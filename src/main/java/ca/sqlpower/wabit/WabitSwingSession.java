@@ -27,12 +27,15 @@ import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.border.EmptyBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import ca.sqlpower.swingui.MemoryMonitor;
@@ -106,13 +109,22 @@ public class WabitSwingSession {
 		
 		MemoryMonitor memoryMonitor = new MemoryMonitor();
 		memoryMonitor.start();
-		statusPane.add(memoryMonitor.getLabel(), BorderLayout.EAST);
+		JLabel memoryLabel = memoryMonitor.getLabel();
+		memoryLabel.setBorder(new EmptyBorder(0, 20, 0, 20));
+		statusPane.add(memoryLabel, BorderLayout.EAST);
 		
 		JPanel cp = new JPanel(new BorderLayout());
 		cp.add(wabitPane, BorderLayout.CENTER);
         cp.add(statusPane, BorderLayout.SOUTH);
         
+        
+        JMenuBar menuBar = new JMenuBar();
+		JMenu fileMenu = new JMenu("File");
+		fileMenu.setMnemonic('f');
+		menuBar.add(fileMenu);
+        
         JFrame wabitFrame = new JFrame("Power*Wabit");
+        wabitFrame.setJMenuBar(menuBar);
         wabitFrame.getContentPane().add(cp);
         wabitFrame.setSize(800, 500);
         wabitFrame.setLocation(400, 300);
@@ -124,7 +136,7 @@ public class WabitSwingSession {
      * 
      */
     public static void  main (String[] args) {
-        
+    	System.setProperty("apple.laf.useScreenMenuBar", "true");
         WabitSwingSession wss = new WabitSwingSession();
         wss.buildUI();
     }
