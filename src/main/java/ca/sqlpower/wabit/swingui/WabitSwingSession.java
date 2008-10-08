@@ -58,10 +58,10 @@ public class WabitSwingSession {
     	JTabbedPane resultTabPane = new JTabbedPane();
     	
     	JTabbedPane editorTabPane = new JTabbedPane();
-    	JPanel playPen = new JPanel();
+    	JPanel playPen = QueryPen.createQueryPen();
     	playPen.setBackground(new Color(255, 255, 255));
     	JTextArea queryTextArea = new JTextArea();
-    	editorTabPane.add(new JScrollPane(playPen),"PlayPen");
+    	editorTabPane.add(playPen,"PlayPen");
     	editorTabPane.add(new JScrollPane(queryTextArea),"Query");
     	
     	
