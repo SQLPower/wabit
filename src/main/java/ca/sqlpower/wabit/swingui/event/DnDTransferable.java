@@ -4,7 +4,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * A tranferable for objects in a JTree. This is used in dragging items from the
