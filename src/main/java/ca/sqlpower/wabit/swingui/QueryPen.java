@@ -1,25 +1,28 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Point;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.geom.Point2D;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.jgoodies.forms.builder.ButtonStackBuilder;
-import com.jgoodies.forms.builder.PanelBuilder;
-import com.jgoodies.forms.layout.CellConstraints;
-import com.jgoodies.forms.layout.FormLayout;
 
 import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.PLayer;
-import edu.umd.cs.piccolox.pswing.PSwing;
+import edu.umd.cs.piccolo.event.PDragEventHandler;
+import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
@@ -28,6 +31,58 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
  */
 public class QueryPen {
 	
+	private final class QueryPenDropTargetListener implements
+			DropTargetListener {
+		public void dropActionChanged(DropTargetDragEvent dtde) {
+		}
+
+		public void drop(DropTargetDropEvent dtde) {
+			System.out.println("Drop fired");
+			
+			Object draggedObject;
+			DataFlavor flavour = null;
+			for (DataFlavor f: dtde.getCurrentDataFlavors()) {
+				if (f != null) {
+					flavour = f;
+					break;
+				}
+			}
+			try {
+				draggedObject = dtde.getTransferable().getTransferData(flavour);
+			} catch (UnsupportedFlavorException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			
+			ContainerModel<String> model = new ContainerModel<String>();
+			model.setName(draggedObject.toString());
+			model.addContainer();
+			for (int i = 0; i < session.getTree().getModel().getChildCount(draggedObject); i++) {
+				model.addItem(0, session.getTree().getModel().getChild(draggedObject, i).toString());
+			}
+			
+			ContainerPane<String> pane = new ContainerPane<String>(canvas, model);
+			Point location = dtde.getLocation();
+			Point2D movedLoc = canvas.getCamera().localToView(location);
+			pane.translate(movedLoc.getX(), movedLoc.getY());
+			canvas.getLayer().addChild(pane);
+			
+			canvas.repaint();
+			dtde.acceptDrop(dtde.getDropAction());
+			dtde.dropComplete(true);
+		}
+
+		public void dragOver(DropTargetDragEvent dtde) {
+		}
+
+		public void dragExit(DropTargetEvent dte) {
+		}
+
+		public void dragEnter(DropTargetDragEvent dtde) {
+		}
+	}
+
 	protected static final double ZOOM_CONSTANT = 0.1;
 
 	/**
@@ -42,10 +97,12 @@ public class QueryPen {
 	
 	private final JButton zoomInButton;
 	private final JButton zoomOutButton;
+
+	private final WabitSwingSession session;
 	
-	public static JPanel createQueryPen() {
+	public static JPanel createQueryPen(WabitSwingSession session) {
 		JPanel panel = new JPanel();
-		QueryPen pen = new QueryPen();
+		QueryPen pen = new QueryPen(session);
         panel.setLayout(new BorderLayout());
         panel.add(pen.getScrollPane(), BorderLayout.CENTER);
         ButtonStackBuilder buttonStack = new ButtonStackBuilder();
@@ -56,21 +113,10 @@ public class QueryPen {
 		return panel;
 	}
 
-	public QueryPen() {
+	public QueryPen(WabitSwingSession s) {
+		session = s;
 		canvas = new PSwingCanvas();
 		scrollPane = new PScrollPane(canvas);
-        PLayer l = canvas.getLayer();
-
-        JSlider js = new JSlider( 0, 100 );
-        js.addChangeListener( new ChangeListener() {
-            public void stateChanged( ChangeEvent e ) {
-                System.out.println( "e = " + e );
-            }
-        } );
-        js.setBorder( BorderFactory.createTitledBorder( "Test JSlider" ) );
-        PSwing pSwing = new PSwing( js );
-        pSwing.translate( 100, 100 );
-        l.addChild( pSwing );
 
         canvas.setPanEventHandler( null );
         
@@ -83,9 +129,15 @@ public class QueryPen {
         zoomOutButton = new JButton(new AbstractAction("Zoom Out"){
 			public void actionPerformed(ActionEvent e) {
 				PCamera camera = canvas.getCamera();
-        		camera.setViewScale(camera.getViewScale() - ZOOM_CONSTANT);
+				if (camera.getViewScale() > ZOOM_CONSTANT) {
+					camera.setViewScale(camera.getViewScale() - ZOOM_CONSTANT);
+				}
 			}
 		});
+        
+        new DropTarget(canvas, new QueryPenDropTargetListener());
+        canvas.addInputEventListener(new PDragEventHandler());
+//        canvas.addInputEventListener(new PSelectionEventHandler(canvas.getLayer(), canvas.getLayer()));
 	}
 	
 	public JScrollPane getScrollPane() {

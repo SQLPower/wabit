@@ -21,6 +21,16 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -39,6 +49,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import ca.sqlpower.swingui.MemoryMonitor;
+import ca.sqlpower.wabit.swingui.event.DnDTransferable;
 
 
 /**
@@ -48,6 +59,8 @@ import ca.sqlpower.swingui.MemoryMonitor;
 public class WabitSwingSession {
     
     
+	private JTree projectTree;
+
 	/**
 	 *  Builds the GUI
 	 */
@@ -58,7 +71,7 @@ public class WabitSwingSession {
     	JTabbedPane resultTabPane = new JTabbedPane();
     	
     	JTabbedPane editorTabPane = new JTabbedPane();
-    	JPanel playPen = QueryPen.createQueryPen();
+    	JPanel playPen = QueryPen.createQueryPen(this);
     	playPen.setBackground(new Color(255, 255, 255));
     	JTextArea queryTextArea = new JTextArea();
     	editorTabPane.add(playPen,"PlayPen");
@@ -98,7 +111,25 @@ public class WabitSwingSession {
     	
     	// Demo Tree 
     	DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("Project Tree");
-    	JTree projectTree = new JTree(treeNode);
+    	projectTree = new JTree();
+    	DragSource ds = new DragSource();
+		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
+			
+			public void dragGestureRecognized(DragGestureEvent dge) {
+				dge.getDragSource().startDrag(dge, null, new DnDTransferable(projectTree.getSelectionPath().getLastPathComponent()), new DragSourceListener() {
+					public void dropActionChanged(DragSourceDragEvent dsde) {
+					}
+					public void dragOver(DragSourceDragEvent dsde) {
+					}
+					public void dragExit(DragSourceEvent dse) {
+					}
+					public void dragEnter(DragSourceDragEvent dsde) {
+					}
+					public void dragDropEnd(DragSourceDropEvent dsde) {
+					}
+				});
+			}
+		});
     	
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
         wabitPane.add(rightViewPane, JSplitPane.RIGHT);
@@ -123,12 +154,33 @@ public class WabitSwingSession {
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
         
-        JFrame wabitFrame = new JFrame("Power*Wabit");
+        final JFrame wabitFrame = new JFrame("Power*Wabit");
         wabitFrame.setJMenuBar(menuBar);
         wabitFrame.getContentPane().add(cp);
         wabitFrame.setSize(800, 500);
         wabitFrame.setLocation(400, 300);
         wabitFrame.setVisible(true);
+        wabitFrame.addWindowListener(new WindowListener() {
+			public void windowOpened(WindowEvent e) {
+			}
+			public void windowIconified(WindowEvent e) {
+			}
+			public void windowDeiconified(WindowEvent e) {
+			}
+			public void windowDeactivated(WindowEvent e) {
+			}
+			public void windowClosing(WindowEvent e) {
+				wabitFrame.dispose();
+			}
+			public void windowClosed(WindowEvent e) {
+			}
+			public void windowActivated(WindowEvent e) {
+			}
+		});
+    }
+    
+    public JTree getTree() {
+    	return projectTree;
     }
     
     /**
