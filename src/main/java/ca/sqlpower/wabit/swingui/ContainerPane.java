@@ -9,10 +9,11 @@ import java.util.List;
 
 import javax.swing.JEditorPane;
 import javax.swing.border.LineBorder;
-import javax.swing.text.JTextComponent;
 
+import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PDragEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -36,27 +37,27 @@ public class ContainerPane<C extends Object> extends PNode {
 	private static final int BORDER_SIZE = 5;
 	
 	/**
-	 * Need to move the editing ability of the styled text editor to a mouse click
-	 * so we can either edit a column or drag a column.
+	 * A simple drag handler that only allows dragging the object if the picked
+	 * object is the same as the object passed in the constructor.
 	 */
-	private class OnClickPStyledTextEventHandler extends PStyledTextEventHandler {
-		public OnClickPStyledTextEventHandler(PCanvas canvas) {
-			super(canvas);
-		}
+	private class DragTargetEventHandler extends PDragEventHandler {
+		private Object parent;
 		
-		public OnClickPStyledTextEventHandler(PCanvas canvas, JTextComponent editor) {
-			super(canvas, editor);
-		}
-		
-		@Override
-		public void mousePressed(PInputEvent e) {
+		/**
+		 * The parent is the object this event handler should be allowed to drag.
+		 */
+		public DragTargetEventHandler(Object parent) {
+			this.parent = parent;
 		}
 		
 		@Override
-		public void mouseClicked(PInputEvent e) {
-			super.mousePressed(e);
+		protected boolean shouldStartDragInteraction(PInputEvent e) {
+			if (super.shouldStartDragInteraction(e)) {
+				return e.getPickedNode() == parent;
+			}
+			return false;
 		}
-	}
+	};
 	
 	private final ContainerModel<C> model;
 
@@ -71,14 +72,6 @@ public class ContainerPane<C extends Object> extends PNode {
 	 * The canvas this component is being drawn on.
 	 */
 	private PCanvas canvas;
-
-	/**
-	 * The last node picked by the mouse when a child of this component was
-	 * picked. This allows events to be sent to the child node if this class
-	 * does not want to handle the event. This will be null if the last item
-	 * picked is not this or a child of this.
-	 */
-	private PNode lastPickedNode = null;
 	
 	/**
 	 * All of the {@link PStyledText} objects that represent an object in the model.
@@ -113,6 +106,8 @@ public class ContainerPane<C extends Object> extends PNode {
 		outerRect = PPath.createRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2);
 		this.addChild(outerRect);
 		outerRect.moveToBack();
+		
+		addInputEventListener(new DragTargetEventHandler(this));
 	}
 
 	/**
@@ -124,7 +119,7 @@ public class ContainerPane<C extends Object> extends PNode {
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
 		nameEditor.setText(text);
 		modelNameText.setDocument(nameEditor.getDocument());
-		final PStyledTextEventHandler styledTextEventHandler = new OnClickPStyledTextEventHandler(canvas, nameEditor);
+		final PStyledTextEventHandler styledTextEventHandler = new ExtendedStyledTextEventHandler(canvas, nameEditor);
 		addInputEventListener(styledTextEventHandler);
 		nameEditor.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {

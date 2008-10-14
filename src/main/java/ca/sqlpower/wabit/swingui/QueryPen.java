@@ -21,8 +21,6 @@ import javax.swing.JScrollPane;
 import com.jgoodies.forms.builder.ButtonStackBuilder;
 
 import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.event.PDragEventHandler;
-import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
@@ -136,7 +134,6 @@ public class QueryPen {
 		});
         
         new DropTarget(canvas, new QueryPenDropTargetListener());
-        canvas.addInputEventListener(new PDragEventHandler());
 //        canvas.addInputEventListener(new PSelectionEventHandler(canvas.getLayer(), canvas.getLayer()));
 	}
 	
