@@ -6,6 +6,12 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * A tranferable for objects in a JTree. This is used in dragging items from the
+ * left tree to be dropped onto different parts of Wabit.
+ * 
+ * TODO: Add more data flavours to this including string.
+ */
 public class DnDTransferable implements Transferable {
 	
 	public static final DataFlavor OBJECT_NAME_FLAVOR = new DataFlavor(Object.class, "Selected Object");

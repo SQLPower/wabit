@@ -21,6 +21,13 @@ import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
 import edu.umd.cs.piccolox.nodes.PComposite;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
+/**
+ * This container pane displays a list of values stored in its model. The elements displayed
+ * in a container pane can be broken into groups and will be separated by a line for each 
+ * group.
+ * 
+ * @param <C> The type of object this container is displaying.
+ */
 public class ContainerPane<C extends Object> extends PComposite {
 	
 	private static final int BORDER_SIZE = 5;
@@ -43,8 +50,15 @@ public class ContainerPane<C extends Object> extends PComposite {
 	
 	private final ContainerModel<C> model;
 
+	/**
+	 * The outer rectangle of this component. All parts of this component should be within this 
+	 * rectangle and it should be resized if the components inside are changed.
+	 */
 	private PPath outerRect;
 	
+	/**
+	 * The canvas this component is being drawn on.
+	 */
 	private PCanvas canvas;
 
 	/**

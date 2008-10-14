@@ -3,6 +3,12 @@ package ca.sqlpower.wabit.swingui;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A model for the {@link ContainerPane}. This will store objects of a defined type and
+ * can be grouped when adding the items to the model.
+ *
+ * @param <C> The type of object this model will store.
+ */
 public class ContainerModel<C extends Object> {
 
 	private List<List<C>> containers;
