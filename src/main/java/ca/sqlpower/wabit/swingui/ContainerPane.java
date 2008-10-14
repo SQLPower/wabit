@@ -13,8 +13,6 @@ import javax.swing.border.LineBorder;
 import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PDragEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
@@ -35,29 +33,6 @@ public class ContainerPane<C extends Object> extends PNode {
 	 * for readability.
 	 */
 	private static final int BORDER_SIZE = 5;
-	
-	/**
-	 * A simple drag handler that only allows dragging the object if the picked
-	 * object is the same as the object passed in the constructor.
-	 */
-	private class DragTargetEventHandler extends PDragEventHandler {
-		private Object parent;
-		
-		/**
-		 * The parent is the object this event handler should be allowed to drag.
-		 */
-		public DragTargetEventHandler(Object parent) {
-			this.parent = parent;
-		}
-		
-		@Override
-		protected boolean shouldStartDragInteraction(PInputEvent e) {
-			if (super.shouldStartDragInteraction(e)) {
-				return e.getPickedNode() == parent;
-			}
-			return false;
-		}
-	};
 	
 	private final ContainerModel<C> model;
 
@@ -106,8 +81,7 @@ public class ContainerPane<C extends Object> extends PNode {
 		outerRect = PPath.createRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2);
 		this.addChild(outerRect);
 		outerRect.moveToBack();
-		
-		addInputEventListener(new DragTargetEventHandler(this));
+		setBounds(outerRect.getBounds());
 	}
 
 	/**
@@ -126,6 +100,7 @@ public class ContainerPane<C extends Object> extends PNode {
 				styledTextEventHandler.stopEditing();
 			}
 			public void focusGained(FocusEvent e) {
+				//no-op
 			}
 		});
 		modelNameText.addPropertyChangeListener(new PropertyChangeListener() {

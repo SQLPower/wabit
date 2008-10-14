@@ -1,6 +1,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -21,6 +22,7 @@ import javax.swing.JScrollPane;
 import com.jgoodies.forms.builder.ButtonStackBuilder;
 
 import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
@@ -29,9 +31,12 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
  */
 public class QueryPen {
 	
+	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
+	
 	private final class QueryPenDropTargetListener implements
 			DropTargetListener {
 		public void dropActionChanged(DropTargetDragEvent dtde) {
+			//no-op
 		}
 
 		public void drop(DropTargetDropEvent dtde) {
@@ -72,16 +77,21 @@ public class QueryPen {
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
+			//no-op
 		}
 
 		public void dragExit(DropTargetEvent dte) {
+			//no-op
 		}
 
 		public void dragEnter(DropTargetDragEvent dtde) {
+			//no-op
 		}
 	}
 
 	protected static final double ZOOM_CONSTANT = 0.1;
+
+	private static final float SELECTION_TRANSPARENCY = 0.33f;
 
 	/**
 	 * The scroll pane that contains the visual query a user is building.
@@ -134,7 +144,10 @@ public class QueryPen {
 		});
         
         new DropTarget(canvas, new QueryPenDropTargetListener());
-//        canvas.addInputEventListener(new PSelectionEventHandler(canvas.getLayer(), canvas.getLayer()));
+        PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(canvas.getLayer(), canvas.getLayer());
+        selectionEventHandler.setMarqueePaint(SELECTION_COLOUR);
+        selectionEventHandler.setMarqueePaintTransparency(SELECTION_TRANSPARENCY);
+		canvas.addInputEventListener(selectionEventHandler);
 	}
 	
 	public JScrollPane getScrollPane() {
