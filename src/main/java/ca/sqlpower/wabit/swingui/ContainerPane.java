@@ -2,23 +2,22 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JEditorPane;
 import javax.swing.border.LineBorder;
+import javax.swing.text.JTextComponent;
 
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
-import edu.umd.cs.piccolox.nodes.PComposite;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
@@ -28,31 +27,43 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
  * 
  * @param <C> The type of object this container is displaying.
  */
-public class ContainerPane<C extends Object> extends PComposite {
-	
+public class ContainerPane<C extends Object> extends PNode {
+
+	/**
+	 * The size of the border to place around the text in this container pane
+	 * for readability.
+	 */
 	private static final int BORDER_SIZE = 5;
 	
-	private class DoubleClickEditInputEventHandler extends PBasicInputEventHandler {
+	/**
+	 * Need to move the editing ability of the styled text editor to a mouse click
+	 * so we can either edit a column or drag a column.
+	 */
+	private class OnClickPStyledTextEventHandler extends PStyledTextEventHandler {
+		public OnClickPStyledTextEventHandler(PCanvas canvas) {
+			super(canvas);
+		}
+		
+		public OnClickPStyledTextEventHandler(PCanvas canvas, JTextComponent editor) {
+			super(canvas, editor);
+		}
+		
 		@Override
 		public void mousePressed(PInputEvent e) {
+		}
+		
+		@Override
+		public void mouseClicked(PInputEvent e) {
 			super.mousePressed(e);
-			if (lastPickedNode != null && e.getClickCount() == 2) {
-				System.out.println("Last picked node on mouse double click " + lastPickedNode + " type " +lastPickedNode.getClass());
-				for (Object o : lastPickedNode.getListenerList().getListenerList()) {
-					if (o instanceof PInputEventListener) {
-						PInputEventListener listener = (PInputEventListener)o;
-						listener.processEvent(e, MouseEvent.MOUSE_PRESSED);
-					}
-				}
-			}
 		}
 	}
 	
 	private final ContainerModel<C> model;
 
 	/**
-	 * The outer rectangle of this component. All parts of this component should be within this 
-	 * rectangle and it should be resized if the components inside are changed.
+	 * The outer rectangle of this component. All parts of this component should
+	 * be within this rectangle and it should be resized if the components
+	 * inside are changed.
 	 */
 	private PPath outerRect;
 	
@@ -69,6 +80,11 @@ public class ContainerPane<C extends Object> extends PComposite {
 	 */
 	private PNode lastPickedNode = null;
 	
+	/**
+	 * All of the {@link PStyledText} objects that represent an object in the model.
+	 */
+	private List<PStyledText> containedItems;
+	
 	public ContainerPane(PCanvas canvas) {
 		this(canvas, new ContainerModel<C>());
 	}
@@ -76,6 +92,7 @@ public class ContainerPane<C extends Object> extends PComposite {
 	public ContainerPane(PCanvas canvas, ContainerModel<C> newModel) {
 		model = newModel;
 		this.canvas = canvas;
+		containedItems = new ArrayList<PStyledText>();
 		System.out.println("Model name is " + model.getName());
 		final PStyledText modelNameText = createTextLine(model.getName());
 		addChild(modelNameText);
@@ -86,6 +103,7 @@ public class ContainerPane<C extends Object> extends PComposite {
 				final PStyledText newText = createTextLine(model.getContents(i, j).toString());
 				newText.translate(0, modelNameText.getHeight() * yLoc);
 				addChild(newText);
+				containedItems.add(newText);
 				yLoc++;
 			}
 		}
@@ -95,8 +113,6 @@ public class ContainerPane<C extends Object> extends PComposite {
 		outerRect = PPath.createRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2);
 		this.addChild(outerRect);
 		outerRect.moveToBack();
-	
-		this.addInputEventListener(new DoubleClickEditInputEventHandler());
 	}
 
 	/**
@@ -108,7 +124,7 @@ public class ContainerPane<C extends Object> extends PComposite {
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
 		nameEditor.setText(text);
 		modelNameText.setDocument(nameEditor.getDocument());
-		final PStyledTextEventHandler styledTextEventHandler = new PStyledTextEventHandler(canvas, nameEditor);
+		final PStyledTextEventHandler styledTextEventHandler = new OnClickPStyledTextEventHandler(canvas, nameEditor);
 		addInputEventListener(styledTextEventHandler);
 		nameEditor.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {
@@ -126,20 +142,31 @@ public class ContainerPane<C extends Object> extends PComposite {
 		});
 		return modelNameText;
 	}
-	
-	@Override
-	public boolean pick(PPickPath path) {
-		lastPickedNode = path.getPickedNode();
-		while (lastPickedNode != null) {
-			System.out.println(lastPickedNode);
-			lastPickedNode = lastPickedNode.getParent();
-		}
-		lastPickedNode = path.getPickedNode();
-		return super.pick(path);
-	}
 		
 	public ContainerModel<C> getModel() {
 		return model;
+	}
+	
+	@Override
+	/*
+	 * Taken from PComposite. This keeps the title and container lines together in
+	 * a unit but is modified to allow picking of internal components.
+	 */
+	public boolean fullPick(PPickPath pickPath) {
+		if (super.fullPick(pickPath)) {
+			PNode picked = pickPath.getPickedNode();
+			
+			// this code won't work with internal cameras, because it doesn't pop
+			// the cameras view transform.
+			while (picked != this && !containedItems.contains(picked)) {
+				pickPath.popTransform(picked.getTransformReference(false));
+				pickPath.popNode(picked);
+				picked = pickPath.getPickedNode();
+			}
+			
+			return true;
+		}
+		return false;
 	}
 
 }
