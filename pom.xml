@@ -6,7 +6,19 @@
   <packaging>jar</packaging>
   <version>0.9.1-SNAPSHOT</version>
   <name>wabit</name>
-  <url>http://maven.apache.org</url>
+  <url>http://code.google.com/p/wabit</url>
+  <build>
+	  <plugins>
+	  	<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<configuration>
+				<source>1.5</source>
+				<target>1.5</target>
+			</configuration>
+		</plugin>
+	  </plugins>
+  </build>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -27,7 +39,7 @@
       <scope>system</scope>
       <systemPath>${basedir}/lib/piccolo.jar</systemPath>
     </dependency>
-        <dependency>
+    <dependency>
       <groupId>edu.umd.cs</groupId>
       <artifactId>piccolox</artifactId>
       <version>1.2.1</version>
