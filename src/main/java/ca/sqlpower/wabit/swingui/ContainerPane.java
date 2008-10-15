@@ -44,6 +44,12 @@ public class ContainerPane<C extends Object> extends PNode {
 	private PPath outerRect;
 	
 	/**
+	 * The pane that contains the current state of the mouse for that this component
+	 * is attached to.
+	 */
+	private MouseStatePane mouseStates;
+	
+	/**
 	 * The canvas this component is being drawn on.
 	 */
 	private PCanvas canvas;
@@ -53,12 +59,13 @@ public class ContainerPane<C extends Object> extends PNode {
 	 */
 	private List<PStyledText> containedItems;
 	
-	public ContainerPane(PCanvas canvas) {
-		this(canvas, new ContainerModel<C>());
+	public ContainerPane(MouseStatePane pen, PCanvas canvas) {
+		this(pen, canvas, new ContainerModel<C>());
 	}
 	
-	public ContainerPane(PCanvas canvas, ContainerModel<C> newModel) {
+	public ContainerPane(MouseStatePane pen, PCanvas canvas, ContainerModel<C> newModel) {
 		model = newModel;
+		this.mouseStates = pen;
 		this.canvas = canvas;
 		containedItems = new ArrayList<PStyledText>();
 		System.out.println("Model name is " + model.getName());
@@ -93,7 +100,7 @@ public class ContainerPane<C extends Object> extends PNode {
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
 		nameEditor.setText(text);
 		modelNameText.setDocument(nameEditor.getDocument());
-		final PStyledTextEventHandler styledTextEventHandler = new ExtendedStyledTextEventHandler(canvas, nameEditor);
+		final PStyledTextEventHandler styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, nameEditor);
 		addInputEventListener(styledTextEventHandler);
 		nameEditor.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {
@@ -107,6 +114,7 @@ public class ContainerPane<C extends Object> extends PNode {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (outerRect != null) {
 					outerRect.setWidth(Math.max(modelNameText.getWidth() + 2 * BORDER_SIZE, outerRect.getWidth()));
+					setBounds(outerRect.getBounds());
 				}
 			}
 		});

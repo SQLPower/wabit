@@ -19,6 +19,8 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
+
 import com.jgoodies.forms.builder.ButtonStackBuilder;
 
 import edu.umd.cs.piccolo.PCamera;
@@ -29,12 +31,18 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 /**
  * The pen where users can graphically create sql queries.
  */
-public class QueryPen {
+public class QueryPen implements MouseStatePane {
 	
 	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
 	
 	private final class QueryPenDropTargetListener implements
 			DropTargetListener {
+		private MouseStatePane mouseState ;
+
+		public QueryPenDropTargetListener(MouseStatePane mouseState) {
+			this.mouseState = mouseState;
+		}
+		
 		public void dropActionChanged(DropTargetDragEvent dtde) {
 			//no-op
 		}
@@ -65,7 +73,7 @@ public class QueryPen {
 				model.addItem(0, session.getTree().getModel().getChild(draggedObject, i).toString());
 			}
 			
-			ContainerPane<String> pane = new ContainerPane<String>(canvas, model);
+			ContainerPane<String> pane = new ContainerPane<String>(mouseState, canvas, model);
 			Point location = dtde.getLocation();
 			Point2D movedLoc = canvas.getCamera().localToView(location);
 			pane.translate(movedLoc.getX(), movedLoc.getY());
@@ -92,7 +100,7 @@ public class QueryPen {
 	protected static final double ZOOM_CONSTANT = 0.1;
 
 	private static final float SELECTION_TRANSPARENCY = 0.33f;
-
+	
 	/**
 	 * The scroll pane that contains the visual query a user is building.
 	 */
@@ -105,8 +113,14 @@ public class QueryPen {
 	
 	private final JButton zoomInButton;
 	private final JButton zoomOutButton;
+	private final JButton createJoinButton;
 
 	private final WabitSwingSession session;
+	
+	/**
+	 * The mouse state in this query pen.
+	 */
+	private MouseStates mouseState = MouseStates.READY;
 	
 	public static JPanel createQueryPen(WabitSwingSession session) {
 		JPanel panel = new JPanel();
@@ -117,6 +131,8 @@ public class QueryPen {
         buttonStack.addGridded(pen.getZoomInButton());
         buttonStack.addRelatedGap();
         buttonStack.addGridded(pen.getZoomOutButton());
+        buttonStack.addUnrelatedGap();
+        buttonStack.addGridded(pen.getCreateJoinButton());
         panel.add(buttonStack.getPanel(), BorderLayout.EAST);
 		return panel;
 	}
@@ -143,7 +159,14 @@ public class QueryPen {
 			}
 		});
         
-        new DropTarget(canvas, new QueryPenDropTargetListener());
+        createJoinButton = new JButton(new AbstractAction("Create Join") {
+        	public void actionPerformed(ActionEvent e) {
+        		setMouseState(MouseStates.CREATE_JOIN);
+        	}
+        });
+        canvas.addInputEventListener(new CreateJoinEventHandler(this, canvas));
+        
+        new DropTarget(canvas, new QueryPenDropTargetListener(this));
         PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(canvas.getLayer(), canvas.getLayer());
         selectionEventHandler.setMarqueePaint(SELECTION_COLOUR);
         selectionEventHandler.setMarqueePaintTransparency(SELECTION_TRANSPARENCY);
@@ -160,5 +183,21 @@ public class QueryPen {
 
 	public JButton getZoomOutButton() {
 		return zoomOutButton;
+	}
+	
+	public JButton getCreateJoinButton() {
+		return createJoinButton;
+	}
+	
+	public PSwingCanvas getCanvas() {
+		return canvas;
+	}
+
+	public MouseStates getMouseState() {
+		return mouseState;
+	}
+
+	public synchronized void setMouseState(MouseStates mouseState) {
+		this.mouseState = mouseState;
 	}
 }

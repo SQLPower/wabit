@@ -4,6 +4,8 @@ import java.awt.geom.Point2D;
 
 import javax.swing.text.JTextComponent;
 
+import ca.sqlpower.wabit.swingui.MouseStatePane;
+import ca.sqlpower.wabit.swingui.MouseStatePane.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
@@ -36,19 +38,27 @@ public class ExtendedStyledTextEventHandler extends PStyledTextEventHandler {
 	 */
 	private State mouseState;
 	
-	public ExtendedStyledTextEventHandler(PCanvas canvas) {
+	/**
+	 * The query pen that contains the component this handler is attached to.
+	 * Used for getting the current state of the mouse.
+	 */
+	private MouseStatePane pen;
+	
+	public ExtendedStyledTextEventHandler(MouseStatePane pen, PCanvas canvas) {
 		super(canvas);
+		this.pen = pen;
 		mouseState = State.MOUSE_UP;
 	}
 	
-	public ExtendedStyledTextEventHandler(PCanvas canvas, JTextComponent editor) {
+	public ExtendedStyledTextEventHandler(MouseStatePane pen, PCanvas canvas, JTextComponent editor) {
 		super(canvas, editor);
+		this.pen = pen;
 		mouseState = State.MOUSE_UP;
 	}
 	
 	@Override
 	public void mousePressed(PInputEvent e) {
-		if (mouseState == State.MOUSE_UP) {
+		if (pen.getMouseState() == MouseStates.READY && mouseState == State.MOUSE_UP) {
 			mouseState = State.MOUSE_DOWN;
 			mousePressed = e.getPosition();
 		}
@@ -56,7 +66,7 @@ public class ExtendedStyledTextEventHandler extends PStyledTextEventHandler {
 	
 	@Override
 	public void mouseReleased(PInputEvent e) {
-		if (mouseState == State.MOUSE_DOWN) {
+		if (pen.getMouseState() == MouseStates.READY && mouseState == State.MOUSE_DOWN) {
 			mouseState = State.MOUSE_UP;
 			if (e.getPosition().distance(mousePressed) < ALLOWED_MOVEMENT_ON_MOUSE_CLICK) {
 				super.mousePressed(e);
