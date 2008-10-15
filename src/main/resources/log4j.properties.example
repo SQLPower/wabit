@@ -1,0 +1,33 @@
+# Log4J configuration file for SQL*Power Wabit
+# DO NOT EDIT file log4j.properties.example; it is generated automatically.
+# Please configure your own logging in a copy named "log4j.properties"
+
+log4j.rootLogger=INFO, R, C
+
+#log4j.logger.ca.sqlpower.wabit.WabitSession=debug
+#log4j.logger.ca.sqlpower.wabit.WabitSessionContext=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.ContainerModel=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.ContainerPane=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.JoinLine=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.MouseStatePane=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.QueryPen=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.WabitSwingSession=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.event.ContainerEvent=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.event.ContainerItemEvent=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.event.ContainerModelListener=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.event.DnDTransferable=debug
+#log4j.logger.ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler=debug
+
+# Tail end of automatically-generated log4j config file; just set up Appenders.
+
+log4j.appender.R=org.apache.log4j.RollingFileAppender
+log4j.appender.R.File=wabit.log
+log4j.appender.R.MaxFileSize=10000KB
+log4j.appender.R.MaxBackupIndex=1
+log4j.appender.R.layout=org.apache.log4j.PatternLayout
+log4j.appender.R.layout.ConversionPattern=%-4r [%t] %-5p %c %x - %m%n
+
+log4j.appender.C=org.apache.log4j.ConsoleAppender
+log4j.appender.C.layout=org.apache.log4j.PatternLayout
+log4j.appender.C.layout.ConversionPattern=%-4r [%t] %-5p %c %x - %m%n
