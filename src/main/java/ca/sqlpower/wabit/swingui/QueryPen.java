@@ -24,6 +24,8 @@ import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import com.jgoodies.forms.builder.ButtonStackBuilder;
 
 import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
@@ -77,7 +79,7 @@ public class QueryPen implements MouseStatePane {
 			Point location = dtde.getLocation();
 			Point2D movedLoc = canvas.getCamera().localToView(location);
 			pane.translate(movedLoc.getX(), movedLoc.getY());
-			canvas.getLayer().addChild(pane);
+			topLayer.addChild(pane);
 			
 			canvas.repaint();
 			dtde.acceptDrop(dtde.getDropAction());
@@ -111,6 +113,9 @@ public class QueryPen implements MouseStatePane {
 	 */
 	private final PSwingCanvas canvas;
 	
+	private final PLayer joinLayer;
+	private final PNode topLayer;
+	
 	private final JButton zoomInButton;
 	private final JButton zoomOutButton;
 	private final JButton createJoinButton;
@@ -143,6 +148,9 @@ public class QueryPen implements MouseStatePane {
 		scrollPane = new PScrollPane(canvas);
 
         canvas.setPanEventHandler( null );
+        topLayer = canvas.getLayer();
+        joinLayer = new PLayer();
+        canvas.getCamera().addLayer(0, joinLayer);
         
         zoomInButton = new JButton(new AbstractAction("Zoom In") {
         	public void actionPerformed(ActionEvent e) {
@@ -164,10 +172,10 @@ public class QueryPen implements MouseStatePane {
         		setMouseState(MouseStates.CREATE_JOIN);
         	}
         });
-        canvas.addInputEventListener(new CreateJoinEventHandler(this, canvas));
+        canvas.addInputEventListener(new CreateJoinEventHandler(this, joinLayer));
         
         new DropTarget(canvas, new QueryPenDropTargetListener(this));
-        PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(canvas.getLayer(), canvas.getLayer());
+        PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(topLayer, topLayer);
         selectionEventHandler.setMarqueePaint(SELECTION_COLOUR);
         selectionEventHandler.setMarqueePaintTransparency(SELECTION_TRANSPARENCY);
 		canvas.addInputEventListener(selectionEventHandler);

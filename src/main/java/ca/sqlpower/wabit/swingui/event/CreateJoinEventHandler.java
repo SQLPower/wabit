@@ -3,7 +3,7 @@ package ca.sqlpower.wabit.swingui.event;
 import ca.sqlpower.wabit.swingui.JoinLine;
 import ca.sqlpower.wabit.swingui.MouseStatePane;
 import ca.sqlpower.wabit.swingui.MouseStatePane.MouseStates;
-import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolox.nodes.PStyledText;
@@ -16,11 +16,11 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	private MouseStatePane mouseStatePane;
 	private PStyledText leftText;
 	private PStyledText rightText;
-	private PCanvas canvas;
+	private PLayer joinLayer;
 
-	public CreateJoinEventHandler(MouseStatePane mouseStatePane, PCanvas canvas) {
+	public CreateJoinEventHandler(MouseStatePane mouseStatePane, PLayer joinLayer) {
 		this.mouseStatePane = mouseStatePane;
-		this.canvas = canvas;
+		this.joinLayer = joinLayer;
 	}
 	
 	@Override
@@ -32,7 +32,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					leftText = (PStyledText)event.getPickedNode();
 				} else if (rightText == null) {
 					rightText = (PStyledText)event.getPickedNode();
-					canvas.getLayer().addChild(new JoinLine(leftText, rightText));
+					joinLayer.addChild(new JoinLine(leftText, rightText));
 					leftText = null;
 					rightText = null;
 					mouseStatePane.setMouseState(MouseStates.READY);
