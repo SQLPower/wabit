@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
@@ -43,12 +42,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 import ca.sqlpower.swingui.MemoryMonitor;
+import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.swingui.query.SQLQueryUIComponents;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.event.DnDTransferable;
 
 
@@ -56,61 +57,62 @@ import ca.sqlpower.wabit.swingui.event.DnDTransferable;
  * The Main Window for the Wabit Application; contains a main() method that is
  * the conventional way to start the application running.
  */
-public class WabitSwingSession {
+public class WabitSwingSession implements SwingWorkerRegistry {
     
-    
+	private final WabitSessionContext sessionContext;
+	
+    private SQLQueryUIComponents queryUIComponents;
 	private JTree projectTree;
+	private JFrame frame;
 
+	/**
+	 * Creates a new session 
+	 * 
+	 * @param context
+	 */
+	public WabitSwingSession(WabitSessionContext context) {
+		sessionContext = context;
+	}
+	
 	/**
 	 *  Builds the GUI
 	 */
     public void buildUI() {
+        frame = new JFrame("Power*Wabit");
+        
+        // this will be the frame's content pane
+		JPanel cp = new JPanel(new BorderLayout());
+
+    	queryUIComponents = new SQLQueryUIComponents(this, sessionContext.getDataSources(), cp);
     	
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-    	JTabbedPane resultTabPane = new JTabbedPane();
+    	JTabbedPane resultTabPane = queryUIComponents.getTableTabPane();
     	
     	JTabbedPane editorTabPane = new JTabbedPane();
     	JPanel playPen = QueryPen.createQueryPen(this);
-    	playPen.setBackground(new Color(255, 255, 255));
-    	JTextArea queryTextArea = new JTextArea();
     	editorTabPane.add(playPen,"PlayPen");
-    	editorTabPane.add(new JScrollPane(queryTextArea),"Query");
-    	
-    	
-    	JTextArea logTextArea = new JTextArea();
-    	JPanel tablePane = new JPanel();
-    	
-    	// this tableLabel currently is a Jlabel, and it will be replaced with a JTable
-    	JLabel tableLabel = new JLabel("This is where the table is going to be :) ");
-    	tableLabel.setOpaque(true);
-    	tableLabel.setBackground(new Color(255, 255, 255));
-    	JPanel optionPane = new JPanel();
-    	optionPane.setLayout(new BorderLayout());
-    	
+    	editorTabPane.add(new JScrollPane(queryUIComponents.getQueryArea()),"Query");
     	
     	// Created two JCheckBoxes for the option Panel
     	JCheckBox groupingCheckBox = new JCheckBox("Grouping");
     	JCheckBox havingCheckBox = new JCheckBox("Having");
-    	Box box = new Box(BoxLayout.Y_AXIS);
+    	Box box = new Box(BoxLayout.X_AXIS);
+    	box.add(new JLabel("Database connection:"));
+    	box.add(queryUIComponents.getDatabaseComboBox());
+    	box.add(Box.createHorizontalGlue());
     	box.add(groupingCheckBox);
     	box.add(havingCheckBox);
-    	optionPane.add(box);
     	
-    	// Created the Result and the Log Panels and added them to the TabbedPane
-    	tablePane.setLayout(new BorderLayout());
-    	tablePane.add(optionPane, BorderLayout.NORTH);
-    	tablePane.add(new JScrollPane(tableLabel), BorderLayout.CENTER);
+    	JPanel topPane = new JPanel(new BorderLayout());
+    	topPane.add(box, BorderLayout.SOUTH);
+    	topPane.add(editorTabPane, BorderLayout.CENTER);
     	
-    	resultTabPane.add(new JScrollPane(logTextArea), "Log");
-    	resultTabPane.add(tablePane, "result");
-    	
-    	rightViewPane.add(editorTabPane, JSplitPane.TOP);
+    	rightViewPane.add(topPane, JSplitPane.TOP);
     	rightViewPane.add(resultTabPane, JSplitPane.BOTTOM);  	
     	
     	
     	// Demo Tree 
-    	DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("Project Tree");
     	projectTree = new JTree();
     	DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
@@ -144,23 +146,20 @@ public class WabitSwingSession {
 		memoryLabel.setBorder(new EmptyBorder(0, 20, 0, 20));
 		statusPane.add(memoryLabel, BorderLayout.EAST);
 		
-		JPanel cp = new JPanel(new BorderLayout());
 		cp.add(wabitPane, BorderLayout.CENTER);
         cp.add(statusPane, BorderLayout.SOUTH);
-        
         
         JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
         
-        final JFrame wabitFrame = new JFrame("Power*Wabit");
-        wabitFrame.setJMenuBar(menuBar);
-        wabitFrame.getContentPane().add(cp);
-        wabitFrame.setSize(800, 500);
-        wabitFrame.setLocation(400, 300);
-        wabitFrame.setVisible(true);
-        wabitFrame.addWindowListener(new WindowListener() {
+		frame.setJMenuBar(menuBar);
+        frame.setContentPane(cp);
+        frame.setSize(800, 500);
+        frame.setLocation(400, 300);
+        frame.setVisible(true);
+        frame.addWindowListener(new WindowListener() {
 			public void windowOpened(WindowEvent e) {
 			}
 			public void windowIconified(WindowEvent e) {
@@ -170,7 +169,7 @@ public class WabitSwingSession {
 			public void windowDeactivated(WindowEvent e) {
 			}
 			public void windowClosing(WindowEvent e) {
-				wabitFrame.dispose();
+				frame.dispose();
 			}
 			public void windowClosed(WindowEvent e) {
 			}
@@ -184,13 +183,29 @@ public class WabitSwingSession {
     }
     
     /**
-     * Main
+     * Launches the Wabit application by loading the configuration and
+     * displaying the GUI.
      * 
+     * @throws Exception if startup fails
      */
-    public static void  main (String[] args) {
+    public static void  main (String[] args) throws Exception {
+    	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-        WabitSwingSession wss = new WabitSwingSession();
+    	WabitSessionContext context = new WabitSessionContext();
+        WabitSwingSession wss = new WabitSwingSession(context);
         wss.buildUI();
     }
+
+    /* docs inherited from interface */
+	public void registerSwingWorker(SPSwingWorker worker) {
+		// TODO Auto-generated method stub
+		
+	}
+
+    /* docs inherited from interface */
+	public void removeSwingWorker(SPSwingWorker worker) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

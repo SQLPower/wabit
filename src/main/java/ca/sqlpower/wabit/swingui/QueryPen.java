@@ -147,6 +147,7 @@ public class QueryPen implements MouseStatePane {
         buttonStack.addUnrelatedGap();
         buttonStack.addGridded(pen.getCreateJoinButton());
         panel.add(buttonStack.getPanel(), BorderLayout.EAST);
+        panel.setBackground(Color.WHITE);
 		return panel;
 	}
 
