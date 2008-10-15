@@ -113,7 +113,15 @@ public class QueryPen implements MouseStatePane {
 	 */
 	private final PSwingCanvas canvas;
 	
+	/**
+	 * The layer that contains all of the join lines. This will be behind the top layer.
+	 */
 	private final PLayer joinLayer;
+	
+	/**
+	 * The top layer that has the tables and columns added to it. This should be used
+	 * instead of getting the first layer from the canvas.
+	 */
 	private final PNode topLayer;
 	
 	private final JButton zoomInButton;

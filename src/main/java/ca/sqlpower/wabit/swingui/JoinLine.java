@@ -10,20 +10,63 @@ import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
+/**
+ * This object draws a join line between two columns in the GUI query pen.
+ */
 public class JoinLine extends PNode {
 
+	/**
+	 * The border width of the ellipse that surrounds the join expression.
+	 */
 	private static final float BORDER_WIDTH = 5;
+	
+	/**
+	 * One of the columns that is being joined on.
+	 */
 	private final PNode leftNode;
+	
+	/**
+	 * The other column that is being joined on.
+	 */
 	private final PNode rightNode;
+	
+	/**
+	 * The parent to the leftNode. This will be used to know where
+	 * to draw the join line and when to update it on a move.
+	 */
 	private final PNode leftContainerPane;
+	
+	/**
+	 * The parent to the rightNode. This will be used to know where
+	 * to draw the join line and when to update it on a move.
+	 */
 	private final PNode rightContainerPane;
 	
+	/**
+	 * The text of the type of join the two columns are being joined by.
+	 */
 	private final PStyledText joinText;
+	
+	/**
+	 * A circle to surround the join text.
+	 */
 	private final PPath textCircle;
 	
+	/**
+	 * A Bezier curve that connects the left column to the text circle.
+	 */
 	private final PPath leftPath;
+	
+	/**
+	 * A Bezier curve that connects the right column to the text circle.
+	 */
 	private final PPath rightPath;
 	
+	/**
+	 * Creates the line representing a join between two columns.
+	 * The parent of these nodes will be listened to for movement
+	 * to update the position of the line.
+	 */
 	public JoinLine(PNode leftNode, PNode rightNode) {
 		super();
 		this.leftNode = leftNode;
@@ -58,6 +101,9 @@ public class JoinLine extends PNode {
 		updateLine();		
 	}
 
+	/**
+	 * Updates the line end points and control points. The text area is also moved.
+	 */
 	private void updateLine() {
 		PBounds leftBounds = this.leftNode.getGlobalBounds();
 		PBounds rightBounds = this.rightNode.getGlobalBounds();
