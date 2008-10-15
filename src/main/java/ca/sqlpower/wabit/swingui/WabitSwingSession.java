@@ -30,6 +30,9 @@ import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -48,7 +51,10 @@ import javax.swing.border.EmptyBorder;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.swingui.event.SessionLifecycleEvent;
+import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.event.DnDTransferable;
 
@@ -57,7 +63,7 @@ import ca.sqlpower.wabit.swingui.event.DnDTransferable;
  * The Main Window for the Wabit Application; contains a main() method that is
  * the conventional way to start the application running.
  */
-public class WabitSwingSession implements SwingWorkerRegistry {
+public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     
 	private final WabitSessionContext sessionContext;
 	
@@ -66,12 +72,19 @@ public class WabitSwingSession implements SwingWorkerRegistry {
 	private JFrame frame;
 
 	/**
+	 * The list of all currently-registered background tasks.
+	 */
+	private final List<SPSwingWorker> activeWorkers =
+		Collections.synchronizedList(new ArrayList<SPSwingWorker>());
+
+	/**
 	 * Creates a new session 
 	 * 
 	 * @param context
 	 */
 	public WabitSwingSession(WabitSessionContext context) {
 		sessionContext = context;
+		sessionContext.registerChildSession(this);
 	}
 	
 	/**
@@ -169,7 +182,7 @@ public class WabitSwingSession implements SwingWorkerRegistry {
 			public void windowDeactivated(WindowEvent e) {
 			}
 			public void windowClosing(WindowEvent e) {
-				frame.dispose();
+				close();
 			}
 			public void windowClosed(WindowEvent e) {
 			}
@@ -181,6 +194,44 @@ public class WabitSwingSession implements SwingWorkerRegistry {
     public JTree getTree() {
     	return projectTree;
     }
+
+    /* docs inherited from interface */
+	public void registerSwingWorker(SPSwingWorker worker) {
+		activeWorkers.add(worker);
+	}
+
+    /* docs inherited from interface */
+	public void removeSwingWorker(SPSwingWorker worker) {
+		activeWorkers.remove(worker);
+	}
+
+	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
+		new ArrayList<SessionLifecycleListener<WabitSession>>();
+	
+	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
+		lifecycleListeners.add(l);
+	}
+
+	public void removeSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
+		lifecycleListeners.remove(l);
+	}
+
+	/**
+	 * Ends this session, disposing its frame and releasing any system
+	 * resources that were obtained explicitly by this session. Also
+	 * fires a sessionClosing lifecycle event, so any resources used up
+	 * by subsystems dependent on this session can be freed by the appropriate
+	 * parties.
+	 */
+    public void close() {
+    	SessionLifecycleEvent<WabitSession> e =
+    		new SessionLifecycleEvent<WabitSession>(this);
+    	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
+    		lifecycleListeners.get(i).sessionClosing(e);
+    	}
+    	frame.dispose();
+    	sessionContext.deregisterChildSession(this);
+    }
     
     /**
      * Launches the Wabit application by loading the configuration and
@@ -188,24 +239,11 @@ public class WabitSwingSession implements SwingWorkerRegistry {
      * 
      * @throws Exception if startup fails
      */
-    public static void  main (String[] args) throws Exception {
+    public static void  main(String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	WabitSessionContext context = new WabitSessionContext();
+    	WabitSessionContext context = new WabitSessionContext(true);
         WabitSwingSession wss = new WabitSwingSession(context);
         wss.buildUI();
     }
-
-    /* docs inherited from interface */
-	public void registerSwingWorker(SPSwingWorker worker) {
-		// TODO Auto-generated method stub
-		
-	}
-
-    /* docs inherited from interface */
-	public void removeSwingWorker(SPSwingWorker worker) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }
