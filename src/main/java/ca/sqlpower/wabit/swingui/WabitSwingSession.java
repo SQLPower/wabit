@@ -48,6 +48,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
 
+import org.fife.ui.rtextarea.RTextScrollPane;
+
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
@@ -105,7 +107,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JTabbedPane editorTabPane = new JTabbedPane();
     	JPanel playPen = QueryPen.createQueryPen(this);
     	editorTabPane.add(playPen,"PlayPen");
-    	editorTabPane.add(new JScrollPane(queryUIComponents.getQueryArea()),"Query");
+    	editorTabPane.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),"Query");
     	
     	// Created two JCheckBoxes for the option Panel
     	JCheckBox groupingCheckBox = new JCheckBox("Grouping");
@@ -145,7 +147,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				});
 			}
 		});
-    	
+
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
         wabitPane.add(rightViewPane, JSplitPane.RIGHT);
         
