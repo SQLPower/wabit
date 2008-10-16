@@ -100,7 +100,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-    	JTabbedPane resultTabPane = queryUIComponents.getTableTabPane();
+    	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
     	
     	JTabbedPane editorTabPane = new JTabbedPane();
     	JPanel playPen = QueryPen.createQueryPen(this);
