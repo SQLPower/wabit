@@ -46,5 +46,12 @@
       <scope>system</scope>
       <systemPath>${basedir}/lib/piccolox.jar</systemPath>
     </dependency>
+	<dependency>
+      <groupId>org.fife</groupId>
+      <artifactId>rsyntaxtextarea</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/rsyntaxtextarea.jar</systemPath>
+    </dependency>
   </dependencies>
 </project>
