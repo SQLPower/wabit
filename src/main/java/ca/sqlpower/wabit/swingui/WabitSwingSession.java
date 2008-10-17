@@ -28,8 +28,8 @@ import java.awt.dnd.DragSourceDragEvent;
 import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -186,23 +186,11 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
         frame.setSize(800, 500);
         frame.setLocation(400, 300);
         frame.setVisible(true);
-        frame.addWindowListener(new WindowListener() {
-			public void windowOpened(WindowEvent e) {
-			}
-			public void windowIconified(WindowEvent e) {
-			}
-			public void windowDeiconified(WindowEvent e) {
-			}
-			public void windowDeactivated(WindowEvent e) {
-			}
+        frame.addWindowListener(new WindowAdapter() {
+
 			public void windowClosing(WindowEvent e) {
 				close();
-			}
-			public void windowClosed(WindowEvent e) {
-			}
-			public void windowActivated(WindowEvent e) {
-			}
-		});
+			}});
     }
     
     public JTree getTree() {
