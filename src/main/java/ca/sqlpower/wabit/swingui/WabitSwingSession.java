@@ -45,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
 
@@ -100,6 +101,17 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 
     	queryUIComponents = new SQLQueryUIComponents(this, sessionContext.getDataSources(), cp);
     	
+		JPanel queryToolPanel = new JPanel(new BorderLayout());
+		JToolBar queryToolBar = new JToolBar();
+		queryToolBar.add(queryUIComponents.getExecuteButton());
+		queryToolBar.add(queryUIComponents.getStopButton());
+		queryToolBar.add(queryUIComponents.getClearButton());
+		queryToolBar.add(queryUIComponents.getUndoButton());
+		queryToolBar.add(queryUIComponents.getRedoButton());
+		
+		queryToolPanel.add(queryToolBar, BorderLayout.NORTH);
+		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
+    	
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
     	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
@@ -107,7 +119,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JTabbedPane editorTabPane = new JTabbedPane();
     	JPanel playPen = QueryPen.createQueryPen(this);
     	editorTabPane.add(playPen,"PlayPen");
-    	editorTabPane.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),"Query");
+    	editorTabPane.add(queryToolPanel,"Query");
     	
     	// Created two JCheckBoxes for the option Panel
     	JCheckBox groupingCheckBox = new JCheckBox("Grouping");
