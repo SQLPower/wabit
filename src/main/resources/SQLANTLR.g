@@ -1,6 +1,5 @@
 grammar SQLANTLR;
 
-
 tokens {
 	PLUS 	= '+' ;
 	MINUS	= '-' ;
@@ -12,9 +11,8 @@ tokens {
 	PCT 	= '%' ;
 	EQ 	= '=' ;
 	HAT 	= '^' ;
-	
-	/* **************************** */
-	//see rule for a_expr in  http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/src/backend/parser/gram.y?rev=2.625;content-type=text%2Fplain
+	GE 	= '>=' ;
+	LE 	= '<-' ;
 }
 
 
@@ -22,29 +20,13 @@ tokens {
 { 
     public static void main(String[] args) throws Exception {
         SQLANTLRLexer lex = new SQLANTLRLexer(new ANTLRFileStream(args[0]));
-       	
-       	//ParseTreeBuilder builder = new ParseTreeBuilder("stmtblock");
        	CommonTokenStream tokens = new CommonTokenStream(lex);	
-
 	List listTokens = tokens.getTokens();
-	/*for(int i = 0; i < listTokens.size(); i++) {
-		Token tok = (Token) listTokens.get(i);
 	
-		if ( tok.getType() == 20 ){
-			System.out.print("//"+tok.getText()+"\\");
-		}else if ( tok.getChannel() == HIDDEN ) {
-			System.out.print("..."+tok.getText()+"..." );
-		}else {
-			System.out.print(tok.getText() );
-		}
-	}*/
 		
-	SQLANTLRParser parser = new SQLANTLRParser(tokens);//, builder);
-
+	SQLANTLRParser parser = new SQLANTLRParser(tokens);
         try {
-        
             parser.stmtblock();
-            //System.out.println(builder.getTree().toStringTree());
         } catch (RecognitionException e)  {
             e.printStackTrace();
         }
@@ -57,7 +39,18 @@ tokens {
  
  /*------------------------------------------------------------------
  * SELECT
+ *
+ * Currently supported:
+ *	SELECT FROM WHERE GROUP BY HAVING 
+ *	Multiples, semi separated
+ *	Nested Selects
+ * TODO:- orderby and limit are a bit funky, need some work.
+ * 	- values clause doesn't work as expected
+ *	- function names: any id, or a list?
+ *	- improve a_expr
  *------------------------------------------------------------------*/
+ 
+ 
 stmtblock	: stmtmulti 
 		;
 
@@ -72,11 +65,23 @@ select_with_parens	: '(' select_no_parens ')'
 			| '(' select_with_parens ')' 
 			;
 
-select_no_parens 	: SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause opt_limit 
-			;
+select_no_parens: SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause opt_limit 
+		| values_clause
+		;
+			
+values_clause 	: VALUES '(' values_expr_list ')' (',' '(' values_expr_list ')' )*
+		;
+		
+values_expr_list: (values_expr) (',' values_expr)*
+		;
+
+values_expr	: a_expr
+		| DEFAULT	
+		;
 
 /*------------------------------------------------------------------
  * DISTINCT
+ * 	Works under Postgres platform, need to check others.
  *------------------------------------------------------------------*/
 
 opt_distinct	: DISTINCT 
@@ -90,17 +95,20 @@ expr_list       : (a_expr) (',' a_expr)*
 
 /*------------------------------------------------------------------
  * TARGET LIST
+ *	Works under Postgres platform, need to check others.
+ *	TODO: Support aliasing to keywords (in target:), and without as keyword. See alias_clause.
  *------------------------------------------------------------------*/
 
 target_list     : (target) (',' target)*	
 		;
 
 target	: (a_expr ( AS id )? | STAR) 
-	; //TODO Support aliasing to keywords, and without as keyword. See alias_clause.
-
+	;
 
 /*------------------------------------------------------------------
  * INTO
+ *	Works under Postgres platform, need to check others.
+ * 	TODO: support for arrays in postgres '[' a_expr ']' | '[' a_expr ':' a_expr ']'  See indirection:
  *------------------------------------------------------------------*/
 
 into_clause	: INTO opt_temp_table_name 
@@ -118,7 +126,7 @@ opt_temp_table_name	: TEMPORARY opt_table qualified_name
 			;
 			
 opt_table	: TABLE 
-		| /*EMPTY*/ 
+		| //EMPTY 
 		;
 
 qualified_name	: relation_name indirections? 
@@ -137,19 +145,24 @@ indirections	: (indirection) (indirection)*
 
 indirection	: DOT id 
 		| DOT STAR 
-		; //TODO support for arrays in postgres '[' a_expr ']' | '[' a_expr ':' a_expr ']' ;	
+		; 	
 
 columnref	: relation_name indirections?
 		;
 
 /*------------------------------------------------------------------
  * FROM
+ *	Supports : from table, table, table
+ *		   from table join join
+ *		   nested select statements
+ *		   functions
  *------------------------------------------------------------------*/
 
 from_clause	: FROM from_list 
 		| //EMPTY 
 		;
  
+ //Syntactic predicates are used to determine if the list is comma seperated or not. Either one or the other is possible, not both.
 from_list 	: ( table_ref (',' table_ref )+ )=> refs_list
 		| ( table_ref table_join+ )=> table_joins
 		| ( table_ref ) => table_ref 
@@ -191,7 +204,8 @@ join_outer	: OUTER
 join_qual	: USING '(' name_list ')' 
 		| ON a_expr 
 		;
-		
+
+// Syntactic predicates are used to help the parser deal with both "table AS id" and "table id" being valid alias statements
 opt_alias 	: (alias_clause) => alias_clause 
 		| //EMPTY
 		;
@@ -206,8 +220,14 @@ names		: id '(' name_list ')'
 		
 name_list	: (id) (',' id)* 
 		;
+		
+relation_expr	: qualified_name STAR? 
+		| ONLY  qualified_name 
+		| ONLY '(' qualified_name ')'
+		; 
 
-func_expr 	: ( func_name ) => func_name '(' 
+// For now, function names come from a list of possible functions below. This may change if the need arises.
+func_expr 	:  func_name '(' 
 		( ')' 
 		| expr_list ( ')' | ',' VARIADIC a_expr ')')
 		| VARIADIC a_expr ')' 
@@ -217,26 +237,25 @@ func_expr 	: ( func_name ) => func_name '('
 		)
 		; 
 				
-func_name	: id //| AVG | COUNT | FIRST | LAST | MAX | MIN | NVL | SUM | UCASE | LCASE | MID | LEN | ROUND | NOW | FORMAT 
-		;
-				
-relation_expr	: qualified_name STAR? 
-		| ONLY  qualified_name 
-		| ONLY '(' qualified_name ')' 
+func_name	: AVG | COUNT | FIRST | LAST | MAX | MIN | NVL | SUM | UCASE | LCASE | MID | LEN | ROUND | NOW | FORMAT 
 		;
 
 /*------------------------------------------------------------------
  * EXPRESSIONS
+ *	For this application, precedence of operators is ignored; to be able to execute expressions, more work needs to be done.
+ * 	a_expr needs to be expanded greatly. Only binary ops are supported, nothing unary yet. 
  *------------------------------------------------------------------*/
-//For this application, precedence of operators is being ignored; to actually be able to execute expressions, more work needs to be done.
+
 a_expr		: c_expr ( binary_op c_expr)*		
 		; 
 		
-binary_op 	: STAR | PLUS | DIV | MINUS | PCT | GT | LT | EQ | HAT | AND | OR | LIKE | NOT LIKE | ILIKE | NOT ILIKE | SIMILAR TO | NOT SIMILAR TO 
+binary_op 	: STAR | PLUS | DIV | MINUS | PCT | GT | LT | GE | LE | EQ | HAT | AND | OR | LIKE | NOT LIKE | ILIKE | NOT ILIKE | SIMILAR TO | NOT SIMILAR TO 
 		;
 
+// may be needed when a_expr starts getting more complicated; will serve as a place for restricted experssions
 b_expr		: 	;
 
+//select_with_parens needs a syntactic predicate to help the parser distinguish between that and " ( a_expr ) "
 c_expr		: columnref 
 		|'(' a_expr ')'
 		| func_expr 
@@ -247,47 +266,44 @@ c_expr		: columnref
 		| QUOTEDSTRING
 		;
 
-where_clause 	: ( WHERE a_expr | /*EMPTY */ );
+where_clause 	: WHERE a_expr 
+		| //EMPTY  
+		;
 
-having_clause 	: ( HAVING  | /*EMPTY */ );	
+groupby_clause  : GROUP BY expr_list 
+		| //EMPTY  
+		;
+	
+having_clause 	: HAVING a_expr 
+		| //EMPTY  
+		;
 
-groupby_clause  : ( GROUP BY  | /*EMPTY */ ) ;	
+orderby_clause  : ORDER BY (DESC|ASC)? 
+		| //EMPTY 
+		;
 
-orderby_clause  : ( ORDER BY  (DESC|ASC| ) | /*EMPTY*/ ) ;
-
-opt_limit  	: ( limit | /*EMPTY*/ ) ;	
+opt_limit  	: limit 
+		| //EMPTY
+		;	
 
 limit 		: LIMIT NUMBER OFFSET NUMBER 
 		| OFFSET NUMBER LIMIT NUMBER
 		| LIMIT NUMBER 
 		| OFFSET NUMBER
-		| LIMIT NUMBER ',' NUMBER  ;
+		| LIMIT NUMBER ',' NUMBER  
+		;
 			
-id 		: ID ; //TODO support quoted ids| QUOTEID;
+id 		: ID 
+		; 
 
-//ids 		: ( (QUOTEID | id | aliasid) ( alias_clause | ) ( ',' (QUOTEID | id | aliasid) ( alias_clause | )  )*  ) ;
-
-//and 		: AND comp ;
-
-//comp 		: expr (EQUALS | GT | LT) expr ;
-
-/* **************************** */
-//need a general-purpose a_expr statement, like in http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/src/backend/parser/gram.y?rev=2.625;content-type=text%2Fplain
-
-//expr		: term ( ( PLUS | MINUS )  term )* ;
-
-//term		: ( factor | aliasid | ID | QUOTEDSTRING ) ( ( STAR | DIV ) ( factor | aliasid | ID | QUOTEDSTRING ) )* ;
-
-factor		: NUMBER ;
-
-//ident 		: id;
-
-//keyword         : ( ALL | AND | ARRAY | AS | ASC | AVG | BY | COUNT | CROSS | DESC | DISTINCT | EQUALS | EXISTS | FIRST | FORMAT | FROM | FULL | GLOBAL | GROUP | HAVING | INNER | INTO | JOIN | LAST | LCASE | LEFT | LEN | LIMIT | LOCAL | MAX | MID | MIN | NATURAL | NEW | NOW | NUMBER | OFFSET | OLD | ON | ONLY | ORDER | OUTER | RIGHT | ROUND | SELECT | SUM | TABLE | TEMP | TEMPORARY | UCASE | USING | VARIADIC | WHERE ) ;
+factor		: NUMBER 
+		;
 
 /*------------------------------------------------------------------
  * LEXER RULES
+ * 	Anything that could appear as a keyword is strung out as a set comparison. This allows 
+ *	select, SELECT and SeLeCT to all be parsed as the same keyword.
  *------------------------------------------------------------------*/
-
 ALL 	: ('A'|'a')('L'|'l')('L'|'l');
 AND 	: ('A'|'a')('N'|'n')('D'|'d');
 ARRAY 	: ('A'|'a')('R'|'r')('R'|'r')('A'|'a')('Y'|'y');
@@ -297,6 +313,7 @@ AVG     : ('A'|'a')('V'|'v')('G'|'g') ;
 BY      : ('B'|'b')('Y'|'y');
 COUNT   : ('C'|'c')('O'|'o')('U'|'u')('N'|'n')('T'|'t') ;
 CROSS   : ('C'|'c')('R'|'r')('O'|'o')('S'|'s')('S'|'s') ;
+DEFAULT : ('D'|'d')('E'|'e')('F'|'f')('A'|'a')('U'|'u')('L'|'l')('T'|'t') ;
 DESC 	: ('D'|'d')('E'|'e')('S'|'s')('C'|'c');
 DISTINCT: ('D'|'d')('I'|'i')('S'|'s')('T'|'t')('I'|'i')('N'|'n')('C'|'c')('T'|'t') ;
 EXISTS	: ('E'|'e')('X'|'x')('I'|'i')('S'|'s')('T'|'t')('S'|'s');
@@ -344,29 +361,21 @@ TEMPORARY	: ('T'|'t')('E'|'e')('M'|'m')('P'|'p')('O'|'o')('R'|'r')('A'|'a')('R'|
 TO      : ('T'|'t')('O'|'o') ;
 UCASE   : ('U'|'u')('C'|'c')('A'|'a')('S'|'s')('E'|'e') ;
 USING   : ('U'|'u')('S'|'s')('I'|'i')('N'|'n')('G'|'g') ;
+VALUES  : ('V'|'v')('A'|'a')('L'|'l')('U'|'u')('E'|'e')('S'|'s') ;
 VARIADIC: ('V'|'v')('A'|'a')('R'|'r')('I'|'i')('A'|'a')('D'|'d')('I'|'i')('C'|'c');
 WHERE 	: ('W'|'w')('H'|'h')('E'|'e')('R'|'r')('E'|'e');
 
-QUOTEDSTRING : Q ( options{greedy=false;} : ( ~Q ) )* Q ;
-
-QUOTEID : ('['ID']'|'"'ID'"') ;
-
-NUMBER	: (DIGIT)+ ;
-
-ID      : LETTER ( LETTER | NUMBER | '_')* 
-	;
-	
+//basic id, number, quotation and whitspace rules
 WHITESPACE : ( '\t' | ' ' | '\r' | '\n'| '\u000C' )+ 	{ $channel = HIDDEN; } ;
+QUOTEDSTRING :  ('\'' | '$$') ( options{greedy=false;} : ( ~('\'' | '$$') ) )*  ('\'' | '$$') ;
+QUOTEID : ('['ID']'|'"'ID'"') ;
+NUMBER	: (DIGIT)+ ;
+ID      : LETTER ( LETTER | NUMBER | '_' )* ;	
 
-fragment Q 	: '\'' | '$$'	;
-
+//quote and character fragments
 fragment DIGIT	: '0'..'9' ;
-
 fragment LETTER : ('a'..'z' | 'A'..'Z') ;
 
-//HANDLES COMMENTS 
-SL_COMMENT	: '--' (~('\n'|'\r'))* ('\n'| EOF |'\r'('\n')?)  { $channel = HIDDEN; }  ;
-
-ML_COMMENT      : '/*' (options {greedy=false;} : .)* '*/' { $channel = HIDDEN; }    ;
-    
-
+//comments
+SL_COMMENT	: '--' (~('\n'|'\r'))* ('\n'| EOF |'\r'('\n')?)  { $channel = HIDDEN; } ;
+ML_COMMENT      : '/*' (options {greedy=false;} : .)* '*/' { $channel = HIDDEN; } ; 
