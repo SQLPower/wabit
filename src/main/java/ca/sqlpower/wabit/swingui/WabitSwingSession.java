@@ -51,6 +51,12 @@ import javax.swing.border.EmptyBorder;
 
 import org.fife.ui.rtextarea.RTextScrollPane;
 
+import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.architect.SQLDatabase;
+import ca.sqlpower.architect.SQLObjectRoot;
+import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
+import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
@@ -92,8 +98,9 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	
 	/**
 	 *  Builds the GUI
+	 * @throws ArchitectException 
 	 */
-    public void buildUI() {
+    public void buildUI() throws ArchitectException {
         frame = new JFrame("Power*Wabit");
         
         // this will be the frame's content pane
@@ -140,7 +147,12 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
     	
     	// Demo Tree 
-    	projectTree = new JTree();
+    	SQLObjectRoot rootNode = new SQLObjectRoot();
+        for (SPDataSource ds : sessionContext.getDataSources().getConnections()) {
+            rootNode.addChild(new SQLDatabase(ds));
+        }
+    	projectTree = new JTree(new DBTreeModel(rootNode));
+    	projectTree.setCellRenderer(new DBTreeCellRenderer());
     	DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
 			

@@ -46,6 +46,20 @@
       <scope>system</scope>
       <systemPath>${basedir}/lib/piccolox.jar</systemPath>
     </dependency>
+    <dependency>
+      <groupId>ca.sqlpower.architect</groupId>
+      <artifactId>architect-core</artifactId>
+      <version>0.9.12alpha</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/architect_lib.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>ca.sqlpower.architect.swingui.dbtree</groupId>
+      <artifactId>architect-dbtree</artifactId>
+      <version>0.9.12alpha</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/architect_dbtree_lib.jar</systemPath>
+    </dependency>
 	<dependency>
       <groupId>org.fife</groupId>
       <artifactId>rsyntaxtextarea</artifactId>
