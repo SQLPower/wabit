@@ -15,6 +15,13 @@ tokens {
 	LE 	= '<-' ;
 }
 
+@lexer::header {
+package ca.sqlpower.wabit.parser;
+}
+
+@parser::header {
+package ca.sqlpower.wabit.parser;
+}
 
 @members 
 { 

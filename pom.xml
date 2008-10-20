@@ -17,6 +17,21 @@
 				<target>1.5</target>
 			</configuration>
 		</plugin>
+		<plugin>
+        	<groupId>org.codehaus.mojo</groupId>
+	        <artifactId>antlr3-maven-plugin</artifactId>
+        	<version>1.0</version>
+        	<configuration>
+        		<outputDirectory>src/main/java</outputDirectory>
+        	</configuration>
+        	<executions>
+	          <execution>
+	            <goals>
+	              <goal>antlr</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+      	</plugin>
 	  </plugins>
   </build>
   <dependencies>
@@ -73,6 +88,11 @@
 		<version>1.2.1</version>
 		<scope>compile</scope>
 	</dependency>
+	<dependency>
+    	<groupId>org.antlr</groupId>
+    	<artifactId>antlr-runtime</artifactId>
+    	<version>3.0.1</version>
+	</dependency> 
   </dependencies>
   
   	<repositories>
