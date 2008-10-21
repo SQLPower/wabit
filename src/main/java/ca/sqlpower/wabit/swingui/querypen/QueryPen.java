@@ -38,6 +38,8 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLObject;
@@ -59,6 +61,8 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
  * The pen where users can graphically create sql queries.
  */
 public class QueryPen implements MouseStatePane {
+	
+	private static Logger logger = Logger.getLogger(QueryPen.class);
 	
 	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
 	
@@ -127,7 +131,7 @@ public class QueryPen implements MouseStatePane {
 					dtde.acceptDrop(dtde.getDropAction());
 					dtde.dropComplete(true);
 				} else {
-					System.out.println("dragged " + draggedObject.toString());
+					logger.debug("dragged " + draggedObject.toString());
 				}
 			}
 			

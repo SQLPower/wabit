@@ -24,6 +24,8 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.JEditorPane;
 
+import org.apache.log4j.Logger;
+
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
@@ -34,6 +36,8 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
  * This object draws a join line between two columns in the GUI query pen.
  */
 public class JoinLine extends PNode {
+	
+	private static Logger logger = Logger.getLogger(JoinLine.class);
 
 	/**
 	 * The border width of the ellipse that surrounds the join expression.
@@ -145,6 +149,8 @@ public class JoinLine extends PNode {
 		double leftX = leftBounds.getX() + leftBounds.getWidth();
 		double midX = leftX + (rightBounds.getX() - leftX)/2;
 		double midY = Math.abs(leftBounds.getY() - rightBounds.getY()) / 2 + Math.min(leftBounds.getY(), rightBounds.getY());
+		
+		logger.debug("Left x position is " + leftX + " and mid x position is " + midX);
 		
 		// For two Bezier curves to be connected the last point in the first
 		// curve must equal the first point in the second curve.

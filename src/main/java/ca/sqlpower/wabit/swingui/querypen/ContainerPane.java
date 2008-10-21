@@ -27,6 +27,8 @@ import java.util.List;
 import javax.swing.JEditorPane;
 import javax.swing.border.LineBorder;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.architect.SQLObject;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
@@ -43,6 +45,8 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
  * @param <C> The type of object this container is displaying.
  */
 public class ContainerPane<C extends SQLObject> extends PNode {
+	
+	private static Logger logger = Logger.getLogger(ContainerPane.class);
 
 	/**
 	 * The size of the border to place around the text in this container pane
@@ -84,7 +88,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		this.mouseStates = pen;
 		this.canvas = canvas;
 		containedItems = new ArrayList<SQLColumnPNode>();
-		System.out.println("Model name is " + model.getName());
+		logger.debug("Model name is " + model.getName());
 		final PStyledText modelNameText = new PStyledText();
 		JEditorPane nameEditor = new JEditorPane();
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
