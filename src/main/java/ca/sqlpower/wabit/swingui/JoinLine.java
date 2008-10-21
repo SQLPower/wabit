@@ -24,6 +24,7 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.JEditorPane;
 
+import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -64,7 +65,7 @@ public class JoinLine extends PNode {
 	/**
 	 * The text of the type of join the two columns are being joined by.
 	 */
-	private final PStyledText joinText;
+	private final PStyledText equalityText;
 	
 	/**
 	 * A circle to surround the join text.
@@ -86,7 +87,7 @@ public class JoinLine extends PNode {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(PNode leftNode, PNode rightNode) {
+	public JoinLine(MouseStatePane mouseState, PCanvas canvas, SQLColumnPNode leftNode, SQLColumnPNode rightNode) {
 		super();
 		this.leftNode = leftNode;
 		this.rightNode = rightNode;
@@ -111,11 +112,11 @@ public class JoinLine extends PNode {
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
 		
-		joinText = new PStyledText();
+		equalityText = new PStyledText();
 		JEditorPane editorPane = new JEditorPane();
 		editorPane.setText("=");
-		joinText.setDocument(editorPane.getDocument());
-		addChild(joinText);
+		equalityText.setDocument(editorPane.getDocument());
+		addChild(equalityText);
 		
 		updateLine();		
 	}
@@ -124,8 +125,8 @@ public class JoinLine extends PNode {
 	 * Updates the line end points and control points. The text area is also moved.
 	 */
 	private void updateLine() {
-		PBounds leftBounds = this.leftNode.getGlobalBounds();
-		PBounds rightBounds = this.rightNode.getGlobalBounds();
+		PBounds leftBounds = this.leftNode.getGlobalFullBounds();
+		PBounds rightBounds = this.rightNode.getGlobalFullBounds();
 		PBounds leftContainerBounds = leftContainerPane.getGlobalBounds();
 		PBounds rightContainerBounds = rightContainerPane.getGlobalBounds();
 		if (leftBounds.getCenterX() > rightBounds.getCenterX()) {
@@ -137,6 +138,7 @@ public class JoinLine extends PNode {
 			leftContainerBounds = rightContainerBounds;
 			rightContainerBounds = tempBounds;
 		}
+		
 		
 		leftPath.reset();
 		rightPath.reset();
@@ -154,14 +156,14 @@ public class JoinLine extends PNode {
 		rightPath.moveTo((float)midX, (float)midY);
 		rightPath.curveTo((float)midX, (float)(rightBounds.getY() + Math.abs(leftBounds.getY() - rightBounds.getY())/6), (float)(midX + (rightBounds.getX() - leftX)/6), (float)rightBounds.getY(), (float)(rightContainerBounds.getX()), (float)(rightBounds.getY() + rightBounds.getHeight()/2));
 		
-		double textMidX = midX - joinText.getWidth()/2;
-		double textMidY = midY - joinText.getHeight()/2;
-		joinText.setX(textMidX);
-		joinText.setY(textMidY);
+		double textMidX = midX - equalityText.getWidth()/2;
+		double textMidY = midY - equalityText.getHeight()/2;
+		equalityText.setX(textMidX);
+		equalityText.setY(textMidY);
 		
 		textCircle.setPathToEllipse((float)(textMidX - BORDER_WIDTH),
 				(float)(textMidY - BORDER_WIDTH),
-				(float)joinText.getWidth() + 2 * BORDER_WIDTH,
-				(float)joinText.getHeight() + 2 * BORDER_WIDTH);
+				(float)equalityText.getWidth() + 2 * BORDER_WIDTH,
+				(float)equalityText.getHeight() + 2 * BORDER_WIDTH);
 	}
 }

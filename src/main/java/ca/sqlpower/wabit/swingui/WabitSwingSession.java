@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
@@ -48,14 +49,17 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
+import javax.swing.tree.TreePath;
 
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLDatabase;
+import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
+import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -65,7 +69,6 @@ import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.swingui.event.DnDTransferable;
 
 
 /**
@@ -146,18 +149,37 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	rightViewPane.add(resultTabPane, JSplitPane.BOTTOM);  	
     	
     	
-    	// Demo Tree 
-    	SQLObjectRoot rootNode = new SQLObjectRoot();
+    	rootNode = new SQLObjectRoot();
         for (SPDataSource ds : sessionContext.getDataSources().getConnections()) {
             rootNode.addChild(new SQLDatabase(ds));
         }
-    	projectTree = new JTree(new DBTreeModel(rootNode));
+    	final DBTreeModel treeModel = new DBTreeModel(rootNode);
+		projectTree = new JTree(treeModel);
     	projectTree.setCellRenderer(new DBTreeCellRenderer());
     	DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
 			
 			public void dragGestureRecognized(DragGestureEvent dge) {
-				dge.getDragSource().startDrag(dge, null, new DnDTransferable(projectTree.getSelectionPath().getLastPathComponent()), new DragSourceListener() {
+				ArrayList<int[]> list = new ArrayList<int[]>();
+				for (TreePath path : projectTree.getSelectionPaths()) {
+					Object selectedNode = path.getLastPathComponent();
+					if (!(selectedNode instanceof SQLObject)) {
+						throw new IllegalStateException("DBTrees are not allowed to contain non SQLObjects. This tree contains a " + selectedNode.getClass());
+					}
+					int[] dndPathToNode = DnDTreePathTransferable.getDnDPathToNode((SQLObject)selectedNode, rootNode);
+					list.add(dndPathToNode);
+				}
+					
+				Object firstSelectedObject = projectTree.getSelectionPath().getLastPathComponent();
+				String name;
+				if (firstSelectedObject instanceof SQLObject) {
+					name = ((SQLObject) firstSelectedObject).getName();
+				} else {
+					name = firstSelectedObject.toString();
+				}
+				
+				Transferable dndTransferable = new DnDTreePathTransferable(list, name);
+				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceListener() {
 					public void dropActionChanged(DragSourceDragEvent dsde) {
 					}
 					public void dragOver(DragSourceDragEvent dsde) {
@@ -221,6 +243,8 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 
 	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
+
+	private SQLObjectRoot rootNode;
 	
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.add(l);
@@ -260,4 +284,8 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
         WabitSwingSession wss = new WabitSwingSession(context);
         wss.buildUI();
     }
+
+	public SQLObjectRoot getRootNode() {
+		return rootNode;
+	}
 }

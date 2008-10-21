@@ -19,8 +19,6 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -29,13 +27,12 @@ import java.util.List;
 import javax.swing.JEditorPane;
 import javax.swing.border.LineBorder;
 
-import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
+import ca.sqlpower.architect.SQLObject;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
-import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
@@ -45,7 +42,7 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
  * 
  * @param <C> The type of object this container is displaying.
  */
-public class ContainerPane<C extends Object> extends PNode {
+public class ContainerPane<C extends SQLObject> extends PNode {
 
 	/**
 	 * The size of the border to place around the text in this container pane
@@ -76,7 +73,7 @@ public class ContainerPane<C extends Object> extends PNode {
 	/**
 	 * All of the {@link PStyledText} objects that represent an object in the model.
 	 */
-	private List<PStyledText> containedItems;
+	private List<SQLColumnPNode> containedItems;
 	
 	public ContainerPane(MouseStatePane pen, PCanvas canvas) {
 		this(pen, canvas, new ContainerModel<C>());
@@ -86,15 +83,19 @@ public class ContainerPane<C extends Object> extends PNode {
 		model = newModel;
 		this.mouseStates = pen;
 		this.canvas = canvas;
-		containedItems = new ArrayList<PStyledText>();
+		containedItems = new ArrayList<SQLColumnPNode>();
 		System.out.println("Model name is " + model.getName());
-		final PStyledText modelNameText = createTextLine(model.getName());
+		final PStyledText modelNameText = new PStyledText();
+		JEditorPane nameEditor = new JEditorPane();
+		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
+		nameEditor.setText(model.getName());
+		modelNameText.setDocument(nameEditor.getDocument());
 		addChild(modelNameText);
 		
 		int yLoc = 1;
 		for (int i = 0; i < model.getContainerCount(); i++) {
 			for (int j = 0; j < model.getContainerSize(i); j++) {
-				final PStyledText newText = createTextLine(model.getContents(i, j).toString());
+				final SQLColumnPNode newText = createTextLine(model.getContents(i, j));
 				newText.translate(0, modelNameText.getHeight() * yLoc);
 				addChild(newText);
 				containedItems.add(newText);
@@ -113,26 +114,12 @@ public class ContainerPane<C extends Object> extends PNode {
 	/**
 	 * Creates a {@link PStyledText} object that is editable by clicking on it.
 	 */
-	private PStyledText createTextLine(String text) {
-		final PStyledText modelNameText = new PStyledText();
-		JEditorPane nameEditor = new JEditorPane();
-		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
-		nameEditor.setText(text);
-		modelNameText.setDocument(nameEditor.getDocument());
-		final PStyledTextEventHandler styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, nameEditor);
-		addInputEventListener(styledTextEventHandler);
-		nameEditor.addFocusListener(new FocusListener() {
-			public void focusLost(FocusEvent e) {
-				styledTextEventHandler.stopEditing();
-			}
-			public void focusGained(FocusEvent e) {
-				//no-op
-			}
-		});
-		modelNameText.addPropertyChangeListener(new PropertyChangeListener() {
+	private SQLColumnPNode createTextLine(SQLObject sqlColumn) {
+		final SQLColumnPNode modelNameText = new SQLColumnPNode(mouseStates, canvas, sqlColumn);
+		modelNameText.getColumnText().addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (outerRect != null) {
-					outerRect.setWidth(Math.max(modelNameText.getWidth() + 2 * BORDER_SIZE, outerRect.getWidth()));
+					outerRect.setWidth(Math.max(modelNameText.getColumnText().getWidth() + 2 * BORDER_SIZE, outerRect.getWidth()));
 					setBounds(outerRect.getBounds());
 				}
 			}
@@ -155,7 +142,12 @@ public class ContainerPane<C extends Object> extends PNode {
 			
 			// this code won't work with internal cameras, because it doesn't pop
 			// the cameras view transform.
-			while (picked != this && !containedItems.contains(picked)) {
+			for (PNode node : containedItems) {
+				if (node.getAllNodes().contains(picked)) {
+					return true;
+				}
+			}
+			while (picked != this) {
 				pickPath.popTransform(picked.getTransformReference(false));
 				pickPath.popNode(picked);
 				picked = pickPath.getPickedNode();

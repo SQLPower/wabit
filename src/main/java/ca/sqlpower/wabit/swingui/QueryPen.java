@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
@@ -32,12 +31,18 @@ import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.architect.SQLColumn;
+import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.architect.SQLTable;
+import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 
 import com.jgoodies.forms.builder.ButtonStackBuilder;
@@ -69,40 +74,62 @@ public class QueryPen implements MouseStatePane {
 		}
 
 		public void drop(DropTargetDropEvent dtde) {
-			System.out.println("Drop fired");
-			
-			Object draggedObject;
-			DataFlavor flavour = null;
-			for (DataFlavor f: dtde.getCurrentDataFlavors()) {
-				if (f != null) {
-					flavour = f;
-					break;
-				}
+			if (!dtde.isLocalTransfer()) {
+				return;
 			}
+			
+			if (!dtde.isDataFlavorSupported(DnDTreePathTransferable.TREEPATH_ARRAYLIST_FLAVOR)) {
+				return;
+			}
+
+			Object draggedObject;
 			try {
-				draggedObject = dtde.getTransferable().getTransferData(flavour);
+				draggedObject = dtde.getTransferable().getTransferData(DnDTreePathTransferable.TREEPATH_ARRAYLIST_FLAVOR);
 			} catch (UnsupportedFlavorException e) {
 				throw new RuntimeException(e);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 			
-			ContainerModel<String> model = new ContainerModel<String>();
-			model.setName(draggedObject.toString());
-			model.addContainer();
-			for (int i = 0; i < session.getTree().getModel().getChildCount(draggedObject); i++) {
-				model.addItem(0, session.getTree().getModel().getChild(draggedObject, i).toString());
+			if (draggedObject == null || !(draggedObject instanceof ArrayList)) {
+				return;
 			}
 			
-			ContainerPane<String> pane = new ContainerPane<String>(mouseState, canvas, model);
-			Point location = dtde.getLocation();
-			Point2D movedLoc = canvas.getCamera().localToView(location);
-			pane.translate(movedLoc.getX(), movedLoc.getY());
-			topLayer.addChild(pane);
+			for (int[] path : (ArrayList<int[]>)draggedObject) {
+				SQLObject draggedSQLObject;
+				try {
+					draggedSQLObject = DnDTreePathTransferable.getNodeForDnDPath(session.getRootNode(), path);
+				} catch (ArchitectException e1) {
+					throw new RuntimeException(e1);
+				}
+
+				if (draggedSQLObject instanceof SQLTable) {
+					SQLTable table = (SQLTable) draggedSQLObject;
+					ContainerModel<SQLObject> model = new ContainerModel<SQLObject>();
+					model.setName(table.getName());
+					model.addContainer();
+					try {
+						for (SQLColumn column : table.getColumns()) {
+							model.addItem(0, column);
+						}
+					} catch (ArchitectException e) {
+						throw new RuntimeException(e);
+					}
+
+					ContainerPane<SQLObject> pane = new ContainerPane<SQLObject>(mouseState, canvas, model);
+					Point location = dtde.getLocation();
+					Point2D movedLoc = canvas.getCamera().localToView(location);
+					pane.translate(movedLoc.getX(), movedLoc.getY());
+					topLayer.addChild(pane);
+
+					canvas.repaint();
+					dtde.acceptDrop(dtde.getDropAction());
+					dtde.dropComplete(true);
+				} else {
+					System.out.println("dragged " + draggedObject.toString());
+				}
+			}
 			
-			canvas.repaint();
-			dtde.acceptDrop(dtde.getDropAction());
-			dtde.dropComplete(true);
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
@@ -200,7 +227,7 @@ public class QueryPen implements MouseStatePane {
         		setMouseState(MouseStates.CREATE_JOIN);
         	}
         });
-        canvas.addInputEventListener(new CreateJoinEventHandler(this, joinLayer));
+        canvas.addInputEventListener(new CreateJoinEventHandler(this, joinLayer, canvas));
         
         new DropTarget(canvas, new QueryPenDropTargetListener(this));
         PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(topLayer, topLayer);

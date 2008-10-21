@@ -21,11 +21,13 @@ package ca.sqlpower.wabit.swingui.event;
 
 import ca.sqlpower.wabit.swingui.JoinLine;
 import ca.sqlpower.wabit.swingui.MouseStatePane;
+import ca.sqlpower.wabit.swingui.SQLColumnPNode;
 import ca.sqlpower.wabit.swingui.MouseStatePane.MouseStates;
+import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
  * Creates a join between two columns in two different tables.
@@ -33,25 +35,31 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
 public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
 	private MouseStatePane mouseStatePane;
-	private PStyledText leftText;
-	private PStyledText rightText;
+	private SQLColumnPNode leftText;
+	private SQLColumnPNode rightText;
 	private PLayer joinLayer;
+	private PCanvas canvas;
 
-	public CreateJoinEventHandler(MouseStatePane mouseStatePane, PLayer joinLayer) {
+	public CreateJoinEventHandler(MouseStatePane mouseStatePane, PLayer joinLayer, PCanvas canvas) {
 		this.mouseStatePane = mouseStatePane;
 		this.joinLayer = joinLayer;
+		this.canvas = canvas;
 	}
 	
 	@Override
 	public void mousePressed(PInputEvent event) {
 		super.mousePressed(event);
 		if (mouseStatePane.getMouseState().equals(MouseStates.CREATE_JOIN)) {
-			if (event.getPickedNode() instanceof PStyledText) {
+			PNode pick = event.getPickedNode();
+			while (pick != null && !(pick instanceof SQLColumnPNode)) {
+				pick = pick.getParent();
+			}
+			if (pick != null) {
 				if (leftText == null) {
-					leftText = (PStyledText)event.getPickedNode();
+					leftText = (SQLColumnPNode)pick;
 				} else if (rightText == null) {
-					rightText = (PStyledText)event.getPickedNode();
-					joinLayer.addChild(new JoinLine(leftText, rightText));
+					rightText = (SQLColumnPNode)pick;
+					joinLayer.addChild(new JoinLine(mouseStatePane, canvas, leftText, rightText));
 					leftText = null;
 					rightText = null;
 					mouseStatePane.setMouseState(MouseStates.READY);
