@@ -32,6 +32,7 @@ import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -42,7 +43,9 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
+import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
@@ -120,6 +123,44 @@ public class QueryPen implements MouseState {
 					Point2D movedLoc = canvas.getCamera().localToView(location);
 					pane.translate(movedLoc.getX(), movedLoc.getY());
 					topLayer.addChild(pane);
+					
+					try {
+						for (SQLRelationship relation : table.getExportedKeys()) {
+							List<ContainerPane<?>> fkContainers = getContainerPane(relation.getFkTable());
+							for (ContainerPane<?> fkContainer : fkContainers) {
+								for (ColumnMapping mapping : relation.getMappings()) {
+									logger.debug("PK container has model name " + pane.getModel().getName() + " looking for col named " + mapping.getPkColumn().getName());
+									ItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
+									logger.debug("PK item node is " + pkItemNode);
+									logger.debug("fK container has model name " + fkContainer.getModel().getName() + " looking for col named " + mapping.getFkColumn().getName());
+									ItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
+									logger.debug("FK item node is " + fkItemNode);
+									if (pkItemNode != null && fkItemNode != null) {
+										joinLayer.addChild(new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode));
+									} else {
+										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
+									}
+								}
+							}
+						}
+						
+						for (SQLRelationship relation : table.getImportedKeys()) {
+							List<ContainerPane<?>> pkContainers = getContainerPane(relation.getPkTable());
+							for (ContainerPane<?> pkContainer : pkContainers) {
+								for (ColumnMapping mapping : relation.getMappings()) {
+									ItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
+									ItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
+									if (pkItemNode != null && fkItemNode != null) {
+										joinLayer.addChild(new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode));
+									} else {
+										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
+									}
+								}
+							}
+						}
+					} catch (ArchitectException e) {
+						throw new RuntimeException(e);
+					}
 
 					canvas.repaint();
 					dtde.acceptDrop(dtde.getDropAction());
@@ -261,5 +302,20 @@ public class QueryPen implements MouseState {
 
 	public synchronized void setMouseState(MouseStates mouseState) {
 		this.mouseState = mouseState;
+	}
+
+	/**
+	 * Returns a list of container panes, where each one wraps the same
+	 * SQLTable, in the QueryPen. If no container panes wraps the SQLTable in
+	 * the QueryPen then this will return an empty list.
+	 */
+	private List<ContainerPane<?>> getContainerPane(SQLTable table) {
+		List<ContainerPane<?>> containerList = new ArrayList<ContainerPane<?>>();
+		for (Object node : topLayer.getAllNodes()) {
+			if (node instanceof ContainerPane && ((ContainerPane<?>)node).getModel().getContainedObject() == table) {
+				containerList.add((ContainerPane<?>)node);
+			}
+		}
+		return containerList;
 	}
 }

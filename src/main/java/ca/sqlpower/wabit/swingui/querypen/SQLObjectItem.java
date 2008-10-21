@@ -38,6 +38,10 @@ public class SQLObjectItem implements Item {
 		return sqlObject.getName();
 	}
 	
+	public Object getItem() {
+		return sqlObject;
+	}
+	
 	public String getAlias() {
 		return alias;
 	}

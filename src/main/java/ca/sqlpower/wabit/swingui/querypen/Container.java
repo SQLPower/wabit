@@ -37,4 +37,16 @@ public interface Container {
 	 */
 	String getName();
 
+	/**
+	 * Gets the Item wrapper that contains the given item. Returns null if the
+	 * object is not contained in this container.
+	 */
+	Item getItem(Object item);
+	
+	/**
+	 * Gets the object this container is modeling. This object will be the object
+	 * that contains the children wrapped by the items and possibly contains more.
+	 */
+	Object getContainedObject();
+
 }

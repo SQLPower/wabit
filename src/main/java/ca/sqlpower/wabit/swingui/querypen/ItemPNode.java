@@ -85,7 +85,7 @@ public class ItemPNode extends PNode {
 		addChild(columnText);
 	}
 
-	public Item getSqlColumn() {
+	public Item getItem() {
 		return item;
 	}
 

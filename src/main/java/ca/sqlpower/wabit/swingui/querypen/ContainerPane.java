@@ -143,6 +143,25 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	public Container getModel() {
 		return model;
 	}
+
+	/**
+	 * Returns the ItemPNode that represents the Item that contains the object
+	 * passed into this method. If there is no ItemPNode in this container that
+	 * represents the given item null is returned.
+	 */
+	public ItemPNode getItemPNode(Object item) {
+		Item itemInModel = model.getItem(item);
+		if (itemInModel == null) {
+			logger.debug("Item " + item  + " not in model.");
+			return null;
+		}
+		for (ItemPNode itemNode : containedItems) {
+			if (itemInModel.getItem() == itemNode.getItem().getItem()) {
+				return itemNode;
+			}
+		}
+		return null;
+	}
 	
 	@Override
 	/*

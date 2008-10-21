@@ -63,4 +63,17 @@ public class TableContainer implements Container {
 		this.alias = alias;
 	}
 
+	public Item getItem(Object item) {
+		for (Item i : section.getItems()) {
+			if (i.getItem() == item) {
+				return i;
+			}
+		}
+		return null;
+	}
+
+	public Object getContainedObject() {
+		return table;
+	}
+
 }

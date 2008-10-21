@@ -25,4 +25,6 @@ package ca.sqlpower.wabit.swingui.querypen;
 public interface Item {
 
 	String getName();
+	
+	Object getItem();
 }
