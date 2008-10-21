@@ -1,4 +1,4 @@
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;

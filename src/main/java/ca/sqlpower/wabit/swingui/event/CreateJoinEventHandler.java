@@ -19,10 +19,10 @@
 
 package ca.sqlpower.wabit.swingui.event;
 
-import ca.sqlpower.wabit.swingui.JoinLine;
-import ca.sqlpower.wabit.swingui.MouseStatePane;
-import ca.sqlpower.wabit.swingui.SQLColumnPNode;
-import ca.sqlpower.wabit.swingui.MouseStatePane.MouseStates;
+import ca.sqlpower.wabit.swingui.querypen.JoinLine;
+import ca.sqlpower.wabit.swingui.querypen.MouseStatePane;
+import ca.sqlpower.wabit.swingui.querypen.SQLColumnPNode;
+import ca.sqlpower.wabit.swingui.querypen.MouseStatePane.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;

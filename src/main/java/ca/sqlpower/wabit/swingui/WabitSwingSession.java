@@ -69,6 +69,7 @@ import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 
 /**

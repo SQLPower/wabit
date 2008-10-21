@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -43,6 +43,7 @@ import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 
 import com.jgoodies.forms.builder.ButtonStackBuilder;

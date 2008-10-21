@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.swingui.querypen;
 
 /**
  * Classes that contain a mouse state should implement this interface.
