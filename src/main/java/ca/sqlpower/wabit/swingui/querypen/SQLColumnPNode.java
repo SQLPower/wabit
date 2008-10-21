@@ -18,9 +18,6 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
  */
 public class SQLColumnPNode extends PNode {
 
-	/**
-	 * This will become a SQLColumn later when it is refactored.
-	 */
 	private final SQLObject sqlColumn;
 	
 	/**
@@ -29,23 +26,56 @@ public class SQLColumnPNode extends PNode {
 	 */
 	private final PStyledText columnText;
 	
+	/**
+	 * The user defined alias for this sql column.
+	 */
+	private String aliasText;
+
+	/**
+	 * The editor pane for editing the column alias.
+	 */
+	private final JEditorPane nameEditor;
+
+	/**
+	 * A focus listener to properly display the alias and column name.
+	 * This focus listener for the nameEditor will show only the alias
+	 * when the alias is being edited and will show the alias and column
+	 * name otherwise.
+	 */
+	private FocusListener editorFocusListener = new FocusListener() {
+		public void focusLost(FocusEvent e) {
+			aliasText = nameEditor.getText();
+			if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(sqlColumn.getName())) {
+				nameEditor.setText(aliasText + " (" + sqlColumn.getName() + ")");
+			} else {
+				nameEditor.setText(sqlColumn.getName());
+			}
+			styledTextEventHandler.stopEditing();
+		}
+		public void focusGained(FocusEvent e) {
+			if (aliasText != null && aliasText.length() > 0) {
+				nameEditor.setText(aliasText);
+			}
+		}
+	};
+
+	/**
+	 * The text handler for the PStyledTextArea. This will allow click
+	 * to edit on the text.
+	 */
+	private PStyledTextEventHandler styledTextEventHandler;
+	
 	public SQLColumnPNode(MouseStatePane mouseStates, PCanvas canvas, SQLObject sqlColumn) {
 		this.sqlColumn = sqlColumn;
+		aliasText = "";
 		columnText = new PStyledText();
-		JEditorPane nameEditor = new JEditorPane();
+		nameEditor = new JEditorPane();
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
 		nameEditor.setText(sqlColumn.getName());
 		columnText.setDocument(nameEditor.getDocument());
-		final PStyledTextEventHandler styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, nameEditor);
+		styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, nameEditor);
 		columnText.addInputEventListener(styledTextEventHandler);
-		nameEditor.addFocusListener(new FocusListener() {
-			public void focusLost(FocusEvent e) {
-				styledTextEventHandler.stopEditing();
-			}
-			public void focusGained(FocusEvent e) {
-				//no-op
-			}
-		});
+		nameEditor.addFocusListener(editorFocusListener);
 		addChild(columnText);
 	}
 
