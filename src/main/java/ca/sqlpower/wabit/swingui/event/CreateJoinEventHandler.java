@@ -21,7 +21,7 @@ package ca.sqlpower.wabit.swingui.event;
 
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.MouseState;
-import ca.sqlpower.wabit.swingui.querypen.SQLColumnPNode;
+import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
@@ -35,8 +35,8 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
 	private MouseState mouseStatePane;
-	private SQLColumnPNode leftText;
-	private SQLColumnPNode rightText;
+	private ItemPNode leftText;
+	private ItemPNode rightText;
 	private PLayer joinLayer;
 	private PCanvas canvas;
 
@@ -51,14 +51,14 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 		super.mousePressed(event);
 		if (mouseStatePane.getMouseState().equals(MouseStates.CREATE_JOIN)) {
 			PNode pick = event.getPickedNode();
-			while (pick != null && !(pick instanceof SQLColumnPNode)) {
+			while (pick != null && !(pick instanceof ItemPNode)) {
 				pick = pick.getParent();
 			}
 			if (pick != null) {
 				if (leftText == null) {
-					leftText = (SQLColumnPNode)pick;
+					leftText = (ItemPNode)pick;
 				} else if (rightText == null) {
-					rightText = (SQLColumnPNode)pick;
+					rightText = (ItemPNode)pick;
 					joinLayer.addChild(new JoinLine(mouseStatePane, canvas, leftText, rightText));
 					leftText = null;
 					rightText = null;

@@ -7,7 +7,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.border.LineBorder;
 
-import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
@@ -18,9 +17,9 @@ import edu.umd.cs.piccolox.pswing.PSwing;
 /**
  * This PNode represents a SQL column on a table.
  */
-public class SQLColumnPNode extends PNode {
+public class ItemPNode extends PNode {
 
-	private final SQLObject sqlColumn;
+	private final Item item;
 	
 	/**
 	 * A text area to allow showing the name of the sql column and
@@ -47,10 +46,10 @@ public class SQLColumnPNode extends PNode {
 	private FocusListener editorFocusListener = new FocusListener() {
 		public void focusLost(FocusEvent e) {
 			aliasText = nameEditor.getText();
-			if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(sqlColumn.getName())) {
-				nameEditor.setText(aliasText + " (" + sqlColumn.getName() + ")");
+			if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(item.getName())) {
+				nameEditor.setText(aliasText + " (" + item.getName() + ")");
 			} else {
-				nameEditor.setText(sqlColumn.getName());
+				nameEditor.setText(item.getName());
 			}
 			styledTextEventHandler.stopEditing();
 		}
@@ -67,8 +66,8 @@ public class SQLColumnPNode extends PNode {
 	 */
 	private PStyledTextEventHandler styledTextEventHandler;
 	
-	public SQLColumnPNode(MouseState mouseStates, PCanvas canvas, SQLObject sqlColumn) {
-		this.sqlColumn = sqlColumn;
+	public ItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
+		this.item = item;
 		aliasText = "";
 		
 		PSwing swingCheckBox = new PSwing(new JCheckBox());
@@ -77,7 +76,7 @@ public class SQLColumnPNode extends PNode {
 		columnText = new PStyledText();
 		nameEditor = new JEditorPane();
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
-		nameEditor.setText(sqlColumn.getName());
+		nameEditor.setText(item.getName());
 		columnText.setDocument(nameEditor.getDocument());
 		styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, nameEditor);
 		columnText.addInputEventListener(styledTextEventHandler);
@@ -86,8 +85,8 @@ public class SQLColumnPNode extends PNode {
 		addChild(columnText);
 	}
 
-	public SQLObject getSqlColumn() {
-		return sqlColumn;
+	public Item getSqlColumn() {
+		return item;
 	}
 
 	public PStyledText getColumnText() {

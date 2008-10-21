@@ -19,10 +19,10 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.architect.SQLTable;
 
 /**
  * A model for the {@link ContainerPane}. This will store objects of a defined type and
@@ -30,43 +30,37 @@ import ca.sqlpower.architect.SQLObject;
  *
  * @param <C> The type of object this model will store.
  */
-public class ContainerModel<C extends SQLObject> {
+public class TableContainer implements Container {
 
-	private List<List<C>> containers;
+	private final SQLTable table;
 	
-	private String name;
+	/**
+	 * The section object that contains all of the
+	 * columns of the table.
+	 */
+	private final Section section;
 	
-	public ContainerModel() {
-		containers = new ArrayList<List<C>>();
-		name = "";
+	private String alias;
+	
+	public TableContainer(SQLTable t) {
+		table = t;
+		section = new SQLObjectSection(table.getColumnsFolder());
 	}
 	
-	public void addContainer() {
-		containers.add(new ArrayList<C>());
-	}
-	
-	public void addItem(int containerIndex, C item) {
-		containers.get(containerIndex).add(item);		
-	}
-	
-	public C getContents(int containerIndex, int containerLocation) {
-		return containers.get(containerIndex).get(containerLocation);
-	}
-	
-	public int getContainerCount() {
-		return containers.size();
-	}
-	
-	public int getContainerSize(int containerIndex) {
-		return containers.get(containerIndex).size();
+	public List<Section> getSections() {
+		return Collections.singletonList(section);
 	}
 	
 	public String getName() {
-		return name;
+		return table.getName();
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public String getAlias() {
+		return alias;
 	}
 	
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
+
 }

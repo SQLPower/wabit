@@ -91,7 +91,7 @@ public class JoinLine extends PNode {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(MouseState mouseState, PCanvas canvas, SQLColumnPNode leftNode, SQLColumnPNode rightNode) {
+	public JoinLine(MouseState mouseState, PCanvas canvas, ItemPNode leftNode, ItemPNode rightNode) {
 		super();
 		this.leftNode = leftNode;
 		this.rightNode = rightNode;

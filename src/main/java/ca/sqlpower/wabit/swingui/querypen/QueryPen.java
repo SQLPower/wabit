@@ -41,7 +41,6 @@ import javax.swing.JScrollPane;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
@@ -100,7 +99,11 @@ public class QueryPen implements MouseState {
 				return;
 			}
 			
-			for (int[] path : (ArrayList<int[]>)draggedObject) {
+			for (Object arrayListObject : (ArrayList<?>)draggedObject) {
+				if (!(arrayListObject instanceof int[])) {
+					continue;
+				}
+				int[] path = (int[]) arrayListObject;
 				SQLObject draggedSQLObject;
 				try {
 					draggedSQLObject = DnDTreePathTransferable.getNodeForDnDPath(session.getRootNode(), path);
@@ -110,16 +113,7 @@ public class QueryPen implements MouseState {
 
 				if (draggedSQLObject instanceof SQLTable) {
 					SQLTable table = (SQLTable) draggedSQLObject;
-					ContainerModel<SQLObject> model = new ContainerModel<SQLObject>();
-					model.setName(table.getName());
-					model.addContainer();
-					try {
-						for (SQLColumn column : table.getColumns()) {
-							model.addItem(0, column);
-						}
-					} catch (ArchitectException e) {
-						throw new RuntimeException(e);
-					}
+					Container model = new TableContainer(table);
 
 					ContainerPane<SQLObject> pane = new ContainerPane<SQLObject>(mouseState, canvas, model);
 					Point location = dtde.getLocation();

@@ -54,7 +54,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private static final int BORDER_SIZE = 5;
 	
-	private final ContainerModel<C> model;
+	private final Container model;
 
 	/**
 	 * The outer rectangle of this component. All parts of this component should
@@ -77,7 +77,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	/**
 	 * All of the {@link PStyledText} objects that represent an object in the model.
 	 */
-	private List<SQLColumnPNode> containedItems;
+	private List<ItemPNode> containedItems;
 	
 	/**
 	 * The PPath lines that separate the header from the columns and
@@ -85,15 +85,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private List<PPath> separatorLines;
 	
-	public ContainerPane(MouseState pen, PCanvas canvas) {
-		this(pen, canvas, new ContainerModel<C>());
-	}
-	
-	public ContainerPane(MouseState pen, PCanvas canvas, ContainerModel<C> newModel) {
+	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
 		this.mouseStates = pen;
 		this.canvas = canvas;
-		containedItems = new ArrayList<SQLColumnPNode>();
+		containedItems = new ArrayList<ItemPNode>();
 		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
 		final PStyledText modelNameText = new PStyledText();
@@ -104,9 +100,9 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		addChild(modelNameText);
 		
 		int yLoc = 1;
-		for (int i = 0; i < model.getContainerCount(); i++) {
-			for (int j = 0; j < model.getContainerSize(i); j++) {
-				final SQLColumnPNode newText = createTextLine(model.getContents(i, j));
+		for (Section sec : model.getSections()) {
+			for (Item item : sec.getItems()) {
+				final ItemPNode newText = createTextLine(item);
 				newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc);
 				addChild(newText);
 				containedItems.add(newText);
@@ -127,8 +123,8 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	/**
 	 * Creates a {@link PStyledText} object that is editable by clicking on it.
 	 */
-	private SQLColumnPNode createTextLine(SQLObject sqlColumn) {
-		final SQLColumnPNode modelNameText = new SQLColumnPNode(mouseStates, canvas, sqlColumn);
+	private ItemPNode createTextLine(Item sqlColumn) {
+		final ItemPNode modelNameText = new ItemPNode(mouseStates, canvas, sqlColumn);
 		modelNameText.getColumnText().addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (outerRect != null) {
@@ -144,7 +140,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		return modelNameText;
 	}
 		
-	public ContainerModel<C> getModel() {
+	public Container getModel() {
 		return model;
 	}
 	
