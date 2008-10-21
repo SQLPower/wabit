@@ -1,6 +1,6 @@
 // $ANTLR 3.0.1 /home/jeffrey/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/parser/SQLANTLR.g 2008-10-20 11:21:24
 
-package ca.sqlpower.wabit.parser;
+package ca.sqlpower.wabit.sql.parser;
 
 import org.antlr.runtime.CharStream;
 import org.antlr.runtime.EarlyExitException;
