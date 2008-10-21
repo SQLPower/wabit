@@ -79,6 +79,12 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private List<SQLColumnPNode> containedItems;
 	
+	/**
+	 * The PPath lines that separate the header from the columns and
+	 * different groups of columns.
+	 */
+	private List<PPath> separatorLines;
+	
 	public ContainerPane(MouseStatePane pen, PCanvas canvas) {
 		this(pen, canvas, new ContainerModel<C>());
 	}
@@ -88,6 +94,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		this.mouseStates = pen;
 		this.canvas = canvas;
 		containedItems = new ArrayList<SQLColumnPNode>();
+		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
 		final PStyledText modelNameText = new PStyledText();
 		JEditorPane nameEditor = new JEditorPane();
@@ -108,7 +115,9 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		}
 		
 		PBounds fullBounds = getFullBounds();
-		this.addChild(PPath.createLine((float)getX() - BORDER_SIZE, (float)(getY() + modelNameText.getHeight()), (float)(getX() + fullBounds.width + BORDER_SIZE), (float)(getY() + modelNameText.getHeight())));
+		PPath headerLine = PPath.createLine((float)getX() - BORDER_SIZE, (float)(getY() + modelNameText.getHeight()), (float)(getX() + fullBounds.width + BORDER_SIZE), (float)(getY() + modelNameText.getHeight()));
+		separatorLines.add(headerLine);
+		this.addChild(headerLine);
 		outerRect = PPath.createRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2);
 		this.addChild(outerRect);
 		outerRect.moveToBack();
@@ -123,7 +132,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		modelNameText.getColumnText().addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (outerRect != null) {
-					outerRect.setWidth(Math.max(modelNameText.getColumnText().getWidth() + 2 * BORDER_SIZE, outerRect.getWidth()));
+					double maxWidth = Math.max(modelNameText.getColumnText().getWidth() + 2 * BORDER_SIZE, outerRect.getWidth());
+					outerRect.setWidth(maxWidth);
+					for (PPath line : separatorLines) {
+						line.setWidth(maxWidth);
+					}
 					setBounds(outerRect.getBounds());
 				}
 			}
