@@ -60,7 +60,7 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 /**
  * The pen where users can graphically create sql queries.
  */
-public class QueryPen implements MouseStatePane {
+public class QueryPen implements MouseState {
 	
 	private static Logger logger = Logger.getLogger(QueryPen.class);
 	
@@ -68,9 +68,9 @@ public class QueryPen implements MouseStatePane {
 	
 	private final class QueryPenDropTargetListener implements
 			DropTargetListener {
-		private MouseStatePane mouseState ;
+		private MouseState mouseState ;
 
-		public QueryPenDropTargetListener(MouseStatePane mouseState) {
+		public QueryPenDropTargetListener(MouseState mouseState) {
 			this.mouseState = mouseState;
 		}
 		

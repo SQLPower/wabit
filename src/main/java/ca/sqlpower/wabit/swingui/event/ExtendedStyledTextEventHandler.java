@@ -23,8 +23,8 @@ import java.awt.geom.Point2D;
 
 import javax.swing.text.JTextComponent;
 
-import ca.sqlpower.wabit.swingui.querypen.MouseStatePane;
-import ca.sqlpower.wabit.swingui.querypen.MouseStatePane.MouseStates;
+import ca.sqlpower.wabit.swingui.querypen.MouseState;
+import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
@@ -61,15 +61,15 @@ public class ExtendedStyledTextEventHandler extends PStyledTextEventHandler {
 	 * The query pen that contains the component this handler is attached to.
 	 * Used for getting the current state of the mouse.
 	 */
-	private MouseStatePane pen;
+	private MouseState pen;
 	
-	public ExtendedStyledTextEventHandler(MouseStatePane pen, PCanvas canvas) {
+	public ExtendedStyledTextEventHandler(MouseState pen, PCanvas canvas) {
 		super(canvas);
 		this.pen = pen;
 		mouseState = State.MOUSE_UP;
 	}
 	
-	public ExtendedStyledTextEventHandler(MouseStatePane pen, PCanvas canvas, JTextComponent editor) {
+	public ExtendedStyledTextEventHandler(MouseState pen, PCanvas canvas, JTextComponent editor) {
 		super(canvas, editor);
 		this.pen = pen;
 		mouseState = State.MOUSE_UP;

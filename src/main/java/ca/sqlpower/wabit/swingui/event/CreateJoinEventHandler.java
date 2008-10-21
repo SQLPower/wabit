@@ -20,9 +20,9 @@
 package ca.sqlpower.wabit.swingui.event;
 
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
-import ca.sqlpower.wabit.swingui.querypen.MouseStatePane;
+import ca.sqlpower.wabit.swingui.querypen.MouseState;
 import ca.sqlpower.wabit.swingui.querypen.SQLColumnPNode;
-import ca.sqlpower.wabit.swingui.querypen.MouseStatePane.MouseStates;
+import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
@@ -34,13 +34,13 @@ import edu.umd.cs.piccolo.event.PInputEvent;
  */
 public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
-	private MouseStatePane mouseStatePane;
+	private MouseState mouseStatePane;
 	private SQLColumnPNode leftText;
 	private SQLColumnPNode rightText;
 	private PLayer joinLayer;
 	private PCanvas canvas;
 
-	public CreateJoinEventHandler(MouseStatePane mouseStatePane, PLayer joinLayer, PCanvas canvas) {
+	public CreateJoinEventHandler(MouseState mouseStatePane, PLayer joinLayer, PCanvas canvas) {
 		this.mouseStatePane = mouseStatePane;
 		this.joinLayer = joinLayer;
 		this.canvas = canvas;

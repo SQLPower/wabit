@@ -3,6 +3,7 @@ package ca.sqlpower.wabit.swingui.querypen;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
+import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.border.LineBorder;
 
@@ -12,6 +13,7 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
 import edu.umd.cs.piccolox.nodes.PStyledText;
+import edu.umd.cs.piccolox.pswing.PSwing;
 
 /**
  * This PNode represents a SQL column on a table.
@@ -65,9 +67,13 @@ public class SQLColumnPNode extends PNode {
 	 */
 	private PStyledTextEventHandler styledTextEventHandler;
 	
-	public SQLColumnPNode(MouseStatePane mouseStates, PCanvas canvas, SQLObject sqlColumn) {
+	public SQLColumnPNode(MouseState mouseStates, PCanvas canvas, SQLObject sqlColumn) {
 		this.sqlColumn = sqlColumn;
 		aliasText = "";
+		
+		PSwing swingCheckBox = new PSwing(new JCheckBox());
+		addChild(swingCheckBox);
+		
 		columnText = new PStyledText();
 		nameEditor = new JEditorPane();
 		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
@@ -76,6 +82,7 @@ public class SQLColumnPNode extends PNode {
 		styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, nameEditor);
 		columnText.addInputEventListener(styledTextEventHandler);
 		nameEditor.addFocusListener(editorFocusListener);
+		columnText.translate(swingCheckBox.getFullBounds().width, (swingCheckBox.getFullBounds().height - columnText.getFullBounds().height)/2);
 		addChild(columnText);
 	}
 

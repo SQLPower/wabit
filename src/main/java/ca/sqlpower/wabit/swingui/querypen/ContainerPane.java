@@ -67,7 +67,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 * The pane that contains the current state of the mouse for that this component
 	 * is attached to.
 	 */
-	private MouseStatePane mouseStates;
+	private MouseState mouseStates;
 	
 	/**
 	 * The canvas this component is being drawn on.
@@ -85,11 +85,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private List<PPath> separatorLines;
 	
-	public ContainerPane(MouseStatePane pen, PCanvas canvas) {
+	public ContainerPane(MouseState pen, PCanvas canvas) {
 		this(pen, canvas, new ContainerModel<C>());
 	}
 	
-	public ContainerPane(MouseStatePane pen, PCanvas canvas, ContainerModel<C> newModel) {
+	public ContainerPane(MouseState pen, PCanvas canvas, ContainerModel<C> newModel) {
 		model = newModel;
 		this.mouseStates = pen;
 		this.canvas = canvas;
@@ -107,7 +107,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		for (int i = 0; i < model.getContainerCount(); i++) {
 			for (int j = 0; j < model.getContainerSize(i); j++) {
 				final SQLColumnPNode newText = createTextLine(model.getContents(i, j));
-				newText.translate(0, modelNameText.getHeight() * yLoc);
+				newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc);
 				addChild(newText);
 				containedItems.add(newText);
 				yLoc++;
@@ -132,7 +132,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		modelNameText.getColumnText().addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (outerRect != null) {
-					double maxWidth = Math.max(modelNameText.getColumnText().getWidth() + 2 * BORDER_SIZE, outerRect.getWidth());
+					double maxWidth = ContainerPane.this.getFullBounds().getWidth();
 					outerRect.setWidth(maxWidth);
 					for (PPath line : separatorLines) {
 						line.setWidth(maxWidth);

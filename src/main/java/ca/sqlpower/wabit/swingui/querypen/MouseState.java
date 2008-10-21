@@ -22,7 +22,7 @@ package ca.sqlpower.wabit.swingui.querypen;
 /**
  * Classes that contain a mouse state should implement this interface.
  */
-public interface MouseStatePane {
+public interface MouseState {
 
 	/**
 	 * The states a mouse can be on the query pen.
