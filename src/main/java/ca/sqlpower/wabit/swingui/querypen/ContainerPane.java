@@ -92,11 +92,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		containedItems = new ArrayList<ItemPNode>();
 		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
-		final PStyledText modelNameText = new PStyledText();
-		JEditorPane nameEditor = new JEditorPane();
-		nameEditor.setBorder(new LineBorder(nameEditor.getForeground()));
-		nameEditor.setText(model.getName());
-		modelNameText.setDocument(nameEditor.getDocument());
+		final PStyledText modelNameText = new EditablePStyledText(model.getName(), pen, canvas);
 		addChild(modelNameText);
 		
 		int yLoc = 1;
