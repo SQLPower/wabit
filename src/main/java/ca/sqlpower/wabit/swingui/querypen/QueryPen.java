@@ -55,6 +55,7 @@ import com.jgoodies.forms.builder.ButtonStackBuilder;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
@@ -240,6 +241,8 @@ public class QueryPen implements MouseState {
 	public QueryPen(WabitSwingSession s) {
 		session = s;
 		canvas = new PSwingCanvas();
+		canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		scrollPane = new PScrollPane(canvas);
 
         canvas.setPanEventHandler( null );
