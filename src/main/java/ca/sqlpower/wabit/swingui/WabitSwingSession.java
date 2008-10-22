@@ -182,14 +182,19 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				Transferable dndTransferable = new DnDTreePathTransferable(list, name);
 				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceListener() {
 					public void dropActionChanged(DragSourceDragEvent dsde) {
+						//do nothing
 					}
 					public void dragOver(DragSourceDragEvent dsde) {
+						//do nothing
 					}
 					public void dragExit(DragSourceEvent dse) {
+						//do nothing
 					}
 					public void dragEnter(DragSourceDragEvent dsde) {
+						//do nothing
 					}
 					public void dragDropEnd(DragSourceDropEvent dsde) {
+						//do nothing
 					}
 				});
 			}
