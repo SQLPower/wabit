@@ -16,11 +16,11 @@ tokens {
 }
 
 @lexer::header {
-package ca.sqlpower.wabit.parser;
+package ca.sqlpower.wabit.sql.parser;
 }
 
 @parser::header {
-package ca.sqlpower.wabit.parser;
+package ca.sqlpower.wabit.sql.parser;
 }
 
 @members 
