@@ -83,6 +83,7 @@ public class ItemPNode extends PNode {
 		aliasText = "";
 		
 		isInSelectCheckBox = new JCheckBox();
+		isInSelectCheckBox.setSelected(true);
 		PSwing swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
 		
