@@ -369,21 +369,9 @@ public class QueryPen implements MouseState {
 		query.append("SELECT ");
 		boolean firstSelect = true;
 		
-		StringBuffer from = new StringBuffer();
-		from.append("FROM ");
-		boolean firstFrom = true;
-		
 		for (Object o : topLayer.getAllNodes()) {
 			if (o instanceof ContainerPane) {
 				ContainerPane<?> container = (ContainerPane<?>)o;
-				
-				if (!firstFrom) {
-					from.append(", ");
-				} else {
-					firstFrom = false;
-				}
-				from.append(((SQLObject)container.getModel().getContainedObject()).getName() + " ");
-				
 				for (Section section : container.getModel().getSections()) {
 					for (Item item : section.getItems()) {
 						ItemPNode itemNode = container.getItemPNode(item.getItem());
@@ -394,7 +382,7 @@ public class QueryPen implements MouseState {
 								firstSelect = false;
 							}
 							SQLColumn column = (SQLColumn)item.getItem();
-							query.append(column.getName() + " ");
+							query.append(column.getParentTable().getName() + "." + column.getName() + " ");
 							if (itemNode.getAlias() != null && itemNode.getAlias().length() > 0) {
 								query.append("AS " + itemNode.getAlias() + " ");
 							}
@@ -403,7 +391,54 @@ public class QueryPen implements MouseState {
 				}
 			}
 		}
-		query.append(from.toString());
+		
+		// This iterates across the joins to make the
+		// FROM clause. When the joins are backed by
+		// SQLRelationships this will need to be changed.
+		List<JoinLine> joinLines = new ArrayList<JoinLine>();
+		for (Object o : joinLayer.getAllNodes()) {
+			if (o instanceof JoinLine) {
+				joinLines.add((JoinLine)o);
+			}
+		}
+		boolean isFirstFrom = true;
+		query.append(" \nFROM ");
+		for (Object o : topLayer.getAllNodes()) {
+			if (o instanceof ContainerPane) {
+				ContainerPane<?> container = (ContainerPane<?>)o;
+				Object containerObject = container.getModel().getContainedObject();
+				if (containerObject instanceof SQLTable) {
+					SQLTable table = (SQLTable)containerObject;
+					if (isFirstFrom == true) {
+						query.append(table.getName() + " ");
+						isFirstFrom = false;
+					} else {
+						query.append(" \n  INNER JOIN " + table.getName() + " ");
+						boolean firstOn = true;
+						for (int i = joinLines.size() - 1; i >= 0; i--) {
+							JoinLine joinLine = joinLines.get(i);
+							SQLColumn leftColumn = (SQLColumn)((ItemPNode)joinLine.getLeftNode()).getItem().getItem();
+							SQLColumn rightColumn = (SQLColumn)((ItemPNode)joinLine.getRightNode()).getItem().getItem();
+							if (leftColumn.getParentTable() == table ||	rightColumn.getParentTable() == table ) {
+								if (firstOn) {
+									query.append("ON ");
+									firstOn = false;
+								} else {
+									query.append("AND ");
+								}
+								query.append((leftColumn.getParentTable()).getName() + "." + leftColumn.getName());
+								query.append(" = ");
+								query.append((rightColumn.getParentTable()).getName() + "." + leftColumn.getName());
+								query.append(" ");
+								joinLines.remove(joinLine);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		
 		logger.debug("Select is : "  + query);
 		return query.toString();
 	}
