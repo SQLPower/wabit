@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -49,13 +50,17 @@ import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
+import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 
 import com.jgoodies.forms.builder.ButtonStackBuilder;
 
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PPaintContext;
+import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
@@ -209,7 +214,7 @@ public class QueryPen implements MouseState {
 	 * The top layer that has the tables and columns added to it. This should be used
 	 * instead of getting the first layer from the canvas.
 	 */
-	private final PNode topLayer;
+	private final PLayer topLayer;
 	
 	private final JButton zoomInButton;
 	private final JButton zoomOutButton;
@@ -222,6 +227,28 @@ public class QueryPen implements MouseState {
 	 */
 	private MouseStates mouseState = MouseStates.READY;
 	
+	/**
+	 * The pick path stored from the last mouse up event.
+	 */
+	private PPickPath lastPickPath;
+
+	/**
+	 * Deletes the selected item from the QueryPen.
+	 */
+	private final Action deleteAction = new AbstractAction("Delete"){
+		public void actionPerformed(ActionEvent e) {
+			if (lastPickPath != null) {
+				PNode pickedNode = lastPickPath.getPickedNode();
+				if (pickedNode.getParent() == topLayer) {
+					topLayer.removeChild(pickedNode);
+				}
+				if (pickedNode.getParent() == joinLayer) {
+					joinLayer.removeChild(pickedNode);
+				}
+			}
+		}
+	};
+	
 	public static JPanel createQueryPen(WabitSwingSession session) {
 		JPanel panel = new JPanel();
 		QueryPen pen = new QueryPen(session);
@@ -233,6 +260,8 @@ public class QueryPen implements MouseState {
         buttonStack.addGridded(pen.getZoomOutButton());
         buttonStack.addUnrelatedGap();
         buttonStack.addGridded(pen.getCreateJoinButton());
+        buttonStack.addRelatedGap();
+        buttonStack.addGridded(new JButton(pen.getDeleteAction()));
         panel.add(buttonStack.getPanel(), BorderLayout.EAST);
         panel.setBackground(Color.WHITE);
 		return panel;
@@ -244,10 +273,18 @@ public class QueryPen implements MouseState {
 		canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		scrollPane = new PScrollPane(canvas);
+		
+		canvas.addInputEventListener(new PBasicInputEventHandler() {
+			@Override
+			public void mouseReleased(PInputEvent event) {
+				lastPickPath = event.getPath();
+			}
+		});
 
         canvas.setPanEventHandler( null );
         topLayer = canvas.getLayer();
         joinLayer = new PLayer();
+        canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
         zoomInButton = new JButton(new AbstractAction("Zoom In") {
@@ -273,7 +310,10 @@ public class QueryPen implements MouseState {
         canvas.addInputEventListener(new CreateJoinEventHandler(this, joinLayer, canvas));
         
         new DropTarget(canvas, new QueryPenDropTargetListener(this));
-        PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(topLayer, topLayer);
+        List<PLayer> layerList = new ArrayList<PLayer>();
+        layerList.add(topLayer);
+        layerList.add(joinLayer);
+        PSelectionEventHandler selectionEventHandler = new QueryPenSelectionEventHandler(topLayer, layerList);
         selectionEventHandler.setMarqueePaint(SELECTION_COLOUR);
         selectionEventHandler.setMarqueePaintTransparency(SELECTION_TRANSPARENCY);
 		canvas.addInputEventListener(selectionEventHandler);
@@ -305,6 +345,10 @@ public class QueryPen implements MouseState {
 
 	public synchronized void setMouseState(MouseStates mouseState) {
 		this.mouseState = mouseState;
+	}
+	
+	public Action getDeleteAction() {
+		return deleteAction;
 	}
 
 	/**

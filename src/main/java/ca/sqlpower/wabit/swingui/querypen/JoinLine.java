@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -30,12 +31,13 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolox.nodes.PComposite;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
  * This object draws a join line between two columns in the GUI query pen.
  */
-public class JoinLine extends PNode {
+public class JoinLine extends PComposite {
 	
 	private static Logger logger = Logger.getLogger(JoinLine.class);
 
@@ -122,13 +124,15 @@ public class JoinLine extends PNode {
 		equalityText.setDocument(editorPane.getDocument());
 		addChild(equalityText);
 		
-		updateLine();		
+		updateLine();
 	}
 
 	/**
 	 * Updates the line end points and control points. The text area is also moved.
 	 */
 	private void updateLine() {
+		setBounds(0, 0, 0, 0);
+		
 		PBounds leftBounds = this.leftNode.getGlobalFullBounds();
 		PBounds rightBounds = this.rightNode.getGlobalFullBounds();
 		PBounds leftContainerBounds = leftContainerPane.getGlobalBounds();
@@ -171,5 +175,14 @@ public class JoinLine extends PNode {
 				(float)(textMidY - BORDER_WIDTH),
 				(float)equalityText.getWidth() + 2 * BORDER_WIDTH,
 				(float)equalityText.getHeight() + 2 * BORDER_WIDTH);
+		
+		//Compute the bounds only by the paths and the circle.
+		//This prevents the bound handles from being included.
+		Rectangle2D boundUnion = textCircle.getBounds();
+		boundUnion = boundUnion.createUnion(leftPath.getBounds());
+		boundUnion = boundUnion.createUnion(rightPath.getBounds());
+		setBounds(boundUnion);
+		
 	}
+	
 }
