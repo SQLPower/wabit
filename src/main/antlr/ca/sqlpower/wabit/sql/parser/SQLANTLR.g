@@ -35,23 +35,23 @@ tokens {
 }
 
 @lexer::header {
-package ca.sqlpower.wabit.parser;
+package ca.sqlpower.wabit.sql.parser;
 }
 
 @parser::header {
-package ca.sqlpower.wabit.parser;
+package ca.sqlpower.wabit.sql.parser;
 }
 
 
 @members 
 { 
     public static void main(String[] args) throws Exception {
-        SQLANTLR_ASTLexer lex = new SQLANTLR_ASTLexer(new ANTLRFileStream(args[0]));
+        SQLANTLRLexer lex = new SQLANTLRLexer(new ANTLRFileStream(args[0]));
        	CommonTokenStream tokens = new CommonTokenStream(lex);	
 	List listTokens = tokens.getTokens();
 	
 		
-	SQLANTLR_ASTParser parser = new SQLANTLR_ASTParser(tokens);
+	SQLANTLRParser parser = new SQLANTLRParser(tokens);
         try {
             parser.stmtblock();
         } catch (RecognitionException e)  {
@@ -73,8 +73,8 @@ package ca.sqlpower.wabit.parser;
  *	Nested Selects
  * TODO:- orderby and limit are a bit funky, need some work.
  * 	- values clause doesn't work as expected
- *	- function names: any id, or a list?
- *	- improve a_expr
+ *      - inner_select does not work
+ *	- the AST building for joins and functions is not complete
  *------------------------------------------------------------------*/
  
  
@@ -88,8 +88,8 @@ stmtmulti	: (simple_select) (';' simple_select)* (';')?
 select_with_parens	: LPAREN simple_select RPAREN
 			;
 
-simple_select: SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause// orderby_clause 
-			-> ^(SELECT["SELECT"]opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause)// orderby_clause )
+simple_select: SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause 
+			-> ^(SELECT["SELECT"]opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause )
 		| values_clause
 		;
 			
@@ -178,15 +178,14 @@ indirection	: DOT id ->^(INDIRECTION id)
  * FROM
  *	Supports : from table, table, table
  *		   from table join join
- *		   nested select statements
+ *		   nested select statements //TODO these need work!
  *		   functions
  *------------------------------------------------------------------*/
 
 from_clause	: FROM from_list -> ^(FROM["FROM"] from_list)
 		| //EMPTY 
 		;
- 
- //Syntactic predicates are used to determine if the list is comma seperated or not. Either one or the other is possible, not both.
+
 from_list 	: table_joins
 		| table_refs
 		;
@@ -257,7 +256,7 @@ func_args	: (ALL | DISTINCT)? expr_list
 		| STAR
 			;
 				
-func_name	: id //AVG |/* COUNT*/  FIRST | LAST | MAX | MIN | NVL | SUM | UCASE | LCASE | MID | LEN | ROUND | NOW | FORMAT 
+func_name	: id 
 		;
 
 /*------------------------------------------------------------------
