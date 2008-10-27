@@ -29,6 +29,12 @@ public class ItemPNode extends PNode {
 	 * The user defined alias for this sql column.
 	 */
 	private String aliasText;
+	
+	/**
+	 * Tracks if the item is in the select portion of a select
+	 * statement.
+	 */
+	private final JCheckBox isInSelectCheckBox;
 
 	/**
 	 * A listener to properly display the alias and column name when the
@@ -76,7 +82,8 @@ public class ItemPNode extends PNode {
 		this.item = item;
 		aliasText = "";
 		
-		PSwing swingCheckBox = new PSwing(new JCheckBox());
+		isInSelectCheckBox = new JCheckBox();
+		PSwing swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
 		
 		columnText = new EditablePStyledText(item.getName(), mouseStates, canvas);
@@ -92,6 +99,14 @@ public class ItemPNode extends PNode {
 
 	public PStyledText getColumnText() {
 		return columnText;
+	}
+	
+	public boolean isInSelect() {
+		return isInSelectCheckBox.isSelected();
+	}
+	
+	public String getAlias() {
+		return aliasText;
 	}
 
 }

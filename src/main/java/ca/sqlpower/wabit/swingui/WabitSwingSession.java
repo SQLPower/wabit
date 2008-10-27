@@ -49,6 +49,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.tree.TreePath;
 
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -128,9 +130,15 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
     	
     	JTabbedPane editorTabPane = new JTabbedPane();
-    	JPanel playPen = QueryPen.createQueryPen(this);
+    	final QueryPen queryPen = new QueryPen(this);
+    	JPanel playPen = queryPen.createQueryPen(this);
     	editorTabPane.add(playPen,"PlayPen");
     	editorTabPane.add(queryToolPanel,"Query");
+    	editorTabPane.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				queryUIComponents.getQueryArea().setText(queryPen.createQueryString());
+			}
+		});
     	
     	// Created two JCheckBoxes for the option Panel
     	JCheckBox groupingCheckBox = new JCheckBox("Grouping");

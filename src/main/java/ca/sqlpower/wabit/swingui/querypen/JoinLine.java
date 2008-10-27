@@ -185,4 +185,12 @@ public class JoinLine extends PComposite {
 		
 	}
 	
+	public PNode getLeftNode() {
+		return leftNode;
+	}
+	
+	public PNode getRightNode() {
+		return rightNode;
+	}
+	
 }

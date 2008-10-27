@@ -43,6 +43,7 @@ import javax.swing.JScrollPane;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
@@ -249,19 +250,27 @@ public class QueryPen implements MouseState {
 		}
 	};
 	
-	public static JPanel createQueryPen(WabitSwingSession session) {
+	public JPanel createQueryPen(WabitSwingSession session) {
 		JPanel panel = new JPanel();
-		QueryPen pen = new QueryPen(session);
         panel.setLayout(new BorderLayout());
-        panel.add(pen.getScrollPane(), BorderLayout.CENTER);
+        panel.add(getScrollPane(), BorderLayout.CENTER);
         ButtonStackBuilder buttonStack = new ButtonStackBuilder();
-        buttonStack.addGridded(pen.getZoomInButton());
+        buttonStack.addGridded(getZoomInButton());
         buttonStack.addRelatedGap();
-        buttonStack.addGridded(pen.getZoomOutButton());
+        buttonStack.addGridded(getZoomOutButton());
         buttonStack.addUnrelatedGap();
-        buttonStack.addGridded(pen.getCreateJoinButton());
+        buttonStack.addGridded(getCreateJoinButton());
         buttonStack.addRelatedGap();
-        buttonStack.addGridded(new JButton(pen.getDeleteAction()));
+        buttonStack.addGridded(new JButton(getDeleteAction()));
+        buttonStack.addUnrelatedGap();
+        Action createQuery = new AbstractAction("Create Query") {
+		
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				logger.debug("Query is : " + createQueryString());
+			}
+		};
+        buttonStack.addGridded(new JButton(createQuery));
         panel.add(buttonStack.getPanel(), BorderLayout.EAST);
         panel.setBackground(Color.WHITE);
 		return panel;
@@ -349,6 +358,54 @@ public class QueryPen implements MouseState {
 	
 	public Action getDeleteAction() {
 		return deleteAction;
+	}
+	
+	/**
+	 * A basic query string generator. This is being done quickly for the
+	 * demo today and should be enhanced later.
+	 */
+	public String createQueryString() {
+		StringBuffer query = new StringBuffer();
+		query.append("SELECT ");
+		boolean firstSelect = true;
+		
+		StringBuffer from = new StringBuffer();
+		from.append("FROM ");
+		boolean firstFrom = true;
+		
+		for (Object o : topLayer.getAllNodes()) {
+			if (o instanceof ContainerPane) {
+				ContainerPane<?> container = (ContainerPane<?>)o;
+				
+				if (!firstFrom) {
+					from.append(", ");
+				} else {
+					firstFrom = false;
+				}
+				from.append(((SQLObject)container.getModel().getContainedObject()).getName() + " ");
+				
+				for (Section section : container.getModel().getSections()) {
+					for (Item item : section.getItems()) {
+						ItemPNode itemNode = container.getItemPNode(item.getItem());
+						if (itemNode != null && itemNode.isInSelect() && item.getItem() instanceof SQLColumn) {
+							if (!firstSelect) {
+								query.append(", ");
+							} else {
+								firstSelect = false;
+							}
+							SQLColumn column = (SQLColumn)item.getItem();
+							query.append(column.getName() + " ");
+							if (itemNode.getAlias() != null && itemNode.getAlias().length() > 0) {
+								query.append("AS " + itemNode.getAlias() + " ");
+							}
+						}
+					}
+				}
+			}
+		}
+		query.append(from.toString());
+		logger.debug("Select is : "  + query);
+		return query.toString();
 	}
 
 	/**
