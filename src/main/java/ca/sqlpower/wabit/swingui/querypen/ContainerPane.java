@@ -23,6 +23,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.event.ChangeEvent;
@@ -103,6 +104,24 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		}
 	};
 	
+	/**
+	 * This listener will resize the bounding box of the container
+	 * when properties of components it is attached to change.
+	 */
+	private PropertyChangeListener resizeOnEditChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			repositionWhereClauses();
+			if (outerRect != null) {
+				double maxWidth = ContainerPane.this.getFullBounds().getWidth();
+				outerRect.setWidth(maxWidth);
+				for (PPath line : separatorLines) {
+					line.setWidth(maxWidth);
+				}
+				setBounds(outerRect.getBounds());
+			}
+		}
+	};
+	
 	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
 		queryChangeListeners = new ArrayList<ChangeListener>();
@@ -124,6 +143,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 				yLoc++;
 			}
 		}
+		repositionWhereClauses();
 		
 		PBounds fullBounds = getFullBounds();
 		PPath headerLine = PPath.createLine((float)getX() - BORDER_SIZE, (float)(getY() + modelNameText.getHeight()), (float)(getX() + fullBounds.width + BORDER_SIZE), (float)(getY() + modelNameText.getHeight()));
@@ -140,18 +160,8 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private ItemPNode createTextLine(Item sqlColumn) {
 		final ItemPNode modelNameText = new ItemPNode(mouseStates, canvas, sqlColumn);
-		modelNameText.getColumnText().addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (outerRect != null) {
-					double maxWidth = ContainerPane.this.getFullBounds().getWidth();
-					outerRect.setWidth(maxWidth);
-					for (PPath line : separatorLines) {
-						line.setWidth(maxWidth);
-					}
-					setBounds(outerRect.getBounds());
-				}
-			}
-		});
+		modelNameText.getItemText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
+		modelNameText.getWherePStyledText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.addQueryChangeListener(itemChangeListener);
 		return modelNameText;
 	}
@@ -212,6 +222,20 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	
 	public void removeQueryChangeListener(ChangeListener l) {
 		queryChangeListeners.remove(l);
+	}
+	
+	private void repositionWhereClauses() {
+		double maxXPos = 0;
+		for (ItemPNode itemNode : containedItems) {
+			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
+		}
+		for (ItemPNode itemNode : containedItems) {
+			itemNode.positionWhere(maxXPos);
+		}
+	}
+	
+	public List<ItemPNode> getContainedItems() {
+		return Collections.unmodifiableList(containedItems);
 	}
 
 }

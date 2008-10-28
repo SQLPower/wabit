@@ -24,13 +24,33 @@ public class ItemPNode extends PNode {
 	
 	private static final Logger logger = Logger.getLogger(ItemPNode.class);
 
+	/**
+	 * The amount of space to place between the column name text and
+	 * the where clause.
+	 */
+	private static final double WHERE_BUFFER = 5;
+	
+	/**
+	 * This text will go in the whereText field when there is
+	 * no where clause on the current item.
+	 */
+	private static final String WHERE_START_TEXT = "WHERE...";
+
+	/**
+	 * The item this node is displaying.
+	 */
 	private final Item item;
 	
 	/**
-	 * A text area to allow showing the name of the sql column and
+	 * A text area to allow showing the name of the item and
 	 * for editing its alias.
 	 */
 	private final EditablePStyledText columnText;
+	
+	/**
+	 * The text area storing the where clause for a given item.
+	 */
+	private final EditablePStyledText whereText;
 	
 	/**
 	 * The user defined alias for this sql column.
@@ -93,6 +113,29 @@ public class ItemPNode extends PNode {
 			}
 		}
 	};
+	
+	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
+		public void editingStopping() {
+			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
+				whereText.getEditorPane().setText(WHERE_START_TEXT);
+				whereText.syncWithDocument();
+			}
+			for (ChangeListener l : queryChangeListeners) {
+				l.stateChanged(new ChangeEvent(ItemPNode.this));
+			}
+		}
+		public void editingStarting() {
+			if (whereText.getEditorPane().getText().equals(WHERE_START_TEXT)) {
+				whereText.getEditorPane().setText("");
+			}
+		}
+	};
+
+	/**
+	 * The check box for selection wrapped as a PSwing 
+	 * object.
+	 */
+	private PSwing swingCheckBox;
 
 	public ItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
 		this.item = item;
@@ -101,7 +144,7 @@ public class ItemPNode extends PNode {
 		
 		isInSelectCheckBox = new JCheckBox();
 		isInSelectCheckBox.setSelected(true);
-		PSwing swingCheckBox = new PSwing(isInSelectCheckBox);
+		swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
 		
 		isInSelectCheckBox.addActionListener(new ActionListener() {
@@ -115,8 +158,15 @@ public class ItemPNode extends PNode {
 		
 		columnText = new EditablePStyledText(item.getName(), mouseStates, canvas);
 		columnText.addEditStyledTextListener(editingTextListener);
-		columnText.translate(swingCheckBox.getFullBounds().width, (swingCheckBox.getFullBounds().height - columnText.getFullBounds().height)/2);
+		double textYTranslation = (swingCheckBox.getFullBounds().height - columnText.getFullBounds().height)/2;
+		columnText.translate(swingCheckBox.getFullBounds().width, textYTranslation);
 		addChild(columnText);
+		
+		whereText = new EditablePStyledText(WHERE_START_TEXT, mouseStates, canvas);
+		whereText.addEditStyledTextListener(whereTextListener);
+		whereText.translate(0, textYTranslation);
+		addChild(whereText);
+		
 		logger.debug("Pnode " + item.getName() + " created.");
 	}
 
@@ -124,8 +174,21 @@ public class ItemPNode extends PNode {
 		return item;
 	}
 
-	public PStyledText getColumnText() {
+	public PStyledText getItemText() {
 		return columnText;
+	}
+	
+	public PStyledText getWherePStyledText() {
+		return whereText;
+	}
+	
+	public String getWhereText() {
+		String text = whereText.getEditorPane().getText();
+		if (text.equals(WHERE_START_TEXT)) {
+			return "";
+		} else {
+			return text;
+		}
 	}
 	
 	public boolean isInSelect() {
@@ -142,6 +205,15 @@ public class ItemPNode extends PNode {
 	
 	public void removeQueryChangeListener(ChangeListener l) {
 		queryChangeListeners.remove(l);
+	}
+	
+	public double getDistanceForWhere() {
+		return swingCheckBox.getFullBounds().width + columnText.getWidth() + WHERE_BUFFER;
+	}
+	
+	public void positionWhere(double xpos) {
+		logger.debug("Moving where text: xpos = " + xpos + ", text x position = " + whereText.getFullBounds().getX() + " x offset " + whereText.getXOffset());
+		whereText.translate(xpos - whereText.getXOffset(), 0);
 	}
 
 }

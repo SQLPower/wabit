@@ -29,6 +29,8 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -225,6 +228,13 @@ public class QueryPen implements MouseState {
 	private final JButton zoomInButton;
 	private final JButton zoomOutButton;
 	private final JButton createJoinButton;
+	
+	/**
+	 * This text area is for any part of the WHERE clause
+	 * that a user would want to add in that is not specific
+	 * to a column in a table.
+	 */
+	private final JTextField globalWhereText;
 
 	private final WabitSwingSession session;
 	
@@ -262,7 +272,7 @@ public class QueryPen implements MouseState {
 	/**
 	 * Listeners that will be notified when the query string has been modified.
 	 */
-	List<ChangeListener> queryListeners = new ArrayList<ChangeListener>();
+	private List<ChangeListener> queryListeners = new ArrayList<ChangeListener>();
 
 	/**
 	 * This change listener will be invoked whenever a change is made to the query pen
@@ -352,6 +362,16 @@ public class QueryPen implements MouseState {
         selectionEventHandler.setMarqueePaint(SELECTION_COLOUR);
         selectionEventHandler.setMarqueePaintTransparency(SELECTION_TRANSPARENCY);
 		canvas.addInputEventListener(selectionEventHandler);
+		
+		globalWhereText = new JTextField();
+		globalWhereText.addFocusListener(new FocusListener() {
+			public void focusLost(FocusEvent e) {
+				queryChangeListener.stateChanged(new ChangeEvent(globalWhereText));
+			}
+			public void focusGained(FocusEvent e) {
+				//do nothing
+			}
+		});
 	}
 	
 	public JScrollPane getScrollPane() {
@@ -386,6 +406,10 @@ public class QueryPen implements MouseState {
 		return deleteAction;
 	}
 	
+	public JTextField getGlobalWhereText() {
+		return globalWhereText;
+	}
+	
 	/**
 	 * A basic query string generator. This is being done quickly for the
 	 * demo today and should be enhanced later.
@@ -398,20 +422,17 @@ public class QueryPen implements MouseState {
 		for (Object o : topLayer.getAllNodes()) {
 			if (o instanceof ContainerPane) {
 				ContainerPane<?> container = (ContainerPane<?>)o;
-				for (Section section : container.getModel().getSections()) {
-					for (Item item : section.getItems()) {
-						ItemPNode itemNode = container.getItemPNode(item.getItem());
-						if (itemNode != null && itemNode.isInSelect() && item.getItem() instanceof SQLColumn) {
-							if (!firstSelect) {
-								query.append(", ");
-							} else {
-								firstSelect = false;
-							}
-							SQLColumn column = (SQLColumn)item.getItem();
-							query.append(column.getParentTable().getName() + "." + column.getName() + " ");
-							if (itemNode.getAlias() != null && itemNode.getAlias().length() > 0) {
-								query.append("AS " + itemNode.getAlias() + " ");
-							}
+				for (ItemPNode itemNode : container.getContainedItems()) {
+					if (itemNode != null && itemNode.isInSelect() && itemNode.getItem().getItem() instanceof SQLColumn) {
+						if (!firstSelect) {
+							query.append(", ");
+						} else {
+							firstSelect = false;
+						}
+						SQLColumn column = (SQLColumn)itemNode.getItem().getItem();
+						query.append(column.getParentTable().getName() + "." + column.getName() + " ");
+						if (itemNode.getAlias() != null && itemNode.getAlias().length() > 0) {
+							query.append("AS " + itemNode.getAlias() + " ");
 						}
 					}
 				}
@@ -468,6 +489,30 @@ public class QueryPen implements MouseState {
 			}
 		}
 		
+		boolean isFirstWhere = true;
+		for (Object o : topLayer.getAllNodes()) {
+			if (o instanceof ContainerPane && ((ContainerPane<?>)o).getModel().getContainedObject() instanceof SQLTable) {
+				ContainerPane<?> container = (ContainerPane<?>)o;
+				for (ItemPNode itemNode : container.getContainedItems()) {
+					if (itemNode.getWhereText() != null && itemNode.getWhereText().length() > 0) {
+						if (isFirstWhere) {
+							query.append(" \nWHERE ");
+							isFirstWhere = false;
+						} else {
+							query.append(" AND ");
+						}
+						query.append(((SQLTable)container.getModel().getContainedObject()).getName() + "." + itemNode.getItem().getName() + " " + itemNode.getWhereText() + " ");
+					}
+				}
+			}
+		}
+		if (globalWhereText.getText().length() > 0) {
+			if (isFirstWhere) {
+				query.append(" \nWHERE " + globalWhereText.getText());
+			} else {
+				query.append(" AND " + globalWhereText.getText());
+			}
+		}
 		
 		logger.debug("Select is : "  + query);
 		return query.toString();

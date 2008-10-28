@@ -39,11 +39,8 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -53,7 +50,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
@@ -81,6 +77,9 @@ import ca.sqlpower.swingui.table.ComponentCellRenderer;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
 
 
 /**
@@ -181,14 +180,16 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 			public void focusLost(FocusEvent e) {
 				// Do nothing
 			}});
-    	Box box = new Box(BoxLayout.X_AXIS);
-    	box.add(new JLabel("Database connection:"));
-    	box.add(queryUIComponents.getDatabaseComboBox());
-    	box.add(Box.createHorizontalGlue());
-    	box.add(groupingCheckBox);
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 10dlu, pref, 3dlu, pref");
+    	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
+    	southPanelBuilder.append(new JLabel("Database connection:"));
+    	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
+    	southPanelBuilder.append(groupingCheckBox);
+    	southPanelBuilder.nextLine();
+    	southPanelBuilder.append("Filter:", queryPen.getGlobalWhereText(), 5);
     	
     	JPanel topPane = new JPanel(new BorderLayout());
-    	topPane.add(box, BorderLayout.SOUTH);
+    	topPane.add(southPanelBuilder.getPanel(), BorderLayout.SOUTH);
     	topPane.add(editorTabPane, BorderLayout.CENTER);
     	
     	rightViewPane.add(topPane, JSplitPane.TOP);
