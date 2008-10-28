@@ -60,6 +60,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.tree.TreePath;
 
+import org.apache.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.ArchitectException;
@@ -77,7 +78,10 @@ import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
-import ca.sqlpower.swingui.table.ComponentCellRenderer;
+import ca.sqlpower.swingui.query.TableChangeEvent;
+import ca.sqlpower.swingui.query.TableChangeListener;
+import ca.sqlpower.swingui.table.FancyExportableJTable;
+import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
@@ -91,6 +95,8 @@ import com.jgoodies.forms.layout.FormLayout;
  * the conventional way to start the application running.
  */
 public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
+	
+	private static Logger logger = Logger.getLogger(WabitSwingSession.class);
     
 	private final WabitSessionContext sessionContext;
 	
@@ -126,6 +132,21 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		JPanel cp = new JPanel(new BorderLayout());
 
     	queryUIComponents = new SQLQueryUIComponents(this, sessionContext.getDataSources(), cp);
+    	queryUIComponents.addTableChangeListener(new TableChangeListener() {
+			public void tableRemoved(TableChangeEvent arg0) {
+				//Do Nothing
+			}
+		
+			public void tableAdded(TableChangeEvent e) {
+				TableModelSortDecorator sortDecorator = null;
+				if (e.getChangedTable() instanceof FancyExportableJTable) {
+					FancyExportableJTable fancyTable = (FancyExportableJTable)e.getChangedTable();
+					sortDecorator = fancyTable.getTableModelSortDecorator();
+				}
+				ComponentCellRenderer renderer = new ComponentCellRenderer(e.getChangedTable(), sortDecorator);
+				e.getChangedTable().getTableHeader().setDefaultRenderer(renderer);
+			}
+		});
     	
 		JPanel queryToolPanel = new JPanel(new BorderLayout());
 		JToolBar queryToolBar = new JToolBar();
@@ -184,13 +205,13 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 			public void focusLost(FocusEvent e) {
 				// Do nothing
 			}});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 10dlu, pref, 3dlu, pref");
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 10dlu, pref");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel("Database connection:"));
     	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
     	southPanelBuilder.append(groupingCheckBox);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append("Filter:", queryPen.getGlobalWhereText(), 5);
+    	southPanelBuilder.append("Filter:", queryPen.getGlobalWhereText(), 3);
     	
     	JPanel topPane = new JPanel(new BorderLayout());
     	topPane.add(southPanelBuilder.getPanel(), BorderLayout.SOUTH);
