@@ -30,6 +30,8 @@ import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -91,6 +94,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     private SQLQueryUIComponents queryUIComponents;
 	private JTree projectTree;
 	private JFrame frame;
+	private JCheckBox groupingCheckBox;
 
 	/**
 	 * The list of all currently-registered background tasks.
@@ -122,7 +126,8 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
 		JPanel queryToolPanel = new JPanel(new BorderLayout());
 		JToolBar queryToolBar = new JToolBar();
-		queryToolBar.add(queryUIComponents.getExecuteButton());
+		JButton executeButton = queryUIComponents.getExecuteButton();
+		queryToolBar.add(executeButton);
 		queryToolBar.add(queryUIComponents.getStopButton());
 		queryToolBar.add(queryUIComponents.getClearButton());
 		queryToolBar.add(queryUIComponents.getUndoButton());
@@ -151,7 +156,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 			}
 		});
     	
-    	JCheckBox groupingCheckBox = new JCheckBox("Grouping");
+    	groupingCheckBox = new JCheckBox("Grouping");
     	groupingCheckBox.addActionListener(new AbstractAction(){
 
     		public void actionPerformed(ActionEvent e) {
@@ -168,6 +173,14 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 						renderPanel.setGroupingEnabled(false);		
 					}
     			}}});
+		executeButton.addFocusListener(new FocusListener() {
+			public void focusGained(FocusEvent e) {
+				groupingCheckBox.setSelected(false);
+			}
+
+			public void focusLost(FocusEvent e) {
+				// Do nothing
+			}});
     	Box box = new Box(BoxLayout.X_AXIS);
     	box.add(new JLabel("Database connection:"));
     	box.add(queryUIComponents.getDatabaseComboBox());
