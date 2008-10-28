@@ -39,6 +39,8 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -126,6 +128,7 @@ public class QueryPen implements MouseState {
 					Container model = new TableContainer(table);
 
 					ContainerPane<SQLObject> pane = new ContainerPane<SQLObject>(mouseState, canvas, model);
+					pane.addQueryChangeListener(queryChangeListener);
 					Point location = dtde.getLocation();
 					Point2D movedLoc = canvas.getCamera().localToView(location);
 					pane.translate(movedLoc.getX(), movedLoc.getY());
@@ -172,6 +175,8 @@ public class QueryPen implements MouseState {
 					canvas.repaint();
 					dtde.acceptDrop(dtde.getDropAction());
 					dtde.dropComplete(true);
+					
+					queryChangeListener.stateChanged(new ChangeEvent(canvas));
 				} else {
 					logger.debug("dragged " + draggedObject.toString());
 				}
@@ -242,10 +247,31 @@ public class QueryPen implements MouseState {
 				PNode pickedNode = lastPickPath.getPickedNode();
 				if (pickedNode.getParent() == topLayer) {
 					topLayer.removeChild(pickedNode);
+					if (pickedNode instanceof ContainerPane<?>) {
+						((ContainerPane<?>)pickedNode).removeQueryChangeListener(queryChangeListener);
+					}
 				}
 				if (pickedNode.getParent() == joinLayer) {
 					joinLayer.removeChild(pickedNode);
 				}
+				queryChangeListener.stateChanged(new ChangeEvent(canvas));
+			}
+		}
+	};
+	
+	/**
+	 * Listeners that will be notified when the query string has been modified.
+	 */
+	List<ChangeListener> queryListeners = new ArrayList<ChangeListener>();
+
+	/**
+	 * This change listener will be invoked whenever a change is made to the query pen
+	 * that will result in a change to the SQL script.
+	 */
+	private ChangeListener queryChangeListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+			for (ChangeListener l : queryListeners) {
+				l.stateChanged(e);
 			}
 		}
 	};
@@ -433,6 +459,10 @@ public class QueryPen implements MouseState {
 								joinLines.remove(joinLine);
 							}
 						}
+						if (firstOn) {
+							//On is not optional so set it to be true
+							query.append("ON TRUE ");
+						}
 					}
 				}
 			}
@@ -456,5 +486,13 @@ public class QueryPen implements MouseState {
 			}
 		}
 		return containerList;
+	}
+	
+	public void addQueryListener(ChangeListener l) {
+		queryListeners.add(l);
+	}
+	
+	public void removeQueryListener(ChangeListener l) {
+		queryListeners.remove(l);
 	}
 }

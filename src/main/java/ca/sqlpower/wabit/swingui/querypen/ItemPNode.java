@@ -1,7 +1,14 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -35,6 +42,12 @@ public class ItemPNode extends PNode {
 	 * statement.
 	 */
 	private final JCheckBox isInSelectCheckBox;
+	
+	/**
+	 * These listeners will fire a change event when an element on this object
+	 * is changed that affects the resulting generated query.
+	 */
+	private final Collection<ChangeListener> queryChangeListeners;
 
 	/**
 	 * A listener to properly display the alias and column name when the
@@ -67,6 +80,9 @@ public class ItemPNode extends PNode {
 				columnText.syncWithDocument();
 			}
 			editing = false;
+			for (ChangeListener l : queryChangeListeners) {
+				l.stateChanged(new ChangeEvent(ItemPNode.this));
+			}
 		}
 		
 		public void editingStarting() {
@@ -81,11 +97,21 @@ public class ItemPNode extends PNode {
 	public ItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
 		this.item = item;
 		aliasText = "";
+		queryChangeListeners = new ArrayList<ChangeListener>();
 		
 		isInSelectCheckBox = new JCheckBox();
 		isInSelectCheckBox.setSelected(true);
 		PSwing swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
+		
+		isInSelectCheckBox.addActionListener(new ActionListener() {
+		
+			public void actionPerformed(ActionEvent e) {
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(ItemPNode.this));
+				}
+			}
+		});
 		
 		columnText = new EditablePStyledText(item.getName(), mouseStates, canvas);
 		columnText.addEditStyledTextListener(editingTextListener);
@@ -108,6 +134,14 @@ public class ItemPNode extends PNode {
 	
 	public String getAlias() {
 		return aliasText;
+	}
+	
+	public void addQueryChangeListener(ChangeListener l) {
+		queryChangeListeners.add(l);
+	}
+	
+	public void removeQueryChangeListener(ChangeListener l) {
+		queryChangeListeners.remove(l);
 	}
 
 }

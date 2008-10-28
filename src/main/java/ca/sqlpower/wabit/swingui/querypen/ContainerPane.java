@@ -22,10 +22,11 @@ package ca.sqlpower.wabit.swingui.querypen;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import javax.swing.JEditorPane;
-import javax.swing.border.LineBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -85,8 +86,26 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private List<PPath> separatorLines;
 	
+	/**
+	 * These listeners will fire a change event when an element on this object
+	 * is changed that affects the resulting generated query.
+	 */
+	private final Collection<ChangeListener> queryChangeListeners;
+	
+	/**
+	 * A change listener for use on items stored in this container pane.
+	 */
+	private ChangeListener itemChangeListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+			for (ChangeListener l : queryChangeListeners) {
+				l.stateChanged(e);
+			}
+		}
+	};
+	
 	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
+		queryChangeListeners = new ArrayList<ChangeListener>();
 		this.mouseStates = pen;
 		this.canvas = canvas;
 		containedItems = new ArrayList<ItemPNode>();
@@ -133,6 +152,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 				}
 			}
 		});
+		modelNameText.addQueryChangeListener(itemChangeListener);
 		return modelNameText;
 	}
 		
@@ -184,6 +204,14 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 			return true;
 		}
 		return false;
+	}
+	
+	public void addQueryChangeListener(ChangeListener l) {
+		queryChangeListeners.add(l);
+	}
+	
+	public void removeQueryChangeListener(ChangeListener l) {
+		queryChangeListeners.remove(l);
 	}
 
 }

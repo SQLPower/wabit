@@ -131,6 +131,11 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
     	JTabbedPane editorTabPane = new JTabbedPane();
     	final QueryPen queryPen = new QueryPen(this);
+    	queryPen.addQueryListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				queryUIComponents.executeQuery(queryPen.createQueryString());
+			}
+		});
     	JPanel playPen = queryPen.createQueryPen(this);
     	editorTabPane.add(playPen,"PlayPen");
     	editorTabPane.add(queryToolPanel,"Query");
