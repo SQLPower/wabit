@@ -29,15 +29,18 @@ import java.awt.dnd.DragSourceDragEvent;
 import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
+import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -46,6 +49,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
@@ -69,6 +74,7 @@ import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
+import ca.sqlpower.swingui.table.ComponentCellRenderer;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
@@ -128,7 +134,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
     	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
-    	
+        	
     	JTabbedPane editorTabPane = new JTabbedPane();
     	final QueryPen queryPen = new QueryPen(this);
     	queryPen.addQueryListener(new ChangeListener() {
@@ -145,15 +151,28 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 			}
 		});
     	
-    	// Created two JCheckBoxes for the option Panel
     	JCheckBox groupingCheckBox = new JCheckBox("Grouping");
-    	JCheckBox havingCheckBox = new JCheckBox("Having");
+    	groupingCheckBox.addActionListener(new AbstractAction(){
+
+    		public void actionPerformed(ActionEvent e) {
+    			JCheckBox checkBox = (JCheckBox)e.getSource();
+    			ArrayList<JTable> tables = queryUIComponents.getResultTables();
+    			if(checkBox.isSelected()) {
+    				for(JTable t : tables)	{
+    					ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
+    					renderPanel.setGroupingEnabled(true);
+    				}
+    			} else {
+					for(JTable t : tables)	{
+						ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
+						renderPanel.setGroupingEnabled(false);		
+					}
+    			}}});
     	Box box = new Box(BoxLayout.X_AXIS);
     	box.add(new JLabel("Database connection:"));
     	box.add(queryUIComponents.getDatabaseComboBox());
     	box.add(Box.createHorizontalGlue());
     	box.add(groupingCheckBox);
-    	box.add(havingCheckBox);
     	
     	JPanel topPane = new JPanel(new BorderLayout());
     	topPane.add(box, BorderLayout.SOUTH);
@@ -161,7 +180,6 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
     	rightViewPane.add(topPane, JSplitPane.TOP);
     	rightViewPane.add(resultTabPane, JSplitPane.BOTTOM);  	
-    	
     	
     	rootNode = new SQLObjectRoot();
         for (SPDataSource ds : sessionContext.getDataSources().getConnections()) {
