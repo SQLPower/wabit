@@ -32,6 +32,8 @@ import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -46,6 +48,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -70,6 +73,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
@@ -201,6 +205,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
         }
     	final DBTreeModel treeModel = new DBTreeModel(rootNode);
 		projectTree = new JTree(treeModel);
+		projectTree.addMouseListener(new PopUpMenuListener());
     	projectTree.setCellRenderer(new DBTreeCellRenderer());
     	DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
@@ -338,5 +343,37 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 
 	public SQLObjectRoot getRootNode() {
 		return rootNode;
+	}
+	
+	/**
+	 * A PopUpMenuListener which is current used for the ProjectTree.
+	 * It will Display a List of options once you right click on the ProjectTree.
+	 *
+	 */
+	private class PopUpMenuListener extends MouseAdapter {
+
+		JPopupMenu menu;
+		DatabaseConnectionManager dbConnectionManager;
+
+		PopUpMenuListener() {
+			menu = new JPopupMenu();
+			dbConnectionManager = new DatabaseConnectionManager(sessionContext.getDataSources());
+			menu.add(new AbstractAction("Database ConnectionManager..."){
+
+				public void actionPerformed(ActionEvent e) {
+					 dbConnectionManager.showDialog(frame);
+				}});
+
+		}
+
+		public void mouseClicked(MouseEvent e) {
+			
+			if (e.getButton() == MouseEvent.BUTTON3) {
+				menu.show(e.getComponent(), e.getX(), e.getY());
+			} else {
+				menu.setVisible(false);
+			}
+
+		}
 	}
 }
