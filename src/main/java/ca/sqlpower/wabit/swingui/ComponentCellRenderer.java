@@ -36,11 +36,16 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JComboBox;
@@ -70,6 +75,10 @@ import ca.sqlpower.swingui.table.TableModelSortDecorator;
 public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 
 	private static final Logger logger = Logger.getLogger(ComponentCellRenderer.class);
+	
+	public static final String PROPERTY_GROUP_BY = "GROUP_BY";
+	
+	public static final String PROPERTY_HAVING = "HAVING";
 
 	private final TableCellRenderer renderer;
 	private final JTableHeader tableHeader;
@@ -93,7 +102,12 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 * Note: This will be null if there is no sort decorator.
 	 */
 	private final TableModelSortDecorator sortDecorator;
-
+	
+	/**
+	 * A list of listeners that fire when the group by or having clause changes.
+	 */
+	private final List<PropertyChangeListener> listeners;
+	
 	/**
 	 * Constructs a cell renderer for a table header that allows editing of the
 	 * table's group by and having clauses. The sort decorator is the sort decorator
@@ -101,6 +115,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 */
 	public ComponentCellRenderer(JTable t, TableModelSortDecorator sortDecorator) {
 		this.sortDecorator = sortDecorator;
+		listeners = new ArrayList<PropertyChangeListener>();
 		tableHeader = t.getTableHeader();
 		renderer = t.getTableHeader().getDefaultRenderer();
 		tableHeader.addMouseListener(new HeaderMouseListener());
@@ -108,7 +123,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		comboBoxes = new ArrayList<JComboBox>();
 		Vector<String> comboBoxItems = new Vector<String>();
 		Object[] tempGroupItems =SQLGroupFunction.values();
-		comboBoxItems.add("(GROUP BY)");
+		comboBoxItems.add(QueryCache.GROUP_BY);
 
 		for(Object item : tempGroupItems) {
 			comboBoxItems.add(item.toString());
@@ -116,10 +131,30 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 
 		textFields = new ArrayList<JTextField>();
 		for(int i = 0 ; i < t.getColumnCount(); i++) {
-			JTextField textField = new JTextField();
-			JComboBox comboBox = new JComboBox(comboBoxItems);
+			final JTextField textField = new JTextField();
+			final JComboBox comboBox = new JComboBox(comboBoxItems);
 			comboBoxes.add(comboBox);
 			textFields.add(textField);
+			
+			comboBox.addActionListener(new ActionListener() {
+
+				public void actionPerformed(ActionEvent e) {
+					for (PropertyChangeListener l : listeners) {
+						l.propertyChange(new PropertyChangeEvent(comboBox, PROPERTY_GROUP_BY, null, (String)comboBox.getSelectedItem()));
+					}
+				}
+			});
+			
+			textField.addFocusListener(new FocusListener() {
+				public void focusLost(FocusEvent e) {
+					for (PropertyChangeListener l : listeners) {
+						l.propertyChange(new PropertyChangeEvent(textField, PROPERTY_HAVING, null, textField.getText()));
+					}
+				}
+				public void focusGained(FocusEvent e) {
+					//Do nothing.
+				}
+			});
 
 			if(i == 0) {
 				// takes the first ComboBoxes and TextField's height
@@ -166,6 +201,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		}
 		return this;
 	}
+	
 	/**
 	 * This MouseListener handles clicking on the TableHeader. It will check the position of the click o determine its click
 	 * as well as what component is being clicked.
@@ -177,7 +213,6 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 			if(!groupingEnabled) {
 				return;
 			}
-			int labelY = labelHeight + comboBoxHeight+  havingFieldHeight;
 			int comboBoxY = comboBoxHeight;
 			int havingFieldY =  comboBoxHeight+ havingFieldHeight;
 			JTableHeader h = (JTableHeader) e.getSource();
@@ -244,7 +279,6 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 			if(!groupingEnabled) {
 				return;
 			}
-			int labelY = labelHeight + comboBoxHeight+  havingFieldHeight;
 			int comboBoxY = comboBoxHeight;
 			int havingFieldY =  comboBoxHeight+ havingFieldHeight;
 			JTableHeader h = (JTableHeader) e.getSource();
@@ -347,5 +381,13 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 */
 	public int getLabelHeight() {
 		return labelHeight;
+	}
+	
+	public void addGroupAndHavingListener(PropertyChangeListener l) {
+		listeners.add(l);
+	}
+	
+	public void removeGroupAndHavingListener(PropertyChangeListener l) {
+		listeners.remove(l);
 	}
 }

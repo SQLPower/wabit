@@ -32,6 +32,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.geom.Point2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +44,13 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.architect.SQLColumn;
+import ca.sqlpower.architect.SQLDatabase;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
@@ -77,6 +79,12 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 public class QueryPen implements MouseState {
 	
 	private static Logger logger = Logger.getLogger(QueryPen.class);
+	
+	public static final String PROPERTY_TABLE_ADDED = "TABLE_ADDED";
+	
+	public static final String PROPERTY_TABLE_REMOVED = "TABLE_REMOVED";
+	
+	public static final String PROPERTY_WHERE_MODIFIED = "WHERE_MODIFIED";
 	
 	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
 	
@@ -136,6 +144,9 @@ public class QueryPen implements MouseState {
 					Point2D movedLoc = canvas.getCamera().localToView(location);
 					pane.translate(movedLoc.getX(), movedLoc.getY());
 					topLayer.addChild(pane);
+					for (ItemPNode itemNode : pane.getContainedItems()) {
+						itemNode.setInSelected(true);
+					}
 					
 					try {
 						for (SQLRelationship relation : table.getExportedKeys()) {
@@ -179,7 +190,7 @@ public class QueryPen implements MouseState {
 					dtde.acceptDrop(dtde.getDropAction());
 					dtde.dropComplete(true);
 					
-					queryChangeListener.stateChanged(new ChangeEvent(canvas));
+					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane));
 				} else {
 					logger.debug("dragged " + draggedObject.toString());
 				}
@@ -258,13 +269,17 @@ public class QueryPen implements MouseState {
 				if (pickedNode.getParent() == topLayer) {
 					topLayer.removeChild(pickedNode);
 					if (pickedNode instanceof ContainerPane<?>) {
-						((ContainerPane<?>)pickedNode).removeQueryChangeListener(queryChangeListener);
+						ContainerPane<?> pane = ((ContainerPane<?>)pickedNode);
+						for (ItemPNode itemNode : pane.getContainedItems()) {
+							itemNode.setInSelected(false);
+						}
+						pane.removeQueryChangeListener(queryChangeListener);
+						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane, null));
 					}
 				}
 				if (pickedNode.getParent() == joinLayer) {
 					joinLayer.removeChild(pickedNode);
 				}
-				queryChangeListener.stateChanged(new ChangeEvent(canvas));
 			}
 		}
 	};
@@ -272,16 +287,16 @@ public class QueryPen implements MouseState {
 	/**
 	 * Listeners that will be notified when the query string has been modified.
 	 */
-	private List<ChangeListener> queryListeners = new ArrayList<ChangeListener>();
+	private List<PropertyChangeListener> queryListeners = new ArrayList<PropertyChangeListener>();
 
 	/**
 	 * This change listener will be invoked whenever a change is made to the query pen
 	 * that will result in a change to the SQL script.
 	 */
-	private ChangeListener queryChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
-			for (ChangeListener l : queryListeners) {
-				l.stateChanged(e);
+	private PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			for (PropertyChangeListener l : queryListeners) {
+				l.propertyChange(evt);
 			}
 		}
 	};
@@ -298,15 +313,6 @@ public class QueryPen implements MouseState {
         buttonStack.addGridded(getCreateJoinButton());
         buttonStack.addRelatedGap();
         buttonStack.addGridded(new JButton(getDeleteAction()));
-        buttonStack.addUnrelatedGap();
-        Action createQuery = new AbstractAction("Create Query") {
-		
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				logger.debug("Query is : " + createQueryString());
-			}
-		};
-        buttonStack.addGridded(new JButton(createQuery));
         panel.add(buttonStack.getPanel(), BorderLayout.EAST);
         panel.setBackground(Color.WHITE);
 		return panel;
@@ -366,7 +372,7 @@ public class QueryPen implements MouseState {
 		globalWhereText = new JTextField();
 		globalWhereText.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {
-				queryChangeListener.stateChanged(new ChangeEvent(globalWhereText));
+				queryChangeListener.propertyChange(new PropertyChangeEvent(globalWhereText, PROPERTY_WHERE_MODIFIED, globalWhereText.getText(), globalWhereText.getText()));
 			}
 			public void focusGained(FocusEvent e) {
 				//do nothing
@@ -416,28 +422,6 @@ public class QueryPen implements MouseState {
 	 */
 	public String createQueryString() {
 		StringBuffer query = new StringBuffer();
-		query.append("SELECT ");
-		boolean firstSelect = true;
-		
-		for (Object o : topLayer.getAllNodes()) {
-			if (o instanceof ContainerPane) {
-				ContainerPane<?> container = (ContainerPane<?>)o;
-				for (ItemPNode itemNode : container.getContainedItems()) {
-					if (itemNode != null && itemNode.isInSelect() && itemNode.getItem().getItem() instanceof SQLColumn) {
-						if (!firstSelect) {
-							query.append(", ");
-						} else {
-							firstSelect = false;
-						}
-						SQLColumn column = (SQLColumn)itemNode.getItem().getItem();
-						query.append(column.getParentTable().getName() + "." + column.getName() + " ");
-						if (itemNode.getAlias() != null && itemNode.getAlias().length() > 0) {
-							query.append("AS " + itemNode.getAlias() + " ");
-						}
-					}
-				}
-			}
-		}
 		
 		// This iterates across the joins to make the
 		// FROM clause. When the joins are backed by
@@ -457,10 +441,10 @@ public class QueryPen implements MouseState {
 				if (containerObject instanceof SQLTable) {
 					SQLTable table = (SQLTable)containerObject;
 					if (isFirstFrom == true) {
-						query.append(table.getName() + " ");
+						query.append(ArchitectUtils.toQualifiedName(table, SQLDatabase.class) + " " + table.getName());
 						isFirstFrom = false;
 					} else {
-						query.append(" \n  INNER JOIN " + table.getName() + " ");
+						query.append(" \n  INNER JOIN " + ArchitectUtils.toQualifiedName(table, SQLDatabase.class) + " " + table.getName());
 						boolean firstOn = true;
 						for (int i = joinLines.size() - 1; i >= 0; i--) {
 							JoinLine joinLine = joinLines.get(i);
@@ -533,11 +517,11 @@ public class QueryPen implements MouseState {
 		return containerList;
 	}
 	
-	public void addQueryListener(ChangeListener l) {
+	public void addQueryListener(PropertyChangeListener l) {
 		queryListeners.add(l);
 	}
 	
-	public void removeQueryListener(ChangeListener l) {
+	public void removeQueryListener(PropertyChangeListener l) {
 		queryListeners.remove(l);
 	}
 }

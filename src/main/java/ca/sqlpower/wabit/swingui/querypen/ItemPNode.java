@@ -2,13 +2,13 @@ package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -23,6 +23,12 @@ import edu.umd.cs.piccolox.pswing.PSwing;
 public class ItemPNode extends PNode {
 	
 	private static final Logger logger = Logger.getLogger(ItemPNode.class);
+	
+	public static final String PROPERTY_ALIAS = "ALIAS";
+	
+	public static final String PROPERTY_SELECTED = "SELECTED";
+	
+	public static final String PROPERTY_WHERE = "WHERE";
 
 	/**
 	 * The amount of space to place between the column name text and
@@ -67,7 +73,7 @@ public class ItemPNode extends PNode {
 	 * These listeners will fire a change event when an element on this object
 	 * is changed that affects the resulting generated query.
 	 */
-	private final Collection<ChangeListener> queryChangeListeners;
+	private final Collection<PropertyChangeListener> queryChangeListeners;
 
 	/**
 	 * A listener to properly display the alias and column name when the
@@ -87,6 +93,7 @@ public class ItemPNode extends PNode {
 		private boolean editing = false;
 		
 		public void editingStopping() {
+			String oldAlias = aliasText;
 			if (editing) {
 				JEditorPane nameEditor = columnText.getEditorPane();
 				aliasText = nameEditor.getText();
@@ -100,8 +107,8 @@ public class ItemPNode extends PNode {
 				columnText.syncWithDocument();
 			}
 			editing = false;
-			for (ChangeListener l : queryChangeListeners) {
-				l.stateChanged(new ChangeEvent(ItemPNode.this));
+			for (PropertyChangeListener l : queryChangeListeners) {
+				l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_ALIAS, oldAlias, aliasText));
 			}
 		}
 		
@@ -116,12 +123,13 @@ public class ItemPNode extends PNode {
 	
 	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
 		public void editingStopping() {
+			String oldWhere = getWhereText();
 			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
 				whereText.getEditorPane().setText(WHERE_START_TEXT);
 				whereText.syncWithDocument();
 			}
-			for (ChangeListener l : queryChangeListeners) {
-				l.stateChanged(new ChangeEvent(ItemPNode.this));
+			for (PropertyChangeListener l : queryChangeListeners) {
+				l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_WHERE, oldWhere, getWhereText()));
 			}
 		}
 		public void editingStarting() {
@@ -140,7 +148,7 @@ public class ItemPNode extends PNode {
 	public ItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
 		this.item = item;
 		aliasText = "";
-		queryChangeListeners = new ArrayList<ChangeListener>();
+		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		
 		isInSelectCheckBox = new JCheckBox();
 		isInSelectCheckBox.setSelected(true);
@@ -150,8 +158,8 @@ public class ItemPNode extends PNode {
 		isInSelectCheckBox.addActionListener(new ActionListener() {
 		
 			public void actionPerformed(ActionEvent e) {
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(ItemPNode.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_SELECTED, !isInSelectCheckBox.isSelected(), isInSelectCheckBox.isSelected()));
 				}
 			}
 		});
@@ -191,6 +199,13 @@ public class ItemPNode extends PNode {
 		}
 	}
 	
+	public void setInSelected(boolean selected) {
+		isInSelectCheckBox.setSelected(selected);
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_SELECTED, !isInSelectCheckBox.isSelected(), isInSelectCheckBox.isSelected()));
+		}
+	}
+	
 	public boolean isInSelect() {
 		return isInSelectCheckBox.isSelected();
 	}
@@ -199,11 +214,11 @@ public class ItemPNode extends PNode {
 		return aliasText;
 	}
 	
-	public void addQueryChangeListener(ChangeListener l) {
+	public void addQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.add(l);
 	}
 	
-	public void removeQueryChangeListener(ChangeListener l) {
+	public void removeQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.remove(l);
 	}
 	

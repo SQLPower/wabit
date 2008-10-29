@@ -30,12 +30,14 @@ import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.ContainerEvent;
+import java.awt.event.ContainerListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -73,6 +75,7 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
@@ -109,6 +112,11 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	private JCheckBox groupingCheckBox;
 
 	/**
+	 * Stores the parts of the query.
+	 */
+	private QueryCache queryCache;
+
+	/**
 	 * The list of all currently-registered background tasks.
 	 */
 	private final List<SPSwingWorker> activeWorkers =
@@ -122,6 +130,8 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	public WabitSwingSession(WabitSessionContext context) {
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
+		queryPen = new QueryPen(this);
+		queryCache = new QueryCache(queryPen);
 	}
 	
 	/**
@@ -136,18 +146,20 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 
     	queryUIComponents = new SQLQueryUIComponents(this, sessionContext.getDataSources(), cp);
     	queryUIComponents.addTableChangeListener(new TableChangeListener() {
-			public void tableRemoved(TableChangeEvent arg0) {
-				//Do Nothing
+			public void tableRemoved(TableChangeEvent e) {
+				// Do Nothing
 			}
 		
 			public void tableAdded(TableChangeEvent e) {
 				TableModelSortDecorator sortDecorator = null;
-				if (e.getChangedTable() instanceof FancyExportableJTable) {
-					FancyExportableJTable fancyTable = (FancyExportableJTable)e.getChangedTable();
+				JTable table = e.getChangedTable();
+				if (table instanceof FancyExportableJTable) {
+					FancyExportableJTable fancyTable = (FancyExportableJTable)table;
 					sortDecorator = fancyTable.getTableModelSortDecorator();
 				}
-				ComponentCellRenderer renderer = new ComponentCellRenderer(e.getChangedTable(), sortDecorator);
-				e.getChangedTable().getTableHeader().setDefaultRenderer(renderer);
+				ComponentCellRenderer renderer = new ComponentCellRenderer(table, sortDecorator);
+				table.getTableHeader().setDefaultRenderer(renderer);
+				queryCache.listenToCellRenderer(renderer);
 			}
 		});
     	
@@ -168,10 +180,16 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
         	
     	JTabbedPane editorTabPane = new JTabbedPane();
-    	final QueryPen queryPen = new QueryPen(this);
-    	queryPen.addQueryListener(new ChangeListener() {
+    	queryPen.addQueryListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent e) {
+				StringBuffer query = new StringBuffer(queryCache.generateQuery());
+				
+				queryUIComponents.executeQuery(query.toString());
+			}
+		});
+    	queryCache.addQueryChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				queryUIComponents.executeQuery(queryPen.createQueryString());
+				queryUIComponents.executeQuery(queryCache.generateQuery());
 			}
 		});
     	JPanel playPen = queryPen.createQueryPen(this);
@@ -179,37 +197,34 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	editorTabPane.add(queryToolPanel,"Query");
     	editorTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				queryUIComponents.getQueryArea().setText(queryPen.createQueryString());
+				queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 			}
 		});
     	
     	groupingCheckBox = new JCheckBox("Grouping");
-    	groupingCheckBox.addActionListener(new AbstractAction(){
+    	groupingCheckBox.addActionListener(new AbstractAction() {
 
     		public void actionPerformed(ActionEvent e) {
-    			JCheckBox checkBox = (JCheckBox)e.getSource();
-    			ArrayList<JTable> tables = queryUIComponents.getResultTables();
-    			if(checkBox.isSelected()) {
-    				for(JTable t : tables)	{
-    					ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
-    					renderPanel.setGroupingEnabled(true);
-    				}
-    			} else {
-					for(JTable t : tables)	{
-						ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
-						renderPanel.setGroupingEnabled(false);		
-					}
-    			}}});
-		executeButton.addFocusListener(new FocusListener() {
-			public void focusGained(FocusEvent e) {
-				groupingCheckBox.setSelected(false);
+    			addGroupingTableHeaders();
+    		}
+    	});
+    	queryUIComponents.getResultTabPane().addContainerListener(new ContainerListener() {
+			public void componentRemoved(ContainerEvent e) {
+				//Do nothing.
 			}
-
-			public void focusLost(FocusEvent e) {
-				// Do nothing
-			}});
+			public void componentAdded(ContainerEvent e) {
+				addGroupingTableHeaders();
+			}
+		});
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 10dlu, pref");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
+    	southPanelBuilder.append(new JLabel(""), 3);
+    	southPanelBuilder.append(new JButton(new AbstractAction("Execute Query") {
+			public void actionPerformed(ActionEvent e) {
+				queryUIComponents.executeQuery(queryCache.generateQuery());
+			}
+		}));
+    	southPanelBuilder.nextLine();
     	southPanelBuilder.append(new JLabel("Database connection:"));
     	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
     	southPanelBuilder.append(groupingCheckBox);
@@ -332,6 +347,8 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
 
 	private SQLObjectRoot rootNode;
+
+	private QueryPen queryPen;
 	
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.add(l);
@@ -406,5 +423,37 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 			}
 
 		}
+	}
+	
+	/**
+	 * This will add a {@link ComponentCellRenderer} to the table headers
+	 * to allow grouping when the grouping checkbox is checked. This will
+	 * need to be called each time the tables are recreated.
+	 */
+	private void addGroupingTableHeaders() {
+		ArrayList<JTable> tables = queryUIComponents.getResultTables();
+		for(JTable t : tables)	{
+			ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
+			if(groupingCheckBox.isSelected()) {
+				renderPanel.setGroupingEnabled(true);
+				logger.debug("Grouping Enabled");
+			} else {
+				renderPanel.setGroupingEnabled(false);		
+			}
+			for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
+				SQLGroupFunction groupByAggregate = queryCache.getGroupByAggregate(queryCache.getSelectedColumns().get(i));
+				if (groupByAggregate != null) {
+					renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate.toString());
+				}
+			}
+			
+			for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
+				String havingText = queryCache.getHavingClause(queryCache.getSelectedColumns().get(i));
+				if (havingText != null) {
+					renderPanel.getTextFields().get(i).setText(havingText);
+				}
+			}
+		}
+		queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
 	}
 }

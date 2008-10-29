@@ -26,9 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.SQLObject;
@@ -91,15 +88,15 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 * These listeners will fire a change event when an element on this object
 	 * is changed that affects the resulting generated query.
 	 */
-	private final Collection<ChangeListener> queryChangeListeners;
+	private final Collection<PropertyChangeListener> queryChangeListeners;
 	
 	/**
 	 * A change listener for use on items stored in this container pane.
 	 */
-	private ChangeListener itemChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
-			for (ChangeListener l : queryChangeListeners) {
-				l.stateChanged(e);
+	private PropertyChangeListener itemChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			for (PropertyChangeListener l : queryChangeListeners) {
+				l.propertyChange(evt);
 			}
 		}
 	};
@@ -124,7 +121,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	
 	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
-		queryChangeListeners = new ArrayList<ChangeListener>();
+		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		this.mouseStates = pen;
 		this.canvas = canvas;
 		containedItems = new ArrayList<ItemPNode>();
@@ -216,11 +213,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		return false;
 	}
 	
-	public void addQueryChangeListener(ChangeListener l) {
+	public void addQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.add(l);
 	}
 	
-	public void removeQueryChangeListener(ChangeListener l) {
+	public void removeQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.remove(l);
 	}
 	
