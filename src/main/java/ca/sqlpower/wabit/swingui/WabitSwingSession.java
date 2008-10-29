@@ -47,12 +47,14 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
@@ -84,6 +86,7 @@ import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -292,6 +295,13 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
         
+		JMenu windowMenu = new JMenu("Window");
+		fileMenu.setMnemonic('w');
+		menuBar.add(windowMenu);
+		JTextArea logTextArea = queryUIComponents.getLogTextArea();
+		JMenuItem logMenuItem = new JMenuItem(new LogAction(frame, logTextArea ));
+		windowMenu.add(logMenuItem);
+		
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
         frame.setSize(800, 500);
