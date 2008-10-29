@@ -280,7 +280,15 @@ public class QueryCache {
 				} else {
 					query.append(", ");
 				}
-				query.append(entry.getKey().getParentTable().getName() + "." + entry.getKey().getName() + " " + entry.getValue());
+				SQLColumn column = entry.getKey();
+				if (groupByAggregateMap.get(column) != null) {
+					query.append(groupByAggregateMap.get(column).toString() + "(");
+				}
+				query.append(column.getParentTable().getName() + "." + column.getName() + " ");
+				if (groupByAggregateMap.get(column) != null) {
+					query.append(")");
+				}
+				query.append(entry.getValue());
 			}
 			query.append(" ");
 		}
