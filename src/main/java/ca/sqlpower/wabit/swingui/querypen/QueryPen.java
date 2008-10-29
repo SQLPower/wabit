@@ -452,14 +452,14 @@ public class QueryPen implements MouseState {
 							SQLColumn rightColumn = (SQLColumn)((ItemPNode)joinLine.getRightNode()).getItem().getItem();
 							if (leftColumn.getParentTable() == table ||	rightColumn.getParentTable() == table ) {
 								if (firstOn) {
-									query.append("ON ");
+									query.append(" ON ");
 									firstOn = false;
 								} else {
-									query.append("AND ");
+									query.append(" AND ");
 								}
 								query.append((leftColumn.getParentTable()).getName() + "." + leftColumn.getName());
 								query.append(" = ");
-								query.append((rightColumn.getParentTable()).getName() + "." + leftColumn.getName());
+								query.append((rightColumn.getParentTable()).getName() + "." + rightColumn.getName());
 								query.append(" ");
 								joinLines.remove(joinLine);
 							}
