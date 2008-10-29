@@ -441,10 +441,10 @@ public class QueryPen implements MouseState {
 				if (containerObject instanceof SQLTable) {
 					SQLTable table = (SQLTable)containerObject;
 					if (isFirstFrom == true) {
-						query.append(ArchitectUtils.toQualifiedName(table, SQLDatabase.class) + " " + table.getName());
+						query.append(table.toQualifiedName() + " " + table.getName());
 						isFirstFrom = false;
 					} else {
-						query.append(" \n  INNER JOIN " + ArchitectUtils.toQualifiedName(table, SQLDatabase.class) + " " + table.getName());
+						query.append(" \n  INNER JOIN " + table.toQualifiedName() + " " + table.getName());
 						boolean firstOn = true;
 						for (int i = joinLines.size() - 1; i >= 0; i--) {
 							JoinLine joinLine = joinLines.get(i);
