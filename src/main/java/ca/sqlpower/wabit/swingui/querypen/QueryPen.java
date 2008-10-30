@@ -322,9 +322,11 @@ public class QueryPen implements MouseState {
         panel.add(getScrollPane(), BorderLayout.CENTER);
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/delete.png"));
         JButton deleteButton = new JButton(getDeleteAction());
+        deleteButton.setToolTipText("Delete");
         deleteButton.setIcon(joinIcon);
         
         JToolBar queryPenBar = new JToolBar(JToolBar.VERTICAL);
+        queryPenBar.setToolTipText("QueryPen Toolbar");
         queryPenBar.add(getZoomInButton());
         queryPenBar.add(getZoomOutButton());
         queryPenBar.add(getCreateJoinButton());
@@ -364,6 +366,7 @@ public class QueryPen implements MouseState {
         		camera.setViewScale(camera.getViewScale() + ZOOM_CONSTANT);
         	}
         });
+        zoomInButton.setToolTipText("Zoom In");
         zoomInButton.setIcon(zoomInIcon);
         
         ImageIcon zoomOutIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_out16.png"));
@@ -375,6 +378,7 @@ public class QueryPen implements MouseState {
 				}
 			}
 		});
+        zoomOutButton.setToolTipText("Zoom Out");
         zoomOutButton.setIcon(zoomOutIcon);
         
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/join.png"));
@@ -383,6 +387,7 @@ public class QueryPen implements MouseState {
         		setMouseState(MouseStates.CREATE_JOIN);
         	}
         });
+        createJoinButton.setToolTipText("Create Join");
         createJoinButton.setIcon(joinIcon);
         
         CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas);
