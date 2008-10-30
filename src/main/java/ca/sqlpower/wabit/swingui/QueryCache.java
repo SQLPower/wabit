@@ -31,11 +31,14 @@ import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -53,6 +56,15 @@ public class QueryCache {
 	 * to be grouped by and not aggregated on.
 	 */
 	public static final String GROUP_BY = "(GROUP BY)";
+	
+	/**
+	 * The arguments that can be added to a column in the 
+	 * order by clause.
+	 */
+	public enum OrderByArgument {
+		ASC,
+		DESC
+	}
 	
 	/**
 	 * This will map SQLColumns to aliases that are in the SELECT statement.
@@ -124,6 +136,45 @@ public class QueryCache {
 	};
 	
 	/**
+	 * This handles listening for order by changes in the sort decorator of a component
+	 * cell renderer.
+	 */
+	private TableModelListener orderByListener = new TableModelListener() {
+	
+		public void tableChanged(TableModelEvent e) {
+			TableModelSortDecorator sortDecorator = (TableModelSortDecorator)e.getSource();
+			boolean sortChanged = false;
+			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
+				int sortStatus = sortDecorator.getSortingStatus(i);
+				SQLColumn column = selectedColumns.get(i);
+				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgumentMap.get(column) == null)
+						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgumentMap.get(column) == OrderByArgument.ASC)
+						|| (sortStatus == TableModelSortDecorator.DESCENDING && orderByArgumentMap.get(column) == OrderByArgument.DESC)) {
+					continue;
+				}
+				sortChanged = true;
+				if (sortStatus == TableModelSortDecorator.NOT_SORTED) {
+					orderByArgumentMap.remove(column);
+					orderByList.remove(column);
+				} else if (sortStatus == TableModelSortDecorator.ASCENDING) {
+					orderByArgumentMap.put(column, OrderByArgument.ASC);
+					orderByList.add(column);
+				} else if (sortStatus == TableModelSortDecorator.DESCENDING) {
+					orderByArgumentMap.put(column, OrderByArgument.DESC);
+					orderByList.add(column);
+				} else {
+					throw new IllegalStateException("The column " + column.getName() + " was sorted in an unknown way");
+				}
+			}
+			if (sortChanged) {
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
+			}
+		}
+	};
+	
+	/**
 	 * Listens for changes to the alias on ItemPNodes and updates
 	 * the map accordingly. This would be better if it was placed
 	 * directly on the ItemPNode and listened to only the alias change. 
@@ -151,7 +202,18 @@ public class QueryCache {
 	 * in.
 	 */
 	private final List<SQLColumn> selectedColumns;
-
+	
+	/**
+	 * This map contains the columns that have an ascending
+	 * or descending argument and is in the order by clause.
+	 */
+	private final Map<SQLColumn, OrderByArgument> orderByArgumentMap;
+	
+	/**
+	 * The order by list keeps track of the order that columns were selected in.
+	 */
+	private final List<SQLColumn> orderByList;
+	
 	/**
 	 * Listens for changes to the select checkbox on the column of a table in 
 	 * the query pen.
@@ -202,6 +264,8 @@ public class QueryCache {
 	
 	public QueryCache(QueryPen pen) {
 		this.pen = pen;
+		orderByArgumentMap = new HashMap<SQLColumn, OrderByArgument>();
+		orderByList = new ArrayList<SQLColumn>();
 		selectedColumns = new ArrayList<SQLColumn>();
 		queryChangeListeners = new ArrayList<ChangeListener>();
 		aliasMap = new HashMap<SQLColumn, String>();
@@ -234,6 +298,9 @@ public class QueryCache {
 	 * in the cache and remove the string parameter from this method.
 	 */
 	public String generateQuery() {
+		if (selectedColumns.size() ==  0) {
+			return "";
+		}
 		StringBuffer query = new StringBuffer();
 		query.append("SELECT");
 		boolean isFirstSelect = true;
@@ -292,6 +359,23 @@ public class QueryCache {
 			}
 			query.append(" ");
 		}
+		
+		if (!orderByArgumentMap.isEmpty()) {
+			query.append("\nORDER BY");
+			boolean isFirstOrder = true;
+			for (SQLColumn col : orderByList) {
+				if (isFirstOrder) {
+					query.append(" ");
+					isFirstOrder = false;
+				} else {
+					query.append(", ");
+				}
+				query.append(col.getParentTable().getName() + "." + col.getName() + " ");
+				if (orderByArgumentMap.get(col) != null) {
+					query.append(orderByArgumentMap.get(col).toString() + " ");
+				}
+			}
+		}
 		logger.debug(" Query is : " + query.toString());
 		return query.toString();
 	}
@@ -299,6 +383,7 @@ public class QueryCache {
 	public void listenToCellRenderer(ComponentCellRenderer renderer) {
 		cellRenderer = renderer;
 		renderer.addGroupAndHavingListener(groupByAndHavingListener);
+		renderer.addTableListenerToSortDecorator(orderByListener);
 	}
 	
 	public void addQueryChangeListener(ChangeListener l) {
@@ -329,6 +414,10 @@ public class QueryCache {
 	 */
 	public String getHavingClause(SQLColumn column) {
 		return havingMap.get(column);
+	}
+
+	public OrderByArgument getOrderByArgument(SQLColumn column) {
+		return orderByArgumentMap.get(column);
 	}
 
 }

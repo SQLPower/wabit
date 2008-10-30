@@ -55,6 +55,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -77,7 +78,12 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	private static final Logger logger = Logger.getLogger(ComponentCellRenderer.class);
 	
 	public static final String PROPERTY_GROUP_BY = "GROUP_BY";
-	
+
+	/**
+	 * This property will define a change to a having field. The old value will
+	 * be the value when entering the text field as it is only fired on leaving
+	 * the text field.
+	 */
 	public static final String PROPERTY_HAVING = "HAVING";
 
 	private final TableCellRenderer renderer;
@@ -138,22 +144,25 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 			textFields.add(textField);
 			
 			comboBox.addActionListener(new ActionListener() {
-
+				private String oldSelectedItem;
 				public void actionPerformed(ActionEvent e) {
 					for (PropertyChangeListener l : listeners) {
-						l.propertyChange(new PropertyChangeEvent(comboBox, PROPERTY_GROUP_BY, null, (String)comboBox.getSelectedItem()));
+						String selectedItem = (String)comboBox.getSelectedItem();
+						l.propertyChange(new PropertyChangeEvent(comboBox, PROPERTY_GROUP_BY, oldSelectedItem, selectedItem));
+						oldSelectedItem = selectedItem;
 					}
 				}
 			});
 			
 			textField.addFocusListener(new FocusListener() {
+				private String oldValue;
 				public void focusLost(FocusEvent e) {
 					for (PropertyChangeListener l : listeners) {
-						l.propertyChange(new PropertyChangeEvent(textField, PROPERTY_HAVING, null, textField.getText()));
+						l.propertyChange(new PropertyChangeEvent(textField, PROPERTY_HAVING, oldValue, textField.getText()));
 					}
 				}
 				public void focusGained(FocusEvent e) {
-					//Do nothing.
+					oldValue = textField.getText();
 				}
 			});
 
@@ -164,6 +173,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 				havingFieldHeight = textFields.get(i).getPreferredSize().height;
 			}
 		}
+		
 		setLayout(new BorderLayout());
 	}
 
@@ -387,6 +397,14 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 */
 	public int getLabelHeight() {
 		return labelHeight;
+	}
+
+	public void addTableListenerToSortDecorator(TableModelListener l) {
+		sortDecorator.addTableModelListener(l);
+	}
+	
+	public void setSortingStatus(int column, int status) {
+		sortDecorator.setSortingStatus(column, status);
 	}
 	
 	public void addGroupAndHavingListener(PropertyChangeListener l) {

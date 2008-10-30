@@ -89,6 +89,7 @@ import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.swingui.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -468,6 +469,19 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 						renderPanel.getTextFields().get(i).setText(havingText);
 					}
 				}
+				
+				// The combo box count should be the same as the column count.
+				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
+					OrderByArgument arg = queryCache.getOrderByArgument(queryCache.getSelectedColumns().get(i));
+					if (arg != null) {
+						if (arg == OrderByArgument.ASC) {
+							renderPanel.setSortingStatus(i, TableModelSortDecorator.ASCENDING);
+						} else if (arg == OrderByArgument.DESC) {
+							renderPanel.setSortingStatus(i, TableModelSortDecorator.DESCENDING);
+						}
+					}
+				}
+				
 			}
 			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
 		}
