@@ -37,9 +37,12 @@ import javax.swing.event.TableModelListener;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.SQLColumn;
+import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
+import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
@@ -243,6 +246,91 @@ public class QueryCache {
 	};
 	
 	/**
+	 * The list of tables that we are selecting from.
+	 */
+	private final List<SQLTable> fromTableList;
+	
+	/**
+	 * This maps each table to a list of SQLJoin objects.
+	 * These column pairs defines a join in the select statement.
+	 */
+	private final Map<SQLTable, List<SQLJoin>> joinMapping;
+	
+	private PropertyChangeListener joinChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent e) {
+			if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_ADDED)) {
+				JoinLine joinLine = (JoinLine) e.getNewValue();
+				ItemPNode leftNode = joinLine.getLeftNode();
+				ItemPNode rightNode = joinLine.getRightNode();
+				if (leftNode.getItem().getItem() instanceof SQLColumn && rightNode.getItem().getItem() instanceof SQLColumn) {
+					SQLColumn leftColumn = (SQLColumn)leftNode.getItem().getItem();
+					SQLColumn rightColumn = (SQLColumn)rightNode.getItem().getItem();
+					SQLJoin join = new SQLJoin(leftColumn, rightColumn);
+					if (joinMapping.get(leftColumn.getParentTable()) == null) {
+						List<SQLJoin> joinList = new ArrayList<SQLJoin>();
+						joinList.add(join);
+						joinMapping.put(leftColumn.getParentTable(), joinList);
+					} else {
+						joinMapping.get(leftColumn.getParentTable()).add(join);
+					}
+					
+					if (joinMapping.get(rightColumn.getParentTable()) == null) {
+						List<SQLJoin> joinList = new ArrayList<SQLJoin>();
+						joinList.add(join);
+						joinMapping.put(rightColumn.getParentTable(), joinList);
+					} else {
+						joinMapping.get(rightColumn.getParentTable()).add(join);
+					}
+				}
+			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_REMOVED)) {
+				JoinLine joinLine = (JoinLine) e.getOldValue();
+				ItemPNode leftNode = joinLine.getLeftNode();
+				ItemPNode rightNode = joinLine.getRightNode();
+				if (leftNode.getItem().getItem() instanceof SQLColumn && rightNode.getItem().getItem() instanceof SQLColumn) {
+					SQLColumn leftColumn = (SQLColumn)leftNode.getItem().getItem();
+					SQLColumn rightColumn = (SQLColumn)rightNode.getItem().getItem();
+					
+					List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParentTable());
+					for (SQLJoin join : leftJoinList) {
+						if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
+							leftJoinList.remove(join);
+							break;
+						}
+					}
+					
+					List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getParentTable());
+					for (SQLJoin join : rightJoinList) {
+						if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
+							rightJoinList.remove(join);
+							break;
+						}
+					}
+				}
+			}
+		}
+	};
+	
+	private PropertyChangeListener fromChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_ADDED)) {
+				if (evt.getNewValue() instanceof ContainerPane<?>) {
+					ContainerPane<?> container = (ContainerPane<?>)evt.getNewValue();
+					if (container.getModel().getContainedObject() instanceof SQLTable) {
+						fromTableList.add((SQLTable)container.getModel().getContainedObject());
+					}
+				}
+			} else if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_REMOVED)) {
+				if (evt.getOldValue() instanceof ContainerPane<?>) {
+					ContainerPane<?> container = (ContainerPane<?>)evt.getOldValue();
+					if (container.getModel().getContainedObject() instanceof SQLTable) {
+						fromTableList.remove((SQLTable)container.getModel().getContainedObject());
+					}
+				}
+			}
+		}
+	};
+	
+	/**
 	 * This is the current cell renderer we are listening on for group by 
 	 * and having values.
 	 */
@@ -267,6 +355,8 @@ public class QueryCache {
 		orderByArgumentMap = new HashMap<SQLColumn, OrderByArgument>();
 		orderByList = new ArrayList<SQLColumn>();
 		selectedColumns = new ArrayList<SQLColumn>();
+		fromTableList = new ArrayList<SQLTable>();
+		joinMapping = new HashMap<SQLTable, List<SQLJoin>>();
 		queryChangeListeners = new ArrayList<ChangeListener>();
 		aliasMap = new HashMap<SQLColumn, String>();
 		groupByAggregateMap = new HashMap<SQLColumn, SQLGroupFunction>();
@@ -275,6 +365,8 @@ public class QueryCache {
 		
 		pen.addQueryListener(aliasListener);
 		pen.addQueryListener(selectedColumnListener);
+		pen.addQueryListener(fromChangeListener);
+		pen.addQueryListener(joinChangeListener);
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -322,6 +414,43 @@ public class QueryCache {
 				query.append(" AS " + aliasMap.get(col));
 			}
 		}
+		query.append(" \nFROM");
+		boolean isFirstFrom = true;
+		for (SQLTable table : fromTableList) {
+			if (isFirstFrom) {
+				query.append(" " + table.toQualifiedName());
+				isFirstFrom = false;
+			} else {
+				query.append(" \n\tINNER JOIN ");
+				query.append(table.toQualifiedName() + " ON ");
+				if (joinMapping.get(table) == null || joinMapping.get(table).isEmpty()) {
+					query.append("TRUE");
+				} else {
+					boolean isFirstJoin = true;
+					for (SQLJoin join : joinMapping.get(table)) {
+						SQLColumn otherColumn;
+						if (join.getLeftColumn().getParentTable() == table) {
+							otherColumn = join.getRightColumn();
+						} else {
+							otherColumn = join.getLeftColumn();
+						}
+						for (int i = 0; i < fromTableList.indexOf(table); i++) {
+							if (otherColumn.getParentTable() == fromTableList.get(i)) {
+								if (isFirstJoin) {
+									isFirstJoin = false;
+								} else {
+									query.append(" AND ");
+								}
+								query.append(join.getLeftColumn().getParentTable().getName() + "." + join.getLeftColumn().getName() + 
+										" " + join.getComparator() + " " + 
+										join.getRightColumn().getParentTable().getName() + "." + join.getRightColumn().getName());
+							}
+						}
+					}
+				}
+			}
+		}
+		query.append(" ");
 		query.append(pen.createQueryString());
 		if (!groupByList.isEmpty()) {
 			query.append("\nGROUP BY");

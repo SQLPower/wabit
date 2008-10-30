@@ -49,12 +49,12 @@ public class JoinLine extends PComposite {
 	/**
 	 * One of the columns that is being joined on.
 	 */
-	private final PNode leftNode;
+	private final ItemPNode leftNode;
 	
 	/**
 	 * The other column that is being joined on.
 	 */
-	private final PNode rightNode;
+	private final ItemPNode rightNode;
 	
 	/**
 	 * The parent to the leftNode. This will be used to know where
@@ -185,11 +185,11 @@ public class JoinLine extends PComposite {
 		
 	}
 	
-	public PNode getLeftNode() {
+	public ItemPNode getLeftNode() {
 		return leftNode;
 	}
 	
-	public PNode getRightNode() {
+	public ItemPNode getRightNode() {
 		return rightNode;
 	}
 	

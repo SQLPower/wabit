@@ -19,9 +19,15 @@
 
 package ca.sqlpower.wabit.swingui.event;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.MouseState;
-import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
+import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
@@ -39,6 +45,8 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	private ItemPNode rightText;
 	private PLayer joinLayer;
 	private PCanvas canvas;
+	
+	private List<PropertyChangeListener> createJoinListeners = new ArrayList<PropertyChangeListener>();
 
 	public CreateJoinEventHandler(MouseState mouseStatePane, PLayer joinLayer, PCanvas canvas) {
 		this.mouseStatePane = mouseStatePane;
@@ -59,7 +67,11 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					leftText = (ItemPNode)pick;
 				} else if (rightText == null) {
 					rightText = (ItemPNode)pick;
-					joinLayer.addChild(new JoinLine(mouseStatePane, canvas, leftText, rightText));
+					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
+					joinLayer.addChild(join);
+					for(PropertyChangeListener listener : createJoinListeners) {
+						listener.propertyChange(new PropertyChangeEvent(canvas, QueryPen.PROPERTY_JOIN_ADDED, null, join));
+					}
 					leftText = null;
 					rightText = null;
 					mouseStatePane.setMouseState(MouseStates.READY);
@@ -72,5 +84,13 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 				mouseStatePane.setMouseState(MouseStates.READY);
 			}
 		}
+	}
+	
+	public void addCreateJoinListener(PropertyChangeListener l) {
+		createJoinListeners.add(l);
+	}
+	
+	public void removeCreateJoinListener(PropertyChangeListener l) {
+		createJoinListeners.remove(l);
 	}
 }

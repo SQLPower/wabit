@@ -48,9 +48,6 @@ import javax.swing.JTextField;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.ArchitectUtils;
-import ca.sqlpower.architect.SQLColumn;
-import ca.sqlpower.architect.SQLDatabase;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
@@ -85,6 +82,10 @@ public class QueryPen implements MouseState {
 	public static final String PROPERTY_TABLE_REMOVED = "TABLE_REMOVED";
 	
 	public static final String PROPERTY_WHERE_MODIFIED = "WHERE_MODIFIED";
+	
+	public static final String PROPERTY_JOIN_ADDED = "JOIN_ADDED";
+	
+	public static final String PROPERTY_JOIN_REMOVED = "JOIN_REMOVED";
 	
 	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
 	
@@ -144,6 +145,7 @@ public class QueryPen implements MouseState {
 					Point2D movedLoc = canvas.getCamera().localToView(location);
 					pane.translate(movedLoc.getX(), movedLoc.getY());
 					topLayer.addChild(pane);
+					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane));
 					for (ItemPNode itemNode : pane.getContainedItems()) {
 						itemNode.setInSelected(true);
 					}
@@ -160,7 +162,11 @@ public class QueryPen implements MouseState {
 									ItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
-										joinLayer.addChild(new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode));
+										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+										joinLayer.addChild(join);
+										for (PropertyChangeListener l : queryListeners) {
+											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
+										}
 									} else {
 										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
 									}
@@ -175,7 +181,11 @@ public class QueryPen implements MouseState {
 									ItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
 									ItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
 									if (pkItemNode != null && fkItemNode != null) {
-										joinLayer.addChild(new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode));
+										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+										joinLayer.addChild(join);
+										for (PropertyChangeListener l : queryListeners) {
+											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
+										}
 									} else {
 										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
 									}
@@ -190,7 +200,6 @@ public class QueryPen implements MouseState {
 					dtde.acceptDrop(dtde.getDropAction());
 					dtde.dropComplete(true);
 					
-					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane));
 				} else {
 					logger.debug("dragged " + draggedObject.toString());
 				}
@@ -214,7 +223,7 @@ public class QueryPen implements MouseState {
 	protected static final double ZOOM_CONSTANT = 0.1;
 
 	private static final float SELECTION_TRANSPARENCY = 0.33f;
-	
+
 	/**
 	 * The scroll pane that contains the visual query a user is building.
 	 */
@@ -279,6 +288,12 @@ public class QueryPen implements MouseState {
 				}
 				if (pickedNode.getParent() == joinLayer) {
 					joinLayer.removeChild(pickedNode);
+					if (pickedNode instanceof JoinLine) {
+						JoinLine join = (JoinLine) pickedNode;
+						for (PropertyChangeListener l : queryListeners) {
+							l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_REMOVED, join, null));
+						}
+					}
 				}
 			}
 		}
@@ -358,7 +373,9 @@ public class QueryPen implements MouseState {
         		setMouseState(MouseStates.CREATE_JOIN);
         	}
         });
-        canvas.addInputEventListener(new CreateJoinEventHandler(this, joinLayer, canvas));
+        CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas);
+		canvas.addInputEventListener(createJoinListener);
+		createJoinListener.addCreateJoinListener(queryChangeListener);
         
         new DropTarget(canvas, new QueryPenDropTargetListener(this));
         List<PLayer> layerList = new ArrayList<PLayer>();
@@ -422,56 +439,6 @@ public class QueryPen implements MouseState {
 	 */
 	public String createQueryString() {
 		StringBuffer query = new StringBuffer();
-		
-		// This iterates across the joins to make the
-		// FROM clause. When the joins are backed by
-		// SQLRelationships this will need to be changed.
-		List<JoinLine> joinLines = new ArrayList<JoinLine>();
-		for (Object o : joinLayer.getAllNodes()) {
-			if (o instanceof JoinLine) {
-				joinLines.add((JoinLine)o);
-			}
-		}
-		boolean isFirstFrom = true;
-		query.append(" \nFROM ");
-		for (Object o : topLayer.getAllNodes()) {
-			if (o instanceof ContainerPane) {
-				ContainerPane<?> container = (ContainerPane<?>)o;
-				Object containerObject = container.getModel().getContainedObject();
-				if (containerObject instanceof SQLTable) {
-					SQLTable table = (SQLTable)containerObject;
-					if (isFirstFrom == true) {
-						query.append(table.toQualifiedName() + " " + table.getName());
-						isFirstFrom = false;
-					} else {
-						query.append(" \n  INNER JOIN " + table.toQualifiedName() + " " + table.getName());
-						boolean firstOn = true;
-						for (int i = joinLines.size() - 1; i >= 0; i--) {
-							JoinLine joinLine = joinLines.get(i);
-							SQLColumn leftColumn = (SQLColumn)((ItemPNode)joinLine.getLeftNode()).getItem().getItem();
-							SQLColumn rightColumn = (SQLColumn)((ItemPNode)joinLine.getRightNode()).getItem().getItem();
-							if (leftColumn.getParentTable() == table ||	rightColumn.getParentTable() == table ) {
-								if (firstOn) {
-									query.append(" ON ");
-									firstOn = false;
-								} else {
-									query.append(" AND ");
-								}
-								query.append((leftColumn.getParentTable()).getName() + "." + leftColumn.getName());
-								query.append(" = ");
-								query.append((rightColumn.getParentTable()).getName() + "." + rightColumn.getName());
-								query.append(" ");
-								joinLines.remove(joinLine);
-							}
-						}
-						if (firstOn) {
-							//On is not optional so set it to be true
-							query.append(" ON TRUE ");
-						}
-					}
-				}
-			}
-		}
 		
 		boolean isFirstWhere = true;
 		for (Object o : topLayer.getAllNodes()) {
