@@ -20,15 +20,30 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.swing.AbstractAction;
 
+import org.apache.log4j.Logger;
+
+import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.WebResultHTMLFormatter;
+import ca.sqlpower.sql.WebResultSet;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 
 public class AddContentBoxAction extends AbstractAction {
 
+    private static final Logger logger = Logger.getLogger(AddContentBoxAction.class);
+    
     private final Report report;
     private final PageNode addTo;
 
@@ -43,8 +58,46 @@ public class AddContentBoxAction extends AbstractAction {
         newCBNode.setBounds(addTo.getWidth() / 2, addTo.getHeight() / 2, 30, 30); // XXX should be near mouse pointer
         addTo.addChild(newCBNode);
         
-        // XXX temporary
-        Label l = new Label(report, "This is a label");
-        newCBNode.getContentBox().setContentRenderer(l);
+        // XXX temporary from here to end of method
+        
+        Connection con = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            PlDotIni dataSources = new PlDotIni();
+            dataSources.read(new File(System.getProperty("user.home"), "pl.ini"));
+            SPDataSource ds = dataSources.getDataSource("Local PostgreSQL fuerth");
+            
+            String sqlQuery = "select * from activity";
+            
+            con = ds.createConnection();
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(sqlQuery);
+
+            CachedRowSet crs = new CachedRowSet();
+            crs.populate(rs);
+            ResultSetRenderer rsr = new ResultSetRenderer(crs);
+            newCBNode.getContentBox().setContentRenderer(rsr);
+            
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+            } catch (SQLException ex) {
+                logger.warn("Failed to close result set. Squishing this exception: ", ex);
+            }
+            try {
+                if (stmt != null) stmt.close();
+            } catch (SQLException ex) {
+                logger.warn("Failed to close statement. Squishing this exception: ", ex);
+            }
+            try {
+                if (con != null) con.close();
+            } catch (SQLException ex) {
+                logger.warn("Failed to close database connection. Squishing this exception: ", ex);
+            }
+        }
+
     }
 }

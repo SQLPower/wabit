@@ -30,7 +30,6 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Report;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
