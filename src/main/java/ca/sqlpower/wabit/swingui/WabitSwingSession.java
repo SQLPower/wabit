@@ -38,6 +38,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -146,6 +147,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		JPanel cp = new JPanel(new BorderLayout());
 
     	queryUIComponents = new SQLQueryUIComponents(this, sessionContext.getDataSources(), cp);
+    	queryUIComponents.enableMultipleQueries(false);
     	queryUIComponents.addTableChangeListener(new TableChangeListener() {
 			public void tableRemoved(TableChangeEvent e) {
 				// Do Nothing
@@ -178,13 +180,12 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-    	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
+    	JPanel resultPanel = queryUIComponents.getFirstResultPanel();
         	
     	queryPenAndTextTabPane = new JTabbedPane();
     	queryPen.addQueryListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent e) {
 				StringBuffer query = new StringBuffer(queryCache.generateQuery());
-				
 				queryUIComponents.executeQuery(query.toString());
 			}
 		});
@@ -200,6 +201,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				queryUIComponents.executeQuery(queryCache.generateQuery());
 			}
 		}));
+    	
     	JPanel queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
     	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
@@ -218,7 +220,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     			addGroupingTableHeaders();
     		}
     	});
-    	queryUIComponents.getResultTabPane().addContainerListener(new ContainerListener() {
+    	queryUIComponents.getFirstResultPanel().addContainerListener(new ContainerListener() {
 			public void componentRemoved(ContainerEvent e) {
 				//Do nothing.
 			}
@@ -226,20 +228,22 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				addGroupingTableHeaders();
 			}
 		});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 10dlu, pref");
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, pref");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel("Database connection:"));
     	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
-    	southPanelBuilder.append(groupingCheckBox);
+    	southPanelBuilder.append(new JLabel("                               "));
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append("Filter:", queryPen.getGlobalWhereText(), 3);
+    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 3);
+    	southPanelBuilder.nextLine();
+    	southPanelBuilder.append(groupingCheckBox);
+    	southPanelBuilder.append(new JLabel(""));
+    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel());
+    	southPanelBuilder.nextLine();
+    	southPanelBuilder.append(resultPanel, 5);
     	
-    	JPanel topPane = new JPanel(new BorderLayout());
-    	topPane.add(southPanelBuilder.getPanel(), BorderLayout.SOUTH);
-    	topPane.add(queryPenAndTextTabPane, BorderLayout.CENTER);
-    	
-    	rightViewPane.add(topPane, JSplitPane.TOP);
-    	rightViewPane.add(resultTabPane, JSplitPane.BOTTOM);  	
+    	rightViewPane.add(queryPenAndTextTabPane, JSplitPane.TOP);
+    	rightViewPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);  	
     	
     	rootNode = new SQLObjectRoot();
         for (SPDataSource ds : sessionContext.getDataSources().getConnections()) {
