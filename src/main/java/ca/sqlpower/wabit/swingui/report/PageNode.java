@@ -66,5 +66,17 @@ public class PageNode extends PNode {
         }
         return boundsSet;
     }
-    
+
+    /**
+     * Adds the given node to this page node, and if it's a content box node,
+     * also adds that node's underlying content box to this page node's
+     * underlying page object.
+     */
+    @Override
+    public void addChild(int index, PNode child) {
+        super.addChild(index, child);
+        if (child instanceof ContentBoxNode) {
+            page.addContentBox(((ContentBoxNode) child).getContentBox());
+        }
+    }
 }

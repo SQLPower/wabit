@@ -19,6 +19,10 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.FontMetrics;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Representation of a page that a report can be output to. Includes
  * information about page dimensions and margins.
@@ -29,7 +33,13 @@ public class Page {
      * This is the Graphics2D standard for pixels-to-inches conversions.
      */
     public static final int DPI = 72;
-    
+
+    /**
+     * The default FontMetrics for this Page. All ContentBoxes in this
+     * Page that use a FontMetrics will by default inherit this one.
+     */
+    private FontMetrics defaultFont;
+
     public static enum StandardPageSizes {
         /**
          * Approximation of ISO A4 (210x297mm) in 1/72 of an inch.
@@ -97,6 +107,11 @@ public class Page {
      * Bottom margin height. Default is 1 inch.
      */
     private int bottomMargin = DPI;
+    
+    /**
+     * The content boxes that provide the page's content and define its layout.
+     */
+    private final List<ContentBox> contentBoxes = new ArrayList<ContentBox>();
     
     /**
      * Creates a page with the given standard size and 1-inch margins on all sides.
@@ -169,4 +184,27 @@ public class Page {
         this.bottomMargin = bottomMargin;
     }
     
+    public FontMetrics getDefaultFont() {
+        return defaultFont;
+    }
+    
+    public void setDefaultFont(FontMetrics defaultFont) {
+        this.defaultFont = defaultFont;
+    }
+    
+    public void addContentBox(ContentBox addme) {
+        if (addme.getPage() != null) {
+            throw new IllegalStateException("That content box already belongs to a different page");
+        }
+        addme.setPage(this);
+        contentBoxes.add(addme);
+    }
+    
+    public void removeContentBox(ContentBox removeme) {
+        if (removeme.getPage() != this) {
+            throw new IllegalStateException("That's not my content box!");
+        }
+        contentBoxes.remove(removeme);
+        removeme.setPage(null);
+    }
 }

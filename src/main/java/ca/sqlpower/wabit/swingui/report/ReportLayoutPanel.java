@@ -63,7 +63,7 @@ public class ReportLayoutPanel {
         InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
         inputMap.put(KeyStroke.getKeyStroke('b'), AddContentBoxAction.class);
         
-        canvas.getActionMap().put(AddContentBoxAction.class, new AddContentBoxAction(pageNode));
+        canvas.getActionMap().put(AddContentBoxAction.class, new AddContentBoxAction(report, pageNode));
     }
     
     private class MouseInputHandler implements PInputEventListener {

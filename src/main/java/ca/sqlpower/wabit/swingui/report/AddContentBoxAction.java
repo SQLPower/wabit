@@ -24,19 +24,27 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.Report;
 
 public class AddContentBoxAction extends AbstractAction {
 
+    private final Report report;
     private final PageNode addTo;
 
-    public AddContentBoxAction(PageNode addTo) {
+    public AddContentBoxAction(Report report, PageNode addTo) {
         super("Add Content Box");
+        this.report = report;
         this.addTo = addTo;
     }
     
     public void actionPerformed(ActionEvent e) {
-        ContentBoxNode newContentBox = new ContentBoxNode(new ContentBox());
-        newContentBox.setBounds(addTo.getWidth() / 2, addTo.getHeight() / 2, 30, 30); // XXX should be near mouse pointer
-        addTo.addChild(newContentBox);
+        ContentBoxNode newCBNode = new ContentBoxNode(new ContentBox());
+        newCBNode.setBounds(addTo.getWidth() / 2, addTo.getHeight() / 2, 30, 30); // XXX should be near mouse pointer
+        addTo.addChild(newCBNode);
+        
+        // XXX temporary
+        Label l = new Label(report, "This is a label");
+        newCBNode.getContentBox().setContentRenderer(l);
     }
 }

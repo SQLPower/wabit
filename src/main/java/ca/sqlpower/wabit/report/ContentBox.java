@@ -28,8 +28,25 @@ public class ContentBox {
     private int y;
     private int width;
     private int height;
+
+    /**
+     * The Page that contains this ContentBox
+     */
+    private Page page;
     
-    // TODO source of data to render
+    /**
+     * The renderer that provides visual content for this box.
+     */
+    private ReportContentRenderer contentRenderer;
+    
+    
+    public void setContentRenderer(ReportContentRenderer contentRenderer) {
+        this.contentRenderer = contentRenderer;
+    }
+    
+    public ReportContentRenderer getContentRenderer() {
+        return contentRenderer;
+    }
     
     public int getX() {
         return x;
@@ -54,6 +71,14 @@ public class ContentBox {
     }
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public Page getPage() {
+        return page;
+    }
+
+    public void setPage(Page page) {
+        this.page = page;
     }
 
     

@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -66,5 +67,25 @@ public class ContentBoxNode extends PNode {
         g2.setColor(borderColour);
         g2.setStroke(SPSUtils.getAdjustedStroke(borderStroke, camera.getViewScale()));
         g2.draw(getBounds());
+        
+        ReportContentRenderer contentRenderer = contentBox.getContentRenderer();
+        if (contentRenderer != null) {
+            logger.debug("Rendering content");
+            Graphics2D contentGraphics = (Graphics2D) g2.create(
+                    (int) getX(), (int) getY(),
+                    (int) getWidth(), (int) getHeight());
+            contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale());
+            contentGraphics.dispose();
+        } else {
+            g2.setColor(Color.LIGHT_GRAY);
+            g2.drawString("Empty box\u2014drag content provider here!", 0, (int) (getHeight() / 2));
+        }
+    }
+    
+    /**
+     * Returns the content box this node is the visual representation of.
+     */
+    public ContentBox getContentBox() {
+        return contentBox;
     }
 }

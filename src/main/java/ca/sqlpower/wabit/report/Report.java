@@ -28,6 +28,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
@@ -38,6 +41,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.WebResultFormatter;
 import ca.sqlpower.sql.WebResultHTMLFormatter;
 import ca.sqlpower.sql.WebResultSet;
+import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
 /**
@@ -45,7 +49,7 @@ import ca.sqlpower.wabit.report.Page.StandardPageSizes;
  * queries against a particular database, an output specifier that determines
  * file format, page layout and other formatting attributes, and an output destination.
  */
-public class Report implements Runnable, Callable<Void> {
+public class Report implements Runnable, Callable<Void>, VariableContext {
 
     private static final Logger logger = Logger.getLogger(Report.class);
     
@@ -68,7 +72,12 @@ public class Report implements Runnable, Callable<Void> {
      * The place the formatted report should be written.
      */
     private File targetFile; // TODO create a ReportDestination interface instead of using a file
-    
+
+    /**
+     * The variables defined for this report.
+     */
+    private final Map<String, Object> vars = new HashMap<String, Object>();
+
     /**
      * A wrapper for {@link #call()} that achieves two purposes: firstly, it allows Report
      * to implement Runnable; secondly it conveniently wraps any checked exceptions
@@ -178,5 +187,22 @@ public class Report implements Runnable, Callable<Void> {
         } else {
             System.out.println("Output is in file " + targetFile);
         }
+    }
+
+    public Set<String> getVariableNames() {
+        return vars.keySet();
+    }
+
+    public <T> T getVariableValue(String name, T defaultValue) {
+        if (vars.containsKey(name)) {
+            Class<T> valueClass = (Class<T>) defaultValue.getClass();
+            return valueClass.cast(vars.get(name));
+        } else { 
+            return defaultValue;
+        }
+    }
+    
+    public void setVariable(String name, Object value) {
+        vars.put(name, value);
     }
 }
