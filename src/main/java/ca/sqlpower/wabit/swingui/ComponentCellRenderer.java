@@ -88,6 +88,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 */
 	private int labelHeight;
 	private int comboBoxHeight;
+	private int comboBoxWidth;
 	private int havingFieldHeight;
 	private ArrayList<JComboBox> comboBoxes;
 	private ArrayList<JTextField> textFields;
@@ -158,8 +159,9 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 
 			if(i == 0) {
 				// takes the first ComboBoxes and TextField's height
-				comboBoxHeight = comboBoxes.get(0).getPreferredSize().height;
-				havingFieldHeight = textFields.get(0).getPreferredSize().height;
+				comboBoxHeight = comboBoxes.get(i).getPreferredSize().height;
+				comboBoxWidth = comboBoxes.get(i).getPreferredSize().width;
+				havingFieldHeight = textFields.get(i).getPreferredSize().height;
 			}
 		}
 		setLayout(new BorderLayout());
@@ -367,7 +369,11 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		if (groupingEnabled) {
 			tableHeader.getParent().setPreferredSize(new Dimension(
 					tableHeader.getParent().getPreferredSize().width,
-					labelHeight +comboBoxHeight+ havingFieldHeight));			
+					labelHeight +comboBoxHeight+ havingFieldHeight));
+			for(int i = 0; i < comboBoxes.size(); i++) {
+				int tempWidth = Math.max(comboBoxWidth, tableHeader.getColumnModel().getColumn(i).getWidth());
+				tableHeader.getColumnModel().getColumn(i).setPreferredWidth(tempWidth);			
+			}
 		} else {
 			tableHeader.getParent().setPreferredSize(new Dimension(
 					tableHeader.getParent().getPreferredSize().width, labelHeight));	
