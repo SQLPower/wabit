@@ -179,7 +179,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
     	JTabbedPane resultTabPane = queryUIComponents.getResultTabPane();
         	
-    	JTabbedPane editorTabPane = new JTabbedPane();
+    	queryPenAndTextTabPane = new JTabbedPane();
     	queryPen.addQueryListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent e) {
 				StringBuffer query = new StringBuffer(queryCache.generateQuery());
@@ -193,9 +193,18 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 			}
 		});
     	JPanel playPen = queryPen.createQueryPen(this);
-    	editorTabPane.add(playPen,"PlayPen");
-    	editorTabPane.add(queryToolPanel,"Query");
-    	editorTabPane.addChangeListener(new ChangeListener() {
+    	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
+    	queryExecuteBuilder.append("", new JButton(new AbstractAction("Execute Query") {
+			public void actionPerformed(ActionEvent e) {
+				queryUIComponents.executeQuery(queryCache.generateQuery());
+			}
+		}));
+    	JPanel queryPenPanel = new JPanel(new BorderLayout());
+    	queryPenPanel.add(playPen, BorderLayout.CENTER);
+    	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
+    	queryPenAndTextTabPane.add(queryPenPanel,"PlayPen");
+    	queryPenAndTextTabPane.add(queryToolPanel,"Query");
+    	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 			}
@@ -218,13 +227,6 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		});
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 10dlu, pref");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
-    	southPanelBuilder.append(new JLabel(""), 3);
-    	southPanelBuilder.append(new JButton(new AbstractAction("Execute Query") {
-			public void actionPerformed(ActionEvent e) {
-				queryUIComponents.executeQuery(queryCache.generateQuery());
-			}
-		}));
-    	southPanelBuilder.nextLine();
     	southPanelBuilder.append(new JLabel("Database connection:"));
     	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
     	southPanelBuilder.append(groupingCheckBox);
@@ -233,7 +235,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	
     	JPanel topPane = new JPanel(new BorderLayout());
     	topPane.add(southPanelBuilder.getPanel(), BorderLayout.SOUTH);
-    	topPane.add(editorTabPane, BorderLayout.CENTER);
+    	topPane.add(queryPenAndTextTabPane, BorderLayout.CENTER);
     	
     	rightViewPane.add(topPane, JSplitPane.TOP);
     	rightViewPane.add(resultTabPane, JSplitPane.BOTTOM);  	
@@ -349,6 +351,12 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	private SQLObjectRoot rootNode;
 
 	private QueryPen queryPen;
+
+	/**
+	 * This is the tabbed pane that contains the query pen and text editor.
+	 * All the query editing UI should be in this tabbed pane.
+	 */
+	private JTabbedPane queryPenAndTextTabPane;
 	
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.add(l);
@@ -431,29 +439,37 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	 * need to be called each time the tables are recreated.
 	 */
 	private void addGroupingTableHeaders() {
-		ArrayList<JTable> tables = queryUIComponents.getResultTables();
-		for(JTable t : tables)	{
-			ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
-			if(groupingCheckBox.isSelected()) {
-				renderPanel.setGroupingEnabled(true);
-				logger.debug("Grouping Enabled");
-			} else {
-				renderPanel.setGroupingEnabled(false);		
-			}
-			for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-				SQLGroupFunction groupByAggregate = queryCache.getGroupByAggregate(queryCache.getSelectedColumns().get(i));
-				if (groupByAggregate != null) {
-					renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate.toString());
+		//XXX The group by and having clauses should be allowed
+		// to be shown on both the query pen and text editor tabs
+		// however we currently can't update the query cache from 
+		// the text side so we won't be able to use these components
+		// from the text side and they will cause errors as they won't
+		// be able to synchronize with the new queries being run.
+		if (queryPenAndTextTabPane.getSelectedIndex() == 0) {
+			ArrayList<JTable> tables = queryUIComponents.getResultTables();
+			for(JTable t : tables)	{
+				ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
+				if(groupingCheckBox.isSelected()) {
+					renderPanel.setGroupingEnabled(true);
+					logger.debug("Grouping Enabled");
+				} else {
+					renderPanel.setGroupingEnabled(false);		
+				}
+				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
+					SQLGroupFunction groupByAggregate = queryCache.getGroupByAggregate(queryCache.getSelectedColumns().get(i));
+					if (groupByAggregate != null) {
+						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate.toString());
+					}
+				}
+
+				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
+					String havingText = queryCache.getHavingClause(queryCache.getSelectedColumns().get(i));
+					if (havingText != null) {
+						renderPanel.getTextFields().get(i).setText(havingText);
+					}
 				}
 			}
-			
-			for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-				String havingText = queryCache.getHavingClause(queryCache.getSelectedColumns().get(i));
-				if (havingText != null) {
-					renderPanel.getTextFields().get(i).setText(havingText);
-				}
-			}
+			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
 		}
-		queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
 	}
 }
