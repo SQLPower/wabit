@@ -40,10 +40,12 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 
 import org.apache.log4j.Logger;
 
@@ -53,12 +55,10 @@ import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
+import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
-
-import com.jgoodies.forms.builder.ButtonStackBuilder;
-
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
@@ -271,7 +271,7 @@ public class QueryPen implements MouseState {
 	/**
 	 * Deletes the selected item from the QueryPen.
 	 */
-	private final Action deleteAction = new AbstractAction("Delete"){
+	private final Action deleteAction = new AbstractAction(){
 		public void actionPerformed(ActionEvent e) {
 			if (lastPickPath != null) {
 				PNode pickedNode = lastPickPath.getPickedNode();
@@ -320,15 +320,18 @@ public class QueryPen implements MouseState {
 		JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
-        ButtonStackBuilder buttonStack = new ButtonStackBuilder();
-        buttonStack.addGridded(getZoomInButton());
-        buttonStack.addRelatedGap();
-        buttonStack.addGridded(getZoomOutButton());
-        buttonStack.addUnrelatedGap();
-        buttonStack.addGridded(getCreateJoinButton());
-        buttonStack.addRelatedGap();
-        buttonStack.addGridded(new JButton(getDeleteAction()));
-        panel.add(buttonStack.getPanel(), BorderLayout.EAST);
+        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/delete.png"));
+        JButton deleteButton = new JButton(getDeleteAction());
+        deleteButton.setIcon(joinIcon);
+        
+        JToolBar queryPenBar = new JToolBar(JToolBar.VERTICAL);
+        queryPenBar.add(getZoomInButton());
+        queryPenBar.add(getZoomOutButton());
+        queryPenBar.add(getCreateJoinButton());
+        queryPenBar.add(deleteButton);
+        
+        
+        panel.add(queryPenBar, BorderLayout.EAST);
         panel.setBackground(Color.WHITE);
 		return panel;
 	}
@@ -353,13 +356,18 @@ public class QueryPen implements MouseState {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
-        zoomInButton = new JButton(new AbstractAction("Zoom In") {
+           	
+        ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_in16.png"));
+        zoomInButton = new JButton(new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		PCamera camera = canvas.getCamera();
         		camera.setViewScale(camera.getViewScale() + ZOOM_CONSTANT);
         	}
         });
-        zoomOutButton = new JButton(new AbstractAction("Zoom Out"){
+        zoomInButton.setIcon(zoomInIcon);
+        
+        ImageIcon zoomOutIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_out16.png"));
+        zoomOutButton = new JButton(new AbstractAction(){
 			public void actionPerformed(ActionEvent e) {
 				PCamera camera = canvas.getCamera();
 				if (camera.getViewScale() > ZOOM_CONSTANT) {
@@ -367,12 +375,16 @@ public class QueryPen implements MouseState {
 				}
 			}
 		});
+        zoomOutButton.setIcon(zoomOutIcon);
         
-        createJoinButton = new JButton(new AbstractAction("Create Join") {
+        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/join.png"));
+        createJoinButton = new JButton(new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		setMouseState(MouseStates.CREATE_JOIN);
         	}
         });
+        createJoinButton.setIcon(joinIcon);
+        
         CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas);
 		canvas.addInputEventListener(createJoinListener);
 		createJoinListener.addCreateJoinListener(queryChangeListener);
