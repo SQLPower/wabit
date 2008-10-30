@@ -466,7 +466,7 @@ public class QueryPen implements MouseState {
 						}
 						if (firstOn) {
 							//On is not optional so set it to be true
-							query.append("ON TRUE ");
+							query.append(" ON TRUE ");
 						}
 					}
 				}
