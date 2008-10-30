@@ -228,11 +228,10 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				addGroupingTableHeaders();
 			}
 		});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, pref");
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, max(pref;80dlu)");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel("Database connection:"));
-    	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
-    	southPanelBuilder.append(new JLabel("                               "));
+    	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox(), 3);
     	southPanelBuilder.nextLine();
     	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 3);
     	southPanelBuilder.nextLine();
