@@ -109,6 +109,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	private JTree projectTree;
 	private JFrame frame;
 	private JCheckBox groupingCheckBox;
+	private static JLabel statusLabel;
 
 	/**
 	 * Stores the parts of the query.
@@ -131,6 +132,13 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		sessionContext.registerChildSession(this);
 		queryPen = new QueryPen(this);
 		queryCache = new QueryCache(queryPen);
+		statusLabel= new JLabel();
+	}
+	/**
+	 * sets the StatusMessage
+	 */
+	public static void setStatusMessage (String msg) {
+		statusLabel.setText(msg);	
 	}
 	
 	/**
@@ -289,9 +297,8 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
         wabitPane.add(rightViewPane, JSplitPane.RIGHT);
         
-        //the current status label will be replaced by the Session Messages once it is implemented
         JPanel statusPane = new JPanel(new BorderLayout());
-        statusPane.add(new JLabel("Status Message here"), BorderLayout.CENTER);
+        statusPane.add(statusLabel, BorderLayout.CENTER);
 		
 		MemoryMonitor memoryMonitor = new MemoryMonitor();
 		memoryMonitor.start();
