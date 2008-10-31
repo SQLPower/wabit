@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui.querypen;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
@@ -31,6 +32,7 @@ import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -42,10 +44,12 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 
 import org.apache.log4j.Logger;
 
@@ -89,6 +93,15 @@ public class QueryPen implements MouseState {
 	
 	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
 	
+    private static final String DELETE_ACTION = "Delete";
+    
+    private static final String ZOOM_IN_ACTION = "Zoom In";
+    
+    private static final String ZOOM_OUT_ACTION = "Zoom Out";
+    
+    private AbstractAction zoomInAction;
+    private AbstractAction zoomOutAction;
+    
 	private final class QueryPenDropTargetListener implements
 			DropTargetListener {
 		private MouseState mouseState ;
@@ -258,6 +271,8 @@ public class QueryPen implements MouseState {
 
 	private final WabitSwingSession session;
 	
+	private final String acceleratorKeyString;
+	
 	/**
 	 * The mouse state in this query pen.
 	 */
@@ -319,7 +334,8 @@ public class QueryPen implements MouseState {
         panel.add(getScrollPane(), BorderLayout.CENTER);
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/delete.png"));
         JButton deleteButton = new JButton(getDeleteAction());
-        deleteButton.setToolTipText("Delete");
+        deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut delete)");
+        
         deleteButton.setIcon(joinIcon);
         
         JToolBar queryPenBar = new JToolBar(JToolBar.VERTICAL);
@@ -337,6 +353,11 @@ public class QueryPen implements MouseState {
 
 	public QueryPen(WabitSwingSession s) {
 		session = s;
+		if(s.getContext().isMacOSX()) {
+			acceleratorKeyString = "Cmd";
+		} else {
+			acceleratorKeyString= "Ctrl";
+		}
 		canvas = new PSwingCanvas();
 		canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -348,6 +369,10 @@ public class QueryPen implements MouseState {
 				lastPickPath = event.getPath();
 			}
 		});
+		
+		canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+	                KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), DELETE_ACTION);
+	    canvas.getActionMap().put(DELETE_ACTION, deleteAction);
 
         canvas.setPanEventHandler( null );
         topLayer = canvas.getLayer();
@@ -355,18 +380,38 @@ public class QueryPen implements MouseState {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
-           	
         ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_in16.png"));
-        zoomInButton = new JButton(new AbstractAction() {
+        zoomInAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		PCamera camera = canvas.getCamera();
         		camera.setViewScale(camera.getViewScale() + ZOOM_CONSTANT);
         	}
-        });
-        zoomInButton.setToolTipText("Zoom In");
-        zoomInButton.setIcon(zoomInIcon);
+        };
         
+        zoomInButton = new JButton(zoomInAction);
+        zoomInButton.setToolTipText( ZOOM_IN_ACTION+ " (Shortcut "+ acceleratorKeyString+ " +)");
+        zoomInButton.setIcon(zoomInIcon);
+        canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
+                
+                , ZOOM_IN_ACTION);
+        canvas.getActionMap().put(ZOOM_IN_ACTION, zoomInAction);
         ImageIcon zoomOutIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_out16.png"));
+        
+        zoomOutAction = new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				PCamera camera = canvas.getCamera();
+				if (camera.getViewScale() > ZOOM_CONSTANT) {
+					camera.setViewScale(camera.getViewScale() - ZOOM_CONSTANT);
+				}
+			}
+        };
+        canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
+                
+                , ZOOM_OUT_ACTION);
+        canvas.getActionMap().put(ZOOM_OUT_ACTION, zoomOutAction);
+        
         zoomOutButton = new JButton(new AbstractAction(){
 			public void actionPerformed(ActionEvent e) {
 				PCamera camera = canvas.getCamera();
@@ -375,7 +420,7 @@ public class QueryPen implements MouseState {
 				}
 			}
 		});
-        zoomOutButton.setToolTipText("Zoom Out");
+        zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " -)");
         zoomOutButton.setIcon(zoomOutIcon);
         
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/join.png"));
