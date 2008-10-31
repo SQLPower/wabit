@@ -36,6 +36,7 @@ import javax.swing.event.TableModelListener;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.sql.SQLGroupFunction;
@@ -338,7 +339,15 @@ public class QueryCache {
 				if (evt.getOldValue() instanceof ContainerPane<?>) {
 					ContainerPane<?> container = (ContainerPane<?>)evt.getOldValue();
 					if (container.getModel().getContainedObject() instanceof SQLTable) {
-						fromTableList.remove((SQLTable)container.getModel().getContainedObject());
+						SQLTable table = (SQLTable)container.getModel().getContainedObject();
+						fromTableList.remove(table);
+						try {
+							for (SQLColumn col : table.getColumns()) {
+								whereMapping.remove(col);
+							}
+						} catch (ArchitectException e) {
+							throw new RuntimeException(e);
+						}
 					}
 					for (ChangeListener l : queryChangeListeners) {
 						l.stateChanged(new ChangeEvent(QueryCache.this));
