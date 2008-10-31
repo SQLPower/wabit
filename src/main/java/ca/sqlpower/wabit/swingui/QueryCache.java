@@ -185,18 +185,20 @@ public class QueryCache {
 	 */
 	private PropertyChangeListener aliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getSource() instanceof ItemPNode) {
-				ItemPNode itemNode = (ItemPNode)e.getSource();
-				if (itemNode.getItem().getItem() instanceof SQLColumn) {
-					SQLColumn column = (SQLColumn) itemNode.getItem().getItem();
-					if (itemNode.getAlias().length() > 0) {
-						aliasMap.put(column, itemNode.getAlias());
-						logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
-					} else {
-						aliasMap.remove(column);
-					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
+			if (e.getPropertyName().equals(ItemPNode.PROPERTY_ALIAS)) {
+				if (e.getSource() instanceof ItemPNode) {
+					ItemPNode itemNode = (ItemPNode)e.getSource();
+					if (itemNode.getItem().getItem() instanceof SQLColumn) {
+						SQLColumn column = (SQLColumn) itemNode.getItem().getItem();
+						if (itemNode.getAlias().length() > 0) {
+							aliasMap.put(column, itemNode.getAlias());
+							logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
+						} else {
+							aliasMap.remove(column);
+						}
+						for (ChangeListener l : queryChangeListeners) {
+							l.stateChanged(new ChangeEvent(QueryCache.this));
+						}
 					}
 				}
 			}
@@ -231,21 +233,24 @@ public class QueryCache {
 				ItemPNode itemNode = (ItemPNode)e.getSource();
 				if (itemNode.getItem().getItem() instanceof SQLColumn) {
 					SQLColumn column = (SQLColumn) itemNode.getItem().getItem();
-					if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED) && e.getNewValue().equals(true)) {
-						selectedColumns.add(column);
-						if (groupingEnabled) {
-							groupByList.add(column);
+					if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED)) {
+						if (e.getNewValue().equals(true)) {
+							selectedColumns.add(column);
+							if (groupingEnabled) {
+								groupByList.add(column);
+							}
+							logger.debug("Added " + column.getName() + " to the column list");
+						} else if (e.getNewValue().equals(false)) {
+							selectedColumns.remove(column);
+							aliasMap.remove(column);
+							groupByList.remove(column);
+							groupByAggregateMap.remove(column);
+							havingMap.remove(column);
 						}
-						logger.debug("Added " + column.getName() + " to the column list");
-					} else if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED) && e.getNewValue().equals(false)) {
-						selectedColumns.remove(column);
-						aliasMap.remove(column);
-						groupByList.remove(column);
-						groupByAggregateMap.remove(column);
-						havingMap.remove(column);
-					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
+						logger.debug("Firing change for selection.");
+						for (ChangeListener l : queryChangeListeners) {
+							l.stateChanged(new ChangeEvent(QueryCache.this));
+						}
 					}
 				}
 			}
@@ -587,6 +592,11 @@ public class QueryCache {
 					query.append(orderByArgumentMap.get(col).toString() + " ");
 				}
 			}
+		}
+		try {
+			throw new Exception();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		logger.debug(" Query is : " + query.toString());
 		return query.toString();

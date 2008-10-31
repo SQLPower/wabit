@@ -107,8 +107,10 @@ public class ItemPNode extends PNode {
 				columnText.syncWithDocument();
 			}
 			editing = false;
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_ALIAS, oldAlias, aliasText));
+			if (!aliasText.equals(oldAlias)) {
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_ALIAS, oldAlias, aliasText));
+				}
 			}
 		}
 		
@@ -122,17 +124,20 @@ public class ItemPNode extends PNode {
 	};
 	
 	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
+		private String oldWhere;
 		public void editingStopping() {
-			String oldWhere = getWhereText();
 			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
 				whereText.getEditorPane().setText(WHERE_START_TEXT);
 				whereText.syncWithDocument();
 			}
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_WHERE, oldWhere, getWhereText()));
+			if (!getWhereText().equals(oldWhere)) {
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_WHERE, oldWhere, getWhereText()));
+				}
 			}
 		}
 		public void editingStarting() {
+			oldWhere = getWhereText();
 			if (whereText.getEditorPane().getText().equals(WHERE_START_TEXT)) {
 				whereText.getEditorPane().setText("");
 			}
