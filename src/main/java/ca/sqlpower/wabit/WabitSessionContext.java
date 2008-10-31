@@ -90,7 +90,10 @@ public class WabitSessionContext {
 			System.exit(0);
 		}
 	}
-	
+	/**
+	 * returns true if the OS is Mac
+	 * @return
+	 */
 	public boolean isMacOSX() {
 		return MAC_OS_X ; 
 	}
