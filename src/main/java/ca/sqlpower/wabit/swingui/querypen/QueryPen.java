@@ -449,42 +449,6 @@ public class QueryPen implements MouseState {
 	public JTextField getGlobalWhereText() {
 		return globalWhereText;
 	}
-	
-	/**
-	 * A basic query string generator. This is being done quickly for the
-	 * demo today and should be enhanced later.
-	 */
-	public String createQueryString() {
-		StringBuffer query = new StringBuffer();
-		
-		boolean isFirstWhere = true;
-		for (Object o : topLayer.getAllNodes()) {
-			if (o instanceof ContainerPane && ((ContainerPane<?>)o).getModel().getContainedObject() instanceof SQLTable) {
-				ContainerPane<?> container = (ContainerPane<?>)o;
-				for (ItemPNode itemNode : container.getContainedItems()) {
-					if (itemNode.getWhereText() != null && itemNode.getWhereText().length() > 0) {
-						if (isFirstWhere) {
-							query.append(" \nWHERE ");
-							isFirstWhere = false;
-						} else {
-							query.append(" AND ");
-						}
-						query.append(((SQLTable)container.getModel().getContainedObject()).getName() + "." + itemNode.getItem().getName() + " " + itemNode.getWhereText() + " ");
-					}
-				}
-			}
-		}
-		if (globalWhereText.getText().length() > 0) {
-			if (isFirstWhere) {
-				query.append(" \nWHERE " + globalWhereText.getText());
-			} else {
-				query.append(" AND " + globalWhereText.getText());
-			}
-		}
-		
-		logger.debug("Select is : "  + query);
-		return query.toString();
-	}
 
 	/**
 	 * Returns a list of container panes, where each one wraps the same

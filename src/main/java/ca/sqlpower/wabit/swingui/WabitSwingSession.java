@@ -36,9 +36,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -183,12 +180,6 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	JPanel resultPanel = queryUIComponents.getFirstResultPanel();
         	
     	queryPenAndTextTabPane = new JTabbedPane();
-    	queryPen.addQueryListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent e) {
-				StringBuffer query = new StringBuffer(queryCache.generateQuery());
-				queryUIComponents.executeQuery(query.toString());
-			}
-		});
     	queryCache.addQueryChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				queryUIComponents.executeQuery(queryCache.generateQuery());

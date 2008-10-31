@@ -194,6 +194,9 @@ public class QueryCache {
 					} else {
 						aliasMap.remove(column);
 					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
 				}
 			}
 		}
@@ -240,6 +243,9 @@ public class QueryCache {
 						groupByAggregateMap.remove(column);
 						havingMap.remove(column);
 					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
 				}
 			}
 		}
@@ -281,6 +287,9 @@ public class QueryCache {
 					} else {
 						joinMapping.get(rightColumn.getParentTable()).add(join);
 					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
 				}
 			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_REMOVED)) {
 				JoinLine joinLine = (JoinLine) e.getOldValue();
@@ -305,6 +314,9 @@ public class QueryCache {
 							break;
 						}
 					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
 				}
 			}
 		}
@@ -318,6 +330,9 @@ public class QueryCache {
 					if (container.getModel().getContainedObject() instanceof SQLTable) {
 						fromTableList.add((SQLTable)container.getModel().getContainedObject());
 					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
 				}
 			} else if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_REMOVED)) {
 				if (evt.getOldValue() instanceof ContainerPane<?>) {
@@ -325,6 +340,46 @@ public class QueryCache {
 					if (container.getModel().getContainedObject() instanceof SQLTable) {
 						fromTableList.remove((SQLTable)container.getModel().getContainedObject());
 					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
+				}
+			}
+		}
+	};
+	
+	/**
+	 * This maps the where clause defined on a column specific basis to their
+	 * columns.
+	 */
+	private final Map<SQLColumn, String> whereMapping;
+	
+	/**
+	 * This is the global where clause that is for all non-column-specific where
+	 * entries.
+	 */
+	private String globalWhereClause;
+	
+	private PropertyChangeListener whereListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent e) {
+			if (e.getPropertyName().equals(ItemPNode.PROPERTY_WHERE)) {
+				if (e.getSource() instanceof ItemPNode) {
+					ItemPNode itemNode = (ItemPNode) e.getSource();
+					if (itemNode.getItem().getItem() instanceof SQLColumn) {
+						if (e.getNewValue() != null && ((String)e.getNewValue()).length() > 0) {
+							whereMapping.put((SQLColumn)itemNode.getItem().getItem(), (String)e.getNewValue());
+						} else {
+							whereMapping.remove(itemNode.getItem().getItem());
+						}
+					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
+					}
+				}
+			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_WHERE_MODIFIED)) {
+				globalWhereClause = (String)e.getNewValue();
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			}
 		}
@@ -343,20 +398,18 @@ public class QueryCache {
 	 */
 	private Map<SQLColumn, String> havingMap;
 	
-	private final QueryPen pen;
-	
 	/**
 	 * These listeners will fire an event whenever the query has changed.
 	 */
 	private final List<ChangeListener> queryChangeListeners;
 	
 	public QueryCache(QueryPen pen) {
-		this.pen = pen;
 		orderByArgumentMap = new HashMap<SQLColumn, OrderByArgument>();
 		orderByList = new ArrayList<SQLColumn>();
 		selectedColumns = new ArrayList<SQLColumn>();
 		fromTableList = new ArrayList<SQLTable>();
 		joinMapping = new HashMap<SQLTable, List<SQLJoin>>();
+		whereMapping = new HashMap<SQLColumn, String>();
 		queryChangeListeners = new ArrayList<ChangeListener>();
 		aliasMap = new HashMap<SQLColumn, String>();
 		groupByAggregateMap = new HashMap<SQLColumn, SQLGroupFunction>();
@@ -367,6 +420,7 @@ public class QueryCache {
 		pen.addQueryListener(selectedColumnListener);
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
+		pen.addQueryListener(whereListener);
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -451,7 +505,27 @@ public class QueryCache {
 			}
 		}
 		query.append(" ");
-		query.append(pen.createQueryString());
+		if (!whereMapping.isEmpty() || (globalWhereClause != null && globalWhereClause.length() > 0)) {
+			query.append(" \nWHERE");
+			boolean isFirstWhere = true;
+			for (Map.Entry<SQLColumn, String> entry : whereMapping.entrySet()) {
+				if (entry.getValue().length() > 0) {
+					if (isFirstWhere) {
+						query.append(" ");
+						isFirstWhere = false;
+					} else {
+						query.append(" AND ");
+					}
+					query.append(entry.getKey().getParentTable().getName() + "." + entry.getKey().getName() + " " + entry.getValue());
+				}
+			}
+			if (!isFirstWhere && (globalWhereClause != null && globalWhereClause.length() > 0)) {
+				query.append(" AND");
+			}
+			if (globalWhereClause != null) {
+				query.append(" " + globalWhereClause);
+			}
+		}
 		if (!groupByList.isEmpty()) {
 			query.append("\nGROUP BY");
 			boolean isFirstGroupBy = true;
