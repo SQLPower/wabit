@@ -279,9 +279,6 @@ public class QueryPen implements MouseState {
 					topLayer.removeChild(pickedNode);
 					if (pickedNode instanceof ContainerPane<?>) {
 						ContainerPane<?> pane = ((ContainerPane<?>)pickedNode);
-						for (ItemPNode itemNode : pane.getContainedItems()) {
-							itemNode.setInSelected(false);
-						}
 						pane.removeQueryChangeListener(queryChangeListener);
 						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane, null));
 					}

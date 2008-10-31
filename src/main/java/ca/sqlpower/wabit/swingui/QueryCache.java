@@ -241,11 +241,7 @@ public class QueryCache {
 							}
 							logger.debug("Added " + column.getName() + " to the column list");
 						} else if (e.getNewValue().equals(false)) {
-							selectedColumns.remove(column);
-							aliasMap.remove(column);
-							groupByList.remove(column);
-							groupByAggregateMap.remove(column);
-							havingMap.remove(column);
+							removeColumnSelection(column);
 						}
 						logger.debug("Firing change for selection.");
 						for (ChangeListener l : queryChangeListeners) {
@@ -349,6 +345,7 @@ public class QueryCache {
 						try {
 							for (SQLColumn col : table.getColumns()) {
 								whereMapping.remove(col);
+								removeColumnSelection(col);
 							}
 						} catch (ArchitectException e) {
 							throw new RuntimeException(e);
@@ -452,10 +449,19 @@ public class QueryCache {
 	}
 	
 	/**
+	 * Removes the column from the selected columns list and all other
+	 * related lists.
+	 */
+	private void removeColumnSelection(SQLColumn column) {
+		selectedColumns.remove(column);
+		aliasMap.remove(column);
+		groupByList.remove(column);
+		groupByAggregateMap.remove(column);
+		havingMap.remove(column);
+	}
+	
+	/**
 	 * Generates the query based on the cache.
-	 * 
-	 * TODO: Store the select, from, and where portions
-	 * in the cache and remove the string parameter from this method.
 	 */
 	public String generateQuery() {
 		if (selectedColumns.size() ==  0) {
