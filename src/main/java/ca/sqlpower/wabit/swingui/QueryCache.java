@@ -593,11 +593,6 @@ public class QueryCache {
 				}
 			}
 		}
-		try {
-			throw new Exception();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		logger.debug(" Query is : " + query.toString());
 		return query.toString();
 	}
