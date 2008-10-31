@@ -45,6 +45,7 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -403,8 +404,8 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		sortDecorator.addTableModelListener(l);
 	}
 	
-	public void setSortingStatus(int column, int status) {
-		sortDecorator.setSortingStatus(column, status);
+	public void setSortingStatus(LinkedHashMap<Integer, Integer> columnSortMap) {
+		sortDecorator.setSortingStatus(columnSortMap);
 	}
 	
 	public void addGroupAndHavingListener(PropertyChangeListener l) {

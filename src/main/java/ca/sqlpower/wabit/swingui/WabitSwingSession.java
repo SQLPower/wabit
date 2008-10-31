@@ -38,6 +38,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -66,6 +67,7 @@ import org.apache.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLDatabase;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLObjectRoot;
@@ -471,17 +473,21 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 					}
 				}
 				
-				// The combo box count should be the same as the column count.
-				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-					OrderByArgument arg = queryCache.getOrderByArgument(queryCache.getSelectedColumns().get(i));
+				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
+				for (SQLColumn column : queryCache.getOrderByList()) {
+					int columnIndex = queryCache.getSelectedColumns().indexOf(column);
+					OrderByArgument arg = queryCache.getOrderByArgument(column);
 					if (arg != null) {
 						if (arg == OrderByArgument.ASC) {
-							renderPanel.setSortingStatus(i, TableModelSortDecorator.ASCENDING);
+							columnSortMap.put(columnIndex, TableModelSortDecorator.ASCENDING);
 						} else if (arg == OrderByArgument.DESC) {
-							renderPanel.setSortingStatus(i, TableModelSortDecorator.DESCENDING);
+							columnSortMap.put(columnIndex, TableModelSortDecorator.DESCENDING);
+						} else {
+							logger.debug("Order by argument for column " + columnIndex + " is " + arg.toString() + " but was not set for an unknown reason.");
 						}
 					}
 				}
+				renderPanel.setSortingStatus(columnSortMap);
 				
 			}
 			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());

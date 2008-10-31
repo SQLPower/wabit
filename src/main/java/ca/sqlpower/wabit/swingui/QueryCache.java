@@ -154,16 +154,21 @@ public class QueryCache {
 				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgumentMap.get(column) == null)
 						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgumentMap.get(column) == OrderByArgument.ASC)
 						|| (sortStatus == TableModelSortDecorator.DESCENDING && orderByArgumentMap.get(column) == OrderByArgument.DESC)) {
+					if (sortStatus != TableModelSortDecorator.NOT_SORTED) {
+						logger.debug("Column " + column.getName() + " is sorted by type " + sortStatus + " and has a stored sort order of " + orderByArgumentMap.get(column));
+					}
 					continue;
 				}
 				sortChanged = true;
+				orderByList.remove(column);
 				if (sortStatus == TableModelSortDecorator.NOT_SORTED) {
 					orderByArgumentMap.remove(column);
-					orderByList.remove(column);
 				} else if (sortStatus == TableModelSortDecorator.ASCENDING) {
+					logger.debug("Setting sort order of " + column.getName() + " to ascending.");
 					orderByArgumentMap.put(column, OrderByArgument.ASC);
 					orderByList.add(column);
 				} else if (sortStatus == TableModelSortDecorator.DESCENDING) {
+					logger.debug("Setting sort order of " + column.getName() + " to descending.");
 					orderByArgumentMap.put(column, OrderByArgument.DESC);
 					orderByList.add(column);
 				} else {
@@ -641,6 +646,10 @@ public class QueryCache {
 
 	public OrderByArgument getOrderByArgument(SQLColumn column) {
 		return orderByArgumentMap.get(column);
+	}
+
+	public List<SQLColumn> getOrderByList() {
+		return Collections.unmodifiableList(orderByList);
 	}
 
 }
