@@ -405,6 +405,10 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		return rootNode;
 	}
 	
+	public WabitSessionContext getContext() {
+		return sessionContext;
+	}
+	
 	/**
 	 * A PopUpMenuListener which is current used for the ProjectTree.
 	 * It will Display a List of options once you right click on the ProjectTree.
