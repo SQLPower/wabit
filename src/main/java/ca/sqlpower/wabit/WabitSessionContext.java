@@ -46,6 +46,11 @@ public class WabitSessionContext {
 	private boolean terminateWhenLastSessionCloses;
 	
 	/**
+	 *  Stores true when the OS is MAC
+	 */
+    private static final boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
+	
+	/**
 	 * Creates a new Wabit session context.
 	 * 
 	 * @param terminateWhenLastSessionCloses
@@ -85,4 +90,10 @@ public class WabitSessionContext {
 			System.exit(0);
 		}
 	}
+	
+	public boolean isMacOSX() {
+		return MAC_OS_X ; 
+	}
+	
+	
 }
