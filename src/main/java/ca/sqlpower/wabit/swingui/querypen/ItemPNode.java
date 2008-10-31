@@ -102,6 +102,7 @@ public class ItemPNode extends PNode {
 				} else {
 					logger.debug("item name is " + item.getName());
 					nameEditor.setText(item.getName());
+					aliasText = "";
 				}
 				logger.debug("editor has text " + nameEditor.getText() + " alias is " + aliasText);
 				columnText.syncWithDocument();
