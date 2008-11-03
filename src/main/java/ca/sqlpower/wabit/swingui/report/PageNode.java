@@ -19,42 +19,34 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics2D;
 
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.report.Page;
-import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.util.PPaintContext;
 
 public class PageNode extends PNode {
 
-    private Color marginColour = new Color(0xdddddd);
-    private BasicStroke marginStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 4f, new float[] { 12f, 12f }, 0f);
+    private static final int DPI = 72;
+    
     private final Page page;
+    
+    // XXX do these need to be special, or can they just be regular guides?
+    // to make them regular guides, we'd need to let guides listen to their
+    // parent node and be defined relative to the top, bottom, left, right,
+    // vmiddle, or hmiddle of that node
+    private final GuideNode leftMargin = new GuideNode(GuideNode.Axis.VERTICAL);
+    private final GuideNode rightMargin = new GuideNode(GuideNode.Axis.VERTICAL);
+    private final GuideNode topMargin = new GuideNode(GuideNode.Axis.HORIZONTAL);
+    private final GuideNode bottomMargin = new GuideNode(GuideNode.Axis.HORIZONTAL);
     
     public PageNode(Page page) {
         this.page = page;
+        addChild(leftMargin);
+        addChild(rightMargin);
+        addChild(topMargin);
+        addChild(bottomMargin);
         setBounds(0, 0, page.getWidth(), page.getHeight());
         setPaint(Color.WHITE);
-    }
-    
-    @Override
-    protected void paint(PPaintContext paintContext) {
-        super.paint(paintContext);
-        PCamera camera = paintContext.getCamera();
-        Graphics2D g2 = paintContext.getGraphics();
-        
-        g2.setColor(marginColour);
-        g2.setStroke(SPSUtils.getAdjustedStroke(marginStroke, camera.getViewScale()));
-        g2.drawLine(page.getLeftMargin(), 0, page.getLeftMargin(), page.getHeight());
-        g2.drawLine(page.getWidth() - page.getRightMargin(), 0, page.getWidth() - page.getRightMargin(), page.getHeight());
-        g2.drawLine(0, page.getTopMargin(), page.getWidth(), page.getTopMargin());
-        g2.drawLine(0, page.getHeight() - page.getBottomMargin(), page.getWidth(), page.getHeight() - page.getBottomMargin());
-        // TODO create guide node class and make margins guides
-        
     }
     
     @Override
@@ -63,6 +55,11 @@ public class PageNode extends PNode {
         if (boundsSet) {
             page.setWidth((int) width);
             page.setHeight((int) height);
+            
+            leftMargin.setGuideOffset(DPI);
+            rightMargin.setGuideOffset((int) (width - DPI));
+            topMargin.setGuideOffset(DPI);
+            bottomMargin.setGuideOffset((int) (height - DPI));
         }
         return boundsSet;
     }
@@ -78,5 +75,6 @@ public class PageNode extends PNode {
         if (child instanceof ContentBoxNode) {
             page.addContentBox(((ContentBoxNode) child).getContentBox());
         }
+        // TODO add guides to model
     }
 }

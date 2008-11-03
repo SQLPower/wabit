@@ -56,8 +56,11 @@ public class ReportLayoutPanel {
         
         pageNode = new PageNode(report.getPage());
         canvas.getLayer().addChild(pageNode);
-        canvas.addInputEventListener(new PSelectionEventHandler(pageNode, pageNode));
+        PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(pageNode, pageNode);
+        canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
+        canvas.addInputEventListener(new MouseInputHandler());
+        canvas.getRoot().getDefaultInputManager().setKeyboardFocus(selectionEventHandler);
         
         InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
         inputMap.put(KeyStroke.getKeyStroke('b'), AddContentBoxAction.class);
