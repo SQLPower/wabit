@@ -42,7 +42,7 @@ public class ItemPNode extends PNode {
 	 * This text will go in the whereText field when there is
 	 * no where clause on the current item.
 	 */
-	private static final String WHERE_START_TEXT = "WHERE...";
+	private static final String WHERE_START_TEXT = "        ";
 
 	/**
 	 * The item this node is displaying.
