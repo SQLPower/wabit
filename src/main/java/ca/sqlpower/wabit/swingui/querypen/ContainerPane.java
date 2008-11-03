@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -26,7 +29,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+
+import javax.swing.AbstractAction;
+import javax.swing.JCheckBox;
+
+
 import javax.swing.JEditorPane;
+
 
 import org.apache.log4j.Logger;
 
@@ -40,6 +49,7 @@ import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.nodes.PStyledText;
+import edu.umd.cs.piccolox.pswing.PSwing;
 
 /**
  * This container pane displays a list of values stored in its model. The elements displayed
@@ -84,9 +94,24 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	private PCanvas canvas;
 	
 	/**
+	 * This is the Text for the Where ColumnHeader. We need to store the variable so we can change its position when the column names or headers get resized
+	 */
+	private PStyledText whereHeader; 
+	
+	/**
+	 * this is a checkBox in the header which checks all the items checkBoxes 
+	 */
+	private PSwing swingCheckBox;
+	
+	/**
 	 * All of the {@link PStyledText} objects that represent an object in the model.
 	 */
 	private List<ItemPNode> containedItems;
+	
+	/**
+	 * This will store the distance for the whereHeader
+	 */
+	private double whereHeaderDistance = 0;
 	
 	/**
 	 * The PPath lines that separate the header from the columns and
@@ -205,11 +230,15 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		modelNameText.addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		addChild(modelNameText);
 		
-		int yLoc = 1;
+		PNode header = createColumnHeader();
+		header.translate(0, modelNameText.getHeight()+ BORDER_SIZE);
+		addChild(header);
+		
+		int yLoc = 2;
 		for (Section sec : model.getSections()) {
 			for (Item item : sec.getItems()) {
 				final ItemPNode newText = createTextLine(item);
-				newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc);
+				newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc+ BORDER_SIZE);
 				addChild(newText);
 				containedItems.add(newText);
 				yLoc++;
@@ -218,7 +247,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		repositionWhereClauses();
 		
 		PBounds fullBounds = getFullBounds();
-		PPath headerLine = PPath.createLine((float)getX() - BORDER_SIZE, (float)(getY() + modelNameText.getHeight()), (float)(getX() + fullBounds.width + BORDER_SIZE), (float)(getY() + modelNameText.getHeight()));
+		PPath headerLine = PPath.createLine((float)getX() - BORDER_SIZE, (float)(getY() +(modelNameText.getHeight()+ BORDER_SIZE)*2+ BORDER_SIZE), (float)(getX() + fullBounds.width + BORDER_SIZE), (float)(getY() + (modelNameText.getHeight()+ BORDER_SIZE)*2+ BORDER_SIZE));
 		separatorLines.add(headerLine);
 		this.addChild(headerLine);
 		outerRect = PPath.createRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2);
@@ -237,9 +266,42 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		modelNameText.addQueryChangeListener(itemChangeListener);
 		return modelNameText;
 	}
+	
+	private PNode createColumnHeader() {
 		
-	public Container getModel() {
-		return model;
+		int whereBuffer = 5;
+		PNode itemHeader = new PNode();
+		JCheckBox allCheckBox = new JCheckBox();
+		allCheckBox.addActionListener(new AbstractAction(){
+
+			public void actionPerformed(ActionEvent e) {
+				for (ItemPNode itemNode : containedItems) {
+					if(itemNode.isInSelect() != ((JCheckBox)e.getSource()).isSelected()) {
+						itemNode.setInSelected(((JCheckBox)e.getSource()).isSelected());						
+					}
+				}
+			} 
+		});
+		allCheckBox.setSelected(true);
+		swingCheckBox = new PSwing(allCheckBox);
+		itemHeader.addChild(swingCheckBox);
+		
+		PStyledText columnNameHeader = new EditablePStyledText("Column/Alias", mouseStates, canvas);
+		double textYTranslation = (swingCheckBox.getFullBounds().height - columnNameHeader.getFullBounds().height)/2;
+		columnNameHeader.translate(swingCheckBox.getFullBounds().width+ 5, textYTranslation);
+		itemHeader.addChild(columnNameHeader);
+		
+		whereHeader = new EditablePStyledText("WHERE:", mouseStates, canvas);
+		whereHeader.translate(0, textYTranslation);
+		itemHeader.addChild(whereHeader);
+	
+		whereHeaderDistance = swingCheckBox.getFullBounds().width+ 5+ columnNameHeader.getWidth() + whereBuffer;
+		
+		return itemHeader;
+	}
+	
+		public Container getModel() {
+			return model;
 	}
 
 	/**
@@ -277,7 +339,8 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 					return true;
 				}
 			}
-			if (picked == modelNameText) {
+			
+			if (picked == swingCheckBox || picked == modelNameText) {
 				return true;
 			}
 			while (picked != this) {
@@ -300,10 +363,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	}
 	
 	private void repositionWhereClauses() {
-		double maxXPos = 0;
+		double maxXPos= whereHeaderDistance ;
 		for (ItemPNode itemNode : containedItems) {
 			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
 		}
+		whereHeader.translate(maxXPos - whereHeader.getXOffset(), 0);
 		for (ItemPNode itemNode : containedItems) {
 			itemNode.positionWhere(maxXPos);
 		}
