@@ -363,7 +363,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	}
 	
 	private void repositionWhereClauses() {
-		double maxXPos= whereHeaderDistance ;
+		double maxXPos= whereHeaderDistance+ 5 ;
 		for (ItemPNode itemNode : containedItems) {
 			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
 		}
