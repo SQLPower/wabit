@@ -12,6 +12,8 @@ import javax.swing.JEditorPane;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.swingui.Item;
+
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.nodes.PStyledText;

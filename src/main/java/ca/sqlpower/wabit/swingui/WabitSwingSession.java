@@ -67,7 +67,6 @@ import org.apache.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLDatabase;
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLObjectRoot;
@@ -478,7 +477,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				}
 				
 				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (SQLColumn column : queryCache.getOrderByList()) {
+				for (Item column : queryCache.getOrderByList()) {
 					int columnIndex = queryCache.getSelectedColumns().indexOf(column);
 					OrderByArgument arg = queryCache.getOrderByArgument(column);
 					if (arg != null) {

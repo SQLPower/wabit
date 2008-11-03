@@ -26,9 +26,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.JEditorPane;
+
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.wabit.swingui.Container;
+import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.swingui.Section;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
@@ -52,6 +57,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 * for readability.
 	 */
 	private static final int BORDER_SIZE = 5;
+	
+	/**
+	 * Defines the property change to be a name change on the container.
+	 */
+	public static final String PROPERTY_CONTAINTER_ALIAS = "CONTAINER_ALIAS";
 	
 	private final Container model;
 
@@ -91,6 +101,66 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	private final Collection<PropertyChangeListener> queryChangeListeners;
 	
 	/**
+	 * Stores the alias given to this container.
+	 */
+	private String containerAlias;
+	
+	/**
+	 * A listener to properly display the alias and column name when the
+	 * {@link EditablePStyledText} is switching from edit to non-edit mode and
+	 * back. This listener for the nameEditor will show only the alias when the
+	 * alias is being edited. When the alias is not being edited it will show
+	 * the alias and column name, in brackets, if an alias is specified.
+	 * Otherwise only the column name will be displayed.
+	 */
+	private EditStyledTextListener editingTextListener = new EditStyledTextListener() {
+		/**
+		 * Tracks if we are in an editing state or not. Used to keep the
+		 * editingStopped method from running only once per stop edit (some
+		 * cases the editingStopped can be called from multiple places on the
+		 * same stopEditing).
+		 */
+		private boolean editing = false;
+		
+		public void editingStopping() {
+			String oldAlias = containerAlias;
+			if (editing) {
+				JEditorPane nameEditor = modelNameText.getEditorPane();
+				containerAlias = nameEditor.getText();
+				String name;
+				if (model.getContainedObject() instanceof SQLObject) {
+					name = ((SQLObject)model.getContainedObject()).getName();
+				} else {
+					name = model.getContainedObject().toString();
+				}
+				if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(name)) {
+					nameEditor.setText(containerAlias + " (" + name + ")");
+				} else {
+					logger.debug("item name is " + name);
+					nameEditor.setText(name);
+					containerAlias = "";
+				}
+				logger.debug("editor has text " + nameEditor.getText() + " alias is " + containerAlias);
+				modelNameText.syncWithDocument();
+			}
+			editing = false;
+			if (!containerAlias.equals(oldAlias)) {
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(new PropertyChangeEvent(ContainerPane.this, PROPERTY_CONTAINTER_ALIAS, oldAlias, containerAlias));
+				}
+			}
+		}
+		
+		public void editingStarting() {
+			editing = true;
+			if (containerAlias != null && containerAlias.length() > 0) {
+				modelNameText.getEditorPane().setText(containerAlias);
+				logger.debug("Setting editor text to " + containerAlias);
+			}
+		}
+	};
+	
+	/**
 	 * A change listener for use on items stored in this container pane.
 	 */
 	private PropertyChangeListener itemChangeListener = new PropertyChangeListener() {
@@ -118,6 +188,8 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 			}
 		}
 	};
+
+	private EditablePStyledText modelNameText;
 	
 	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
@@ -127,7 +199,10 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		containedItems = new ArrayList<ItemPNode>();
 		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
-		final PStyledText modelNameText = new EditablePStyledText(model.getName(), pen, canvas);
+		containerAlias = "";
+		modelNameText = new EditablePStyledText(model.getName(), pen, canvas);
+		modelNameText.addEditStyledTextListener(editingTextListener);
+		modelNameText.addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		addChild(modelNameText);
 		
 		int yLoc = 1;
@@ -202,6 +277,9 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 					return true;
 				}
 			}
+			if (picked == modelNameText) {
+				return true;
+			}
 			while (picked != this) {
 				pickPath.popTransform(picked.getTransformReference(false));
 				pickPath.popNode(picked);
@@ -233,6 +311,10 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	
 	public List<ItemPNode> getContainedItems() {
 		return Collections.unmodifiableList(containedItems);
+	}
+
+	public String getContainerAlias() {
+		return containerAlias;
 	}
 
 }

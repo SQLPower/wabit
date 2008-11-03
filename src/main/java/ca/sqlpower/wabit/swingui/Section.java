@@ -17,14 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.swingui;
+
+import java.util.List;
+
 
 /**
- * A class implementing this interface wraps an item in a container.
+ * A section should hold all or a portion of the items contained by a class
+ * implementing the Container interface.
  */
-public interface Item {
-
-	String getName();
+public interface Section {
 	
-	Object getItem();
+	/**
+	 * Gets a list of items stored in the given section.
+	 */
+	List<Item> getItems();
+	
+	Container getParent();
 }

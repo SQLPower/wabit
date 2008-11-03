@@ -23,6 +23,9 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.architect.SQLTable;
+import ca.sqlpower.wabit.swingui.Container;
+import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * A model for the {@link ContainerPane}. This will store objects of a defined type and
@@ -44,7 +47,7 @@ public class TableContainer implements Container {
 	
 	public TableContainer(SQLTable t) {
 		table = t;
-		section = new SQLObjectSection(table.getColumnsFolder());
+		section = new SQLObjectSection(this, table.getColumnsFolder());
 	}
 	
 	public List<Section> getSections() {

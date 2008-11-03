@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import ca.sqlpower.architect.SQLColumn;
 
 
 /**
@@ -32,23 +31,23 @@ public class SQLJoin {
 	/**
 	 * The left column of this join.
 	 */
-	private final SQLColumn leftColumn;
+	private final Item leftColumn;
 
 	/**
 	 * The right column in the join.
 	 */
-	private final SQLColumn rightColumn;
+	private final Item rightColumn;
 
-	public SQLJoin(SQLColumn leftColumn, SQLColumn rightColumn) {
+	public SQLJoin(Item leftColumn, Item rightColumn) {
 		this.leftColumn = leftColumn;
 		this.rightColumn = rightColumn;
 	}
 
-	public SQLColumn getLeftColumn() {
+	public Item getLeftColumn() {
 		return leftColumn;
 	}
 	
-	public SQLColumn getRightColumn() {
+	public Item getRightColumn() {
 		return rightColumn;
 	}
 

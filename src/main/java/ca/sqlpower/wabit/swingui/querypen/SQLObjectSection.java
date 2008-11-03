@@ -24,6 +24,9 @@ import java.util.List;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.wabit.swingui.Container;
+import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * This is a generic Section that contains a SQLObject as it's parent. 
@@ -31,22 +34,28 @@ import ca.sqlpower.architect.SQLObject;
  */
 public class SQLObjectSection implements Section {
 	
-	private final SQLObject parent;
+	private final Container parent;
 	
-	public SQLObjectSection(SQLObject parent) {
+	private final List<Item> itemList;
+	
+	public SQLObjectSection(Container parent, SQLObject containedObject) {
 		this.parent = parent;
-	}
-
-	public List<Item> getItems() {
-		List<Item> itemList = new ArrayList<Item>();
+		itemList = new ArrayList<Item>();
 		try {
-			for (Object child : parent.getChildren()) {
-				itemList.add(new SQLObjectItem((SQLObject)child));
+			for (Object child : containedObject.getChildren()) {
+				itemList.add(new SQLObjectItem(this, (SQLObject)child));
 			}
 		} catch (ArchitectException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public List<Item> getItems() {
 		return itemList;
+	}
+	
+	public Container getParent() {
+		return parent;
 	}
 
 }

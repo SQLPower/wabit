@@ -36,8 +36,6 @@ import javax.swing.event.TableModelListener;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLColumn;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
@@ -73,7 +71,7 @@ public class QueryCache {
 	/**
 	 * This will map SQLColumns to aliases that are in the SELECT statement.
 	 */
-	private Map<SQLColumn, String> aliasMap;
+	private Map<Item, String> aliasMap;
 	
 	/**
 	 * Tracks if there are groupings added to this select statement.
@@ -86,13 +84,61 @@ public class QueryCache {
 	 * functions. If the column is in the GROUP BY clause and is not being
 	 * aggregated on it should appear in the group by list.
 	 */
-	private Map<SQLColumn, SQLGroupFunction> groupByAggregateMap;
+	private Map<Item, SQLGroupFunction> groupByAggregateMap;
 	
 	/**
 	 * A list of columns we are grouping by. These are not
 	 * being aggregated on but are in the GROUP BY clause. 
 	 */
-	private List<SQLColumn> groupByList;
+	private List<Item> groupByList;
+
+	/**
+	 * This maps SQLColumns to having clauses. The entry with a null key
+	 * contains the generic having clause that is not defined for a specific
+	 * column.
+	 */
+	private Map<Item, String> havingMap;
+	
+	/**
+	 * The columns in the SELECT statement that will be returned.
+	 * These columns are stored in the order they will be returned
+	 * in.
+	 */
+	private final List<Item> selectedColumns;
+	
+	/**
+	 * This map contains the columns that have an ascending
+	 * or descending argument and is in the order by clause.
+	 */
+	private final Map<Item, OrderByArgument> orderByArgumentMap;
+	
+	/**
+	 * The order by list keeps track of the order that columns were selected in.
+	 */
+	private final List<Item> orderByList;
+	
+	/**
+	 * The list of tables that we are selecting from.
+	 */
+	private final List<Container> fromTableList;
+	
+	/**
+	 * This maps each table to a list of SQLJoin objects.
+	 * These column pairs defines a join in the select statement.
+	 */
+	private final Map<Container, List<SQLJoin>> joinMapping;
+	
+	/**
+	 * This maps the where clause defined on a column specific basis to their
+	 * columns.
+	 */
+	private final Map<Item, String> whereMapping;
+	
+	/**
+	 * This is the global where clause that is for all non-column-specific where
+	 * entries.
+	 */
+	private String globalWhereClause;
 	
 	/**
 	 * A listener that handles changes to the group by and having clauses.
@@ -101,7 +147,7 @@ public class QueryCache {
 	
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
-				SQLColumn column = selectedColumns.get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
+				Item column = selectedColumns.get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
 				if (e.getNewValue().equals(GROUP_BY)) {
 					if (groupByList.contains(column)) {
 						return;
@@ -123,7 +169,7 @@ public class QueryCache {
 				if (indexOfTextField < 0) {
 					return;
 				}
-				SQLColumn column = selectedColumns.get(indexOfTextField);
+				Item column = selectedColumns.get(indexOfTextField);
 				String newValue = (String)e.getNewValue();
 				if (newValue != null && newValue.length() > 0) {
 					if (!newValue.equals(havingMap.get(column))) {
@@ -150,7 +196,7 @@ public class QueryCache {
 			boolean sortChanged = false;
 			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
 				int sortStatus = sortDecorator.getSortingStatus(i);
-				SQLColumn column = selectedColumns.get(i);
+				Item column = selectedColumns.get(i);
 				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgumentMap.get(column) == null)
 						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgumentMap.get(column) == OrderByArgument.ASC)
 						|| (sortStatus == TableModelSortDecorator.DESCENDING && orderByArgumentMap.get(column) == OrderByArgument.DESC)) {
@@ -193,40 +239,20 @@ public class QueryCache {
 			if (e.getPropertyName().equals(ItemPNode.PROPERTY_ALIAS)) {
 				if (e.getSource() instanceof ItemPNode) {
 					ItemPNode itemNode = (ItemPNode)e.getSource();
-					if (itemNode.getItem().getItem() instanceof SQLColumn) {
-						SQLColumn column = (SQLColumn) itemNode.getItem().getItem();
-						if (itemNode.getAlias().length() > 0) {
-							aliasMap.put(column, itemNode.getAlias());
-							logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
-						} else {
-							aliasMap.remove(column);
-						}
-						for (ChangeListener l : queryChangeListeners) {
-							l.stateChanged(new ChangeEvent(QueryCache.this));
-						}
+					Item column = itemNode.getItem();
+					if (itemNode.getAlias().length() > 0) {
+						aliasMap.put(column, itemNode.getAlias());
+						logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
+					} else {
+						aliasMap.remove(column);
+					}
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
 					}
 				}
 			}
 		}
 	};
-	
-	/**
-	 * The columns in the SELECT statement that will be returned.
-	 * These columns are stored in the order they will be returned
-	 * in.
-	 */
-	private final List<SQLColumn> selectedColumns;
-	
-	/**
-	 * This map contains the columns that have an ascending
-	 * or descending argument and is in the order by clause.
-	 */
-	private final Map<SQLColumn, OrderByArgument> orderByArgumentMap;
-	
-	/**
-	 * The order by list keeps track of the order that columns were selected in.
-	 */
-	private final List<SQLColumn> orderByList;
 	
 	/**
 	 * Listens for changes to the select checkbox on the column of a table in 
@@ -236,38 +262,25 @@ public class QueryCache {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getSource() instanceof ItemPNode) {
 				ItemPNode itemNode = (ItemPNode)e.getSource();
-				if (itemNode.getItem().getItem() instanceof SQLColumn) {
-					SQLColumn column = (SQLColumn) itemNode.getItem().getItem();
-					if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED)) {
-						if (e.getNewValue().equals(true)) {
-							selectedColumns.add(column);
-							if (groupingEnabled) {
-								groupByList.add(column);
-							}
-							logger.debug("Added " + column.getName() + " to the column list");
-						} else if (e.getNewValue().equals(false)) {
-							removeColumnSelection(column);
+				Item column = itemNode.getItem();
+				if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED)) {
+					if (e.getNewValue().equals(true)) {
+						selectedColumns.add(column);
+						if (groupingEnabled) {
+							groupByList.add(column);
 						}
-						logger.debug("Firing change for selection.");
-						for (ChangeListener l : queryChangeListeners) {
-							l.stateChanged(new ChangeEvent(QueryCache.this));
-						}
+						logger.debug("Added " + column.getName() + " to the column list");
+					} else if (e.getNewValue().equals(false)) {
+						removeColumnSelection(column);
+					}
+					logger.debug("Firing change for selection.");
+					for (ChangeListener l : queryChangeListeners) {
+						l.stateChanged(new ChangeEvent(QueryCache.this));
 					}
 				}
 			}
 		}
 	};
-	
-	/**
-	 * The list of tables that we are selecting from.
-	 */
-	private final List<SQLTable> fromTableList;
-	
-	/**
-	 * This maps each table to a list of SQLJoin objects.
-	 * These column pairs defines a join in the select statement.
-	 */
-	private final Map<SQLTable, List<SQLJoin>> joinMapping;
 	
 	private PropertyChangeListener joinChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
@@ -275,55 +288,53 @@ public class QueryCache {
 				JoinLine joinLine = (JoinLine) e.getNewValue();
 				ItemPNode leftNode = joinLine.getLeftNode();
 				ItemPNode rightNode = joinLine.getRightNode();
-				if (leftNode.getItem().getItem() instanceof SQLColumn && rightNode.getItem().getItem() instanceof SQLColumn) {
-					SQLColumn leftColumn = (SQLColumn)leftNode.getItem().getItem();
-					SQLColumn rightColumn = (SQLColumn)rightNode.getItem().getItem();
-					SQLJoin join = new SQLJoin(leftColumn, rightColumn);
-					if (joinMapping.get(leftColumn.getParentTable()) == null) {
-						List<SQLJoin> joinList = new ArrayList<SQLJoin>();
-						joinList.add(join);
-						joinMapping.put(leftColumn.getParentTable(), joinList);
-					} else {
-						joinMapping.get(leftColumn.getParentTable()).add(join);
-					}
-					
-					if (joinMapping.get(rightColumn.getParentTable()) == null) {
-						List<SQLJoin> joinList = new ArrayList<SQLJoin>();
-						joinList.add(join);
-						joinMapping.put(rightColumn.getParentTable(), joinList);
-					} else {
-						joinMapping.get(rightColumn.getParentTable()).add(join);
-					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
+				Item leftColumn = leftNode.getItem();
+				Item rightColumn = rightNode.getItem();
+				SQLJoin join = new SQLJoin(leftColumn, rightColumn);
+				Container leftContainer = leftColumn.getParent().getParent();
+				Container rightContainer = rightColumn.getParent().getParent();
+				if (joinMapping.get(leftContainer) == null) {
+					List<SQLJoin> joinList = new ArrayList<SQLJoin>();
+					joinList.add(join);
+					joinMapping.put(leftContainer, joinList);
+				} else {
+					joinMapping.get(leftContainer).add(join);
+				}
+
+				if (joinMapping.get(rightContainer) == null) {
+					List<SQLJoin> joinList = new ArrayList<SQLJoin>();
+					joinList.add(join);
+					joinMapping.put(rightContainer, joinList);
+				} else {
+					joinMapping.get(rightContainer).add(join);
+				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_REMOVED)) {
 				JoinLine joinLine = (JoinLine) e.getOldValue();
 				ItemPNode leftNode = joinLine.getLeftNode();
 				ItemPNode rightNode = joinLine.getRightNode();
-				if (leftNode.getItem().getItem() instanceof SQLColumn && rightNode.getItem().getItem() instanceof SQLColumn) {
-					SQLColumn leftColumn = (SQLColumn)leftNode.getItem().getItem();
-					SQLColumn rightColumn = (SQLColumn)rightNode.getItem().getItem();
-					
-					List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParentTable());
-					for (SQLJoin join : leftJoinList) {
-						if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
-							leftJoinList.remove(join);
-							break;
-						}
+				Item leftColumn = leftNode.getItem();
+				Item rightColumn = rightNode.getItem();
+
+				List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParent().getParent());
+				for (SQLJoin join : leftJoinList) {
+					if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
+						leftJoinList.remove(join);
+						break;
 					}
-					
-					List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getParentTable());
-					for (SQLJoin join : rightJoinList) {
-						if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
-							rightJoinList.remove(join);
-							break;
-						}
+				}
+
+				List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getParent().getParent());
+				for (SQLJoin join : rightJoinList) {
+					if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
+						rightJoinList.remove(join);
+						break;
 					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
+				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			}
 		}
@@ -334,9 +345,7 @@ public class QueryCache {
 			if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_ADDED)) {
 				if (evt.getNewValue() instanceof ContainerPane<?>) {
 					ContainerPane<?> container = (ContainerPane<?>)evt.getNewValue();
-					if (container.getModel().getContainedObject() instanceof SQLTable) {
-						fromTableList.add((SQLTable)container.getModel().getContainedObject());
-					}
+					fromTableList.add(container.getModel());
 					for (ChangeListener l : queryChangeListeners) {
 						l.stateChanged(new ChangeEvent(QueryCache.this));
 					}
@@ -344,16 +353,12 @@ public class QueryCache {
 			} else if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_REMOVED)) {
 				if (evt.getOldValue() instanceof ContainerPane<?>) {
 					ContainerPane<?> container = (ContainerPane<?>)evt.getOldValue();
-					if (container.getModel().getContainedObject() instanceof SQLTable) {
-						SQLTable table = (SQLTable)container.getModel().getContainedObject();
-						fromTableList.remove(table);
-						try {
-							for (SQLColumn col : table.getColumns()) {
-								whereMapping.remove(col);
-								removeColumnSelection(col);
-							}
-						} catch (ArchitectException e) {
-							throw new RuntimeException(e);
+					Container table = container.getModel();
+					fromTableList.remove(table);
+					for (Section section : table.getSections()) {
+						for (Item col : section.getItems()) {
+							whereMapping.remove(col);
+							removeColumnSelection(col);
 						}
 					}
 					for (ChangeListener l : queryChangeListeners) {
@@ -364,29 +369,15 @@ public class QueryCache {
 		}
 	};
 	
-	/**
-	 * This maps the where clause defined on a column specific basis to their
-	 * columns.
-	 */
-	private final Map<SQLColumn, String> whereMapping;
-	
-	/**
-	 * This is the global where clause that is for all non-column-specific where
-	 * entries.
-	 */
-	private String globalWhereClause;
-	
 	private PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ItemPNode.PROPERTY_WHERE)) {
 				if (e.getSource() instanceof ItemPNode) {
 					ItemPNode itemNode = (ItemPNode) e.getSource();
-					if (itemNode.getItem().getItem() instanceof SQLColumn) {
-						if (e.getNewValue() != null && ((String)e.getNewValue()).length() > 0) {
-							whereMapping.put((SQLColumn)itemNode.getItem().getItem(), (String)e.getNewValue());
-						} else {
-							whereMapping.remove(itemNode.getItem().getItem());
-						}
+					if (e.getNewValue() != null && ((String)e.getNewValue()).length() > 0) {
+						whereMapping.put(itemNode.getItem(), (String)e.getNewValue());
+					} else {
+						whereMapping.remove(itemNode.getItem());
 					}
 					for (ChangeListener l : queryChangeListeners) {
 						l.stateChanged(new ChangeEvent(QueryCache.this));
@@ -406,13 +397,6 @@ public class QueryCache {
 	 * and having values.
 	 */
 	private ComponentCellRenderer cellRenderer;
-
-	/**
-	 * This maps SQLColumns to having clauses. The entry with a null key
-	 * contains the generic having clause that is not defined for a specific
-	 * column.
-	 */
-	private Map<SQLColumn, String> havingMap;
 	
 	/**
 	 * These listeners will fire an event whenever the query has changed.
@@ -420,17 +404,17 @@ public class QueryCache {
 	private final List<ChangeListener> queryChangeListeners;
 	
 	public QueryCache(QueryPen pen) {
-		orderByArgumentMap = new HashMap<SQLColumn, OrderByArgument>();
-		orderByList = new ArrayList<SQLColumn>();
-		selectedColumns = new ArrayList<SQLColumn>();
-		fromTableList = new ArrayList<SQLTable>();
-		joinMapping = new HashMap<SQLTable, List<SQLJoin>>();
-		whereMapping = new HashMap<SQLColumn, String>();
+		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
+		orderByList = new ArrayList<Item>();
+		selectedColumns = new ArrayList<Item>();
+		fromTableList = new ArrayList<Container>();
+		joinMapping = new HashMap<Container, List<SQLJoin>>();
+		whereMapping = new HashMap<Item, String>();
 		queryChangeListeners = new ArrayList<ChangeListener>();
-		aliasMap = new HashMap<SQLColumn, String>();
-		groupByAggregateMap = new HashMap<SQLColumn, SQLGroupFunction>();
-		groupByList = new ArrayList<SQLColumn>();
-		havingMap = new HashMap<SQLColumn, String>();
+		aliasMap = new HashMap<Item, String>();
+		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
+		groupByList = new ArrayList<Item>();
+		havingMap = new HashMap<Item, String>();
 		
 		pen.addQueryListener(aliasListener);
 		pen.addQueryListener(selectedColumnListener);
@@ -442,7 +426,7 @@ public class QueryCache {
 	public void setGroupingEnabled(boolean enabled) {
 		logger.debug("Setting grouping enabled to " + enabled);
 		if (!groupingEnabled && enabled) {
-			for (SQLColumn col : selectedColumns) {
+			for (Item col : selectedColumns) {
 				groupByList.add(col);
 			}
 		} else if (!enabled) {
@@ -457,7 +441,7 @@ public class QueryCache {
 	 * Removes the column from the selected columns list and all other
 	 * related lists.
 	 */
-	private void removeColumnSelection(SQLColumn column) {
+	private void removeColumnSelection(Item column) {
 		selectedColumns.remove(column);
 		aliasMap.remove(column);
 		groupByList.remove(column);
@@ -475,7 +459,7 @@ public class QueryCache {
 		StringBuffer query = new StringBuffer();
 		query.append("SELECT");
 		boolean isFirstSelect = true;
-		for (SQLColumn col : selectedColumns) {
+		for (Item col : selectedColumns) {
 			if (isFirstSelect) {
 				query.append(" ");
 				isFirstSelect = false;
@@ -485,7 +469,7 @@ public class QueryCache {
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(groupByAggregateMap.get(col).toString() + "(");
 			}
-			query.append(col.getParentTable().getName() + "." + col.getName());
+			query.append(col.getParent().getParent().getName() + "." + col.getName());
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(")");
 			}
@@ -495,34 +479,40 @@ public class QueryCache {
 		}
 		query.append(" \nFROM");
 		boolean isFirstFrom = true;
-		for (SQLTable table : fromTableList) {
+		for (Container table : fromTableList) {
+			String qualifiedName;
+			if (table.getContainedObject() instanceof SQLTable) {
+				qualifiedName = ((SQLTable)table.getContainedObject()).toQualifiedName();
+			} else {
+				qualifiedName = table.getName();
+			}
 			if (isFirstFrom) {
-				query.append(" " + table.toQualifiedName());
+				query.append(" " + qualifiedName);
 				isFirstFrom = false;
 			} else {
 				query.append(" \n\tINNER JOIN ");
-				query.append(table.toQualifiedName() + " ON ");
+				query.append(qualifiedName + " ON ");
 				if (joinMapping.get(table) == null || joinMapping.get(table).isEmpty()) {
 					query.append("TRUE");
 				} else {
 					boolean isFirstJoin = true;
 					for (SQLJoin join : joinMapping.get(table)) {
-						SQLColumn otherColumn;
-						if (join.getLeftColumn().getParentTable() == table) {
+						Item otherColumn;
+						if (join.getLeftColumn().getParent().getParent() == table) {
 							otherColumn = join.getRightColumn();
 						} else {
 							otherColumn = join.getLeftColumn();
 						}
 						for (int i = 0; i < fromTableList.indexOf(table); i++) {
-							if (otherColumn.getParentTable() == fromTableList.get(i)) {
+							if (otherColumn.getParent().getParent() == fromTableList.get(i)) {
 								if (isFirstJoin) {
 									isFirstJoin = false;
 								} else {
 									query.append(" AND ");
 								}
-								query.append(join.getLeftColumn().getParentTable().getName() + "." + join.getLeftColumn().getName() + 
+								query.append(join.getLeftColumn().getParent().getParent().getName() + "." + join.getLeftColumn().getName() + 
 										" " + join.getComparator() + " " + 
-										join.getRightColumn().getParentTable().getName() + "." + join.getRightColumn().getName());
+										join.getRightColumn().getParent().getParent().getName() + "." + join.getRightColumn().getName());
 							}
 						}
 					}
@@ -533,7 +523,7 @@ public class QueryCache {
 		if (!whereMapping.isEmpty() || (globalWhereClause != null && globalWhereClause.length() > 0)) {
 			query.append(" \nWHERE");
 			boolean isFirstWhere = true;
-			for (Map.Entry<SQLColumn, String> entry : whereMapping.entrySet()) {
+			for (Map.Entry<Item, String> entry : whereMapping.entrySet()) {
 				if (entry.getValue().length() > 0) {
 					if (isFirstWhere) {
 						query.append(" ");
@@ -541,7 +531,7 @@ public class QueryCache {
 					} else {
 						query.append(" AND ");
 					}
-					query.append(entry.getKey().getParentTable().getName() + "." + entry.getKey().getName() + " " + entry.getValue());
+					query.append(entry.getKey().getParent().getParent().getName() + "." + entry.getKey().getName() + " " + entry.getValue());
 				}
 			}
 			if (!isFirstWhere && (globalWhereClause != null && globalWhereClause.length() > 0)) {
@@ -554,32 +544,32 @@ public class QueryCache {
 		if (!groupByList.isEmpty()) {
 			query.append("\nGROUP BY");
 			boolean isFirstGroupBy = true;
-			for (SQLColumn col : groupByList) {
+			for (Item col : groupByList) {
 				if (isFirstGroupBy) {
 					query.append(" ");
 					isFirstGroupBy = false;
 				} else {
 					query.append(", ");
 				}
-				query.append(col.getParentTable().getName() + "." + col.getName());
+				query.append(col.getParent().getParent().getName() + "." + col.getName());
 			}
 			query.append(" ");
 		}
 		if (!havingMap.isEmpty()) {
 			query.append("\nHAVING");
 			boolean isFirstHaving = true;
-			for (Map.Entry<SQLColumn, String> entry : havingMap.entrySet()) {
+			for (Map.Entry<Item, String> entry : havingMap.entrySet()) {
 				if (isFirstHaving) {
 					query.append(" ");
 					isFirstHaving = false;
 				} else {
 					query.append(", ");
 				}
-				SQLColumn column = entry.getKey();
+				Item column = entry.getKey();
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(groupByAggregateMap.get(column).toString() + "(");
 				}
-				query.append(column.getParentTable().getName() + "." + column.getName() + " ");
+				query.append(column.getParent().getParent().getName() + "." + column.getName() + " ");
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(")");
 				}
@@ -591,14 +581,14 @@ public class QueryCache {
 		if (!orderByArgumentMap.isEmpty()) {
 			query.append("\nORDER BY");
 			boolean isFirstOrder = true;
-			for (SQLColumn col : orderByList) {
+			for (Item col : orderByList) {
 				if (isFirstOrder) {
 					query.append(" ");
 					isFirstOrder = false;
 				} else {
 					query.append(", ");
 				}
-				query.append(col.getParentTable().getName() + "." + col.getName() + " ");
+				query.append(col.getParent().getParent().getName() + "." + col.getName() + " ");
 				if (orderByArgumentMap.get(col) != null) {
 					query.append(orderByArgumentMap.get(col).toString() + " ");
 				}
@@ -622,7 +612,7 @@ public class QueryCache {
 		queryChangeListeners.remove(l);
 	}
 
-	public List<SQLColumn> getSelectedColumns() {
+	public List<Item> getSelectedColumns() {
 		return Collections.unmodifiableList(selectedColumns);
 	}
 
@@ -630,7 +620,7 @@ public class QueryCache {
 	 * Returns the grouping function if the column is being aggregated on
 	 * or null otherwise.
 	 */
-	public SQLGroupFunction getGroupByAggregate(SQLColumn column) {
+	public SQLGroupFunction getGroupByAggregate(Item column) {
 		return groupByAggregateMap.get(column);
 	}
 	
@@ -640,15 +630,15 @@ public class QueryCache {
 	 * @param column
 	 * @return
 	 */
-	public String getHavingClause(SQLColumn column) {
+	public String getHavingClause(Item column) {
 		return havingMap.get(column);
 	}
 
-	public OrderByArgument getOrderByArgument(SQLColumn column) {
+	public OrderByArgument getOrderByArgument(Item column) {
 		return orderByArgumentMap.get(column);
 	}
 
-	public List<SQLColumn> getOrderByList() {
+	public List<Item> getOrderByList() {
 		return Collections.unmodifiableList(orderByList);
 	}
 

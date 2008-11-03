@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * This container item wraps a SQLColumn for use in a ContainerPane.
@@ -29,8 +31,11 @@ public class SQLObjectItem implements Item {
 	private final SQLObject sqlObject;
 	
 	private String alias;
+
+	private final Section parent;
 	
-	public SQLObjectItem(SQLObject object) {
+	public SQLObjectItem(Section parent, SQLObject object) {
+		this.parent = parent;
 		sqlObject = object;
 	}
 	
@@ -48,6 +53,10 @@ public class SQLObjectItem implements Item {
 	
 	public void setAlias(String alias) {
 		this.alias = alias;
+	}
+	
+	public Section getParent() {
+		return parent;
 	}
 
 }

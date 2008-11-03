@@ -17,18 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.swingui;
 
 import java.util.List;
 
+
 /**
- * A section should hold all or a portion of the items contained by a class
- * implementing the Container interface.
+ * A container model stores an object that has multiple items 
+ * stored in different sections.
  */
-public interface Section {
+public interface Container {
 	
 	/**
-	 * Gets a list of items stored in the given section.
+	 * Gets all of the sections of the contained object.
 	 */
-	List<Item> getItems();
+	List<Section> getSections();
+	
+	/**
+	 * Gets the name of the object this container holds.
+	 */
+	String getName();
+
+	/**
+	 * Gets the Item wrapper that contains the given item. Returns null if the
+	 * object is not contained in this container.
+	 */
+	Item getItem(Object item);
+	
+	/**
+	 * Gets the object this container is modeling. This object will be the object
+	 * that contains the children wrapped by the items and possibly contains more.
+	 */
+	Object getContainedObject();
+
 }

@@ -60,6 +60,7 @@ import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.validation.swingui.StatusComponent;
+import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
