@@ -100,8 +100,12 @@ public class QueryPen implements MouseState {
     
     private static final String ZOOM_OUT_ACTION = "Zoom Out";
     
+    private static final String JOIN_ACTION = "Create Join";
+
+    
     private AbstractAction zoomInAction;
     private AbstractAction zoomOutAction;
+    private JToolBar queryPenBar;
     
 	private final class QueryPenDropTargetListener implements
 			DropTargetListener {
@@ -335,17 +339,15 @@ public class QueryPen implements MouseState {
         panel.add(getScrollPane(), BorderLayout.CENTER);
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/delete.png"));
         JButton deleteButton = new JButton(getDeleteAction());
-        deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut delete)");
-        
+        deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut Delete)");
         deleteButton.setIcon(joinIcon);
         
-        JToolBar queryPenBar = new JToolBar(JToolBar.VERTICAL);
+        queryPenBar = new JToolBar(JToolBar.VERTICAL);
         queryPenBar.setToolTipText("QueryPen Toolbar");
         queryPenBar.add(getZoomInButton());
         queryPenBar.add(getZoomOutButton());
         queryPenBar.add(getCreateJoinButton());
         queryPenBar.add(deleteButton);
-        
         
         panel.add(queryPenBar, BorderLayout.EAST);
         panel.setBackground(Color.WHITE);
@@ -425,13 +427,19 @@ public class QueryPen implements MouseState {
         zoomOutButton.setIcon(zoomOutIcon);
         
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/join.png"));
-        createJoinButton = new JButton(new AbstractAction() {
+        AbstractAction joinAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		setMouseState(MouseStates.CREATE_JOIN);
         	}
-        });
-        createJoinButton.setToolTipText("Create Join");
+        };
+        createJoinButton = new JButton(joinAction);
+        createJoinButton.setToolTipText(JOIN_ACTION + " (Shortcut "+ acceleratorKeyString+ " J)");
         createJoinButton.setIcon(joinIcon);
+        canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_J, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
+                
+                , JOIN_ACTION);
+        canvas.getActionMap().put(JOIN_ACTION, joinAction);
         
         CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas);
 		canvas.addInputEventListener(createJoinListener);
@@ -514,5 +522,17 @@ public class QueryPen implements MouseState {
 	
 	public void removeQueryListener(PropertyChangeListener l) {
 		queryListeners.remove(l);
+	}
+	
+	public JToolBar getQueryPenBar () {
+		return queryPenBar;
+	}
+	
+	public String getAcceleratorKeyString () {
+		return acceleratorKeyString;
+	}
+	
+	public PSwingCanvas getQueryPenCavas () {
+		return canvas;
 	}
 }

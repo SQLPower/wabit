@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
@@ -32,6 +33,7 @@ import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -42,8 +44,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -58,6 +62,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -86,6 +91,7 @@ import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.QueryCache.OrderByArgument;
@@ -106,6 +112,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	
 	private static final String SQL_TEXT_TAB_HEADING = "SQL";
     
+	private final String QUERY_EXECUTE = "Execute";
 	private final WabitSessionContext sessionContext;
 	
     private SQLQueryUIComponents queryUIComponents;
@@ -198,11 +205,20 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		});
     	JPanel playPen = queryPen.createQueryPen(this);
     	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
-    	queryExecuteBuilder.append("", new JButton(new AbstractAction("Execute Query") {
+    	AbstractAction queryExecuteAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				queryUIComponents.executeQuery(queryCache.generateQuery());
 			}
-		}));
+		};
+    	JButton playPenExecuteButton = new JButton(queryExecuteAction);
+    	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/execute.png"));
+    	playPenExecuteButton.setIcon(executeIcon);
+    	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ queryPen.getAcceleratorKeyString()+ " R)");
+    	queryPen.getQueryPenBar().add(playPenExecuteButton);
+    	queryPen.getQueryPenCavas().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
+                , QUERY_EXECUTE);
+    	queryPen.getQueryPenCavas().getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
     	
     	JPanel queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
