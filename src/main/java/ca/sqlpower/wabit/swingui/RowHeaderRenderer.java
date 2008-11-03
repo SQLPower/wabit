@@ -28,6 +28,9 @@ import javax.swing.ListCellRenderer;
 import javax.swing.UIManager;
 import javax.swing.table.JTableHeader;
 
+/**
+ * This class creates a row header for the JTable and Numbers its Rows.
+ */
 public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 
 
@@ -40,7 +43,10 @@ public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 		setBackground(header.getBackground());
 		setFont(header.getFont());
 	}
-
+	/**
+	 * Implementing the getComponent method on the renderer, take the JList and renders its object value
+	 * which should just be a its Row Number.
+	 */
 	public Component getListCellRendererComponent(JList list, Object value,
 			int index, boolean isSelected, boolean cellHasFocus) {
 		setText((value == null) ? "" : value.toString());
