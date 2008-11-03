@@ -103,6 +103,8 @@ import com.jgoodies.forms.layout.FormLayout;
 public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	
 	private static Logger logger = Logger.getLogger(WabitSwingSession.class);
+	
+	private static final String SQL_TEXT_TAB_HEADING = "SQL";
     
 	private final WabitSessionContext sessionContext;
 	
@@ -206,7 +208,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
     	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
     	queryPenAndTextTabPane.add(queryPenPanel,"PlayPen");
-    	queryPenAndTextTabPane.add(queryToolPanel,"Query");
+    	queryPenAndTextTabPane.add(queryToolPanel,SQL_TEXT_TAB_HEADING);
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
