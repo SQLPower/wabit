@@ -314,6 +314,10 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
 			
 			public void dragGestureRecognized(DragGestureEvent dge) {
+				
+				if(projectTree.getSelectionPaths() == null) {
+					return;
+				}
 				ArrayList<int[]> list = new ArrayList<int[]>();
 				for (TreePath path : projectTree.getSelectionPaths()) {
 					Object selectedNode = path.getLastPathComponent();
