@@ -42,14 +42,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.AbstractAction;
+import javax.swing.AbstractListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -63,6 +66,7 @@ import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.ListModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -120,6 +124,10 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	private JFrame frame;
 	private JCheckBox groupingCheckBox;
 	private static JLabel statusLabel;
+	private final JLabel groupingLabel = new JLabel("Group By");
+	private final JLabel havingLabel = new JLabel ("Having");
+	private final JLabel columnNameLabel = new JLabel ("Column");
+	private JPanel cornerPanelLabel;
 
 	/**
 	 * Stores the parts of the query.
@@ -152,6 +160,23 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	}
 	
 	/**
+	 * This is a listModel that just returns the row Number for the rowHeaderRender
+	 */
+	private class RowListModel extends AbstractListModel{
+		int tableRowSize;
+		public RowListModel(JTable table) {
+			tableRowSize = table.getRowCount();
+		}
+		public Object getElementAt(int index) {
+			return index+1;
+		}
+		public int getSize() {
+			return tableRowSize;
+		}
+		
+	}
+	
+	/**
 	 *  Builds the GUI
 	 * @throws ArchitectException 
 	 */
@@ -177,6 +202,21 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				}
 				ComponentCellRenderer renderer = new ComponentCellRenderer(table, sortDecorator);
 				table.getTableHeader().setDefaultRenderer(renderer);
+				
+				ListModel lm = new RowListModel(table);
+				JList rowHeader = new JList(lm);
+				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width);
+				rowHeader.setCellRenderer(new RowHeaderRenderer(table));
+				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
+				
+				cornerPanelLabel = new JPanel(new BorderLayout());
+				columnNameLabel.setFont(table.getTableHeader().getFont());
+				groupingLabel.setFont(table.getTableHeader().getFont());
+				havingLabel.setFont(table.getTableHeader().getFont());
+				cornerPanelLabel.add(groupingLabel, BorderLayout.NORTH);
+				cornerPanelLabel.add(havingLabel, BorderLayout.CENTER);
+				cornerPanelLabel.add(columnNameLabel, BorderLayout.SOUTH);
+				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanelLabel);
 				queryCache.listenToCellRenderer(renderer);
 			}
 		});
@@ -477,8 +517,12 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				if(groupingCheckBox.isSelected()) {
 					renderPanel.setGroupingEnabled(true);
 					logger.debug("Grouping Enabled");
+					groupingLabel.setVisible(true);
+					havingLabel.setVisible(true);
 				} else {
-					renderPanel.setGroupingEnabled(false);		
+					renderPanel.setGroupingEnabled(false);
+					groupingLabel.setVisible(false);
+					havingLabel.setVisible(false);
 				}
 				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
 					SQLGroupFunction groupByAggregate = queryCache.getGroupByAggregate(queryCache.getSelectedColumns().get(i));
