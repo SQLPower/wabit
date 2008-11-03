@@ -141,6 +141,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		for(int i = 0 ; i < t.getColumnCount(); i++) {
 			final JTextField textField = new JTextField();
 			final JComboBox comboBox = new JComboBox(comboBoxItems);
+			comboBox.setFont(comboBox.getFont().deriveFont(tableHeader.getFont().getSize2D()));
 			comboBoxes.add(comboBox);
 			textFields.add(textField);
 			
@@ -196,7 +197,9 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 				labelYPos = 0;
 			} else {
 				int modelIndex = table.getColumnModel().getColumn(column).getModelIndex();
-				add(new JComboBox(new Object[] { comboBoxes.get(modelIndex).getSelectedItem() }), BorderLayout.NORTH);
+				JComboBox comboBox = new JComboBox(new Object[] { comboBoxes.get(modelIndex).getSelectedItem() });
+				comboBox.setFont(comboBox.getFont().deriveFont(tableHeader.getFont().getSize2D()));
+				add(comboBox, BorderLayout.NORTH);
 				add(new JTextField(textFields.get(modelIndex).getText()), BorderLayout.CENTER);
 				add((JLabel)c, BorderLayout.SOUTH);
 				labelYPos = c.getY();
