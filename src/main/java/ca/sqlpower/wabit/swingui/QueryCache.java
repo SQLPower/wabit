@@ -141,6 +141,11 @@ public class QueryCache {
 	private String globalWhereClause;
 	
 	/**
+	 * This maps containers to aliases used in a select statement.
+	 */
+	private final Map<Container, String> tableAliasMap;
+	
+	/**
 	 * A listener that handles changes to the group by and having clauses.
 	 */
 	private PropertyChangeListener groupByAndHavingListener = new PropertyChangeListener() {
@@ -355,6 +360,7 @@ public class QueryCache {
 					ContainerPane<?> container = (ContainerPane<?>)evt.getOldValue();
 					Container table = container.getModel();
 					fromTableList.remove(table);
+					tableAliasMap.remove(table);
 					for (Section section : table.getSections()) {
 						for (Item col : section.getItems()) {
 							whereMapping.remove(col);
@@ -392,6 +398,19 @@ public class QueryCache {
 		}
 	};
 	
+	private final PropertyChangeListener tableAliasListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent e) {
+			if (e.getPropertyName().equals(ContainerPane.PROPERTY_CONTAINTER_ALIAS)) {
+				ContainerPane<?> pane = (ContainerPane<?>)e.getSource();
+				if (pane.getContainerAlias() == null || pane.getContainerAlias().length() <= 0) {
+					tableAliasMap.remove(pane.getModel());
+				} else {
+					tableAliasMap.put(pane.getModel(), pane.getContainerAlias());
+				}
+			}
+		}
+	}; 
+	
 	/**
 	 * This is the current cell renderer we are listening on for group by 
 	 * and having values.
@@ -404,6 +423,7 @@ public class QueryCache {
 	private final List<ChangeListener> queryChangeListeners;
 	
 	public QueryCache(QueryPen pen) {
+		tableAliasMap = new HashMap<Container, String>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		orderByList = new ArrayList<Item>();
 		selectedColumns = new ArrayList<Item>();
@@ -421,6 +441,7 @@ public class QueryCache {
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
+		pen.addQueryListener(tableAliasListener);
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -466,10 +487,14 @@ public class QueryCache {
 			} else {
 				query.append(", ");
 			}
+			String alias = tableAliasMap.get(col.getParent().getParent());
+			if (alias == null) {
+				alias = col.getParent().getParent().getName();
+			}
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(groupByAggregateMap.get(col).toString() + "(");
 			}
-			query.append(col.getParent().getParent().getName() + "." + col.getName());
+			query.append(alias + "." + col.getName());
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(")");
 			}
@@ -486,12 +511,16 @@ public class QueryCache {
 			} else {
 				qualifiedName = table.getName();
 			}
+			String alias = tableAliasMap.get(table);
+			if (alias == null) {
+				alias = table.getName();
+			}
 			if (isFirstFrom) {
-				query.append(" " + qualifiedName);
+				query.append(" " + qualifiedName + " " + alias);
 				isFirstFrom = false;
 			} else {
 				query.append(" \n\tINNER JOIN ");
-				query.append(qualifiedName + " ON ");
+				query.append(qualifiedName + " " + alias + " ON ");
 				if (joinMapping.get(table) == null || joinMapping.get(table).isEmpty()) {
 					query.append("TRUE");
 				} else {
@@ -510,9 +539,17 @@ public class QueryCache {
 								} else {
 									query.append(" AND ");
 								}
-								query.append(join.getLeftColumn().getParent().getParent().getName() + "." + join.getLeftColumn().getName() + 
+								String leftAlias = tableAliasMap.get(join.getLeftColumn().getParent().getParent());
+								if (leftAlias == null) {
+									leftAlias = join.getLeftColumn().getParent().getParent().getName();
+								}
+								String rightAlias = tableAliasMap.get(join.getRightColumn().getParent().getParent());
+								if (rightAlias == null) {
+									rightAlias = join.getRightColumn().getParent().getParent().getName();
+								}
+								query.append(leftAlias + "." + join.getLeftColumn().getName() + 
 										" " + join.getComparator() + " " + 
-										join.getRightColumn().getParent().getParent().getName() + "." + join.getRightColumn().getName());
+										rightAlias + "." + join.getRightColumn().getName());
 							}
 						}
 					}
@@ -531,7 +568,11 @@ public class QueryCache {
 					} else {
 						query.append(" AND ");
 					}
-					query.append(entry.getKey().getParent().getParent().getName() + "." + entry.getKey().getName() + " " + entry.getValue());
+					String alias = tableAliasMap.get(entry.getKey().getParent().getParent());
+					if (alias == null) {
+						alias = entry.getKey().getParent().getParent().getName();
+					}
+					query.append(alias + "." + entry.getKey().getName() + " " + entry.getValue());
 				}
 			}
 			if (!isFirstWhere && (globalWhereClause != null && globalWhereClause.length() > 0)) {
@@ -551,7 +592,11 @@ public class QueryCache {
 				} else {
 					query.append(", ");
 				}
-				query.append(col.getParent().getParent().getName() + "." + col.getName());
+				String alias = tableAliasMap.get(col.getParent().getParent());
+				if (alias == null) {
+					alias = col.getParent().getParent().getName();
+				}
+				query.append(alias + "." + col.getName());
 			}
 			query.append(" ");
 		}
@@ -569,7 +614,11 @@ public class QueryCache {
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(groupByAggregateMap.get(column).toString() + "(");
 				}
-				query.append(column.getParent().getParent().getName() + "." + column.getName() + " ");
+				String alias = tableAliasMap.get(column.getParent().getParent());
+				if (alias == null) {
+					alias = column.getParent().getParent().getName();
+				}
+				query.append(alias + "." + column.getName() + " ");
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(")");
 				}
@@ -588,7 +637,11 @@ public class QueryCache {
 				} else {
 					query.append(", ");
 				}
-				query.append(col.getParent().getParent().getName() + "." + col.getName() + " ");
+				String alias = tableAliasMap.get(col.getParent().getParent());
+				if (alias == null) {
+					alias = col.getParent().getParent().getName();
+				}
+				query.append(alias + "." + col.getName() + " ");
 				if (orderByArgumentMap.get(col) != null) {
 					query.append(orderByArgumentMap.get(col).toString() + " ");
 				}
