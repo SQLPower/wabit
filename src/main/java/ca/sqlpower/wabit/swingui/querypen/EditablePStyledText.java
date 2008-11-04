@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,6 +127,20 @@ public class EditablePStyledText extends PStyledText {
 			}
 		};
 		addInputEventListener(styledTextEventHandler);
+		
+		editorPane.addKeyListener(new KeyListener() {
+			public void keyTyped(KeyEvent e) {
+				//Do nothing
+			}
+			public void keyReleased(KeyEvent e) {
+				//Do nothing
+			}
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					styledTextEventHandler.stopEditing();
+				}
+			}
+		});
 		
 		editorPane.addFocusListener(editorFocusListener);
 	}
