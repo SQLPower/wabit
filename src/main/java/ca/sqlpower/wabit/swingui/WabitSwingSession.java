@@ -212,11 +212,12 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
 				cornerPanelLabel = new JPanel(new BorderLayout());
-				columnNameLabel.setFont(table.getTableHeader().getFont());
-				groupingLabel.setFont(table.getTableHeader().getFont());
-				havingLabel.setFont(table.getTableHeader().getFont());
-				cornerPanelLabel.add(groupingLabel, BorderLayout.NORTH);
-				cornerPanelLabel.add(havingLabel, BorderLayout.CENTER);
+				if(queryPenAndTextTabPane.getSelectedIndex() == 0) {
+					groupingLabel.setFont(table.getTableHeader().getFont());
+					havingLabel.setFont(table.getTableHeader().getFont());
+					cornerPanelLabel.add(groupingLabel, BorderLayout.NORTH);
+					cornerPanelLabel.add(havingLabel, BorderLayout.CENTER);
+				}
 				cornerPanelLabel.add(columnNameLabel, BorderLayout.SOUTH);
 				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanelLabel);
 				queryCache.listenToCellRenderer(renderer);
