@@ -1,5 +1,6 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -9,11 +10,13 @@ import java.util.Collection;
 
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.swingui.Item;
-
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.nodes.PStyledText;
@@ -71,6 +74,8 @@ public class ItemPNode extends PNode {
 	 */
 	private final JCheckBox isInSelectCheckBox;
 	
+	private boolean isJoined = false;
+	
 	/**
 	 * These listeners will fire a change event when an element on this object
 	 * is changed that affects the resulting generated query.
@@ -109,6 +114,9 @@ public class ItemPNode extends PNode {
 				logger.debug("editor has text " + nameEditor.getText() + " alias is " + aliasText);
 				columnText.syncWithDocument();
 			}
+			if(isJoined) {
+				highLightText();
+			}
 			editing = false;
 			if (!aliasText.equals(oldAlias)) {
 				for (PropertyChangeListener l : queryChangeListeners) {
@@ -146,6 +154,23 @@ public class ItemPNode extends PNode {
 			}
 		}
 	};
+	
+	/**
+	 * HighLights the columnText. This will be called when the item is joined or Deleted.
+	 */
+	public void highLightText() {
+		SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+		if(isJoined) {
+			StyleConstants.setForeground(attributeSet, Color.blue);
+		} else {
+			StyleConstants.setForeground(attributeSet, Color.black);
+		}
+		DefaultStyledDocument leftDoc = (DefaultStyledDocument)columnText.getDocument();
+		leftDoc.setCharacterAttributes(0, leftDoc.getLength(), attributeSet, false);
+		columnText.repaint();
+		columnText.syncWithDocument();
+		
+	}
 
 	/**
 	 * The check box for selection wrapped as a PSwing 
@@ -186,6 +211,11 @@ public class ItemPNode extends PNode {
 		logger.debug("Pnode " + item.getName() + " created.");
 	}
 
+	public void setIsJoined(boolean joined) {
+		isJoined = joined;
+		highLightText();
+	}
+	 
 	public Item getItem() {
 		return item;
 	}

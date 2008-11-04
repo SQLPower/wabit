@@ -201,6 +201,8 @@ public class QueryPen implements MouseState {
 									ItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+										pkItemNode.setIsJoined(true);
+										fkItemNode.setIsJoined(true);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
 											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
@@ -305,6 +307,10 @@ public class QueryPen implements MouseState {
 					}
 				}
 				if (pickedNode.getParent() == joinLayer) {
+					PNode leftNode = ((JoinLine)pickedNode).getLeftNode();
+					PNode rightNode = ((JoinLine)pickedNode).getRightNode();
+					((ItemPNode)leftNode).setIsJoined(false);
+					((ItemPNode)rightNode).setIsJoined(false);
 					joinLayer.removeChild(pickedNode);
 					if (pickedNode instanceof JoinLine) {
 						JoinLine join = (JoinLine) pickedNode;
