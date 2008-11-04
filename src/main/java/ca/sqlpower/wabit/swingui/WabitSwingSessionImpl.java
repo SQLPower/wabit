@@ -265,7 +265,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 		};
     	JButton playPenExecuteButton = new JButton(queryExecuteAction);
-    	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/execute.png"));
+    	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/execute.png"));
     	playPenExecuteButton.setIcon(executeIcon);
     	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ queryPen.getAcceleratorKeyString()+ " R)");
     	queryPen.getQueryPenBar().add(playPenExecuteButton);

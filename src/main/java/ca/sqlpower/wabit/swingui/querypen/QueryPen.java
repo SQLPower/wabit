@@ -338,7 +338,7 @@ public class QueryPen implements MouseState {
 		JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
-        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/delete.png"));
+        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/delete.png"));
         JButton deleteButton = new JButton(getDeleteAction());
         deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut Delete)");
         deleteButton.setIcon(joinIcon);
@@ -384,7 +384,7 @@ public class QueryPen implements MouseState {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
-        ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_in16.png"));
+        ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"));
         zoomInAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		PCamera camera = canvas.getCamera();
@@ -400,7 +400,7 @@ public class QueryPen implements MouseState {
                 
                 , ZOOM_IN_ACTION);
         canvas.getActionMap().put(ZOOM_IN_ACTION, zoomInAction);
-        ImageIcon zoomOutIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/zoom_out16.png"));
+        ImageIcon zoomOutIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_out16.png"));
         
         zoomOutAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
@@ -427,7 +427,7 @@ public class QueryPen implements MouseState {
         zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift -)");
         zoomOutButton.setIcon(zoomOutIcon);
         
-        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/join.png"));
+        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/join.png"));
         AbstractAction joinAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		setMouseState(MouseStates.CREATE_JOIN);
