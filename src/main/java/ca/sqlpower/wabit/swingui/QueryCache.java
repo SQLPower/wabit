@@ -652,6 +652,10 @@ public class QueryCache {
 	}
 
 	public void listenToCellRenderer(ComponentCellRenderer renderer) {
+		if (cellRenderer != null) {
+			cellRenderer.removeGroupAndHavingListener(groupByAndHavingListener);
+			cellRenderer.removeTableListenerToSortDecorator(orderByListener);
+		}
 		cellRenderer = renderer;
 		renderer.addGroupAndHavingListener(groupByAndHavingListener);
 		renderer.addTableListenerToSortDecorator(orderByListener);

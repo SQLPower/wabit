@@ -407,6 +407,10 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		sortDecorator.addTableModelListener(l);
 	}
 	
+	public void removeTableListenerToSortDecorator(TableModelListener l) {
+		sortDecorator.removeTableModelListener(l);
+	}
+	
 	public void setSortingStatus(LinkedHashMap<Integer, Integer> columnSortMap) {
 		sortDecorator.setSortingStatus(columnSortMap);
 	}
