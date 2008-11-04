@@ -31,8 +31,6 @@ import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -141,6 +139,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		Collections.synchronizedList(new ArrayList<SPSwingWorker>());
 
 	/**
+	 * This stores a copy of the query cache for each query that is executed
+	 * through this session. This way we can get at parts of the query for the
+	 * tables that result from executing these queries. If a query is found to
+	 * be used part way through this list the queries before it will be removed
+	 * as the tables that represent the query should have been removed prior to
+	 * the new tables being added to the result set.
+	 */
+	private final List<QueryCache> queuedQueryCache;
+
+	/**
 	 * Creates a new session 
 	 * 
 	 * @param context
@@ -151,6 +159,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		queryPen = new QueryPen(this);
 		queryCache = new QueryCache(queryPen);
 		statusLabel= new JLabel();
+		queuedQueryCache = new ArrayList<QueryCache>();
 	}
 	/**
 	 * sets the StatusMessage
@@ -194,6 +203,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 		
 			public void tableAdded(TableChangeEvent e) {
+				logger.debug("Table added.");
+				queryCache.unlistenToCellRenderer();
 				TableModelSortDecorator sortDecorator = null;
 				JTable table = e.getChangedTable();
 				if (table instanceof FancyExportableJTable) {
@@ -219,6 +230,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				}
 				cornerPanelLabel.add(columnNameLabel, BorderLayout.SOUTH);
 				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanelLabel);
+				addGroupingTableHeaders();
 				queryCache.listenToCellRenderer(renderer);
 			}
 		});
@@ -242,14 +254,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	queryPenAndTextTabPane = new JTabbedPane();
     	queryCache.addQueryChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				queryUIComponents.executeQuery(queryCache.generateQuery());
+				executeQueryInCache();
 			}
 		});
     	JPanel playPen = queryPen.createQueryPen();
     	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
     	AbstractAction queryExecuteAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
-				queryUIComponents.executeQuery(queryCache.generateQuery());
+				executeQueryInCache();
 			}
 		};
     	JButton playPenExecuteButton = new JButton(queryExecuteAction);
@@ -280,14 +292,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     			addGroupingTableHeaders();
     		}
     	});
-    	queryUIComponents.getFirstResultPanel().addContainerListener(new ContainerListener() {
-			public void componentRemoved(ContainerEvent e) {
-				//Do nothing.
-			}
-			public void componentAdded(ContainerEvent e) {
-				addGroupingTableHeaders();
-			}
-		});
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, max(pref;80dlu)");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel("Database connection:"));
@@ -522,6 +526,24 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		if (queryPenAndTextTabPane.getSelectedIndex() == 0) {
 			ArrayList<JTable> tables = queryUIComponents.getResultTables();
 			for(JTable t : tables)	{
+				QueryCache cache = null;
+				List<QueryCache> removeCacheList = new ArrayList<QueryCache>();
+				for (QueryCache c : queuedQueryCache) {
+					if (c.generateQuery().equals(queryUIComponents.getQueryForJTable(t))) {
+						cache = c;
+						break;
+					}
+					removeCacheList.add(c);
+				}
+				for (QueryCache c : removeCacheList) {
+					queuedQueryCache.remove(c);
+				}
+				if (cache == null) {
+					// There are no QueryCache objects that define the header for
+					// this table so we cannot add a header.
+					logger.debug("There was no cache matching the table from query " + queryUIComponents.getQueryForJTable(t));
+					return;
+				}
 				ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
 				if(groupingCheckBox.isSelected()) {
 					renderPanel.setGroupingEnabled(true);
@@ -534,23 +556,23 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 					havingLabel.setVisible(false);
 				}
 				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-					SQLGroupFunction groupByAggregate = queryCache.getGroupByAggregate(queryCache.getSelectedColumns().get(i));
+					SQLGroupFunction groupByAggregate = cache.getGroupByAggregate(cache.getSelectedColumns().get(i));
 					if (groupByAggregate != null) {
 						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate.toString());
 					}
 				}
 
 				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-					String havingText = queryCache.getHavingClause(queryCache.getSelectedColumns().get(i));
+					String havingText = cache.getHavingClause(cache.getSelectedColumns().get(i));
 					if (havingText != null) {
 						renderPanel.getTextFields().get(i).setText(havingText);
 					}
 				}
 				
 				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (Item column : queryCache.getOrderByList()) {
-					int columnIndex = queryCache.getSelectedColumns().indexOf(column);
-					OrderByArgument arg = queryCache.getOrderByArgument(column);
+				for (Item column : cache.getOrderByList()) {
+					int columnIndex = cache.getSelectedColumns().indexOf(column);
+					OrderByArgument arg = cache.getOrderByArgument(column);
 					if (arg != null) {
 						if (arg == OrderByArgument.ASC) {
 							columnSortMap.put(columnIndex, TableModelSortDecorator.ASCENDING);
@@ -566,5 +588,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
 		}
+	}
+	
+	/**
+	 * This will execute the current query in the QueryCache and
+	 * store a copy of the QueryCache in the queued list.
+	 */
+	private synchronized void executeQueryInCache() {
+		queuedQueryCache.add(new QueryCache(queryCache));
+		queryUIComponents.executeQuery(queryCache.generateQuery());
+		
 	}
 }

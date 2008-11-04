@@ -416,6 +416,40 @@ public class QueryCache {
 		pen.addQueryListener(tableAliasListener);
 	}
 	
+	/**
+	 * A copy constructor for the query cache. This will not
+	 * hook up listeners.
+	 */
+	public QueryCache(QueryCache copy) {
+		selectedColumns = new ArrayList<Item>();
+		aliasMap = new HashMap<Item, String>();
+		fromTableList = new ArrayList<Container>();
+		tableAliasMap = new HashMap<Container, String>();
+		joinMapping = new HashMap<Container, List<SQLJoin>>();
+		whereMapping = new HashMap<Item, String>();
+		groupByList = new ArrayList<Item>();
+		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
+		havingMap = new HashMap<Item, String>();
+		orderByList = new ArrayList<Item>();
+		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
+		
+		selectedColumns.addAll(copy.getSelectedColumns());
+		aliasMap.putAll(copy.getAliasMap());
+		fromTableList.addAll(copy.getFromTableList());
+		tableAliasMap.putAll(copy.getTableAliasMap());
+		joinMapping.putAll(copy.getJoinMapping());
+		whereMapping.putAll(copy.getWhereMapping());
+		groupByList.addAll(copy.getGroupByList());
+		groupByAggregateMap.putAll(copy.getGroupByAggregateMap());
+		havingMap.putAll(copy.getHavingMap());
+		orderByList.addAll(copy.getOrderByList());
+		orderByArgumentMap.putAll(copy.getOrderByArgumentMap());
+		globalWhereClause = copy.getGlobalWhereClause();
+		groupingEnabled = copy.isGroupingEnabled();
+		
+		queryChangeListeners = new ArrayList<ChangeListener>();
+	}
+	
 	public void setGroupingEnabled(boolean enabled) {
 		logger.debug("Setting grouping enabled to " + enabled);
 		if (!groupingEnabled && enabled) {
@@ -440,6 +474,8 @@ public class QueryCache {
 		groupByList.remove(column);
 		groupByAggregateMap.remove(column);
 		havingMap.remove(column);
+		orderByList.remove(column);
+		orderByArgumentMap.remove(column);
 	}
 	
 	/**
@@ -624,13 +660,17 @@ public class QueryCache {
 	}
 
 	public void listenToCellRenderer(ComponentCellRenderer renderer) {
+		unlistenToCellRenderer();
+		cellRenderer = renderer;
+		renderer.addGroupAndHavingListener(groupByAndHavingListener);
+		renderer.addTableListenerToSortDecorator(orderByListener);
+	}
+	
+	public void unlistenToCellRenderer() {
 		if (cellRenderer != null) {
 			cellRenderer.removeGroupAndHavingListener(groupByAndHavingListener);
 			cellRenderer.removeTableListenerToSortDecorator(orderByListener);
 		}
-		cellRenderer = renderer;
-		renderer.addGroupAndHavingListener(groupByAndHavingListener);
-		renderer.addTableListenerToSortDecorator(orderByListener);
 	}
 	
 	public void addQueryChangeListener(ChangeListener l) {
@@ -714,6 +754,50 @@ public class QueryCache {
 
 	Map<Item, String> getAliasList() {
 		return Collections.unmodifiableMap(aliasMap);
+	}
+
+	protected Map<Item, String> getAliasMap() {
+		return aliasMap;
+	}
+
+	protected boolean isGroupingEnabled() {
+		return groupingEnabled;
+	}
+
+	protected Map<Item, SQLGroupFunction> getGroupByAggregateMap() {
+		return groupByAggregateMap;
+	}
+
+	protected List<Item> getGroupByList() {
+		return groupByList;
+	}
+
+	protected Map<Item, String> getHavingMap() {
+		return havingMap;
+	}
+
+	protected Map<Item, OrderByArgument> getOrderByArgumentMap() {
+		return orderByArgumentMap;
+	}
+
+	protected List<Container> getFromTableList() {
+		return fromTableList;
+	}
+
+	protected Map<Container, List<SQLJoin>> getJoinMapping() {
+		return joinMapping;
+	}
+
+	protected Map<Item, String> getWhereMapping() {
+		return whereMapping;
+	}
+
+	protected String getGlobalWhereClause() {
+		return globalWhereClause;
+	}
+
+	protected Map<Container, String> getTableAliasMap() {
+		return tableAliasMap;
 	}
 
 }
