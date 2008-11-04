@@ -40,6 +40,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -165,6 +167,22 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 				}
 				public void focusGained(FocusEvent e) {
 					oldValue = textField.getText();
+				}
+			});
+			
+			textField.addKeyListener(new KeyListener() {
+				public void keyTyped(KeyEvent e) {
+					//Do nothing
+				}
+				public void keyReleased(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+						for (PropertyChangeListener l : listeners) {
+							l.propertyChange(new PropertyChangeEvent(textField, PROPERTY_HAVING, null, textField.getText()));
+						}
+					}
+				}
+				public void keyPressed(KeyEvent e) {
+					// Do nothing
 				}
 			});
 
