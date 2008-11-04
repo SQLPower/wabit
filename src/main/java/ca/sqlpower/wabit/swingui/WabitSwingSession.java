@@ -126,7 +126,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 	private static JLabel statusLabel;
 	private final JLabel groupingLabel = new JLabel("Group By");
 	private final JLabel havingLabel = new JLabel ("Having");
-	private final JLabel columnNameLabel = new JLabel ("Column");
+	private final JLabel columnNameLabel = new JLabel ();
 	private JPanel cornerPanelLabel;
 
 	/**
@@ -207,6 +207,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				JList rowHeader = new JList(lm);
 				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width + 2);
 				rowHeader.setCellRenderer(new RowHeaderRenderer(table));
+				
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
 				cornerPanelLabel = new JPanel(new BorderLayout());
