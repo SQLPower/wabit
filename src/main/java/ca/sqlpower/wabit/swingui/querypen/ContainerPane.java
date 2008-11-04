@@ -19,9 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
-import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -29,13 +28,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
-
-
 import javax.swing.JEditorPane;
-
 
 import org.apache.log4j.Logger;
 
@@ -45,6 +40,8 @@ import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
@@ -229,6 +226,19 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		modelNameText.addEditStyledTextListener(editingTextListener);
 		modelNameText.addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		addChild(modelNameText);
+		modelNameText.addInputEventListener(new PBasicInputEventHandler() {
+			private Point2D lastMousePosition;
+			@Override
+			public void mousePressed(PInputEvent event) {
+				lastMousePosition = event.getPosition();
+			}
+			
+			@Override
+			public void mouseDragged(PInputEvent event) {
+				ContainerPane.this.translate(event.getPosition().getX() - lastMousePosition.getX(), event.getPosition().getY() - lastMousePosition.getY());
+				lastMousePosition = event.getPosition();
+			}
+		});
 		
 		PNode header = createColumnHeader();
 		header.translate(0, modelNameText.getHeight()+ BORDER_SIZE);
