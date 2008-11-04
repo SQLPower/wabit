@@ -392,7 +392,7 @@ public class QueryPen implements MouseState {
         };
         
         zoomInButton = new JButton(zoomInAction);
-        zoomInButton.setToolTipText( ZOOM_IN_ACTION+ " (Shortcut "+ acceleratorKeyString+ " +)");
+        zoomInButton.setToolTipText( ZOOM_IN_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift +)");
         zoomInButton.setIcon(zoomInIcon);
         canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
@@ -423,7 +423,7 @@ public class QueryPen implements MouseState {
 				}
 			}
 		});
-        zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " -)");
+        zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift -)");
         zoomOutButton.setIcon(zoomOutIcon);
         
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/wabit/swingui/querypen/join.png"));
