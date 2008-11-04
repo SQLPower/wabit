@@ -222,6 +222,10 @@ public class ItemPNode extends PNode {
 		return aliasText;
 	}
 	
+	public void setAlias(String newAlias) {
+		aliasText = newAlias;
+	}
+	
 	public void addQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.add(l);
 	}

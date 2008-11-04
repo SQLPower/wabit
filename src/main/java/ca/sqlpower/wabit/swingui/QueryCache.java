@@ -241,20 +241,8 @@ public class QueryCache {
 	 */
 	private PropertyChangeListener aliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(ItemPNode.PROPERTY_ALIAS)) {
-				if (e.getSource() instanceof ItemPNode) {
-					ItemPNode itemNode = (ItemPNode)e.getSource();
-					Item column = itemNode.getItem();
-					if (itemNode.getAlias().length() > 0) {
-						aliasMap.put(column, itemNode.getAlias());
-						logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
-					} else {
-						aliasMap.remove(column);
-					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
-				}
+			if (e.getPropertyName().equals(ItemPNode.PROPERTY_ALIAS) && e.getSource() instanceof ItemPNode) {
+				aliasChanged((ItemPNode)e.getSource());
 			}
 		}
 	};
@@ -265,24 +253,8 @@ public class QueryCache {
 	 */
 	private PropertyChangeListener selectedColumnListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getSource() instanceof ItemPNode) {
-				ItemPNode itemNode = (ItemPNode)e.getSource();
-				Item column = itemNode.getItem();
-				if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED)) {
-					if (e.getNewValue().equals(true)) {
-						selectedColumns.add(column);
-						if (groupingEnabled) {
-							groupByList.add(column);
-						}
-						logger.debug("Added " + column.getName() + " to the column list");
-					} else if (e.getNewValue().equals(false)) {
-						removeColumnSelection(column);
-					}
-					logger.debug("Firing change for selection.");
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
-				}
+			if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED) && e.getSource() instanceof ItemPNode) {
+				selectionChanged((ItemPNode)e.getSource(), (Boolean)e.getNewValue());
 			}
 		}
 	};
@@ -697,6 +669,51 @@ public class QueryCache {
 
 	public List<Item> getOrderByList() {
 		return Collections.unmodifiableList(orderByList);
+	}
+	
+	/**
+	 * This method will change the selection of a column.
+	 * 
+	 * Package private for testing
+	 */
+	void selectionChanged(ItemPNode itemNode, Boolean isSelected) {
+		Item column = itemNode.getItem();
+
+		if (isSelected.equals(true)) {
+			selectedColumns.add(column);
+			if (groupingEnabled) {
+				groupByList.add(column);
+			}
+			logger.debug("Added " + column.getName() + " to the column list");
+		} else if (isSelected.equals(false)) {
+			removeColumnSelection(column);
+		}
+		logger.debug("Firing change for selection.");
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+	
+	/**
+	 * This method will change the alias on a column to the alias that is stored in the ItemPNode.
+	 * 
+	 * Package private for testing.
+	 */
+	void aliasChanged(ItemPNode itemNode) {
+		Item column = itemNode.getItem();
+		if (itemNode.getAlias().length() > 0) {
+			aliasMap.put(column, itemNode.getAlias());
+			logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
+		} else {
+			aliasMap.remove(column);
+		}
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+
+	Map<Item, String> getAliasList() {
+		return Collections.unmodifiableMap(aliasMap);
 	}
 
 }
