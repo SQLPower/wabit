@@ -17,17 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit;
 
-import ca.sqlpower.architect.SQLObjectRoot;
-import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.sql.DataSourceCollection;
 
-public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
-	
-	WabitSessionContext getContext();
-	
-	SQLObjectRoot getRootNode();
+public class StubWabitSessionContext implements WabitSessionContext {
+
+	public void deregisterChildSession(WabitSession child) {
+	}
+
+	public DataSourceCollection getDataSources() {
+		return null;
+	}
+
+	public boolean isMacOSX() {
+		return false;
+	}
+
+	public void registerChildSession(WabitSession child) {
+	}
 
 }

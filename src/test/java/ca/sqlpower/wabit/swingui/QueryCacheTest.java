@@ -20,8 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
-import ca.sqlpower.wabit.StubItem;
-import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -29,14 +27,10 @@ public class QueryCacheTest extends TestCase {
 	
 	private QueryCache queryCache;
 	private QueryPen pen;
-	private WabitSwingSession session;
-	private WabitSessionContext context;
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		context = new WabitSessionContext(true);
-		session = new WabitSwingSession(context);
-		pen = new QueryPen(session);
+		pen = new QueryPen(new StubWabitSwingSession());
 		queryCache = new QueryCache(pen);
 	}
 	

@@ -20,14 +20,48 @@
 package ca.sqlpower.wabit.swingui;
 
 import ca.sqlpower.architect.SQLObjectRoot;
-import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 
-public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
+/**
+ * This stubbed swing session does nothing for all of its methods.
+ */
+public class StubWabitSwingSession implements WabitSwingSession {
 	
-	WabitSessionContext getContext();
+	WabitSessionContext context = new StubWabitSessionContext();
+
+	public WabitSessionContext getContext() {
+		return context;
+	}
+
+	public SQLObjectRoot getRootNode() {
+		return null;
+	}
+
+	public void registerSwingWorker(SPSwingWorker worker) {
+		//Do nothing
+	}
+
+	public void removeSwingWorker(SPSwingWorker worker) {
+		//Do nothing
+	}
+
+	public void addSessionLifecycleListener(
+			SessionLifecycleListener<WabitSession> l) {
+		//Do nothing
+	}
+
+	public void close() {
+		//Do nothing
+	}
+
+	public void removeSessionLifecycleListener(
+			SessionLifecycleListener<WabitSession> l) {
+		//Do nothing
+	}
 	
-	SQLObjectRoot getRootNode();
 
 }

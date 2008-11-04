@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit;
+package ca.sqlpower.wabit.swingui;
 
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;

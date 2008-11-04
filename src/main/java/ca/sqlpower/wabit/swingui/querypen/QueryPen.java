@@ -333,7 +333,7 @@ public class QueryPen implements MouseState {
 		}
 	};
 	
-	public JPanel createQueryPen(WabitSwingSession session) {
+	public JPanel createQueryPen() {
 		JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
