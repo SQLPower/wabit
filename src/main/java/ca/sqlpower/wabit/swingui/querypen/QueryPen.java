@@ -33,6 +33,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -461,6 +462,19 @@ public class QueryPen implements MouseState {
 			}
 			public void focusGained(FocusEvent e) {
 				//do nothing
+			}
+		});
+		globalWhereText.addKeyListener(new KeyListener() {
+			public void keyTyped(KeyEvent e) {
+				//Do Nothing
+			}
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					queryChangeListener.propertyChange(new PropertyChangeEvent(globalWhereText, PROPERTY_WHERE_MODIFIED, globalWhereText.getText(), globalWhereText.getText()));
+				}
+			}
+			public void keyPressed(KeyEvent e) {
+				//Do nothing
 			}
 		});
 	}
