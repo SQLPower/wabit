@@ -205,7 +205,7 @@ public class WabitSwingSession implements WabitSession, SwingWorkerRegistry {
 				
 				ListModel lm = new RowListModel(table);
 				JList rowHeader = new JList(lm);
-				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width);
+				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width + 2);
 				rowHeader.setCellRenderer(new RowHeaderRenderer(table));
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
