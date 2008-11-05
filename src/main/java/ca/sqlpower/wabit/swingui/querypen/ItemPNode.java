@@ -165,8 +165,8 @@ public class ItemPNode extends PNode {
 		} else {
 			StyleConstants.setForeground(attributeSet, Color.black);
 		}
-		DefaultStyledDocument leftDoc = (DefaultStyledDocument)columnText.getDocument();
-		leftDoc.setCharacterAttributes(0, leftDoc.getLength(), attributeSet, false);
+		DefaultStyledDocument doc = (DefaultStyledDocument)columnText.getDocument();
+		doc.setCharacterAttributes(0, doc.getLength(), attributeSet, false);
 		columnText.repaint();
 		columnText.syncWithDocument();
 		
