@@ -66,6 +66,11 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	private static final int BORDER_SIZE = 5;
 	
 	/**
+	 * The size of separators between different fields.
+	 */
+	private static final int SEPARATOR_SIZE = 5;
+	
+	/**
 	 * Defines the property change to be a name change on the container.
 	 */
 	public static final String PROPERTY_CONTAINTER_ALIAS = "CONTAINER_ALIAS";
@@ -104,11 +109,6 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 * All of the {@link PStyledText} objects that represent an object in the model.
 	 */
 	private List<ItemPNode> containedItems;
-	
-	/**
-	 * This will store the distance for the whereHeader
-	 */
-	private double whereHeaderDistance = 0;
 	
 	/**
 	 * The PPath lines that separate the header from the columns and
@@ -201,7 +201,13 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		public void propertyChange(PropertyChangeEvent evt) {
 			repositionWhereClauses();
 			if (outerRect != null) {
-				double maxWidth = ContainerPane.this.getFullBounds().getWidth();
+				double maxWidth = Math.max(header.getFullBounds().getWidth(), modelNameText.getFullBounds().getWidth());
+				logger.debug("Header width is " + header.getFullBounds().getWidth() + " and the container name has width " + modelNameText.getFullBounds().getWidth());
+				for (ItemPNode node : containedItems) {
+					maxWidth = Math.max(maxWidth, node.getFullBounds().getWidth());
+				}
+				logger.debug("Max width of the container pane is " + maxWidth);
+				maxWidth += 2 * BORDER_SIZE;
 				outerRect.setWidth(maxWidth);
 				for (PPath line : separatorLines) {
 					line.setWidth(maxWidth);
@@ -212,6 +218,18 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	};
 
 	private EditablePStyledText modelNameText;
+
+	/**
+	 * This is the header that defines which column is the select check boxes,
+	 * which column is the column name and alias, and which column is the where
+	 * clause.
+	 */
+	private final PNode header;
+
+	/**
+	 * This is the header for column names and aliases.
+	 */
+	private PStyledText columnNameHeader;
 	
 	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
@@ -240,7 +258,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 			}
 		});
 		
-		PNode header = createColumnHeader();
+		header = createColumnHeader();
 		header.translate(0, modelNameText.getHeight()+ BORDER_SIZE);
 		addChild(header);
 		
@@ -279,7 +297,6 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	
 	private PNode createColumnHeader() {
 		
-		int whereBuffer = 5;
 		PNode itemHeader = new PNode();
 		JCheckBox allCheckBox = new JCheckBox();
 		allCheckBox.addActionListener(new AbstractAction(){
@@ -296,17 +313,15 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		swingCheckBox = new PSwing(allCheckBox);
 		itemHeader.addChild(swingCheckBox);
 		
-		PStyledText columnNameHeader = new EditablePStyledText("Column/Alias", mouseStates, canvas);
+		columnNameHeader = new EditablePStyledText("Column/Alias", mouseStates, canvas);
 		double textYTranslation = (swingCheckBox.getFullBounds().height - columnNameHeader.getFullBounds().height)/2;
-		columnNameHeader.translate(swingCheckBox.getFullBounds().width+ 5, textYTranslation);
+		columnNameHeader.translate(swingCheckBox.getFullBounds().width + SEPARATOR_SIZE, textYTranslation);
 		itemHeader.addChild(columnNameHeader);
 		
 		whereHeader = new EditablePStyledText("WHERE:", mouseStates, canvas);
 		whereHeader.translate(0, textYTranslation);
 		itemHeader.addChild(whereHeader);
 	
-		whereHeaderDistance = swingCheckBox.getFullBounds().width+ 5+ columnNameHeader.getWidth() + whereBuffer;
-		
 		return itemHeader;
 	}
 	
@@ -373,7 +388,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	}
 	
 	private void repositionWhereClauses() {
-		double maxXPos= whereHeaderDistance+ 5 ;
+		double maxXPos = swingCheckBox.getFullBounds().width + SEPARATOR_SIZE + columnNameHeader.getWidth() + SEPARATOR_SIZE;
 		for (ItemPNode itemNode : containedItems) {
 			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
 		}
