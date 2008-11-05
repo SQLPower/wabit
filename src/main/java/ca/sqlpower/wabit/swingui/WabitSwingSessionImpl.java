@@ -292,7 +292,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     			addGroupingTableHeaders();
     		}
     	});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, max(pref;80dlu)");
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, max(pref;80dlu)"
+    			,"pref, pref,  pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel("Database connection:"));
     	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
