@@ -39,6 +39,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -163,6 +165,32 @@ public class QueryPen implements MouseState {
 					Point location = dtde.getLocation();
 					Point2D movedLoc = canvas.getCamera().localToView(location);
 					pane.translate(movedLoc.getX(), movedLoc.getY());
+					
+					int aliasCounter = 0;
+					ArrayList<String> aliasNames = new ArrayList<String>();
+					
+					// This basically check if there exist a table with the same name as the one being dropped
+					// compare all the alias names to see which number it needs to not create a duplicate table name.
+					for(Object node: topLayer.getAllNodes()) {
+						if(node instanceof ContainerPane) {
+							ContainerPane containerNode = (ContainerPane)node;
+							if(containerNode.getModelTextName().equals(pane.getModelTextName())){
+								logger.debug("Found same tableName, going to alias");
+								aliasNames.add(containerNode.getContainerAlias());
+							}
+						}
+					}
+					Collections.sort(aliasNames);
+					for(String alias : aliasNames) {
+						if(alias.equals(pane.getModel().getName()+ "_"+ aliasCounter)
+								|| alias.equals("")) {
+							aliasCounter++;
+						}
+					}
+					if(aliasCounter != 0) {
+						pane.setContainerAlias(pane.getModel().getName()+ "_"+ aliasCounter);
+					}
+
 					topLayer.addChild(pane);
 					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane));
 					for (ItemPNode itemNode : pane.getContainedItems()) {
