@@ -145,32 +145,12 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		private boolean editing = false;
 		
 		public void editingStopping() {
-			String oldAlias = containerAlias;
+			
 			if (editing) {
-				JEditorPane nameEditor = modelNameText.getEditorPane();
-				containerAlias = nameEditor.getText();
-				String name;
-				if (model.getContainedObject() instanceof SQLObject) {
-					name = ((SQLObject)model.getContainedObject()).getName();
-				} else {
-					name = model.getContainedObject().toString();
-				}
-				if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(name)) {
-					nameEditor.setText(containerAlias + " (" + name + ")");
-				} else {
-					logger.debug("item name is " + name);
-					nameEditor.setText(name);
-					containerAlias = "";
-				}
-				logger.debug("editor has text " + nameEditor.getText() + " alias is " + containerAlias);
-				modelNameText.syncWithDocument();
+				createAliasName();
 			}
 			editing = false;
-			if (!containerAlias.equals(oldAlias)) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(ContainerPane.this, PROPERTY_CONTAINTER_ALIAS, oldAlias, containerAlias));
-				}
-			}
+
 		}
 		
 		public void editingStarting() {
@@ -181,6 +161,34 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 			}
 		}
 	};
+	
+	
+	private void createAliasName() {
+		String oldAlias = containerAlias;
+		JEditorPane nameEditor = modelNameText.getEditorPane();
+		containerAlias = nameEditor.getText();
+		String name;
+		if (model.getContainedObject() instanceof SQLObject) {
+			name = ((SQLObject)model.getContainedObject()).getName();
+		} else {
+			name = model.getContainedObject().toString();
+		}
+		if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(name)) {
+			nameEditor.setText(containerAlias + " (" + name + ")");
+		} else {
+			logger.debug("item name is " + name);
+			nameEditor.setText(name);
+			containerAlias = "";
+		}
+		logger.debug("editor has text " + nameEditor.getText() + " alias is " + containerAlias);
+		modelNameText.syncWithDocument();
+		
+		if (!containerAlias.equals(oldAlias)) {
+			for (PropertyChangeListener l : queryChangeListeners) {
+				l.propertyChange(new PropertyChangeEvent(ContainerPane.this, PROPERTY_CONTAINTER_ALIAS, oldAlias, containerAlias));
+			}
+		}
+	}
 	
 	/**
 	 * A change listener for use on items stored in this container pane.
@@ -328,6 +336,10 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		public Container getModel() {
 			return model;
 	}
+		
+		public String getModelTextName() {
+			return model.getName();
+		}
 
 	/**
 	 * Returns the ItemPNode that represents the Item that contains the object
@@ -405,5 +417,10 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	public String getContainerAlias() {
 		return containerAlias;
 	}
-
+	
+	public void setContainerAlias(String newAlias) {
+		modelNameText.getEditorPane().setText(newAlias);
+		createAliasName();
+	}
+	
 }
