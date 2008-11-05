@@ -33,6 +33,8 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -47,6 +49,8 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
  * attached to this extended PStyledText.
  */
 public class EditablePStyledText extends PStyledText {
+	
+	private static final Logger logger = Logger.getLogger(EditablePStyledText.class);
 	
 	/**
 	 * The editor pane shown when the text is clicked. The text entered into this
@@ -124,6 +128,9 @@ public class EditablePStyledText extends PStyledText {
 					l.editingStopping();
 				}
 				super.stopEditing();
+				editorPane.setText(editorPane.getText().replaceAll("\n", ""));
+				syncWithDocument();
+				logger.debug("Editing stopped.");
 			}
 		};
 		addInputEventListener(styledTextEventHandler);
@@ -134,6 +141,7 @@ public class EditablePStyledText extends PStyledText {
 			}
 			public void keyReleased(KeyEvent e) {
 				//Do nothing
+				editorPane.setText(editorPane.getText().replaceAll("[\n|\r]", ""));
 			}
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
