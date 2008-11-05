@@ -649,7 +649,14 @@ public class QueryCache {
 				if (alias == null) {
 					alias = col.getParent().getParent().getName();
 				}
-				query.append(alias + "." + col.getName() + " ");
+				if (groupByAggregateMap.containsKey(col)) {
+					query.append(groupByAggregateMap.get(col) + "(");
+				}
+				query.append(alias + "." + col.getName());
+				if (groupByAggregateMap.containsKey(col)) {
+					query.append(")");
+				}
+				query.append(" ");
 				if (orderByArgumentMap.get(col) != null) {
 					query.append(orderByArgumentMap.get(col).toString() + " ");
 				}
