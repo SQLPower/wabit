@@ -182,6 +182,8 @@ public class QueryPen implements MouseState {
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+										pkItemNode.JoinTo(join);
+										fkItemNode.JoinTo(join);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
 											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
@@ -201,8 +203,8 @@ public class QueryPen implements MouseState {
 									ItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
-										pkItemNode.setIsJoined(true);
-										fkItemNode.setIsJoined(true);
+										pkItemNode.JoinTo(join);
+										fkItemNode.JoinTo(join);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
 											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
@@ -302,26 +304,44 @@ public class QueryPen implements MouseState {
 					topLayer.removeChild(pickedNode);
 					if (pickedNode instanceof ContainerPane<?>) {
 						ContainerPane<?> pane = ((ContainerPane<?>)pickedNode);
+						List<ItemPNode> items = pane.getContainedItems();
+
+						for(ItemPNode item : items) {
+							List<JoinLine> joinedLines = item.getJoinedLines();
+							for(int i = joinedLines.size()-1; i >= 0 ; i--) {
+								if(joinedLines.get(i).getParent() == joinLayer) {
+									deleteJoinLine(joinedLines.get(i));
+								}
+							}
+						}
 						pane.removeQueryChangeListener(queryChangeListener);
 						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane, null));
 					}
 				}
 				if (pickedNode.getParent() == joinLayer) {
-					PNode leftNode = ((JoinLine)pickedNode).getLeftNode();
-					PNode rightNode = ((JoinLine)pickedNode).getRightNode();
-					((ItemPNode)leftNode).setIsJoined(false);
-					((ItemPNode)rightNode).setIsJoined(false);
-					joinLayer.removeChild(pickedNode);
-					if (pickedNode instanceof JoinLine) {
-						JoinLine join = (JoinLine) pickedNode;
-						for (PropertyChangeListener l : queryListeners) {
-							l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_REMOVED, join, null));
-						}
-					}
+					deleteJoinLine((JoinLine)pickedNode);
 				}
 			}
 		}
 	};
+	/**
+	 * This method will remove the Joined line from its left and right Nodes and remove it from the joinLayer
+	 * It also fires the propertyChange event to update the query
+	 */
+	private void deleteJoinLine(JoinLine pickedNode) {
+		
+		ItemPNode leftNode = (ItemPNode)((JoinLine)pickedNode).getLeftNode();
+		ItemPNode rightNode = (ItemPNode)((JoinLine)pickedNode).getRightNode();
+		leftNode.removeJoinedLine(pickedNode);
+		rightNode.removeJoinedLine(pickedNode);
+		joinLayer.removeChild(pickedNode);
+		if (pickedNode instanceof JoinLine) {
+			JoinLine join = (JoinLine) pickedNode;
+			for (PropertyChangeListener l : queryListeners) {
+				l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_REMOVED, join, null));
+			}
+		}
+	}
 	
 	/**
 	 * Listeners that will be notified when the query string has been modified.

@@ -7,6 +7,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
@@ -76,6 +77,7 @@ public class ItemPNode extends PNode {
 	
 	private boolean isJoined = false;
 	
+	private List<JoinLine> joinedLines;
 	/**
 	 * These listeners will fire a change event when an element on this object
 	 * is changed that affects the resulting generated query.
@@ -171,6 +173,22 @@ public class ItemPNode extends PNode {
 		columnText.syncWithDocument();
 		
 	}
+	
+	public void JoinTo(JoinLine line) {
+		joinedLines.add(line);
+		setIsJoined(true);
+	}
+	
+	public List<JoinLine> getJoinedLines() {
+		return joinedLines;
+	}
+	
+	public void removeJoinedLine(JoinLine line){
+		joinedLines.remove(line);
+		if(joinedLines.isEmpty()) {
+			setIsJoined(false);
+		}
+	}
 
 	/**
 	 * The check box for selection wrapped as a PSwing 
@@ -182,6 +200,7 @@ public class ItemPNode extends PNode {
 		this.item = item;
 		aliasText = "";
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
+		joinedLines = new ArrayList<JoinLine>();
 		
 		isInSelectCheckBox = new JCheckBox();
 		isInSelectCheckBox.setSelected(true);

@@ -67,9 +67,15 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					leftText = (ItemPNode)pick;
 				} else if (rightText == null) {
 					rightText = (ItemPNode)pick;
+					if(leftText == rightText) {
+						leftText = null;
+						rightText = null;
+						mouseStatePane.setMouseState(MouseStates.READY);
+						return;
+					}
 					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
-					rightText.setIsJoined(true);
-					leftText.setIsJoined(true);
+					rightText.JoinTo(join);
+					leftText.JoinTo(join);
 					joinLayer.addChild(join);
 					for(PropertyChangeListener listener : createJoinListeners) {
 						listener.propertyChange(new PropertyChangeEvent(canvas, QueryPen.PROPERTY_JOIN_ADDED, null, join));
