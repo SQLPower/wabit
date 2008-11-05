@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -31,8 +34,12 @@ import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
 
@@ -379,9 +386,67 @@ public class QueryCache {
 				} else {
 					tableAliasMap.put(pane.getModel(), pane.getContainerAlias());
 				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
 			}
 		}
-	}; 
+	};
+
+	/**
+	 * This is the last column move in the result table registered by the
+	 * reorderSelectionByHeaderListener listener. This will be null if there was
+	 * no column move since the last time a table column was dragged.
+	 */
+	private TableColumnModelEvent lastTableColumnMove = null;
+
+	/**
+	 * This listens to the mouse releases on a table to know when to try and
+	 * handle a table column move. The table columns should only be moved after
+	 * the user is done dragging.
+	 */
+	private final MouseListener reorderSelectionByHeaderMouseListener = new MouseAdapter() {
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			if (lastTableColumnMove != null) {
+				logger.debug("Moving column in select from " + lastTableColumnMove.getFromIndex() + " to " + lastTableColumnMove.getToIndex());
+				Item movedColumn = selectedColumns.get(lastTableColumnMove.getFromIndex());
+				selectedColumns.remove(movedColumn);
+				selectedColumns.add(lastTableColumnMove.getToIndex(), movedColumn);
+				lastTableColumnMove = null;
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
+			}
+		}
+	};
+	
+	/**
+	 * This will listen to the table for column reordering and update the select statement accordingly.
+	 */
+	private final TableColumnModelListener reorderSelectionByHeaderListener = new TableColumnModelListener() {
+		public void columnSelectionChanged(ListSelectionEvent e) {
+			//do nothing
+		}
+		public void columnRemoved(TableColumnModelEvent e) {
+			//do nothing	
+		}
+		public void columnMoved(TableColumnModelEvent e) {
+			if (e.getToIndex() != e.getFromIndex()) {
+				if (lastTableColumnMove == null) {
+					lastTableColumnMove = e;
+				} else {
+					lastTableColumnMove = new TableColumnModelEvent((TableColumnModel)e.getSource(), lastTableColumnMove.getFromIndex(), e.getToIndex());
+				}
+			}
+		}
+		public void columnMarginChanged(ChangeEvent e) {
+			//do nothing
+		}
+		public void columnAdded(TableColumnModelEvent e) {
+			//do nothing
+		}
+	};
 	
 	/**
 	 * This is the current cell renderer we are listening on for group by 
@@ -671,12 +736,16 @@ public class QueryCache {
 		cellRenderer = renderer;
 		renderer.addGroupAndHavingListener(groupByAndHavingListener);
 		renderer.addTableListenerToSortDecorator(orderByListener);
+		renderer.getTable().getColumnModel().addColumnModelListener(reorderSelectionByHeaderListener);
+		renderer.getTable().getTableHeader().addMouseListener(reorderSelectionByHeaderMouseListener);
 	}
 	
 	public void unlistenToCellRenderer() {
 		if (cellRenderer != null) {
 			cellRenderer.removeGroupAndHavingListener(groupByAndHavingListener);
 			cellRenderer.removeTableListenerToSortDecorator(orderByListener);
+			cellRenderer.getTable().getColumnModel().removeColumnModelListener(reorderSelectionByHeaderListener);
+			cellRenderer.getTable().getTableHeader().removeMouseListener(reorderSelectionByHeaderMouseListener);
 		}
 	}
 	

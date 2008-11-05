@@ -117,6 +117,11 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 * A list of listeners that fire when the group by or having clause changes.
 	 */
 	private final List<PropertyChangeListener> listeners;
+
+	/**
+	 * The table this renderer is on.
+	 */
+	private final JTable table;
 	
 	/**
 	 * Constructs a cell renderer for a table header that allows editing of the
@@ -124,6 +129,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 * attached to the table or null if the table does not have a sort decorator.
 	 */
 	public ComponentCellRenderer(JTable t, TableModelSortDecorator sortDecorator) {
+		this.table = t;
 		this.sortDecorator = sortDecorator;
 		listeners = new ArrayList<PropertyChangeListener>();
 		tableHeader = t.getTableHeader();
@@ -439,5 +445,9 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	
 	public void removeGroupAndHavingListener(PropertyChangeListener l) {
 		listeners.remove(l);
+	}
+
+	public JTable getTable() {
+		return table;
 	}
 }
