@@ -40,6 +40,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -69,10 +70,7 @@ import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
@@ -316,17 +314,19 @@ public class QueryPen implements MouseState {
 	private MouseStates mouseState = MouseStates.READY;
 	
 	/**
-	 * The pick path stored from the last mouse up event.
+	 * A SelectionEventHandler that supports multiple select on Tables for deletion and dragging.
 	 */
-	private PPickPath lastPickPath;
+	private PSelectionEventHandler selectionEventHandler;
 
 	/**
 	 * Deletes the selected item from the QueryPen.
 	 */
 	private final Action deleteAction = new AbstractAction(){
 		public void actionPerformed(ActionEvent e) {
-			if (lastPickPath != null) {
-				PNode pickedNode = lastPickPath.getPickedNode();
+
+			Iterator<?> selectedIter = selectionEventHandler.getSelection().iterator();
+			while(selectedIter.hasNext()) {
+				PNode pickedNode = (PNode) selectedIter.next();
 				if (pickedNode.getParent() == topLayer) {
 					topLayer.removeChild(pickedNode);
 					if (pickedNode instanceof ContainerPane<?>) {
@@ -420,13 +420,6 @@ public class QueryPen implements MouseState {
 		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		scrollPane = new PScrollPane(canvas);
 		
-		canvas.addInputEventListener(new PBasicInputEventHandler() {
-			@Override
-			public void mouseReleased(PInputEvent event) {
-				lastPickPath = event.getPath();
-			}
-		});
-		
 		canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 	                KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), DELETE_ACTION);
 	    canvas.getActionMap().put(DELETE_ACTION, deleteAction);
@@ -503,7 +496,7 @@ public class QueryPen implements MouseState {
         List<PLayer> layerList = new ArrayList<PLayer>();
         layerList.add(topLayer);
         layerList.add(joinLayer);
-        PSelectionEventHandler selectionEventHandler = new QueryPenSelectionEventHandler(topLayer, layerList);
+        selectionEventHandler = new QueryPenSelectionEventHandler(topLayer, layerList);
         selectionEventHandler.setMarqueePaint(SELECTION_COLOUR);
         selectionEventHandler.setMarqueePaintTransparency(SELECTION_TRANSPARENCY);
 		canvas.addInputEventListener(selectionEventHandler);
