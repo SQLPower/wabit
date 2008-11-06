@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ca.sqlpower.swingui.CursorManager;
-import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
+import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.MouseState;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
@@ -42,8 +42,8 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
 	private MouseState mouseStatePane;
-	private ItemPNode leftText;
-	private ItemPNode rightText;
+	private UnmodifiableItemPNode leftText;
+	private UnmodifiableItemPNode rightText;
 	private PLayer joinLayer;
 	private PCanvas canvas;
 	private CursorManager cursorManager;
@@ -62,14 +62,14 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 		super.mousePressed(event);
 		if (mouseStatePane.getMouseState().equals(MouseStates.CREATE_JOIN)) {
 			PNode pick = event.getPickedNode();
-			while (pick != null && !(pick instanceof ItemPNode)) {
+			while (pick != null && !(pick instanceof UnmodifiableItemPNode)) {
 				pick = pick.getParent();
 			}
 			if (pick != null) {
 				if (leftText == null) {
-					leftText = (ItemPNode)pick;
+					leftText = (UnmodifiableItemPNode)pick;
 				} else if (rightText == null) {
-					rightText = (ItemPNode)pick;
+					rightText = (UnmodifiableItemPNode)pick;
 					if(leftText == rightText) {
 						leftText = null;
 						rightText = null;

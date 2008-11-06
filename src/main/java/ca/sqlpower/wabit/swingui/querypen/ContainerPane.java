@@ -109,7 +109,7 @@ public class ContainerPane extends PNode {
 	/**
 	 * All of the {@link PStyledText} objects that represent an object in the model.
 	 */
-	private List<ItemPNode> containedItems;
+	private List<UnmodifiableItemPNode> containedItems;
 	
 	/**
 	 * The PPath lines that separate the header from the columns and
@@ -235,7 +235,7 @@ public class ContainerPane extends PNode {
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		this.mouseStates = pen;
 		this.canvas = canvas;
-		containedItems = new ArrayList<ItemPNode>();
+		containedItems = new ArrayList<UnmodifiableItemPNode>();
 		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
 		containerAlias = "";
@@ -264,7 +264,7 @@ public class ContainerPane extends PNode {
 		int yLoc = 2;
 		for (Section sec : model.getSections()) {
 			for (Item item : sec.getItems()) {
-				final ItemPNode newText = createTextLine(item);
+				final UnmodifiableItemPNode newText = createTextLine(item);
 				newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc+ BORDER_SIZE);
 				addChild(newText);
 				containedItems.add(newText);
@@ -289,9 +289,9 @@ public class ContainerPane extends PNode {
 	 * if it's a column, and not editable if it's a table from which everything
 	 * is being selected.
 	 */
-	private ItemPNode createTextLine(Item item) {
-		final ItemPNode modelNameText;
-		modelNameText = new ItemPNode(mouseStates, canvas, item);
+	private UnmodifiableItemPNode createTextLine(Item item) {
+		final UnmodifiableItemPNode modelNameText;
+		modelNameText = new UnmodifiableItemPNode(mouseStates, canvas, item);
 		modelNameText.getItemText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.getWherePStyledText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.addQueryChangeListener(itemChangeListener);
@@ -305,7 +305,7 @@ public class ContainerPane extends PNode {
 		allCheckBox.addActionListener(new AbstractAction(){
 
 			public void actionPerformed(ActionEvent e) {
-				for (ItemPNode itemNode : containedItems) {
+				for (UnmodifiableItemPNode itemNode : containedItems) {
 					if(itemNode.isInSelect() != ((JCheckBox)e.getSource()).isSelected()) {
 						itemNode.setInSelected(((JCheckBox)e.getSource()).isSelected());						
 					}
@@ -341,13 +341,13 @@ public class ContainerPane extends PNode {
 	 * passed into this method. If there is no ItemPNode in this container that
 	 * represents the given item null is returned.
 	 */
-	public ItemPNode getItemPNode(Object item) {
+	public UnmodifiableItemPNode getItemPNode(Object item) {
 		Item itemInModel = model.getItem(item);
 		if (itemInModel == null) {
 			logger.debug("Item " + item  + " not in model.");
 			return null;
 		}
-		for (ItemPNode itemNode : containedItems) {
+		for (UnmodifiableItemPNode itemNode : containedItems) {
 			if (itemInModel.getItem() == itemNode.getItem().getItem()) {
 				return itemNode;
 			}
@@ -396,16 +396,16 @@ public class ContainerPane extends PNode {
 	
 	private void repositionWhereClauses() {
 		double maxXPos = swingCheckBox.getFullBounds().width + SEPARATOR_SIZE + columnNameHeader.getWidth() + SEPARATOR_SIZE;
-		for (ItemPNode itemNode : containedItems) {
+		for (UnmodifiableItemPNode itemNode : containedItems) {
 			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
 		}
 		whereHeader.translate(maxXPos - whereHeader.getXOffset(), 0);
-		for (ItemPNode itemNode : containedItems) {
+		for (UnmodifiableItemPNode itemNode : containedItems) {
 			itemNode.positionWhere(maxXPos);
 		}
 	}
 	
-	public List<ItemPNode> getContainedItems() {
+	public List<UnmodifiableItemPNode> getContainedItems() {
 		return Collections.unmodifiableList(containedItems);
 	}
 
@@ -414,7 +414,7 @@ public class ContainerPane extends PNode {
 	}
 	
 	private void addItem(Item item) {
-		ItemPNode itemNode = createTextLine(item);
+		UnmodifiableItemPNode itemNode = createTextLine(item);
 		itemNode.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * (2 + containedItems.size()) + BORDER_SIZE);
 		addChild(itemNode);
 		containedItems.add(itemNode);
@@ -422,7 +422,7 @@ public class ContainerPane extends PNode {
 	}
 	
 	private void removeItem(Item item) {
-		ItemPNode itemNode = getItemPNode(item.getItem());
+		UnmodifiableItemPNode itemNode = getItemPNode(item.getItem());
 		if (itemNode != null) {
 			int containedItemsLocation = containedItems.indexOf(itemNode);
 			removeChild(itemNode);
@@ -442,7 +442,7 @@ public class ContainerPane extends PNode {
 		if (outerRect != null) {
 			double maxWidth = Math.max(header.getFullBounds().getWidth(), modelNameText.getFullBounds().getWidth());
 			logger.debug("Header width is " + header.getFullBounds().getWidth() + " and the container name has width " + modelNameText.getFullBounds().getWidth());
-			for (ItemPNode node : containedItems) {
+			for (UnmodifiableItemPNode node : containedItems) {
 				maxWidth = Math.max(maxWidth, node.getFullBounds().getWidth());
 			}
 			logger.debug("Max width of the container pane is " + maxWidth);

@@ -50,7 +50,6 @@ import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
-import ca.sqlpower.wabit.swingui.querypen.SQLObjectItem;
 
 /**
  * This class will cache all of the parts of a select
@@ -450,6 +449,21 @@ public class QueryCache {
 	};
 	
 	/**
+	 * Listens to items being removed from their parent containers so the items
+	 * will also be removed from any lists in the cache.
+	 */
+	private final PropertyChangeListener removedItemListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals(ItemPNode.PROPERTY_ITEM_REMOVED)) {
+				Item item = (Item)evt.getOldValue();
+				logger.debug("Item name is " + item.getName());
+				removeColumnSelection(item);
+				whereMapping.remove(item);
+			}
+		}
+	};
+	
+	/**
 	 * This is the current cell renderer we are listening on for group by 
 	 * and having values.
 	 */
@@ -480,6 +494,15 @@ public class QueryCache {
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableAliasListener);
+		pen.addQueryListener(removedItemListener);
+		pen.addQueryListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
+			}
+		});
+		
 	}
 	
 	/**
@@ -564,11 +587,8 @@ public class QueryCache {
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(groupByAggregateMap.get(col).toString() + "(");
 			}
-			if (col instanceof SQLObjectItem) {
-				String alias = tableAliasMap.get(col.getParent().getParent());
-				if (alias == null) {
-					alias = col.getParent().getParent().getName();
-				}
+			String alias = tableAliasMap.get(col.getParent().getParent());
+			if (alias != null) {
 				query.append(alias + ".");
 			}
 			query.append(col.getName());
@@ -579,7 +599,9 @@ public class QueryCache {
 				query.append(" AS " + aliasMap.get(col));
 			}
 		}
-		query.append(" \nFROM");
+		if (!fromTableList.isEmpty()) {
+			query.append(" \nFROM");
+		}
 		boolean isFirstFrom = true;
 		for (Container table : fromTableList) {
 			String qualifiedName;
@@ -646,10 +668,10 @@ public class QueryCache {
 						query.append(" AND ");
 					}
 					String alias = tableAliasMap.get(entry.getKey().getParent().getParent());
-					if (alias == null) {
-						alias = entry.getKey().getParent().getParent().getName();
+					if (alias != null) {
+						query.append(alias + ".");
 					}
-					query.append(alias + "." + entry.getKey().getName() + " " + entry.getValue());
+					query.append(entry.getKey().getName() + " " + entry.getValue());
 				}
 			}
 			if (!isFirstWhere && (globalWhereClause != null && globalWhereClause.length() > 0)) {
@@ -670,10 +692,10 @@ public class QueryCache {
 					query.append(", ");
 				}
 				String alias = tableAliasMap.get(col.getParent().getParent());
-				if (alias == null) {
-					alias = col.getParent().getParent().getName();
+				if (alias != null) {
+					query.append(alias + ".");
 				}
-				query.append(alias + "." + col.getName());
+				query.append(col.getName());
 			}
 			query.append(" ");
 		}
@@ -692,13 +714,14 @@ public class QueryCache {
 					query.append(groupByAggregateMap.get(column).toString() + "(");
 				}
 				String alias = tableAliasMap.get(column.getParent().getParent());
-				if (alias == null) {
-					alias = column.getParent().getParent().getName();
+				if (alias != null) {
+					query.append(alias + ".");
 				}
-				query.append(alias + "." + column.getName() + " ");
+				query.append(column.getName());
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(")");
 				}
+				query.append(" ");
 				query.append(entry.getValue());
 			}
 			query.append(" ");
@@ -714,14 +737,14 @@ public class QueryCache {
 				} else {
 					query.append(", ");
 				}
-				String alias = tableAliasMap.get(col.getParent().getParent());
-				if (alias == null) {
-					alias = col.getParent().getParent().getName();
-				}
 				if (groupByAggregateMap.containsKey(col)) {
 					query.append(groupByAggregateMap.get(col) + "(");
 				}
-				query.append(alias + "." + col.getName());
+				String alias = tableAliasMap.get(col.getParent().getParent());
+				if (alias != null) {
+					query.append(alias + ".");
+				}
+				query.append(col.getName());
 				if (groupByAggregateMap.containsKey(col)) {
 					query.append(")");
 				}
@@ -801,6 +824,9 @@ public class QueryCache {
 
 		if (isSelected.equals(true)) {
 			selectedColumns.add(column);
+			if (itemNode.getAlias().length() > 0) {
+				aliasMap.put(column, itemNode.getAlias());
+			}
 			if (groupingEnabled) {
 				groupByList.add(column);
 			}

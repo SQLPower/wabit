@@ -1,294 +1,60 @@
+/*
+ * Copyright (c) 2008, SQL Power Group Inc.
+ *
+ * This file is part of Wabit.
+ *
+ * Wabit is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Wabit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ */
+
 package ca.sqlpower.wabit.swingui.querypen;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.JCheckBox;
-import javax.swing.JEditorPane;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.wabit.swingui.Item;
-import edu.umd.cs.piccolo.PCanvas;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolox.nodes.PStyledText;
-import edu.umd.cs.piccolox.pswing.PSwing;
 
 /**
- * This PNode represents a SQL column on a table.
+ * An interface for all PNodes that display an Item in a query.
  */
-public class ItemPNode extends PNode {
+public interface ItemPNode {
 	
-	private static final Logger logger = Logger.getLogger(ItemPNode.class);
-	
+	/**
+	 * Defines a property change of an alias on a pnode.
+	 */
 	public static final String PROPERTY_ALIAS = "ALIAS";
 	
+	/**
+	 * Defines the item contained by this ItemPNode was added
+	 * or removed from the select list.
+	 */
 	public static final String PROPERTY_SELECTED = "SELECTED";
 	
+	/**
+	 * Defines a change of the where filer for this contained item.
+	 */
 	public static final String PROPERTY_WHERE = "WHERE";
 
 	/**
-	 * The amount of space to place between the column name text and
-	 * the where clause.
+	 * Defines a change to the item contained by this ItemPNode itself.
 	 */
-	private static final double WHERE_BUFFER = 5;
+	public static final String PROPERTY_ITEM = "ITEM";
 	
 	/**
-	 * This text will go in the whereText field when there is
-	 * no where clause on the current item.
+	 * Defines a change that the item this ItemPNode contains will be removed
+	 * from its container immediately after this event is fired. The item is
+	 * removed immediately after this event so the parent container will get the event.
 	 */
-	private static final String WHERE_START_TEXT = "        ";
+	public static final String PROPERTY_ITEM_REMOVED = "ITEM_REMOVED";
 
-	/**
-	 * The item this node is displaying.
-	 */
-	private final Item item;
-	
-	/**
-	 * A text area to allow showing the name of the item and
-	 * for editing its alias.
-	 */
-	private final EditablePStyledText columnText;
-	
-	/**
-	 * The text area storing the where clause for a given item.
-	 */
-	private final EditablePStyledText whereText;
-	
-	/**
-	 * The user defined alias for this sql column.
-	 */
-	private String aliasText;
-	
-	/**
-	 * Tracks if the item is in the select portion of a select
-	 * statement.
-	 */
-	private final JCheckBox isInSelectCheckBox;
-	
-	private boolean isJoined = false;
-	
-	private List<JoinLine> joinedLines;
-	/**
-	 * These listeners will fire a change event when an element on this object
-	 * is changed that affects the resulting generated query.
-	 */
-	private final Collection<PropertyChangeListener> queryChangeListeners;
-
-	/**
-	 * A listener to properly display the alias and column name when the
-	 * {@link EditablePStyledText} is switching from edit to non-edit mode and
-	 * back. This listener for the nameEditor will show only the alias when the
-	 * alias is being edited. When the alias is not being edited it will show
-	 * the alias and column name, in brackets, if an alias is specified.
-	 * Otherwise only the column name will be displayed.
-	 */
-	private EditStyledTextListener editingTextListener = new EditStyledTextListener() {
-		/**
-		 * Tracks if we are in an editing state or not. Used to keep the
-		 * editingStopped method from running only once per stop edit (some
-		 * cases the editingStopped can be called from multiple places on the
-		 * same stopEditing).
-		 */
-		private boolean editing = false;
-		
-		public void editingStopping() {
-			String oldAlias = aliasText;
-			if (editing) {
-				JEditorPane nameEditor = columnText.getEditorPane();
-				aliasText = nameEditor.getText();
-				if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(item.getName())) {
-					nameEditor.setText(aliasText + " (" + item.getName() + ")");
-				} else {
-					logger.debug("item name is " + item.getName());
-					nameEditor.setText(item.getName());
-					aliasText = "";
-				}
-				logger.debug("editor has text " + nameEditor.getText() + " alias is " + aliasText);
-				columnText.syncWithDocument();
-			}
-			if(isJoined) {
-				highLightText();
-			}
-			editing = false;
-			if (!aliasText.equals(oldAlias)) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_ALIAS, oldAlias, aliasText));
-				}
-			}
-		}
-		
-		public void editingStarting() {
-			editing = true;
-			if (aliasText != null && aliasText.length() > 0) {
-				columnText.getEditorPane().setText(aliasText);
-				logger.debug("Setting editor text to " + aliasText);
-			}
-		}
-	};
-	
-	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
-		private String oldWhere;
-		public void editingStopping() {
-			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
-				whereText.getEditorPane().setText(WHERE_START_TEXT);
-				whereText.syncWithDocument();
-			}
-			if (!getWhereText().equals(oldWhere)) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_WHERE, oldWhere, getWhereText()));
-				}
-			}
-		}
-		public void editingStarting() {
-			oldWhere = getWhereText();
-			if (whereText.getEditorPane().getText().equals(WHERE_START_TEXT)) {
-				whereText.getEditorPane().setText("");
-			}
-		}
-	};
-	
-	/**
-	 * HighLights the columnText. This will be called when the item is joined or Deleted.
-	 */
-	public void highLightText() {
-		SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-		if(isJoined) {
-			StyleConstants.setForeground(attributeSet, Color.blue);
-		} else {
-			StyleConstants.setForeground(attributeSet, Color.black);
-		}
-		DefaultStyledDocument doc = (DefaultStyledDocument)columnText.getDocument();
-		doc.setCharacterAttributes(0, doc.getLength(), attributeSet, false);
-		columnText.repaint();
-		columnText.syncWithDocument();
-		
-	}
-	
-	public void JoinTo(JoinLine line) {
-		joinedLines.add(line);
-		setIsJoined(true);
-	}
-	
-	public List<JoinLine> getJoinedLines() {
-		return joinedLines;
-	}
-	
-	public void removeJoinedLine(JoinLine line){
-		joinedLines.remove(line);
-		if(joinedLines.isEmpty()) {
-			setIsJoined(false);
-		}
-	}
-
-	/**
-	 * The check box for selection wrapped as a PSwing 
-	 * object.
-	 */
-	private PSwing swingCheckBox;
-
-	public ItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
-		this.item = item;
-		aliasText = "";
-		queryChangeListeners = new ArrayList<PropertyChangeListener>();
-		joinedLines = new ArrayList<JoinLine>();
-		
-		isInSelectCheckBox = new JCheckBox();
-		swingCheckBox = new PSwing(isInSelectCheckBox);
-		addChild(swingCheckBox);
-		
-		isInSelectCheckBox.addActionListener(new ActionListener() {
-		
-			public void actionPerformed(ActionEvent e) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_SELECTED, !isInSelectCheckBox.isSelected(), isInSelectCheckBox.isSelected()));
-				}
-			}
-		});
-		
-		columnText = new EditablePStyledText(item.getName(), mouseStates, canvas);
-		columnText.addEditStyledTextListener(editingTextListener);
-		double textYTranslation = (swingCheckBox.getFullBounds().height - columnText.getFullBounds().height)/2;
-		columnText.translate(swingCheckBox.getFullBounds().width, textYTranslation);
-		addChild(columnText);
-		
-		whereText = new EditablePStyledText(WHERE_START_TEXT, mouseStates, canvas);
-		whereText.addEditStyledTextListener(whereTextListener);
-		whereText.translate(0, textYTranslation);
-		addChild(whereText);
-
-		logger.debug("Pnode " + item.getName() + " created.");
-	}
-
-	public void setIsJoined(boolean joined) {
-		isJoined = joined;
-		highLightText();
-	}
-	 
-	public Item getItem() {
-		return item;
-	}
-
-	public PStyledText getItemText() {
-		return columnText;
-	}
-	
-	public PStyledText getWherePStyledText() {
-		return whereText;
-	}
-	
-	public String getWhereText() {
-		String text = whereText.getEditorPane().getText();
-		if (text.equals(WHERE_START_TEXT)) {
-			return "";
-		} else {
-			return text;
-		}
-	}
-	
-	public void setInSelected(boolean selected) {
-		isInSelectCheckBox.setSelected(selected);
-		for (PropertyChangeListener l : queryChangeListeners) {
-			l.propertyChange(new PropertyChangeEvent(ItemPNode.this, PROPERTY_SELECTED, !isInSelectCheckBox.isSelected(), isInSelectCheckBox.isSelected()));
-		}
-	}
-	
-	public boolean isInSelect() {
-		return isInSelectCheckBox.isSelected();
-	}
-	
-	public String getAlias() {
-		return aliasText;
-	}
-	
-	public void setAlias(String newAlias) {
-		aliasText = newAlias;
-	}
-	
-	public void addQueryChangeListener(PropertyChangeListener l) {
-		queryChangeListeners.add(l);
-	}
-	
-	public void removeQueryChangeListener(PropertyChangeListener l) {
-		queryChangeListeners.remove(l);
-	}
-	
-	public double getDistanceForWhere() {
-		return swingCheckBox.getFullBounds().width + columnText.getWidth() + WHERE_BUFFER;
-	}
-	
-	public void positionWhere(double xpos) {
-		logger.debug("Moving where text: xpos = " + xpos + ", text x position = " + whereText.getFullBounds().getX() + " x offset " + whereText.getXOffset());
-		whereText.translate(xpos - whereText.getXOffset(), 0);
-	}
-
+	Item getItem();
+	String getAlias();
+	String getWhereText();
 }

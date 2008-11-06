@@ -192,7 +192,7 @@ public class QueryPen implements MouseState {
 
 					topLayer.addChild(pane);
 					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane));
-					for (ItemPNode itemNode : pane.getContainedItems()) {
+					for (UnmodifiableItemPNode itemNode : pane.getContainedItems()) {
 						itemNode.setInSelected(true);
 					}
 					
@@ -202,10 +202,10 @@ public class QueryPen implements MouseState {
 							for (ContainerPane fkContainer : fkContainers) {
 								for (ColumnMapping mapping : relation.getMappings()) {
 									logger.debug("PK container has model name " + pane.getModel().getName() + " looking for col named " + mapping.getPkColumn().getName());
-									ItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
+									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
 									logger.debug("PK item node is " + pkItemNode);
 									logger.debug("fK container has model name " + fkContainer.getModel().getName() + " looking for col named " + mapping.getFkColumn().getName());
-									ItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
+									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
@@ -226,8 +226,8 @@ public class QueryPen implements MouseState {
 							List<ContainerPane> pkContainers = getContainerPane(relation.getPkTable());
 							for (ContainerPane pkContainer : pkContainers) {
 								for (ColumnMapping mapping : relation.getMappings()) {
-									ItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
-									ItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
+									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
+									UnmodifiableItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
 										pkItemNode.JoinTo(join);
@@ -347,9 +347,9 @@ public class QueryPen implements MouseState {
 					topLayer.removeChild(pickedNode);
 					if (pickedNode instanceof ContainerPane) {
 						ContainerPane pane = ((ContainerPane)pickedNode);
-						List<ItemPNode> items = pane.getContainedItems();
+						List<UnmodifiableItemPNode> items = pane.getContainedItems();
 
-						for(ItemPNode item : items) {
+						for(UnmodifiableItemPNode item : items) {
 							List<JoinLine> joinedLines = item.getJoinedLines();
 							for(int i = joinedLines.size()-1; i >= 0 ; i--) {
 								if(joinedLines.get(i).getParent() == joinLayer) {
@@ -374,8 +374,8 @@ public class QueryPen implements MouseState {
 	 */
 	private void deleteJoinLine(JoinLine pickedNode) {
 		
-		ItemPNode leftNode = (ItemPNode)((JoinLine)pickedNode).getLeftNode();
-		ItemPNode rightNode = (ItemPNode)((JoinLine)pickedNode).getRightNode();
+		UnmodifiableItemPNode leftNode = (UnmodifiableItemPNode)((JoinLine)pickedNode).getLeftNode();
+		UnmodifiableItemPNode rightNode = (UnmodifiableItemPNode)((JoinLine)pickedNode).getRightNode();
 		leftNode.removeJoinedLine(pickedNode);
 		rightNode.removeJoinedLine(pickedNode);
 		joinLayer.removeChild(pickedNode);

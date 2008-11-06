@@ -49,12 +49,12 @@ public class JoinLine extends PComposite {
 	/**
 	 * One of the columns that is being joined on.
 	 */
-	private final ItemPNode leftNode;
+	private final UnmodifiableItemPNode leftNode;
 	
 	/**
 	 * The other column that is being joined on.
 	 */
-	private final ItemPNode rightNode;
+	private final UnmodifiableItemPNode rightNode;
 	
 	/**
 	 * The parent to the leftNode. This will be used to know where
@@ -93,7 +93,7 @@ public class JoinLine extends PComposite {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(MouseState mouseState, PCanvas canvas, ItemPNode leftNode, ItemPNode rightNode) {
+	public JoinLine(MouseState mouseState, PCanvas canvas, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
 		super();
 		this.leftNode = leftNode;
 		this.rightNode = rightNode;
@@ -185,11 +185,11 @@ public class JoinLine extends PComposite {
 		
 	}
 	
-	public ItemPNode getLeftNode() {
+	public UnmodifiableItemPNode getLeftNode() {
 		return leftNode;
 	}
 	
-	public ItemPNode getRightNode() {
+	public UnmodifiableItemPNode getRightNode() {
 		return rightNode;
 	}
 	

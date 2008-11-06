@@ -19,11 +19,13 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
 
 import org.apache.log4j.Logger;
@@ -117,7 +119,7 @@ public class ConstantsPane extends PNode {
 		public void itemAdded(ContainerItemEvent e) {
 			ConstantPNode newConstantNode = new ConstantPNode(e.getSource(), mouseState, canvas);
 			newConstantNode.addChangeListener(resizeListener);
-			newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()));
+			newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);
 			constantPNodeList.add(newConstantNode);
 			ConstantsPane.this.addChild(newConstantNode);
 			repositionAndResize();
@@ -129,8 +131,14 @@ public class ConstantsPane extends PNode {
 	 */
 	private PStyledText title;
 	
+	/**
+	 * Listens for changes to the contained constants and resizes the window appropriately.
+	 */
 	private PropertyChangeListener resizeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
+			for (PropertyChangeListener listener : changeListeners) {
+				listener.propertyChange(evt);
+			}
 			repositionAndResize();
 		}
 	};
@@ -139,6 +147,11 @@ public class ConstantsPane extends PNode {
 	 * This node contains all of the column headers for this pane.
 	 */
 	private PNode header;
+
+	/**
+	 * This checkbox will allow the user to check and uncheck all of the constanst in one click.
+	 */
+	private PSwing allSelectCheckbox;
 	
 	public ConstantsPane(MouseState mouseState, PCanvas canvas, Container containerModel) {
 		this.mouseState = mouseState;
@@ -154,11 +167,19 @@ public class ConstantsPane extends PNode {
 		
 		header = new PNode();
 		header.translate(0, title.getHeight() + BORDER_SIZE);
-		PSwing swingCheckbox = new PSwing(new JCheckBox());
-		header.addChild(swingCheckbox);
+		final JCheckBox checkbox = new JCheckBox();
+		checkbox.addActionListener(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				for (ConstantPNode node : constantPNodeList) {
+					node.setSelected(checkbox.isSelected());
+				}
+			}
+		});
+		allSelectCheckbox = new PSwing(checkbox);
+		header.addChild(allSelectCheckbox);
 		columnHeader = new EditablePStyledText("Column", mouseState, canvas);
-		double headerYPos = (swingCheckbox.getFullBounds().getHeight() - columnHeader.getHeight())/2;
-		double checkboxWidth = swingCheckbox.getFullBounds().getWidth();
+		double headerYPos = (allSelectCheckbox.getFullBounds().getHeight() - columnHeader.getHeight())/2;
+		double checkboxWidth = allSelectCheckbox.getFullBounds().getWidth();
 		columnHeader.translate(checkboxWidth + BORDER_SIZE, headerYPos);
 		header.addChild(columnHeader);
 		aliasHeader = new EditablePStyledText("Alias", mouseState, canvas);
@@ -183,15 +204,16 @@ public class ConstantsPane extends PNode {
 				addingNewItemPNode.getEditorPane().setText("");
 			}
 		});
-		addingNewItemPNode.translate(0, (title.getHeight() + BORDER_SIZE) * 2);
+		addingNewItemPNode.translate(0, (title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE);
 		addChild(addingNewItemPNode);
 		
 		outerRect = PPath.createRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)(getFullBounds().getWidth() + 2 * BORDER_SIZE), (float)(getFullBounds().getHeight() + 2 * BORDER_SIZE));
-		headerLine = PPath.createRectangle((float)outerRect.getX(), (float)(title.getHeight() + BORDER_SIZE)*2, (float)outerRect.getWidth(), (float)0);
+		headerLine = PPath.createRectangle((float)outerRect.getX(), (float)(title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE, (float)outerRect.getWidth(), (float)0);
 		addChild(headerLine);
 		addChild(outerRect);
 		outerRect.moveToBack();
 		setBounds(outerRect.getBounds());
+		translate(BORDER_SIZE, BORDER_SIZE);
 		
 	}
 	
@@ -200,7 +222,7 @@ public class ConstantsPane extends PNode {
 	 * as move the adding field and resize the outer rectangle and overall bounds.
 	 */
 	private void repositionAndResize() {
-		addingNewItemPNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) - addingNewItemPNode.getFullBounds().getY());
+		addingNewItemPNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE - addingNewItemPNode.getFullBounds().getY());
 		
 		double translateAliasX = columnHeader.getFullBounds().getX() + columnHeader.getWidth() + BORDER_SIZE;
 		for (ConstantPNode node : constantPNodeList) {
@@ -213,8 +235,10 @@ public class ConstantsPane extends PNode {
 		}
 		
 		double translateWhereX = aliasHeader.getFullBounds().getX() + aliasHeader.getWidth() + BORDER_SIZE;
+		logger.debug("Translating where: max x is " + translateWhereX);
 		for (ConstantPNode node : constantPNodeList) {
 			translateWhereX = Math.max(translateWhereX, node.getWhereOffset());
+			logger.debug("Translating where: max x is " + translateWhereX);
 		}
 		logger.debug("Translating where header " + translateWhereX + " from " + whereHeader.getFullBounds().getX());
 		whereHeader.translate(translateWhereX - whereHeader.getFullBounds().getX(), 0);
@@ -229,7 +253,7 @@ public class ConstantsPane extends PNode {
 		outerRect.setWidth(maxWidth + 2 * BORDER_SIZE);
 		headerLine.setWidth(maxWidth + 2 * BORDER_SIZE);
 				
-		outerRect.setHeight((title.getHeight() + BORDER_SIZE) * (3 + constantPNodeList.size()));
+		outerRect.setHeight((title.getHeight() + BORDER_SIZE) * (3 + constantPNodeList.size()) + BORDER_SIZE);
 		setBounds(outerRect.getBounds());
 	}
 	
@@ -252,7 +276,7 @@ public class ConstantsPane extends PNode {
 				}
 			}
 			
-			if (picked == addingNewItemPNode) {
+			if (picked == addingNewItemPNode || picked == allSelectCheckbox) {
 				return true;
 			}
 			//---End clickable elements

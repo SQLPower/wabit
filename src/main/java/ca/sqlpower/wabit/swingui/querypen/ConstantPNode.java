@@ -19,12 +19,16 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JCheckBox;
+
+import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.swingui.Item;
 import edu.umd.cs.piccolo.PCanvas;
@@ -36,14 +40,12 @@ import edu.umd.cs.piccolox.pswing.PSwing;
  * {@link ConstantsPane}. A constant is allowed to be edited and can be removed
  * from the {@link ConstantsPane}.
  */
-public class ConstantPNode extends PNode {
+public class ConstantPNode extends PNode implements ItemPNode {
 	
-	public static final String ALIAS_CHANGE = "ALIAS_CHANGE";
-	public static final String WHERE_CHANGE = "WHERE_CHANGE";
-	public static final String CONSTANT_TEXT_CHANGE = "CONSTANT_TEXT_CHANGE";
+	private static final Logger logger = Logger.getLogger(ConstantPNode.class);
 	
 	private static final int SPACING_SIZE = 8;
-	private static final String LONG_EMPTY_STRING = "      ";
+	private static final String LONG_EMPTY_STRING = "        ";
 	
 	/**
 	 * This listener simply trim the string of the styled text passed in
@@ -56,6 +58,7 @@ public class ConstantPNode extends PNode {
 		private final EditablePStyledText text;
 		private String oldText = "";
 		private final String propertyChangeConstant;
+		private boolean isEditing = false;
 		
 		public EmptyTextListener(EditablePStyledText text, String propertyChangeConstant) {
 			this.text = text;
@@ -64,15 +67,19 @@ public class ConstantPNode extends PNode {
 		}
 		
 		public void editingStopping() {
-			if (text.getEditorPane().getText().length() <= 0) {
-				text.getEditorPane().setText(LONG_EMPTY_STRING);
-				text.syncWithDocument();
+			if (isEditing) {
+				if (text.getEditorPane().getText().length() <= 0) {
+					text.getEditorPane().setText(LONG_EMPTY_STRING);
+					text.syncWithDocument();
+				}
+				for (PropertyChangeListener listener : changeListeners) {
+					listener.propertyChange(new PropertyChangeEvent(ConstantPNode.this, propertyChangeConstant, oldText, text.getEditorPane().getText().trim()));
+				}
 			}
-			for (PropertyChangeListener listener : changeListeners) {
-				listener.propertyChange(new PropertyChangeEvent(text, propertyChangeConstant, oldText, text.getEditorPane().getText().trim()));
-			}
+			isEditing = false;
 		}
 		public void editingStarting() {
+			isEditing = true;
 			text.getEditorPane().setText(text.getEditorPane().getText().trim());
 			oldText = text.getEditorPane().getText();
 		}
@@ -95,10 +102,15 @@ public class ConstantPNode extends PNode {
 		private String oldText;
 		public void editingStopping() {
 			if (constantText.getEditorPane().getText().length() <= 0) {
+				for (PropertyChangeListener l : changeListeners) {
+					l.propertyChange(new PropertyChangeEvent(ConstantPNode.this, ItemPNode.PROPERTY_ITEM_REMOVED, item, null));
+				}
 				item.getParent().getParent().removeItem(item);
+			} else if (item instanceof StringItem) {
+				((StringItem)item).setName(constantText.getEditorPane().getText());
 			}
 			for (PropertyChangeListener listener : changeListeners) {
-				listener.propertyChange(new PropertyChangeEvent(constantText, CONSTANT_TEXT_CHANGE, oldText, constantText.getEditorPane().getText().trim()));
+				listener.propertyChange(new PropertyChangeEvent(constantText, ItemPNode.PROPERTY_ITEM, oldText, constantText.getEditorPane().getText().trim()));
 			}
 		}
 		public void editingStarting() {
@@ -113,6 +125,13 @@ public class ConstantPNode extends PNode {
 		selectionCheckbox = new JCheckBox();
 		PSwing swingCheckbox = new PSwing(selectionCheckbox);
 		addChild(swingCheckbox);
+		selectionCheckbox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				for (PropertyChangeListener listener : changeListeners) {
+					listener.propertyChange(new PropertyChangeEvent(ConstantPNode.this, ItemPNode.PROPERTY_SELECTED, !selectionCheckbox.isSelected(), selectionCheckbox.isSelected()));
+				}
+			}
+		});
 		
 		constantText = new EditablePStyledText(source.getName(), mouseStates, canvas);
 		constantText.addEditStyledTextListener(removeItemListener);
@@ -121,12 +140,12 @@ public class ConstantPNode extends PNode {
 		addChild(constantText);
 		
 		aliasText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
-		aliasText.addEditStyledTextListener(new EmptyTextListener(aliasText, ALIAS_CHANGE));
+		aliasText.addEditStyledTextListener(new EmptyTextListener(aliasText, ItemPNode.PROPERTY_ALIAS));
 		aliasText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + 2 * SPACING_SIZE, yPos);
 		addChild(aliasText);
 		
 		whereText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
-		whereText.addEditStyledTextListener(new EmptyTextListener(whereText, WHERE_CHANGE));
+		whereText.addEditStyledTextListener(new EmptyTextListener(whereText, ItemPNode.PROPERTY_WHERE));
 		whereText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + aliasText.getWidth() + 3 * SPACING_SIZE, yPos);
 		addChild(whereText);
 	}
@@ -135,12 +154,22 @@ public class ConstantPNode extends PNode {
 		return item;
 	}
 	
+	public String getAlias() {
+		return aliasText.getEditorPane().getText().trim();
+	}
+	
+	public String getWhereText() {
+		return whereText.getEditorPane().getText().trim();
+	}
+	
 	public double getAliasOffset() {
 		return selectionCheckbox.getWidth() + constantText.getWidth() + 2 * SPACING_SIZE;
 	}
 	
 	public double getWhereOffset() {
-		return selectionCheckbox.getWidth() + constantText.getWidth() + aliasText.getWidth() + 3 * SPACING_SIZE;
+		double offset = aliasText.getFullBounds().getX() + aliasText.getWidth() + SPACING_SIZE;
+		logger.debug("Returning where offset of " + offset + " where position is currently " + whereText.getFullBounds().getX());
+		return offset;
 	}
 	
 	public void setAliasXPosition(double position) {
@@ -158,6 +187,10 @@ public class ConstantPNode extends PNode {
 	
 	public void removeChangeListener(PropertyChangeListener l) {
 		changeListeners.remove(l);
+	}
+
+	public void setSelected(boolean selected) {
+		selectionCheckbox.setSelected(selected);
 	}
 
 }

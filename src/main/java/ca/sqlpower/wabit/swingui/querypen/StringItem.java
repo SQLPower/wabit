@@ -28,7 +28,7 @@ import ca.sqlpower.wabit.swingui.Section;
  */
 public class StringItem implements Item {
 	
-	private final String name;
+	private String name;
 	private Section parent;
 
 	public StringItem(String name) {
@@ -48,6 +48,10 @@ public class StringItem implements Item {
 	
 	public void setParent(Section parent) {
 		this.parent = parent;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }
