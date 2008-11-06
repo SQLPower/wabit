@@ -20,7 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
-import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
+import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 public class QueryCacheTest extends TestCase {
@@ -36,7 +36,7 @@ public class QueryCacheTest extends TestCase {
 	
 	public void testSelectListener() throws Exception {
 		Item item = new StubItem();
-		ItemPNode node = new ItemPNode(pen, pen.getCanvas(), item);
+		UnmodifiableItemPNode node = new UnmodifiableItemPNode(pen, pen.getCanvas(), item);
 		queryCache.selectionChanged(node, true);
 		assertTrue(queryCache.getSelectedColumns().contains(item));
 		queryCache.selectionChanged(node, false);
@@ -45,7 +45,7 @@ public class QueryCacheTest extends TestCase {
 	
 	public void testAliasListener() throws Exception {
 		Item item = new StubItem();
-		ItemPNode node = new ItemPNode(pen, pen.getCanvas(), item);
+		UnmodifiableItemPNode node = new UnmodifiableItemPNode(pen, pen.getCanvas(), item);
 		String newAlias = "Alias test.";
 		node.setAlias(newAlias);
 		queryCache.aliasChanged(node);
