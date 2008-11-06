@@ -64,7 +64,6 @@ import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
@@ -158,9 +157,9 @@ public class QueryPen implements MouseState {
 
 				if (draggedSQLObject instanceof SQLTable) {
 					SQLTable table = (SQLTable) draggedSQLObject;
-					Container model = new TableContainer(table);
+					TableContainer model = new TableContainer(table);
 
-					ContainerPane<SQLObject> pane = new ContainerPane<SQLObject>(mouseState, canvas, model);
+					ContainerPane pane = new ContainerPane(mouseState, canvas, model);
 					pane.addQueryChangeListener(queryChangeListener);
 					Point location = dtde.getLocation();
 					Point2D movedLoc = canvas.getCamera().localToView(location);
@@ -199,8 +198,8 @@ public class QueryPen implements MouseState {
 					
 					try {
 						for (SQLRelationship relation : table.getExportedKeys()) {
-							List<ContainerPane<?>> fkContainers = getContainerPane(relation.getFkTable());
-							for (ContainerPane<?> fkContainer : fkContainers) {
+							List<ContainerPane> fkContainers = getContainerPane(relation.getFkTable());
+							for (ContainerPane fkContainer : fkContainers) {
 								for (ColumnMapping mapping : relation.getMappings()) {
 									logger.debug("PK container has model name " + pane.getModel().getName() + " looking for col named " + mapping.getPkColumn().getName());
 									ItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
@@ -224,8 +223,8 @@ public class QueryPen implements MouseState {
 						}
 						
 						for (SQLRelationship relation : table.getImportedKeys()) {
-							List<ContainerPane<?>> pkContainers = getContainerPane(relation.getPkTable());
-							for (ContainerPane<?> pkContainer : pkContainers) {
+							List<ContainerPane> pkContainers = getContainerPane(relation.getPkTable());
+							for (ContainerPane pkContainer : pkContainers) {
 								for (ColumnMapping mapping : relation.getMappings()) {
 									ItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
 									ItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
@@ -325,6 +324,12 @@ public class QueryPen implements MouseState {
      * The cursor manager for this Query pen.
      */
 	private final CursorManager cursorManager;
+	
+	/**
+	 * This is the container pane that will hold constants to allow users to join on special
+	 * things or add unusual values to a select statement.
+	 */
+	private ConstantsPane constantsContainer;
 
 	/**
 	 * Deletes the selected item from the QueryPen.
@@ -336,9 +341,12 @@ public class QueryPen implements MouseState {
 			while(selectedIter.hasNext()) {
 				PNode pickedNode = (PNode) selectedIter.next();
 				if (pickedNode.getParent() == topLayer) {
+					if (pickedNode == constantsContainer) {
+						return;
+					}
 					topLayer.removeChild(pickedNode);
-					if (pickedNode instanceof ContainerPane<?>) {
-						ContainerPane<?> pane = ((ContainerPane<?>)pickedNode);
+					if (pickedNode instanceof ContainerPane) {
+						ContainerPane pane = ((ContainerPane)pickedNode);
 						List<ItemPNode> items = pane.getContainedItems();
 
 						for(ItemPNode item : items) {
@@ -350,6 +358,7 @@ public class QueryPen implements MouseState {
 							}
 						}
 						pane.removeQueryChangeListener(queryChangeListener);
+						
 						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane, null));
 					}
 				}
@@ -432,12 +441,17 @@ public class QueryPen implements MouseState {
 		canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 	                KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), DELETE_ACTION);
 	    canvas.getActionMap().put(DELETE_ACTION, deleteAction);
+	    
 
         canvas.setPanEventHandler( null );
         topLayer = canvas.getLayer();
         joinLayer = new PLayer();
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
+        
+        constantsContainer = new ConstantsPane(this, canvas, new ItemContainer("CONSTANTS", this, canvas));
+        constantsContainer.addChangeListener(queryChangeListener);
+        topLayer.addChild(constantsContainer);
         
         ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"));
         zoomInAction = new AbstractAction() {
@@ -580,11 +594,11 @@ public class QueryPen implements MouseState {
 	 * SQLTable, in the QueryPen. If no container panes wraps the SQLTable in
 	 * the QueryPen then this will return an empty list.
 	 */
-	private List<ContainerPane<?>> getContainerPane(SQLTable table) {
-		List<ContainerPane<?>> containerList = new ArrayList<ContainerPane<?>>();
+	private List<ContainerPane> getContainerPane(SQLTable table) {
+		List<ContainerPane> containerList = new ArrayList<ContainerPane>();
 		for (Object node : topLayer.getAllNodes()) {
-			if (node instanceof ContainerPane && ((ContainerPane<?>)node).getModel().getContainedObject() == table) {
-				containerList.add((ContainerPane<?>)node);
+			if (node instanceof ContainerPane && ((ContainerPane)node).getModel().getContainedObject() == table) {
+				containerList.add((ContainerPane)node);
 			}
 		}
 		return containerList;

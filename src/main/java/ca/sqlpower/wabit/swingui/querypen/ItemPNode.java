@@ -203,7 +203,6 @@ public class ItemPNode extends PNode {
 		joinedLines = new ArrayList<JoinLine>();
 		
 		isInSelectCheckBox = new JCheckBox();
-		isInSelectCheckBox.setSelected(true);
 		swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
 		
@@ -226,7 +225,7 @@ public class ItemPNode extends PNode {
 		whereText.addEditStyledTextListener(whereTextListener);
 		whereText.translate(0, textYTranslation);
 		addChild(whereText);
-		
+
 		logger.debug("Pnode " + item.getName() + " created.");
 	}
 

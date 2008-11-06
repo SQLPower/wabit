@@ -17,12 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.event;
+package ca.sqlpower.wabit.swingui.querypen;
 
+import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.swingui.Section;
 
-public interface ContainerModelListener {
+/**
+ * This class stores generic strings, such as functions, constants and any other
+ * string that can be included in a SQL statement, but is not a column.
+ */
+public class StringItem implements Item {
 	
-	void itemAdded(ContainerItemEvent e);
-	void itemRemoved(ContainerItemEvent e);
+	private final String name;
+	private Section parent;
+
+	public StringItem(String name) {
+		this.name = name;
+	}
+	public Object getItem() {
+		return name;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Section getParent() {
+		return parent;
+	}
+	
+	public void setParent(Section parent) {
+		this.parent = parent;
+	}
 
 }

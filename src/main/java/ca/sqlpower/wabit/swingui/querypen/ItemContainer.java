@@ -23,73 +23,80 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.architect.SQLTable;
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
+import ca.sqlpower.wabit.swingui.event.ContainerItemEvent;
 import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
+import edu.umd.cs.piccolo.PCanvas;
 
 /**
- * A model for the {@link ContainerPane}. This will store objects of a defined type and
- * can be grouped when adding the items to the model.
- *
- * @param <C> The type of object this model will store.
+ * This container is used to hold a generic list of items in
+ * the same section.
  */
-public class TableContainer implements Container {
+public class ItemContainer implements Container {
+	
+	private static final Logger logger = Logger.getLogger(ItemContainer.class);
 
-	private final SQLTable table;
+	/**
+	 * The user visible name to this container.
+	 */
+	private String name;
+
+	/**
+	 * This section holds all of the Items containing the strings in this
+	 * container.
+	 */
+	private Section section;
 	
 	/**
-	 * The section object that contains all of the
-	 * columns of the table.
+	 * A list of listeners that will tell other objects when the model changes.
 	 */
-	private final Section section;
-	
-	private String alias;
-
 	private final List<ContainerModelListener> modelListeners;
 	
-	public TableContainer(SQLTable t) {
-		table = t;
-		section = new SQLObjectSection(this, table.getColumnsFolder());
+	public ItemContainer(String name, MouseState mouseState, PCanvas canvas) {
+		this.name = name;
 		modelListeners = new ArrayList<ContainerModelListener>();
+		section = new ObjectSection();
+		((ObjectSection)section).setParent(this);
+		logger.debug("Container created.");
 	}
 	
-	public List<Section> getSections() {
-		return Collections.singletonList(section);
-	}
-	
-	public String getName() {
-		return table.getName();
-	}
-
-	public String getAlias() {
-		return alias;
-	}
-	
-	public void setAlias(String alias) {
-		this.alias = alias;
+	public Object getContainedObject() {
+		return section.getItems();
 	}
 
 	public Item getItem(Object item) {
 		for (Item i : section.getItems()) {
-			if (i.getItem() == item) {
+			if (i.getItem().equals(item)) {
 				return i;
 			}
 		}
 		return null;
 	}
-
-	public Object getContainedObject() {
-		return table;
-	}
-
+	
 	public void addItem(Item item) {
-		throw new IllegalStateException("Cannot add arbitrary items to a SQLObject.");		
+		section.addItem(item);
+		for (ContainerModelListener l : modelListeners) {
+			l.itemAdded(new ContainerItemEvent(item));
+		}
+	}
+	
+	public void removeItem(Item item) {
+		section.removeItem(item);
+		for (ContainerModelListener l : modelListeners) {
+			l.itemRemoved(new ContainerItemEvent(item));
+		}
 	}
 
-	public void removeItem(Item item) {
-		throw new IllegalStateException("Cannot remove arbitrary items from a SQLObject.");		
+	public String getName() {
+		return name;
+	}
+
+	public List<Section> getSections() {
+		return Collections.singletonList(section);
 	}
 
 	public void addContainerModelListener(ContainerModelListener l) {

@@ -50,6 +50,7 @@ import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
+import ca.sqlpower.wabit.swingui.querypen.SQLObjectItem;
 
 /**
  * This class will cache all of the parts of a select
@@ -327,16 +328,16 @@ public class QueryCache {
 	private PropertyChangeListener fromChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_ADDED)) {
-				if (evt.getNewValue() instanceof ContainerPane<?>) {
-					ContainerPane<?> container = (ContainerPane<?>)evt.getNewValue();
+				if (evt.getNewValue() instanceof ContainerPane) {
+					ContainerPane container = (ContainerPane)evt.getNewValue();
 					fromTableList.add(container.getModel());
 					for (ChangeListener l : queryChangeListeners) {
 						l.stateChanged(new ChangeEvent(QueryCache.this));
 					}
 				}
 			} else if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_REMOVED)) {
-				if (evt.getOldValue() instanceof ContainerPane<?>) {
-					ContainerPane<?> container = (ContainerPane<?>)evt.getOldValue();
+				if (evt.getOldValue() instanceof ContainerPane) {
+					ContainerPane container = (ContainerPane)evt.getOldValue();
 					Container table = container.getModel();
 					fromTableList.remove(table);
 					tableAliasMap.remove(table);
@@ -380,7 +381,7 @@ public class QueryCache {
 	private final PropertyChangeListener tableAliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ContainerPane.PROPERTY_CONTAINTER_ALIAS)) {
-				ContainerPane<?> pane = (ContainerPane<?>)e.getSource();
+				ContainerPane pane = (ContainerPane)e.getSource();
 				if (pane.getContainerAlias() == null || pane.getContainerAlias().length() <= 0) {
 					tableAliasMap.remove(pane.getModel());
 				} else {
@@ -560,14 +561,17 @@ public class QueryCache {
 			} else {
 				query.append(", ");
 			}
-			String alias = tableAliasMap.get(col.getParent().getParent());
-			if (alias == null) {
-				alias = col.getParent().getParent().getName();
-			}
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(groupByAggregateMap.get(col).toString() + "(");
 			}
-			query.append(alias + "." + col.getName());
+			if (col instanceof SQLObjectItem) {
+				String alias = tableAliasMap.get(col.getParent().getParent());
+				if (alias == null) {
+					alias = col.getParent().getParent().getName();
+				}
+				query.append(alias + ".");
+			}
+			query.append(col.getName());
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(")");
 			}

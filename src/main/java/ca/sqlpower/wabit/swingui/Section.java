@@ -34,4 +34,8 @@ public interface Section {
 	List<Item> getItems();
 	
 	Container getParent();
+
+	void addItem(Item item);
+
+	void removeItem(Item item);
 }

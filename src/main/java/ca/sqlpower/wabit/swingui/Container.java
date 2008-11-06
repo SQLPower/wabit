@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.swingui;
 
 import java.util.List;
 
+import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
+
 
 /**
  * A container model stores an object that has multiple items 
@@ -49,5 +51,13 @@ public interface Container {
 	 * that contains the children wrapped by the items and possibly contains more.
 	 */
 	Object getContainedObject();
+
+	void removeItem(Item item);
+
+	void addItem(Item item);
+	
+	void addContainerModelListener(ContainerModelListener l);
+	
+	void removeContainerModelListener(ContainerModelListener l);
 
 }

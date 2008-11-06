@@ -31,11 +31,10 @@ public class SQLObjectItem implements Item {
 	private final SQLObject sqlObject;
 	
 	private String alias;
-
-	private final Section parent;
 	
-	public SQLObjectItem(Section parent, SQLObject object) {
-		this.parent = parent;
+	private Section parent;
+
+	public SQLObjectItem(SQLObject object) {
 		sqlObject = object;
 	}
 	
@@ -57,6 +56,10 @@ public class SQLObjectItem implements Item {
 	
 	public Section getParent() {
 		return parent;
+	}
+	
+	public void setParent(Section parent) {
+		this.parent = parent;
 	}
 
 }

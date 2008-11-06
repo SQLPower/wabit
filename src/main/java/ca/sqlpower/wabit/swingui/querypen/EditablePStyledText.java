@@ -124,12 +124,12 @@ public class EditablePStyledText extends PStyledText {
 			
 			@Override
 			public void stopEditing() {
+				editorPane.setText(editorPane.getText().replaceAll("\n", "").trim());
+				syncWithDocument();
 				for (EditStyledTextListener l : editingListeners) {
 					l.editingStopping();
 				}
 				super.stopEditing();
-				editorPane.setText(editorPane.getText().replaceAll("\n", ""));
-				syncWithDocument();
 				logger.debug("Editing stopped.");
 			}
 		};
@@ -141,7 +141,6 @@ public class EditablePStyledText extends PStyledText {
 			}
 			public void keyReleased(KeyEvent e) {
 				//Do nothing
-				editorPane.setText(editorPane.getText().replaceAll("[\n|\r]", ""));
 			}
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {

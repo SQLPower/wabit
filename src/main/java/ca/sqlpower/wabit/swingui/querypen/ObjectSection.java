@@ -20,52 +20,45 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
 
 /**
- * This is a generic Section that contains a SQLObject as it's parent. 
- * It uses the parent's child list to create the sections.
+ * This is a default section that can contain any type of object wrapped in an
+ * Item.
  */
-public class SQLObjectSection implements Section {
-	
-	private final Container parent;
+public class ObjectSection implements Section {
 	
 	private final List<Item> itemList;
+	private Container parent;
 	
-	public SQLObjectSection(Container parent, SQLObject containedObject) {
-		this.parent = parent;
+	public ObjectSection() {
 		itemList = new ArrayList<Item>();
-		try {
-			for (Object child : containedObject.getChildren()) {
-				SQLObjectItem item = new SQLObjectItem((SQLObject)child);
-				item.setParent(this);
-				itemList.add(item);
-				
-			}
-		} catch (ArchitectException e) {
-			throw new RuntimeException(e);
-		}
+	}
+
+	public void addItem(Item item) {
+		itemList.add(item);
+		item.setParent(this);
+	}
+	
+	public void removeItem(Item item) {
+		itemList.remove(item);
 	}
 
 	public List<Item> getItems() {
-		return itemList;
+		return Collections.unmodifiableList(itemList);
 	}
-	
+
 	public Container getParent() {
 		return parent;
 	}
-
-	public void addItem(Item stringItem) {
-		throw new IllegalStateException("Cannot add arbitrary items to a SQLObject.");
+	
+	public void setParent(Container parent) {
+		this.parent = parent;
 	}
 
-	public void removeItem(Item item) {
-		throw new IllegalStateException("Cannot remove arbitrary items from a SQLObject.");		
-	}
 }

@@ -22,8 +22,8 @@ package ca.sqlpower.wabit.swingui.event;
 import java.util.Iterator;
 import java.util.List;
 
+import ca.sqlpower.wabit.swingui.querypen.ConstantsPane;
 import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
-
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PDimension;
@@ -49,7 +49,9 @@ public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 	/*
 	 * The regular docs comes from PSelectionEventHandler This is a modified
 	 * version from PSelectionEventHandler. We only want to allow dragging of
-	 * ContainerPane objects at current.
+	 * ContainerPane objects and the ConstantsPane. Joins will update to 
+	 * connect to the moved container panes appropriately and should not
+	 * be moved in addition to relocating their ends.
 	 */
 	@Override
 	protected void dragStandardSelection(PInputEvent e) {
@@ -62,7 +64,7 @@ public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 		while (selectionEn.hasNext()) {
 			PNode node = (PNode) selectionEn.next();
 
-			if (node instanceof ContainerPane) {
+			if (node instanceof ContainerPane || node instanceof ConstantsPane) {
 				gDist.setSize(d);
 				node.getParent().globalToLocal(gDist);
 				node.offset(gDist.getWidth(), gDist.getHeight());

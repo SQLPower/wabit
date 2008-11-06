@@ -30,4 +30,6 @@ public interface Item {
 	Object getItem();
 	
 	Section getParent();
+	
+	void setParent(Section parent);
 }

@@ -34,10 +34,11 @@ import javax.swing.JEditorPane;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
+import ca.sqlpower.wabit.swingui.event.ContainerItemEvent;
+import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -55,7 +56,7 @@ import edu.umd.cs.piccolox.pswing.PSwing;
  * 
  * @param <C> The type of object this container is displaying.
  */
-public class ContainerPane<C extends SQLObject> extends PNode {
+public class ContainerPane extends PNode {
 	
 	private static Logger logger = Logger.getLogger(ContainerPane.class);
 
@@ -167,12 +168,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		String oldAlias = containerAlias;
 		JEditorPane nameEditor = modelNameText.getEditorPane();
 		containerAlias = nameEditor.getText();
-		String name;
-		if (model.getContainedObject() instanceof SQLObject) {
-			name = ((SQLObject)model.getContainedObject()).getName();
-		} else {
-			name = model.getContainedObject().toString();
-		}
+		String name = model.getName();
 		if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(name)) {
 			nameEditor.setText(containerAlias + " (" + name + ")");
 		} else {
@@ -207,21 +203,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 */
 	private PropertyChangeListener resizeOnEditChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
-			repositionWhereClauses();
-			if (outerRect != null) {
-				double maxWidth = Math.max(header.getFullBounds().getWidth(), modelNameText.getFullBounds().getWidth());
-				logger.debug("Header width is " + header.getFullBounds().getWidth() + " and the container name has width " + modelNameText.getFullBounds().getWidth());
-				for (ItemPNode node : containedItems) {
-					maxWidth = Math.max(maxWidth, node.getFullBounds().getWidth());
-				}
-				logger.debug("Max width of the container pane is " + maxWidth);
-				maxWidth += 2 * BORDER_SIZE;
-				outerRect.setWidth(maxWidth);
-				for (PPath line : separatorLines) {
-					line.setWidth(maxWidth);
-				}
-				setBounds(outerRect.getBounds());
-			}
+			repositionWhereAndResize();
 		}
 	};
 
@@ -238,9 +220,18 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	 * This is the header for column names and aliases.
 	 */
 	private PStyledText columnNameHeader;
-	
+
 	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
 		model = newModel;
+		model.addContainerModelListener(new ContainerModelListener() {
+			public void itemRemoved(ContainerItemEvent e) {
+				removeItem(e.getSource());
+			}
+			public void itemAdded(ContainerItemEvent e) {
+				addItem(e.getSource());
+				logger.debug("Added " + e.getSource().getName() + " to the container pane.");
+			}
+		});
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		this.mouseStates = pen;
 		this.canvas = canvas;
@@ -280,6 +271,7 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 				yLoc++;
 			}
 		}
+		
 		repositionWhereClauses();
 		
 		PBounds fullBounds = getFullBounds();
@@ -293,10 +285,13 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 	}
 
 	/**
-	 * Creates a {@link PStyledText} object that is editable by clicking on it.
+	 * Creates a {@link PStyledText} object that is editable by clicking on it
+	 * if it's a column, and not editable if it's a table from which everything
+	 * is being selected.
 	 */
-	private ItemPNode createTextLine(Item sqlColumn) {
-		final ItemPNode modelNameText = new ItemPNode(mouseStates, canvas, sqlColumn);
+	private ItemPNode createTextLine(Item item) {
+		final ItemPNode modelNameText;
+		modelNameText = new ItemPNode(mouseStates, canvas, item);
 		modelNameText.getItemText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.getWherePStyledText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.addQueryChangeListener(itemChangeListener);
@@ -418,6 +413,52 @@ public class ContainerPane<C extends SQLObject> extends PNode {
 		return containerAlias;
 	}
 	
+	private void addItem(Item item) {
+		ItemPNode itemNode = createTextLine(item);
+		itemNode.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * (2 + containedItems.size()) + BORDER_SIZE);
+		addChild(itemNode);
+		containedItems.add(itemNode);
+		repositionWhereAndResize();
+	}
+	
+	private void removeItem(Item item) {
+		ItemPNode itemNode = getItemPNode(item.getItem());
+		if (itemNode != null) {
+			int containedItemsLocation = containedItems.indexOf(itemNode);
+			removeChild(itemNode);
+			containedItems.remove(itemNode);
+			itemNode.getItemText().removePropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
+			itemNode.getWherePStyledText().removePropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
+			itemNode.removeQueryChangeListener(itemChangeListener);
+			for (int i = containedItemsLocation; i < containedItems.size(); i++) {
+				containedItems.get(i).translate(0, - modelNameText.getHeight() - BORDER_SIZE);
+			}
+			repositionWhereAndResize();
+		}
+	}
+	
+	private void repositionWhereAndResize() {
+		repositionWhereClauses();
+		if (outerRect != null) {
+			double maxWidth = Math.max(header.getFullBounds().getWidth(), modelNameText.getFullBounds().getWidth());
+			logger.debug("Header width is " + header.getFullBounds().getWidth() + " and the container name has width " + modelNameText.getFullBounds().getWidth());
+			for (ItemPNode node : containedItems) {
+				maxWidth = Math.max(maxWidth, node.getFullBounds().getWidth());
+			}
+			logger.debug("Max width of the container pane is " + maxWidth);
+			maxWidth += 2 * BORDER_SIZE;
+			outerRect.setWidth(maxWidth);
+			for (PPath line : separatorLines) {
+				line.setWidth(maxWidth);
+			}
+			
+			int numStaticRows = 2;
+			outerRect.setHeight((modelNameText.getHeight() + BORDER_SIZE) * (numStaticRows + containedItems.size()) + BORDER_SIZE * 3);
+			
+			setBounds(outerRect.getBounds());
+		}
+	}
+
 	public void setContainerAlias(String newAlias) {
 		modelNameText.getEditorPane().setText(newAlias);
 		createAliasName();

@@ -36,4 +36,8 @@ public class StubItem implements Item {
 		return null;
 	}
 
+	public void setParent(Section parent) {
+		//nothing
+	}
+
 }

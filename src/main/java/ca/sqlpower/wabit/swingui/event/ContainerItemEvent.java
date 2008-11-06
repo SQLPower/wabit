@@ -19,6 +19,18 @@
 
 package ca.sqlpower.wabit.swingui.event;
 
+import ca.sqlpower.wabit.swingui.Item;
+
 public class ContainerItemEvent {
+	
+	private final Item source;
+	
+	public ContainerItemEvent(Item source) {
+		this.source = source;
+	}
+
+	public Item getSource() {
+		return source;
+	}
 
 }
