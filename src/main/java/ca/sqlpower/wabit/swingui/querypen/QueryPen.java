@@ -62,6 +62,7 @@ import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
+import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -101,7 +102,9 @@ public class QueryPen implements MouseState {
     private static final String ZOOM_OUT_ACTION = "Zoom Out";
     
     private static final String JOIN_ACTION = "Create Join";
-
+    
+    private JPanel panel;
+    
     
     private AbstractAction zoomInAction;
     private AbstractAction zoomOutAction;
@@ -317,6 +320,11 @@ public class QueryPen implements MouseState {
 	 * A SelectionEventHandler that supports multiple select on Tables for deletion and dragging.
 	 */
 	private PSelectionEventHandler selectionEventHandler;
+	
+    /**
+     * The cursor manager for this Query pen.
+     */
+	private final CursorManager cursorManager;
 
 	/**
 	 * Deletes the selected item from the QueryPen.
@@ -388,7 +396,6 @@ public class QueryPen implements MouseState {
 	};
 	
 	public JPanel createQueryPen() {
-		JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/delete.png"));
@@ -410,6 +417,8 @@ public class QueryPen implements MouseState {
 
 	public QueryPen(WabitSwingSession s) {
 		session = s;
+		panel = new JPanel();
+	    cursorManager = new CursorManager(panel);
 		if(s.getContext().isMacOSX()) {
 			acceleratorKeyString = "Cmd";
 		} else {
@@ -477,6 +486,7 @@ public class QueryPen implements MouseState {
         AbstractAction joinAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		setMouseState(MouseStates.CREATE_JOIN);
+        		cursorManager.placeModeStarted();
         	}
         };
         createJoinButton = new JButton(joinAction);
@@ -488,7 +498,7 @@ public class QueryPen implements MouseState {
                 , JOIN_ACTION);
         canvas.getActionMap().put(JOIN_ACTION, joinAction);
         
-        CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas);
+        CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas, cursorManager);
 		canvas.addInputEventListener(createJoinListener);
 		createJoinListener.addCreateJoinListener(queryChangeListener);
         
@@ -559,6 +569,10 @@ public class QueryPen implements MouseState {
 	
 	public JTextField getGlobalWhereText() {
 		return globalWhereText;
+	}
+	
+	public CursorManager getCursorManager() {
+		return cursorManager;
 	}
 
 	/**

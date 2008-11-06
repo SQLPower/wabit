@@ -24,6 +24,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.MouseState;
@@ -45,13 +46,15 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	private ItemPNode rightText;
 	private PLayer joinLayer;
 	private PCanvas canvas;
+	private CursorManager cursorManager;
 	
 	private List<PropertyChangeListener> createJoinListeners = new ArrayList<PropertyChangeListener>();
 
-	public CreateJoinEventHandler(MouseState mouseStatePane, PLayer joinLayer, PCanvas canvas) {
+	public CreateJoinEventHandler(MouseState mouseStatePane, PLayer joinLayer, PCanvas canvas, CursorManager cursorManager) {
 		this.mouseStatePane = mouseStatePane;
 		this.joinLayer = joinLayer;
 		this.canvas = canvas;
+		this.cursorManager = cursorManager;
 	}
 	
 	@Override
@@ -82,6 +85,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					}
 					leftText = null;
 					rightText = null;
+					cursorManager.placeModeFinished();
 					mouseStatePane.setMouseState(MouseStates.READY);
 				} else {
 					throw new IllegalStateException("Trying to create a join while both ends have already been specified.");
@@ -89,6 +93,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 			} else {
 				leftText = null;
 				rightText = null;
+				cursorManager.placeModeFinished();
 				mouseStatePane.setMouseState(MouseStates.READY);
 			}
 		}
