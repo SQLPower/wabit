@@ -289,6 +289,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	groupingCheckBox.addActionListener(new AbstractAction() {
 
     		public void actionPerformed(ActionEvent e) {
+    			executeQueryInCache();
     			addGroupingTableHeaders();
     		}
     	});
