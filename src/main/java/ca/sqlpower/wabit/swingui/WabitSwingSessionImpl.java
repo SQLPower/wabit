@@ -126,7 +126,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final JLabel groupingLabel = new JLabel("Group By");
 	private final JLabel havingLabel = new JLabel ("Having");
 	private final JLabel columnNameLabel = new JLabel ();
-	private JPanel cornerPanelLabel;
+	private JPanel cornerPanel;
 
 	/**
 	 * Stores the parts of the query.
@@ -223,17 +223,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
 				GridLayout layout = new GridLayout(0,1);
-				cornerPanelLabel = new JPanel(layout);
+				cornerPanel = new JPanel(layout);
 				if(queryPenAndTextTabPane.getSelectedIndex() == 0) {
 					groupingLabel.setFont(table.getTableHeader().getFont());
-					havingLabel.setVerticalAlignment(JLabel.BOTTOM);
 					havingLabel.setFont(table.getTableHeader().getFont());
 					havingLabel.setVerticalAlignment(JLabel.BOTTOM);
-					cornerPanelLabel.add(groupingLabel);
-					cornerPanelLabel.add(havingLabel);
+					cornerPanel.add(groupingLabel);
+					cornerPanel.add(havingLabel);
 				}
-				cornerPanelLabel.add(columnNameLabel);
-				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanelLabel);
+				cornerPanel.add(columnNameLabel);
+				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanel);
 				addGroupingTableHeaders();
 				queryCache.listenToCellRenderer(renderer);
 			}
