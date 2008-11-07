@@ -47,6 +47,14 @@ public class JoinLine extends PComposite {
 	private static final float BORDER_WIDTH = 5;
 	
 	/**
+	 * This is the minimum amount the join line will stick out of the container
+	 * PNode. This will help the user see where the join lines come out of and
+	 * where they go to when the join line goes behind the connected container
+	 * PNode.
+	 */
+	private static final float JOIN_LINE_STICKOUT_LENGTH = 50;
+	
+	/**
 	 * One of the columns that is being joined on.
 	 */
 	private final UnmodifiableItemPNode leftNode;
@@ -136,23 +144,35 @@ public class JoinLine extends PComposite {
 		PBounds leftBounds = this.leftNode.getGlobalFullBounds();
 		PBounds rightBounds = this.rightNode.getGlobalFullBounds();
 		PBounds leftContainerBounds = leftContainerPane.getGlobalBounds();
-		PBounds rightContainerBounds = rightContainerPane.getGlobalBounds();
-		if (leftBounds.getCenterX() > rightBounds.getCenterX()) {
-			PBounds tempBounds = leftBounds;
-			leftBounds = rightBounds;
-			rightBounds = tempBounds;
-			
-			tempBounds = leftContainerBounds;
-			leftContainerBounds = rightContainerBounds;
-			rightContainerBounds = tempBounds;
-		}
-		
+		PBounds rightContainerBounds = rightContainerPane.getGlobalBounds();		
 		
 		leftPath.reset();
 		rightPath.reset();
-		double leftX = leftBounds.getX() + leftBounds.getWidth();
-		double midX = leftX + (rightBounds.getX() - leftX)/2;
-		double midY = Math.abs(leftBounds.getY() - rightBounds.getY()) / 2 + Math.min(leftBounds.getY(), rightBounds.getY());
+		double leftY = leftBounds.getY() + leftBounds.getHeight()/2;
+		double rightY = rightBounds.getY() + rightBounds.getHeight()/2;
+		double midY = Math.abs(leftY - rightY) / 2 + Math.min(leftY, rightY);
+		
+		double leftX = leftContainerBounds.getX();
+		double rightX = rightContainerBounds.getX();
+		double midX;
+		int rightContainerFirstControlPointDirection = -1;
+		int leftContainerFirstControlPointDirection = 1;
+		if (leftX + leftContainerBounds.getWidth() < rightX) {
+			leftX += leftContainerBounds.getWidth();
+			midX = leftX + (rightX - leftX)/2;
+			rightContainerFirstControlPointDirection = 1;
+			logger.debug("Left container is to the left of the right container.");
+		} else if (leftX < rightContainerBounds.getWidth() + rightContainerBounds.getX()) {
+			leftX += leftContainerBounds.getWidth();
+			rightX += rightContainerBounds.getWidth();
+			midX = Math.max(JOIN_LINE_STICKOUT_LENGTH + leftX, JOIN_LINE_STICKOUT_LENGTH + rightX);
+			logger.debug("The containers are above or below eachother.");
+		} else {
+			rightX += rightContainerBounds.getWidth();
+			midX = leftX + (rightX - leftX)/2;
+			leftContainerFirstControlPointDirection = -1;
+			logger.debug("The right container is to the left of the left container.");
+		}
 		
 		logger.debug("Left x position is " + leftX + " and mid x position is " + midX);
 		
@@ -161,10 +181,11 @@ public class JoinLine extends PComposite {
 		// For two Bezier curves to be continuous on the first derivative the
 		// connecting point must be on the line made by the second control point
 		// of the first curve and the first control point of the second curve.
-		leftPath.moveTo((float)(leftContainerBounds.getX() + leftContainerBounds.getWidth()), (float)(leftBounds.getY() + leftBounds.getHeight()/2));
-		leftPath.curveTo((float)(midX - (rightBounds.getX() - leftX)/6), (float)leftBounds.getY(), (float)midX, (float)(leftBounds.getY() - Math.abs(leftBounds.getY() - rightBounds.getY())/6), (float)midX, (float)midY);
+		leftPath.moveTo((float)(leftX), (float)(leftY));
+		leftPath.curveTo((float)(leftX + leftContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)leftY, (float)midX, (float)(leftY + (rightY - leftY)/6), (float)midX, (float)midY);
+		
 		rightPath.moveTo((float)midX, (float)midY);
-		rightPath.curveTo((float)midX, (float)(rightBounds.getY() + Math.abs(leftBounds.getY() - rightBounds.getY())/6), (float)(midX + (rightBounds.getX() - leftX)/6), (float)rightBounds.getY(), (float)(rightContainerBounds.getX()), (float)(rightBounds.getY() + rightBounds.getHeight()/2));
+		rightPath.curveTo((float)midX, (float)(leftY + (rightY - leftY)*5/6), (float)(rightX - rightContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)rightY, (float)(rightX), (float)(rightY));
 		
 		double textMidX = midX - equalityText.getWidth()/2;
 		double textMidY = midY - equalityText.getHeight()/2;
