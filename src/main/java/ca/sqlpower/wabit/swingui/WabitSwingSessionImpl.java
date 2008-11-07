@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
@@ -221,14 +222,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
-				cornerPanelLabel = new JPanel(new BorderLayout());
+				GridLayout layout = new GridLayout(0,1);
+				cornerPanelLabel = new JPanel(layout);
 				if(queryPenAndTextTabPane.getSelectedIndex() == 0) {
 					groupingLabel.setFont(table.getTableHeader().getFont());
+					havingLabel.setVerticalAlignment(JLabel.BOTTOM);
 					havingLabel.setFont(table.getTableHeader().getFont());
-					cornerPanelLabel.add(groupingLabel, BorderLayout.NORTH);
-					cornerPanelLabel.add(havingLabel, BorderLayout.CENTER);
+					havingLabel.setVerticalAlignment(JLabel.BOTTOM);
+					cornerPanelLabel.add(groupingLabel);
+					cornerPanelLabel.add(havingLabel);
 				}
-				cornerPanelLabel.add(columnNameLabel, BorderLayout.SOUTH);
+				cornerPanelLabel.add(columnNameLabel);
 				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanelLabel);
 				addGroupingTableHeaders();
 				queryCache.listenToCellRenderer(renderer);
