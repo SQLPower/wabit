@@ -123,7 +123,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private JFrame frame;
 	private JCheckBox groupingCheckBox;
 	private static JLabel statusLabel;
-	private final JLabel groupingLabel = new JLabel("Group By");
+	private final JLabel groupingLabel = new JLabel("Group Function");
 	private final JLabel havingLabel = new JLabel ("Having");
 	private final JLabel columnNameLabel = new JLabel ();
 	private JPanel cornerPanel;
