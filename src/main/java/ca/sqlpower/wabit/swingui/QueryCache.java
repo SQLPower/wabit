@@ -652,6 +652,9 @@ public class QueryCache {
 							}
 						}
 					}
+					if (isFirstJoin) {
+						query.append("TRUE");
+					}
 				}
 			}
 		}
