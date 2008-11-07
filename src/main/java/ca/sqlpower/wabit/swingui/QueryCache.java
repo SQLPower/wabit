@@ -590,6 +590,8 @@ public class QueryCache {
 			String alias = tableAliasMap.get(col.getParent().getParent());
 			if (alias != null) {
 				query.append(alias + ".");
+			} else if (fromTableList.contains(col.getParent().getParent())) {
+				query.append(col.getParent().getParent().getName() + ".");
 			}
 			query.append(col.getName());
 			if (groupByAggregateMap.containsKey(col)) {
@@ -673,6 +675,8 @@ public class QueryCache {
 					String alias = tableAliasMap.get(entry.getKey().getParent().getParent());
 					if (alias != null) {
 						query.append(alias + ".");
+					} else if (fromTableList.contains(entry.getKey().getParent().getParent())) {
+						query.append(entry.getKey().getParent().getParent().getName() + ".");
 					}
 					query.append(entry.getKey().getName() + " " + entry.getValue());
 				}
@@ -697,6 +701,8 @@ public class QueryCache {
 				String alias = tableAliasMap.get(col.getParent().getParent());
 				if (alias != null) {
 					query.append(alias + ".");
+				} else if (fromTableList.contains(col.getParent().getParent())) {
+					query.append(col.getParent().getParent().getName() + ".");
 				}
 				query.append(col.getName());
 			}
@@ -719,6 +725,8 @@ public class QueryCache {
 				String alias = tableAliasMap.get(column.getParent().getParent());
 				if (alias != null) {
 					query.append(alias + ".");
+				} else if (fromTableList.contains(column.getParent().getParent())) {
+					query.append(column.getParent().getParent().getName() + ".");
 				}
 				query.append(column.getName());
 				if (groupByAggregateMap.get(column) != null) {
@@ -746,6 +754,8 @@ public class QueryCache {
 				String alias = tableAliasMap.get(col.getParent().getParent());
 				if (alias != null) {
 					query.append(alias + ".");
+				} else if (fromTableList.contains(col.getParent().getParent())) {
+					query.append(col.getParent().getParent().getName() + ".");
 				}
 				query.append(col.getName());
 				if (groupByAggregateMap.containsKey(col)) {
