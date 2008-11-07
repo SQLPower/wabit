@@ -408,8 +408,8 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 			tableHeader.getParent().setPreferredSize(new Dimension(
 					tableHeader.getParent().getPreferredSize().width,
 					labelHeight +comboBoxHeight+ havingFieldHeight));
-			for(int i = 0; i < comboBoxes.size(); i++) {
-				int tempWidth = Math.max(comboBoxWidth, tableHeader.getColumnModel().getColumn(i).getWidth());
+			for(int i = 0; i < tableHeader.getColumnModel().getColumnCount(); i++) {
+				int tempWidth = Math.max(comboBoxWidth, tableHeader.getColumnModel().getColumn(i).getPreferredWidth() );
 				tableHeader.getColumnModel().getColumn(i).setPreferredWidth(tempWidth);			
 			}
 		} else {
