@@ -102,6 +102,8 @@ public class QueryPen implements MouseState {
     
     private static final String JOIN_ACTION = "Create Join";
     
+    private static final int TABLE_SPACE = 5;
+    
     private JPanel panel;
     
     
@@ -141,8 +143,8 @@ public class QueryPen implements MouseState {
 			
 			if (draggedObject == null || !(draggedObject instanceof ArrayList)) {
 				return;
-			}
-			
+			} 
+			int tempTranslateLocation = 0;
 			for (Object arrayListObject : (ArrayList<?>)draggedObject) {
 				if (!(arrayListObject instanceof int[])) {
 					continue;
@@ -163,7 +165,8 @@ public class QueryPen implements MouseState {
 					pane.addQueryChangeListener(queryChangeListener);
 					Point location = dtde.getLocation();
 					Point2D movedLoc = canvas.getCamera().localToView(location);
-					pane.translate(movedLoc.getX(), movedLoc.getY());
+					pane.translate(movedLoc.getX() + tempTranslateLocation, movedLoc.getY());
+					tempTranslateLocation += pane.getWidth() + TABLE_SPACE;
 					
 					int aliasCounter = 0;
 					ArrayList<String> aliasNames = new ArrayList<String>();
