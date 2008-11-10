@@ -18,8 +18,11 @@ import javax.swing.text.StyleConstants;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 import edu.umd.cs.piccolox.pswing.PSwing;
 
@@ -168,6 +171,16 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 		
 	}
 	
+	public void setBackground(Color color){
+		
+		SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+		StyleConstants.setBackground(attributeSet, color);
+		DefaultStyledDocument doc = ((DefaultStyledDocument)columnText.getDocument());
+		doc.setCharacterAttributes(0, doc.getLength(), attributeSet, false);
+		columnText.repaint();
+		columnText.syncWithDocument();
+	}
+	
 	public void JoinTo(JoinLine line) {
 		joinedLines.add(line);
 		setIsJoined(true);
@@ -189,10 +202,12 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 	 * object.
 	 */
 	private PSwing swingCheckBox;
+	private final MouseState mouseState;
 
 	public UnmodifiableItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
 		this.item = item;
 		aliasText = "";
+		mouseState = mouseStates;
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		joinedLines = new ArrayList<JoinLine>();
 		
@@ -209,13 +224,33 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 			}
 		});
 		
-		columnText = new EditablePStyledText(item.getName(), mouseStates, canvas);
+		columnText = new EditablePStyledText(item.getName(), mouseState, canvas);
 		columnText.addEditStyledTextListener(editingTextListener);
 		double textYTranslation = (swingCheckBox.getFullBounds().height - columnText.getFullBounds().height)/2;
 		columnText.translate(swingCheckBox.getFullBounds().width, textYTranslation);
+		columnText.addInputEventListener(new PBasicInputEventHandler() {
+			
+			@Override
+			public void mouseEntered(PInputEvent event) {
+				if(mouseState.getMouseState().equals(MouseStates.CREATE_JOIN)) {
+					setBackground(Color.gray);		
+				}
+			}
+			
+			@Override
+			public void mouseExited(PInputEvent event) {
+					setBackground(Color.white);	
+			}
+			
+			@Override
+			public void mouseClicked(PInputEvent event) {
+					setBackground(Color.white);	
+			}
+		});
+		
 		addChild(columnText);
 		
-		whereText = new EditablePStyledText(WHERE_START_TEXT, mouseStates, canvas);
+		whereText = new EditablePStyledText(WHERE_START_TEXT, mouseState, canvas);
 		whereText.addEditStyledTextListener(whereTextListener);
 		whereText.translate(0, textYTranslation);
 		addChild(whereText);

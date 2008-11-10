@@ -34,7 +34,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -436,7 +435,7 @@ public class QueryPen implements MouseState {
 		}
 		canvas = new PSwingCanvas();
 		canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
-		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING); 
 		scrollPane = new PScrollPane(canvas);
 		scrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		scrollPane.getHorizontalScrollBar().setUnitIncrement(10);
