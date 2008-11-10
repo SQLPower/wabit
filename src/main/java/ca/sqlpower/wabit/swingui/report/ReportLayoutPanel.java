@@ -30,7 +30,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Layout;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
@@ -42,10 +42,10 @@ public class ReportLayoutPanel {
     private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
     
     private final PCanvas canvas;
-    private final Report report;
+    private final Layout report;
     private final PageNode pageNode;
     
-    public ReportLayoutPanel(Report report) {
+    public ReportLayoutPanel(Layout report) {
         this.report = report;
         canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -79,7 +79,7 @@ public class ReportLayoutPanel {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Report report = new Report();
+                Layout report = new Layout();
                 ReportLayoutPanel p = new ReportLayoutPanel(report);
                 JFrame f = new JFrame("Report layout");
                 f.setContentPane(p.canvas);

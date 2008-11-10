@@ -24,8 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Representation of a page that a report can be output to. Includes
- * information about page dimensions and margins.
+ * A page is an arrangement of boxes and guides (usually page margins) on a
+ * container of a particular size. Boxes have data provided to them by content
+ * renderers, which can be fed by database queries, labels with variable
+ * substitution, or anything else. The actual report will be rendered to one or
+ * more pages--the content renderers specify whether or not they need another
+ * page to finish rendering their data.
  */
 public class Page {
 
@@ -40,6 +44,10 @@ public class Page {
      */
     private FontMetrics defaultFont;
 
+    /**
+     * XXX this should not be an enum; page sizes should be user-definable and
+     * stored in a config file and/or the project file
+     */
     public static enum StandardPageSizes {
         /**
          * Approximation of ISO A4 (210x297mm) in 1/72 of an inch.

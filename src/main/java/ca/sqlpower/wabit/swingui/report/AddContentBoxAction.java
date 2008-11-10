@@ -37,17 +37,17 @@ import ca.sqlpower.sql.WebResultHTMLFormatter;
 import ca.sqlpower.sql.WebResultSet;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;
-import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 
 public class AddContentBoxAction extends AbstractAction {
 
     private static final Logger logger = Logger.getLogger(AddContentBoxAction.class);
     
-    private final Report report;
+    private final Layout report;
     private final PageNode addTo;
 
-    public AddContentBoxAction(Report report, PageNode addTo) {
+    public AddContentBoxAction(Layout report, PageNode addTo) {
         super("Add Content Box");
         this.report = report;
         this.addTo = addTo;
