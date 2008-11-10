@@ -56,7 +56,7 @@ public class ReportLayoutPanel {
         
         pageNode = new PageNode(report.getPage());
         canvas.getLayer().addChild(pageNode);
-        PSelectionEventHandler selectionEventHandler = new PSelectionEventHandler(pageNode, pageNode);
+        PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
         canvas.addInputEventListener(new MouseInputHandler());

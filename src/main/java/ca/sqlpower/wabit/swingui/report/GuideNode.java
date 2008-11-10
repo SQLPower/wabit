@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.SPSUtils;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 
 /**
@@ -118,4 +119,55 @@ public class GuideNode extends PNode {
         }
         
     };
+
+    /**
+     * Attempts to snap the given node's bounds so one of its edges sits on this
+     * guide. The given node is assumed to have the same coordinate space as this
+     * guide, which should be true if this guide and the given node share a parent,
+     * and the given node doesn't define its own transform.
+     * 
+     * @param node
+     *            The node whose bounds to tweak
+     * @return True if the node's bounds were snapped to this guide; false if
+     *         the node was not modified.
+     */
+    public boolean snap(PNode node, int threshold) {
+        boolean snap = false;
+        PBounds nodeBounds = node.getGlobalBounds();
+        PBounds guideBounds = getGlobalBounds();
+        if (axis == Axis.HORIZONTAL) {
+            int topEdgeDistance = (int) Math.abs(nodeBounds.getY() - guideBounds.getY());
+            int bottomEdgeDistance = (int) Math.abs(nodeBounds.getY() + nodeBounds.getHeight() - guideBounds.getY());
+            if (topEdgeDistance < threshold) {
+                logger.debug("Top edge snap!");
+                nodeBounds.y = guideBounds.getY();
+                snap = true;
+            } else if (bottomEdgeDistance < threshold) {
+                logger.debug("Bottom edge snap!");
+                nodeBounds.y = guideBounds.getY() - nodeBounds.getHeight();
+                snap = true;
+            }
+        } else if (axis == Axis.VERTICAL) {
+            int leftEdgeDistance = (int) Math.abs(nodeBounds.getX() - guideBounds.getX());
+            int rightEdgeDistance = (int) Math.abs(nodeBounds.getX() + nodeBounds.getWidth() - guideBounds.getX());
+            if (leftEdgeDistance < threshold) {
+                logger.debug("Left edge snap!");
+                nodeBounds.x = guideBounds.getX();
+                snap = true;
+            } else if (rightEdgeDistance < threshold) {
+                logger.debug("Right edge snap!");
+                nodeBounds.x = guideBounds.getX() - nodeBounds.getWidth();
+                snap = true;
+            }
+        } else {
+            throw new IllegalStateException("Unknown axis: " + axis);
+        }
+
+        if (snap) {
+            node.globalToLocal(nodeBounds);
+            node.setBounds(nodeBounds);
+        }
+        
+        return snap;
+    }
 }
