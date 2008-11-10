@@ -24,11 +24,15 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import ca.sqlpower.swingui.CursorManager;
-import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
+import ca.sqlpower.wabit.swingui.querypen.ConstantPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.MouseState;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
+import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
@@ -63,6 +67,10 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 		if (mouseStatePane.getMouseState().equals(MouseStates.CREATE_JOIN)) {
 			PNode pick = event.getPickedNode();
 			while (pick != null && !(pick instanceof UnmodifiableItemPNode)) {
+				
+				if(pick instanceof ConstantPNode) {
+					JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(canvas), "Joining on constants is not allowed.");
+				}
 				pick = pick.getParent();
 			}
 			if (pick != null) {
