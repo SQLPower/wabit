@@ -56,18 +56,21 @@ public class WabitProject extends AbstractWabitObject {
     public void addDataSource(WabitDataSource ds) {
         int index = dataSources.size();
         dataSources.add(index, ds);
+        ds.setParent(this);
         fireChildAdded(WabitDataSource.class, ds, index);
     }
 
-    public void addQuery(Query dp) {
+    public void addQuery(Query query) {
         int index = queries.size();
-        queries.add(index, dp);
-        fireChildAdded(Query.class, dp, index);
+        queries.add(index, query);
+        query.setParent(this);
+        fireChildAdded(Query.class, query, index);
     }
 
     public void addLayout(Layout layout) {
         int index = layouts.size();
         layouts.add(index, layout);
+        layout.setParent(this);
         fireChildAdded(Layout.class, layout, index);
     }
     
@@ -85,4 +88,12 @@ public class WabitProject extends AbstractWabitObject {
         
         throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
     }
+
+	public WabitObject getParent() {
+		return null;
+	}
+	
+	public boolean allowsChildren() {
+		return true;
+	}
 }

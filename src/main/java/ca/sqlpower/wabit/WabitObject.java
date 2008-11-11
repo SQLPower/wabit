@@ -28,7 +28,10 @@ public interface WabitObject {
     void removeChildListener(WabitChildListener l);
     void addPropertyChangeListener(PropertyChangeListener l);
     void removePropertyChangeListener(PropertyChangeListener l);
+    WabitObject getParent();
+    void setParent(WabitObject parent);
     List<WabitObject> getChildren();
+    boolean allowsChildren();
     
     /**
      * Returns the position in the list that would be returned by getChildren()

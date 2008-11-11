@@ -33,6 +33,7 @@ import ca.sqlpower.sql.NoRowidException;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
 /**
@@ -104,5 +105,7 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
         return null;
     }
     
-    
+    public boolean allowsChildren() {
+    	return true;
+    }
 }
