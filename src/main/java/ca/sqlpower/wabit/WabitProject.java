@@ -78,7 +78,7 @@ public class WabitProject extends AbstractWabitObject {
         int offset = 0;
 
         // TODO consider whether this should be instaceOf or strict equality
-        if (childType == SPDataSource.class) return offset;
+        if (childType == WabitDataSource.class) return offset;
         offset += dataSources.size();
 
         if (childType == Query.class) return offset;
