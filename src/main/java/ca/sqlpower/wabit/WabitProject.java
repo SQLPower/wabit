@@ -22,7 +22,6 @@ package ca.sqlpower.wabit;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.report.Layout;
 
 public class WabitProject extends AbstractWabitObject {
@@ -60,6 +59,17 @@ public class WabitProject extends AbstractWabitObject {
         fireChildAdded(WabitDataSource.class, ds, index);
     }
 
+    public boolean removeDataSource(WabitDataSource ds) {
+    	int index = dataSources.indexOf(ds);
+    	if (index != -1) {
+    		dataSources.remove(ds);
+    		fireChildRemoved(WabitDataSource.class, ds, index);
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     public void addQuery(Query query) {
         int index = queries.size();
         queries.add(index, query);
@@ -67,11 +77,33 @@ public class WabitProject extends AbstractWabitObject {
         fireChildAdded(Query.class, query, index);
     }
 
+    public boolean removeQuery(Query query) {
+    	int index = queries.indexOf(query);
+    	if (index != -1) {
+    		queries.remove(query);
+    		fireChildRemoved(Query.class, query, index);
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     public void addLayout(Layout layout) {
         int index = layouts.size();
         layouts.add(index, layout);
         layout.setParent(this);
         fireChildAdded(Layout.class, layout, index);
+    }
+    
+    public boolean removeLayout(Layout layout) {
+    	int index = layouts.indexOf(layout);
+    	if (index != -1) {
+    		layouts.remove(layout);
+    		fireChildRemoved(Layout.class, layout, index);
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
     
     public int childPositionOffset(Class<? extends WabitObject> childType) {
