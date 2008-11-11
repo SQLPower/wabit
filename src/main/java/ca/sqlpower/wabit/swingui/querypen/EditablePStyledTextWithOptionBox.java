@@ -123,12 +123,12 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 	/**
 	 * This is the width of the WHERE option's box
 	 */
-	private static final int WHERE_OPTION_BOX_WIDTH = 95;
+	private static final int WHERE_OPTION_BOX_WIDTH = 100;
 	
 	/**
 	 * This is the height of the Where option's box
 	 */
-	private static final int WHERE_OPTION_BOX_HIEGHT = 85;
+	private static final int WHERE_OPTION_BOX_HIEGHT = 90;
 	
 	
 	private boolean boxClicked;
@@ -216,7 +216,7 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 		for(String whereOption : whereOptions) {
 			final PText newOption = new PText(whereOption);
 			newOption.addAttribute(StyleConstants.FontFamily, UIManager.getFont("List.font").getFamily());
-			newOption.translate((WHERE_OPTION_BOX_WIDTH/3)*xLoc+ ONE_PIXEL_SPACE*2, (getHeight()+ 2) * yLoc+ ONE_PIXEL_SPACE*5);
+			newOption.translate((WHERE_OPTION_BOX_WIDTH/3)*xLoc+ ONE_PIXEL_SPACE*3, (getHeight()+ 1) * yLoc+ ONE_PIXEL_SPACE*5);
 			newOption.addInputEventListener(new PBasicInputEventHandler() {
 
 				@Override
