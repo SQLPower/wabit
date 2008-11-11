@@ -31,8 +31,7 @@ import javax.swing.JCheckBox;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.swingui.Container;
-import ca.sqlpower.wabit.swingui.event.ContainerItemEvent;
-import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
+import ca.sqlpower.wabit.swingui.Item;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
@@ -97,32 +96,33 @@ public class ConstantsPane extends PNode {
 	 * the model. It also removes items from this container when they're
 	 * removed from the model.
 	 */
-	private final ContainerModelListener itemChangedListener = new ContainerModelListener() {
-		public void itemRemoved(ContainerItemEvent e) {
-			int constantPosition = -1;
-			for (ConstantPNode constantNode : constantPNodeList) {
-				if (constantNode.getItem() == e.getSource()) {
-					constantPosition = constantPNodeList.indexOf(constantNode);
-					constantPNodeList.remove(constantNode);
-					constantNode.removeChangeListener(resizeListener);
-					ConstantsPane.this.removeChild(constantNode);
-					break;
+	private final PropertyChangeListener itemChangedListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals(Container.CONTAINER_ITEM_REMOVED)) {
+				int constantPosition = -1;
+				for (ConstantPNode constantNode : constantPNodeList) {
+					if (constantNode.getItem() == (Item)evt.getOldValue()) {
+						constantPosition = constantPNodeList.indexOf(constantNode);
+						constantPNodeList.remove(constantNode);
+						constantNode.removeChangeListener(resizeListener);
+						ConstantsPane.this.removeChild(constantNode);
+						break;
+					}
 				}
-			}
-			if (constantPosition != -1) {
-				for (int i = constantPosition; i < constantPNodeList.size(); i++) {
-					constantPNodeList.get(i).translate(0, -title.getHeight() - BORDER_SIZE);
+				if (constantPosition != -1) {
+					for (int i = constantPosition; i < constantPNodeList.size(); i++) {
+						constantPNodeList.get(i).translate(0, -title.getHeight() - BORDER_SIZE);
+					}
+					repositionAndResize();
 				}
+			} else if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
+				ConstantPNode newConstantNode = new ConstantPNode((Item)evt.getNewValue(), mouseState, canvas);
+				newConstantNode.addChangeListener(resizeListener);
+				newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);
+				constantPNodeList.add(newConstantNode);
+				ConstantsPane.this.addChild(newConstantNode);
 				repositionAndResize();
 			}
-		}
-		public void itemAdded(ContainerItemEvent e) {
-			ConstantPNode newConstantNode = new ConstantPNode(e.getSource(), mouseState, canvas);
-			newConstantNode.addChangeListener(resizeListener);
-			newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);
-			constantPNodeList.add(newConstantNode);
-			ConstantsPane.this.addChild(newConstantNode);
-			repositionAndResize();
 		}
 	};
 
@@ -160,7 +160,7 @@ public class ConstantsPane extends PNode {
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		constantPNodeList = new ArrayList<ConstantPNode>();
 		
-		model.addContainerModelListener(itemChangedListener);
+		model.addChangeListener(itemChangedListener);
 		
 		title = new EditablePStyledText(TITLE_STRING, mouseState, canvas);
 		addChild(title);

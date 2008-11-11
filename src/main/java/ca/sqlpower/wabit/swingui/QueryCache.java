@@ -49,7 +49,6 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -427,28 +426,22 @@ public class QueryCache {
 	private PropertyChangeListener fromChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_ADDED)) {
-				if (evt.getNewValue() instanceof ContainerPane) {
-					ContainerPane container = (ContainerPane)evt.getNewValue();
-					fromTableList.add(container.getModel());
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
+				fromTableList.add((Container)evt.getNewValue());
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			} else if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_REMOVED)) {
-				if (evt.getOldValue() instanceof ContainerPane) {
-					ContainerPane container = (ContainerPane)evt.getOldValue();
-					Container table = container.getModel();
-					fromTableList.remove(table);
-					tableAliasMap.remove(table);
-					for (Section section : table.getSections()) {
-						for (Item col : section.getItems()) {
-							whereMapping.remove(col);
-							removeColumnSelection(col);
-						}
+				Container table = (Container)evt.getOldValue();
+				fromTableList.remove(table);
+				tableAliasMap.remove(table);
+				for (Section section : table.getSections()) {
+					for (Item col : section.getItems()) {
+						whereMapping.remove(col);
+						removeColumnSelection(col);
 					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
+				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			}
 		}
@@ -479,12 +472,12 @@ public class QueryCache {
 	
 	private final PropertyChangeListener tableAliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(ContainerPane.PROPERTY_CONTAINTER_ALIAS)) {
-				ContainerPane pane = (ContainerPane)e.getSource();
-				if (pane.getContainerAlias() == null || pane.getContainerAlias().length() <= 0) {
-					tableAliasMap.remove(pane.getModel());
+			if (e.getPropertyName().equals(Container.CONTAINTER_ALIAS_CHANGED)) {
+				Container pane = (Container)e.getSource();
+				if (pane.getAlias() == null || pane.getAlias().length() <= 0) {
+					tableAliasMap.remove(pane);
 				} else {
-					tableAliasMap.put(pane.getModel(), pane.getContainerAlias());
+					tableAliasMap.put(pane, pane.getAlias());
 				}
 				for (ChangeListener l : queryChangeListeners) {
 					l.stateChanged(new ChangeEvent(QueryCache.this));

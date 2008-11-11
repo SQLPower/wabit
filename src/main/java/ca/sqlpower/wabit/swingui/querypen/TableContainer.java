@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +29,6 @@ import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
-import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
 
 /**
  * A model for the {@link ContainerPane}. This will store objects of a defined type and
@@ -47,12 +48,12 @@ public class TableContainer implements Container {
 	
 	private String alias;
 
-	private final List<ContainerModelListener> modelListeners;
+	private final List<PropertyChangeListener> modelListeners;
 	
 	public TableContainer(SQLTable t) {
 		table = t;
 		section = new SQLObjectSection(this, table.getColumnsFolder());
-		modelListeners = new ArrayList<ContainerModelListener>();
+		modelListeners = new ArrayList<PropertyChangeListener>();
 	}
 	
 	public List<Section> getSections() {
@@ -67,8 +68,18 @@ public class TableContainer implements Container {
 		return alias;
 	}
 	
+	/**
+	 * Sets the alias of the container. Null is not allowed.
+	 */
 	public void setAlias(String alias) {
+		String oldAlias = this.alias;
+		if (alias.equals(oldAlias)) {
+			return;
+		}
 		this.alias = alias;
+		for (PropertyChangeListener l : modelListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, CONTAINTER_ALIAS_CHANGED, oldAlias, alias));
+		}
 	}
 
 	public Item getItem(Object item) {
@@ -92,11 +103,12 @@ public class TableContainer implements Container {
 		throw new IllegalStateException("Cannot remove arbitrary items from a SQLObject.");		
 	}
 
-	public void addContainerModelListener(ContainerModelListener l) {
+
+	public void addChangeListener(PropertyChangeListener l) {
 		modelListeners.add(l);
 	}
-	
-	public void removeContainerModelListener(ContainerModelListener l) {
+
+	public void removeChangeListener(PropertyChangeListener l) {
 		modelListeners.remove(l);
 	}
 

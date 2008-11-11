@@ -19,9 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.beans.PropertyChangeListener;
 import java.util.List;
-
-import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
 
 
 /**
@@ -29,6 +28,13 @@ import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
  * stored in different sections.
  */
 public interface Container {
+	
+	/**
+	 * Defines the property change to be a name change on the container.
+	 */
+	public static final String CONTAINTER_ALIAS_CHANGED = "CONTAINER_ALIAS_CHANGED";
+	public static final String CONTAINTER_ITEM_ADDED = "CONTAINER_ITEM_ADDED";
+	public static final String CONTAINER_ITEM_REMOVED = "CONTAINER_ITEM_REMOVED";
 	
 	/**
 	 * Gets all of the sections of the contained object.
@@ -56,8 +62,12 @@ public interface Container {
 
 	void addItem(Item item);
 	
-	void addContainerModelListener(ContainerModelListener l);
+	void setAlias(String alias);
 	
-	void removeContainerModelListener(ContainerModelListener l);
+	String getAlias();
+	
+	void addChangeListener(PropertyChangeListener l);
+	
+	void removeChangeListener(PropertyChangeListener l);
 
 }

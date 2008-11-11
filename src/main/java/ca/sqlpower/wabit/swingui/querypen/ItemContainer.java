@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,8 +30,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
-import ca.sqlpower.wabit.swingui.event.ContainerItemEvent;
-import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
 import edu.umd.cs.piccolo.PCanvas;
 
 /**
@@ -51,14 +51,16 @@ public class ItemContainer implements Container {
 	 */
 	private Section section;
 	
+	private String alias;
+	
 	/**
 	 * A list of listeners that will tell other objects when the model changes.
 	 */
-	private final List<ContainerModelListener> modelListeners;
+	private final List<PropertyChangeListener> modelListeners;
 	
 	public ItemContainer(String name, MouseState mouseState, PCanvas canvas) {
 		this.name = name;
-		modelListeners = new ArrayList<ContainerModelListener>();
+		modelListeners = new ArrayList<PropertyChangeListener>();
 		section = new ObjectSection();
 		((ObjectSection)section).setParent(this);
 		logger.debug("Container created.");
@@ -79,15 +81,15 @@ public class ItemContainer implements Container {
 	
 	public void addItem(Item item) {
 		section.addItem(item);
-		for (ContainerModelListener l : modelListeners) {
-			l.itemAdded(new ContainerItemEvent(item));
+		for (PropertyChangeListener l : modelListeners) {
+			l.propertyChange(new PropertyChangeEvent(ItemContainer.this, Container.CONTAINTER_ITEM_ADDED, null, item));
 		}
 	}
 	
 	public void removeItem(Item item) {
 		section.removeItem(item);
-		for (ContainerModelListener l : modelListeners) {
-			l.itemRemoved(new ContainerItemEvent(item));
+		for (PropertyChangeListener l : modelListeners) {
+			l.propertyChange(new PropertyChangeEvent(ItemContainer.this, Container.CONTAINER_ITEM_REMOVED, item, null));
 		}
 	}
 
@@ -99,12 +101,30 @@ public class ItemContainer implements Container {
 		return Collections.singletonList(section);
 	}
 
-	public void addContainerModelListener(ContainerModelListener l) {
-		modelListeners.add(l);
+	public String getAlias() {
+		return alias;
 	}
-	
-	public void removeContainerModelListener(ContainerModelListener l) {
-		modelListeners.remove(l);
+
+	/**
+	 * Sets the alias of the container. Null is not allowed.
+	 */
+	public void setAlias(String alias) {
+		String oldAlias = this.alias;
+		if (alias.equals(oldAlias)) {
+			return;
+		}
+		this.alias = alias;
+		for (PropertyChangeListener l : modelListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, CONTAINTER_ALIAS_CHANGED, oldAlias, alias));
+		}
+	}
+
+	public void addChangeListener(PropertyChangeListener l) {
+		modelListeners.add(l);		
+	}
+
+	public void removeChangeListener(PropertyChangeListener l) {
+		modelListeners.remove(l);		
 	}
 
 }

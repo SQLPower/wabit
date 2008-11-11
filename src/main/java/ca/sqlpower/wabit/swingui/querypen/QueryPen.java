@@ -179,7 +179,7 @@ public class QueryPen implements MouseState {
 							ContainerPane containerNode = (ContainerPane)node;
 							if(containerNode.getModelTextName().equals(pane.getModelTextName())){
 								logger.debug("Found same tableName, going to alias");
-								aliasNames.add(containerNode.getContainerAlias());
+								aliasNames.add(containerNode.getModel().getAlias());
 							}
 						}
 					}
@@ -195,7 +195,7 @@ public class QueryPen implements MouseState {
 					}
 
 					topLayer.addChild(pane);
-					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane));
+					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane.getModel()));
 					for (UnmodifiableItemPNode itemNode : pane.getContainedItems()) {
 						itemNode.setInSelected(true);
 					}
@@ -361,7 +361,7 @@ public class QueryPen implements MouseState {
 						}
 						pane.removeQueryChangeListener(queryChangeListener);
 						
-						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane, null));
+						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane.getModel(), null));
 					}
 				}
 				if (pickedNode.getParent() == joinLayer) {

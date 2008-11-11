@@ -37,8 +37,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
-import ca.sqlpower.wabit.swingui.event.ContainerItemEvent;
-import ca.sqlpower.wabit.swingui.event.ContainerModelListener;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -70,11 +68,6 @@ public class ContainerPane extends PNode {
 	 * The size of separators between different fields.
 	 */
 	private static final int SEPARATOR_SIZE = 5;
-	
-	/**
-	 * Defines the property change to be a name change on the container.
-	 */
-	public static final String PROPERTY_CONTAINTER_ALIAS = "CONTAINER_ALIAS";
 	
 	private final Container model;
 
@@ -124,11 +117,6 @@ public class ContainerPane extends PNode {
 	private final Collection<PropertyChangeListener> queryChangeListeners;
 	
 	/**
-	 * Stores the alias given to this container.
-	 */
-	private String containerAlias;
-	
-	/**
 	 * A listener to properly display the alias and column name when the
 	 * {@link EditablePStyledText} is switching from edit to non-edit mode and
 	 * back. This listener for the nameEditor will show only the alias when the
@@ -156,34 +144,28 @@ public class ContainerPane extends PNode {
 		
 		public void editingStarting() {
 			editing = true;
-			if (containerAlias != null && containerAlias.length() > 0) {
-				modelNameText.getEditorPane().setText(containerAlias);
-				logger.debug("Setting editor text to " + containerAlias);
+			if (model.getAlias() != null && model.getAlias().length() > 0) {
+				modelNameText.getEditorPane().setText(model.getAlias());
+				logger.debug("Setting editor text to " + model.getAlias());
 			}
 		}
 	};
 	
 	
 	private void createAliasName() {
-		String oldAlias = containerAlias;
 		JEditorPane nameEditor = modelNameText.getEditorPane();
-		containerAlias = nameEditor.getText();
 		String name = model.getName();
 		if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(name)) {
-			nameEditor.setText(containerAlias + " (" + name + ")");
+			model.setAlias(nameEditor.getText());
+			nameEditor.setText(model.getAlias() + " (" + name + ")");
 		} else {
 			logger.debug("item name is " + name);
 			nameEditor.setText(name);
-			containerAlias = "";
+			model.setAlias("");
 		}
-		logger.debug("editor has text " + nameEditor.getText() + " alias is " + containerAlias);
+		logger.debug("editor has text " + nameEditor.getText() + " alias is " + model.getAlias());
 		modelNameText.syncWithDocument();
 		
-		if (!containerAlias.equals(oldAlias)) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(ContainerPane.this, PROPERTY_CONTAINTER_ALIAS, oldAlias, containerAlias));
-			}
-		}
 	}
 	
 	/**
@@ -223,13 +205,18 @@ public class ContainerPane extends PNode {
 
 	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
-		model.addContainerModelListener(new ContainerModelListener() {
-			public void itemRemoved(ContainerItemEvent e) {
-				removeItem(e.getSource());
-			}
-			public void itemAdded(ContainerItemEvent e) {
-				addItem(e.getSource());
-				logger.debug("Added " + e.getSource().getName() + " to the container pane.");
+		model.addChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
+					addItem((Item)evt.getNewValue());
+					logger.debug("Added " + ((Item)evt.getNewValue()).getName() + " to the container pane.");
+				} else if (evt.getPropertyName().equals(Container.CONTAINER_ITEM_REMOVED)) {
+					removeItem((Item)evt.getOldValue());
+				} else if (evt.getPropertyName().equals(Container.CONTAINTER_ALIAS_CHANGED)) {
+					for (PropertyChangeListener l : queryChangeListeners) {
+						l.propertyChange(evt);
+					}
+				}
 			}
 		});
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
@@ -238,7 +225,7 @@ public class ContainerPane extends PNode {
 		containedItems = new ArrayList<UnmodifiableItemPNode>();
 		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
-		containerAlias = "";
+		model.setAlias("");
 		modelNameText = new EditablePStyledText(model.getName(), pen, canvas);
 		modelNameText.addEditStyledTextListener(editingTextListener);
 		modelNameText.addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
@@ -409,10 +396,6 @@ public class ContainerPane extends PNode {
 		return Collections.unmodifiableList(containedItems);
 	}
 
-	public String getContainerAlias() {
-		return containerAlias;
-	}
-	
 	private void addItem(Item item) {
 		UnmodifiableItemPNode itemNode = createTextLine(item);
 		itemNode.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * (2 + containedItems.size()) + BORDER_SIZE);
