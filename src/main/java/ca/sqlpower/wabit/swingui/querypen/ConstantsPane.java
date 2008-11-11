@@ -61,7 +61,7 @@ public class ConstantsPane extends PNode {
 	private static final String ADDING_ITEM_STRING = "Add...";
 	
 	private final PCanvas canvas;
-	private final MouseState mouseState;
+	private final QueryPen mouseState;
 
 	private final Container model;
 	
@@ -153,7 +153,7 @@ public class ConstantsPane extends PNode {
 	 */
 	private PSwing allSelectCheckbox;
 	
-	public ConstantsPane(MouseState mouseState, PCanvas canvas, Container containerModel) {
+	public ConstantsPane(QueryPen mouseState, PCanvas canvas, Container containerModel) {
 		this.mouseState = mouseState;
 		this.canvas = canvas;
 		this.model = containerModel;

@@ -113,9 +113,10 @@ public class QueryPen implements MouseState {
     
 	private final class QueryPenDropTargetListener implements
 			DropTargetListener {
-		private MouseState mouseState ;
+		
+		private QueryPen mouseState ;
 
-		public QueryPenDropTargetListener(MouseState mouseState) {
+		public QueryPenDropTargetListener(QueryPen mouseState) {
 			this.mouseState = mouseState;
 		}
 		
@@ -414,7 +415,6 @@ public class QueryPen implements MouseState {
         JButton deleteButton = new JButton(getDeleteAction());
         deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut Delete)");
         deleteButton.setIcon(joinIcon);
-        
         queryPenBar = new JToolBar(JToolBar.VERTICAL);
         queryPenBar.setToolTipText("QueryPen Toolbar");
         queryPenBar.add(getZoomInButton());
@@ -576,6 +576,14 @@ public class QueryPen implements MouseState {
 
 	public MouseStates getMouseState() {
 		return mouseState;
+	}
+	
+	public PLayer getJoinLayer() {
+		return joinLayer;
+	}
+	
+	public PLayer getTopLayer() {
+		return topLayer;
 	}
 
 	public synchronized void setMouseState(MouseStates mouseState) {

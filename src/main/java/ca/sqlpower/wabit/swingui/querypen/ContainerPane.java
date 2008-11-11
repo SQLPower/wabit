@@ -89,7 +89,7 @@ public class ContainerPane extends PNode {
 	 * The pane that contains the current state of the mouse for that this component
 	 * is attached to.
 	 */
-	private MouseState mouseStates;
+	private QueryPen mouseStates;
 	
 	/**
 	 * The canvas this component is being drawn on.
@@ -221,7 +221,7 @@ public class ContainerPane extends PNode {
 	 */
 	private PStyledText columnNameHeader;
 
-	public ContainerPane(MouseState pen, PCanvas canvas, Container newModel) {
+	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
 		model.addContainerModelListener(new ContainerModelListener() {
 			public void itemRemoved(ContainerItemEvent e) {

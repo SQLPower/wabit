@@ -59,7 +59,7 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 	/**
 	 * The text area storing the where clause for a given item.
 	 */
-	private final EditablePStyledText whereText;
+	private final EditablePStyledTextWithOptionBox whereText;
 	
 	/**
 	 * The user defined alias for this sql column.
@@ -202,9 +202,9 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 	 * object.
 	 */
 	private PSwing swingCheckBox;
-	private final MouseState mouseState;
+	private final QueryPen mouseState;
 
-	public UnmodifiableItemPNode(MouseState mouseStates, PCanvas canvas, Item item) {
+	public UnmodifiableItemPNode(QueryPen mouseStates, PCanvas canvas, Item item) {
 		this.item = item;
 		aliasText = "";
 		mouseState = mouseStates;
@@ -250,7 +250,7 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 		
 		addChild(columnText);
 		
-		whereText = new EditablePStyledText(WHERE_START_TEXT, mouseState, canvas);
+		whereText = new EditablePStyledTextWithOptionBox(WHERE_START_TEXT, mouseState, canvas);
 		whereText.addEditStyledTextListener(whereTextListener);
 		whereText.translate(0, textYTranslation);
 		addChild(whereText);

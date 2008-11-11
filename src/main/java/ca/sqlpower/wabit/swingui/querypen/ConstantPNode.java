@@ -118,7 +118,7 @@ public class ConstantPNode extends PNode implements ItemPNode {
 		}
 	};
 
-	public ConstantPNode(Item source, MouseState mouseStates, PCanvas canvas) {
+	public ConstantPNode(Item source, QueryPen mouseStates, PCanvas canvas) {
 		this.item = source;
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		
