@@ -19,6 +19,11 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+
 
 
 /**
@@ -29,6 +34,20 @@ package ca.sqlpower.wabit.swingui;
 public class SQLJoin {
 	
 	/**
+	 * This property indicates a change to the join in relation to the object
+	 * connected by the left part of this join. The left side is not the physical 
+	 * side shown in the GUI but the object stored in the leftColumn.
+	 */
+	public static final String LEFT_JOIN_CHANGED = "LEFT_JOIN_CHANGED";
+	
+	/**
+	 * This property indicates a change to the join in relation to the object
+	 * connected by the right part of this join. The right side is not the physical 
+	 * side shown in the GUI but the object stored in the rightColumn.
+	 */
+	public static final String RIGHT_JOIN_CHANGED = "RIGHT_JOIN_CHANGED";
+	
+	/**
 	 * The left column of this join.
 	 */
 	private final Item leftColumn;
@@ -37,10 +56,32 @@ public class SQLJoin {
 	 * The right column in the join.
 	 */
 	private final Item rightColumn;
+	
+	/**
+	 * True if the left column should be an outer join. False otherwise.
+	 * If this and isRightColumnOuterJoin is true then it should be a full
+	 * outer join.
+	 */
+	private boolean isLeftColumnOuterJoin;
+	
+	/**
+	 * True if the right column should be an outer join. False otherwise.
+	 * If this and isLeftColumnOuterJoin is true then it should be a full
+	 * outer join.
+	 */
+	private boolean isRightColumnOuterJoin;
+	
+	/**
+	 * Listeners listening for changes to the join.
+	 */
+	private final List<PropertyChangeListener> joinChangeListeners;
 
 	public SQLJoin(Item leftColumn, Item rightColumn) {
 		this.leftColumn = leftColumn;
 		this.rightColumn = rightColumn;
+		isLeftColumnOuterJoin = false;
+		isRightColumnOuterJoin = false;
+		joinChangeListeners = new ArrayList<PropertyChangeListener>();
 	}
 
 	public Item getLeftColumn() {
@@ -60,5 +101,47 @@ public class SQLJoin {
 	 */
 	public String getComparator() {
 		return "=";
+	}
+
+	public boolean isLeftColumnOuterJoin() {
+		return isLeftColumnOuterJoin;
+	}
+
+	public void setLeftColumnOuterJoin(boolean isLeftColumnOuterJoin) {
+		if (this.isLeftColumnOuterJoin != isLeftColumnOuterJoin) {
+			this.isLeftColumnOuterJoin = isLeftColumnOuterJoin;
+			for (PropertyChangeListener l : joinChangeListeners) {
+				l.propertyChange(new PropertyChangeEvent(this, LEFT_JOIN_CHANGED, !this.isLeftColumnOuterJoin, this.isLeftColumnOuterJoin));
+			}
+		}
+	}
+
+	public boolean isRightColumnOuterJoin() {
+		return isRightColumnOuterJoin;
+	}
+
+	public void setRightColumnOuterJoin(boolean isRightColumnOuterJoin) {
+		if (this.isRightColumnOuterJoin != isRightColumnOuterJoin) {
+			this.isRightColumnOuterJoin = isRightColumnOuterJoin;
+			for (PropertyChangeListener l : joinChangeListeners) {
+				l.propertyChange(new PropertyChangeEvent(this, RIGHT_JOIN_CHANGED, !this.isRightColumnOuterJoin, this.isRightColumnOuterJoin));
+			}
+		}
+	}
+	
+	public void addJoinChangeListener(PropertyChangeListener l) {
+		joinChangeListeners.add(l);
+	}
+	
+	public void removeJoinChangeListener(PropertyChangeListener l) {
+		joinChangeListeners.remove(l);
+	}
+	
+	/**
+	 * This can be called to remove all the listeners. Used for deleting
+	 * a join.
+	 */
+	public void removeAllListeners() {
+		joinChangeListeners.clear();
 	}
 }

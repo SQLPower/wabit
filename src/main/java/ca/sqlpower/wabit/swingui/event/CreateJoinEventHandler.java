@@ -52,6 +52,14 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	private PCanvas canvas;
 	private CursorManager cursorManager;
 	
+	private PropertyChangeListener changeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			for (PropertyChangeListener l : createJoinListeners) {
+				l.propertyChange(evt);
+			}
+		}
+	};
+	
 	private List<PropertyChangeListener> createJoinListeners = new ArrayList<PropertyChangeListener>();
 
 	public CreateJoinEventHandler(MouseState mouseStatePane, PLayer joinLayer, PCanvas canvas, CursorManager cursorManager) {
@@ -85,11 +93,10 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 						return;
 					}
 					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
-					rightText.JoinTo(join);
-					leftText.JoinTo(join);
+					join.getModel().addJoinChangeListener(changeListener);
 					joinLayer.addChild(join);
 					for(PropertyChangeListener listener : createJoinListeners) {
-						listener.propertyChange(new PropertyChangeEvent(canvas, QueryPen.PROPERTY_JOIN_ADDED, null, join));
+						listener.propertyChange(new PropertyChangeEvent(canvas, QueryPen.PROPERTY_JOIN_ADDED, null, join.getModel()));
 					}
 					leftText = null;
 					rightText = null;

@@ -213,11 +213,10 @@ public class QueryPen implements MouseState {
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
-										pkItemNode.JoinTo(join);
-										fkItemNode.JoinTo(join);
+										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
-											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
+											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join.getModel()));
 										}
 									} else {
 										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
@@ -234,11 +233,10 @@ public class QueryPen implements MouseState {
 									UnmodifiableItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
 									if (pkItemNode != null && fkItemNode != null) {
 										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
-										pkItemNode.JoinTo(join);
-										fkItemNode.JoinTo(join);
+										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
-											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join));
+											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join.getModel()));
 										}
 									} else {
 										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
@@ -377,17 +375,10 @@ public class QueryPen implements MouseState {
 	 * It also fires the propertyChange event to update the query
 	 */
 	private void deleteJoinLine(JoinLine pickedNode) {
-		
-		UnmodifiableItemPNode leftNode = (UnmodifiableItemPNode)((JoinLine)pickedNode).getLeftNode();
-		UnmodifiableItemPNode rightNode = (UnmodifiableItemPNode)((JoinLine)pickedNode).getRightNode();
-		leftNode.removeJoinedLine(pickedNode);
-		rightNode.removeJoinedLine(pickedNode);
+		pickedNode.disconnectJoin();
 		joinLayer.removeChild(pickedNode);
-		if (pickedNode instanceof JoinLine) {
-			JoinLine join = (JoinLine) pickedNode;
-			for (PropertyChangeListener l : queryListeners) {
-				l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_REMOVED, join, null));
-			}
+		for (PropertyChangeListener l : queryListeners) {
+			l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_REMOVED, pickedNode.getModel(), null));
 		}
 	}
 	
@@ -402,6 +393,7 @@ public class QueryPen implements MouseState {
 	 */
 	private PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
+			logger.debug("Query pen received state change.");
 			for (PropertyChangeListener l : queryListeners) {
 				l.propertyChange(evt);
 			}

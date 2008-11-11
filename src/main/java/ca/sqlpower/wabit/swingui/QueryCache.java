@@ -25,6 +25,7 @@ import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,11 +45,12 @@ import javax.swing.table.TableColumnModel;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.SQLTable;
+import ca.sqlpower.graph.DepthFirstSearch;
+import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
-import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
@@ -73,6 +75,65 @@ public class QueryCache {
 	public enum OrderByArgument {
 		ASC,
 		DESC
+	}
+	
+	/**
+	 * This graph represents the tables in the SQL statement. Each table in
+	 * the statement is a vertex in the graph. Each join is an edge in the 
+	 * graph coming from the left table and moving towards the right table.
+	 */
+	private class TableJoinGraph implements GraphModel<Container, SQLJoin> {
+
+		public Collection<Container> getAdjacentNodes(Container node) {
+			List<Container> adjacencyNodes = new ArrayList<Container>();
+			if (joinMapping.get(node) != null) {
+				for (SQLJoin join : joinMapping.get(node)) {
+					if (join.getLeftColumn().getParent().getParent() == node) {
+						adjacencyNodes.add(join.getRightColumn().getParent().getParent());
+					}
+				}
+			}
+			return adjacencyNodes;
+		}
+
+		public Collection<SQLJoin> getEdges() {
+			List<SQLJoin> edgesList = new ArrayList<SQLJoin>();
+			for (List<SQLJoin> joinList : joinMapping.values()) {
+				for (SQLJoin join : joinList) {
+					edgesList.add(join);
+				}
+			}
+			return edgesList;
+		}
+
+		public Collection<SQLJoin> getInboundEdges(Container node) {
+			List<SQLJoin> inboundEdges = new ArrayList<SQLJoin>();
+			if (joinMapping.get(node) != null) {
+				for (SQLJoin join : joinMapping.get(node)) {
+					if (join.getRightColumn().getParent().getParent() == node) {
+						inboundEdges.add(join);
+					}
+				}
+			}
+			return inboundEdges;
+		}
+
+		public Collection<Container> getNodes() {
+			return fromTableList;
+		}
+
+		public Collection<SQLJoin> getOutboundEdges(Container node) {
+			List<SQLJoin> outboundEdges = new ArrayList<SQLJoin>();
+			if (joinMapping.get(node) != null) {
+				for (SQLJoin join : joinMapping.get(node)) {
+					if (join.getLeftColumn().getParent().getParent() == node) {
+						outboundEdges.add(join);
+					}
+				}
+			}
+			return outboundEdges;
+		}
+		
 	}
 	
 	/**
@@ -269,12 +330,9 @@ public class QueryCache {
 	private PropertyChangeListener joinChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_ADDED)) {
-				JoinLine joinLine = (JoinLine) e.getNewValue();
-				ItemPNode leftNode = joinLine.getLeftNode();
-				ItemPNode rightNode = joinLine.getRightNode();
-				Item leftColumn = leftNode.getItem();
-				Item rightColumn = rightNode.getItem();
-				SQLJoin join = new SQLJoin(leftColumn, rightColumn);
+				SQLJoin join = (SQLJoin) e.getNewValue();
+				Item leftColumn = join.getLeftColumn();
+				Item rightColumn = join.getRightColumn();
 				Container leftContainer = leftColumn.getParent().getParent();
 				Container rightContainer = rightColumn.getParent().getParent();
 				if (joinMapping.get(leftContainer) == null) {
@@ -282,6 +340,15 @@ public class QueryCache {
 					joinList.add(join);
 					joinMapping.put(leftContainer, joinList);
 				} else {
+					if (joinMapping.get(leftContainer).size() > 0) {
+						SQLJoin prevJoin = joinMapping.get(leftContainer).get(0);
+						if (prevJoin.getLeftColumn().getParent().getParent() == leftContainer) {
+							join.setLeftColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
+						} else if (prevJoin.getRightColumn().getParent().getParent() == leftContainer) {
+							join.setLeftColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
+						}
+					}
+						
 					joinMapping.get(leftContainer).add(join);
 				}
 
@@ -290,17 +357,25 @@ public class QueryCache {
 					joinList.add(join);
 					joinMapping.put(rightContainer, joinList);
 				} else {
+					if (joinMapping.get(rightContainer).size() > 0) {
+						SQLJoin prevJoin = joinMapping.get(rightContainer).get(0);
+						if (prevJoin.getLeftColumn().getParent().getParent() == rightContainer) {
+							join.setRightColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
+						} else if (prevJoin.getRightColumn().getParent().getParent() == rightContainer) {
+							join.setRightColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
+						} else {
+							throw new IllegalStateException("A table contains a join that is not connected to any of its columns in the table.");
+						}
+					}
 					joinMapping.get(rightContainer).add(join);
 				}
 				for (ChangeListener l : queryChangeListeners) {
 					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_REMOVED)) {
-				JoinLine joinLine = (JoinLine) e.getOldValue();
-				ItemPNode leftNode = joinLine.getLeftNode();
-				ItemPNode rightNode = joinLine.getRightNode();
-				Item leftColumn = leftNode.getItem();
-				Item rightColumn = rightNode.getItem();
+				SQLJoin joinLine = (SQLJoin) e.getOldValue();
+				Item leftColumn = joinLine.getLeftColumn();
+				Item rightColumn = joinLine.getRightColumn();
 
 				List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParent().getParent());
 				for (SQLJoin join : leftJoinList) {
@@ -319,6 +394,31 @@ public class QueryCache {
 				}
 				for (ChangeListener l : queryChangeListeners) {
 					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
+			} else if (e.getPropertyName().equals(SQLJoin.LEFT_JOIN_CHANGED)) {
+				logger.debug("Got left join changed.");
+				SQLJoin changedJoin = (SQLJoin) e.getSource();
+				Container leftJoinContainer = changedJoin.getLeftColumn().getParent().getParent();
+				for (SQLJoin join : joinMapping.get(leftJoinContainer)) {
+					if (join.getLeftColumn().getParent().getParent() == leftJoinContainer) {
+						join.setLeftColumnOuterJoin((Boolean)e.getNewValue());
+					} else {
+						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
+					}
+				}
+			} else if (e.getPropertyName().equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
+				logger.debug("Got right join changed.");
+				SQLJoin changedJoin = (SQLJoin) e.getSource();
+				Container rightJoinContainer = changedJoin.getRightColumn().getParent().getParent();
+				logger.debug("There are " + joinMapping.get(rightJoinContainer) + " joins on the table with the changed join.");
+				for (SQLJoin join : joinMapping.get(rightJoinContainer)) {
+					if (join.getLeftColumn().getParent().getParent() == rightJoinContainer) {
+						logger.debug("Changing left side");
+						join.setLeftColumnOuterJoin((Boolean)e.getNewValue());
+					} else {
+						logger.debug("Changing right side");
+						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
+					}
 				}
 			}
 		}
@@ -605,7 +705,11 @@ public class QueryCache {
 			query.append(" \nFROM");
 		}
 		boolean isFirstFrom = true;
-		for (Container table : fromTableList) {
+		
+		DepthFirstSearch<Container, SQLJoin> dfs = new DepthFirstSearch<Container, SQLJoin>();
+		dfs.performSearch(new TableJoinGraph());
+		Container previousTable = null;
+		for (Container table : dfs.getFinishOrder()) {
 			String qualifiedName;
 			if (table.getContainedObject() instanceof SQLTable) {
 				qualifiedName = ((SQLTable)table.getContainedObject()).toQualifiedName();
@@ -620,8 +724,28 @@ public class QueryCache {
 				query.append(" " + qualifiedName + " " + alias);
 				isFirstFrom = false;
 			} else {
-				query.append(" \n\tINNER JOIN ");
-				query.append(qualifiedName + " " + alias + " ON ");
+				boolean joinFound = false;
+				if (previousTable != null && joinMapping.get(table) != null) {
+					for (SQLJoin join : joinMapping.get(table)) {
+						if (join.getLeftColumn().getParent().getParent() == previousTable) {
+							joinFound = true;
+							if (join.isLeftColumnOuterJoin() && join.isRightColumnOuterJoin()) {
+								query.append(" \nFULL OUTER JOIN ");
+							} else if (join.isLeftColumnOuterJoin() && !join.isRightColumnOuterJoin()) {
+								query.append(" \nLEFT OUTER JOIN ");
+							} else if (!join.isLeftColumnOuterJoin() && join.isRightColumnOuterJoin()) {
+								query.append(" \nRIGHT OUTER JOIN ");
+							} else {
+								query.append(" \nINNER JOIN ");
+							}
+							break;
+						}
+					}
+				}
+				if (!joinFound) {
+					query.append(" \nINNER JOIN ");
+				}
+				query.append(qualifiedName + " " + alias + " \n  ON ");
 				if (joinMapping.get(table) == null || joinMapping.get(table).isEmpty()) {
 					query.append("TRUE");
 				} else {
@@ -633,12 +757,12 @@ public class QueryCache {
 						} else {
 							otherColumn = join.getLeftColumn();
 						}
-						for (int i = 0; i < fromTableList.indexOf(table); i++) {
-							if (otherColumn.getParent().getParent() == fromTableList.get(i)) {
+						for (int i = 0; i < dfs.getFinishOrder().indexOf(table); i++) {
+							if (otherColumn.getParent().getParent() == dfs.getFinishOrder().get(i)) {
 								if (isFirstJoin) {
 									isFirstJoin = false;
 								} else {
-									query.append(" AND ");
+									query.append(" \n    AND ");
 								}
 								String leftAlias = tableAliasMap.get(join.getLeftColumn().getParent().getParent());
 								if (leftAlias == null) {
@@ -659,6 +783,7 @@ public class QueryCache {
 					}
 				}
 			}
+			previousTable = table;
 		}
 		query.append(" ");
 		if (!whereMapping.isEmpty() || (globalWhereClause != null && globalWhereClause.length() > 0)) {

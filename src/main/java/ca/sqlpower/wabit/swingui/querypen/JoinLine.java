@@ -19,25 +19,37 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.BasicStroke;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JEditorPane;
+import javax.swing.UIManager;
+import javax.swing.text.StyleConstants;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.swingui.SQLJoin;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolox.nodes.PComposite;
+import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
  * This object draws a join line between two columns in the GUI query pen.
  */
-public class JoinLine extends PComposite {
+public class JoinLine extends PNode {
 	
 	private static Logger logger = Logger.getLogger(JoinLine.class);
 
@@ -53,6 +65,18 @@ public class JoinLine extends PComposite {
 	 * PNode.
 	 */
 	private static final float JOIN_LINE_STICKOUT_LENGTH = 50;
+	
+	/**
+	 * A buffer that defines how far from the mouse click we will consider the
+	 * user actually meant to click on a specific part of the join line.
+	 */
+	private static final int MOUSE_CLICK_BUFFER = 4;
+
+	/**
+	 * The length of each dash that makes up a join line part when it is in
+	 * outer join mode.
+	 */
+	private static final float DASH_WIDTH = 5;
 	
 	/**
 	 * One of the columns that is being joined on.
@@ -96,15 +120,73 @@ public class JoinLine extends PComposite {
 	 */
 	private final PPath rightPath;
 	
+	private final PNode joinCombo;
+	
+	private boolean clickedOnLeftPath;
+	
+	/**
+	 * This will listen for right clicks and if the click is near the join
+	 * line it will pop-up a list of join types (inner and outer) to let 
+	 * the user change the join type.
+	 */
+	private final PInputEventListener joinChangeListener = new PBasicInputEventHandler() {
+		
+		@Override
+		public void mouseReleased(PInputEvent event) {
+			if (event.getButton() == MouseEvent.BUTTON3) {
+				
+				joinCombo.translate(event.getPosition().getX() - joinCombo.getFullBounds().getX() - BORDER_WIDTH, event.getPosition().getY() - joinCombo.getFullBounds().getY() - BORDER_WIDTH);
+				if (canvas.getLayer().getAllNodes().contains(joinCombo)) {
+					canvas.getLayer().removeChild(joinCombo);
+				}
+				
+
+				if (checkClickOnPath(event.getPosition().getX(), event.getPosition().getY(), leftPath)) {
+					clickedOnLeftPath = true;
+					canvas.getLayer().addChild(joinCombo);
+					logger.debug("Clicked on left path");
+					return;
+				} 
+				
+				if (checkClickOnPath(event.getPosition().getX(), event.getPosition().getY(), rightPath)) {
+					clickedOnLeftPath = false;
+					canvas.getLayer().addChild(joinCombo);
+					logger.debug("Clicked on right path");
+				}
+				
+			}
+		};
+		
+	};
+
+	/**
+	 * The canvas to display combo boxes and this join on.
+	 */
+	private final PCanvas canvas;
+	
+	/**
+	 * This is the model behind the JoinLine
+	 */
+	private final SQLJoin model;
+	
 	/**
 	 * Creates the line representing a join between two columns.
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(MouseState mouseState, PCanvas canvas, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
+	public JoinLine(MouseState mouseState, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
 		super();
+		this.canvas = c;
+		model = new SQLJoin(leftNode.getItem(), rightNode.getItem());
+		model.addJoinChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				updateLine();
+			}
+		});
 		this.leftNode = leftNode;
 		this.rightNode = rightNode;
+		leftNode.JoinTo(this);
+		rightNode.JoinTo(this);
 		leftContainerPane = leftNode.getParent();
 		rightContainerPane = rightNode.getParent();
 		leftContainerPane.addPropertyChangeListener(new PropertyChangeListener() {
@@ -118,10 +200,10 @@ public class JoinLine extends PComposite {
 			}
 		});
 		
-		leftPath = new PPath();
-		addChild(leftPath);
 		rightPath = new PPath();
 		addChild(rightPath);
+		leftPath = new PPath();
+		addChild(leftPath);
 		
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
@@ -133,6 +215,55 @@ public class JoinLine extends PComposite {
 		addChild(equalityText);
 		
 		updateLine();
+		
+		this.addInputEventListener(joinChangeListener);
+		
+		joinCombo = new PNode();
+		joinCombo.addInputEventListener(new PBasicInputEventHandler() {
+			@Override
+			public void mouseExited(PInputEvent event) {
+				if (!joinCombo.getBounds().contains(joinCombo.globalToLocal(event.getPosition())) && canvas.getLayer().getAllNodes().contains(joinCombo)) {
+					canvas.getLayer().removeChild(joinCombo);
+				}
+			}
+		});
+		PText innerJoinComboItem = new PText("Inner Join");
+		innerJoinComboItem.addAttribute(StyleConstants.FontFamily, UIManager.getFont("List.font").getFamily());
+		joinCombo.addChild(innerJoinComboItem);
+		innerJoinComboItem.addInputEventListener(new PBasicInputEventHandler() {
+
+			@Override
+			public void mouseReleased(PInputEvent event) {
+				canvas.getLayer().removeChild(joinCombo);
+				if (clickedOnLeftPath) {
+					model.setLeftColumnOuterJoin(false);
+				} else {
+					model.setRightColumnOuterJoin(false);
+				}
+				updateLine();
+			}
+		});
+		PText outerJoinComboItem = new PText("Outer Join");
+		outerJoinComboItem.addAttribute(StyleConstants.FontFamily, UIManager.getFont("List.font").getFamily());
+		outerJoinComboItem.translate(0, innerJoinComboItem.getHeight() + BORDER_WIDTH);
+		joinCombo.addChild(outerJoinComboItem);
+		outerJoinComboItem.addInputEventListener(new PBasicInputEventHandler() {
+			@Override
+			public void mouseReleased(PInputEvent event) {
+				if (clickedOnLeftPath) {
+					model.setLeftColumnOuterJoin(true);
+				} else {
+					model.setRightColumnOuterJoin(true);
+				}
+				canvas.getLayer().removeChild(joinCombo);
+				updateLine();
+			}
+		});
+		
+		PPath outerRect = PPath.createRectangle((float)- BORDER_WIDTH, (float)- BORDER_WIDTH, (float)(joinCombo.getFullBounds().getWidth() + 2 * BORDER_WIDTH), (float)(joinCombo.getFullBounds().getHeight() + 2 * BORDER_WIDTH));
+		joinCombo.addChild(outerRect);
+		joinCombo.setBounds(outerRect.getBounds());
+		outerRect.moveToBack();
 	}
 
 	/**
@@ -182,10 +313,26 @@ public class JoinLine extends PComposite {
 		// connecting point must be on the line made by the second control point
 		// of the first curve and the first control point of the second curve.
 		leftPath.moveTo((float)(leftX), (float)(leftY));
-		leftPath.curveTo((float)(leftX + leftContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)leftY, (float)midX, (float)(leftY + (rightY - leftY)/6), (float)midX, (float)midY);
+		Point2D leftControlPoint1 = new Point2D.Float((float)(leftX + leftContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)leftY);
+		Point2D leftControlPoint2 = new Point2D.Float((float)midX, (float)(leftY + (rightY - leftY)/6));
+		leftPath.curveTo((float)leftControlPoint1.getX(), (float)leftControlPoint1.getY(), (float)leftControlPoint2.getX(), (float)leftControlPoint2.getY(), (float)midX, (float)midY);	
 		
 		rightPath.moveTo((float)midX, (float)midY);
-		rightPath.curveTo((float)midX, (float)(leftY + (rightY - leftY)*5/6), (float)(rightX - rightContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)rightY, (float)(rightX), (float)(rightY));
+		Point2D rightControlPoint1 = new Point2D.Float((float)midX, (float)(leftY + (rightY - leftY)*5/6));
+		Point2D rightControlPoint2 = new Point2D.Float( (float)(rightX - rightContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)rightY);
+		rightPath.curveTo((float)rightControlPoint1.getX(), (float)rightControlPoint1.getY(), (float)rightControlPoint2.getX(), (float)rightControlPoint2.getY(), (float)(rightX), (float)(rightY));
+		
+		float[] dash = { DASH_WIDTH, DASH_WIDTH };
+		if (model.isLeftColumnOuterJoin()) {
+			leftPath.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1, dash, 0));
+		} else {
+			leftPath.setStroke(new BasicStroke());
+		}
+		if (model.isRightColumnOuterJoin()) {
+			rightPath.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1, dash, 0));
+		} else {
+			rightPath.setStroke(new BasicStroke());
+		}
 		
 		double textMidX = midX - equalityText.getWidth()/2;
 		double textMidY = midY - equalityText.getHeight()/2;
@@ -206,6 +353,32 @@ public class JoinLine extends PComposite {
 		
 	}
 	
+	/**
+	 * Returns true if the user clicked on or near the given path. Returns
+	 * false otherwise. Clicking in the join circle will not be considered
+	 * clicking near the line.
+	 */
+	private boolean checkClickOnPath(double mouseX, double mouseY, PPath path) {
+		Rectangle2D mouseClickRectangle = new Rectangle((int)mouseX - MOUSE_CLICK_BUFFER, (int)mouseY - MOUSE_CLICK_BUFFER, 2 * MOUSE_CLICK_BUFFER, 2 * MOUSE_CLICK_BUFFER);
+		PathIterator iter = path.getPathReference().getPathIterator(path.getTransform(), 1);
+		float [] linePoints = new float[2];
+		Point2D oldPoints;
+		iter.currentSegment(linePoints);
+		iter.next();
+		if (textCircle.getPathReference().contains(mouseX, mouseY)) {
+			return false;
+		}
+		while (!iter.isDone()) {
+			oldPoints = new Point2D.Float(linePoints[0], linePoints[1]);
+			iter.currentSegment(linePoints);
+			if (mouseClickRectangle.intersectsLine(oldPoints.getX(), oldPoints.getY(), linePoints[0], linePoints[1])) {
+				return true;
+			}
+			iter.next();
+		}
+		return false;
+	}
+	
 	public UnmodifiableItemPNode getLeftNode() {
 		return leftNode;
 	}
@@ -213,5 +386,36 @@ public class JoinLine extends PComposite {
 	public UnmodifiableItemPNode getRightNode() {
 		return rightNode;
 	}
+
+	public SQLJoin getModel() {
+		return model;
+	}
 	
+	public void disconnectJoin() {
+		model.removeAllListeners();
+		leftNode.removeJoinedLine(this);
+		rightNode.removeJoinedLine(this);
+	}
+	
+	@Override
+	/*
+	 * Overriding the fullPick here so that the join line only actually
+	 * gets picked when you click on the circle or close to a line 
+	 */
+	public boolean fullPick(PPickPath pickPath) {
+		boolean superPick = super.fullPick(pickPath);
+		if (superPick 
+				&& (pickPath.getPickedNode() != this 
+						|| checkClickOnPath(pickPath.getPickBounds().getX(), pickPath.getPickBounds().getY(), leftPath) 
+						|| checkClickOnPath(pickPath.getPickBounds().getX(), pickPath.getPickBounds().getY(), rightPath))) {
+			PNode picked = pickPath.getPickedNode();
+			while (picked != this) {
+				pickPath.popTransform(picked.getTransformReference(false));
+				pickPath.popNode(picked);
+				picked = pickPath.getPickedNode();
+			}
+			return true;
+		}
+		return false;
+	}
 }
