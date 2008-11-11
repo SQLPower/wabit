@@ -191,6 +191,13 @@ public class ConstantPNode extends PNode implements ItemPNode {
 
 	public void setSelected(boolean selected) {
 		selectionCheckbox.setSelected(selected);
+		for (PropertyChangeListener listener : changeListeners) {
+			listener.propertyChange(new PropertyChangeEvent(ConstantPNode.this, ItemPNode.PROPERTY_SELECTED, !selectionCheckbox.isSelected(), selectionCheckbox.isSelected()));
+		}
+	}
+	
+	public boolean isInSelect() {
+		return selectionCheckbox.isSelected();
 	}
 
 }

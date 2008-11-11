@@ -171,7 +171,9 @@ public class ConstantsPane extends PNode {
 		checkbox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				for (ConstantPNode node : constantPNodeList) {
-					node.setSelected(checkbox.isSelected());
+					if(node.isInSelect() != ((JCheckBox)e.getSource()).isSelected()) {
+						node.setSelected(checkbox.isSelected());
+					}
 				}
 			}
 		});
