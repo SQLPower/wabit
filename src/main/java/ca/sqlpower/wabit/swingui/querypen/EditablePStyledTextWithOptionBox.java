@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.Color;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -37,7 +38,9 @@ import javax.swing.text.StyleConstants;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
+import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.nodes.PPath;
@@ -100,7 +103,7 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 		}
 		public void focusGained(FocusEvent e) {
 			whereOptionBox.translate(getGlobalFullBounds().getX()-whereOptionBox.getXOffset()-ONE_PIXEL_SPACE
-					,(getGlobalFullBounds().getY() + getHeight())-whereOptionBox.getYOffset());
+					,(getGlobalFullBounds().getY() + editorPane.getHeight())-whereOptionBox.getYOffset());
 			queryPen.getTopLayer().addChild(whereOptionBox);
 			whereOptionBox.moveToFront();
 		}
@@ -215,10 +218,30 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 		int xLoc = 0;
 		for(String whereOption : whereOptions) {
 			final PText newOption = new PText(whereOption);
+			final PNode background = new PNode();
+			background.setTransparency((float)0.3);
 			newOption.addAttribute(StyleConstants.FontFamily, UIManager.getFont("List.font").getFamily());
 			newOption.translate((WHERE_OPTION_BOX_WIDTH/3)*xLoc+ ONE_PIXEL_SPACE*3, (getHeight()+ 1) * yLoc+ ONE_PIXEL_SPACE*5);
+			background.setBounds(newOption.getBounds().getX(), newOption.getBounds().getY()
+					,newOption.getBounds().getWidth()+ 3, newOption.getBounds().getHeight()+3);
+			newOption.addChild(background);
 			newOption.addInputEventListener(new PBasicInputEventHandler() {
-
+				
+				
+				@Override
+				public void mouseEntered(PInputEvent event) {
+					newOption.addChild(background);
+					setBackground(Color.gray, background);
+					newOption.repaint();
+				}
+				
+				@Override
+				public void mouseExited(PInputEvent event) {
+					newOption.removeChild(background);
+					setBackground(Color.white, background);
+					newOption.repaint();
+				}
+				
 				@Override
 				public void mousePressed(PInputEvent event) {
 					JEditorPane whereEditorPane = getEditorPane();
@@ -230,6 +253,11 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 						throw new IllegalStateException(e);
 					}
 				}
+				
+				public void setBackground(Color color,PNode background){	
+					background.setPaint(color);
+					
+				}
 			});
 			yLoc++;
 			if(yLoc > 4) {
@@ -240,6 +268,7 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 		}
 		
 	}
+	
 	
 	public void addEditStyledTextListener(EditStyledTextListener l) {
 		editingListeners.add(l);
