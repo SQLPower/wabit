@@ -225,10 +225,10 @@ public class JoinLine extends PNode {
 			}
 		});
 		
-		rightPath = new PPath();
-		addChild(rightPath);
 		leftPath = new PPath();
 		addChild(leftPath);
+		rightPath = new PPath();
+		addChild(rightPath);
 		
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);

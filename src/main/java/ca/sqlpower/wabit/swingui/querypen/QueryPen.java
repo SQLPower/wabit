@@ -91,7 +91,7 @@ public class QueryPen implements MouseState {
     private static final String ZOOM_IN_ACTION = "Zoom In";
     
     private static final String ZOOM_OUT_ACTION = "Zoom Out";
-    
+
     private static final String JOIN_ACTION = "Create Join";
     
     private static final int TABLE_SPACE = 5;
@@ -199,8 +199,6 @@ public class QueryPen implements MouseState {
 								for (ColumnMapping mapping : relation.getMappings()) {
 									logger.debug("PK container has model name " + pane.getModel().getName() + " looking for col named " + mapping.getPkColumn().getName());
 									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
-									logger.debug("PK item node is " + pkItemNode);
-									logger.debug("fK container has model name " + fkContainer.getModel().getName() + " looking for col named " + mapping.getFkColumn().getName());
 									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
@@ -221,10 +219,12 @@ public class QueryPen implements MouseState {
 							List<ContainerPane> pkContainers = getContainerPane(relation.getPkTable());
 							for (ContainerPane pkContainer : pkContainers) {
 								for (ColumnMapping mapping : relation.getMappings()) {
-									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
 									UnmodifiableItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
+									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
 									if (pkItemNode != null && fkItemNode != null) {
-										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+										logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
+										logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
+										JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
