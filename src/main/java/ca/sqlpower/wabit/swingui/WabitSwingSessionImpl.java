@@ -152,6 +152,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private final List<QueryCache> queuedQueryCache;
 
+	private QueryController queryController;
+
 	/**
 	 * Creates a new session 
 	 * 
@@ -163,7 +165,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		queryPen = new QueryPen(this);
 		queryCache = new QueryCache();
 		
-		new QueryController(queryCache, queryPen);
+		queryController = new QueryController(queryCache, queryPen);
 		
 		statusLabel= new JLabel();
 		queuedQueryCache = new ArrayList<QueryCache>();
@@ -211,7 +213,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 			public void tableAdded(TableChangeEvent e) {
 				logger.debug("Table added.");
-				queryCache.unlistenToCellRenderer();
+				queryController.unlistenToCellRenderer();
 				TableModelSortDecorator sortDecorator = null;
 				JTable table = e.getChangedTable();
 				if (table instanceof FancyExportableJTable) {
@@ -240,7 +242,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				cornerPanel.add(columnNameLabel);
 				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanel);
 				addGroupingTableHeaders();
-				queryCache.listenToCellRenderer(renderer);
+				queryController.listenToCellRenderer(renderer);
 			}
 		});
     	
