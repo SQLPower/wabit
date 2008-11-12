@@ -34,7 +34,6 @@ import java.util.Map;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
@@ -49,6 +48,9 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 /**
@@ -56,9 +58,16 @@ import ca.sqlpower.wabit.swingui.querypen.StringItem;
  * statement and also listen to everything that could
  * change the select statement.
  */
-public class QueryCache {
+public class QueryCache implements Query {
 	
 	private static final Logger logger = Logger.getLogger(QueryCache.class);
+	
+	/**
+	 * A property name that is thrown in PropertyChangeListeners when part of
+	 * the query has changed. This is a generic default change to a query
+	 * rather than a specific query change.
+	 */
+	private static final String PROPERTY_QUERY = "PROPERTY_QUERY";
 	
 	/**
 	 * The grouping function defined on a group by event if the column is
@@ -235,8 +244,8 @@ public class QueryCache {
 					havingMap.remove(column);
 				}
 			}
-			for (ChangeListener l : queryChangeListeners) {
-				l.stateChanged(new ChangeEvent(QueryCache.this));
+			for (PropertyChangeListener l : queryChangeListeners) {
+				l.propertyChange(e);
 			}
 		}
 	};
@@ -278,8 +287,8 @@ public class QueryCache {
 				}
 			}
 			if (sortChanged) {
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, null));
 				}
 			}
 		}
@@ -323,8 +332,8 @@ public class QueryCache {
 						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
 					}
 				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(e);
 				}
 			} else if (e.getPropertyName().equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
 				logger.debug("Got right join changed.");
@@ -340,12 +349,12 @@ public class QueryCache {
 						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
 					}
 				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(e);
 				}
 			} else if (e.getPropertyName().equals(SQLJoin.COMPARATOR_CHANGED)) {
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(e);
 				}
 			}
 		}
@@ -360,8 +369,8 @@ public class QueryCache {
 				} else {
 					whereMapping.remove(item);
 				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(e);
 				}
 			} else if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
 				setGlobalWhereClause((String)e.getNewValue());
@@ -378,8 +387,8 @@ public class QueryCache {
 				} else {
 					tableAliasMap.put(pane, pane.getAlias());
 				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(e);
 				}
 			}
 		}
@@ -398,6 +407,7 @@ public class QueryCache {
 	 * the user is done dragging.
 	 */
 	private final MouseListener reorderSelectionByHeaderMouseListener = new MouseAdapter() {
+
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (lastTableColumnMove != null) {
@@ -406,8 +416,8 @@ public class QueryCache {
 				selectedColumns.remove(movedColumn);
 				selectedColumns.add(lastTableColumnMove.getToIndex(), movedColumn);
 				lastTableColumnMove = null;
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, movedColumn, movedColumn));
 				}
 			}
 		}
@@ -449,7 +459,17 @@ public class QueryCache {
 	/**
 	 * These listeners will fire an event whenever the query has changed.
 	 */
-	private final List<ChangeListener> queryChangeListeners;
+	private final List<PropertyChangeListener> queryChangeListeners;
+
+	/**
+	 * The user defined name of the query this QueryCache represents
+	 */
+	private String name;
+
+	/**
+	 * The parent that contains this QueryCache.
+	 */
+	private WabitObject parent;
 	
 	public QueryCache() {
 		tableAliasMap = new HashMap<Container, String>();
@@ -459,7 +479,7 @@ public class QueryCache {
 		fromTableList = new ArrayList<Container>();
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
 		whereMapping = new HashMap<Item, String>();
-		queryChangeListeners = new ArrayList<ChangeListener>();
+		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		aliasMap = new HashMap<Item, String>();
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		groupByList = new ArrayList<Item>();
@@ -497,7 +517,8 @@ public class QueryCache {
 		globalWhereClause = copy.getGlobalWhereClause();
 		groupingEnabled = copy.isGroupingEnabled();
 		
-		queryChangeListeners = new ArrayList<ChangeListener>();
+		name = copy.getName();
+		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -780,11 +801,11 @@ public class QueryCache {
 		}
 	}
 	
-	public void addQueryChangeListener(ChangeListener l) {
+	public void addPropertyChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.add(l);
 	}
 	
-	public void removeQueryChangeLister(ChangeListener l) {
+	public void removePropertyChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.remove(l);
 	}
 
@@ -841,8 +862,8 @@ public class QueryCache {
 			removeColumnSelection(column);
 		}
 		logger.debug("Firing change for selection.");
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column, column));
 		}
 	}
 	
@@ -858,8 +879,8 @@ public class QueryCache {
 		} else {
 			aliasMap.remove(column);
 		}
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column.getAlias(), column.getAlias()));
 		}
 	}
 	
@@ -872,8 +893,8 @@ public class QueryCache {
 				removeItem(col);
 			}
 		}
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, table, null));
 		}
 	}
 
@@ -885,8 +906,8 @@ public class QueryCache {
 				addItem(col);
 			}
 		}
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, container));
 		}
 	}
 	
@@ -895,8 +916,8 @@ public class QueryCache {
 	 */
 	public void setGlobalWhereClause(String whereClause) {
 		globalWhereClause = whereClause;
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, whereClause, whereClause));
 		}
 	}
 	
@@ -920,8 +941,8 @@ public class QueryCache {
 				break;
 			}
 		}
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, joinLine, joinLine));
 		}
 	}
 
@@ -965,8 +986,8 @@ public class QueryCache {
 			}
 			joinMapping.get(rightContainer).add(join);
 		}
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, join));
 		}
 	}
 	
@@ -981,8 +1002,8 @@ public class QueryCache {
 		col.removeChangeListener(selectedColumnListener);
 		col.removeChangeListener(whereListener);
 		removeColumnSelection(col);
-		for (ChangeListener l : queryChangeListeners) {
-			l.stateChanged(new ChangeEvent(QueryCache.this));
+		for (PropertyChangeListener l : queryChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, col, null));
 		}
 	}
 	
@@ -1063,6 +1084,42 @@ public class QueryCache {
 
 	protected Map<Container, String> getTableAliasMap() {
 		return tableAliasMap;
+	}
+
+	public void addChildListener(WabitChildListener l) {
+		throw new IllegalStateException("There are no children of a QueryCache.");
+	}
+
+	public boolean allowsChildren() {
+		return false;
+	}
+
+	public int childPositionOffset(Class<? extends WabitObject> childType) {
+		throw new IllegalStateException("There are no children of a QueryCache.");
+	}
+
+	public List<? extends WabitObject> getChildren() {
+		return null;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public WabitObject getParent() {
+		return parent;
+	}
+
+	public void removeChildListener(WabitChildListener l) {
+		throw new IllegalStateException("There are no children of a QueryCache.");
+	}
+
+	public void setParent(WabitObject parent) {
+		this.parent = parent;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }
