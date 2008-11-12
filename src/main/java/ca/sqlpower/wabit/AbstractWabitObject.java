@@ -63,7 +63,7 @@ public abstract class AbstractWabitObject implements WabitObject {
     protected void fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
         index += childPositionOffset(type);
         WabitChildEvent e = new WabitChildEvent(this, type, child, index);
-        for (int i = childListeners.size() - 1; i >= 0; i++) {
+        for (int i = childListeners.size() - 1; i >= 0; i--) {
             childListeners.get(i).wabitChildAdded(e);
         }
     }
@@ -84,7 +84,7 @@ public abstract class AbstractWabitObject implements WabitObject {
     protected void fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
         index += childPositionOffset(type);
         WabitChildEvent e = new WabitChildEvent(this, type, child, index);
-        for (int i = childListeners.size() - 1; i >= 0; i++) {
+        for (int i = childListeners.size() - 1; i >= 0; i--) {
             childListeners.get(i).wabitChildRemoved(e);
         }
     }
