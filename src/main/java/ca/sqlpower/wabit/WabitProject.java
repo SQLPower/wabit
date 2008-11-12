@@ -45,6 +45,10 @@ public class WabitProject extends AbstractWabitObject {
      */
     private final List<Layout> layouts = new ArrayList<Layout>();
 
+    public WabitProject() {
+        setName("New Project");
+    }
+    
     public List<WabitObject> getChildren() {
         List<WabitObject> allChildren = new ArrayList<WabitObject>();
         allChildren.addAll(dataSources);

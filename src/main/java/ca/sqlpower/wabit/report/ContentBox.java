@@ -36,18 +36,19 @@ public class ContentBox extends AbstractWabitObject {
     private int height;
 
     /**
-     * The Page that contains this ContentBox
-     */
-    private Page page;
-    
-    /**
      * The renderer that provides visual content for this box.
      */
     private ReportContentRenderer contentRenderer;
     
+    public ContentBox() {
+        setName("Empty content box");
+    }
     
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
+        ReportContentRenderer oldContentRenderer = this.contentRenderer;
         this.contentRenderer = contentRenderer;
+        setName("Content from " + contentRenderer);
+        firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
     }
     
     public ReportContentRenderer getContentRenderer() {
@@ -58,33 +59,34 @@ public class ContentBox extends AbstractWabitObject {
         return x;
     }
     public void setX(int x) {
+        int oldX = this.x;
         this.x = x;
+        firePropertyChange("x", oldX, x);
     }
     public int getY() {
         return y;
     }
     public void setY(int y) {
+        int oldY = this.y;
         this.y = y;
+        firePropertyChange("y", oldY, y);
     }
+    
     public int getWidth() {
         return width;
     }
     public void setWidth(int width) {
+        int oldWidth = this.width;
         this.width = width;
+        firePropertyChange("width", oldWidth, width);
     }
     public int getHeight() {
         return height;
     }
     public void setHeight(int height) {
+        int oldHeight = this.height;
         this.height = height;
-    }
-
-    public Page getPage() {
-        return page;
-    }
-
-    public void setPage(Page page) {
-        this.page = page;
+        firePropertyChange("height", oldHeight, height);
     }
 
     public boolean allowsChildren() {

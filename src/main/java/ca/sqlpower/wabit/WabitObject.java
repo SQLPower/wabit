@@ -42,4 +42,9 @@ public interface WabitObject {
      * this OLAPObject.
      */
     int childPositionOffset(Class<? extends WabitObject> childType);
+    
+    /**
+     * Returns the short name for this object.
+     */
+    String getName();
 }

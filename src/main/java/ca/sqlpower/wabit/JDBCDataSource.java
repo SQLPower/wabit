@@ -38,6 +38,8 @@ public class JDBCDataSource extends AbstractWabitObject implements WabitDataSour
 
 	public JDBCDataSource(SPDataSource ds) {
 	    this.dataSource = ds;
+	    setName(ds.getName());
+	    // TODO listen for changes in DS and rebroadcast the appropriate ones
 	}
 	
 	public boolean allowsChildren() {

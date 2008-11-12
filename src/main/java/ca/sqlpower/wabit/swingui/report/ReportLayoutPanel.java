@@ -79,7 +79,7 @@ public class ReportLayoutPanel {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Layout report = new Layout();
+                Layout report = new Layout("My Layout");
                 ReportLayoutPanel p = new ReportLayoutPanel(report);
                 JFrame f = new JFrame("Report layout");
                 f.setContentPane(p.canvas);

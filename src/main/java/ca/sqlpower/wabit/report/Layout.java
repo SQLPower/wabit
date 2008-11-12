@@ -51,13 +51,18 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
      * left and right masters, cover pages, and so on. For now, a Layout can only
      * have one arrangement of page content, and this is it.
      */
-    private Page page = new Page(StandardPageSizes.US_LETTER);
+    private Page page = new Page("Default Page", StandardPageSizes.US_LETTER);
     
     /**
      * The variables defined for this report.
      */
     private final Map<String, Object> vars = new HashMap<String, Object>();
 
+    
+    public Layout(String name) {
+        setName(name);
+    }
+    
     /**
      * A wrapper for {@link #call()} that achieves two purposes: firstly, it allows Report
      * to implement Runnable; secondly it conveniently wraps any checked exceptions

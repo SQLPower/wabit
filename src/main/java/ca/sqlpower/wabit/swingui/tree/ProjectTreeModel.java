@@ -48,7 +48,6 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
 /**
  * Provides a tree with the project at the root. The project contains data
@@ -207,7 +206,7 @@ public class ProjectTreeModel implements TreeModel {
                     // TODO: Add queries to project
                     
                     // Add layouts to project
-                    Layout layout = new Layout();
+                    Layout layout = new Layout("Example Layout");
                     p.addLayout(layout);
                     Page page = layout.getPage();
                     page.addContentBox(new ContentBox());
@@ -216,6 +215,7 @@ public class ProjectTreeModel implements TreeModel {
                     // Show project tree in a frame
                     ProjectTreeModel tm = new ProjectTreeModel(p);
                     JTree tree = new JTree(tm);
+                    tree.setCellRenderer(new ProjectTreeCellRenderer());
                     JFrame f = new JFrame("Tree!");
                     f.setContentPane(new JScrollPane(tree));
                     f.pack();

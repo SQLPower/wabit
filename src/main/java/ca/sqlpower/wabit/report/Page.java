@@ -130,9 +130,8 @@ public class Page extends AbstractWabitObject {
      * 
      * @param size The standard page size this page should have.
      */
-    public Page(StandardPageSizes size) {
-        width = size.getWidth();
-        height = size.getHeight();
+    public Page(String name, StandardPageSizes size) {
+        this(name, size.getWidth(), size.getHeight());
     }
 
     /**
@@ -143,7 +142,8 @@ public class Page extends AbstractWabitObject {
      * @param width The page width in units of 1/72 inch.
      * @param height The page height in units of 1/72 inch.
      */
-    public Page(int width, int height) {
+    public Page(String name, int width, int height) {
+        setName(name);
         this.width = width;
         this.height = height;
     }
@@ -205,19 +205,19 @@ public class Page extends AbstractWabitObject {
     }
     
     public void addContentBox(ContentBox addme) {
-        if (addme.getPage() != null) {
+        if (addme.getParent() != null) {
             throw new IllegalStateException("That content box already belongs to a different page");
         }
-        addme.setPage(this);
+        addme.setParent(this);
         contentBoxes.add(addme);
     }
     
     public void removeContentBox(ContentBox removeme) {
-        if (removeme.getPage() != this) {
+        if (removeme.getParent() != this) {
             throw new IllegalStateException("That's not my content box!");
         }
         contentBoxes.remove(removeme);
-        removeme.setPage(null);
+        removeme.setParent(null);
     }
 
     public boolean allowsChildren() {

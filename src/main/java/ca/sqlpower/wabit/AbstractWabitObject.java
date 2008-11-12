@@ -28,7 +28,8 @@ public abstract class AbstractWabitObject implements WabitObject {
 
     private final List<WabitChildListener> childListeners = new ArrayList<WabitChildListener>();
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-    private WabitObject parent; 
+    private WabitObject parent;
+    private String name;
     
     public void addPropertyChangeListener(PropertyChangeListener l) {
         pcs.addPropertyChangeListener(l);
@@ -105,6 +106,18 @@ public abstract class AbstractWabitObject implements WabitObject {
 	}
 
 	public void setParent(WabitObject parent) {
+	    WabitObject oldParent = this.parent;
 		this.parent = parent;
+		firePropertyChange("parent", oldParent, parent);
 	}
+	
+	public String getName() {
+	    return name;
+	}
+	
+	public void setName(String name) {
+	    String oldName = this.name;
+        this.name = name;
+        firePropertyChange("name", oldName, name);
+    }
 }
