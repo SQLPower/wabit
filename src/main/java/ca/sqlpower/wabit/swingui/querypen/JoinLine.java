@@ -119,8 +119,6 @@ public class JoinLine extends PNode {
 	
 	private JEditorPane editorPane;
 	private QueryPen queryPen;
-	private double oldOptionBoxX;
-	private double oldOptionBoxY;
 	
 	private static final int OPTION_BOX_WIDTH = 65;
 	private static final int OPTION_BOX_HEIGHT = 150;
@@ -150,6 +148,16 @@ public class JoinLine extends PNode {
 		@Override
 		public void mouseReleased(PInputEvent event) {
 			if (event.getButton() == MouseEvent.BUTTON3) {
+				optionBox.translate(event.getPosition().getX() - optionBox.getFullBounds().getX() - BORDER_WIDTH, event.getPosition().getY() - optionBox.getFullBounds().getY() - BORDER_WIDTH);
+				if (event.getPosition().getX()>= textCircle.getX() && event.getPosition().getX()<= textCircle.getX()+ textCircle.getWidth()
+						&& event.getPosition().getY()>= textCircle.getY() && event.getPosition().getY()<= textCircle.getY() + textCircle.getHeight()) {
+						canvas.getLayer().addChild(optionBox);
+						return;
+					}
+				
+				if (canvas.getLayer().getAllNodes().contains(optionBox)) {
+					canvas.getLayer().removeChild(optionBox);
+				}
 				
 				joinCombo.translate(event.getPosition().getX() - joinCombo.getFullBounds().getX() - BORDER_WIDTH, event.getPosition().getY() - joinCombo.getFullBounds().getY() - BORDER_WIDTH);
 				if (canvas.getLayer().getAllNodes().contains(joinCombo)) {
@@ -226,10 +234,6 @@ public class JoinLine extends PNode {
 		addChild(textCircle);
 		
 		optionBox = PPath.createRectangle(0, 0, OPTION_BOX_WIDTH, OPTION_BOX_HEIGHT);
-		oldOptionBoxX = 0;
-		oldOptionBoxY = 0;
-		addChild(optionBox);
-		optionBox.setVisible(false);
 		int textHeight = 0;
 		for (int i = 0; i < optionSigns.length; i++) {
 			final PText tempText = new PText(optionSigns[i]);
@@ -238,30 +242,18 @@ public class JoinLine extends PNode {
 				public void mousePressed(PInputEvent event) {
 						editorPane.setText(tempText.getText());
 						symbolText.setDocument(editorPane.getDocument());
-						optionBox.setVisible(false);
+						canvas.getLayer().removeChild(optionBox);
 						updateLine();
 				}
 			});
 			optionBox.addChild(tempText);
 			textHeight += tempText.getHeight();
 		}
-		queryPen.getTopLayer().addChild(optionBox);
-		optionBox.moveToFront();
 		symbolText = new PStyledText();
 		editorPane = new JEditorPane();
 		editorPane.setText(" = ");
 		symbolText.setDocument(editorPane.getDocument());
 		addChild(symbolText);
-		addInputEventListener(new PBasicInputEventHandler() {
-			public void mouseClicked(PInputEvent event) {
-				if ( event.isRightMouseButton() ) {
-					if (event.getPosition().getX()>= textCircle.getX() && event.getPosition().getX()<= textCircle.getX()+ textCircle.getWidth()
-						&& event.getPosition().getY()>= textCircle.getY() && event.getPosition().getY()<= textCircle.getY() + textCircle.getHeight()) {
-						optionBox.setVisible(true);
-					}
-				}
-		}
-		});
 		updateLine();
 		
 		this.addInputEventListener(joinChangeListener);
@@ -275,6 +267,16 @@ public class JoinLine extends PNode {
 				}
 			}
 		});
+		
+		optionBox.addInputEventListener(new PBasicInputEventHandler() {
+			@Override
+			public void mouseExited(PInputEvent event) {
+				if (!optionBox.getBounds().contains(optionBox.globalToLocal(event.getPosition())) && canvas.getLayer().getAllNodes().contains(optionBox)) {
+					canvas.getLayer().removeChild(optionBox);
+				}
+			}
+		});
+		
 		PText innerJoinComboItem = new PText("Inner Join");
 		innerJoinComboItem.addAttribute(StyleConstants.FontFamily, UIManager.getFont("List.font").getFamily());
 		joinCombo.addChild(innerJoinComboItem);
@@ -393,12 +395,6 @@ public class JoinLine extends PNode {
 				(float)symbolText.getWidth() + 2 * BORDER_WIDTH,
 				(float)symbolText.getHeight() + 2 * BORDER_WIDTH);
 		
-		optionBox.translate((float)midX - oldOptionBoxX, (float)midY - oldOptionBoxY);
-		oldOptionBoxX = midX - oldOptionBoxX;
-		oldOptionBoxY = midY - oldOptionBoxY;
-		optionBox.moveToFront();
-		//Compute the bounds only by the paths and the circle.
-		//This prevents the bound handles from being included.
 		Rectangle2D boundUnion = textCircle.getBounds();
 		boundUnion = boundUnion.createUnion(leftPath.getBounds());
 		boundUnion = boundUnion.createUnion(rightPath.getBounds());
