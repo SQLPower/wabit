@@ -158,7 +158,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
 		queryPen = new QueryPen(this);
-		queryCache = new QueryCache(queryPen);
+		queryCache = new QueryCache();
+		
+		new QueryController(queryCache, queryPen);
+		
 		statusLabel= new JLabel();
 		queuedQueryCache = new ArrayList<QueryCache>();
 	}

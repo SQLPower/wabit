@@ -28,9 +28,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.CursorManager;
+import ca.sqlpower.wabit.swingui.SQLJoin;
 import ca.sqlpower.wabit.swingui.querypen.ConstantPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
-import ca.sqlpower.wabit.swingui.querypen.MouseState;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
@@ -96,7 +96,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					join.getModel().addJoinChangeListener(changeListener);
 					joinLayer.addChild(join);
 					for(PropertyChangeListener listener : createJoinListeners) {
-						listener.propertyChange(new PropertyChangeEvent(canvas, QueryPen.PROPERTY_JOIN_ADDED, null, join.getModel()));
+						listener.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
 					}
 					leftText = null;
 					rightText = null;

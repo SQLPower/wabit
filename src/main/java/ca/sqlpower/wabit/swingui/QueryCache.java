@@ -49,7 +49,6 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
  * This class will cache all of the parts of a select
@@ -327,73 +326,7 @@ public class QueryCache {
 	
 	private PropertyChangeListener joinChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_ADDED)) {
-				SQLJoin join = (SQLJoin) e.getNewValue();
-				Item leftColumn = join.getLeftColumn();
-				Item rightColumn = join.getRightColumn();
-				Container leftContainer = leftColumn.getParent().getParent();
-				Container rightContainer = rightColumn.getParent().getParent();
-				if (joinMapping.get(leftContainer) == null) {
-					List<SQLJoin> joinList = new ArrayList<SQLJoin>();
-					joinList.add(join);
-					joinMapping.put(leftContainer, joinList);
-				} else {
-					if (joinMapping.get(leftContainer).size() > 0) {
-						SQLJoin prevJoin = joinMapping.get(leftContainer).get(0);
-						if (prevJoin.getLeftColumn().getParent().getParent() == leftContainer) {
-							join.setLeftColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
-						} else if (prevJoin.getRightColumn().getParent().getParent() == leftContainer) {
-							join.setLeftColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
-						}
-					}
-						
-					joinMapping.get(leftContainer).add(join);
-				}
-
-				if (joinMapping.get(rightContainer) == null) {
-					List<SQLJoin> joinList = new ArrayList<SQLJoin>();
-					joinList.add(join);
-					joinMapping.put(rightContainer, joinList);
-				} else {
-					if (joinMapping.get(rightContainer).size() > 0) {
-						SQLJoin prevJoin = joinMapping.get(rightContainer).get(0);
-						if (prevJoin.getLeftColumn().getParent().getParent() == rightContainer) {
-							join.setRightColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
-						} else if (prevJoin.getRightColumn().getParent().getParent() == rightContainer) {
-							join.setRightColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
-						} else {
-							throw new IllegalStateException("A table contains a join that is not connected to any of its columns in the table.");
-						}
-					}
-					joinMapping.get(rightContainer).add(join);
-				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
-				}
-			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_JOIN_REMOVED)) {
-				SQLJoin joinLine = (SQLJoin) e.getOldValue();
-				Item leftColumn = joinLine.getLeftColumn();
-				Item rightColumn = joinLine.getRightColumn();
-
-				List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParent().getParent());
-				for (SQLJoin join : leftJoinList) {
-					if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
-						leftJoinList.remove(join);
-						break;
-					}
-				}
-
-				List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getParent().getParent());
-				for (SQLJoin join : rightJoinList) {
-					if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
-						rightJoinList.remove(join);
-						break;
-					}
-				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
-				}
-			} else if (e.getPropertyName().equals(SQLJoin.LEFT_JOIN_CHANGED)) {
+			if (e.getPropertyName().equals(SQLJoin.LEFT_JOIN_CHANGED)) {
 				logger.debug("Got left join changed.");
 				SQLJoin changedJoin = (SQLJoin) e.getSource();
 				Container leftJoinContainer = changedJoin.getLeftColumn().getParent().getParent();
@@ -419,38 +352,17 @@ public class QueryCache {
 					}
 				}
 			}
-		}
-	};
-	
-	private PropertyChangeListener fromChangeListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_ADDED)) {
-				fromTableList.add((Container)evt.getNewValue());
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
-				}
-			} else if (evt.getPropertyName().equals(QueryPen.PROPERTY_TABLE_REMOVED)) {
-				Container table = (Container)evt.getOldValue();
-				fromTableList.remove(table);
-				tableAliasMap.remove(table);
-				for (Section section : table.getSections()) {
-					for (Item col : section.getItems()) {
-						whereMapping.remove(col);
-						removeColumnSelection(col);
-					}
-				}
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
-				}
+			for (ChangeListener l : queryChangeListeners) {
+				l.stateChanged(new ChangeEvent(QueryCache.this));
 			}
 		}
 	};
 	
-	private PropertyChangeListener whereListener = new PropertyChangeListener() {
+	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Item.PROPERTY_WHERE)) {
 				Item item = (Item) e.getSource();
-				if (e.getNewValue() != null && ((String)e.getNewValue()).length() > 0) {
+				if (e.getNewValue() != null && ((String)e.getNewValue()).trim().length() > 0) {
 					whereMapping.put(item, (String)e.getNewValue());
 				} else {
 					whereMapping.remove(item);
@@ -458,11 +370,8 @@ public class QueryCache {
 				for (ChangeListener l : queryChangeListeners) {
 					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
-			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_WHERE_MODIFIED)) {
-				globalWhereClause = (String)e.getNewValue();
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
-				}
+			} else if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
+				setGlobalWhereClause((String)e.getNewValue());
 			}
 		}
 	};
@@ -539,21 +448,6 @@ public class QueryCache {
 	};
 	
 	/**
-	 * Listens to items being removed from their parent containers so the items
-	 * will also be removed from any lists in the cache.
-	 */
-	private final PropertyChangeListener removedItemListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals(Item.PROPERTY_ITEM_REMOVED)) {
-				Item item = (Item)evt.getOldValue();
-				logger.debug("Item name is " + item.getName());
-				removeColumnSelection(item);
-				whereMapping.remove(item);
-			}
-		}
-	};
-	
-	/**
 	 * This is the current cell renderer we are listening on for group by 
 	 * and having values.
 	 */
@@ -564,7 +458,7 @@ public class QueryCache {
 	 */
 	private final List<ChangeListener> queryChangeListeners;
 	
-	public QueryCache(QueryPen pen) {
+	public QueryCache() {
 		tableAliasMap = new HashMap<Container, String>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		orderByList = new ArrayList<Item>();
@@ -577,22 +471,6 @@ public class QueryCache {
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		groupByList = new ArrayList<Item>();
 		havingMap = new HashMap<Item, String>();
-		
-		pen.addQueryListener(aliasListener);
-		pen.addQueryListener(selectedColumnListener);
-		pen.addQueryListener(fromChangeListener);
-		pen.addQueryListener(joinChangeListener);
-		pen.addQueryListener(whereListener);
-		pen.addQueryListener(tableAliasListener);
-		pen.addQueryListener(removedItemListener);
-		pen.addQueryListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				for (ChangeListener l : queryChangeListeners) {
-					l.stateChanged(new ChangeEvent(QueryCache.this));
-				}
-			}
-		});
-		
 	}
 	
 	/**
@@ -981,6 +859,138 @@ public class QueryCache {
 		for (ChangeListener l : queryChangeListeners) {
 			l.stateChanged(new ChangeEvent(QueryCache.this));
 		}
+	}
+	
+	void removeTable(Container table) {
+		fromTableList.remove(table);
+		tableAliasMap.remove(table);
+		table.removeChangeListener(tableAliasListener);
+		for (Section section : table.getSections()) {
+			for (Item col : section.getItems()) {
+				removeItem(col);
+			}
+		}
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+
+	void addTable(Container container) {
+		fromTableList.add(container);
+		container.addChangeListener(tableAliasListener);
+		for (Section section : container.getSections()) {
+			for (Item col : section.getItems()) {
+				addItem(col);
+			}
+		}
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+	
+	/**
+	 * This setter will fire a property change event.
+	 */
+	public void setGlobalWhereClause(String whereClause) {
+		globalWhereClause = whereClause;
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+	
+	public void removeJoin(SQLJoin joinLine) {
+		joinLine.removeJoinChangeListener(joinChangeListener);
+		Item leftColumn = joinLine.getLeftColumn();
+		Item rightColumn = joinLine.getRightColumn();
+
+		List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParent().getParent());
+		for (SQLJoin join : leftJoinList) {
+			if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
+				leftJoinList.remove(join);
+				break;
+			}
+		}
+
+		List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getParent().getParent());
+		for (SQLJoin join : rightJoinList) {
+			if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
+				rightJoinList.remove(join);
+				break;
+			}
+		}
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+
+	public void addJoin(SQLJoin join) {
+		join.addJoinChangeListener(joinChangeListener);
+		Item leftColumn = join.getLeftColumn();
+		Item rightColumn = join.getRightColumn();
+		Container leftContainer = leftColumn.getParent().getParent();
+		Container rightContainer = rightColumn.getParent().getParent();
+		if (joinMapping.get(leftContainer) == null) {
+			List<SQLJoin> joinList = new ArrayList<SQLJoin>();
+			joinList.add(join);
+			joinMapping.put(leftContainer, joinList);
+		} else {
+			if (joinMapping.get(leftContainer).size() > 0) {
+				SQLJoin prevJoin = joinMapping.get(leftContainer).get(0);
+				if (prevJoin.getLeftColumn().getParent().getParent() == leftContainer) {
+					join.setLeftColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
+				} else if (prevJoin.getRightColumn().getParent().getParent() == leftContainer) {
+					join.setLeftColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
+				}
+			}
+				
+			joinMapping.get(leftContainer).add(join);
+		}
+
+		if (joinMapping.get(rightContainer) == null) {
+			List<SQLJoin> joinList = new ArrayList<SQLJoin>();
+			joinList.add(join);
+			joinMapping.put(rightContainer, joinList);
+		} else {
+			if (joinMapping.get(rightContainer).size() > 0) {
+				SQLJoin prevJoin = joinMapping.get(rightContainer).get(0);
+				if (prevJoin.getLeftColumn().getParent().getParent() == rightContainer) {
+					join.setRightColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
+				} else if (prevJoin.getRightColumn().getParent().getParent() == rightContainer) {
+					join.setRightColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
+				} else {
+					throw new IllegalStateException("A table contains a join that is not connected to any of its columns in the table.");
+				}
+			}
+			joinMapping.get(rightContainer).add(join);
+		}
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+	
+	/**
+	 * This removes the item from all lists it could be
+	 * contained in as well as disconnect its listeners.
+	 */
+	public void removeItem(Item col) {
+		logger.debug("Item name is " + col.getName());
+		whereMapping.remove(col);
+		col.removeChangeListener(aliasListener);
+		col.removeChangeListener(selectedColumnListener);
+		col.removeChangeListener(whereListener);
+		removeColumnSelection(col);
+		for (ChangeListener l : queryChangeListeners) {
+			l.stateChanged(new ChangeEvent(QueryCache.this));
+		}
+	}
+	
+	/**
+	 * This adds the appropriate listeners to the new Item.
+	 */
+	public void addItem(Item col) {
+		col.addChangeListener(aliasListener);
+		col.addChangeListener(selectedColumnListener);
+		col.addChangeListener(whereListener);
 	}
 
 	Map<Item, String> getAliasList() {

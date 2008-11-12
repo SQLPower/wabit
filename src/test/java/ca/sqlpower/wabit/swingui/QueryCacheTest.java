@@ -20,18 +20,15 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 public class QueryCacheTest extends TestCase {
 	
 	private QueryCache queryCache;
-	private QueryPen pen;
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		pen = new QueryPen(new StubWabitSwingSession());
-		queryCache = new QueryCache(pen);
+		queryCache = new QueryCache();
 	}
 	
 	public void testSelectListener() throws Exception {

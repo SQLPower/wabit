@@ -113,7 +113,7 @@ public class ConstantPNode extends PNode {
 			private boolean isEditing = false;
 			public void editingStopping() {
 				if (isEditing) {
-					if (aliasText.getEditorPane().getText().length() <= 0) {
+					if (aliasText.getEditorPane().getText().trim().length() <= 0) {
 						aliasText.getEditorPane().setText(LONG_EMPTY_STRING);
 						aliasText.syncWithDocument();
 					}
@@ -134,7 +134,7 @@ public class ConstantPNode extends PNode {
 			private boolean isEditing = false;
 			public void editingStopping() {
 				if (isEditing) {
-					if (whereText.getEditorPane().getText().length() <= 0) {
+					if (whereText.getEditorPane().getText().trim().length() <= 0) {
 						whereText.getEditorPane().setText(LONG_EMPTY_STRING);
 						whereText.syncWithDocument();
 					}

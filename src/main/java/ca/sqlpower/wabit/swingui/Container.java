@@ -35,6 +35,9 @@ public interface Container {
 	public static final String CONTAINTER_ALIAS_CHANGED = "CONTAINER_ALIAS_CHANGED";
 	public static final String CONTAINTER_ITEM_ADDED = "CONTAINER_ITEM_ADDED";
 	public static final String CONTAINER_ITEM_REMOVED = "CONTAINER_ITEM_REMOVED";
+	public static final String PROPERTY_TABLE_ADDED = "TABLE_ADDED";
+	public static final String PROPERTY_TABLE_REMOVED = "TABLE_REMOVED";
+	public static final String PROPERTY_WHERE_MODIFIED = "WHERE_MODIFIED";
 	
 	/**
 	 * Gets all of the sections of the contained object.

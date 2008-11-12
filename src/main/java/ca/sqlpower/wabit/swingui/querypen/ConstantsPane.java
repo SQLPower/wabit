@@ -123,6 +123,9 @@ public class ConstantsPane extends PNode {
 				ConstantsPane.this.addChild(newConstantNode);
 				repositionAndResize();
 			}
+			for (PropertyChangeListener l : changeListeners) {
+				l.propertyChange(evt);
+			}
 		}
 	};
 

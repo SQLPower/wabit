@@ -64,6 +64,8 @@ import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
+import ca.sqlpower.wabit.swingui.Container;
+import ca.sqlpower.wabit.swingui.SQLJoin;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
@@ -81,16 +83,6 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 public class QueryPen implements MouseState {
 	
 	private static Logger logger = Logger.getLogger(QueryPen.class);
-	
-	public static final String PROPERTY_TABLE_ADDED = "TABLE_ADDED";
-	
-	public static final String PROPERTY_TABLE_REMOVED = "TABLE_REMOVED";
-	
-	public static final String PROPERTY_WHERE_MODIFIED = "WHERE_MODIFIED";
-	
-	public static final String PROPERTY_JOIN_ADDED = "JOIN_ADDED";
-	
-	public static final String PROPERTY_JOIN_REMOVED = "JOIN_REMOVED";
 	
 	private static final Color SELECTION_COLOUR = new Color(0xcc333333);
 	
@@ -195,7 +187,7 @@ public class QueryPen implements MouseState {
 					}
 
 					topLayer.addChild(pane);
-					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_ADDED, null, pane.getModel()));
+					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_ADDED, null, pane.getModel()));
 					for (UnmodifiableItemPNode itemNode : pane.getContainedItems()) {
 						itemNode.setInSelected(true);
 					}
@@ -216,7 +208,7 @@ public class QueryPen implements MouseState {
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
-											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join.getModel()));
+											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
 										}
 									} else {
 										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
@@ -236,7 +228,7 @@ public class QueryPen implements MouseState {
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
-											l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_ADDED, null, join.getModel()));
+											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
 										}
 									} else {
 										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
@@ -361,7 +353,7 @@ public class QueryPen implements MouseState {
 						}
 						pane.removeQueryChangeListener(queryChangeListener);
 						
-						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_TABLE_REMOVED, pane.getModel(), null));
+						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_REMOVED, pane.getModel(), null));
 					}
 				}
 				if (pickedNode.getParent() == joinLayer) {
@@ -378,7 +370,7 @@ public class QueryPen implements MouseState {
 		pickedNode.disconnectJoin();
 		joinLayer.removeChild(pickedNode);
 		for (PropertyChangeListener l : queryListeners) {
-			l.propertyChange(new PropertyChangeEvent(canvas, PROPERTY_JOIN_REMOVED, pickedNode.getModel(), null));
+			l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_REMOVED, pickedNode.getModel(), null));
 		}
 	}
 	
@@ -525,7 +517,7 @@ public class QueryPen implements MouseState {
 		globalWhereText = new JTextField();
 		globalWhereText.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {
-				queryChangeListener.propertyChange(new PropertyChangeEvent(globalWhereText, PROPERTY_WHERE_MODIFIED, globalWhereText.getText(), globalWhereText.getText()));
+				queryChangeListener.propertyChange(new PropertyChangeEvent(globalWhereText, Container.PROPERTY_WHERE_MODIFIED, globalWhereText.getText(), globalWhereText.getText()));
 			}
 			public void focusGained(FocusEvent e) {
 				//do nothing
@@ -537,7 +529,7 @@ public class QueryPen implements MouseState {
 			}
 			public void keyReleased(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					queryChangeListener.propertyChange(new PropertyChangeEvent(globalWhereText, PROPERTY_WHERE_MODIFIED, globalWhereText.getText(), globalWhereText.getText()));
+					queryChangeListener.propertyChange(new PropertyChangeEvent(globalWhereText, Container.PROPERTY_WHERE_MODIFIED, globalWhereText.getText(), globalWhereText.getText()));
 				}
 			}
 			public void keyPressed(KeyEvent e) {
