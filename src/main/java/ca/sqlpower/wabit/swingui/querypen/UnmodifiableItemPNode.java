@@ -164,16 +164,6 @@ public class UnmodifiableItemPNode extends PNode {
 		
 	}
 	
-	public void setBackground(Color color){
-		
-		SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-		StyleConstants.setBackground(attributeSet, color);
-		DefaultStyledDocument doc = ((DefaultStyledDocument)columnText.getDocument());
-		doc.setCharacterAttributes(0, doc.getLength(), attributeSet, false);
-		columnText.repaint();
-		columnText.syncWithDocument();
-	}
-	
 	public void JoinTo(JoinLine line) {
 		joinedLines.add(line);
 		setIsJoined(true);
@@ -219,23 +209,26 @@ public class UnmodifiableItemPNode extends PNode {
 		columnText.addEditStyledTextListener(editingTextListener);
 		double textYTranslation = (swingCheckBox.getFullBounds().height - columnText.getFullBounds().height)/2;
 		columnText.translate(swingCheckBox.getFullBounds().width, textYTranslation);
-		columnText.addInputEventListener(new PBasicInputEventHandler() {
+		addInputEventListener(new PBasicInputEventHandler() {
 			
 			@Override
 			public void mouseEntered(PInputEvent event) {
 				if(mouseState.getMouseState().equals(MouseStates.CREATE_JOIN)) {
-					setBackground(Color.gray);		
+					setPaint(Color.GRAY);
+					repaint();	
 				}
 			}
 			
 			@Override
 			public void mouseExited(PInputEvent event) {
-					setBackground(Color.white);	
+				setPaint(Color.WHITE);
+				repaint();
 			}
 			
 			@Override
 			public void mouseClicked(PInputEvent event) {
-					setBackground(Color.white);	
+				setPaint(Color.WHITE);
+				repaint();	
 			}
 		});
 		
@@ -247,6 +240,8 @@ public class UnmodifiableItemPNode extends PNode {
 		addChild(whereText);
 
 		logger.debug("Pnode " + item.getName() + " created.");
+		setWidth(getFullBounds().getWidth());
+		setHeight(getFullBounds().getHeight());
 	}
 
 	public void setIsJoined(boolean joined) {
@@ -299,6 +294,8 @@ public class UnmodifiableItemPNode extends PNode {
 	public void positionWhere(double xpos) {
 		logger.debug("Moving where text: xpos = " + xpos + ", text x position = " + whereText.getFullBounds().getX() + " x offset " + whereText.getXOffset());
 		whereText.translate(xpos - whereText.getXOffset(), 0);
+		setWidth(getFullBounds().getWidth());
+		setHeight(getFullBounds().getHeight());
 	}
 
 }
