@@ -56,7 +56,7 @@ public class ConstantPNode extends PNode {
 
 	private EditablePStyledText aliasText;
 
-	private EditablePStyledText whereText;
+	private EditablePStyledTextWithOptionBox whereText;
 	
 	private final List<PropertyChangeListener> changeListeners;
 	
@@ -129,7 +129,7 @@ public class ConstantPNode extends PNode {
 		aliasText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + 2 * SPACING_SIZE, yPos);
 		addChild(aliasText);
 		
-		whereText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
+		whereText = new EditablePStyledTextWithOptionBox(LONG_EMPTY_STRING, mouseStates, canvas);
 		whereText.addEditStyledTextListener(new EditStyledTextListener() {
 			private boolean isEditing = false;
 			public void editingStopping() {
