@@ -111,7 +111,7 @@ public class JoinLine extends PNode {
 	private final PPath textCircle;
 	
 	private static final String[] optionSigns = 
-		new String[]{" < ", " > ", " = ", " <> ", " >= ", " <= ", "BETWEEN", "LIKE", " IN ", "NOT"};
+		new String[]{"<", ">", "=", "<>", ">=", "<=", "BETWEEN", "LIKE", "IN", "NOT"};
 	/**
 	 * A box containing the optionSigns
 	 */
@@ -244,6 +244,7 @@ public class JoinLine extends PNode {
 						symbolText.setDocument(editorPane.getDocument());
 						canvas.getLayer().removeChild(optionBox);
 						updateLine();
+						model.setComparator(tempText.getText());
 				}
 			});
 			optionBox.addChild(tempText);

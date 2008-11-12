@@ -351,6 +351,10 @@ public class QueryCache {
 						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
 					}
 				}
+			} else if (e.getPropertyName().equals(SQLJoin.COMPARATOR_CHANGED)) {
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
 			}
 			for (ChangeListener l : queryChangeListeners) {
 				l.stateChanged(new ChangeEvent(QueryCache.this));

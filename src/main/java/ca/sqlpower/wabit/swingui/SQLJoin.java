@@ -48,6 +48,12 @@ public class SQLJoin {
 	public static final String RIGHT_JOIN_CHANGED = "RIGHT_JOIN_CHANGED";
 	
 	/**
+	 * This property indicates a change to the Comparable relation to the object
+	 * connected by the left part of this join. 
+	 */
+	public static final String COMPARATOR_CHANGED = "COMPARATOR_CHANGED";
+	
+	/**
 	 * The left column of this join.
 	 */
 	private final Item leftColumn;
@@ -75,6 +81,11 @@ public class SQLJoin {
 	 * Listeners listening for changes to the join.
 	 */
 	private final List<PropertyChangeListener> joinChangeListeners;
+	
+	/**
+	 * it is one of "<", ">", "=", "<>", ">=", "<=", "BETWEEN", "LIKE", "IN", "NOT".
+	 */
+	private String comparator;
 
 	public static final String PROPERTY_JOIN_REMOVED = "JOIN_REMOVED";
 
@@ -83,6 +94,7 @@ public class SQLJoin {
 	public SQLJoin(Item leftColumn, Item rightColumn) {
 		this.leftColumn = leftColumn;
 		this.rightColumn = rightColumn;
+		this.comparator = "=";
 		isLeftColumnOuterJoin = false;
 		isRightColumnOuterJoin = false;
 		joinChangeListeners = new ArrayList<PropertyChangeListener>();
@@ -104,7 +116,7 @@ public class SQLJoin {
 	 * @return
 	 */
 	public String getComparator() {
-		return "=";
+		return comparator;
 	}
 
 	public boolean isLeftColumnOuterJoin() {
@@ -117,6 +129,14 @@ public class SQLJoin {
 			for (PropertyChangeListener l : joinChangeListeners) {
 				l.propertyChange(new PropertyChangeEvent(this, LEFT_JOIN_CHANGED, !this.isLeftColumnOuterJoin, this.isLeftColumnOuterJoin));
 			}
+		}
+	}
+	
+	public void setComparator(String newComparator) {
+		String oldComparator = comparator;
+		comparator = newComparator;
+		for (PropertyChangeListener l : joinChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, COMPARATOR_CHANGED, oldComparator, newComparator));
 		}
 	}
 
