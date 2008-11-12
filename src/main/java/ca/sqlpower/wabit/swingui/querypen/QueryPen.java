@@ -537,6 +537,9 @@ public class QueryPen implements MouseState {
 			}
 		});
 	}
+	public PSelectionEventHandler getMultipleSelectEventHandler(){
+		return selectionEventHandler;
+	}
 	
 	public JScrollPane getScrollPane() {
 		return scrollPane;

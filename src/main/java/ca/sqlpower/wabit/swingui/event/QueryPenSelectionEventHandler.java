@@ -24,6 +24,7 @@ import java.util.List;
 
 import ca.sqlpower.wabit.swingui.querypen.ConstantsPane;
 import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
+import ca.sqlpower.wabit.swingui.querypen.EditablePStyledText;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PDimension;
@@ -56,10 +57,10 @@ public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 	@Override
 	protected void dragStandardSelection(PInputEvent e) {
 		// There was a press node, so drag selection
-	    PDimension d = e.getCanvasDelta();
-	    e.getTopCamera().localToView(d);
+		PDimension d = e.getCanvasDelta();
+		e.getTopCamera().localToView(d);
 
-	    PDimension gDist = new PDimension();
+		PDimension gDist = new PDimension();
 		Iterator<?> selectionEn = getSelection().iterator();
 		while (selectionEn.hasNext()) {
 			PNode node = (PNode) selectionEn.next();
@@ -70,6 +71,27 @@ public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 				node.offset(gDist.getWidth(), gDist.getHeight());
 			}
 		}	
+	}
+	/*
+	 * we need to override the startStandard Selection since it deselects everything when
+	 * you click on something other then the selected Items(such as its children)
+	 */
+	@Override
+	protected void startStandardSelection(PInputEvent pie) {
+		// Option indicator not down - clear selection, and start fresh
+		PNode pickedNode = pie.getPath().getPickedNode();
+		
+		if(pickedNode instanceof EditablePStyledText) {
+			pickedNode = pickedNode.getParent();
+		}
+		if (!(getSelection().contains(pickedNode) && (pickedNode instanceof ContainerPane
+				|| pickedNode instanceof ConstantsPane))) {
+			unselectAll();
+		}
+
+		if (isSelectable(pie.getPath().getPickedNode())) {
+			select(pie.getPath().getPickedNode());
+		}
 	}
 
 }

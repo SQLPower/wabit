@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.event.ActionEvent;
-import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -229,20 +228,17 @@ public class ContainerPane extends PNode {
 		modelNameText = new EditablePStyledText(model.getName(), pen, canvas);
 		modelNameText.addEditStyledTextListener(editingTextListener);
 		modelNameText.addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
-		addChild(modelNameText);
 		modelNameText.addInputEventListener(new PBasicInputEventHandler() {
-			private Point2D lastMousePosition;
-			@Override
-			public void mousePressed(PInputEvent event) {
-				lastMousePosition = event.getPosition();
-			}
 			
 			@Override
-			public void mouseDragged(PInputEvent event) {
-				ContainerPane.this.translate(event.getPosition().getX() - lastMousePosition.getX(), event.getPosition().getY() - lastMousePosition.getY());
-				lastMousePosition = event.getPosition();
-			}
-		});
+			public void mousePressed(PInputEvent event){
+				if(!mouseStates.getMultipleSelectEventHandler().isSelected(ContainerPane.this)){
+					mouseStates.getMultipleSelectEventHandler().unselectAll();
+				}
+				mouseStates.getMultipleSelectEventHandler().select(ContainerPane.this);
+			
+		}});
+		addChild(modelNameText);
 		
 		header = createColumnHeader();
 		header.translate(0, modelNameText.getHeight()+ BORDER_SIZE);
