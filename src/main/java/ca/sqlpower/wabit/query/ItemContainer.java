@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -27,9 +27,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.swingui.Container;
-import ca.sqlpower.wabit.swingui.Item;
-import ca.sqlpower.wabit.swingui.Section;
+import ca.sqlpower.wabit.swingui.querypen.MouseState;
 
 /**
  * This container is used to hold a generic list of items in

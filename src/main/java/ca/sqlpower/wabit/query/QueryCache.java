@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -37,7 +37,6 @@ import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 /**
  * This class will cache all of the parts of a select
@@ -696,10 +695,8 @@ public class QueryCache implements Query {
 	
 	/**
 	 * This method will change the selection of a column.
-	 * 
-	 * Package private for testing
 	 */
-	void selectionChanged(Item column, Boolean isSelected) {
+	public void selectionChanged(Item column, Boolean isSelected) {
 		if (isSelected.equals(true)) {
 			selectedColumns.add(column);
 			if (column.getAlias().length() > 0) {
@@ -726,10 +723,8 @@ public class QueryCache implements Query {
 	
 	/**
 	 * This method will change the alias on a column to the alias that is stored in the ItemPNode.
-	 * 
-	 * Package private for testing.
 	 */
-	void aliasChanged(Item column) {
+	public void aliasChanged(Item column) {
 		if (column.getAlias().length() > 0) {
 			aliasMap.put(column, column.getAlias());
 			logger.debug("Put " + column.getName() + " and " + column.getAlias() + " in the alias map.");
@@ -743,7 +738,7 @@ public class QueryCache implements Query {
 		}
 	}
 	
-	void removeTable(Container table) {
+	public void removeTable(Container table) {
 		fromTableList.remove(table);
 		tableAliasMap.remove(table);
 		table.removeChangeListener(tableAliasListener);
@@ -759,7 +754,7 @@ public class QueryCache implements Query {
 		}
 	}
 
-	void addTable(Container container) {
+	public void addTable(Container container) {
 		fromTableList.add(container);
 		container.addChangeListener(tableAliasListener);
 		for (Section section : container.getSections()) {
@@ -977,7 +972,7 @@ public class QueryCache implements Query {
 		queryBeforeEdit = "";
 	}
 
-	Map<Item, String> getAliasList() {
+	public Map<Item, String> getAliasList() {
 		return Collections.unmodifiableMap(aliasMap);
 	}
 
@@ -1001,7 +996,7 @@ public class QueryCache implements Query {
 		return havingMap;
 	}
 
-	protected Map<Item, OrderByArgument> getOrderByArgumentMap() {
+	public Map<Item, OrderByArgument> getOrderByArgumentMap() {
 		return orderByArgumentMap;
 	}
 

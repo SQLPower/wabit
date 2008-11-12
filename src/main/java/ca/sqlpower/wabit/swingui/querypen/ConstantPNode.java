@@ -30,7 +30,8 @@ import javax.swing.JCheckBox;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.StringItem;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.pswing.PSwing;

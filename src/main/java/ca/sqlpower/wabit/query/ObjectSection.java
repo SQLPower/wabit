@@ -17,15 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.query;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.wabit.swingui.Container;
-import ca.sqlpower.wabit.swingui.Item;
-import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * This is a default section that can contain any type of object wrapped in an

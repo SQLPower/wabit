@@ -68,6 +68,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.wabit.query.QueryCache;
 
 
 /**

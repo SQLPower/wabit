@@ -28,7 +28,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.CursorManager;
-import ca.sqlpower.wabit.swingui.SQLJoin;
+import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.swingui.querypen.ConstantPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;

@@ -17,15 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.sqlpower.wabit.swingui.Item;
-import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * This class stores generic strings, such as functions, constants and any other

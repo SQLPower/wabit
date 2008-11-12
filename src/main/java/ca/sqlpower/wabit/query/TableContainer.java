@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -26,9 +26,6 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.architect.SQLTable;
-import ca.sqlpower.wabit.swingui.Container;
-import ca.sqlpower.wabit.swingui.Item;
-import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * A model for the {@link ContainerPane}. This will store objects of a defined type and

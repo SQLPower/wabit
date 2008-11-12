@@ -38,7 +38,11 @@ import javax.swing.table.TableColumnModel;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.wabit.swingui.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.query.Container;
+import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.query.SQLJoin;
+import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**

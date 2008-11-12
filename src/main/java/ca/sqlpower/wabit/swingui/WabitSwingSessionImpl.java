@@ -99,10 +99,12 @@ import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
-import ca.sqlpower.wabit.swingui.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.query.StringItem;
+import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
-import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;

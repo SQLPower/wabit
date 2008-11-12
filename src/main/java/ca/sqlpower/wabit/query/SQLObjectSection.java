@@ -17,16 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.querypen;
+package ca.sqlpower.wabit.query;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLObject;
-import ca.sqlpower.wabit.swingui.Container;
-import ca.sqlpower.wabit.swingui.Item;
-import ca.sqlpower.wabit.swingui.Section;
 
 /**
  * This is a generic Section that contains a SQLObject as it's parent. 

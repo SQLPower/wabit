@@ -19,7 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.event;
 
-import ca.sqlpower.wabit.swingui.Item;
+import ca.sqlpower.wabit.query.Item;
 
 public class ContainerItemEvent {
 	

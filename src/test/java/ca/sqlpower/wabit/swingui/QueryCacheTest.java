@@ -20,7 +20,9 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
-import ca.sqlpower.wabit.swingui.querypen.StringItem;
+import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.query.StringItem;
 
 public class QueryCacheTest extends TestCase {
 	
