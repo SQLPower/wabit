@@ -323,6 +323,9 @@ public class QueryCache {
 						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
 					}
 				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
 			} else if (e.getPropertyName().equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
 				logger.debug("Got right join changed.");
 				SQLJoin changedJoin = (SQLJoin) e.getSource();
@@ -337,13 +340,13 @@ public class QueryCache {
 						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
 					}
 				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
+				}
 			} else if (e.getPropertyName().equals(SQLJoin.COMPARATOR_CHANGED)) {
 				for (ChangeListener l : queryChangeListeners) {
 					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
-			}
-			for (ChangeListener l : queryChangeListeners) {
-				l.stateChanged(new ChangeEvent(QueryCache.this));
 			}
 		}
 	};
