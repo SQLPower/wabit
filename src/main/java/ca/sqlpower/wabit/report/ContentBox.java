@@ -19,10 +19,16 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Collections;
+import java.util.List;
+
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
+
 /**
  * Represents a box on the page which has an absolute position and size.
  */
-public class ContentBox {
+public class ContentBox extends AbstractWabitObject {
 
     private int x;
     private int y;
@@ -79,6 +85,18 @@ public class ContentBox {
 
     public void setPage(Page page) {
         this.page = page;
+    }
+
+    public boolean allowsChildren() {
+        return false;
+    }
+
+    public int childPositionOffset(Class<? extends WabitObject> childType) {
+        throw new UnsupportedOperationException("Content boxes don't have children");
+    }
+
+    public List<WabitObject> getChildren() {
+        return Collections.emptyList();
     }
 
     

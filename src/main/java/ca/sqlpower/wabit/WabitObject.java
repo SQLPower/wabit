@@ -30,7 +30,7 @@ public interface WabitObject {
     void removePropertyChangeListener(PropertyChangeListener l);
     WabitObject getParent();
     void setParent(WabitObject parent);
-    List<WabitObject> getChildren();
+    List<? extends WabitObject> getChildren();
     boolean allowsChildren();
     
     /**

@@ -21,9 +21,14 @@ package ca.sqlpower.wabit.swingui.tree;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -31,11 +36,19 @@ import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
 /**
  * Provides a tree with the project at the root. The project contains data
@@ -60,18 +73,15 @@ public class ProjectTreeModel implements TreeModel {
     }
 
     public Object getChild(Object parent, int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return ((WabitObject) parent).getChildren().get(index);
     }
 
     public int getChildCount(Object parent) {
-        // TODO Auto-generated method stub
-        return 0;
+        return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
     }
 
     public int getIndexOfChild(Object parent, Object child) {
-        // TODO Auto-generated method stub
-        return 0;
+        return ((WabitObject) parent).getChildren().indexOf(child);
     }
 
     public boolean isLeaf(Object node) {
@@ -80,7 +90,7 @@ public class ProjectTreeModel implements TreeModel {
     }
 
     public void valueForPathChanged(TreePath path, Object newValue) {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Editing not currently supported");
     }
 
     // -------------- treeModel event source support -----------------
@@ -177,5 +187,44 @@ public class ProjectTreeModel implements TreeModel {
 	        }
 	        return new TreePath(path.toArray());
 	    }
+    }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    WabitProject p = new WabitProject();
+                    
+                    // Add data sources to project
+                    DataSourceCollection plini = new PlDotIni();
+                    plini.read(new File(System.getProperty("user.home"), "pl.ini"));
+                    List<SPDataSource> dataSources = plini.getConnections();
+                    for (int i = 0; i < 10 && i < dataSources.size(); i++) {
+                        p.addDataSource(new JDBCDataSource(dataSources.get(i)));
+                    }
+                    System.out.println("Added " + p.getDataSources().size() + " data sources to project");
+                    
+                    // TODO: Add queries to project
+                    
+                    // Add layouts to project
+                    Layout layout = new Layout();
+                    p.addLayout(layout);
+                    Page page = layout.getPage();
+                    page.addContentBox(new ContentBox());
+                    page.addContentBox(new ContentBox());
+                    
+                    // Show project tree in a frame
+                    ProjectTreeModel tm = new ProjectTreeModel(p);
+                    JTree tree = new JTree(tm);
+                    JFrame f = new JFrame("Tree!");
+                    f.setContentPane(new JScrollPane(tree));
+                    f.pack();
+                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    f.setVisible(true);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
     }
 }

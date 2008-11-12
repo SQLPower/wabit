@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.report.Layout;
@@ -68,6 +69,13 @@ public class WabitProject extends AbstractWabitObject {
     	} else {
     		return false;
     	}
+    }
+    
+    /**
+     * Returns an unmodifiable view of the data sources in this project.
+     */
+    public List<WabitDataSource> getDataSources() {
+        return Collections.unmodifiableList(dataSources);
     }
     
     public void addQuery(Query query) {

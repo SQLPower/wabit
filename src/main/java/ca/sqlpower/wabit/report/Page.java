@@ -21,7 +21,11 @@ package ca.sqlpower.wabit.report;
 
 import java.awt.FontMetrics;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
 
 /**
  * A page is an arrangement of boxes and guides (usually page margins) on a
@@ -31,7 +35,7 @@ import java.util.List;
  * more pages--the content renderers specify whether or not they need another
  * page to finish rendering their data.
  */
-public class Page {
+public class Page extends AbstractWabitObject {
 
     /**
      * This is the Graphics2D standard for pixels-to-inches conversions.
@@ -214,5 +218,26 @@ public class Page {
         }
         contentBoxes.remove(removeme);
         removeme.setPage(null);
+    }
+
+    public boolean allowsChildren() {
+        return true;
+    }
+
+    public int childPositionOffset(Class<? extends WabitObject> childType) {
+        if (childType == ContentBox.class) {
+            return 0;
+        } else {
+            throw new IllegalArgumentException("Pages don't have children of type " + childType);
+        }
+    }
+
+    /**
+     * Returns an unmodifiable view of this page's boxes.
+     * <p>
+     * TODO: include guides as well as boxes.
+     */
+    public List<ContentBox> getChildren() {
+        return Collections.unmodifiableList(contentBoxes);
     }
 }

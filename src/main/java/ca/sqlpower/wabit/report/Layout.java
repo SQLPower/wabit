@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.report;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,10 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
     
     /**
      * The page size and margin info.
+     * <p>
+     * TODO: In future versions, a Layout can have many pages so you can accomplish
+     * left and right masters, cover pages, and so on. For now, a Layout can only
+     * have one arrangement of page content, and this is it.
      */
     private Page page = new Page(StandardPageSizes.US_LETTER);
     
@@ -96,16 +101,19 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        // TODO Auto-generated method stub
-        return 0;
+        if (childType == Page.class) {
+            return 0;
+        } else {
+            throw new IllegalArgumentException("Layouts don't have children of type " + childType);
+        }
     }
 
-    public List<WabitObject> getChildren() {
-        // TODO Auto-generated method stub
-        return null;
+    public List<Page> getChildren() {
+        return Collections.singletonList(page);
     }
     
     public boolean allowsChildren() {
     	return true;
     }
+
 }

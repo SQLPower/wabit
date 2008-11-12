@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.sql.SPDataSource;
@@ -35,15 +36,19 @@ public class JDBCDataSource extends AbstractWabitObject implements WabitDataSour
 	 */
 	private SPDataSource dataSource;
 
+	public JDBCDataSource(SPDataSource ds) {
+	    this.dataSource = ds;
+	}
+	
 	public boolean allowsChildren() {
-		return true;
+		return false;
 	}
 
 	public int childPositionOffset(Class<? extends WabitObject> childType) {
-		return 0;
+		throw new UnsupportedOperationException("This object doesn't have children at all");
 	}
 
 	public List<WabitObject> getChildren() {
-		return null;
+		return Collections.emptyList();
 	}
 }
