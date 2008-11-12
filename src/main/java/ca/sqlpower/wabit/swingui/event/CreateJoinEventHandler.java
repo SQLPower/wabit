@@ -86,9 +86,11 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					leftText = (UnmodifiableItemPNode)pick;
 				} else if (rightText == null) {
 					rightText = (UnmodifiableItemPNode)pick;
-					if(leftText == rightText) {
+					if(leftText.getParent() == rightText.getParent()) {
+						JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(canvas), "You cannot join to your own Table.");
 						leftText = null;
 						rightText = null;
+						cursorManager.placeModeFinished();
 						mouseStatePane.setMouseState(MouseStates.READY);
 						return;
 					}
