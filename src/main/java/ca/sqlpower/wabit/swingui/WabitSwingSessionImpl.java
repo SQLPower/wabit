@@ -100,6 +100,7 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.swingui.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
+import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -295,8 +296,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	groupingCheckBox.addActionListener(new AbstractAction() {
 
     		public void actionPerformed(ActionEvent e) {
+    			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
+    			if (groupingCheckBox.isSelected()) {
+    				for (Item item :queryCache.getSelectedColumns()) {
+    					if (item instanceof StringItem) {
+    						queryCache.setGrouping(item, SQLGroupFunction.COUNT.toString());
+    					}
+    				}
+    			}
     			executeQueryInCache();
-    			addGroupingTableHeaders();
     		}
     	});
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, max(pref;80dlu)"
@@ -523,6 +531,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * This will add a {@link ComponentCellRenderer} to the table headers
 	 * to allow grouping when the grouping checkbox is checked. This will
 	 * need to be called each time the tables are recreated.
+	 * 
+	 * @param initialDisplay If true this header will be displayed with default values for the
+	 * headers. If false it will display the header with only what is defined in the QueryCache.
 	 */
 	private void addGroupingTableHeaders() {
 		//XXX The group by and having clauses should be allowed
@@ -594,7 +605,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				renderPanel.setSortingStatus(columnSortMap);
 				
 			}
-			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
 		}
 	}
 	

@@ -49,6 +49,7 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 /**
  * This class will cache all of the parts of a select
@@ -218,22 +219,7 @@ public class QueryCache {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
 				Item column = selectedColumns.get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
-				if (e.getNewValue().equals(GROUP_BY)) {
-					if (groupByList.contains(column)) {
-						return;
-					}
-					groupByList.add(column);
-					groupByAggregateMap.remove(column);
-					logger.debug("Added " + column.getName() + " to group by list.");
-				} else {
-					String newValue = (String)e.getNewValue();
-					if (SQLGroupFunction.valueOf(newValue).equals(groupByAggregateMap.get(column))) {
-						return;
-					}
-					groupByAggregateMap.put(column, SQLGroupFunction.valueOf(newValue));
-					groupByList.remove(column);
-					logger.debug("Added " + column.getName() + " with aggregate " + newValue + " to aggregate group by map.");
-				}
+				setGrouping(column, (String)e.getNewValue());
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				int indexOfTextField = cellRenderer.getTextFields().indexOf((JTextField)e.getSource());
 				if (indexOfTextField < 0) {
@@ -515,7 +501,9 @@ public class QueryCache {
 		logger.debug("Setting grouping enabled to " + enabled);
 		if (!groupingEnabled && enabled) {
 			for (Item col : selectedColumns) {
-				groupByList.add(col);
+				if (!groupByAggregateMap.containsKey(col)) {
+					groupByList.add(col);
+				}
 			}
 		} else if (!enabled) {
 			groupByList.clear();
@@ -739,6 +727,9 @@ public class QueryCache {
 			query.append("\nORDER BY");
 			boolean isFirstOrder = true;
 			for (Item col : orderByList) {
+				if (col instanceof StringItem) {
+					continue;
+				}
 				if (isFirstOrder) {
 					query.append(" ");
 					isFirstOrder = false;
@@ -836,7 +827,11 @@ public class QueryCache {
 				aliasMap.put(column, column.getAlias());
 			}
 			if (groupingEnabled) {
-				groupByList.add(column);
+				if (column instanceof StringItem) {
+					groupByAggregateMap.put(column, SQLGroupFunction.COUNT);
+				} else {
+					groupByList.add(column);
+				}
 			}
 			logger.debug("Added " + column.getName() + " to the column list");
 		} else if (isSelected.equals(false)) {
@@ -995,6 +990,28 @@ public class QueryCache {
 		col.addChangeListener(aliasListener);
 		col.addChangeListener(selectedColumnListener);
 		col.addChangeListener(whereListener);
+	}
+	
+	/**
+	 * This aggregate is either the toString of a SQLGroupFunction or the
+	 * string GROUP_BY defined in this class.
+	 */
+	public void setGrouping(Item column, String groupByAggregate) {
+		if (groupByAggregate.equals(GROUP_BY)) {
+			if (groupByList.contains(column)) {
+				return;
+			}
+			groupByList.add(column);
+			groupByAggregateMap.remove(column);
+			logger.debug("Added " + column.getName() + " to group by list.");
+		} else {
+			if (SQLGroupFunction.valueOf(groupByAggregate).equals(groupByAggregateMap.get(column))) {
+				return;
+			}
+			groupByAggregateMap.put(column, SQLGroupFunction.valueOf(groupByAggregate));
+			groupByList.remove(column);
+			logger.debug("Added " + column.getName() + " with aggregate " + groupByAggregate + " to aggregate group by map.");
+		}
 	}
 
 	Map<Item, String> getAliasList() {
