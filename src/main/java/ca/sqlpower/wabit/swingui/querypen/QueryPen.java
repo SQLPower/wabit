@@ -446,7 +446,7 @@ public class QueryPen implements MouseState {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
-        constantsContainer = new ConstantsPane(this, canvas, new ItemContainer("CONSTANTS", this, canvas));
+        constantsContainer = new ConstantsPane(this, canvas, new ItemContainer("CONSTANTS", this));
         constantsContainer.addChangeListener(queryChangeListener);
         topLayer.addChild(constantsContainer);
         

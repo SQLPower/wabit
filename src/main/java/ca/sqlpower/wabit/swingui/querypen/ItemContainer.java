@@ -30,7 +30,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.swingui.Container;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
-import edu.umd.cs.piccolo.PCanvas;
 
 /**
  * This container is used to hold a generic list of items in
@@ -58,7 +57,7 @@ public class ItemContainer implements Container {
 	 */
 	private final List<PropertyChangeListener> modelListeners;
 	
-	public ItemContainer(String name, MouseState mouseState, PCanvas canvas) {
+	public ItemContainer(String name, MouseState mouseState) {
 		this.name = name;
 		modelListeners = new ArrayList<PropertyChangeListener>();
 		section = new ObjectSection();
