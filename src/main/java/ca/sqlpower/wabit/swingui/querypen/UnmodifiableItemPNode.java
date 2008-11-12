@@ -29,7 +29,7 @@ import edu.umd.cs.piccolox.pswing.PSwing;
 /**
  * This PNode represents a SQL column on a table.
  */
-public class UnmodifiableItemPNode extends PNode implements ItemPNode {
+public class UnmodifiableItemPNode extends PNode {
 	
 	private static final Logger logger = Logger.getLogger(UnmodifiableItemPNode.class);
 
@@ -60,11 +60,6 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 	 * The text area storing the where clause for a given item.
 	 */
 	private final EditablePStyledTextWithOptionBox whereText;
-	
-	/**
-	 * The user defined alias for this sql column.
-	 */
-	private String aliasText;
 	
 	/**
 	 * Tracks if the item is in the select portion of a select
@@ -99,57 +94,55 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 		private boolean editing = false;
 		
 		public void editingStopping() {
-			String oldAlias = aliasText;
+			String alias = item.getAlias();
 			if (editing) {
 				JEditorPane nameEditor = columnText.getEditorPane();
-				aliasText = nameEditor.getText();
+				alias = nameEditor.getText();
 				if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(item.getName())) {
-					nameEditor.setText(aliasText + " (" + item.getName() + ")");
+					nameEditor.setText(alias + " (" + item.getName() + ")");
 				} else {
 					logger.debug("item name is " + item.getName());
 					nameEditor.setText(item.getName());
-					aliasText = "";
+					alias = "";
 				}
-				logger.debug("editor has text " + nameEditor.getText() + " alias is " + aliasText);
+				logger.debug("editor has text " + nameEditor.getText() + " alias is " + alias);
 				columnText.syncWithDocument();
 			}
 			if(isJoined) {
 				highLightText();
 			}
 			editing = false;
-			if (!aliasText.equals(oldAlias)) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(UnmodifiableItemPNode.this, PROPERTY_ALIAS, oldAlias, aliasText));
-				}
-			}
+			item.setAlias(alias);
 		}
 		
 		public void editingStarting() {
 			editing = true;
-			if (aliasText != null && aliasText.length() > 0) {
-				columnText.getEditorPane().setText(aliasText);
-				logger.debug("Setting editor text to " + aliasText);
+			if (item.getAlias() != null && item.getAlias().length() > 0) {
+				columnText.getEditorPane().setText(item.getAlias());
+				logger.debug("Setting editor text to " + item.getAlias());
 			}
 		}
 	};
 	
 	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
-		private String oldWhere;
 		public void editingStopping() {
 			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
 				whereText.getEditorPane().setText(WHERE_START_TEXT);
 				whereText.syncWithDocument();
 			}
-			if (!getWhereText().equals(oldWhere)) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(UnmodifiableItemPNode.this, PROPERTY_WHERE, oldWhere, getWhereText()));
-				}
-			}
+			item.setWhere(getWhereText());
 		}
 		public void editingStarting() {
-			oldWhere = getWhereText();
 			if (whereText.getEditorPane().getText().equals(WHERE_START_TEXT)) {
 				whereText.getEditorPane().setText("");
+			}
+		}
+	};
+	
+	private PropertyChangeListener itemChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			for (PropertyChangeListener l : queryChangeListeners) {
+				l.propertyChange(evt);
 			}
 		}
 	};
@@ -204,9 +197,9 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 	private PSwing swingCheckBox;
 	private final QueryPen mouseState;
 
-	public UnmodifiableItemPNode(QueryPen mouseStates, PCanvas canvas, Item item) {
-		this.item = item;
-		aliasText = "";
+	public UnmodifiableItemPNode(QueryPen mouseStates, PCanvas canvas, Item i) {
+		this.item = i;
+		item.addChangeListener(itemChangeListener);
 		mouseState = mouseStates;
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		joinedLines = new ArrayList<JoinLine>();
@@ -218,9 +211,7 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 		isInSelectCheckBox.addActionListener(new ActionListener() {
 		
 			public void actionPerformed(ActionEvent e) {
-				for (PropertyChangeListener l : queryChangeListeners) {
-					l.propertyChange(new PropertyChangeEvent(UnmodifiableItemPNode.this, PROPERTY_SELECTED, !isInSelectCheckBox.isSelected(), isInSelectCheckBox.isSelected()));
-				}
+				item.setSelected(isInSelectCheckBox.isSelected());
 			}
 		});
 		
@@ -286,21 +277,11 @@ public class UnmodifiableItemPNode extends PNode implements ItemPNode {
 	
 	public void setInSelected(boolean selected) {
 		isInSelectCheckBox.setSelected(selected);
-		for (PropertyChangeListener l : queryChangeListeners) {
-			l.propertyChange(new PropertyChangeEvent(UnmodifiableItemPNode.this, PROPERTY_SELECTED, !isInSelectCheckBox.isSelected(), isInSelectCheckBox.isSelected()));
-		}
+		item.setSelected(selected);
 	}
 	
 	public boolean isInSelect() {
 		return isInSelectCheckBox.isSelected();
-	}
-	
-	public String getAlias() {
-		return aliasText;
-	}
-	
-	public void setAlias(String newAlias) {
-		aliasText = newAlias;
 	}
 	
 	public void addQueryChangeListener(PropertyChangeListener l) {

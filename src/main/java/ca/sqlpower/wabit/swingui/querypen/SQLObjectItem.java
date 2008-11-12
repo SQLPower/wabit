@@ -19,6 +19,11 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+
 import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.wabit.swingui.Item;
 import ca.sqlpower.wabit.swingui.Section;
@@ -33,9 +38,19 @@ public class SQLObjectItem implements Item {
 	private String alias;
 	
 	private Section parent;
+	
+	private final List<PropertyChangeListener> changeListeners;
+
+	private boolean selected;
+
+	private String where;
 
 	public SQLObjectItem(SQLObject object) {
 		sqlObject = object;
+		this.alias = "";
+		this.where = "";
+		this.selected = false;
+		changeListeners = new ArrayList<PropertyChangeListener>();
 	}
 	
 	public String getName() {
@@ -51,7 +66,14 @@ public class SQLObjectItem implements Item {
 	}
 	
 	public void setAlias(String alias) {
+		String oldAlias = this.alias;
+		if(alias.equals(oldAlias)) {
+			return;
+		}
 		this.alias = alias;
+		for (PropertyChangeListener l : changeListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, PROPERTY_ALIAS, oldAlias, alias));
+		}
 	}
 	
 	public Section getParent() {
@@ -60,6 +82,44 @@ public class SQLObjectItem implements Item {
 	
 	public void setParent(Section parent) {
 		this.parent = parent;
+	}
+
+	public void addChangeListener(PropertyChangeListener l) {
+		changeListeners.add(l);
+	}
+
+	public void removeChangeListener(PropertyChangeListener l) {
+		changeListeners.remove(l);
+	}
+
+	public String getWhere() {
+		return where;
+	}
+
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		boolean oldSelect = this.selected;
+		if (oldSelect == selected) {
+			return;
+		}
+		this.selected = selected;
+		for (PropertyChangeListener l : changeListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, PROPERTY_SELECTED, oldSelect, selected));
+		}
+	}
+
+	public void setWhere(String where) {
+		String oldWhere = this.where;
+		if (where.equals(oldWhere)) {
+			return;
+		}
+		this.where = where;
+		for (PropertyChangeListener l : changeListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, PROPERTY_WHERE, oldWhere, where));
+		}
 	}
 
 }

@@ -40,51 +40,13 @@ import edu.umd.cs.piccolox.pswing.PSwing;
  * {@link ConstantsPane}. A constant is allowed to be edited and can be removed
  * from the {@link ConstantsPane}.
  */
-public class ConstantPNode extends PNode implements ItemPNode {
+public class ConstantPNode extends PNode {
 	
 	private static final Logger logger = Logger.getLogger(ConstantPNode.class);
 	
 	private static final int SPACING_SIZE = 8;
 	private static final String LONG_EMPTY_STRING = "        ";
 	
-	/**
-	 * This listener simply trim the string of the styled text passed in
-	 * and sets the text to a long empty string when the user finishes editing
-	 * if they leave the text blank. The long empty string gives the user something
-	 * to click on to edit the field again.
-	 */
-	private class EmptyTextListener implements EditStyledTextListener {
-		
-		private final EditablePStyledText text;
-		private String oldText = "";
-		private final String propertyChangeConstant;
-		private boolean isEditing = false;
-		
-		public EmptyTextListener(EditablePStyledText text, String propertyChangeConstant) {
-			this.text = text;
-			this.propertyChangeConstant = propertyChangeConstant;
-			
-		}
-		
-		public void editingStopping() {
-			if (isEditing) {
-				if (text.getEditorPane().getText().length() <= 0) {
-					text.getEditorPane().setText(LONG_EMPTY_STRING);
-					text.syncWithDocument();
-				}
-				for (PropertyChangeListener listener : changeListeners) {
-					listener.propertyChange(new PropertyChangeEvent(ConstantPNode.this, propertyChangeConstant, oldText, text.getEditorPane().getText().trim()));
-				}
-			}
-			isEditing = false;
-		}
-		public void editingStarting() {
-			isEditing = true;
-			text.getEditorPane().setText(text.getEditorPane().getText().trim());
-			oldText = text.getEditorPane().getText();
-		}
-	}
-
 	/**
 	 * The item this PNode is displaying.
 	 */
@@ -103,23 +65,32 @@ public class ConstantPNode extends PNode implements ItemPNode {
 		public void editingStopping() {
 			if (constantText.getEditorPane().getText().length() <= 0) {
 				for (PropertyChangeListener l : changeListeners) {
-					l.propertyChange(new PropertyChangeEvent(ConstantPNode.this, ItemPNode.PROPERTY_ITEM_REMOVED, item, null));
+					l.propertyChange(new PropertyChangeEvent(ConstantPNode.this, Item.PROPERTY_ITEM_REMOVED, item, null));
 				}
 				item.getParent().getParent().removeItem(item);
 			} else if (item instanceof StringItem) {
 				((StringItem)item).setName(constantText.getEditorPane().getText());
 			}
 			for (PropertyChangeListener listener : changeListeners) {
-				listener.propertyChange(new PropertyChangeEvent(constantText, ItemPNode.PROPERTY_ITEM, oldText, constantText.getEditorPane().getText().trim()));
+				listener.propertyChange(new PropertyChangeEvent(constantText, Item.PROPERTY_ITEM, oldText, constantText.getEditorPane().getText().trim()));
 			}
 		}
 		public void editingStarting() {
 			oldText = constantText.getEditorPane().getText();
 		}
 	};
+	
+	private final PropertyChangeListener itemChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			for (PropertyChangeListener l : changeListeners) {
+				l.propertyChange(evt);
+			}
+		}
+	};
 
 	public ConstantPNode(Item source, QueryPen mouseStates, PCanvas canvas) {
 		this.item = source;
+		item.addChangeListener(itemChangeListener);
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		
 		selectionCheckbox = new JCheckBox();
@@ -127,9 +98,7 @@ public class ConstantPNode extends PNode implements ItemPNode {
 		addChild(swingCheckbox);
 		selectionCheckbox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				for (PropertyChangeListener listener : changeListeners) {
-					listener.propertyChange(new PropertyChangeEvent(ConstantPNode.this, ItemPNode.PROPERTY_SELECTED, !selectionCheckbox.isSelected(), selectionCheckbox.isSelected()));
-				}
+				item.setSelected(selectionCheckbox.isSelected());
 			}
 		});
 		
@@ -140,12 +109,44 @@ public class ConstantPNode extends PNode implements ItemPNode {
 		addChild(constantText);
 		
 		aliasText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
-		aliasText.addEditStyledTextListener(new EmptyTextListener(aliasText, ItemPNode.PROPERTY_ALIAS));
+		aliasText.addEditStyledTextListener(new EditStyledTextListener() {
+			private boolean isEditing = false;
+			public void editingStopping() {
+				if (isEditing) {
+					if (aliasText.getEditorPane().getText().length() <= 0) {
+						aliasText.getEditorPane().setText(LONG_EMPTY_STRING);
+						aliasText.syncWithDocument();
+					}
+					item.setAlias(aliasText.getEditorPane().getText());
+				}
+				isEditing = false;
+			}
+			public void editingStarting() {
+				isEditing = true;
+				aliasText.getEditorPane().setText(aliasText.getEditorPane().getText().trim());
+			}
+		});
 		aliasText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + 2 * SPACING_SIZE, yPos);
 		addChild(aliasText);
 		
 		whereText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
-		whereText.addEditStyledTextListener(new EmptyTextListener(whereText, ItemPNode.PROPERTY_WHERE));
+		whereText.addEditStyledTextListener(new EditStyledTextListener() {
+			private boolean isEditing = false;
+			public void editingStopping() {
+				if (isEditing) {
+					if (whereText.getEditorPane().getText().length() <= 0) {
+						whereText.getEditorPane().setText(LONG_EMPTY_STRING);
+						whereText.syncWithDocument();
+					}
+					item.setWhere(whereText.getEditorPane().getText());
+				}
+				isEditing = false;
+			}
+			public void editingStarting() {
+				isEditing = true;
+				whereText.getEditorPane().setText(whereText.getEditorPane().getText().trim());
+			}
+		});
 		whereText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + aliasText.getWidth() + 3 * SPACING_SIZE, yPos);
 		addChild(whereText);
 	}
@@ -191,9 +192,7 @@ public class ConstantPNode extends PNode implements ItemPNode {
 
 	public void setSelected(boolean selected) {
 		selectionCheckbox.setSelected(selected);
-		for (PropertyChangeListener listener : changeListeners) {
-			listener.propertyChange(new PropertyChangeEvent(ConstantPNode.this, ItemPNode.PROPERTY_SELECTED, !selectionCheckbox.isSelected(), selectionCheckbox.isSelected()));
-		}
+		item.setSelected(selected);
 	}
 	
 	public boolean isInSelect() {

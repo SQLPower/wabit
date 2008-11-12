@@ -19,11 +19,41 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.beans.PropertyChangeListener;
+
 
 /**
  * A class implementing this interface wraps an item in a container.
  */
 public interface Item {
+	
+	/**
+	 * Defines a property change of an alias on an item.
+	 */
+	public static final String PROPERTY_ALIAS = "ALIAS";
+	
+	/**
+	 * Defines the item contained by this Item was added
+	 * or removed from the select list.
+	 */
+	public static final String PROPERTY_SELECTED = "SELECTED";
+	
+	/**
+	 * Defines a change of the where filer for this contained item.
+	 */
+	public static final String PROPERTY_WHERE = "WHERE";
+
+	/**
+	 * Defines a change to the item contained by this Item itself.
+	 */
+	public static final String PROPERTY_ITEM = "ITEM";
+	
+	/**
+	 * Defines a change that the item this ItemPNode contains will be removed
+	 * from its container immediately after this event is fired. The item is
+	 * removed immediately after this event so the parent container will get the event.
+	 */
+	public static final String PROPERTY_ITEM_REMOVED = "ITEM_REMOVED";
 
 	String getName();
 	
@@ -32,4 +62,20 @@ public interface Item {
 	Section getParent();
 	
 	void setParent(Section parent);
+	
+	void setAlias(String alias);
+	
+	String getAlias();
+	
+	void setWhere(String where);
+	
+	String getWhere();
+	
+	void setSelected(boolean selected);
+	
+	boolean isSelected();
+	
+	void addChangeListener(PropertyChangeListener l);
+	
+	void removeChangeListener(PropertyChangeListener l);
 }

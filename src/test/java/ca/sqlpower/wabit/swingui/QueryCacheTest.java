@@ -20,8 +20,8 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
-import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
+import ca.sqlpower.wabit.swingui.querypen.StringItem;
 
 public class QueryCacheTest extends TestCase {
 	
@@ -35,23 +35,21 @@ public class QueryCacheTest extends TestCase {
 	}
 	
 	public void testSelectListener() throws Exception {
-		Item item = new StubItem();
-		UnmodifiableItemPNode node = new UnmodifiableItemPNode(pen, pen.getCanvas(), item);
-		queryCache.selectionChanged(node, true);
+		Item item = new StringItem("ItemName");
+		queryCache.selectionChanged(item, true);
 		assertTrue(queryCache.getSelectedColumns().contains(item));
-		queryCache.selectionChanged(node, false);
+		queryCache.selectionChanged(item, false);
 		assertTrue(!queryCache.getSelectedColumns().contains(item));
 	}
 	
 	public void testAliasListener() throws Exception {
-		Item item = new StubItem();
-		UnmodifiableItemPNode node = new UnmodifiableItemPNode(pen, pen.getCanvas(), item);
+		Item item = new StringItem("ItemName");
 		String newAlias = "Alias test.";
-		node.setAlias(newAlias);
-		queryCache.aliasChanged(node);
+		item.setAlias(newAlias);
+		queryCache.aliasChanged(item);
 		assertTrue(queryCache.getAliasList().get(item).equals(newAlias));
-		node.setAlias("");
-		queryCache.aliasChanged(node);
+		item.setAlias("");
+		queryCache.aliasChanged(item);
 		assertNull(queryCache.getAliasList().get(item));
 	}
 

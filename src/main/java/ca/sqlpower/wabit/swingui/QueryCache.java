@@ -49,7 +49,6 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.wabit.swingui.querypen.ItemPNode;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
@@ -308,8 +307,8 @@ public class QueryCache {
 	 */
 	private PropertyChangeListener aliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(ItemPNode.PROPERTY_ALIAS) && e.getSource() instanceof ItemPNode) {
-				aliasChanged((ItemPNode)e.getSource());
+			if (e.getPropertyName().equals(Item.PROPERTY_ALIAS)) {
+				aliasChanged((Item)e.getSource());
 			}
 		}
 	};
@@ -320,8 +319,8 @@ public class QueryCache {
 	 */
 	private PropertyChangeListener selectedColumnListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(ItemPNode.PROPERTY_SELECTED) && e.getSource() instanceof ItemPNode) {
-				selectionChanged((ItemPNode)e.getSource(), (Boolean)e.getNewValue());
+			if (e.getPropertyName().equals(Item.PROPERTY_SELECTED)) {
+				selectionChanged((Item)e.getSource(), (Boolean)e.getNewValue());
 			}
 		}
 	};
@@ -449,17 +448,15 @@ public class QueryCache {
 	
 	private PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(ItemPNode.PROPERTY_WHERE)) {
-				if (e.getSource() instanceof ItemPNode) {
-					ItemPNode itemNode = (ItemPNode) e.getSource();
-					if (e.getNewValue() != null && ((String)e.getNewValue()).length() > 0) {
-						whereMapping.put(itemNode.getItem(), (String)e.getNewValue());
-					} else {
-						whereMapping.remove(itemNode.getItem());
-					}
-					for (ChangeListener l : queryChangeListeners) {
-						l.stateChanged(new ChangeEvent(QueryCache.this));
-					}
+			if (e.getPropertyName().equals(Item.PROPERTY_WHERE)) {
+				Item item = (Item) e.getSource();
+				if (e.getNewValue() != null && ((String)e.getNewValue()).length() > 0) {
+					whereMapping.put(item, (String)e.getNewValue());
+				} else {
+					whereMapping.remove(item);
+				}
+				for (ChangeListener l : queryChangeListeners) {
+					l.stateChanged(new ChangeEvent(QueryCache.this));
 				}
 			} else if (e.getPropertyName().equals(QueryPen.PROPERTY_WHERE_MODIFIED)) {
 				globalWhereClause = (String)e.getNewValue();
@@ -547,7 +544,7 @@ public class QueryCache {
 	 */
 	private final PropertyChangeListener removedItemListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals(ItemPNode.PROPERTY_ITEM_REMOVED)) {
+			if (evt.getPropertyName().equals(Item.PROPERTY_ITEM_REMOVED)) {
 				Item item = (Item)evt.getOldValue();
 				logger.debug("Item name is " + item.getName());
 				removeColumnSelection(item);
@@ -950,13 +947,11 @@ public class QueryCache {
 	 * 
 	 * Package private for testing
 	 */
-	void selectionChanged(ItemPNode itemNode, Boolean isSelected) {
-		Item column = itemNode.getItem();
-
+	void selectionChanged(Item column, Boolean isSelected) {
 		if (isSelected.equals(true)) {
 			selectedColumns.add(column);
-			if (itemNode.getAlias().length() > 0) {
-				aliasMap.put(column, itemNode.getAlias());
+			if (column.getAlias().length() > 0) {
+				aliasMap.put(column, column.getAlias());
 			}
 			if (groupingEnabled) {
 				groupByList.add(column);
@@ -976,11 +971,10 @@ public class QueryCache {
 	 * 
 	 * Package private for testing.
 	 */
-	void aliasChanged(ItemPNode itemNode) {
-		Item column = itemNode.getItem();
-		if (itemNode.getAlias().length() > 0) {
-			aliasMap.put(column, itemNode.getAlias());
-			logger.debug("Put " + column.getName() + " and " + itemNode.getAlias() + " in the alias map.");
+	void aliasChanged(Item column) {
+		if (column.getAlias().length() > 0) {
+			aliasMap.put(column, column.getAlias());
+			logger.debug("Put " + column.getName() + " and " + column.getAlias() + " in the alias map.");
 		} else {
 			aliasMap.remove(column);
 		}
