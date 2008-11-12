@@ -45,7 +45,7 @@ import edu.umd.cs.piccolo.event.PInputEvent;
  */
 public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
-	private MouseState mouseStatePane;
+	private QueryPen mouseStatePane;
 	private UnmodifiableItemPNode leftText;
 	private UnmodifiableItemPNode rightText;
 	private PLayer joinLayer;
@@ -62,7 +62,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
 	private List<PropertyChangeListener> createJoinListeners = new ArrayList<PropertyChangeListener>();
 
-	public CreateJoinEventHandler(MouseState mouseStatePane, PLayer joinLayer, PCanvas canvas, CursorManager cursorManager) {
+	public CreateJoinEventHandler(QueryPen mouseStatePane, PLayer joinLayer, PCanvas canvas, CursorManager cursorManager) {
 		this.mouseStatePane = mouseStatePane;
 		this.joinLayer = joinLayer;
 		this.canvas = canvas;

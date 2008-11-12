@@ -103,13 +103,29 @@ public class JoinLine extends PNode {
 	/**
 	 * The text of the type of join the two columns are being joined by.
 	 */
-	private final PStyledText equalityText;
+	private final PStyledText symbolText;
 	
 	/**
 	 * A circle to surround the join text.
 	 */
 	private final PPath textCircle;
 	
+	private static final String[] optionSigns = 
+		new String[]{" < ", " > ", " = ", " <> ", " >= ", " <= ", "BETWEEN", "LIKE", " IN ", "NOT"};
+	/**
+	 * A box containing the optionSigns
+	 */
+	private final PPath optionBox;
+	
+	private JEditorPane editorPane;
+	private QueryPen queryPen;
+	private double oldOptionBoxX;
+	private double oldOptionBoxY;
+	
+	private static final int OPTION_BOX_WIDTH = 65;
+	private static final int OPTION_BOX_HEIGHT = 150;
+
+
 	/**
 	 * A Bezier curve that connects the left column to the text circle.
 	 */
@@ -174,8 +190,9 @@ public class JoinLine extends PNode {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(MouseState mouseState, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
+	public JoinLine(QueryPen mouseState, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
 		super();
+		this.queryPen = mouseState;
 		this.canvas = c;
 		model = new SQLJoin(leftNode.getItem(), rightNode.getItem());
 		model.addJoinChangeListener(new PropertyChangeListener() {
@@ -208,12 +225,43 @@ public class JoinLine extends PNode {
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
 		
-		equalityText = new PStyledText();
-		JEditorPane editorPane = new JEditorPane();
-		editorPane.setText("=");
-		equalityText.setDocument(editorPane.getDocument());
-		addChild(equalityText);
-		
+		optionBox = PPath.createRectangle(0, 0, OPTION_BOX_WIDTH, OPTION_BOX_HEIGHT);
+		oldOptionBoxX = 0;
+		oldOptionBoxY = 0;
+		addChild(optionBox);
+		optionBox.setVisible(false);
+		int textHeight = 0;
+		for (int i = 0; i < optionSigns.length; i++) {
+			final PText tempText = new PText(optionSigns[i]);
+			tempText.translate(0, textHeight);
+			tempText.addInputEventListener(new PBasicInputEventHandler() {
+				public void mousePressed(PInputEvent event) {
+						editorPane.setText(tempText.getText());
+						symbolText.setDocument(editorPane.getDocument());
+						optionBox.setVisible(false);
+						updateLine();
+				}
+			});
+			optionBox.addChild(tempText);
+			textHeight += tempText.getHeight();
+		}
+		queryPen.getTopLayer().addChild(optionBox);
+		optionBox.moveToFront();
+		symbolText = new PStyledText();
+		editorPane = new JEditorPane();
+		editorPane.setText(" = ");
+		symbolText.setDocument(editorPane.getDocument());
+		addChild(symbolText);
+		addInputEventListener(new PBasicInputEventHandler() {
+			public void mouseClicked(PInputEvent event) {
+				if ( event.isRightMouseButton() ) {
+					if (event.getPosition().getX()>= textCircle.getX() && event.getPosition().getX()<= textCircle.getX()+ textCircle.getWidth()
+						&& event.getPosition().getY()>= textCircle.getY() && event.getPosition().getY()<= textCircle.getY() + textCircle.getHeight()) {
+						optionBox.setVisible(true);
+					}
+				}
+		}
+		});
 		updateLine();
 		
 		this.addInputEventListener(joinChangeListener);
@@ -271,7 +319,7 @@ public class JoinLine extends PNode {
 	 */
 	private void updateLine() {
 		setBounds(0, 0, 0, 0);
-		
+			
 		PBounds leftBounds = this.leftNode.getGlobalFullBounds();
 		PBounds rightBounds = this.rightNode.getGlobalFullBounds();
 		PBounds leftContainerBounds = leftContainerPane.getGlobalBounds();
@@ -322,6 +370,7 @@ public class JoinLine extends PNode {
 		Point2D rightControlPoint2 = new Point2D.Float( (float)(rightX - rightContainerFirstControlPointDirection * Math.max(JOIN_LINE_STICKOUT_LENGTH, Math.abs(rightX - leftX)/6)), (float)rightY);
 		rightPath.curveTo((float)rightControlPoint1.getX(), (float)rightControlPoint1.getY(), (float)rightControlPoint2.getX(), (float)rightControlPoint2.getY(), (float)(rightX), (float)(rightY));
 		
+
 		float[] dash = { DASH_WIDTH, DASH_WIDTH };
 		if (model.isLeftColumnOuterJoin()) {
 			leftPath.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1, dash, 0));
@@ -334,23 +383,26 @@ public class JoinLine extends PNode {
 			rightPath.setStroke(new BasicStroke());
 		}
 		
-		double textMidX = midX - equalityText.getWidth()/2;
-		double textMidY = midY - equalityText.getHeight()/2;
-		equalityText.setX(textMidX);
-		equalityText.setY(textMidY);
+		double textMidX = midX - symbolText.getWidth()/2;
+		double textMidY = midY - symbolText.getHeight()/2;
+		symbolText.setX(textMidX);
+		symbolText.setY(textMidY);
 		
 		textCircle.setPathToEllipse((float)(textMidX - BORDER_WIDTH),
 				(float)(textMidY - BORDER_WIDTH),
-				(float)equalityText.getWidth() + 2 * BORDER_WIDTH,
-				(float)equalityText.getHeight() + 2 * BORDER_WIDTH);
+				(float)symbolText.getWidth() + 2 * BORDER_WIDTH,
+				(float)symbolText.getHeight() + 2 * BORDER_WIDTH);
 		
+		optionBox.translate((float)midX - oldOptionBoxX, (float)midY - oldOptionBoxY);
+		oldOptionBoxX = midX - oldOptionBoxX;
+		oldOptionBoxY = midY - oldOptionBoxY;
+		optionBox.moveToFront();
 		//Compute the bounds only by the paths and the circle.
 		//This prevents the bound handles from being included.
 		Rectangle2D boundUnion = textCircle.getBounds();
 		boundUnion = boundUnion.createUnion(leftPath.getBounds());
 		boundUnion = boundUnion.createUnion(rightPath.getBounds());
 		setBounds(boundUnion);
-		
 	}
 	
 	/**
@@ -389,6 +441,10 @@ public class JoinLine extends PNode {
 
 	public SQLJoin getModel() {
 		return model;
+	}
+	
+	public JEditorPane getEditorPane(){
+		return editorPane;
 	}
 	
 	public void disconnectJoin() {
