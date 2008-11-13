@@ -34,6 +34,33 @@ import java.util.List;
 public class SQLJoin {
 	
 	/**
+	 * This enum Comparators stores all the comparators.
+	 */
+	public enum Comparators {
+	    GREATER_THAN (">"),
+	    LESS_THAN   ("<"),
+	    GREATER_EQUAL  (">="),
+	    LESS_EQUAL    ("<="),
+	    NOT_EQUAL ("<>"),
+	    BETWEEN  ("BETWEEN"),
+	    LIKE  ("LIKE"),
+	    NOT  ("NOT"),
+	    IN ("IN");
+	    
+	    private String comparator;
+
+	    Comparators(String op)
+	    {
+	    	comparator = op;
+	    }
+
+	    public String getComparator()
+	    {
+	        return(comparator);
+	    };
+	}
+	
+	/**
 	 * This property indicates a change to the join in relation to the object
 	 * connected by the left part of this join. The left side is not the physical 
 	 * side shown in the GUI but the object stored in the leftColumn.
@@ -51,7 +78,7 @@ public class SQLJoin {
 	 * This property indicates a change to the Comparable relation to the object
 	 * connected by the left part of this join. 
 	 */
-	public static final String COMPARATOR_CHANGED = "COMPARATOR_CHANGED";
+	public static final String COMPARATOR_CHANGED = "comparator";
 	
 	/**
 	 * The left column of this join.
@@ -83,9 +110,9 @@ public class SQLJoin {
 	private final List<PropertyChangeListener> joinChangeListeners;
 	
 	/**
-	 * it is one of "<", ">", "=", "<>", ">=", "<=", "BETWEEN", "LIKE", "IN", "NOT".
+	 * it is one of ">", "<", "=", "<>", ">=", "<=", "BETWEEN", "LIKE", "IN", "NOT".
 	 */
-	private String comparator;
+	private String currentComparator;
 
 	public static final String PROPERTY_JOIN_REMOVED = "JOIN_REMOVED";
 
@@ -94,7 +121,7 @@ public class SQLJoin {
 	public SQLJoin(Item leftColumn, Item rightColumn) {
 		this.leftColumn = leftColumn;
 		this.rightColumn = rightColumn;
-		this.comparator = "=";
+		this.currentComparator = "=";
 		isLeftColumnOuterJoin = false;
 		isRightColumnOuterJoin = false;
 		joinChangeListeners = new ArrayList<PropertyChangeListener>();
@@ -116,7 +143,7 @@ public class SQLJoin {
 	 * @return
 	 */
 	public String getComparator() {
-		return comparator;
+		return currentComparator;
 	}
 
 	public boolean isLeftColumnOuterJoin() {
@@ -133,8 +160,8 @@ public class SQLJoin {
 	}
 	
 	public void setComparator(String newComparator) {
-		String oldComparator = comparator;
-		comparator = newComparator;
+		String oldComparator = currentComparator;
+		currentComparator = newComparator;
 		for (PropertyChangeListener l : joinChangeListeners) {
 			l.propertyChange(new PropertyChangeEvent(this, COMPARATOR_CHANGED, oldComparator, newComparator));
 		}

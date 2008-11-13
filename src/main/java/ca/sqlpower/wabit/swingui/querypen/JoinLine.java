@@ -35,6 +35,7 @@ import javax.swing.text.StyleConstants;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.query.SQLJoin;
+import ca.sqlpower.wabit.query.SQLJoin.Comparators;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -110,8 +111,6 @@ public class JoinLine extends PNode {
 	 */
 	private final PPath textCircle;
 	
-	private static final String[] optionSigns = 
-		new String[]{"<", ">", "=", "<>", ">=", "<=", "BETWEEN", "LIKE", "IN", "NOT"};
 	/**
 	 * A box containing the optionSigns
 	 */
@@ -234,9 +233,10 @@ public class JoinLine extends PNode {
 		
 		isJoinedTablesSwapped = false;
 		optionBox = PPath.createRectangle( -BORDER_WIDTH, -BORDER_WIDTH, OPTION_BOX_WIDTH + BORDER_WIDTH, OPTION_BOX_HEIGHT);
+		
 		int textHeight = 0;
-		for (int i = 0; i < optionSigns.length; i++) {
-			final PText tempText = new PText(optionSigns[i]);
+		for (Comparators aComparator: Comparators.values()) {
+			final PText tempText = new PText(aComparator.getComparator());
 			tempText.translate(0, textHeight);
 			tempText.addInputEventListener(new PBasicInputEventHandler() {
 				public void mousePressed(PInputEvent event) {
