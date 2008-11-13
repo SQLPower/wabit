@@ -21,7 +21,10 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -32,6 +35,8 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 
@@ -49,6 +54,13 @@ public class GuideNode extends PNode {
     private final Guide model;
     
     /**
+     * The colour that this guide will paint in when it's in the default state.
+     */
+    private Paint normalColour = new Color(0xdddddd);
+    
+    private Paint mouseOverColour = Color.ORANGE;
+    
+    /**
      * Creates a new guide node oriented as specified. The orientation of
      * a guide node can't be changed, although its position can.
      * 
@@ -56,8 +68,11 @@ public class GuideNode extends PNode {
      */
     public GuideNode(Axis axis) {
         model = new Guide(axis);
-        setPaint(new Color(0xdddddd));
-        setPickable(false);
+        model.addPropertyChangeListener(modelChangeHandler);
+        setPaint(normalColour);
+        addInputEventListener(inputEventHandler);
+        // Note that guides are pickable so they can get input events, but our
+        // custom selection handler treats them as if they were not pickable
     }
     
     @Override
@@ -72,7 +87,6 @@ public class GuideNode extends PNode {
     
     public void setGuideOffset(int guideOffset) {
         model.setOffset(guideOffset);
-        adjustBoundsForParent(); // TODO move to model listener
     }
     
     public int getGuideOffset() {
@@ -116,6 +130,58 @@ public class GuideNode extends PNode {
         
     };
 
+    private final GuideMouseEventHandler inputEventHandler = new GuideMouseEventHandler();
+
+    private class GuideMouseEventHandler extends PBasicInputEventHandler {
+
+        boolean cursorPushed = false;
+        
+        GuideMouseEventHandler() {
+            super();
+            getEventFilter().setAcceptsMouseEntered(true);
+            getEventFilter().setAcceptsMouseExited(true);
+        }
+        
+        @Override
+        public void mouseEntered(PInputEvent event) {
+            logger.debug("Mouse entered!");
+            super.mouseEntered(event);
+            setPaint(mouseOverColour);
+            event.pushCursor(new Cursor(
+                    model.getAxis() == Axis.HORIZONTAL ? Cursor.N_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR)); // XXX need custom cursor
+            cursorPushed = true;
+        }
+        
+        @Override
+        public void mouseExited(PInputEvent event) {
+            logger.debug("Mouse exited!");
+            super.mouseExited(event);
+            setPaint(normalColour);
+            if (cursorPushed) {
+                event.popCursor();
+                cursorPushed = false;
+            }
+        }
+        
+        @Override
+        public void mouseDragged(PInputEvent event) {
+            super.mouseDragged(event);
+            Point2D pagePosition = event.getPositionRelativeTo(getParent());
+            double offset = model.getAxis() == Axis.HORIZONTAL ? pagePosition.getY() : pagePosition.getX();
+            model.setOffset((int) offset);
+        }
+    }
+    
+    private PropertyChangeListener modelChangeHandler = new PropertyChangeListener() {
+
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("offset")) {
+                adjustBoundsForParent();
+            }
+        }
+        
+    };
+    
     /**
      * Attempts to snap the given node's bounds so one of its edges sits on this
      * guide. The given node is assumed to have the same coordinate space as this

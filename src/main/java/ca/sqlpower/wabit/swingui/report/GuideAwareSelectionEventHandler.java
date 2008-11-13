@@ -84,6 +84,30 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
         node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthWestLocator(node), snapThreshold, guides));    
     }
     
+    /**
+     * Overrides the default behaviour by not selecting guides.
+     */
+    @Override
+    public void select(PNode node) {
+        if (! (node instanceof GuideNode)) {
+            super.select(node);
+        }
+    }
+    
+    /**
+     * Overrides the default behaviour by not selecting guides.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void select(Collection items) {
+        List<Object> nonGuideItems = new ArrayList<Object>();
+        for (Object o : items) {
+            if ( ! (o instanceof GuideNode) ) {
+                nonGuideItems.add(o);
+            }
+        }
+        super.select(nonGuideItems);
+    }
     
     /**
      * Returns all the guides that are direct children of the selectable parents
