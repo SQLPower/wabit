@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -208,16 +209,22 @@ public class Page extends AbstractWabitObject {
         if (addme.getParent() != null) {
             throw new IllegalStateException("That content box already belongs to a different page");
         }
+        int index = contentBoxes.size();
         addme.setParent(this);
         contentBoxes.add(addme);
+        fireChildAdded(ContentBox.class, addme, index);
     }
     
     public void removeContentBox(ContentBox removeme) {
         if (removeme.getParent() != this) {
             throw new IllegalStateException("That's not my content box!");
         }
-        contentBoxes.remove(removeme);
-        removeme.setParent(null);
+        int index = contentBoxes.indexOf(removeme);
+        if (index != -1) {
+        	contentBoxes.remove(removeme);
+        	removeme.setParent(null);
+        	fireChildRemoved(ContentBox.class, removeme, index);
+    	}
     }
 
     public boolean allowsChildren() {

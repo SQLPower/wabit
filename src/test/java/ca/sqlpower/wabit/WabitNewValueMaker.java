@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
+import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
@@ -38,6 +39,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             newValue = new StubQuery();
         } else if (valueType.equals(Layout.class)) {
             newValue = new Layout("testing layout");
+        } else if (valueType.equals(ContentBox.class)) {
+        	newValue = new ContentBox();
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
