@@ -313,22 +313,23 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     			executeQueryInCache();
     		}
     	});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 5dlu, max(pref;80dlu)"
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, pref, 3dlu, min(pref;50dlu)"
     			,"pref, pref,  pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel("Database connection:"));
     	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
+    	southPanelBuilder.append(new JLabel("Row Limit"));
     	JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
     	rowLimitSpinner.setValue(new Integer(1000));
     	southPanelBuilder.append(rowLimitSpinner);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 3);
+    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 5);
     	southPanelBuilder.nextLine();
     	southPanelBuilder.append(groupingCheckBox);
     	southPanelBuilder.append(new JLabel(""));
-    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel());
+    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel(),3);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(resultPanel, 5);
+    	southPanelBuilder.append(resultPanel, 7);
     	
     	rightViewPane.add(queryPenAndTextTabPane, JSplitPane.TOP);
     	rightViewPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);  	
@@ -418,7 +419,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
         frame.setSize(800, 500);
-        frame.setLocation(400, 300);
+        frame.setLocation(500, 400);
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
 
