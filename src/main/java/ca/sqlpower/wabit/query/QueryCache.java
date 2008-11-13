@@ -201,14 +201,18 @@ public class QueryCache implements Query {
 	private final Map<Container, String> tableAliasMap;
 	
 	/**
-	 * Listens for changes to the alias on ItemPNodes and updates
-	 * the map accordingly. This would be better if it was placed
-	 * directly on the ItemPNode and listened to only the alias change. 
+	 * Listens for changes to the alias on the item and fires events to its 
+	 * listeners if the alias was changed.
 	 */
 	private PropertyChangeListener aliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Item.PROPERTY_ALIAS)) {
-				aliasChanged((Item)e.getSource());
+				Item column = (Item)e.getSource();
+				if (!compoundEdit) {
+					for (PropertyChangeListener l : queryChangeListeners) {
+						l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column.getAlias(), column.getAlias()));
+					}
+				}
 			}
 		}
 	};
@@ -705,17 +709,6 @@ public class QueryCache implements Query {
 		if (!compoundEdit) {
 			for (PropertyChangeListener l : queryChangeListeners) {
 				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column, column));
-			}
-		}
-	}
-	
-	/**
-	 * This method will change the alias on a column to the alias that is stored in the ItemPNode.
-	 */
-	public void aliasChanged(Item column) {
-		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column.getAlias(), column.getAlias()));
 			}
 		}
 	}
