@@ -19,13 +19,12 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.awt.FontMetrics;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -47,7 +46,7 @@ public class Page extends AbstractWabitObject {
      * The default FontMetrics for this Page. All ContentBoxes in this
      * Page that use a FontMetrics will by default inherit this one.
      */
-    private FontMetrics defaultFont;
+    private Font defaultFont;
 
     /**
      * XXX this should not be an enum; page sizes should be user-definable and
@@ -102,26 +101,6 @@ public class Page extends AbstractWabitObject {
     private int height;
     
     /**
-     * Left margin width. Default is 1 inch.
-     */
-    private int leftMargin = DPI;
-    
-    /**
-     * Right margin width. Default is 1 inch.
-     */
-    private int rightMargin = DPI;
-    
-    /**
-     * Top margin height. Default is 1 inch.
-     */
-    private int topMargin = DPI;
-    
-    /**
-     * Bottom margin height. Default is 1 inch.
-     */
-    private int bottomMargin = DPI;
-    
-    /**
      * The content boxes that provide the page's content and define its layout.
      */
     private final List<ContentBox> contentBoxes = new ArrayList<ContentBox>();
@@ -154,7 +133,9 @@ public class Page extends AbstractWabitObject {
     }
 
     public void setWidth(int width) {
+        int oldWidth = this.width;
         this.width = width;
+        firePropertyChange("width", oldWidth, width);
     }
 
     public int getHeight() {
@@ -162,47 +143,19 @@ public class Page extends AbstractWabitObject {
     }
 
     public void setHeight(int height) {
+        int oldHeight = this.height;
         this.height = height;
+        firePropertyChange("height", oldHeight, height);
     }
 
-    public int getLeftMargin() {
-        return leftMargin;
-    }
-
-    public void setLeftMargin(int leftMargin) {
-        this.leftMargin = leftMargin;
-    }
-
-    public int getRightMargin() {
-        return rightMargin;
-    }
-
-    public void setRightMargin(int rightMargin) {
-        this.rightMargin = rightMargin;
-    }
-
-    public int getTopMargin() {
-        return topMargin;
-    }
-
-    public void setTopMargin(int topMargin) {
-        this.topMargin = topMargin;
-    }
-
-    public int getBottomMargin() {
-        return bottomMargin;
-    }
-
-    public void setBottomMargin(int bottomMargin) {
-        this.bottomMargin = bottomMargin;
-    }
-    
-    public FontMetrics getDefaultFont() {
+    public Font getDefaultFont() {
         return defaultFont;
     }
     
-    public void setDefaultFont(FontMetrics defaultFont) {
+    public void setDefaultFont(Font defaultFont) {
+        Font oldFont = this.defaultFont;
         this.defaultFont = defaultFont;
+        firePropertyChange("defaultFont", oldFont, defaultFont);
     }
     
     public void addContentBox(ContentBox addme) {

@@ -19,8 +19,8 @@
 
 package ca.sqlpower.wabit;
 
-import static org.easymock.EasyMock.*;
-
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.replay;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;

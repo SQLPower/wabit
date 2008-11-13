@@ -19,24 +19,21 @@
 
 package ca.sqlpower.wabit;
 
-import static org.easymock.classextension.EasyMock.*;
+import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 
 public class JDBCDataSourceTest extends AbstractWabitObjectTest {
-    private JDBCDataSource project;
-    
+
+    private JDBCDataSource ds;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        SPDataSource ds = createMock(SPDataSource.class);
-        expect(ds.getName()).andReturn("Test Datasource");
-        replay(ds);
-        
-        project = new JDBCDataSource(ds);
+        ds = new JDBCDataSource(new SPDataSource(new PlDotIni()));
     }
     
     @Override
     public WabitObject getObjectUnderTest() {
-        return project;
+        return ds;
     }
 }

@@ -19,21 +19,30 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
-public class ContentBoxTest extends AbstractWabitObjectTest {
+public class PageTest extends AbstractWabitObjectTest {
 
-    private ContentBox cb;
+    private Page page;
     
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        cb = new ContentBox();
+        page = new Page("test page", StandardPageSizes.US_LETTER);
     }
     
     @Override
+    public Set<String> getPropertiesToIgnoreForEvents() {
+        Set<String> ignore = super.getPropertiesToIgnoreForEvents();
+        ignore.add("fontMetrics"); // this just depends on the font
+        return ignore;
+    }
+    @Override
     public WabitObject getObjectUnderTest() {
-        return cb;
+        return page;
     }
 }
