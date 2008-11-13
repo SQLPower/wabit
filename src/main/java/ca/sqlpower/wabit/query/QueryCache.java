@@ -972,12 +972,8 @@ public class QueryCache implements Query {
 		queryBeforeEdit = "";
 	}
 
-	public Map<Item, String> getAliasList() {
+	public Map<Item, String> getAliasMap() {
 		return Collections.unmodifiableMap(aliasMap);
-	}
-
-	protected Map<Item, String> getAliasMap() {
-		return aliasMap;
 	}
 
 	protected boolean isGroupingEnabled() {
@@ -985,31 +981,31 @@ public class QueryCache implements Query {
 	}
 
 	protected Map<Item, SQLGroupFunction> getGroupByAggregateMap() {
-		return groupByAggregateMap;
+		return Collections.unmodifiableMap(groupByAggregateMap);
 	}
 
 	protected List<Item> getGroupByList() {
-		return groupByList;
+		return Collections.unmodifiableList(groupByList);
 	}
 
 	protected Map<Item, String> getHavingMap() {
-		return havingMap;
+		return Collections.unmodifiableMap(havingMap);
 	}
 
 	public Map<Item, OrderByArgument> getOrderByArgumentMap() {
-		return orderByArgumentMap;
+		return Collections.unmodifiableMap(orderByArgumentMap);
 	}
 
 	protected List<Container> getFromTableList() {
-		return fromTableList;
+		return Collections.unmodifiableList(fromTableList);
 	}
 
 	protected Map<Container, List<SQLJoin>> getJoinMapping() {
-		return joinMapping;
+		return Collections.unmodifiableMap(joinMapping);
 	}
 
 	protected Map<Item, String> getWhereMapping() {
-		return whereMapping;
+		return Collections.unmodifiableMap(whereMapping);
 	}
 
 	protected String getGlobalWhereClause() {
@@ -1017,7 +1013,7 @@ public class QueryCache implements Query {
 	}
 
 	protected Map<Container, String> getTableAliasMap() {
-		return tableAliasMap;
+		return Collections.unmodifiableMap(tableAliasMap);
 	}
 
 	public void addChildListener(WabitChildListener l) {
