@@ -46,8 +46,10 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
  * Provides a tree with the project at the root. The project contains data
@@ -210,6 +212,7 @@ public class ProjectTreeModel implements TreeModel {
                     p.addLayout(layout);
                     Page page = layout.getPage();
                     page.addContentBox(new ContentBox());
+                    page.addGuide(new Guide(Axis.HORIZONTAL));
                     page.addContentBox(new ContentBox());
                     
                     // Show project tree in a frame

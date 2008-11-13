@@ -27,7 +27,21 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class Guide extends AbstractWabitObject {
 
-    public static enum Axis { VERTICAL, HORIZONTAL }
+    public static enum Axis {
+        VERTICAL("Vertical"),
+        HORIZONTAL("Horizontal");
+        
+        private final String humanName;
+        
+        private Axis(String humanName) {
+            this.humanName = humanName;
+        }
+        
+        @Override
+        public String toString() {
+            return humanName;
+        }
+    }
 
     private final Axis axis;
 
@@ -37,6 +51,11 @@ public class Guide extends AbstractWabitObject {
      */
     private int offset;
 
+    public Guide(Axis axis) {
+        this.axis = axis;
+        setOffset(0);
+    }
+    
     public boolean allowsChildren() {
         return false;
     }
@@ -49,10 +68,6 @@ public class Guide extends AbstractWabitObject {
         return Collections.emptyList();
     }
 
-    public Guide(Axis axis) {
-        this.axis = axis;
-    }
-    
     public int getOffset() {
         return offset;
     }
@@ -61,6 +76,7 @@ public class Guide extends AbstractWabitObject {
         int oldOffset = this.offset;
         this.offset = guideOffset;
         firePropertyChange("offset", oldOffset, guideOffset);
+        setName(axis + " guide @" + offset);
     }
 
     public Axis getAxis() {
