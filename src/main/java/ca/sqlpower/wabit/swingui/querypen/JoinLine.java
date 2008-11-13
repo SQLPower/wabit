@@ -119,10 +119,9 @@ public class JoinLine extends PNode {
 	
 	private JEditorPane editorPane;
 	private QueryPen queryPen;
-	
+	private boolean isJoinedTablesSwapped;
 	private static final int OPTION_BOX_WIDTH = 65;
 	private static final int OPTION_BOX_HEIGHT = 150;
-
 
 	/**
 	 * A Bezier curve that connects the left column to the text circle.
@@ -233,7 +232,8 @@ public class JoinLine extends PNode {
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
 		
-		optionBox = PPath.createRectangle(0, 0, OPTION_BOX_WIDTH, OPTION_BOX_HEIGHT);
+		isJoinedTablesSwapped = false;
+		optionBox = PPath.createRectangle( -BORDER_WIDTH, -BORDER_WIDTH, OPTION_BOX_WIDTH + BORDER_WIDTH, OPTION_BOX_HEIGHT);
 		int textHeight = 0;
 		for (int i = 0; i < optionSigns.length; i++) {
 			final PText tempText = new PText(optionSigns[i]);
@@ -243,8 +243,12 @@ public class JoinLine extends PNode {
 						editorPane.setText(tempText.getText());
 						symbolText.setDocument(editorPane.getDocument());
 						canvas.getLayer().removeChild(optionBox);
+						if ( !isJoinedTablesSwapped) {
+							model.setComparator(tempText.getText());
+						} else {
+							model.setComparator(getOppositeSymbol( tempText.getText()) );
+						}
 						updateLine();
-						model.setComparator(tempText.getText());
 				}
 			});
 			optionBox.addChild(tempText);
@@ -252,7 +256,7 @@ public class JoinLine extends PNode {
 		}
 		symbolText = new PStyledText();
 		editorPane = new JEditorPane();
-		editorPane.setText(" = ");
+		editorPane.setText("=");
 		symbolText.setDocument(editorPane.getDocument());
 		addChild(symbolText);
 		updateLine();
@@ -348,14 +352,17 @@ public class JoinLine extends PNode {
 			leftX += leftContainerBounds.getWidth();
 			rightX += rightContainerBounds.getWidth();
 			midX = Math.max(JOIN_LINE_STICKOUT_LENGTH + leftX, JOIN_LINE_STICKOUT_LENGTH + rightX);
+			isJoinedTablesSwapped = false;
 			logger.debug("The containers are above or below eachother.");
 		} else {
 			rightX += rightContainerBounds.getWidth();
 			midX = leftX + (rightX - leftX)/2;
 			leftContainerFirstControlPointDirection = -1;
+			isJoinedTablesSwapped = true;
 			logger.debug("The right container is to the left of the left container.");
 		}
 		
+		handleJoinedTablesSwapped ();
 		logger.debug("Left x position is " + leftX + " and mid x position is " + midX);
 		
 		// For two Bezier curves to be connected the last point in the first
@@ -402,6 +409,38 @@ public class JoinLine extends PNode {
 		setBounds(boundUnion);
 	}
 	
+	/**
+	 *  flip the symbols when joined tables are swapped
+	 */
+	public void handleJoinedTablesSwapped () {
+		if (isJoinedTablesSwapped) {
+			updateSymbolView(getOppositeSymbol(model.getComparator()));
+		} else {
+			updateSymbolView ( model.getComparator() );
+		}
+	}
+	
+	public String getOppositeSymbol (String symbol) {
+		if ( model.getComparator().equals(">") ) {
+			return "<";
+		} else if ( model.getComparator().equals(">=") ) {
+			return "<=";
+		} else if ( model.getComparator().equals("<") ) {
+			return ">";
+		} else if ( model.getComparator().equals("<=") ) {
+			return ">=";
+		} else {
+			return symbol;
+		}
+	}
+	
+	/**
+	 * update the view of the symbol in the circle of the joined line
+	 */
+	public void updateSymbolView (String comparator) {
+		editorPane.setText(comparator);
+		symbolText.setDocument(editorPane.getDocument());
+	}
 	/**
 	 * Returns true if the user clicked on or near the given path. Returns
 	 * false otherwise. Clicking in the join circle will not be considered
