@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.query;
 
+import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -50,6 +52,8 @@ public class ItemContainer implements Container {
 	
 	private String alias;
 	
+	private Point2D position;
+	
 	/**
 	 * A list of listeners that will tell other objects when the model changes.
 	 */
@@ -61,6 +65,7 @@ public class ItemContainer implements Container {
 		section = new ObjectSection();
 		((ObjectSection)section).setParent(this);
 		logger.debug("Container created.");
+		position = new Point(0, 0);
 	}
 	
 	public Object getContainedObject() {
@@ -122,6 +127,14 @@ public class ItemContainer implements Container {
 
 	public void removeChangeListener(PropertyChangeListener l) {
 		modelListeners.remove(l);		
+	}
+
+	public Point2D getPosition() {
+		return position;
+	}
+
+	public void setPosition(Point2D p) {
+		position = p;
 	}
 
 }

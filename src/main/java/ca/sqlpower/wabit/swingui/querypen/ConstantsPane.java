@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.event.ActionEvent;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -163,6 +164,11 @@ public class ConstantsPane extends PNode {
 		this.model = containerModel;
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		constantPNodeList = new ArrayList<ConstantPNode>();
+		addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				model.setPosition(new Point2D.Double(getGlobalBounds().getX(), getGlobalBounds().getY()));
+			}
+		});
 		
 		model.addChangeListener(itemChangedListener);
 		

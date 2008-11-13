@@ -19,13 +19,17 @@
 
 package ca.sqlpower.wabit.query;
 
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.architect.SQLTable;
+import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 
 /**
  * A model for the {@link ContainerPane}. This will store objects of a defined type and
@@ -34,6 +38,8 @@ import ca.sqlpower.architect.SQLTable;
  * @param <C> The type of object this model will store.
  */
 public class TableContainer implements Container {
+	
+	private static final Logger logger = Logger.getLogger(TableContainer.class);
 
 	private final SQLTable table;
 	
@@ -44,6 +50,8 @@ public class TableContainer implements Container {
 	private final Section section;
 	
 	private String alias;
+	
+	private Point2D position;
 
 	private final List<PropertyChangeListener> modelListeners;
 	
@@ -107,6 +115,14 @@ public class TableContainer implements Container {
 
 	public void removeChangeListener(PropertyChangeListener l) {
 		modelListeners.remove(l);
+	}
+
+	public Point2D getPosition() {
+		return position;
+	}
+
+	public void setPosition(Point2D position) {
+		this.position = position;
 	}
 
 }

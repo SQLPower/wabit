@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.query;
 
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
@@ -72,5 +73,17 @@ public interface Container {
 	void addChangeListener(PropertyChangeListener l);
 	
 	void removeChangeListener(PropertyChangeListener l);
+	
+	/**
+	 * Sets the position of the container. This will allow any view to understand
+	 * how the containers are laid out in relation to each other.
+	 */
+	void setPosition(Point2D p);
+	
+	/**
+	 * Gets the position of the container. This will allow any view to understand
+	 * how the containers are laid out in relation to each other.
+	 */
+	Point2D getPosition();
 
 }
