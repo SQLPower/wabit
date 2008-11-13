@@ -84,6 +84,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 			if (pick != null) {
 				if (leftText == null) {
 					leftText = (UnmodifiableItemPNode)pick;
+					leftText.setJoiningState(true);
 				} else if (rightText == null) {
 					rightText = (UnmodifiableItemPNode)pick;
 					if(leftText.getParent() == rightText.getParent()) {
@@ -94,6 +95,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 						mouseStatePane.setMouseState(MouseStates.READY);
 						return;
 					}
+					leftText.setJoiningState(false);
 					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
 					join.getModel().addJoinChangeListener(changeListener);
 					joinLayer.addChild(join);

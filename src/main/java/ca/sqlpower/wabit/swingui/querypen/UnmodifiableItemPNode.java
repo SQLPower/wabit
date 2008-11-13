@@ -69,6 +69,8 @@ public class UnmodifiableItemPNode extends PNode {
 	
 	private boolean isJoined = false;
 	
+	private boolean isInJoiningState = false;
+	
 	private List<JoinLine> joinedLines;
 	/**
 	 * These listeners will fire a change event when an element on this object
@@ -167,6 +169,15 @@ public class UnmodifiableItemPNode extends PNode {
 	public void JoinTo(JoinLine line) {
 		joinedLines.add(line);
 		setIsJoined(true);
+		isInJoiningState = false;
+	}
+	
+	public void setJoiningState(boolean state){
+		if(!state) {
+			setPaint(Color.WHITE);
+			repaint();
+		}
+		isInJoiningState = state;
 	}
 	
 	public List<JoinLine> getJoinedLines() {
@@ -221,14 +232,18 @@ public class UnmodifiableItemPNode extends PNode {
 			
 			@Override
 			public void mouseExited(PInputEvent event) {
-				setPaint(Color.WHITE);
-				repaint();
+				if(!isInJoiningState) {
+					setPaint(Color.WHITE);
+					repaint();
+				}
 			}
 			
 			@Override
 			public void mouseClicked(PInputEvent event) {
-				setPaint(Color.WHITE);
-				repaint();	
+				if(!isInJoiningState) {
+					setPaint(Color.WHITE);
+					repaint();	
+				}
 			}
 		});
 		
