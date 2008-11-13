@@ -97,10 +97,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					rightText = (UnmodifiableItemPNode)pick;
 					if(leftText.getParent() == rightText.getParent()) {
 						JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(canvas), "You cannot join to your own Table.");
-						leftText = null;
-						rightText = null;
-						cursorManager.placeModeFinished();
-						mouseStatePane.setMouseState(MouseStates.READY);
+						 resetJoin();
 						return;
 					}
 					if ( mouseFirstClickX != 0 && mouseSecondClickX!= 0 && mouseFirstClickX > mouseSecondClickX) {
@@ -115,10 +112,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					for(PropertyChangeListener listener : createJoinListeners) {
 						listener.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
 					}
-					leftText = null;
-					rightText = null;
-					cursorManager.placeModeFinished();
-					mouseStatePane.setMouseState(MouseStates.READY);
+					 resetJoin();
 				} else {
 					throw new IllegalStateException("Trying to create a join while both ends have already been specified.");
 				}
@@ -126,12 +120,16 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 				if(leftText != null) {
 					leftText.setJoiningState(false);
 				}
-				leftText = null;
-				rightText = null;
-				cursorManager.placeModeFinished();
-				mouseStatePane.setMouseState(MouseStates.READY);
+				 resetJoin();
 			}
 		}
+	}
+	
+	private void resetJoin() {
+		leftText = null;
+		rightText = null;
+		cursorManager.placeModeFinished();
+		mouseStatePane.setMouseState(MouseStates.READY);
 	}
 	
 	public void addCreateJoinListener(PropertyChangeListener l) {
