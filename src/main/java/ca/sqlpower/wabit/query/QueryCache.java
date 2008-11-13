@@ -129,11 +129,6 @@ public class QueryCache implements Query {
 	}
 	
 	/**
-	 * This will map SQLColumns to aliases that are in the SELECT statement.
-	 */
-	private Map<Item, String> aliasMap;
-	
-	/**
 	 * Tracks if there are groupings added to this select statement.
 	 * This will affect when columns are added to the group by collections.
 	 */
@@ -352,7 +347,6 @@ public class QueryCache implements Query {
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
 		whereMapping = new HashMap<Item, String>();
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
-		aliasMap = new HashMap<Item, String>();
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		groupByList = new ArrayList<Item>();
 		havingMap = new HashMap<Item, String>();
@@ -364,7 +358,6 @@ public class QueryCache implements Query {
 	 */
 	public QueryCache(QueryCache copy) {
 		selectedColumns = new ArrayList<Item>();
-		aliasMap = new HashMap<Item, String>();
 		fromTableList = new ArrayList<Container>();
 		tableAliasMap = new HashMap<Container, String>();
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
@@ -376,7 +369,6 @@ public class QueryCache implements Query {
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		
 		selectedColumns.addAll(copy.getSelectedColumns());
-		aliasMap.putAll(copy.getAliasMap());
 		fromTableList.addAll(copy.getFromTableList());
 		tableAliasMap.putAll(copy.getTableAliasMap());
 		joinMapping.putAll(copy.getJoinMapping());
@@ -415,7 +407,6 @@ public class QueryCache implements Query {
 	 */
 	private void removeColumnSelection(Item column) {
 		selectedColumns.remove(column);
-		aliasMap.remove(column);
 		groupByList.remove(column);
 		groupByAggregateMap.remove(column);
 		havingMap.remove(column);
@@ -453,8 +444,8 @@ public class QueryCache implements Query {
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(")");
 			}
-			if (aliasMap.get(col) != null) {
-				query.append(" AS " + aliasMap.get(col));
+			if (col.getAlias() != null && col.getAlias().trim().length() > 0) {
+				query.append(" AS " + col.getAlias());
 			}
 		}
 		if (!fromTableList.isEmpty()) {
@@ -699,9 +690,6 @@ public class QueryCache implements Query {
 	public void selectionChanged(Item column, Boolean isSelected) {
 		if (isSelected.equals(true)) {
 			selectedColumns.add(column);
-			if (column.getAlias().length() > 0) {
-				aliasMap.put(column, column.getAlias());
-			}
 			if (groupingEnabled) {
 				if (column instanceof StringItem) {
 					groupByAggregateMap.put(column, SQLGroupFunction.COUNT);
@@ -725,12 +713,6 @@ public class QueryCache implements Query {
 	 * This method will change the alias on a column to the alias that is stored in the ItemPNode.
 	 */
 	public void aliasChanged(Item column) {
-		if (column.getAlias().length() > 0) {
-			aliasMap.put(column, column.getAlias());
-			logger.debug("Put " + column.getName() + " and " + column.getAlias() + " in the alias map.");
-		} else {
-			aliasMap.remove(column);
-		}
 		if (!compoundEdit) {
 			for (PropertyChangeListener l : queryChangeListeners) {
 				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column.getAlias(), column.getAlias()));
@@ -970,10 +952,6 @@ public class QueryCache implements Query {
 			}
 		}
 		queryBeforeEdit = "";
-	}
-
-	public Map<Item, String> getAliasMap() {
-		return Collections.unmodifiableMap(aliasMap);
 	}
 
 	protected boolean isGroupingEnabled() {

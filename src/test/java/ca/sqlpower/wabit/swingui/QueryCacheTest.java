@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
+import ca.sqlpower.testutil.CountingPropertyChangeListener;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.StringItem;
@@ -43,13 +44,13 @@ public class QueryCacheTest extends TestCase {
 	
 	public void testAliasListener() throws Exception {
 		Item item = new StringItem("ItemName");
+		queryCache.addItem(item);
+		item.setSelected(true);
+		CountingPropertyChangeListener listener = new CountingPropertyChangeListener();
+		queryCache.addPropertyChangeListener(listener);
 		String newAlias = "Alias test.";
 		item.setAlias(newAlias);
-		queryCache.aliasChanged(item);
-		assertTrue(queryCache.getAliasList().get(item).equals(newAlias));
-		item.setAlias("");
-		queryCache.aliasChanged(item);
-		assertNull(queryCache.getAliasList().get(item));
+		assertEquals(1, listener.getPropertyChangeCount());
 	}
 
 }
