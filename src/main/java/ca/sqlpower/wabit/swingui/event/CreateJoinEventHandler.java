@@ -51,6 +51,9 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	private PLayer joinLayer;
 	private PCanvas canvas;
 	private CursorManager cursorManager;
+	private double mouseFirstClickX;
+	private double mouseSecondClickX;
+
 	
 	private PropertyChangeListener changeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -67,6 +70,8 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 		this.joinLayer = joinLayer;
 		this.canvas = canvas;
 		this.cursorManager = cursorManager;
+		this.mouseFirstClickX=0;
+		this.mouseSecondClickX=0;
 	}
 	
 	@Override
@@ -83,9 +88,11 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 			}
 			if (pick != null) {
 				if (leftText == null) {
+					mouseFirstClickX = event.getPosition().getX();
 					leftText = (UnmodifiableItemPNode)pick;
 					leftText.setJoiningState(true);
 				} else if (rightText == null) {
+					mouseSecondClickX = event.getPosition().getX();
 					rightText = (UnmodifiableItemPNode)pick;
 					if(leftText.getParent() == rightText.getParent()) {
 						JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(canvas), "You cannot join to your own Table.");
@@ -94,6 +101,12 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 						cursorManager.placeModeFinished();
 						mouseStatePane.setMouseState(MouseStates.READY);
 						return;
+					}
+					if ( mouseFirstClickX != 0 && mouseSecondClickX!= 0 && mouseFirstClickX > mouseSecondClickX) {
+						UnmodifiableItemPNode tempNode = leftText;
+						leftText = rightText;
+						rightText = tempNode;
+						mouseFirstClickX = mouseSecondClickX = 0;
 					}
 					leftText.setJoiningState(false);
 					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
