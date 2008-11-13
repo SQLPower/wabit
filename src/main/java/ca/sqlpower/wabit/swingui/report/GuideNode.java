@@ -28,6 +28,8 @@ import java.beans.PropertyChangeListener;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.Guide.Axis;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -42,17 +44,9 @@ public class GuideNode extends PNode {
 
     private static final Logger logger = Logger.getLogger(GuideNode.class);
     
-    public static enum Axis { VERTICAL, HORIZONTAL }
-    
-    private final Axis axis;
-    
     private BasicStroke marginStroke = new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 4f, new float[] { 12f, 12f }, 0f);
-
-    /**
-     * The X or Y coordinate of this guide. For a horizontal guide, this is the Y coordinate;
-     * for a vertical guide it's the X coordinate.
-     */
-    private int guideOffset;
+    
+    private final Guide model;
     
     /**
      * Creates a new guide node oriented as specified. The orientation of
@@ -61,7 +55,7 @@ public class GuideNode extends PNode {
      * @param axis Whether this new guide is oriented vertically or horizontally 
      */
     public GuideNode(Axis axis) {
-        this.axis = axis;
+        model = new Guide(axis);
         setPaint(new Color(0xdddddd));
         setPickable(false);
     }
@@ -77,12 +71,12 @@ public class GuideNode extends PNode {
     }
     
     public void setGuideOffset(int guideOffset) {
-        this.guideOffset = guideOffset;
-        adjustBoundsForParent();
+        model.setOffset(guideOffset);
+        adjustBoundsForParent(); // TODO move to model listener
     }
     
     public int getGuideOffset() {
-        return guideOffset;
+        return model.getOffset();
     }
 
     @Override
@@ -100,6 +94,8 @@ public class GuideNode extends PNode {
     
     private void adjustBoundsForParent() {
         PNode parent = getParent();
+        Axis axis = model.getAxis();
+        int guideOffset = model.getOffset();
         if (axis == Axis.HORIZONTAL) {
             setBounds((int) parent.getX(), guideOffset, (int) parent.getWidth(), 1);
         } else if (axis == Axis.VERTICAL) {
@@ -135,6 +131,7 @@ public class GuideNode extends PNode {
         boolean snap = false;
         PBounds nodeBounds = node.getGlobalBounds();
         PBounds guideBounds = getGlobalBounds();
+        Axis axis = model.getAxis();
         if (axis == Axis.HORIZONTAL) {
             int topEdgeDistance = (int) Math.abs(nodeBounds.getY() - guideBounds.getY());
             int bottomEdgeDistance = (int) Math.abs(nodeBounds.getY() + nodeBounds.getHeight() - guideBounds.getY());

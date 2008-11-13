@@ -141,7 +141,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 int oldRemoveCount = listener.getRemovedCount();
                 Object newChild = valueMaker.makeNewValue(paramTypes[0], null, method.getName());
                 method.invoke(wo, newChild);
-                assertEquals(oldAddCount + 1, listener.getAddedCount());
+                assertEquals("Add child event for " + method.getName() + " didn't fire!",
+                        oldAddCount + 1, listener.getAddedCount());
                 assertEquals(oldRemoveCount, listener.getRemovedCount());
                 assertSame(wo, listener.getLastEvent().getSource());
                 assertSame(newChild, listener.getLastEvent().getChild());

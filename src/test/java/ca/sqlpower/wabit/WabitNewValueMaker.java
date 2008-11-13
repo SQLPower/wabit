@@ -25,8 +25,10 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.Guide.Axis;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -47,6 +49,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         } else if (valueType.equals(ReportContentRenderer.class)) {
         	newValue = createMock(ReportContentRenderer.class);
         	replay(newValue);
+        } else if (valueType.equals(Guide.class)) {
+            newValue = new Guide(Axis.HORIZONTAL);
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

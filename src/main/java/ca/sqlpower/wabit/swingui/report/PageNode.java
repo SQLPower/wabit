@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui.report;
 import java.awt.Color;
 
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Guide.Axis;
 import edu.umd.cs.piccolo.PNode;
 
 public class PageNode extends PNode {
@@ -34,10 +35,10 @@ public class PageNode extends PNode {
     // to make them regular guides, we'd need to let guides listen to their
     // parent node and be defined relative to the top, bottom, left, right,
     // vmiddle, or hmiddle of that node
-    private final GuideNode leftMargin = new GuideNode(GuideNode.Axis.VERTICAL);
-    private final GuideNode rightMargin = new GuideNode(GuideNode.Axis.VERTICAL);
-    private final GuideNode topMargin = new GuideNode(GuideNode.Axis.HORIZONTAL);
-    private final GuideNode bottomMargin = new GuideNode(GuideNode.Axis.HORIZONTAL);
+    private final GuideNode leftMargin = new GuideNode(Axis.VERTICAL);
+    private final GuideNode rightMargin = new GuideNode(Axis.VERTICAL);
+    private final GuideNode topMargin = new GuideNode(Axis.HORIZONTAL);
+    private final GuideNode bottomMargin = new GuideNode(Axis.HORIZONTAL);
     
     public PageNode(Page page) {
         this.page = page;

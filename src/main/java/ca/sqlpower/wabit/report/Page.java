@@ -104,7 +104,13 @@ public class Page extends AbstractWabitObject {
      * The content boxes that provide the page's content and define its layout.
      */
     private final List<ContentBox> contentBoxes = new ArrayList<ContentBox>();
-    
+
+    /**
+     * The guides of this page. They don't print visibly, but they give reference
+     * points for the layout.
+     */
+    private final List<Guide> guides = new ArrayList<Guide>();
+
     /**
      * Creates a page with the given standard size and 1-inch margins on all sides.
      * 
@@ -162,7 +168,7 @@ public class Page extends AbstractWabitObject {
         if (addme.getParent() != null) {
             throw new IllegalStateException("That content box already belongs to a different page");
         }
-        int index = contentBoxes.size();
+        int index = contentBoxes.size() + childPositionOffset(ContentBox.class);
         addme.setParent(this);
         contentBoxes.add(addme);
         fireChildAdded(ContentBox.class, addme, index);
@@ -179,6 +185,16 @@ public class Page extends AbstractWabitObject {
         	fireChildRemoved(ContentBox.class, removeme, index);
     	}
     }
+    
+    public void addGuide(Guide addme) {
+        if (addme.getParent() != null) {
+            throw new IllegalStateException("That guide already belongs to a different page");
+        }
+        int index = guides.size() + childPositionOffset(Guide.class);
+        addme.setParent(this);
+        guides.add(addme);
+        fireChildAdded(Guide.class, addme, index);
+    }
 
     public boolean allowsChildren() {
         return true;
@@ -187,6 +203,8 @@ public class Page extends AbstractWabitObject {
     public int childPositionOffset(Class<? extends WabitObject> childType) {
         if (childType == ContentBox.class) {
             return 0;
+        } else if (childType == Guide.class) {
+            return contentBoxes.size();
         } else {
             throw new IllegalArgumentException("Pages don't have children of type " + childType);
         }
@@ -194,10 +212,11 @@ public class Page extends AbstractWabitObject {
 
     /**
      * Returns an unmodifiable view of this page's boxes.
-     * <p>
-     * TODO: include guides as well as boxes.
      */
-    public List<ContentBox> getChildren() {
-        return Collections.unmodifiableList(contentBoxes);
+    public List<WabitObject> getChildren() {
+        List<WabitObject> children = new ArrayList<WabitObject>();
+        children.addAll(contentBoxes);
+        children.addAll(guides);
+        return Collections.unmodifiableList(children);
     }
 }
