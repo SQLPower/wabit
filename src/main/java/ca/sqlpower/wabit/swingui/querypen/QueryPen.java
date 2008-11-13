@@ -66,6 +66,7 @@ import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.ItemContainer;
+import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -307,6 +308,11 @@ public class QueryPen implements MouseState {
 	private final String acceleratorKeyString;
 	
 	/**
+	 * This is the queryPen's model
+	 */
+	private final QueryCache model;
+	
+	/**
 	 * The mouse state in this query pen.
 	 */
 	private MouseStates mouseState = MouseStates.READY;
@@ -368,7 +374,7 @@ public class QueryPen implements MouseState {
 	 * This method will remove the Joined line from its left and right Nodes and remove it from the joinLayer
 	 * It also fires the propertyChange event to update the query
 	 */
-	private void deleteJoinLine(JoinLine pickedNode) {
+	public void deleteJoinLine(JoinLine pickedNode) {
 		pickedNode.disconnectJoin();
 		joinLayer.removeChild(pickedNode);
 		for (PropertyChangeListener l : queryListeners) {
@@ -412,8 +418,9 @@ public class QueryPen implements MouseState {
         panel.setBackground(Color.WHITE);
 		return panel;
 	}
-
-	public QueryPen(WabitSwingSession s) {
+	
+	public QueryPen(WabitSwingSession s, QueryCache model) {
+		this.model = model;
 		session = s;
 		panel = new JPanel();
 	    cursorManager = new CursorManager(panel);
@@ -616,6 +623,10 @@ public class QueryPen implements MouseState {
 	
 	public JToolBar getQueryPenBar () {
 		return queryPenBar;
+	}
+	
+	public QueryCache getModel() {
+		return model;
 	}
 	
 	public String getAcceleratorKeyString () {
