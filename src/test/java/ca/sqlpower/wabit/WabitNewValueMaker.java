@@ -19,11 +19,14 @@
 
 package ca.sqlpower.wabit;
 
+import static org.easymock.EasyMock.*;
+
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -41,6 +44,9 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             newValue = new Layout("testing layout");
         } else if (valueType.equals(ContentBox.class)) {
         	newValue = new ContentBox();
+        } else if (valueType.equals(ReportContentRenderer.class)) {
+        	newValue = createMock(ReportContentRenderer.class);
+        	replay(newValue);
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
