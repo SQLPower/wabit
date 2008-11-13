@@ -49,6 +49,7 @@ import javax.swing.AbstractListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -125,6 +126,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
     private SQLQueryUIComponents queryUIComponents;
 	private JTree projectTree;
+	private JTree dragTree;
 	private JFrame frame;
 	private JCheckBox groupingCheckBox;
 	private static JLabel statusLabel;
@@ -132,6 +134,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final JLabel havingLabel = new JLabel ("Having");
 	private final JLabel columnNameLabel = new JLabel ();
 	private JPanel cornerPanel;
+	private JComboBox reportComboBox;
 
 	/**
 	 * Stores the parts of the query.
@@ -164,13 +167,33 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	public WabitSwingSessionImpl(WabitSessionContext context) {
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
-		queryPen = new QueryPen(this);
 		queryCache = new QueryCache();
+		queryPen = new QueryPen(this, queryCache);
 		
 		queryController = new QueryController(queryCache, queryPen);
 		
 		statusLabel= new JLabel();
 		queuedQueryCache = new ArrayList<QueryCache>();
+		dragTree = new JTree();
+		reportComboBox = new JComboBox(sessionContext.getDataSources()
+				.getConnections().toArray());
+		reportComboBox.addActionListener(new AbstractAction() {
+			public void actionPerformed(ActionEvent event) {
+				SQLObjectRoot tempRootNode = new SQLObjectRoot();
+				try {
+					tempRootNode.addChild(new SQLDatabase(
+							(SPDataSource) reportComboBox.getSelectedItem()));
+					DBTreeModel tempTreeModel = new DBTreeModel(tempRootNode);
+					dragTree.setModel(tempTreeModel);
+				} catch (ArchitectException e) {
+					throw new RuntimeException(
+							"Could not add DataSource to rootNode", e);
+				}
+
+			}
+		});
+		reportComboBox.setSelectedIndex(0);
+		dragTree.setCellRenderer(new DBTreeCellRenderer());
 	}
 	/**
 	 * sets the StatusMessage
@@ -331,7 +354,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	southPanelBuilder.nextLine();
     	southPanelBuilder.append(resultPanel, 7);
     	
-    	rightViewPane.add(queryPenAndTextTabPane, JSplitPane.TOP);
+    	JPanel rightTreePanel = new JPanel(new BorderLayout());
+    	rightTreePanel.add(dragTree,BorderLayout.CENTER);
+    	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
+    	
+    	JPanel rightTopPane = new JPanel(new BorderLayout());
+    	rightTopPane.add(queryPenAndTextTabPane, BorderLayout.CENTER);
+    	rightTopPane.add(rightTreePanel,BorderLayout.EAST);
+    	
+    	rightViewPane.add(rightTopPane, JSplitPane.TOP);
     	rightViewPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);  	
     	
     	rootNode = new SQLObjectRoot();
