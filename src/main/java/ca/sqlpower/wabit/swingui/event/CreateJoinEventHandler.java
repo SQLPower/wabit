@@ -92,6 +92,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					leftText = (UnmodifiableItemPNode)pick;
 					leftText.setJoiningState(true);
 				} else if (rightText == null) {
+					leftText.setJoiningState(false);
 					mouseSecondClickX = event.getPosition().getX();
 					rightText = (UnmodifiableItemPNode)pick;
 					if(leftText.getParent() == rightText.getParent()) {
@@ -108,7 +109,6 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 						rightText = tempNode;
 						mouseFirstClickX = mouseSecondClickX = 0;
 					}
-					leftText.setJoiningState(false);
 					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
 					join.getModel().addJoinChangeListener(changeListener);
 					joinLayer.addChild(join);
@@ -123,6 +123,9 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 					throw new IllegalStateException("Trying to create a join while both ends have already been specified.");
 				}
 			} else {
+				if(leftText != null) {
+					leftText.setJoiningState(false);
+				}
 				leftText = null;
 				rightText = null;
 				cursorManager.placeModeFinished();

@@ -237,14 +237,6 @@ public class UnmodifiableItemPNode extends PNode {
 					repaint();
 				}
 			}
-			
-			@Override
-			public void mouseClicked(PInputEvent event) {
-				if(!isInJoiningState) {
-					setPaint(Color.WHITE);
-					repaint();	
-				}
-			}
 		});
 		
 		addChild(columnText);
@@ -261,6 +253,8 @@ public class UnmodifiableItemPNode extends PNode {
 
 	public void setIsJoined(boolean joined) {
 		isJoined = joined;
+		setPaint(Color.WHITE);
+		repaint();
 		highLightText();
 	}
 	 
