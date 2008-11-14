@@ -26,13 +26,14 @@ import java.awt.Graphics2D;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 
-public class ContentBoxNode extends PNode {
+public class ContentBoxNode extends PNode implements ReportNode {
 
     private static final Logger logger = Logger.getLogger(ContentBoxNode.class);
     
@@ -82,13 +83,6 @@ public class ContentBoxNode extends PNode {
         }
     }
     
-    /**
-     * Returns the content box this node is the visual representation of.
-     */
-    public ContentBox getContentBox() {
-        return contentBox;
-    }
-    
     @Override
     public void setParent(PNode newParent) {
         PNode oldParent = getParent();
@@ -96,5 +90,13 @@ public class ContentBoxNode extends PNode {
         if (contentBox.getParent() != null && newParent != oldParent) {
             contentBox.getParent().removeContentBox(contentBox);
         }
+    }
+
+    public void cleanup() {
+        // no cleanup needed at this time
+    }
+
+    public ContentBox getModel() {
+        return contentBox;
     }
 }

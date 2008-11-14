@@ -31,6 +31,7 @@ import java.beans.PropertyChangeListener;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import edu.umd.cs.piccolo.PCamera;
@@ -45,7 +46,7 @@ import edu.umd.cs.piccolo.util.PPaintContext;
  * (movable) position that other nodes can snap to and be positioned relative
  * to.
  */
-public class GuideNode extends PNode {
+public class GuideNode extends PNode implements ReportNode {
 
     private static final Logger logger = Logger.getLogger(GuideNode.class);
     
@@ -91,10 +92,6 @@ public class GuideNode extends PNode {
     
     public void setGuideOffset(int guideOffset) {
         model.setOffset(guideOffset);
-    }
-    
-    public Guide getGuide() {
-        return model;
     }
     
     public int getGuideOffset() {
@@ -240,5 +237,13 @@ public class GuideNode extends PNode {
         }
         
         return snap;
+    }
+
+    public void cleanup() {
+        model.removePropertyChangeListener(modelChangeHandler);
+    }
+
+    public Guide getModel() {
+        return model;
     }
 }

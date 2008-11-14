@@ -77,7 +77,7 @@ public class AddContentBoxAction extends AbstractAction {
             CachedRowSet crs = new CachedRowSet();
             crs.populate(rs);
             ResultSetRenderer rsr = new ResultSetRenderer(crs);
-            newCBNode.getContentBox().setContentRenderer(rsr);
+            newCBNode.getModel().setContentRenderer(rsr);
             
         } catch (Exception ex) {
             throw new RuntimeException(ex);

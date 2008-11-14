@@ -27,7 +27,7 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
 import edu.umd.cs.piccolo.PNode;
 
-public class PageNode extends PNode {
+public class PageNode extends PNode implements ReportNode {
 
     private final Page page;
     
@@ -67,17 +67,21 @@ public class PageNode extends PNode {
     @Override
     public void addChild(int index, PNode child) {
         super.addChild(index, child);
-        if (child instanceof ContentBoxNode) {
-            ContentBox contentBox = ((ContentBoxNode) child).getContentBox();
-            if (!page.getChildren().contains(contentBox)) {
-                page.addContentBox(contentBox);
+        if (child instanceof ReportNode && !page.getChildren().contains(((ReportNode) child).getModel())) {
+            if (child instanceof ContentBoxNode) {
+                page.addContentBox(((ContentBoxNode) child).getModel());
+            } else if (child instanceof GuideNode) {
+                page.addGuide(((GuideNode) child).getModel());
             }
-        } else if (child instanceof GuideNode) {
-            Guide guide = ((GuideNode) child).getGuide();
-            if (!page.getChildren().contains(guide)) {
-                page.addGuide(guide);
-            }
+            // There are other types of PNodes added that the model doesn't care about (like selection handles)
         }
-        // There are other types of PNodes added that the model doesn't care about (like selection handles)
+    }
+
+    public void cleanup() {
+        // no cleanup needed right now
+    }
+
+    public Page getModel() {
+        return page;
     }
 }
