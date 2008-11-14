@@ -29,8 +29,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.swingui.querypen.MouseState;
-
 /**
  * This container is used to hold a generic list of items in
  * the same section.
@@ -59,7 +57,7 @@ public class ItemContainer implements Container {
 	 */
 	private final List<PropertyChangeListener> modelListeners;
 	
-	public ItemContainer(String name, MouseState mouseState) {
+	public ItemContainer(String name) {
 		this.name = name;
 		modelListeners = new ArrayList<PropertyChangeListener>();
 		section = new ObjectSection();
