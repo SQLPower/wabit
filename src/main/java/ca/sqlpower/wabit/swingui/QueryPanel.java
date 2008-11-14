@@ -88,6 +88,7 @@ import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -364,6 +365,10 @@ public class QueryPanel {
 			}
 		}), 0);
     	
+    	queryPen.getQueryPenBar().addSeparator();
+    	
+    	queryPen.getQueryPenBar().add(new CreateLayoutFromQueryAction(session.getProject(), queryCache));
+
     	JPanel queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
     	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
