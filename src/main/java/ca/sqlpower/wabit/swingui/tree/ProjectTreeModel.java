@@ -166,6 +166,7 @@ public class ProjectTreeModel implements TreeModel {
 		}
 
 		public void wabitChildAdded(WabitChildEvent e) {
+		    WabitUtils.listenToHierarchy(e.getChild(), this, this);
 			TreeModelEvent treeEvent = new TreeModelEvent(this, pathToNode(e
 					.getSource()), new int[] { e.getIndex() }, new Object[] { e
 					.getChild() });
@@ -173,6 +174,7 @@ public class ProjectTreeModel implements TreeModel {
 		}
 
 		public void wabitChildRemoved(WabitChildEvent e) {
+            WabitUtils.unlistenToHierarchy(e.getChild(), this, this);
 			TreeModelEvent treeEvent = new TreeModelEvent(this, pathToNode(e
 					.getSource()), new int[] { e.getIndex() }, new Object[] { e
 					.getChild() });
@@ -185,6 +187,13 @@ public class ProjectTreeModel implements TreeModel {
 	            path.add(0, o);
 	            if (o == getRoot()) break;
 	            o = o.getParent();
+	        }
+	        if (path.get(0) != getRoot()) {
+	            // note: if you get this exception, it's probably because the item
+	            // at the beginning of the path needs its parent reference set, but
+	            // it might also be because one of the other items in the path points
+	            // to a node that's in a different tree. So check into both possibilities!
+	            throw new IllegalStateException("Parent pointer is missing at " + path.get(0));
 	        }
 	        return new TreePath(path.toArray());
 	    }
