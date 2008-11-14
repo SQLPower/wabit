@@ -20,8 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
@@ -32,50 +30,30 @@ import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.AbstractAction;
-import javax.swing.AbstractListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.KeyStroke;
-import javax.swing.ListModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
-import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLDatabase;
@@ -85,30 +63,16 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
-import ca.sqlpower.swingui.query.SQLQueryUIComponents;
-import ca.sqlpower.swingui.query.TableChangeEvent;
-import ca.sqlpower.swingui.query.TableChangeListener;
-import ca.sqlpower.swingui.table.FancyExportableJTable;
-import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.StringItem;
-import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.LogAction;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
 
 
 /**
@@ -119,45 +83,22 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
-	private static final String SQL_TEXT_TAB_HEADING = "SQL";
-    
-	private final String QUERY_EXECUTE = "Execute";
 	private final WabitSessionContext sessionContext;
 	
-    private SQLQueryUIComponents queryUIComponents;
 	private JTree projectTree;
-	private JTree dragTree;
 	private JFrame frame;
-	private JCheckBox groupingCheckBox;
 	private static JLabel statusLabel;
-	private final JLabel groupingLabel = new JLabel("Group Function");
-	private final JLabel havingLabel = new JLabel ("Having");
-	private final JLabel columnNameLabel = new JLabel ();
-	private JPanel cornerPanel;
-	private JComboBox reportComboBox;
-
 	/**
-	 * Stores the parts of the query.
+	 * All information useful to the user in a log format should be logged here.
+	 * The user can get access to the contents of this log from the window's menu.
 	 */
-	private QueryCache queryCache;
+	private final Logger userInformationLogger = Logger.getLogger("User Info Log");
 
 	/**
 	 * The list of all currently-registered background tasks.
 	 */
 	private final List<SPSwingWorker> activeWorkers =
 		Collections.synchronizedList(new ArrayList<SPSwingWorker>());
-
-	/**
-	 * This stores a copy of the query cache for each query that is executed
-	 * through this session. This way we can get at parts of the query for the
-	 * tables that result from executing these queries. If a query is found to
-	 * be used part way through this list the queries before it will be removed
-	 * as the tables that represent the query should have been removed prior to
-	 * the new tables being added to the result set.
-	 */
-	private final List<QueryCache> queuedQueryCache;
-
-	private QueryController queryController;
 
 	/**
 	 * Creates a new session 
@@ -167,56 +108,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	public WabitSwingSessionImpl(WabitSessionContext context) {
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
-		queryCache = new QueryCache();
-		queryPen = new QueryPen(this, queryCache);
-		
-		queryController = new QueryController(queryCache, queryPen);
 		
 		statusLabel= new JLabel();
-		queuedQueryCache = new ArrayList<QueryCache>();
-		dragTree = new JTree();
-		reportComboBox = new JComboBox(sessionContext.getDataSources()
-				.getConnections().toArray());
-		reportComboBox.addActionListener(new AbstractAction() {
-			public void actionPerformed(ActionEvent event) {
-				SQLObjectRoot tempRootNode = new SQLObjectRoot();
-				try {
-					tempRootNode.addChild(new SQLDatabase(
-							(SPDataSource) reportComboBox.getSelectedItem()));
-					DBTreeModel tempTreeModel = new DBTreeModel(tempRootNode);
-					dragTree.setModel(tempTreeModel);
-				} catch (ArchitectException e) {
-					throw new RuntimeException(
-							"Could not add DataSource to rootNode", e);
-				}
-
-			}
-		});
-		reportComboBox.setSelectedIndex(0);
-		dragTree.setCellRenderer(new DBTreeCellRenderer());
+		
 	}
 	/**
 	 * sets the StatusMessage
 	 */
 	public static void setStatusMessage (String msg) {
 		statusLabel.setText(msg);	
-	}
-	
-	/**
-	 * This is a listModel that just returns the row Number for the rowHeaderRender
-	 */
-	private class RowListModel extends AbstractListModel{
-		int tableRowSize;
-		public RowListModel(JTable table) {
-			tableRowSize = table.getRowCount();
-		}
-		public Object getElementAt(int index) {
-			return index+1;
-		}
-		public int getSize() {
-			return tableRowSize;
-		}
-		
 	}
 	
 	/**
@@ -228,142 +128,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
-
-    	queryUIComponents = new SQLQueryUIComponents(this, sessionContext.getDataSources(), cp);
-    	queryUIComponents.enableMultipleQueries(false);
-    	queryUIComponents.addTableChangeListener(new TableChangeListener() {
-			public void tableRemoved(TableChangeEvent e) {
-				// Do Nothing
-			}
-		
-			public void tableAdded(TableChangeEvent e) {
-				logger.debug("Table added.");
-				queryController.unlistenToCellRenderer();
-				TableModelSortDecorator sortDecorator = null;
-				JTable table = e.getChangedTable();
-				if (table instanceof FancyExportableJTable) {
-					FancyExportableJTable fancyTable = (FancyExportableJTable)table;
-					sortDecorator = fancyTable.getTableModelSortDecorator();
-				}
-				ComponentCellRenderer renderer = new ComponentCellRenderer(table, sortDecorator);
-				table.getTableHeader().setDefaultRenderer(renderer);
-				
-				ListModel lm = new RowListModel(table);
-				JList rowHeader = new JList(lm);
-				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width + 2);
-				rowHeader.setCellRenderer(new RowHeaderRenderer(table));
-				
-				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
-				
-				GridLayout layout = new GridLayout(0,1);
-				cornerPanel = new JPanel(layout);
-				if(queryPenAndTextTabPane.getSelectedIndex() == 0) {
-					groupingLabel.setFont(table.getTableHeader().getFont());
-					havingLabel.setFont(table.getTableHeader().getFont());
-					havingLabel.setVerticalAlignment(JLabel.BOTTOM);
-					cornerPanel.add(groupingLabel);
-					cornerPanel.add(havingLabel);
-				}
-				cornerPanel.add(columnNameLabel);
-				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanel);
-				addGroupingTableHeaders();
-				queryController.listenToCellRenderer(renderer);
-			}
-		});
-    	
-		JPanel queryToolPanel = new JPanel(new BorderLayout());
-		JToolBar queryToolBar = new JToolBar();
-		JButton executeButton = queryUIComponents.getExecuteButton();
-		queryToolBar.add(executeButton);
-		queryToolBar.add(queryUIComponents.getStopButton());
-		queryToolBar.add(queryUIComponents.getClearButton());
-		queryToolBar.add(queryUIComponents.getUndoButton());
-		queryToolBar.add(queryUIComponents.getRedoButton());
-		
-		queryToolPanel.add(queryToolBar, BorderLayout.NORTH);
-		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-    	JSplitPane rightViewPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-    	JPanel resultPanel = queryUIComponents.getFirstResultPanel();
-        	
-    	queryPenAndTextTabPane = new JTabbedPane();
-    	queryCache.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent e) {
-				executeQueryInCache();
-			}
-		});
-    	JPanel playPen = queryPen.createQueryPen();
-    	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
-    	AbstractAction queryExecuteAction = new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				executeQueryInCache();
-			}
-		};
-    	JButton playPenExecuteButton = new JButton(queryExecuteAction);
-    	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/execute.png"));
-    	playPenExecuteButton.setIcon(executeIcon);
-    	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ queryPen.getAcceleratorKeyString()+ " R)");
-    	queryPen.getQueryPenBar().add(playPenExecuteButton);
-    	queryPen.getQueryPenCavas().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-                KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
-                , QUERY_EXECUTE);
-    	queryPen.getQueryPenCavas().getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
-    	
-    	JPanel queryPenPanel = new JPanel(new BorderLayout());
-    	queryPenPanel.add(playPen, BorderLayout.CENTER);
-    	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
-    	queryPenAndTextTabPane.add(queryPenPanel,"PlayPen");
-    	queryPenAndTextTabPane.add(queryToolPanel,SQL_TEXT_TAB_HEADING);
-    	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
-			}
-		});
-    	
-    	groupingCheckBox = new JCheckBox("Grouping");
-    	groupingCheckBox.addActionListener(new AbstractAction() {
-
-    		public void actionPerformed(ActionEvent e) {
-    			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
-    			if (groupingCheckBox.isSelected()) {
-    				for (Item item :queryCache.getSelectedColumns()) {
-    					if (item instanceof StringItem) {
-    						queryCache.setGrouping(item, SQLGroupFunction.COUNT.toString());
-    					}
-    				}
-    			}
-    			executeQueryInCache();
-    		}
-    	});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, pref, 3dlu, min(pref;50dlu)"
-    			,"pref, pref,  pref, fill:min(pref;100dlu):grow");
-    	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
-    	southPanelBuilder.append(new JLabel("Database connection:"));
-    	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
-    	southPanelBuilder.append(new JLabel("Row Limit"));
-    	JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
-    	rowLimitSpinner.setValue(new Integer(1000));
-    	southPanelBuilder.append(rowLimitSpinner);
-    	southPanelBuilder.nextLine();
-    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 5);
-    	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(groupingCheckBox);
-    	southPanelBuilder.append(new JLabel(""));
-    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel(),3);
-    	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(resultPanel, 7);
-    	
-    	JPanel rightTreePanel = new JPanel(new BorderLayout());
-    	rightTreePanel.add(dragTree,BorderLayout.CENTER);
-    	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
-    	
-    	JPanel rightTopPane = new JPanel(new BorderLayout());
-    	rightTopPane.add(queryPenAndTextTabPane, BorderLayout.CENTER);
-    	rightTopPane.add(rightTreePanel,BorderLayout.EAST);
-    	
-    	rightViewPane.add(rightTopPane, JSplitPane.TOP);
-    	rightViewPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);  	
     	
     	rootNode = new SQLObjectRoot();
         for (SPDataSource ds : sessionContext.getDataSources().getConnections()) {
@@ -421,7 +187,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		});
 
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
-        wabitPane.add(rightViewPane, JSplitPane.RIGHT);
+        wabitPane.add(new QueryPanel(this).getSplitPane(), JSplitPane.RIGHT);
         
         JPanel statusPane = new JPanel(new BorderLayout());
         statusPane.add(statusLabel, BorderLayout.CENTER);
@@ -443,7 +209,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu windowMenu = new JMenu("Window");
 		fileMenu.setMnemonic('w');
 		menuBar.add(windowMenu);
-		JTextArea logTextArea = queryUIComponents.getLogTextArea();
+		JTextArea logTextArea = new JTextArea();
+		DocumentAppender docAppender = new DocumentAppender(logTextArea.getDocument());
+		userInformationLogger.addAppender(docAppender);
 		JMenuItem logMenuItem = new JMenuItem(new LogAction(frame, logTextArea ));
 		windowMenu.add(logMenuItem);
 		
@@ -457,6 +225,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			public void windowClosing(WindowEvent e) {
 				close();
 			}});
+        logger.debug("UI is built.");
     }
     
     public JTree getTree() {
@@ -477,14 +246,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
 
 	private SQLObjectRoot rootNode;
-
-	private QueryPen queryPen;
-
-	/**
-	 * This is the tabbed pane that contains the query pen and text editor.
-	 * All the query editing UI should be in this tabbed pane.
-	 */
-	private JTabbedPane queryPenAndTextTabPane;
 	
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.add(l);
@@ -564,95 +325,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 		}
 	}
-	
-	/**
-	 * This will add a {@link ComponentCellRenderer} to the table headers
-	 * to allow grouping when the grouping checkbox is checked. This will
-	 * need to be called each time the tables are recreated.
-	 * 
-	 * @param initialDisplay If true this header will be displayed with default values for the
-	 * headers. If false it will display the header with only what is defined in the QueryCache.
-	 */
-	private void addGroupingTableHeaders() {
-		//XXX The group by and having clauses should be allowed
-		// to be shown on both the query pen and text editor tabs
-		// however we currently can't update the query cache from 
-		// the text side so we won't be able to use these components
-		// from the text side and they will cause errors as they won't
-		// be able to synchronize with the new queries being run.
-		if (queryPenAndTextTabPane.getSelectedIndex() == 0) {
-			ArrayList<JTable> tables = queryUIComponents.getResultTables();
-			for(JTable t : tables)	{
-				QueryCache cache = null;
-				List<QueryCache> removeCacheList = new ArrayList<QueryCache>();
-				for (QueryCache c : queuedQueryCache) {
-					if (c.generateQuery().equals(queryUIComponents.getQueryForJTable(t))) {
-						cache = c;
-						break;
-					}
-					removeCacheList.add(c);
-				}
-				for (QueryCache c : removeCacheList) {
-					queuedQueryCache.remove(c);
-				}
-				if (cache == null) {
-					// There are no QueryCache objects that define the header for
-					// this table so we cannot add a header.
-					logger.debug("There was no cache matching the table from query " + queryUIComponents.getQueryForJTable(t));
-					return;
-				}
-				ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
-				if(groupingCheckBox.isSelected()) {
-					renderPanel.setGroupingEnabled(true);
-					logger.debug("Grouping Enabled");
-					groupingLabel.setVisible(true);
-					havingLabel.setVisible(true);
-				} else {
-					renderPanel.setGroupingEnabled(false);
-					groupingLabel.setVisible(false);
-					havingLabel.setVisible(false);
-				}
-				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-					SQLGroupFunction groupByAggregate = cache.getGroupByAggregate(cache.getSelectedColumns().get(i));
-					if (groupByAggregate != null) {
-						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate.toString());
-					}
-				}
 
-				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-					String havingText = cache.getHavingClause(cache.getSelectedColumns().get(i));
-					if (havingText != null) {
-						renderPanel.getTextFields().get(i).setText(havingText);
-					}
-				}
-				
-				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (Item column : cache.getOrderByList()) {
-					int columnIndex = cache.getSelectedColumns().indexOf(column);
-					OrderByArgument arg = cache.getOrderByArgument(column);
-					if (arg != null) {
-						if (arg == OrderByArgument.ASC) {
-							columnSortMap.put(columnIndex, TableModelSortDecorator.ASCENDING);
-						} else if (arg == OrderByArgument.DESC) {
-							columnSortMap.put(columnIndex, TableModelSortDecorator.DESCENDING);
-						} else {
-							logger.debug("Order by argument for column " + columnIndex + " is " + arg.toString() + " but was not set for an unknown reason.");
-						}
-					}
-				}
-				renderPanel.setSortingStatus(columnSortMap);
-				
-			}
-		}
+	public Logger getUserInformationLogger() {
+		return userInformationLogger;
 	}
 	
-	/**
-	 * This will execute the current query in the QueryCache and
-	 * store a copy of the QueryCache in the queued list.
-	 */
-	private synchronized void executeQueryInCache() {
-		queuedQueryCache.add(new QueryCache(queryCache));
-		queryUIComponents.executeQuery(queryCache.generateQuery());
-		
-	}
 }

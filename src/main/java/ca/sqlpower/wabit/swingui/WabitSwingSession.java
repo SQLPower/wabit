@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSession;
@@ -29,5 +31,7 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	WabitSessionContext getContext();
 	
 	SQLObjectRoot getRootNode();
+	
+	Logger getUserInformationLogger();
 
 }

@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
@@ -61,6 +63,11 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	public void removeSessionLifecycleListener(
 			SessionLifecycleListener<WabitSession> l) {
 		//Do nothing
+	}
+
+	public Logger getUserInformationLogger() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 
