@@ -28,6 +28,8 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
@@ -43,6 +45,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
@@ -78,8 +81,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final WabitProject project;
 	
 	private JTree projectTree;
+	private QueryPanel queryPanel;
+	private JSplitPane wabitPane;
 	private JFrame frame;
 	private static JLabel statusLabel;
+	
+	private final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContext.class);
+	
 	/**
 	 * All information useful to the user in a log format should be logged here.
 	 * The user can get access to the contents of this log from the window's menu.
@@ -122,14 +130,23 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
     	
-    	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    	wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	
 		projectTree = new JTree(new ProjectTreeModel(project));
 		projectTree.addMouseListener(new PopUpMenuListener());
     	projectTree.setCellRenderer(new ProjectTreeCellRenderer());
 
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
-        wabitPane.add(new QueryPanel(this).getSplitPane(), JSplitPane.RIGHT);
+        queryPanel = new QueryPanel(this);
+		wabitPane.add(queryPanel.getFullSplitPane(), JSplitPane.RIGHT);
+    	
+		//prefs
+    	if(prefs.get("DividerLocatons", null) != null) {
+            String[] dividerLocations = prefs.get("DividerLocatons", null).split(",");
+            queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
+            queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
+            wabitPane.setDividerLocation(Integer.parseInt(dividerLocations[2]));
+        }
         
         JPanel statusPane = new JPanel(new BorderLayout());
         statusPane.add(statusLabel, BorderLayout.CENTER);
@@ -159,15 +176,39 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
-        frame.setSize(950, 550);
-        frame.setLocation(300, 200);
+        
+        //prefs
+        if (prefs.get("frameBounds", null) != null) {
+            String[] frameBounds = prefs.get("frameBounds", null).split(",");
+            if (frameBounds.length == 4) {
+                frame.setBounds(
+                        Integer.parseInt(frameBounds[0]),
+                        Integer.parseInt(frameBounds[1]),
+                        Integer.parseInt(frameBounds[2]),
+                        Integer.parseInt(frameBounds[3]));
+            }
+        } else {
+        	frame.setSize(950, 550);
+        	frame.setLocation(300, 200);
+        }
+
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
+        	
+        	@Override
+			public void windowClosing(WindowEvent e) {
+                try {
+                	prefs.put("DividerLocatons", String.format("%d,%d,%d", queryPanel.getTopRightSplitPane().getDividerLocation(),
+                			queryPanel.getFullSplitPane().getDividerLocation(), wabitPane.getDividerLocation()));
+                    prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
+                    prefs.flush();
+                } catch (BackingStoreException ex) {
+                    logger.log(Level.WARN,"Failed to flush preferences", ex);
+                }
 
-            public void windowClosing(WindowEvent e) {
-                close();
-            }
-        });
+				close();
+			}});
+
         logger.debug("UI is built.");
     }
     

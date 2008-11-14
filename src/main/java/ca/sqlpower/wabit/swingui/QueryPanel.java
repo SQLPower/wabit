@@ -75,7 +75,6 @@ import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
-import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
@@ -165,6 +164,12 @@ public class QueryPanel {
 	 * are placed in this.
 	 */
 	private final JSplitPane mainSplitPane;
+	
+	/**
+	 * This is the TopRight SplitPane of wabbit that divides the QueryTabbedPen and the dragTree
+	 * with comboBox
+	 */
+	private JSplitPane rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
 	/**
 	 * This is the root of the JTree on the right of the query builder. This
@@ -338,7 +343,7 @@ public class QueryPanel {
     	queryPen.getQueryPenBar().add(new JButton(new AbstractAction("Save") {
 			public void actionPerformed(ActionEvent e) {
 				final JFileChooser fc = new JFileChooser();
-				int retval = fc.showSaveDialog(QueryPanel.this.getSplitPane());
+				int retval = fc.showSaveDialog(QueryPanel.this.getFullSplitPane());
 				if (retval == JFileChooser.APPROVE_OPTION) {
 					ProjectXMLDAO dao;
 					try {
@@ -386,7 +391,7 @@ public class QueryPanel {
     		}
     	});
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, pref, 3dlu, min(pref;50dlu)"
-    			,"pref, pref,  pref, fill:min(pref;100dlu):grow");
+    			,"pref, 2dlu, pref, 2dlu,  pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(new JLabel(""));
     	southPanelBuilder.append(new JLabel(""));
@@ -395,7 +400,9 @@ public class QueryPanel {
     	rowLimitSpinner.setValue(new Integer(1000));
     	southPanelBuilder.append(rowLimitSpinner);
     	southPanelBuilder.nextLine();
+    	southPanelBuilder.nextLine();
     	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 5);
+    	southPanelBuilder.nextLine();
     	southPanelBuilder.nextLine();
     	southPanelBuilder.append(groupingCheckBox);
     	southPanelBuilder.append(new JLabel(""));
@@ -407,14 +414,13 @@ public class QueryPanel {
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
     	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
     	
-    	JSplitPane rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    	rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
     	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
-    	rightTopPane.setDividerLocation(500);
     	
     	mainSplitPane.add(rightTopPane, JSplitPane.TOP);
     	mainSplitPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);
-	}
+}
 	
 	/**
 	 * This will add a {@link ComponentCellRenderer} to the table headers
@@ -507,8 +513,12 @@ public class QueryPanel {
 		
 	}
 	
-	public JSplitPane getSplitPane() {
+	public JSplitPane getFullSplitPane() {
 		return mainSplitPane;
+	}
+	
+	public JSplitPane getTopRightSplitPane() {
+		return rightTopPane;
 	}
 	
 	public SQLObjectRoot getRootNode() {
