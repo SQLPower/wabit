@@ -25,12 +25,18 @@ import java.awt.Dimension;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
@@ -79,10 +85,21 @@ public class ReportLayoutPanel {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Layout report = new Layout("My Layout");
-                ReportLayoutPanel p = new ReportLayoutPanel(report);
+                
+                WabitProject project = new WabitProject();
+                Layout layout = new Layout("My Layout");
+                project.addLayout(layout);
+                layout.getPage().setName("cows");
+                
+                JTree tree = new JTree(new ProjectTreeModel(project));
+                tree.setCellRenderer(new ProjectTreeCellRenderer());
+                
+                ReportLayoutPanel p = new ReportLayoutPanel(layout);
+                
                 JFrame f = new JFrame("Report layout");
-                f.setContentPane(p.canvas);
+                JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(tree), p.canvas);
+                splitPane.setDividerLocation(200);
+                f.setContentPane(splitPane);
                 f.pack();
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 f.setVisible(true);
