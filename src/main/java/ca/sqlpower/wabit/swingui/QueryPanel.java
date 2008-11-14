@@ -77,6 +77,7 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
@@ -94,7 +95,7 @@ import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
-public class QueryPanel {
+public class QueryPanel implements DataEntryPanel {
 	
 	private static final Logger logger = Logger.getLogger(QueryPanel.class);
 	
@@ -178,10 +179,10 @@ public class QueryPanel {
 	 */
 	private SQLObjectRoot rootNode;
 	
-	public QueryPanel(WabitSwingSession session) {
+	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		this.session = session;
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		queryCache = new QueryCache();
+		queryCache = cache;
 		queryPen = new QueryPen(session, this, queryCache);
 		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
 		queryUIComponents.enableMultipleQueries(false);
@@ -344,7 +345,7 @@ public class QueryPanel {
     	queryPen.getQueryPenBar().add(new JButton(new AbstractAction("Save") {
 			public void actionPerformed(ActionEvent e) {
 				final JFileChooser fc = new JFileChooser();
-				int retval = fc.showSaveDialog(QueryPanel.this.getFullSplitPane());
+				int retval = fc.showSaveDialog(QueryPanel.this.getPanel());
 				if (retval == JFileChooser.APPROVE_OPTION) {
 					ProjectXMLDAO dao;
 					try {
@@ -518,6 +519,10 @@ public class QueryPanel {
 		
 	}
 	
+	public JComponent getPanel() {
+		return mainSplitPane;
+	}
+	
 	public JSplitPane getFullSplitPane() {
 		return mainSplitPane;
 	}
@@ -528,5 +533,22 @@ public class QueryPanel {
 	
 	public SQLObjectRoot getRootNode() {
 		return rootNode;
+	}
+
+
+	public boolean applyChanges() {
+		//Changes are currently always done immediately. If we add a save button this will change.
+		return true;
+	}
+
+
+	public void discardChanges() {
+		//Changes are currently always done immediately. If we add a save button this will change.
+	}
+
+
+	public boolean hasUnsavedChanges() {
+		//Changes are currently always done immediately. If we add a save button this will change.
+		return false;
 	}
 }

@@ -17,26 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.swingui.action;
 
+import java.awt.event.ActionEvent;
 
-import javax.swing.JFrame;
+import javax.swing.AbstractAction;
 
-import org.apache.log4j.Logger;
+import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.query.QueryCache;
 
-import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.wabit.WabitSession;
-
-public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
+public class NewQueryAction extends AbstractAction {
 	
-    Logger getUserInformationLogger();
-    
-    JFrame getFrame();
+    private final WabitProject project;
 
-	/**
-	 * Sets the panel that allows editing of the current selection in the tree.
-	 */
-	void setEditorPanel(DataEntryPanel entryPanel);
+    public NewQueryAction(WabitProject project) {
+        super("New Query");
+        this.project = project;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        QueryCache query = new QueryCache();
+        query.setName("New Query");
+		project.addQuery(query);
+    }
 
 }

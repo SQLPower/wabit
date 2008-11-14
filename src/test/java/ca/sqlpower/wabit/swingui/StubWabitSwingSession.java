@@ -19,10 +19,12 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.StubWabitSessionContext;
@@ -76,5 +78,15 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	public JMenu createDataSourcesMenu() {
 	    // TODO Auto-generated method stub
 	    return null;
+	}
+
+	public JFrame getFrame() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setEditorPanel(DataEntryPanel entryPanel) {
+		// TODO Auto-generated method stub
+		
 	}
 }

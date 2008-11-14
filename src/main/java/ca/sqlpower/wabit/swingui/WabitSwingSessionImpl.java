@@ -20,9 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -31,14 +28,13 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
@@ -49,21 +45,18 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
-import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
-import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
+import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.swingui.action.LogAction;
-import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 
@@ -99,6 +92,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private final List<SPSwingWorker> activeWorkers =
 		Collections.synchronizedList(new ArrayList<SPSwingWorker>());
+	
+	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
+		new ArrayList<SessionLifecycleListener<WabitSession>>();
+
+	/**
+	 * This is the current panel to the right of the JTree showing the parts of the 
+	 * project. This will allow editing the currently selected element in the JTree.
+	 */
+	private DataEntryPanel currentEditorPanel;
 
 	/**
 	 * Creates a new session 
@@ -133,12 +135,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	
 		projectTree = new JTree(new ProjectTreeModel(project));
-		projectTree.addMouseListener(new PopUpMenuListener());
+		projectTree.addMouseListener(new ProjectTreeListener(this));
     	projectTree.setCellRenderer(new ProjectTreeCellRenderer());
 
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
-        queryPanel = new QueryPanel(this);
-		wabitPane.add(queryPanel.getFullSplitPane(), JSplitPane.RIGHT);
+        queryPanel = new QueryPanel(this, new QueryCache());
+		setEditorPanel(queryPanel);
     	
 		//prefs
     	if(prefs.get("DividerLocatons", null) != null) {
@@ -226,9 +228,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		activeWorkers.remove(worker);
 	}
 
-	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
-		new ArrayList<SessionLifecycleListener<WabitSession>>();
-	
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.add(l);
 	}
@@ -276,72 +275,24 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return sessionContext;
 	}
 	
-	/**
-	 * A PopUpMenuListener which is current used for the ProjectTree.
-	 * It will Display a List of options once you right click on the ProjectTree.
-	 *
-	 */
-	private class PopUpMenuListener extends MouseAdapter {
-
-		DatabaseConnectionManager dbConnectionManager;
-
-		PopUpMenuListener() {
-			dbConnectionManager = new DatabaseConnectionManager(sessionContext.getDataSources());
-		}
-
-		@Override
-		public void mouseClicked(MouseEvent e) {
-		    maybeShowPopup(e);
-		}
-		
-		@Override
-		public void mousePressed(MouseEvent e) {
-		    maybeShowPopup(e);
-		}
-		
-		@Override
-		public void mouseReleased(MouseEvent e) {
-		    maybeShowPopup(e);
-		}
-		
-		private void maybeShowPopup(MouseEvent e) {
-		    if (!e.isPopupTrigger()) {
-		        return;
-		    }
-		    
-	        JPopupMenu menu = new JPopupMenu();
-	        menu.add(new AbstractAction("Database Connection Manager...") {
-
-	            public void actionPerformed(ActionEvent e) {
-	                dbConnectionManager.showDialog(frame);
-	            }
-	        });
-	        
-	        menu.add(createDataSourcesMenu());
-
-	        menu.addSeparator();
-	        
-	        menu.add(new NewLayoutAction(project));
-	        
-	        menu.show(e.getComponent(), e.getX(), e.getY());
-		}
-	}
-
 	public Logger getUserInformationLogger() {
 		return userInformationLogger;
 	}
 	
-	
-	public JMenu createDataSourcesMenu() {
-        JMenu dbcsMenu = new JMenu("Add data source"); //$NON-NLS-1$
-//        dbcsMenu.add(new JMenuItem(new NewDataSourceAction(this)));
-//        dbcsMenu.addSeparator();
-
-        for (SPDataSource dbcs : getContext().getDataSources().getConnections()) {
-            dbcsMenu.add(new JMenuItem(new AddDataSourceAction(project, dbcs)));
-        }
-        SPSUtils.breakLongMenu(frame, dbcsMenu);
-        
-        return dbcsMenu;
+	public JFrame getFrame() {
+		return frame;
 	}
+	
+	public void setEditorPanel(DataEntryPanel entryPanel) {
+		if (currentEditorPanel != null && currentEditorPanel.hasUnsavedChanges()) {
+			int retval = JOptionPane.showConfirmDialog(frame, "There are unsaved changes. Discard?", "Discard changes", JOptionPane.YES_NO_OPTION);
+			if (retval == JOptionPane.NO_OPTION) {
+				return;
+			}
+			currentEditorPanel.discardChanges();
+		}
+		currentEditorPanel = entryPanel;
+		wabitPane.add(entryPanel.getPanel(), JSplitPane.RIGHT);
+	}
+	
 }
