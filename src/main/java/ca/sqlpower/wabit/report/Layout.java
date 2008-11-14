@@ -61,6 +61,7 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
     
     public Layout(String name) {
         setName(name);
+        page.setParent(this);
     }
     
     /**
