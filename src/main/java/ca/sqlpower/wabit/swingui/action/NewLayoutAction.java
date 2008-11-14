@@ -17,24 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.swingui.action;
 
+import java.awt.event.ActionEvent;
 
-import javax.swing.JMenu;
+import javax.swing.AbstractAction;
 
-import org.apache.log4j.Logger;
+import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.report.Layout;
 
-import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.wabit.WabitSession;
+/**
+ * An action that adds a new empty layout to a particular project every time it
+ * is invoked.
+ */
+public class NewLayoutAction extends AbstractAction {
 
-public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
-	
-    Logger getUserInformationLogger();
+    private final WabitProject project;
 
-    /**
-     * Creates a JMenu with an item for each data source defined in the context's
-     * data source collection. When one of these items is selected, it invokes an
-     * action that adds that data source to the project. 
-     */
-    public JMenu createDataSourcesMenu();
+    public NewLayoutAction(WabitProject project) {
+        super("New Layout");
+        this.project = project;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        project.addLayout(new Layout("New Layout"));
+    }
 }

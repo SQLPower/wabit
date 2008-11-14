@@ -32,6 +32,11 @@ public interface WabitSession {
 	public void removeSessionLifecycleListener(SessionLifecycleListener<WabitSession> l);
 
 	/**
+	 * Returns the context this session belongs to.
+	 */
+	public WabitSessionContext getContext();
+
+	/**
 	 * Ends this session, disposing its frame and releasing any system
 	 * resources that were obtained explicitly by this session. Also
 	 * fires a sessionClosing lifecycle event, so any resources used up
@@ -40,5 +45,8 @@ public interface WabitSession {
 	 */
 	public void close();
 
-	
+	/**
+	 * Returns the project associated with this session.
+	 */
+	public WabitProject getProject();
 }

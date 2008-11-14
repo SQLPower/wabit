@@ -212,14 +212,13 @@ public class QueryPanel {
 				if(dragTree.getSelectionPaths() == null) {
 					return;
 				}
-				ArrayList<int[]> list = new ArrayList<int[]>();
+				ArrayList<SQLObject> list = new ArrayList<SQLObject>();
 				for (TreePath path : dragTree.getSelectionPaths()) {
 					Object selectedNode = path.getLastPathComponent();
 					if (!(selectedNode instanceof SQLObject)) {
 						throw new IllegalStateException("DBTrees are not allowed to contain non SQLObjects. This tree contains a " + selectedNode.getClass());
 					}
-					int[] dndPathToNode = DnDTreePathTransferable.getDnDPathToNode((SQLObject)selectedNode, rootNode);
-					list.add(dndPathToNode);
+					list.add((SQLObject) selectedNode);
 				}
 					
 				Object firstSelectedObject = dragTree.getSelectionPath().getLastPathComponent();
@@ -230,7 +229,7 @@ public class QueryPanel {
 					name = firstSelectedObject.toString();
 				}
 				
-				Transferable dndTransferable = new DnDTreePathTransferable(list, name);
+				Transferable dndTransferable = new SQLObjectSelection(list);
 				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceListener() {
 					public void dropActionChanged(DragSourceDragEvent dsde) {
 						//do nothing

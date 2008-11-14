@@ -19,12 +19,14 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import javax.swing.JMenu;
+
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.StubWabitSessionContext;
+import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 
@@ -37,10 +39,6 @@ public class StubWabitSwingSession implements WabitSwingSession {
 
 	public WabitSessionContext getContext() {
 		return context;
-	}
-
-	public SQLObjectRoot getRootNode() {
-		return null;
 	}
 
 	public void registerSwingWorker(SPSwingWorker worker) {
@@ -70,5 +68,13 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		return null;
 	}
 	
-
+	public WabitProject getProject() {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
+	
+	public JMenu createDataSourcesMenu() {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
 }

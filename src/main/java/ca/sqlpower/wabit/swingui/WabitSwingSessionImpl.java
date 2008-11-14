@@ -46,21 +46,23 @@ import javax.swing.border.EmptyBorder;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLDatabase;
-import ca.sqlpower.architect.SQLObjectRoot;
-import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
-import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.LogAction;
+import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 
 
 /**
@@ -72,6 +74,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private final WabitSessionContext sessionContext;
+	
+	private final WabitProject project;
 	
 	private JTree projectTree;
 	private JFrame frame;
@@ -94,6 +98,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * @param context
 	 */
 	public WabitSwingSessionImpl(WabitSessionContext context) {
+	    project = new WabitProject();
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
 		
@@ -119,15 +124,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	
     	JSplitPane wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	
-    	rootNode = new SQLObjectRoot();
-        for (SPDataSource ds : sessionContext.getDataSources().getConnections()) {
-            rootNode.addChild(new SQLDatabase(ds));
-        }
-    	final DBTreeModel treeModel = new DBTreeModel(rootNode);
-		projectTree = new JTree(treeModel);
+		projectTree = new JTree(new ProjectTreeModel(project));
 		projectTree.addMouseListener(new PopUpMenuListener());
-    	projectTree.setCellRenderer(new DBTreeCellRenderer());
-    	
+    	projectTree.setCellRenderer(new ProjectTreeCellRenderer());
+
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
         wabitPane.add(new QueryPanel(this).getSplitPane(), JSplitPane.RIGHT);
         
@@ -164,9 +164,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
 
-			public void windowClosing(WindowEvent e) {
-				close();
-			}});
+            public void windowClosing(WindowEvent e) {
+                close();
+            }
+        });
         logger.debug("UI is built.");
     }
     
@@ -186,8 +187,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
-
-	private SQLObjectRoot rootNode;
 	
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.add(l);
@@ -228,10 +227,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         wss.buildUI();
     }
 
-	public SQLObjectRoot getRootNode() {
-		return rootNode;
-	}
-	
+    public WabitProject getProject() {
+        return project;
+    }
+    
 	public WabitSessionContext getContext() {
 		return sessionContext;
 	}
@@ -243,28 +242,47 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private class PopUpMenuListener extends MouseAdapter {
 
-		JPopupMenu menu;
 		DatabaseConnectionManager dbConnectionManager;
 
 		PopUpMenuListener() {
-			menu = new JPopupMenu();
 			dbConnectionManager = new DatabaseConnectionManager(sessionContext.getDataSources());
-			menu.add(new AbstractAction("Database ConnectionManager..."){
-
-				public void actionPerformed(ActionEvent e) {
-					 dbConnectionManager.showDialog(frame);
-				}});
-
 		}
 
+		@Override
 		public void mouseClicked(MouseEvent e) {
-			
-			if (e.getButton() == MouseEvent.BUTTON3) {
-				menu.show(e.getComponent(), e.getX(), e.getY());
-			} else {
-				menu.setVisible(false);
-			}
+		    maybeShowPopup(e);
+		}
+		
+		@Override
+		public void mousePressed(MouseEvent e) {
+		    maybeShowPopup(e);
+		}
+		
+		@Override
+		public void mouseReleased(MouseEvent e) {
+		    maybeShowPopup(e);
+		}
+		
+		private void maybeShowPopup(MouseEvent e) {
+		    if (!e.isPopupTrigger()) {
+		        return;
+		    }
+		    
+	        JPopupMenu menu = new JPopupMenu();
+	        menu.add(new AbstractAction("Database Connection Manager...") {
 
+	            public void actionPerformed(ActionEvent e) {
+	                dbConnectionManager.showDialog(frame);
+	            }
+	        });
+	        
+	        menu.add(createDataSourcesMenu());
+
+	        menu.addSeparator();
+	        
+	        menu.add(new NewLayoutAction(project));
+	        
+	        menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 	}
 
@@ -272,4 +290,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return userInformationLogger;
 	}
 	
+	
+	public JMenu createDataSourcesMenu() {
+        JMenu dbcsMenu = new JMenu("Add data source"); //$NON-NLS-1$
+//        dbcsMenu.add(new JMenuItem(new NewDataSourceAction(this)));
+//        dbcsMenu.addSeparator();
+
+        for (SPDataSource dbcs : getContext().getDataSources().getConnections()) {
+            dbcsMenu.add(new JMenuItem(new AddDataSourceAction(project, dbcs)));
+        }
+        SPSUtils.breakLongMenu(frame, dbcsMenu);
+        
+        return dbcsMenu;
+	}
 }

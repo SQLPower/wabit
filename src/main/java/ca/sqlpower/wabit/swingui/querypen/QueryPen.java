@@ -61,7 +61,6 @@ import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
-import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Container;
@@ -69,6 +68,7 @@ import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.swingui.QueryPanel;
+import ca.sqlpower.wabit.swingui.SQLObjectSelection;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
@@ -121,38 +121,27 @@ public class QueryPen implements MouseState {
 
 		public void drop(DropTargetDropEvent dtde) {
 			if (!dtde.isLocalTransfer()) {
+			    logger.debug("Rejecting non-local transfer");
 				return;
 			}
 			
-			if (!dtde.isDataFlavorSupported(DnDTreePathTransferable.TREEPATH_ARRAYLIST_FLAVOR)) {
+			if (!dtde.isDataFlavorSupported(SQLObjectSelection.LOCAL_SQLOBJECT_ARRAY_FLAVOUR)) {
+                logger.debug("Rejecting transfer of unknown flavour");
 				return;
 			}
 
-			Object draggedObject;
+			SQLObject[] draggedObjects;
 			try {
-				draggedObject = dtde.getTransferable().getTransferData(DnDTreePathTransferable.TREEPATH_ARRAYLIST_FLAVOR);
+				draggedObjects = (SQLObject[]) dtde.getTransferable().getTransferData(SQLObjectSelection.LOCAL_SQLOBJECT_ARRAY_FLAVOUR);
 			} catch (UnsupportedFlavorException e) {
 				throw new RuntimeException(e);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 			
-			if (draggedObject == null || !(draggedObject instanceof ArrayList)) {
-				return;
-			} 
 			int tempTranslateLocation = 0;
-			for (Object arrayListObject : (ArrayList<?>)draggedObject) {
-				if (!(arrayListObject instanceof int[])) {
-					continue;
-				}
-				int[] path = (int[]) arrayListObject;
-				SQLObject draggedSQLObject;
-				try {
-					draggedSQLObject = DnDTreePathTransferable.getNodeForDnDPath(queryPanel.getRootNode(), path);
-				} catch (ArchitectException e1) {
-					throw new RuntimeException(e1);
-				}
-
+			for (Object draggedSQLObject : draggedObjects) {
+				
 				if (draggedSQLObject instanceof SQLTable) {
 					SQLTable table = (SQLTable) draggedSQLObject;
 					TableContainer model = new TableContainer(table);
@@ -248,7 +237,7 @@ public class QueryPen implements MouseState {
 					dtde.dropComplete(true);
 					
 				} else {
-					logger.debug("dragged " + draggedObject.toString());
+					logger.debug("Rejecting drop of non-SQLTable SQLObject: " + draggedSQLObject);
 				}
 			}
 			
