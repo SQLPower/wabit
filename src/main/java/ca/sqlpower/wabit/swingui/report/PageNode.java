@@ -75,7 +75,9 @@ public class PageNode extends PNode {
         super.addChild(index, child);
         if (child instanceof ContentBoxNode) {
             page.addContentBox(((ContentBoxNode) child).getContentBox());
+        } else if (child instanceof GuideNode) {
+            page.addGuide(((GuideNode) child).getGuide());
         }
-        // TODO add guides to model
+        // There are other types of PNodes added that the model doesn't care about (like selection handles)
     }
 }

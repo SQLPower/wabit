@@ -89,6 +89,10 @@ public class GuideNode extends PNode {
         model.setOffset(guideOffset);
     }
     
+    public Guide getGuide() {
+        return model;
+    }
+    
     public int getGuideOffset() {
         return model.getOffset();
     }
@@ -148,7 +152,7 @@ public class GuideNode extends PNode {
             super.mouseEntered(event);
             setPaint(mouseOverColour);
             event.pushCursor(new Cursor(
-                    model.getAxis() == Axis.HORIZONTAL ? Cursor.N_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR)); // XXX need custom cursor
+                    model.getAxis() == Axis.HORIZONTAL ? Cursor.N_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR));
             cursorPushed = true;
         }
         
