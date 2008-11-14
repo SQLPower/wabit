@@ -37,8 +37,8 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -46,7 +46,7 @@ import ca.sqlpower.wabit.WabitObject;
  * statement and also listen to everything that could
  * change the select statement.
  */
-public class QueryCache implements Query {
+public class QueryCache extends AbstractWabitObject implements Query {
 	
 	private static final Logger logger = Logger.getLogger(QueryCache.class);
 	
@@ -55,7 +55,7 @@ public class QueryCache implements Query {
 	 * the query has changed. This is a generic default change to a query
 	 * rather than a specific query change.
 	 */
-	private static final String PROPERTY_QUERY = "PROPERTY_QUERY";
+	private static final String PROPERTY_QUERY = "query";
 	
 	/**
 	 * The grouping function defined on a group by event if the column is
@@ -210,11 +210,8 @@ public class QueryCache implements Query {
 	private PropertyChangeListener aliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Item.PROPERTY_ALIAS)) {
-				Item column = (Item)e.getSource();
 				if (!compoundEdit) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column.getAlias(), column.getAlias()));
-					}
+					firePropertyChange(PROPERTY_QUERY, e.getOldValue(), e.getNewValue());
 				}
 			}
 		}
@@ -246,9 +243,7 @@ public class QueryCache implements Query {
 					}
 				}
 				if (!compoundEdit) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(e);
-					}
+					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
 				}
 			} else if (e.getPropertyName().equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
 				logger.debug("Got right join changed.");
@@ -265,15 +260,11 @@ public class QueryCache implements Query {
 					}
 				}
 				if (!compoundEdit) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(e);
-					}
+					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
 				}
 			} else if (e.getPropertyName().equals(SQLJoin.COMPARATOR_CHANGED)) {
 				if (!compoundEdit) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(e);
-					}
+					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
 				}
 			}
 		}
@@ -289,9 +280,7 @@ public class QueryCache implements Query {
 					whereMapping.remove(item);
 				}
 				if (!compoundEdit) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(e);
-					}
+					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
 				}
 			} else if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
 				setGlobalWhereClause((String)e.getNewValue());
@@ -309,9 +298,7 @@ public class QueryCache implements Query {
 					tableAliasMap.put(pane, pane.getAlias());
 				}
 				if (!compoundEdit) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(e);
-					}
+					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
 				}
 			}
 		}
@@ -323,21 +310,6 @@ public class QueryCache implements Query {
 	 */
 	private final Container constantsContainer;
 	
-	/**
-	 * These listeners will fire an event whenever the query has changed.
-	 */
-	private final List<PropertyChangeListener> queryChangeListeners;
-
-	/**
-	 * The user defined name of the query this QueryCache represents
-	 */
-	private String name;
-
-	/**
-	 * The parent that contains this QueryCache.
-	 */
-	private WabitObject parent;
-
 	/**
 	 * If true the query cache will be in an editing state. When in this
 	 * state events should not be fired. When the compound edit ends
@@ -365,7 +337,6 @@ public class QueryCache implements Query {
 		fromTableList = new ArrayList<Container>();
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
 		whereMapping = new HashMap<Item, String>();
-		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		groupByList = new ArrayList<Item>();
 		havingMap = new HashMap<Item, String>();
@@ -402,8 +373,8 @@ public class QueryCache implements Query {
 		globalWhereClause = copy.getGlobalWhereClause();
 		groupingEnabled = copy.isGroupingEnabled();
 		
-		name = copy.getName();
-		queryChangeListeners = new ArrayList<PropertyChangeListener>();
+		setName(copy.getName());
+		setParent(copy.getParent());
 		constantsContainer = copy.getConstantsContainer();
 	}
 	
@@ -668,14 +639,6 @@ public class QueryCache implements Query {
 		return query.toString();
 	}
 
-	public void addPropertyChangeListener(PropertyChangeListener l) {
-		queryChangeListeners.add(l);
-	}
-	
-	public void removePropertyChangeListener(PropertyChangeListener l) {
-		queryChangeListeners.remove(l);
-	}
-
 	public List<Item> getSelectedColumns() {
 		return Collections.unmodifiableList(selectedColumns);
 	}
@@ -723,11 +686,9 @@ public class QueryCache implements Query {
 		} else if (isSelected.equals(false)) {
 			removeColumnSelection(column);
 		}
-		logger.debug("Firing change for selection.");
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, column, column));
-			}
+			logger.debug("Firing change for selection.");
+			firePropertyChange(PROPERTY_QUERY, Boolean.valueOf(!isSelected), Boolean.valueOf(isSelected));
 		}
 	}
 	
@@ -741,9 +702,7 @@ public class QueryCache implements Query {
 			}
 		}
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, table, null));
-			}
+			firePropertyChange(PROPERTY_QUERY, table, null);
 		}
 	}
 
@@ -756,9 +715,7 @@ public class QueryCache implements Query {
 			}
 		}
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, container));
-			}
+			firePropertyChange(PROPERTY_QUERY, null, container);
 		}
 	}
 	
@@ -766,11 +723,10 @@ public class QueryCache implements Query {
 	 * This setter will fire a property change event.
 	 */
 	public void setGlobalWhereClause(String whereClause) {
+		String oldWhere = globalWhereClause;
 		globalWhereClause = whereClause;
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, whereClause, whereClause));
-			}
+			firePropertyChange(PROPERTY_QUERY, oldWhere, whereClause);
 		}
 	}
 	
@@ -795,9 +751,7 @@ public class QueryCache implements Query {
 			}
 		}
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, joinLine, joinLine));
-			}
+			firePropertyChange(PROPERTY_QUERY, joinLine, null);
 		}
 	}
 
@@ -842,9 +796,7 @@ public class QueryCache implements Query {
 			joinMapping.get(rightContainer).add(join);
 		}
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, join));
-			}
+			firePropertyChange(PROPERTY_QUERY, null, join);
 		}
 	}
 	
@@ -860,9 +812,7 @@ public class QueryCache implements Query {
 		col.removeChangeListener(whereListener);
 		removeColumnSelection(col);
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, col, null));
-			}
+			firePropertyChange(PROPERTY_QUERY, col, null);
 		}
 	}
 	
@@ -880,6 +830,7 @@ public class QueryCache implements Query {
 	 * string GROUP_BY defined in this class.
 	 */
 	public void setGrouping(Item column, String groupByAggregate) {
+		SQLGroupFunction oldAggregate = groupByAggregateMap.get(column);
 		if (groupByAggregate.equals(GROUP_BY)) {
 			if (groupByList.contains(column)) {
 				return;
@@ -896,9 +847,7 @@ public class QueryCache implements Query {
 			logger.debug("Added " + column.getName() + " with aggregate " + groupByAggregate + " to aggregate group by map.");
 		}
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(this, PROPERTY_QUERY, groupByAggregate, groupByAggregate));
-			}
+			firePropertyChange(PROPERTY_QUERY, oldAggregate, groupByAggregate);
 		}		
 
 	}
@@ -907,24 +856,22 @@ public class QueryCache implements Query {
 		orderByList.remove(item);
 		orderByArgumentMap.remove(item);
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, null));
-			}
+			firePropertyChange(PROPERTY_QUERY, item, null);
 		}
 	}
 	
 	public void setSortOrder(Item item, OrderByArgument arg) {
+		OrderByArgument oldSortArg = orderByArgumentMap.get(item);
 		removeSort(item);
 		orderByArgumentMap.put(item, arg);
 		orderByList.add(item);
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, null, null));
-			}
+			firePropertyChange(PROPERTY_QUERY, oldSortArg, arg);
 		}
 	}
 	
 	public void setHavingClause(Item item, String havingText) {
+		String oldText = havingMap.get(item);
 		if (havingText != null && havingText.length() > 0) {
 			if (!havingText.equals(havingMap.get(item))) {
 				havingMap.put(item, havingText);
@@ -933,19 +880,16 @@ public class QueryCache implements Query {
 			havingMap.remove(item);
 		}
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(this, PROPERTY_QUERY, havingText, havingText));
-			}
+			firePropertyChange(PROPERTY_QUERY, oldText, havingText);
 		}
 	}
 	
 	public void moveItem(Item movedColumn, int toIndex) {
+		int oldIndex = selectedColumns.indexOf(movedColumn);
 		selectedColumns.remove(movedColumn);
 		selectedColumns.add(toIndex, movedColumn);
 		if (!compoundEdit) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(QueryCache.this, PROPERTY_QUERY, movedColumn, movedColumn));
-			}
+			firePropertyChange(PROPERTY_QUERY, oldIndex, toIndex);
 		}
 	}
 	
@@ -958,9 +902,7 @@ public class QueryCache implements Query {
 		compoundEdit = false;
 		String currentQuery = generateQuery();
 		if (!currentQuery.equals(queryBeforeEdit)) {
-			for (PropertyChangeListener l : queryChangeListeners) {
-				l.propertyChange(new PropertyChangeEvent(this, PROPERTY_QUERY, queryBeforeEdit, currentQuery));
-			}
+			firePropertyChange(PROPERTY_QUERY, queryBeforeEdit, currentQuery);
 		}
 		queryBeforeEdit = "";
 	}
@@ -1019,10 +961,6 @@ public class QueryCache implements Query {
 		return Collections.unmodifiableMap(tableAliasMap);
 	}
 
-	public void addChildListener(WabitChildListener l) {
-		throw new IllegalStateException("There are no children of a QueryCache.");
-	}
-
 	public boolean allowsChildren() {
 		return false;
 	}
@@ -1032,27 +970,7 @@ public class QueryCache implements Query {
 	}
 
 	public List<? extends WabitObject> getChildren() {
-		return null;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public WabitObject getParent() {
-		return parent;
-	}
-
-	public void removeChildListener(WabitChildListener l) {
-		throw new IllegalStateException("There are no children of a QueryCache.");
-	}
-
-	public void setParent(WabitObject parent) {
-		this.parent = parent;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+		return Collections.emptyList();
 	}
 
 	public Container getConstantsContainer() {
