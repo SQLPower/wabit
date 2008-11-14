@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BasicStroke;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -156,7 +155,21 @@ public class JoinLine extends PNode {
 		
 		@Override
 		public void mouseReleased(PInputEvent event) {
-			if (event.getButton() == MouseEvent.BUTTON3) {
+			maybeShowPopup(event);
+		}
+		
+		@Override
+		public void mousePressed(PInputEvent event) {
+			maybeShowPopup(event);
+		}
+		
+		@Override
+		public void mouseClicked(PInputEvent event) {
+			maybeShowPopup(event);
+		}
+		
+		private void maybeShowPopup(PInputEvent event) {
+			if (event.isPopupTrigger()) {
 				optionBox.translate(event.getPosition().getX() - optionBox.getFullBounds().getX() - BORDER_WIDTH, event.getPosition().getY() - optionBox.getFullBounds().getY() - BORDER_WIDTH);
 				if (event.getPosition().getX()>= textCircle.getX() && event.getPosition().getX()<= textCircle.getX()+ textCircle.getWidth()
 						&& event.getPosition().getY()>= textCircle.getY() && event.getPosition().getY()<= textCircle.getY() + textCircle.getHeight()) {
