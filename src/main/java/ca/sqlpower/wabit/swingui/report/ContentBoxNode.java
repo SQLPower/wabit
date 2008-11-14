@@ -88,4 +88,13 @@ public class ContentBoxNode extends PNode {
     public ContentBox getContentBox() {
         return contentBox;
     }
+    
+    @Override
+    public void setParent(PNode newParent) {
+        PNode oldParent = getParent();
+        super.setParent(newParent);
+        if (contentBox.getParent() != null && newParent != oldParent) {
+            contentBox.getParent().removeContentBox(contentBox);
+        }
+    }
 }
