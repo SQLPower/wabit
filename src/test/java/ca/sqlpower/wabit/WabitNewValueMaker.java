@@ -50,7 +50,11 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = createMock(ReportContentRenderer.class);
         	replay(newValue);
         } else if (valueType.equals(Guide.class)) {
-            newValue = new Guide(Axis.HORIZONTAL);
+            if (oldVal != null) {
+                newValue = new Guide(Axis.HORIZONTAL, ((Guide) oldVal).getOffset() + 1);
+            } else {
+                newValue = new Guide(Axis.HORIZONTAL, 123);
+            }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

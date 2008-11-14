@@ -221,7 +221,7 @@ public class ProjectTreeModel implements TreeModel {
                     p.addLayout(layout);
                     Page page = layout.getPage();
                     page.addContentBox(new ContentBox());
-                    page.addGuide(new Guide(Axis.HORIZONTAL));
+                    page.addGuide(new Guide(Axis.HORIZONTAL, 123));
                     page.addContentBox(new ContentBox());
                     
                     // Show project tree in a frame

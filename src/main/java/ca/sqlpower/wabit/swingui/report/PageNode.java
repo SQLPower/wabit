@@ -21,31 +21,30 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Color;
 
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Guide.Axis;
 import edu.umd.cs.piccolo.PNode;
 
 public class PageNode extends PNode {
 
-    private static final int DPI = 72;
-    
     private final Page page;
-    
-    // XXX do these need to be special, or can they just be regular guides?
-    // to make them regular guides, we'd need to let guides listen to their
-    // parent node and be defined relative to the top, bottom, left, right,
-    // vmiddle, or hmiddle of that node
-    private final GuideNode leftMargin = new GuideNode(Axis.VERTICAL);
-    private final GuideNode rightMargin = new GuideNode(Axis.VERTICAL);
-    private final GuideNode topMargin = new GuideNode(Axis.HORIZONTAL);
-    private final GuideNode bottomMargin = new GuideNode(Axis.HORIZONTAL);
     
     public PageNode(Page page) {
         this.page = page;
-        addChild(leftMargin);
-        addChild(rightMargin);
-        addChild(topMargin);
-        addChild(bottomMargin);
+        
+        for (WabitObject pageChild : page.getChildren()) {
+            if (pageChild instanceof Guide) {
+                addChild(new GuideNode((Guide) pageChild));
+            } else if (pageChild instanceof ContentBox) {
+                addChild(new ContentBoxNode((ContentBox) pageChild));
+            } else {
+                throw new UnsupportedOperationException(
+                        "Don't know what view class to use for page child: " + pageChild);
+            }
+        }
+        
         setBounds(0, 0, page.getWidth(), page.getHeight());
         setPaint(Color.WHITE);
     }
@@ -56,11 +55,6 @@ public class PageNode extends PNode {
         if (boundsSet) {
             page.setWidth((int) width);
             page.setHeight((int) height);
-            
-            leftMargin.setGuideOffset(DPI);
-            rightMargin.setGuideOffset((int) (width - DPI));
-            topMargin.setGuideOffset(DPI);
-            bottomMargin.setGuideOffset((int) (height - DPI));
         }
         return boundsSet;
     }
@@ -74,9 +68,15 @@ public class PageNode extends PNode {
     public void addChild(int index, PNode child) {
         super.addChild(index, child);
         if (child instanceof ContentBoxNode) {
-            page.addContentBox(((ContentBoxNode) child).getContentBox());
+            ContentBox contentBox = ((ContentBoxNode) child).getContentBox();
+            if (!page.getChildren().contains(contentBox)) {
+                page.addContentBox(contentBox);
+            }
         } else if (child instanceof GuideNode) {
-            page.addGuide(((GuideNode) child).getGuide());
+            Guide guide = ((GuideNode) child).getGuide();
+            if (!page.getChildren().contains(guide)) {
+                page.addGuide(guide);
+            }
         }
         // There are other types of PNodes added that the model doesn't care about (like selection handles)
     }

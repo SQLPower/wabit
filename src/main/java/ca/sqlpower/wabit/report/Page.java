@@ -26,6 +26,7 @@ import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
  * A page is an arrangement of boxes and guides (usually page margins) on a
@@ -106,7 +107,8 @@ public class Page extends AbstractWabitObject {
     private final List<ContentBox> contentBoxes = new ArrayList<ContentBox>();
 
     /**
-     * The guides of this page. They don't print visibly, but they give reference
+     * The guides of this page. This list includes but is not limited to the
+     * default page margins. They don't print visibly, but they give reference
      * points for the layout.
      */
     private final List<Guide> guides = new ArrayList<Guide>();
@@ -132,6 +134,12 @@ public class Page extends AbstractWabitObject {
         setName(name);
         this.width = width;
         this.height = height;
+        
+        // Default margins of 1 inch
+        addGuide(new Guide(Axis.VERTICAL, DPI));
+        addGuide(new Guide(Axis.VERTICAL, width - DPI));
+        addGuide(new Guide(Axis.HORIZONTAL, DPI));
+        addGuide(new Guide(Axis.HORIZONTAL, height - DPI));
     }
 
     public int getWidth() {
@@ -142,6 +150,7 @@ public class Page extends AbstractWabitObject {
         int oldWidth = this.width;
         this.width = width;
         firePropertyChange("width", oldWidth, width);
+        // TODO adjust right margin for new page size?
     }
 
     public int getHeight() {
@@ -152,6 +161,7 @@ public class Page extends AbstractWabitObject {
         int oldHeight = this.height;
         this.height = height;
         firePropertyChange("height", oldHeight, height);
+        // TODO adjust bottom margin for new page size?
     }
 
     public Font getDefaultFont() {
@@ -196,6 +206,67 @@ public class Page extends AbstractWabitObject {
         fireChildAdded(Guide.class, addme, index);
     }
 
+    public int getLeftMarginOffset() {
+        Guide leftMargin = getGuideWithSmallestOffset(Axis.VERTICAL);
+        if (leftMargin != null) {
+            return leftMargin.getOffset();
+        } else {
+            return 0;
+        }
+    }
+    
+    public int getRightMarginOffset() {
+        Guide rightMargin = getGuideWithLargestOffset(Axis.VERTICAL);
+        if (rightMargin != null) {
+            return rightMargin.getOffset();
+        } else {
+            return width;
+        }
+    }
+
+    public int getUpperMarginOffset() {
+        Guide upperMargin = getGuideWithSmallestOffset(Axis.HORIZONTAL);
+        if (upperMargin != null) {
+            return upperMargin.getOffset();
+        } else {
+            return 0;
+        }
+    }
+    
+    public int getLowerMarginOffset() {
+        Guide lowerMargin = getGuideWithLargestOffset(Axis.HORIZONTAL);
+        if (lowerMargin != null) {
+            return lowerMargin.getOffset();
+        } else {
+            return height;
+        }
+    }
+
+    private Guide getGuideWithLargestOffset(Axis axis) {
+        Guide largest = null;
+        for (Guide guide: guides) {
+            if (guide.getAxis().equals(axis)) {
+                if (largest == null || largest.getOffset() < guide.getOffset()) {
+                    largest = guide;
+                }
+            }
+        }
+        return largest;
+    }
+    
+    private Guide getGuideWithSmallestOffset(Axis axis) {
+        Guide smallest = null;
+        for (Guide guide: guides) {
+            if (guide.getAxis().equals(axis)) {
+                if (smallest == null || smallest.getOffset() > guide.getOffset()) {
+                    smallest = guide;
+                }
+            }
+        }
+        return smallest;
+    }
+    
+    
     public boolean allowsChildren() {
         return true;
     }

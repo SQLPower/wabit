@@ -51,9 +51,9 @@ public class Guide extends AbstractWabitObject {
      */
     private int offset;
 
-    public Guide(Axis axis) {
+    public Guide(Axis axis, int offset) {
         this.axis = axis;
-        setOffset(0);
+        setOffset(offset);
     }
     
     public boolean allowsChildren() {

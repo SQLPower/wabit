@@ -66,15 +66,19 @@ public class GuideNode extends PNode {
      * 
      * @param axis Whether this new guide is oriented vertically or horizontally 
      */
-    public GuideNode(Axis axis) {
-        model = new Guide(axis);
-        model.addPropertyChangeListener(modelChangeHandler);
+    public GuideNode(Axis axis, int offset) {
+        this(new Guide(axis, offset));
+    }
+    
+    public GuideNode(Guide model) {
+        this.model = model;
+        this.model.addPropertyChangeListener(modelChangeHandler);
         setPaint(normalColour);
         addInputEventListener(inputEventHandler);
         // Note that guides are pickable so they can get input events, but our
         // custom selection handler treats them as if they were not pickable
     }
-    
+
     @Override
     protected void paint(PPaintContext paintContext) {
         PCamera camera = paintContext.getCamera();

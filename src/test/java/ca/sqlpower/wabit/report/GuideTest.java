@@ -30,7 +30,7 @@ public class GuideTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        guide = new Guide(Axis.HORIZONTAL);
+        guide = new Guide(Axis.HORIZONTAL, 123);
     }
     
     @Override
