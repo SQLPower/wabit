@@ -36,7 +36,7 @@ import ca.sqlpower.wabit.report.Page;
 public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
 
     public static final Icon PAGE_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/page_white.png"));
-    public static final Icon LAYOUT_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/page_white_stack.png"));
+    public static final Icon LAYOUT_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/layout.png"));
     public static final Icon BOX_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/shape_square.png"));
 
     @Override
