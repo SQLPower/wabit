@@ -65,7 +65,6 @@ import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.ItemContainer;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
@@ -448,7 +447,7 @@ public class QueryPen implements MouseState {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
-        constantsContainer = new ConstantsPane(this, canvas, new ItemContainer("CONSTANTS"));
+        constantsContainer = new ConstantsPane(this, canvas, model.getConstantsContainer());
         constantsContainer.addChangeListener(queryChangeListener);
         topLayer.addChild(constantsContainer);
         

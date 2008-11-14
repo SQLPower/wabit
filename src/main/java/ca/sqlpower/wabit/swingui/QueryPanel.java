@@ -35,6 +35,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,6 +49,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -80,6 +84,7 @@ import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
+import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.StringItem;
@@ -151,10 +156,6 @@ public class QueryPanel {
 	private final QueryController queryController;
 
 	private final WabitSwingSession session;
-	
-	/**
-	 * This panel displays everything to do with this query.
-	 */
 	
 	private JTree dragTree;
 	private JComboBox reportComboBox;
@@ -334,6 +335,30 @@ public class QueryPanel {
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
                 , QUERY_EXECUTE);
     	queryPen.getQueryPenCavas().getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
+    	
+    	queryPen.getQueryPenBar().add(new JButton(new AbstractAction("Save") {
+			public void actionPerformed(ActionEvent e) {
+				final JFileChooser fc = new JFileChooser();
+				int retval = fc.showSaveDialog(QueryPanel.this.getSplitPane());
+				if (retval == JFileChooser.APPROVE_OPTION) {
+					ProjectXMLDAO dao;
+					try {
+						logger.debug("Starting save");
+						FileOutputStream out = new FileOutputStream(fc.getSelectedFile());
+						dao = new ProjectXMLDAO(out);
+						dao.saveQueryCache(queryCache);
+						dao.close();
+						out.flush();
+						out.close();
+						logger.debug("Save complete");
+					} catch (FileNotFoundException e1) {
+						throw new RuntimeException(e1);
+					} catch (IOException e1) {
+						throw new RuntimeException(e1);
+					}
+				}
+			}
+		}), 0);
     	
     	JPanel queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);

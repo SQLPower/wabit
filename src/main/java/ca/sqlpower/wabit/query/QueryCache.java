@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -315,6 +317,12 @@ public class QueryCache implements Query {
 	};
 	
 	/**
+	 * This container holds the items that are considered constants in the SQL statement.
+	 * This could include functions or other elements that don't belong in a table.
+	 */
+	private final Container constantsContainer;
+	
+	/**
 	 * These listeners will fire an event whenever the query has changed.
 	 */
 	private final List<PropertyChangeListener> queryChangeListeners;
@@ -354,6 +362,8 @@ public class QueryCache implements Query {
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		groupByList = new ArrayList<Item>();
 		havingMap = new HashMap<Item, String>();
+		
+		constantsContainer = new ItemContainer("Constants");
 	}
 	
 	/**
@@ -387,6 +397,7 @@ public class QueryCache implements Query {
 		
 		name = copy.getName();
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
+		constantsContainer = copy.getConstantsContainer();
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -947,11 +958,11 @@ public class QueryCache implements Query {
 		queryBeforeEdit = "";
 	}
 
-	protected boolean isGroupingEnabled() {
+	public boolean isGroupingEnabled() {
 		return groupingEnabled;
 	}
 
-	protected Map<Item, SQLGroupFunction> getGroupByAggregateMap() {
+	public Map<Item, SQLGroupFunction> getGroupByAggregateMap() {
 		return Collections.unmodifiableMap(groupByAggregateMap);
 	}
 
@@ -959,7 +970,7 @@ public class QueryCache implements Query {
 		return Collections.unmodifiableList(groupByList);
 	}
 
-	protected Map<Item, String> getHavingMap() {
+	public Map<Item, String> getHavingMap() {
 		return Collections.unmodifiableMap(havingMap);
 	}
 
@@ -967,19 +978,33 @@ public class QueryCache implements Query {
 		return Collections.unmodifiableMap(orderByArgumentMap);
 	}
 
-	protected List<Container> getFromTableList() {
+	public List<Container> getFromTableList() {
 		return Collections.unmodifiableList(fromTableList);
 	}
 
 	protected Map<Container, List<SQLJoin>> getJoinMapping() {
 		return Collections.unmodifiableMap(joinMapping);
 	}
+	
+	/**
+	 * This returns the joins between tables. Each join will be
+	 * contained only once.
+	 */
+	public Collection<SQLJoin> getJoins() {
+		Set<SQLJoin> joinSet = new HashSet<SQLJoin>();
+		for (List<SQLJoin> joins : joinMapping.values()) {
+			for (SQLJoin join : joins) {
+				joinSet.add(join);
+			}
+		}
+		return joinSet;
+	}
 
 	protected Map<Item, String> getWhereMapping() {
 		return Collections.unmodifiableMap(whereMapping);
 	}
 
-	protected String getGlobalWhereClause() {
+	public String getGlobalWhereClause() {
 		return globalWhereClause;
 	}
 
@@ -1021,6 +1046,10 @@ public class QueryCache implements Query {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Container getConstantsContainer() {
+		return constantsContainer;
 	}
 	
 }
