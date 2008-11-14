@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitChildListener;
@@ -349,6 +350,12 @@ public class QueryCache implements Query {
 	 * when deciding how the query was changed.
 	 */
 	private String queryBeforeEdit;
+	
+	/**
+	 * This is the currently selected data source for the query. This is the 
+	 * datasource the queries will be executed on.
+	 */
+	private SPDataSource dataSource;
 	
 	public QueryCache() {
 		tableAliasMap = new HashMap<Container, String>();
@@ -1050,6 +1057,14 @@ public class QueryCache implements Query {
 
 	public Container getConstantsContainer() {
 		return constantsContainer;
+	}
+	
+	public SPDataSource getDataSource() {
+		return dataSource;
+	}
+	
+	public void setDataSource(SPDataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 	
 }

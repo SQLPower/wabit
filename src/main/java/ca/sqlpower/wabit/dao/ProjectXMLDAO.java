@@ -70,6 +70,7 @@ public class ProjectXMLDAO {
 	public void saveQueryCache(QueryCache cache) {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
+		printAttribute("data-source", cache.getDataSource().getName());
 		xml.println(out, ">");
 		xml.indent++;
 

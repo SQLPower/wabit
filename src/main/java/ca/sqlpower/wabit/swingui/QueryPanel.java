@@ -177,10 +177,10 @@ public class QueryPanel {
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = new QueryCache();
 		queryPen = new QueryPen(session, this, queryCache);
-		queryController = new QueryController(queryCache, queryPen);
-		queuedQueryCache = new ArrayList<QueryCache>();
 		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
 		queryUIComponents.enableMultipleQueries(false);
+		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox());
+		queuedQueryCache = new ArrayList<QueryCache>();
 		
 		dragTree = new JTree();
 		rootNode = new SQLObjectRoot();

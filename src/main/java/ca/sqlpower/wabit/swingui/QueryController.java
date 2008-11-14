@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -37,6 +39,7 @@ import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
@@ -216,12 +219,41 @@ public class QueryController {
 		}
 	};
 	
-	public QueryController(QueryCache cache, QueryPen pen) {
+	/**
+	 * This listens to changes in the data source combo box and updates the
+	 * query cache appropriately.
+	 */
+	private final ActionListener dataSourceListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			Object selectedItem = dataSourceComboBox.getSelectedItem();
+			if (!(selectedItem instanceof SPDataSource)) {
+				throw new IllegalStateException("The data source combo box does not have data sources in it.");
+			}
+			queryCache.setDataSource((SPDataSource) selectedItem);
+		}
+	};
+
+	/**
+	 * The combo box that holds all of the data sources available to the query.
+	 * This combo box should also allow the selection of which data source
+	 * the query is executing on.
+	 */
+	private final JComboBox dataSourceComboBox;
+	
+	/**
+	 * This constructor will attach listeners to the {@link QueryPen} to update
+	 * the state of the {@link QueryCache}. The dataSourceComboBox will also have
+	 * a listener added so the {@link QueryCache} can track which database to execute
+	 * on.
+	 */
+	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox) {
 		queryCache = cache;
+		this.dataSourceComboBox = dataSourceComboBox;
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
+		dataSourceComboBox.addActionListener(dataSourceListener);
 	}
 	
 	public void listenToCellRenderer(ComponentCellRenderer renderer) {
