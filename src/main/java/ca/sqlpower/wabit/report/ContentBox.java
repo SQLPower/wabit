@@ -55,6 +55,11 @@ public class ContentBox extends AbstractWabitObject {
         return contentRenderer;
     }
     
+    @Override
+    public Page getParent() {
+        return (Page) super.getParent();
+    }
+    
     public int getX() {
         return x;
     }
