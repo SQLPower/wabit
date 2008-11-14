@@ -384,9 +384,10 @@ public class QueryPanel {
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
     	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
     	
-    	JPanel rightTopPane = new JPanel(new BorderLayout());
-    	rightTopPane.add(queryPenAndTextTabPane, BorderLayout.CENTER);
-    	rightTopPane.add(rightTreePanel,BorderLayout.EAST);
+    	JSplitPane rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
+    	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
+    	rightTopPane.setDividerLocation(500);
     	
     	mainSplitPane.add(rightTopPane, JSplitPane.TOP);
     	mainSplitPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);

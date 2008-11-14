@@ -159,8 +159,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
-        frame.setSize(800, 500);
-        frame.setLocation(500, 400);
+        frame.setSize(950, 550);
+        frame.setLocation(300, 200);
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
 
