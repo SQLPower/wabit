@@ -178,11 +178,12 @@ public class QueryPanel {
 		queryPen = new QueryPen(session, this, queryCache);
 		queryController = new QueryController(queryCache, queryPen);
 		queuedQueryCache = new ArrayList<QueryCache>();
+		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
+		queryUIComponents.enableMultipleQueries(false);
 		
 		dragTree = new JTree();
 		rootNode = new SQLObjectRoot();
-		reportComboBox = new JComboBox(session.getContext().getDataSources()
-				.getConnections().toArray());
+		reportComboBox = queryUIComponents.getDatabaseComboBox();
 		reportComboBox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent event) {
 				try {
@@ -250,8 +251,6 @@ public class QueryPanel {
 		});
 
 		
-		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
-    	queryUIComponents.enableMultipleQueries(false);
     	queryUIComponents.addTableChangeListener(new TableChangeListener() {
 			public void tableRemoved(TableChangeEvent e) {
 				// Do Nothing
@@ -365,8 +364,8 @@ public class QueryPanel {
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, pref, 3dlu, min(pref;50dlu)"
     			,"pref, pref,  pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
-    	southPanelBuilder.append(new JLabel("Database connection:"));
-    	southPanelBuilder.append(queryUIComponents.getDatabaseComboBox());
+    	southPanelBuilder.append(new JLabel(""));
+    	southPanelBuilder.append(new JLabel(""));
     	southPanelBuilder.append(new JLabel("Row Limit"));
     	JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
     	rowLimitSpinner.setValue(new Integer(1000));
