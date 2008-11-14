@@ -22,6 +22,15 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -51,15 +60,18 @@ import javax.swing.KeyStroke;
 import javax.swing.ListModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLDatabase;
+import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
+import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
@@ -152,25 +164,34 @@ public class QueryPanel {
 	 * are placed in this.
 	 */
 	private final JSplitPane mainSplitPane;
+
+	/**
+	 * This is the root of the JTree on the right of the query builder. This
+	 * will let the user drag and drop components into the query.
+	 */
+	private SQLObjectRoot rootNode;
 	
 	public QueryPanel(WabitSwingSession session) {
 		this.session = session;
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = new QueryCache();
-		queryPen = new QueryPen(session, queryCache);
+		queryPen = new QueryPen(session, this, queryCache);
 		queryController = new QueryController(queryCache, queryPen);
 		queuedQueryCache = new ArrayList<QueryCache>();
 		
 		dragTree = new JTree();
+		rootNode = new SQLObjectRoot();
 		reportComboBox = new JComboBox(session.getContext().getDataSources()
 				.getConnections().toArray());
 		reportComboBox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent event) {
-				SQLObjectRoot tempRootNode = new SQLObjectRoot();
 				try {
-					tempRootNode.addChild(new SQLDatabase(
+					for (int i = rootNode.getChildren().size() - 1; i >= 0; i--) {
+						rootNode.removeChild(i);
+					}
+					rootNode.addChild(new SQLDatabase(
 							(SPDataSource) reportComboBox.getSelectedItem()));
-					DBTreeModel tempTreeModel = new DBTreeModel(tempRootNode);
+					DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 					dragTree.setModel(tempTreeModel);
 				} catch (ArchitectException e) {
 					throw new RuntimeException(
@@ -181,6 +202,53 @@ public class QueryPanel {
 		});
 		reportComboBox.setSelectedIndex(0);
 		dragTree.setCellRenderer(new DBTreeCellRenderer());
+		DragSource ds = new DragSource();
+		ds.createDefaultDragGestureRecognizer(dragTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
+			
+			public void dragGestureRecognized(DragGestureEvent dge) {
+				
+				if(dragTree.getSelectionPaths() == null) {
+					return;
+				}
+				ArrayList<int[]> list = new ArrayList<int[]>();
+				for (TreePath path : dragTree.getSelectionPaths()) {
+					Object selectedNode = path.getLastPathComponent();
+					if (!(selectedNode instanceof SQLObject)) {
+						throw new IllegalStateException("DBTrees are not allowed to contain non SQLObjects. This tree contains a " + selectedNode.getClass());
+					}
+					int[] dndPathToNode = DnDTreePathTransferable.getDnDPathToNode((SQLObject)selectedNode, rootNode);
+					list.add(dndPathToNode);
+				}
+					
+				Object firstSelectedObject = dragTree.getSelectionPath().getLastPathComponent();
+				String name;
+				if (firstSelectedObject instanceof SQLObject) {
+					name = ((SQLObject) firstSelectedObject).getName();
+				} else {
+					name = firstSelectedObject.toString();
+				}
+				
+				Transferable dndTransferable = new DnDTreePathTransferable(list, name);
+				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceListener() {
+					public void dropActionChanged(DragSourceDragEvent dsde) {
+						//do nothing
+					}
+					public void dragOver(DragSourceDragEvent dsde) {
+						//do nothing
+					}
+					public void dragExit(DragSourceEvent dse) {
+						//do nothing
+					}
+					public void dragEnter(DragSourceDragEvent dsde) {
+						//do nothing
+					}
+					public void dragDropEnd(DragSourceDropEvent dsde) {
+						//do nothing
+					}
+				});
+			}
+		});
+
 		
 		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
     	queryUIComponents.enableMultipleQueries(false);
@@ -313,7 +381,7 @@ public class QueryPanel {
     	southPanelBuilder.append(resultPanel, 7);
     	
     	JPanel rightTreePanel = new JPanel(new BorderLayout());
-    	rightTreePanel.add(dragTree,BorderLayout.CENTER);
+    	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
     	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
     	
     	JPanel rightTopPane = new JPanel(new BorderLayout());
@@ -417,5 +485,9 @@ public class QueryPanel {
 	
 	public JSplitPane getSplitPane() {
 		return mainSplitPane;
+	}
+	
+	public SQLObjectRoot getRootNode() {
+		return rootNode;
 	}
 }

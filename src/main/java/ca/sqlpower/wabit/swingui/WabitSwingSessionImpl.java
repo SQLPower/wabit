@@ -20,15 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DragSourceDragEvent;
-import java.awt.dnd.DragSourceDropEvent;
-import java.awt.dnd.DragSourceEvent;
-import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -51,17 +42,14 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.border.EmptyBorder;
-import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.architect.SQLDatabase;
-import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
-import ca.sqlpower.architect.swingui.dbtree.DnDTreePathTransferable;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
@@ -139,53 +127,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		projectTree = new JTree(treeModel);
 		projectTree.addMouseListener(new PopUpMenuListener());
     	projectTree.setCellRenderer(new DBTreeCellRenderer());
-    	DragSource ds = new DragSource();
-		ds.createDefaultDragGestureRecognizer(projectTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
-			
-			public void dragGestureRecognized(DragGestureEvent dge) {
-				
-				if(projectTree.getSelectionPaths() == null) {
-					return;
-				}
-				ArrayList<int[]> list = new ArrayList<int[]>();
-				for (TreePath path : projectTree.getSelectionPaths()) {
-					Object selectedNode = path.getLastPathComponent();
-					if (!(selectedNode instanceof SQLObject)) {
-						throw new IllegalStateException("DBTrees are not allowed to contain non SQLObjects. This tree contains a " + selectedNode.getClass());
-					}
-					int[] dndPathToNode = DnDTreePathTransferable.getDnDPathToNode((SQLObject)selectedNode, rootNode);
-					list.add(dndPathToNode);
-				}
-					
-				Object firstSelectedObject = projectTree.getSelectionPath().getLastPathComponent();
-				String name;
-				if (firstSelectedObject instanceof SQLObject) {
-					name = ((SQLObject) firstSelectedObject).getName();
-				} else {
-					name = firstSelectedObject.toString();
-				}
-				
-				Transferable dndTransferable = new DnDTreePathTransferable(list, name);
-				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceListener() {
-					public void dropActionChanged(DragSourceDragEvent dsde) {
-						//do nothing
-					}
-					public void dragOver(DragSourceDragEvent dsde) {
-						//do nothing
-					}
-					public void dragExit(DragSourceEvent dse) {
-						//do nothing
-					}
-					public void dragEnter(DragSourceDragEvent dsde) {
-						//do nothing
-					}
-					public void dragDropEnd(DragSourceDropEvent dsde) {
-						//do nothing
-					}
-				});
-			}
-		});
-
+    	
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
         wabitPane.add(new QueryPanel(this).getSplitPane(), JSplitPane.RIGHT);
         

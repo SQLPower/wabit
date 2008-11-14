@@ -69,6 +69,7 @@ import ca.sqlpower.wabit.query.ItemContainer;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
+import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
@@ -148,7 +149,7 @@ public class QueryPen implements MouseState {
 				int[] path = (int[]) arrayListObject;
 				SQLObject draggedSQLObject;
 				try {
-					draggedSQLObject = DnDTreePathTransferable.getNodeForDnDPath(session.getRootNode(), path);
+					draggedSQLObject = DnDTreePathTransferable.getNodeForDnDPath(queryPanel.getRootNode(), path);
 				} catch (ArchitectException e1) {
 					throw new RuntimeException(e1);
 				}
@@ -303,8 +304,6 @@ public class QueryPen implements MouseState {
 	 */
 	private final JTextField globalWhereText;
 
-	private final WabitSwingSession session;
-	
 	private final String acceleratorKeyString;
 	
 	/**
@@ -399,6 +398,8 @@ public class QueryPen implements MouseState {
 			}
 		}
 	};
+
+	private final QueryPanel queryPanel;
 	
 	public JPanel createQueryPen() {
         panel.setLayout(new BorderLayout());
@@ -419,9 +420,9 @@ public class QueryPen implements MouseState {
 		return panel;
 	}
 	
-	public QueryPen(WabitSwingSession s, QueryCache model) {
+	public QueryPen(WabitSwingSession s, QueryPanel queryPanel, QueryCache model) {
+		this.queryPanel = queryPanel;
 		this.model = model;
-		session = s;
 		panel = new JPanel();
 	    cursorManager = new CursorManager(panel);
 		if(s.getContext().isMacOSX()) {
