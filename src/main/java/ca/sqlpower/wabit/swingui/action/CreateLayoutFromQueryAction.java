@@ -88,7 +88,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         footer.setContentRenderer(new Label(l, "Page ${page.number} of ${page.totalPages}"));
         // TODO add option for horizontal and vertical alignment (left, center, right, top, middle, bottom) in label
         p.addContentBox(footer);
-        footer.setWidth(pageBodyWidth / 2);
+        footer.setWidth(pageBodyWidth);
         footer.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
         footer.setX(p.getLeftMarginOffset());
         footer.setY(p.getLowerMarginOffset());

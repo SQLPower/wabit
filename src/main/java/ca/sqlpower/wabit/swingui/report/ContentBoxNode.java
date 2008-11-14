@@ -26,8 +26,8 @@ import java.awt.Graphics2D;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
@@ -45,6 +45,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
     public ContentBoxNode(ContentBox contentBox) {
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
+        setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
     }
     
     @Override
@@ -85,10 +86,16 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     @Override
     public void setParent(PNode newParent) {
-        PNode oldParent = getParent();
         super.setParent(newParent);
-        if (contentBox.getParent() != null && newParent != oldParent) {
-            contentBox.getParent().removeContentBox(contentBox);
+        
+        if (newParent instanceof PageNode) {
+            Page p = ((PageNode) newParent).getModel();
+            if (contentBox.getParent() != null) {
+                if (p != contentBox.getParent()) {
+                    contentBox.getParent().removeContentBox(contentBox);
+                    p.addContentBox(contentBox);
+                }
+            }
         }
     }
 

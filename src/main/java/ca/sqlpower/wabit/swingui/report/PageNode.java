@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Color;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -29,6 +31,8 @@ import edu.umd.cs.piccolo.PNode;
 
 public class PageNode extends PNode implements ReportNode {
 
+    private static final Logger logger = Logger.getLogger(PageNode.class);
+    
     private final Page page;
     
     public PageNode(Page page) {
@@ -38,6 +42,7 @@ public class PageNode extends PNode implements ReportNode {
             if (pageChild instanceof Guide) {
                 addChild(new GuideNode((Guide) pageChild));
             } else if (pageChild instanceof ContentBox) {
+                logger.debug("Adding content box node for " + pageChild);
                 addChild(new ContentBoxNode((ContentBox) pageChild));
             } else {
                 throw new UnsupportedOperationException(

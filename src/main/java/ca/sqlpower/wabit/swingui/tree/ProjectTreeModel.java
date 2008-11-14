@@ -82,7 +82,9 @@ public class ProjectTreeModel implements TreeModel {
     }
 
     public int getIndexOfChild(Object parent, Object child) {
-        return ((WabitObject) parent).getChildren().indexOf(child);
+        WabitObject wo = (WabitObject) parent;
+        List<? extends WabitObject> children = wo.getChildren();
+        return children.indexOf(child);
     }
 
     public boolean isLeaf(Object node) {
@@ -158,6 +160,9 @@ public class ProjectTreeModel implements TreeModel {
 						null);
 			} else {
 				WabitObject parent = node.getParent();
+				if (parent == null) {
+				    throw new NullPointerException("Parent of non-root node " + node + " was null!");
+				}
 				int indexOfChild = getIndexOfChild(parent, node);
 				e = new TreeModelEvent(this, pathToNode(parent),
 						new int[] { indexOfChild }, new Object[] { node });

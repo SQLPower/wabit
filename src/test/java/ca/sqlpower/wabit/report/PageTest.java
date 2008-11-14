@@ -45,4 +45,10 @@ public class PageTest extends AbstractWabitObjectTest {
     public WabitObject getObjectUnderTest() {
         return page;
     }
+    
+    public void testAddContentBoxParenting() throws Exception {
+        ContentBox cb = new ContentBox();
+        page.addContentBox(cb);
+        assertSame(page, cb.getParent());
+    }
 }
