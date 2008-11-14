@@ -114,13 +114,24 @@ public class JoinLine extends PNode {
 	/**
 	 * A box containing the optionSigns
 	 */
-	private final PPath optionBox;
+	private final PNode optionBox;
 	
 	private JEditorPane editorPane;
 	private QueryPen queryPen;
+	/**
+	 * check if two joined tables are swapped
+	 */
 	private boolean isJoinedTablesSwapped;
-	private static final int OPTION_BOX_WIDTH = 65;
-	private static final int OPTION_BOX_HEIGHT = 150;
+	
+	/**
+	 * previous isJoinedTablesSwapped
+	 */
+	private boolean oldIsJoinedTableSwapped;
+	
+	/**
+	 * the comparator for viewing in the circle of the Joined line
+	 */
+	private String viewCom;
 
 	/**
 	 * A Bezier curve that connects the left column to the text circle.
@@ -231,33 +242,39 @@ public class JoinLine extends PNode {
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
 		
+		oldIsJoinedTableSwapped = false;
+		viewCom = "=";
 		isJoinedTablesSwapped = false;
-		optionBox = PPath.createRectangle( -BORDER_WIDTH, -BORDER_WIDTH, OPTION_BOX_WIDTH + BORDER_WIDTH, OPTION_BOX_HEIGHT);
-		
+		optionBox = new PNode();
+		symbolText = new PStyledText();
+		editorPane = new JEditorPane();
+		editorPane.setText("=");
+		symbolText.setDocument(editorPane.getDocument());
 		int textHeight = 0;
 		for (Comparators aComparator: Comparators.values()) {
 			final PText tempText = new PText(aComparator.getComparator());
 			tempText.translate(0, textHeight);
 			tempText.addInputEventListener(new PBasicInputEventHandler() {
 				public void mousePressed(PInputEvent event) {
-						editorPane.setText(tempText.getText());
-						symbolText.setDocument(editorPane.getDocument());
-						canvas.getLayer().removeChild(optionBox);
-						if ( !isJoinedTablesSwapped) {
-							model.setComparator(tempText.getText());
-						} else {
-							model.setComparator(getOppositeSymbol( tempText.getText()) );
-						}
-						updateLine();
+					viewCom = tempText.getText();
+					editorPane.setText(viewCom);
+					symbolText.syncWithDocument();
+					if (isJoinedTablesSwapped ) {
+						model.setComparator(getOppositeSymbol(viewCom));
+					} else {
+						model.setComparator(viewCom );
+					}
+					canvas.getLayer().removeChild(optionBox);
 				}
 			});
 			optionBox.addChild(tempText);
 			textHeight += tempText.getHeight();
 		}
-		symbolText = new PStyledText();
-		editorPane = new JEditorPane();
-		editorPane.setText("=");
-		symbolText.setDocument(editorPane.getDocument());
+		PPath optionBoxouterRect = PPath.createRectangle((float)- BORDER_WIDTH, (float)- BORDER_WIDTH, (float)(optionBox.getFullBounds().getWidth() + 2 * BORDER_WIDTH), (float)(optionBox.getFullBounds().getHeight() + 2 * BORDER_WIDTH));
+		optionBox.addChild(optionBoxouterRect);
+		optionBox.setBounds(optionBoxouterRect.getBounds());
+		optionBoxouterRect.moveToBack();
+		
 		addChild(symbolText);
 		updateLine();
 		
@@ -347,12 +364,12 @@ public class JoinLine extends PNode {
 			leftX += leftContainerBounds.getWidth();
 			midX = leftX + (rightX - leftX)/2;
 			rightContainerFirstControlPointDirection = 1;
+			isJoinedTablesSwapped = false;
 			logger.debug("Left container is to the left of the right container.");
 		} else if (leftX < rightContainerBounds.getWidth() + rightContainerBounds.getX()) {
 			leftX += leftContainerBounds.getWidth();
 			rightX += rightContainerBounds.getWidth();
 			midX = Math.max(JOIN_LINE_STICKOUT_LENGTH + leftX, JOIN_LINE_STICKOUT_LENGTH + rightX);
-			isJoinedTablesSwapped = false;
 			logger.debug("The containers are above or below eachother.");
 		} else {
 			rightX += rightContainerBounds.getWidth();
@@ -413,34 +430,32 @@ public class JoinLine extends PNode {
 	 *  flip the symbols when joined tables are swapped
 	 */
 	public void handleJoinedTablesSwapped () {
-		if (isJoinedTablesSwapped) {
-			updateSymbolView(getOppositeSymbol(model.getComparator()));
-		} else {
-			updateSymbolView ( model.getComparator() );
-		}
+		if (isJoinedTablesSwapped && !oldIsJoinedTableSwapped) {
+			viewCom = getOppositeSymbol(viewCom);
+			editorPane.setText(viewCom);
+			symbolText.syncWithDocument();
+			oldIsJoinedTableSwapped = isJoinedTablesSwapped;
+		} else if (oldIsJoinedTableSwapped && !isJoinedTablesSwapped) {
+			editorPane.setText(getOppositeSymbol(viewCom));
+			symbolText.syncWithDocument();
+			oldIsJoinedTableSwapped = isJoinedTablesSwapped;
+		} 
 	}
 	
 	public String getOppositeSymbol (String symbol) {
-		if ( model.getComparator().equals(">") ) {
+		if ( symbol.equals(">") ) {
 			return "<";
-		} else if ( model.getComparator().equals(">=") ) {
+		} else if ( symbol.equals(">=") ) {
 			return "<=";
-		} else if ( model.getComparator().equals("<") ) {
+		} else if ( symbol.equals("<") ) {
 			return ">";
-		} else if ( model.getComparator().equals("<=") ) {
+		} else if ( symbol.equals("<=") ) {
 			return ">=";
 		} else {
 			return symbol;
 		}
 	}
 	
-	/**
-	 * update the view of the symbol in the circle of the joined line
-	 */
-	public void updateSymbolView (String comparator) {
-		editorPane.setText(comparator);
-		symbolText.setDocument(editorPane.getDocument());
-	}
 	/**
 	 * Returns true if the user clicked on or near the given path. Returns
 	 * false otherwise. Clicking in the join circle will not be considered

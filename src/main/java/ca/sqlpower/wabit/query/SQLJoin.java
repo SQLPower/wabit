@@ -113,6 +113,11 @@ public class SQLJoin {
 	 * it is one of ">", "<", "=", "<>", ">=", "<=", "BETWEEN", "LIKE", "IN", "NOT".
 	 */
 	private String currentComparator;
+	
+	/**
+	 * This is the previous Comparator
+	 */
+	private String oldComparator;
 
 	public static final String PROPERTY_JOIN_REMOVED = "JOIN_REMOVED";
 
@@ -121,7 +126,7 @@ public class SQLJoin {
 	public SQLJoin(Item leftColumn, Item rightColumn) {
 		this.leftColumn = leftColumn;
 		this.rightColumn = rightColumn;
-		this.currentComparator = "=";
+		this.currentComparator = oldComparator = "=";
 		isLeftColumnOuterJoin = false;
 		isRightColumnOuterJoin = false;
 		joinChangeListeners = new ArrayList<PropertyChangeListener>();
@@ -135,6 +140,18 @@ public class SQLJoin {
 		return rightColumn;
 	}
 
+	public String getComparator() {
+		return currentComparator;
+	}
+	
+	public void setComparator(String currentComp) {
+		currentComparator = currentComp;
+		for (PropertyChangeListener l : joinChangeListeners) {
+			l.propertyChange(new PropertyChangeEvent(this, COMPARATOR_CHANGED, oldComparator, currentComparator));
+		}
+		oldComparator = currentComp;
+	}
+	
 	/**
 	 * This will return the comparator between the two columns.
 	 * 
@@ -142,9 +159,6 @@ public class SQLJoin {
 	 * things like 'LIKE'.
 	 * @return
 	 */
-	public String getComparator() {
-		return currentComparator;
-	}
 
 	public boolean isLeftColumnOuterJoin() {
 		return isLeftColumnOuterJoin;
@@ -159,14 +173,6 @@ public class SQLJoin {
 		}
 	}
 	
-	public void setComparator(String newComparator) {
-		String oldComparator = currentComparator;
-		currentComparator = newComparator;
-		for (PropertyChangeListener l : joinChangeListeners) {
-			l.propertyChange(new PropertyChangeEvent(this, COMPARATOR_CHANGED, oldComparator, newComparator));
-		}
-	}
-
 	public boolean isRightColumnOuterJoin() {
 		return isRightColumnOuterJoin;
 	}
