@@ -29,10 +29,9 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.SQLTable;
-import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
 
 /**
- * A model for the {@link ContainerPane}. This will store objects of a defined type and
+ * A model that stores SQLTable elements. This will store objects of a defined type and
  * can be grouped when adding the items to the model.
  *
  * @param <C> The type of object this model will store.
@@ -85,6 +84,7 @@ public class TableContainer implements Container {
 		for (PropertyChangeListener l : modelListeners) {
 			l.propertyChange(new PropertyChangeEvent(this, CONTAINTER_ALIAS_CHANGED, oldAlias, alias));
 		}
+		logger.debug("Alias set to " + alias);
 	}
 
 	public Item getItem(Object item) {
