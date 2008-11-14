@@ -396,14 +396,14 @@ public class QueryPen implements MouseState {
         JButton deleteButton = new JButton(getDeleteAction());
         deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut Delete)");
         deleteButton.setIcon(joinIcon);
-        queryPenBar = new JToolBar(JToolBar.VERTICAL);
+        queryPenBar = new JToolBar(JToolBar.HORIZONTAL);
         queryPenBar.setToolTipText("QueryPen Toolbar");
+        queryPenBar.add(deleteButton);
+        queryPenBar.add(getCreateJoinButton());
         queryPenBar.add(getZoomInButton());
         queryPenBar.add(getZoomOutButton());
-        queryPenBar.add(getCreateJoinButton());
-        queryPenBar.add(deleteButton);
         
-        panel.add(queryPenBar, BorderLayout.EAST);
+        panel.add(queryPenBar, BorderLayout.NORTH);
         panel.setBackground(Color.WHITE);
 		return panel;
 	}

@@ -334,7 +334,7 @@ public class QueryPanel {
     	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/execute.png"));
     	playPenExecuteButton.setIcon(executeIcon);
     	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ queryPen.getAcceleratorKeyString()+ " R)");
-    	queryPen.getQueryPenBar().add(playPenExecuteButton);
+    	queryPen.getQueryPenBar().add(playPenExecuteButton, 0);
     	queryPen.getQueryPenCavas().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
                 , QUERY_EXECUTE);
