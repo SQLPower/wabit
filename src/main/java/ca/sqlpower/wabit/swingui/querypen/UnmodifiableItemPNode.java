@@ -102,21 +102,19 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 			if (editing) {
 				JEditorPane nameEditor = columnText.getEditorPane();
 				alias = nameEditor.getText();
-				if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(item.getName())) {
-					nameEditor.setText(alias + " (" + item.getName() + ")");
-				} else {
-					logger.debug("item name is " + item.getName());
-					nameEditor.setText(item.getName());
+				if (!(nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(item.getName()))) {
 					alias = "";
 				}
 				logger.debug("editor has text " + nameEditor.getText() + " alias is " + alias);
-				columnText.syncWithDocument();
 			}
 			if(isJoined) {
 				highLightText();
 			}
-			editing = false;
 			item.setAlias(alias);
+			if (editing) {
+				setVisibleAliasText();
+			}
+			editing = false;
 		}
 		
 		public void editingStarting() {
@@ -251,6 +249,25 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 		logger.debug("Pnode " + item.getName() + " created.");
 		setWidth(getFullBounds().getWidth());
 		setHeight(getFullBounds().getHeight());
+		
+		isInSelectCheckBox.setSelected(item.isSelected());
+		whereText.getEditorPane().setText(item.getWhere());
+		whereText.syncWithDocument();
+		setVisibleAliasText();
+	}
+	
+	/**
+	 * Sets the visible column name text to have an alias if it exists in the model.
+	 */
+	private void setVisibleAliasText() {
+		JEditorPane nameEditor = columnText.getEditorPane();
+		if (item.getAlias() == null || item.getAlias().trim().length() <= 0) {
+			logger.debug("item name is " + item.getName());
+			nameEditor.setText(item.getName());
+		} else {
+			nameEditor.setText(item.getAlias() + " (" + item.getName() + ")");
+		}
+		columnText.syncWithDocument();
 	}
 
 	public void setIsJoined(boolean joined) {

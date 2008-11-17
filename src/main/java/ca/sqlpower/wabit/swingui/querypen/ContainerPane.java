@@ -157,14 +157,13 @@ public class ContainerPane extends PNode implements WabitNode {
 		String name = model.getName();
 		if (nameEditor.getText() != null && nameEditor.getText().length() > 0 && !nameEditor.getText().equals(name)) {
 			model.setAlias(nameEditor.getText());
-			nameEditor.setText(model.getAlias() + " (" + name + ")");
 		} else {
 			logger.debug("item name is " + name);
-			nameEditor.setText(name);
 			model.setAlias("");
 		}
+		setVisibleAliasText();
 		logger.debug("editor has text " + nameEditor.getText() + " alias is " + model.getAlias());
-		modelNameText.syncWithDocument();
+		
 		
 	}
 	
@@ -205,6 +204,7 @@ public class ContainerPane extends PNode implements WabitNode {
 
 	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
+		logger.debug("Container alias is " + model.getAlias());
 		model.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
@@ -225,7 +225,6 @@ public class ContainerPane extends PNode implements WabitNode {
 		containedItems = new ArrayList<UnmodifiableItemPNode>();
 		separatorLines = new ArrayList<PPath>();
 		logger.debug("Model name is " + model.getName());
-		model.setAlias("");
 		modelNameText = new EditablePStyledText(model.getName(), pen, canvas);
 		modelNameText.addEditStyledTextListener(editingTextListener);
 		modelNameText.addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
@@ -273,6 +272,7 @@ public class ContainerPane extends PNode implements WabitNode {
 				logger.debug("Setting position " + getGlobalBounds().getX() + ", " + getGlobalBounds().getY());
 			}
 		});
+		setVisibleAliasText();
 	}
 
 	/**
@@ -444,6 +444,20 @@ public class ContainerPane extends PNode implements WabitNode {
 			
 			setBounds(outerRect.getBounds());
 		}
+	}
+	
+	/**
+	 * This sets the PStyledText to have either the model name or the model name and alias
+	 * depending on the model's alias.
+	 */
+	private void setVisibleAliasText() {
+		JEditorPane nameEditor = modelNameText.getEditorPane();
+		if (model.getAlias() == null || model.getAlias().trim().length() <= 0) {
+			nameEditor.setText(model.getName());			
+		} else {
+			nameEditor.setText(model.getAlias() + " (" + model.getName() + ")");
+		}
+		modelNameText.syncWithDocument();
 	}
 
 	public void setContainerAlias(String newAlias) {

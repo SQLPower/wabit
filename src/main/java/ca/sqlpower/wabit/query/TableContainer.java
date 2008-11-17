@@ -55,6 +55,7 @@ public class TableContainer extends AbstractWabitObject implements Container {
 
 	public TableContainer(SQLTable t) {
 		table = t;
+		alias = "";
 		itemList = new ArrayList<Item>();
 		try {
 			for (Object child : t.getColumnsFolder().getChildren()) {
