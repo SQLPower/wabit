@@ -21,6 +21,10 @@ package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,10 +39,12 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
+import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -639,6 +645,57 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		return query.toString();
 	}
 
+    /**
+     * Executes the current SQL query, returning a cached copy of the result
+     * set. The returned copy of the result set is guaranteed to be scrollable,
+     * and does not hold any remote database resources.
+     * 
+     * @return an in-memory copy of the result set produced by this query
+     *         cache's current query. You are not required to close the returned
+     *         result set when you are finished with it, but you can if you
+     *         like.
+     * @throws SQLException
+     *             If the query fails to execute for any reason.
+     */
+	public ResultSet execute() throws QueryException {
+	    String sql = generateQuery();
+	    Connection con = null;
+	    Statement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        con = dataSource.createConnection();
+	        stmt = con.createStatement();
+	        rs = stmt.executeQuery(sql);
+	        CachedRowSet result = new CachedRowSet();
+	        result.populate(rs);
+	        return result;
+	    } catch (SQLException ex) {
+	        throw new QueryException(sql, ex);
+	    } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Exception ex) {
+                    logger.warn("Failed to close result set. Squishing this exception: ", ex);
+                }
+            }
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Exception ex) {
+                    logger.warn("Failed to close statement. Squishing this exception: ", ex);
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception ex) {
+                    logger.warn("Failed to close connection. Squishing this exception: ", ex);
+                }
+            }
+	    }
+	}
+	
 	public List<Item> getSelectedColumns() {
 		return Collections.unmodifiableList(selectedColumns);
 	}

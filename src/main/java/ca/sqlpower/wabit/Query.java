@@ -19,10 +19,28 @@
 
 package ca.sqlpower.wabit;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  * The interface for anything that can provide data in a report. The canonical
  * example is an SQL query.
  */
 public interface Query extends WabitObject {
 
+    /**
+     * Executes the current query represented by this query object, returning a
+     * cached copy of the result set. The returned copy of the result set is
+     * guaranteed to be scrollable, and does not hold any remote network or
+     * database resources.
+     * 
+     * @return an in-memory copy of the result set produced by this query
+     *         cache's current query. You are not required to close the returned
+     *         result set when you are finished with it, but you can if you
+     *         like.
+     * @throws SQLException
+     *             If the query fails to execute for any reason.
+     */
+    public ResultSet execute() throws QueryException;
+    
 }

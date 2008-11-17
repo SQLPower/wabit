@@ -31,6 +31,8 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
@@ -53,14 +55,18 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     }
     
     public void actionPerformed(ActionEvent e) {
+        createDefaultLayout(project, query);
+    }
+    
+    public static void createDefaultLayout(WabitProject project, Query query) {
         Layout l = new Layout(query.getName() + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();
         final int pageBodyHeight = p.getLowerMarginOffset() - p.getUpperMarginOffset();
         
         ContentBox body = new ContentBox();
-//        ReportContentRenderer bodyRenderer = new ResultSetRenderer(query.execute()); // TODO run in background
-//        body.setContentRenderer(bodyRenderer);
+        ReportContentRenderer bodyRenderer = new ResultSetRenderer(query);
+        body.setContentRenderer(bodyRenderer);
         p.addContentBox(body);
         body.setWidth(pageBodyWidth);
         body.setHeight(pageBodyHeight);

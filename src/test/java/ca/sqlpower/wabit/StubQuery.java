@@ -19,6 +19,12 @@
 
 package ca.sqlpower.wabit;
 
+import java.sql.ResultSet;
+
 public class StubQuery extends StubWabitObject implements Query {
+
+    public ResultSet execute() throws QueryException {
+        return null;
+    }
 
 }
