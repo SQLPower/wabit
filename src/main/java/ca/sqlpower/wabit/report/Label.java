@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 
 import org.apache.log4j.Logger;
@@ -33,6 +34,9 @@ import ca.sqlpower.wabit.Variables;
  */
 public class Label implements ReportContentRenderer {
 
+    public static enum HorizontalAlignment { LEFT, CENTER, RIGHT }
+    public static enum VerticalAlignment { TOP, MIDDLE, BOTTOM }
+    
     private static final Logger logger = Logger.getLogger(Label.class);
     
     /**
@@ -41,6 +45,9 @@ public class Label implements ReportContentRenderer {
      */
     private String text;
 
+    private HorizontalAlignment hAlignment = HorizontalAlignment.LEFT;
+    private VerticalAlignment vAlignment = VerticalAlignment.MIDDLE;
+    
     private final VariableContext variableContext;
     
     /**
@@ -73,13 +80,58 @@ public class Label implements ReportContentRenderer {
         return text;
     }
 
+    public HorizontalAlignment getHorizontalAlignment() {
+        return hAlignment;
+    }
+
+    public void setHorizontalAlignment(HorizontalAlignment alignment) {
+        hAlignment = alignment;
+    }
+
+    public VerticalAlignment getVerticalAlignment() {
+        return vAlignment;
+    }
+
+    public void setVerticalAlignment(VerticalAlignment alignment) {
+        vAlignment = alignment;
+    }
+
     /**
      * Renders this label to the given graphics, with the baseline centered in the content box.
      */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
-        String textToRender = Variables.substitute(text, variableContext);
+        String[] textToRender = Variables.substitute(text, variableContext).split("\n");
+        FontMetrics fm = g.getFontMetrics();
+        int textHeight = fm.getHeight() * textToRender.length;
+        
         logger.debug("Rendering label text: " + textToRender);
-        g.drawString(textToRender, 0, contentBox.getHeight() / 2);
+        
+        int y;
+        if (vAlignment == VerticalAlignment.TOP) {
+            y = fm.getHeight();
+        } else if (vAlignment == VerticalAlignment.MIDDLE) {
+            y = contentBox.getHeight()/2 - textHeight/2 + fm.getAscent();
+        } else if (vAlignment == VerticalAlignment.BOTTOM) {
+            y = contentBox.getHeight() - textHeight - fm.getDescent();
+        } else {
+            throw new IllegalStateException("Unknown vertical alignment: " + vAlignment);
+        }
+        
+        for (String text : textToRender) {
+            int textWidth = fm.stringWidth(text);
+            int x;
+            if (hAlignment == HorizontalAlignment.LEFT) {
+                x = 0;
+            } else if (hAlignment == HorizontalAlignment.CENTER) {
+                x = contentBox.getWidth()/2 - textWidth/2;
+            } else if (hAlignment == HorizontalAlignment.RIGHT) {
+                x = contentBox.getWidth() - textWidth;
+            } else {
+                throw new IllegalStateException("Unknown horizontal alignment: " + hAlignment);
+            }
+            g.drawString(text, x, y);
+            y += fm.getHeight();
+        }
         return false;
     }
 }

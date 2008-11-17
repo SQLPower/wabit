@@ -33,6 +33,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Label.HorizontalAlignment;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
@@ -83,7 +84,11 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         
         // shameless self promotion
         ContentBox shameless = new ContentBox();
-        shameless.setContentRenderer(new Label(l, "This report was produced by SQL Power's Wabit [insert branded dancing bunnies]"));
+        Label selfPromotionLabel = new Label(l,
+                "This report was produced by SQL Power's Wabit\n" +
+                "[insert branded dancing bunnies]");
+        selfPromotionLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        shameless.setContentRenderer(selfPromotionLabel);
         p.addContentBox(shameless);
         shameless.setWidth(pageBodyWidth - header.getWidth());
         shameless.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
@@ -91,7 +96,9 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         shameless.setY(p.getUpperMarginOffset() - shameless.getHeight());
         
         ContentBox footer = new ContentBox();
-        footer.setContentRenderer(new Label(l, "Page ${page.number} of ${page.totalPages}"));
+        Label footerLabel = new Label(l, "Page ${page.number} of ${page.totalPages}");
+        footerLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        footer.setContentRenderer(footerLabel);
         // TODO add option for horizontal and vertical alignment (left, center, right, top, middle, bottom) in label
         p.addContentBox(footer);
         footer.setWidth(pageBodyWidth);

@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.sql.ResultSet;
@@ -142,13 +143,23 @@ public class ResultSetRenderer implements ReportContentRenderer {
             rs.beforeFirst(); // XXX temporary--must define API for resetting renderers
             ResultSetMetaData rsmd = rs.getMetaData();
             FontMetrics fm = g.getFontMetrics();
+            Font bodyFont = g.getFont();
+            Font headerFont = bodyFont.deriveFont(Font.BOLD);
+            
             int x = 0;
             int y = fm.getAscent();
             int colCount = rsmd.getColumnCount();
+            
+            g.setFont(headerFont);
             for (int col = 1; col <= colCount; col++) {
                 g.drawString(replaceNull(rsmd.getColumnLabel(col)), x, y);
                 x += columnWidths.get(col-1);
             }
+            
+            y += fm.getHeight();
+            g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
+            
+            g.setFont(bodyFont);
             while ( rs.next() && ((y + fm.getHeight()) < contentBox.getHeight()) ) {
                 x = 0;
                 y += fm.getHeight();
