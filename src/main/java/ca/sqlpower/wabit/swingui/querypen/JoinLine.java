@@ -117,7 +117,7 @@ public class JoinLine extends PNode implements WabitNode {
 	private final PNode optionBox;
 	
 	private JEditorPane editorPane;
-	private QueryPen queryPen;
+	
 	/**
 	 * check if two joined tables are swapped
 	 */
@@ -230,9 +230,8 @@ public class JoinLine extends PNode implements WabitNode {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(QueryPen mouseState, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
+	public JoinLine(PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
 		super();
-		this.queryPen = mouseState;
 		this.canvas = c;
 		model = new SQLJoin(leftNode.getItem(), rightNode.getItem());
 

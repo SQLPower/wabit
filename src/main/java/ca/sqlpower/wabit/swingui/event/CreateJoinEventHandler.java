@@ -106,7 +106,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 						rightText = tempNode;
 						mouseFirstClickX = mouseSecondClickX = 0;
 					}
-					JoinLine join = new JoinLine(mouseStatePane, canvas, leftText, rightText);
+					JoinLine join = new JoinLine(canvas, leftText, rightText);
 					join.getModel().addJoinChangeListener(changeListener);
 					joinLayer.addChild(join);
 					for(PropertyChangeListener listener : createJoinListeners) {

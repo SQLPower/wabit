@@ -199,7 +199,7 @@ public class QueryPen implements MouseState, WabitNode {
 									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
-										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+										JoinLine join = new JoinLine(canvas, pkItemNode, fkItemNode);
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
@@ -221,7 +221,7 @@ public class QueryPen implements MouseState, WabitNode {
 									if (pkItemNode != null && fkItemNode != null) {
 										logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
 										logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
-										JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
+										JoinLine join = new JoinLine(canvas, fkItemNode, pkItemNode);
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
