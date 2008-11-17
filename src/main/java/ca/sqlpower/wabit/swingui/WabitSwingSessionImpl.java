@@ -290,6 +290,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				return;
 			}
 			currentEditorPanel.discardChanges();
+			wabitPane.remove(currentEditorPanel.getPanel());
 		}
 		currentEditorPanel = entryPanel;
 		wabitPane.add(entryPanel.getPanel(), JSplitPane.RIGHT);
