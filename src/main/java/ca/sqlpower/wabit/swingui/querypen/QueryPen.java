@@ -40,8 +40,10 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -64,6 +66,7 @@ import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Container;
+import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
@@ -393,8 +396,6 @@ public class QueryPen implements MouseState, WabitNode {
 		}
 	};
 
-	private final QueryPanel queryPanel;
-	
 	public JPanel createQueryPen() {
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
@@ -415,7 +416,6 @@ public class QueryPen implements MouseState, WabitNode {
 	}
 	
 	public QueryPen(WabitSwingSession s, QueryPanel queryPanel, QueryCache model) {
-		this.queryPanel = queryPanel;
 		this.model = model;
 		panel = new JPanel();
 	    cursorManager = new CursorManager(panel);
@@ -547,8 +547,16 @@ public class QueryPen implements MouseState, WabitNode {
         constantsContainer = new ConstantsPane(this, canvas, model.getConstantsContainer());
         constantsContainer.addChangeListener(queryChangeListener);
         topLayer.addChild(constantsContainer);
+        Map<Item, UnmodifiableItemPNode> loadedItemPNodes = new HashMap<Item, UnmodifiableItemPNode>();
         for (Container c : model.getFromTableList()) {
-        	topLayer.addChild(new ContainerPane(this, canvas, c));
+        	ContainerPane container = new ContainerPane(this, canvas, c);
+			topLayer.addChild(container);
+			for (UnmodifiableItemPNode node : container.getContainedItems()) {
+				loadedItemPNodes.put(node.getItem(), node);
+			}
+        }
+        for (SQLJoin join : model.getJoins()) {
+        	joinLayer.addChild(new JoinLine(canvas, loadedItemPNodes.get(join.getLeftColumn()), loadedItemPNodes.get(join.getRightColumn()), join));
         }
 	}
 	

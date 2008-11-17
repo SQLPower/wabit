@@ -214,7 +214,7 @@ public class JoinLine extends PNode implements WabitNode {
 	/**
 	 * This is the model behind the JoinLine
 	 */
-	private final SQLJoin model;
+	private SQLJoin model;
 	
 	/**
 	 * This join listener will update the view when the model changes.
@@ -224,6 +224,25 @@ public class JoinLine extends PNode implements WabitNode {
 			updateLine();
 		}
 	};
+	
+	/**
+	 * This will create a join line with properties taken from the model. The ItemPNodes passed in must
+	 * contain the left and right items respectively so the JoinLine can connect itself correctly. Failing
+	 * to pass in the correct ItemPNodes will result in an IllegalStateException.
+	 */
+	public JoinLine(PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode, SQLJoin model) throws IllegalStateException {
+		this(c, leftNode, rightNode);
+		if (model.getLeftColumn() != leftNode.getItem()) {
+			throw new IllegalStateException("The left column items were not equal.");
+		}
+		if (model.getRightColumn() != rightNode.getItem()) {
+			throw new IllegalStateException("The right column items were not equal.");
+		}
+		this.model = model;
+		editorPane.setText(model.getComparator());
+		symbolText.syncWithDocument();
+		updateLine();
+	}
 	
 	/**
 	 * Creates the line representing a join between two columns.
