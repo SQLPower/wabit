@@ -34,6 +34,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -46,7 +47,7 @@ import edu.umd.cs.piccolo.util.PPaintContext;
  * (movable) position that other nodes can snap to and be positioned relative
  * to.
  */
-public class GuideNode extends PNode implements ReportNode {
+public class GuideNode extends PNode implements WabitNode {
 
     private static final Logger logger = Logger.getLogger(GuideNode.class);
     

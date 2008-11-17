@@ -17,28 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.report;
+package ca.sqlpower.wabit.swingui;
 
 import ca.sqlpower.wabit.WabitObject;
 
 /**
- * An interface that all of our reporting view object implement. It serves
- * two main purposes: first, a standard way of getting the WabitObject each
- * type of view component represents; second, a standard way of telling the
- * node that we're done with it (so it can unlisten to the model and clean
- * up any other stuff that needs cleaning up).
+ * An interface that all of our view objects. It serves two main purposes:
+ * first, a standard way of getting the WabitObject each type of view component
+ * represents; second, a standard way of telling the node that we're done with
+ * it (so it can unlisten to the model and clean up any other stuff that needs
+ * cleaning up).
  */
-public interface ReportNode {
+public interface WabitNode {
     
     /**
      * Causes this object to unlisten to its model object and anything else
      * that could impede garbage collection. Once you have cleaned up a
-     * ReportNode, you can't use it again.
+     * WabitNode, you can't use it again.
      */
     void cleanup();
 
     /**
-     * Returns the WabitObject that this ReportNode visually represents.
+     * Returns the WabitObject that this WabitNode visually represents.
      */
     WabitObject getModel();
 }

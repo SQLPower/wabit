@@ -29,11 +29,12 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 
-public class ContentBoxNode extends PNode implements ReportNode {
+public class ContentBoxNode extends PNode implements WabitNode {
 
     private static final Logger logger = Logger.getLogger(ContentBoxNode.class);
     

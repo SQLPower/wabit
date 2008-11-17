@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 import edu.umd.cs.piccolo.PCanvas;
@@ -132,8 +133,8 @@ public class ReportLayoutPanel implements DataEntryPanel {
             recursiveCleanup(child);
         }
         
-        if (node instanceof ReportNode) {
-            ((ReportNode) node).cleanup();
+        if (node instanceof WabitNode) {
+            ((WabitNode) node).cleanup();
         }
     }
     

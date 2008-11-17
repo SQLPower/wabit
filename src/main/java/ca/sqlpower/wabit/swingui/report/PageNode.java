@@ -27,9 +27,10 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PNode;
 
-public class PageNode extends PNode implements ReportNode {
+public class PageNode extends PNode implements WabitNode {
 
     private static final Logger logger = Logger.getLogger(PageNode.class);
     
@@ -72,7 +73,7 @@ public class PageNode extends PNode implements ReportNode {
     @Override
     public void addChild(int index, PNode child) {
         super.addChild(index, child);
-        if (child instanceof ReportNode && !page.getChildren().contains(((ReportNode) child).getModel())) {
+        if (child instanceof WabitNode && !page.getChildren().contains(((WabitNode) child).getModel())) {
             if (child instanceof ContentBoxNode) {
                 page.addContentBox(((ContentBoxNode) child).getModel());
             } else if (child instanceof GuideNode) {
