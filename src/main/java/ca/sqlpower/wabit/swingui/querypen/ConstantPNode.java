@@ -30,8 +30,10 @@ import javax.swing.JCheckBox;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.StringItem;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.pswing.PSwing;
@@ -41,7 +43,7 @@ import edu.umd.cs.piccolox.pswing.PSwing;
  * {@link ConstantsPane}. A constant is allowed to be edited and can be removed
  * from the {@link ConstantsPane}.
  */
-public class ConstantPNode extends PNode {
+public class ConstantPNode extends PNode implements WabitNode {
 	
 	private static final Logger logger = Logger.getLogger(ConstantPNode.class);
 	
@@ -68,7 +70,7 @@ public class ConstantPNode extends PNode {
 				for (PropertyChangeListener l : changeListeners) {
 					l.propertyChange(new PropertyChangeEvent(ConstantPNode.this, Item.PROPERTY_ITEM_REMOVED, item, null));
 				}
-				item.getParent().getParent().removeItem(item);
+				item.getContainer().removeItem(item);
 			} else if (item instanceof StringItem) {
 				((StringItem)item).setName(constantText.getEditorPane().getText());
 			}
@@ -91,7 +93,7 @@ public class ConstantPNode extends PNode {
 
 	public ConstantPNode(Item source, QueryPen mouseStates, PCanvas canvas) {
 		this.item = source;
-		item.addChangeListener(itemChangeListener);
+		item.addPropertyChangeListener(itemChangeListener);
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		
 		selectionCheckbox = new JCheckBox();
@@ -109,7 +111,12 @@ public class ConstantPNode extends PNode {
 		constantText.translate(swingCheckbox.getFullBounds().getWidth() + SPACING_SIZE, yPos);
 		addChild(constantText);
 		
-		aliasText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
+		if (!item.getAlias().equals(LONG_EMPTY_STRING)) {
+			aliasText = new EditablePStyledText(item.getAlias(), mouseStates, canvas);
+		} else {
+			aliasText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
+		}
+		
 		aliasText.addEditStyledTextListener(new EditStyledTextListener() {
 			private boolean isEditing = false;
 			public void editingStopping() {
@@ -130,7 +137,12 @@ public class ConstantPNode extends PNode {
 		aliasText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + 2 * SPACING_SIZE, yPos);
 		addChild(aliasText);
 		
-		whereText = new EditablePStyledTextWithOptionBox(LONG_EMPTY_STRING, mouseStates, canvas);
+		if (!item.getWhere().equals(LONG_EMPTY_STRING)) {
+			whereText = new EditablePStyledTextWithOptionBox(item.getWhere(), mouseStates, canvas);
+		} else {
+			whereText = new EditablePStyledTextWithOptionBox(LONG_EMPTY_STRING, mouseStates, canvas);
+		}
+		
 		whereText.addEditStyledTextListener(new EditStyledTextListener() {
 			private boolean isEditing = false;
 			public void editingStopping() {
@@ -198,6 +210,14 @@ public class ConstantPNode extends PNode {
 	
 	public boolean isInSelect() {
 		return selectionCheckbox.isSelected();
+	}
+
+	public void cleanup() {
+		item.removePropertyChangeListener(itemChangeListener);
+	}
+
+	public WabitObject getModel() {
+		return item;
 	}
 
 }

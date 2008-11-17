@@ -35,12 +35,9 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
-import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
-import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 
 /**
  * This listener is the main listener on the project tree in Wabit.
@@ -81,10 +78,8 @@ public class ProjectTreeListener extends MouseAdapter {
 		}
 		if (e.isPopupTrigger()) {
 			maybeShowPopup(e);
-		} else if (lastPathComponent instanceof QueryCache) {
-			session.setEditorPanel(new QueryPanel(session, (QueryCache)lastPathComponent));
-		} else if (lastPathComponent instanceof Layout) {
-			session.setEditorPanel(new ReportLayoutPanel((Layout)lastPathComponent));
+		} else if (lastPathComponent != null) {
+			session.setEditorPanel(lastPathComponent);
 		}
 	}
 

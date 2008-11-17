@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.Section;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -54,7 +54,7 @@ import edu.umd.cs.piccolox.pswing.PSwing;
  * 
  * @param <C> The type of object this container is displaying.
  */
-public class ContainerPane extends PNode {
+public class ContainerPane extends PNode implements WabitNode {
 	
 	private static Logger logger = Logger.getLogger(ContainerPane.class);
 
@@ -205,7 +205,7 @@ public class ContainerPane extends PNode {
 
 	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
-		model.addChangeListener(new PropertyChangeListener() {
+		model.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
 					addItem((Item)evt.getNewValue());
@@ -217,11 +217,6 @@ public class ContainerPane extends PNode {
 						l.propertyChange(evt);
 					}
 				}
-			}
-		});
-		addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				model.setPosition(new Point2D.Double(getGlobalBounds().getX(), getGlobalBounds().getY()));
 			}
 		});
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
@@ -251,14 +246,12 @@ public class ContainerPane extends PNode {
 		addChild(header);
 		
 		int yLoc = 2;
-		for (Section sec : model.getSections()) {
-			for (Item item : sec.getItems()) {
-				final UnmodifiableItemPNode newText = createTextLine(item);
-				newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc+ BORDER_SIZE);
-				addChild(newText);
-				containedItems.add(newText);
-				yLoc++;
-			}
+		for (Item item : model.getItems()) {
+			final UnmodifiableItemPNode newText = createTextLine(item);
+			newText.translate(0, (modelNameText.getHeight() + BORDER_SIZE) * yLoc+ BORDER_SIZE);
+			addChild(newText);
+			containedItems.add(newText);
+			yLoc++;
 		}
 		
 		repositionWhereClauses();
@@ -271,6 +264,15 @@ public class ContainerPane extends PNode {
 		this.addChild(outerRect);
 		outerRect.moveToBack();
 		setBounds(outerRect.getBounds());
+		translate(-getGlobalBounds().getX(), -getGlobalBounds().getY());
+		translate(model.getPosition().getX(), model.getPosition().getY());
+		
+		addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				model.setPosition(new Point2D.Double(getGlobalBounds().getX(), getGlobalBounds().getY()));
+				logger.debug("Setting position " + getGlobalBounds().getX() + ", " + getGlobalBounds().getY());
+			}
+		});
 	}
 
 	/**
@@ -447,6 +449,15 @@ public class ContainerPane extends PNode {
 	public void setContainerAlias(String newAlias) {
 		modelNameText.getEditorPane().setText(newAlias);
 		createAliasName();
+	}
+
+	public void cleanup() {
+		model.removePropertyChangeListener(itemChangeListener);
+		for (Object o : getAllNodes()) {
+			if (o instanceof WabitNode) {
+				((WabitNode)o).cleanup();
+			}
+		}
 	}
 	
 }

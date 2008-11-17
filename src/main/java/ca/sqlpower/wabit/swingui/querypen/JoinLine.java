@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.SQLJoin.Comparators;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -49,7 +50,7 @@ import edu.umd.cs.piccolox.nodes.PStyledText;
 /**
  * This object draws a join line between two columns in the GUI query pen.
  */
-public class JoinLine extends PNode {
+public class JoinLine extends PNode implements WabitNode {
 	
 	private static Logger logger = Logger.getLogger(JoinLine.class);
 
@@ -216,6 +217,15 @@ public class JoinLine extends PNode {
 	private final SQLJoin model;
 	
 	/**
+	 * This join listener will update the view when the model changes.
+	 */
+	private final PropertyChangeListener joinListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			updateLine();
+		}
+	};
+	
+	/**
 	 * Creates the line representing a join between two columns.
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
@@ -225,11 +235,8 @@ public class JoinLine extends PNode {
 		this.queryPen = mouseState;
 		this.canvas = c;
 		model = new SQLJoin(leftNode.getItem(), rightNode.getItem());
-		model.addJoinChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				updateLine();
-			}
-		});
+
+		model.addJoinChangeListener(joinListener);
 		this.leftNode = leftNode;
 		this.rightNode = rightNode;
 		leftNode.JoinTo(this);
@@ -537,5 +544,9 @@ public class JoinLine extends PNode {
 			return true;
 		}
 		return false;
+	}
+
+	public void cleanup() {
+		model.removeJoinChangeListener(joinListener);
 	}
 }

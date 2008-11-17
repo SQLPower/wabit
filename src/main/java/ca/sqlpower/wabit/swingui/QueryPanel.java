@@ -28,10 +28,6 @@ import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
-import java.awt.dnd.DragSourceDragEvent;
-import java.awt.dnd.DragSourceDropEvent;
-import java.awt.dnd.DragSourceEvent;
-import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -179,8 +175,18 @@ public class QueryPanel implements DataEntryPanel {
 	 * will let the user drag and drop components into the query.
 	 */
 	private SQLObjectRoot rootNode;
+
+	/**
+	 * This will listen to any change in the query cache and update the results table as needed.
+	 */
+	private final PropertyChangeListener queryCacheListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent e) {
+			executeQueryInCache();
+		}
+	};
 	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
+		logger.debug("Constructing new query panel.");
 		this.session = session;
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = cache;
@@ -305,11 +311,7 @@ public class QueryPanel implements DataEntryPanel {
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
-    	queryCache.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent e) {
-				executeQueryInCache();
-			}
-		});
+		queryCache.addPropertyChangeListener(queryCacheListener);
     	JPanel playPen = queryPen.createQueryPen();
     	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
     	AbstractAction queryExecuteAction = new AbstractAction() {
@@ -523,17 +525,28 @@ public class QueryPanel implements DataEntryPanel {
 
 	public boolean applyChanges() {
 		//Changes are currently always done immediately. If we add a save button this will change.
+		disconnect();
 		return true;
 	}
 
 
 	public void discardChanges() {
 		//Changes are currently always done immediately. If we add a save button this will change.
+		disconnect();
 	}
 
 
 	public boolean hasUnsavedChanges() {
 		//Changes are currently always done immediately. If we add a save button this will change.
 		return false;
+	}
+	
+	/**
+	 * Disconnects all listeners in the query cache.
+	 */
+	private void disconnect() {
+		queryController.disconnect();
+		queryCache.removePropertyChangeListener(queryCacheListener);
+		logger.debug("Removed the query panel change listener on the query cache");
 	}
 }

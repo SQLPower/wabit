@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -31,9 +32,11 @@ import javax.swing.JCheckBox;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.StringItem;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
@@ -47,7 +50,7 @@ import edu.umd.cs.piccolox.pswing.PSwing;
  * joins specified to this PNode will have the boolean operation placed in the where
  * clause as there is no actual table to join on. 
  */
-public class ConstantsPane extends PNode {
+public class ConstantsPane extends PNode implements WabitNode {
 	
 	private static final Logger logger = Logger.getLogger(ConstantsPane.class);
 	
@@ -118,12 +121,7 @@ public class ConstantsPane extends PNode {
 					repositionAndResize();
 				}
 			} else if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
-				ConstantPNode newConstantNode = new ConstantPNode((Item)evt.getNewValue(), mouseState, canvas);
-				newConstantNode.addChangeListener(resizeListener);
-				newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);
-				constantPNodeList.add(newConstantNode);
-				ConstantsPane.this.addChild(newConstantNode);
-				repositionAndResize();
+				addItem((Item)evt.getNewValue());
 			}
 			for (PropertyChangeListener l : changeListeners) {
 				l.propertyChange(evt);
@@ -162,15 +160,11 @@ public class ConstantsPane extends PNode {
 		this.mouseState = mouseState;
 		this.canvas = canvas;
 		this.model = containerModel;
+
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		constantPNodeList = new ArrayList<ConstantPNode>();
-		addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				model.setPosition(new Point2D.Double(getGlobalBounds().getX(), getGlobalBounds().getY()));
-			}
-		});
 		
-		model.addChangeListener(itemChangedListener);
+		model.addPropertyChangeListener(itemChangedListener);
 		
 		title = new EditablePStyledText(TITLE_STRING, mouseState, canvas);
 		addChild(title);
@@ -225,7 +219,21 @@ public class ConstantsPane extends PNode {
 		addChild(outerRect);
 		outerRect.moveToBack();
 		setBounds(outerRect.getBounds());
-		translate(BORDER_SIZE, BORDER_SIZE);
+		translate(-getGlobalBounds().getX(), -getGlobalBounds().getY());
+		translate(containerModel.getPosition().getX(), containerModel.getPosition().getY());
+		logger.debug("Loaded constants pane in position " + getGlobalBounds().getX() + ", " + getGlobalBounds().getY());
+		
+		for (Item item : model.getItems()) {
+			addItem(item);
+		}
+		
+		addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName().equals(PNode.PROPERTY_FULL_BOUNDS)) {
+					model.setPosition(new Point2D.Double(getGlobalBounds().getX(), getGlobalBounds().getY()));
+				}
+			}
+		});
 		
 	}
 	
@@ -304,12 +312,37 @@ public class ConstantsPane extends PNode {
 		return false;
 	}
 	
+	/**
+	 * Adds the item to this ConstanstPane in a new ConstantPNode.
+	 */
+	private void addItem(Item item) {
+		ConstantPNode newConstantNode = new ConstantPNode(item, mouseState, canvas);
+		newConstantNode.addChangeListener(resizeListener);
+		newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);
+		constantPNodeList.add(newConstantNode);
+		ConstantsPane.this.addChild(newConstantNode);
+		repositionAndResize();
+	}
+	
 	public void addChangeListener(PropertyChangeListener l) {
 		changeListeners.add(l);
 	}
 	
 	public void removeChangeListener(PropertyChangeListener l) {
 		changeListeners.remove(l);
+	}
+
+	public void cleanup() {
+		model.removePropertyChangeListener(itemChangedListener);
+		for (Object o : getAllNodes()) {
+			if (o instanceof WabitNode) {
+				((WabitNode)o).cleanup();
+			}
+		}
+	}
+
+	public WabitObject getModel() {
+		return model;
 	}
 
 }

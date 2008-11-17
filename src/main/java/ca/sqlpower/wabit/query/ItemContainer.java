@@ -21,19 +21,20 @@ package ca.sqlpower.wabit.query;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
+
 /**
  * This container is used to hold a generic list of items in
  * the same section.
  */
-public class ItemContainer implements Container {
+public class ItemContainer extends AbstractWabitObject implements Container {
 	
 	private static final Logger logger = Logger.getLogger(ItemContainer.class);
 
@@ -46,32 +47,25 @@ public class ItemContainer implements Container {
 	 * This section holds all of the Items containing the strings in this
 	 * container.
 	 */
-	private Section section;
+	private final List<Item> itemList;
 	
 	private String alias;
 	
 	private Point2D position;
 	
-	/**
-	 * A list of listeners that will tell other objects when the model changes.
-	 */
-	private final List<PropertyChangeListener> modelListeners;
-	
 	public ItemContainer(String name) {
 		this.name = name;
-		modelListeners = new ArrayList<PropertyChangeListener>();
-		section = new ObjectSection();
-		((ObjectSection)section).setParent(this);
+		itemList = new ArrayList<Item>();
 		logger.debug("Container created.");
 		position = new Point(0, 0);
 	}
 	
 	public Object getContainedObject() {
-		return section.getItems();
+		return Collections.unmodifiableList(itemList);
 	}
 
 	public Item getItem(Object item) {
-		for (Item i : section.getItems()) {
+		for (Item i : itemList) {
 			if (i.getItem().equals(item)) {
 				return i;
 			}
@@ -80,25 +74,24 @@ public class ItemContainer implements Container {
 	}
 	
 	public void addItem(Item item) {
-		section.addItem(item);
-		for (PropertyChangeListener l : modelListeners) {
-			l.propertyChange(new PropertyChangeEvent(ItemContainer.this, Container.CONTAINTER_ITEM_ADDED, null, item));
-		}
+		itemList.add(item);
+		firePropertyChange(Container.CONTAINTER_ITEM_ADDED, null, item);
+		fireChildAdded(Item.class, item, itemList.indexOf(item));
 	}
 	
 	public void removeItem(Item item) {
-		section.removeItem(item);
-		for (PropertyChangeListener l : modelListeners) {
-			l.propertyChange(new PropertyChangeEvent(ItemContainer.this, Container.CONTAINER_ITEM_REMOVED, item, null));
-		}
+		int index = itemList.indexOf(item);
+		itemList.remove(item);
+		firePropertyChange(Container.CONTAINER_ITEM_REMOVED, item, null);
+		fireChildRemoved(Item.class, item, index);
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public List<Section> getSections() {
-		return Collections.singletonList(section);
+	public List<Item> getItems() {
+		return Collections.unmodifiableList(itemList);
 	}
 
 	public String getAlias() {
@@ -114,17 +107,7 @@ public class ItemContainer implements Container {
 			return;
 		}
 		this.alias = alias;
-		for (PropertyChangeListener l : modelListeners) {
-			l.propertyChange(new PropertyChangeEvent(this, CONTAINTER_ALIAS_CHANGED, oldAlias, alias));
-		}
-	}
-
-	public void addChangeListener(PropertyChangeListener l) {
-		modelListeners.add(l);		
-	}
-
-	public void removeChangeListener(PropertyChangeListener l) {
-		modelListeners.remove(l);		
+		firePropertyChange(CONTAINTER_ALIAS_CHANGED, oldAlias, alias);
 	}
 
 	public Point2D getPosition() {
@@ -133,6 +116,18 @@ public class ItemContainer implements Container {
 
 	public void setPosition(Point2D p) {
 		position = p;
+	}
+	
+	public boolean allowsChildren() {
+		return true;
+	}
+
+	public int childPositionOffset(Class<? extends WabitObject> childType) {
+		return 0;
+	}
+
+	public List<? extends WabitObject> getChildren() {
+		return itemList;
 	}
 
 }

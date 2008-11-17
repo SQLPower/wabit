@@ -19,13 +19,13 @@
 
 package ca.sqlpower.wabit.query;
 
-import java.beans.PropertyChangeListener;
+import ca.sqlpower.wabit.WabitObject;
 
 
 /**
  * A class implementing this interface wraps an item in a container.
  */
-public interface Item {
+public interface Item extends WabitObject {
 	
 	/**
 	 * Defines a property change of an alias on an item.
@@ -55,13 +55,9 @@ public interface Item {
 	 */
 	public static final String PROPERTY_ITEM_REMOVED = "ITEM_REMOVED";
 
-	String getName();
-	
 	Object getItem();
 	
-	Section getParent();
-	
-	void setParent(Section parent);
+	Container getContainer();
 	
 	void setAlias(String alias);
 	
@@ -75,7 +71,4 @@ public interface Item {
 	
 	boolean isSelected();
 	
-	void addChangeListener(PropertyChangeListener l);
-	
-	void removeChangeListener(PropertyChangeListener l);
 }

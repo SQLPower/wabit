@@ -19,26 +19,21 @@
 
 package ca.sqlpower.wabit.query;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import ca.sqlpower.architect.SQLObject;
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
 
 /**
  * This container item wraps a SQLColumn for use in a ContainerPane.
  */
-public class SQLObjectItem implements Item {
+public class SQLObjectItem extends AbstractWabitObject implements Item {
 	
 	private final SQLObject sqlObject;
 	
 	private String alias;
 	
-	private Section parent;
-	
-	private final List<PropertyChangeListener> changeListeners;
-
 	private boolean selected;
 
 	private String where;
@@ -48,11 +43,14 @@ public class SQLObjectItem implements Item {
 		this.alias = "";
 		this.where = "";
 		this.selected = false;
-		changeListeners = new ArrayList<PropertyChangeListener>();
 	}
 	
 	public String getName() {
 		return sqlObject.getName();
+	}
+	
+	public void setName(String name) {
+		throw new IllegalStateException("Cannot set the name of a SQL object retrieved from the database through a query.");
 	}
 	
 	public Object getItem() {
@@ -69,27 +67,9 @@ public class SQLObjectItem implements Item {
 			return;
 		}
 		this.alias = alias;
-		for (PropertyChangeListener l : changeListeners) {
-			l.propertyChange(new PropertyChangeEvent(this, PROPERTY_ALIAS, oldAlias, alias));
-		}
+		firePropertyChange(PROPERTY_ALIAS, oldAlias, alias);
 	}
 	
-	public Section getParent() {
-		return parent;
-	}
-	
-	public void setParent(Section parent) {
-		this.parent = parent;
-	}
-
-	public void addChangeListener(PropertyChangeListener l) {
-		changeListeners.add(l);
-	}
-
-	public void removeChangeListener(PropertyChangeListener l) {
-		changeListeners.remove(l);
-	}
-
 	public String getWhere() {
 		return where;
 	}
@@ -104,9 +84,7 @@ public class SQLObjectItem implements Item {
 			return;
 		}
 		this.selected = selected;
-		for (PropertyChangeListener l : changeListeners) {
-			l.propertyChange(new PropertyChangeEvent(this, PROPERTY_SELECTED, oldSelect, selected));
-		}
+		firePropertyChange(PROPERTY_SELECTED, oldSelect, selected);
 	}
 
 	public void setWhere(String where) {
@@ -115,9 +93,23 @@ public class SQLObjectItem implements Item {
 			return;
 		}
 		this.where = where;
-		for (PropertyChangeListener l : changeListeners) {
-			l.propertyChange(new PropertyChangeEvent(this, PROPERTY_WHERE, oldWhere, where));
-		}
+		firePropertyChange(PROPERTY_WHERE, oldWhere, where);
+	}
+
+	public boolean allowsChildren() {
+		return false;
+	}
+
+	public int childPositionOffset(Class<? extends WabitObject> childType) {
+		return 0;
+	}
+
+	public List<? extends WabitObject> getChildren() {
+		return null;
+	}
+
+	public Container getContainer() {
+		return (Container) getParent();
 	}
 
 }

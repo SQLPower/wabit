@@ -23,7 +23,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
@@ -70,6 +69,7 @@ import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.SQLObjectSelection;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
@@ -84,7 +84,7 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 /**
  * The pen where users can graphically create sql queries.
  */
-public class QueryPen implements MouseState {
+public class QueryPen implements MouseState, WabitNode {
 	
 	private static Logger logger = Logger.getLogger(QueryPen.class);
 	
@@ -442,10 +442,6 @@ public class QueryPen implements MouseState {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
         
-        constantsContainer = new ConstantsPane(this, canvas, model.getConstantsContainer());
-        constantsContainer.addChangeListener(queryChangeListener);
-        topLayer.addChild(constantsContainer);
-        
         ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"));
         zoomInAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
@@ -540,7 +536,22 @@ public class QueryPen implements MouseState {
 				//Do nothing
 			}
 		});
+		
+		loadQueryCache();
 	}
+	
+	/**
+	 * This will load the related tables and their properties into the QueryPen.
+	 */
+	private void loadQueryCache() {
+        constantsContainer = new ConstantsPane(this, canvas, model.getConstantsContainer());
+        constantsContainer.addChangeListener(queryChangeListener);
+        topLayer.addChild(constantsContainer);
+        for (Container c : model.getFromTableList()) {
+        	topLayer.addChild(new ContainerPane(this, canvas, c));
+        }
+	}
+	
 	public PSelectionEventHandler getMultipleSelectEventHandler(){
 		return selectionEventHandler;
 	}
@@ -630,5 +641,20 @@ public class QueryPen implements MouseState {
 	
 	public PSwingCanvas getQueryPenCavas () {
 		return canvas;
+	}
+
+	public void cleanup() {
+		queryListeners.clear();
+		for (Object o : topLayer.getAllNodes()) {
+			if (o instanceof WabitNode) {
+				((WabitNode)o).cleanup();
+			}
+		}
+		
+		for (Object o : joinLayer.getAllNodes()) {
+			if (o instanceof WabitNode) {
+				((WabitNode)o).cleanup();
+			}
+		}
 	}
 }

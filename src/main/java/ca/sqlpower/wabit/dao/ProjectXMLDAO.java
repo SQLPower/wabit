@@ -32,7 +32,6 @@ import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.Section;
 import ca.sqlpower.xml.XMLHelper;
 
 public class ProjectXMLDAO {
@@ -84,18 +83,16 @@ public class ProjectXMLDAO {
 		printAttribute("ypos", constants.getPosition().getY());
 		xml.println(out, ">");
 		xml.indent++;
-		for (Section s : constants.getSections()) {
-			for (Item item : s.getItems()) {
-				xml.print(out, "<column");
-				String ident = "COL" + columnId;
-				printAttribute("id", ident);
-				itemIdMap.put(item, ident);
-				printAttribute("name", item.getName());
-				printAttribute("alias", item.getAlias());
-				printAttribute("where-text", item.getWhere());
-				xml.println(out, "/>");
-				columnId++;
-			}
+		for (Item item : constants.getItems()) {
+			xml.print(out, "<column");
+			String ident = "COL" + columnId;
+			printAttribute("id", ident);
+			itemIdMap.put(item, ident);
+			printAttribute("name", item.getName());
+			printAttribute("alias", item.getAlias());
+			printAttribute("where-text", item.getWhere());
+			xml.println(out, "/>");
+			columnId++;
 		}
 		xml.indent--;
 		xml.println(out, "</constants>");
@@ -108,18 +105,16 @@ public class ProjectXMLDAO {
 			printAttribute("ypos", table.getPosition().getY());
 			xml.println(out, ">");
 			xml.indent++;
-			for (Section s : table.getSections()) {
-				for (Item item : s.getItems()) {
-					xml.print(out, "<column");
-					String ident = "COL" + columnId;
-					printAttribute("id", ident);
-					itemIdMap.put(item, ident);
-					printAttribute("name", item.getName());
-					printAttribute("alias", item.getAlias());
-					printAttribute("where-text", item.getWhere());
-					xml.println(out, "/>");
-					columnId++;
-				}
+			for (Item item : table.getItems()) {
+				xml.print(out, "<column");
+				String ident = "COL" + columnId;
+				printAttribute("id", ident);
+				itemIdMap.put(item, ident);
+				printAttribute("name", item.getName());
+				printAttribute("alias", item.getAlias());
+				printAttribute("where-text", item.getWhere());
+				xml.println(out, "/>");
+				columnId++;
 			}
 			xml.indent--;
 			xml.println(out, "</table>");

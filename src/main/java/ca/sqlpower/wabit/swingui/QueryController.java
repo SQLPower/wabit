@@ -239,6 +239,11 @@ public class QueryController {
 	 * the query is executing on.
 	 */
 	private final JComboBox dataSourceComboBox;
+
+	/**
+	 * The query pen this controller is listening to.
+	 */
+	private final QueryPen pen;
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
@@ -248,12 +253,26 @@ public class QueryController {
 	 */
 	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox) {
 		queryCache = cache;
+		this.pen = pen;
 		this.dataSourceComboBox = dataSourceComboBox;
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
+	}
+	
+	/**
+	 * This disconnects the QueryController from the QueryPen it started to listen to when it
+	 * was created. This should be called when this controller is no longer needed.
+	 */
+	public void disconnect() {
+		pen.removeQueryListener(fromChangeListener);
+		pen.removeQueryListener(joinChangeListener);
+		pen.removeQueryListener(whereListener);
+		pen.removeQueryListener(tableItemListener);
+		dataSourceComboBox.removeActionListener(dataSourceListener);
+		unlistenToCellRenderer();
 	}
 	
 	public void listenToCellRenderer(ComponentCellRenderer renderer) {

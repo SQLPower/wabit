@@ -24,7 +24,6 @@ import javax.swing.JMenu;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.StubWabitSessionContext;
@@ -85,7 +84,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		return null;
 	}
 
-	public void setEditorPanel(DataEntryPanel entryPanel) {
+	public void setEditorPanel(Object entryPanelModel) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -89,8 +89,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			List<Container> adjacencyNodes = new ArrayList<Container>();
 			if (joinMapping.get(node) != null) {
 				for (SQLJoin join : joinMapping.get(node)) {
-					if (join.getLeftColumn().getParent().getParent() == node) {
-						adjacencyNodes.add(join.getRightColumn().getParent().getParent());
+					if (join.getLeftColumn().getContainer() == node) {
+						adjacencyNodes.add(join.getRightColumn().getContainer());
 					}
 				}
 			}
@@ -111,7 +111,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			List<SQLJoin> inboundEdges = new ArrayList<SQLJoin>();
 			if (joinMapping.get(node) != null) {
 				for (SQLJoin join : joinMapping.get(node)) {
-					if (join.getRightColumn().getParent().getParent() == node) {
+					if (join.getRightColumn().getContainer() == node) {
 						inboundEdges.add(join);
 					}
 				}
@@ -127,7 +127,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			List<SQLJoin> outboundEdges = new ArrayList<SQLJoin>();
 			if (joinMapping.get(node) != null) {
 				for (SQLJoin join : joinMapping.get(node)) {
-					if (join.getLeftColumn().getParent().getParent() == node) {
+					if (join.getLeftColumn().getContainer() == node) {
 						outboundEdges.add(join);
 					}
 				}
@@ -240,9 +240,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			if (e.getPropertyName().equals(SQLJoin.LEFT_JOIN_CHANGED)) {
 				logger.debug("Got left join changed.");
 				SQLJoin changedJoin = (SQLJoin) e.getSource();
-				Container leftJoinContainer = changedJoin.getLeftColumn().getParent().getParent();
+				Container leftJoinContainer = changedJoin.getLeftColumn().getContainer();
 				for (SQLJoin join : joinMapping.get(leftJoinContainer)) {
-					if (join.getLeftColumn().getParent().getParent() == leftJoinContainer) {
+					if (join.getLeftColumn().getContainer() == leftJoinContainer) {
 						join.setLeftColumnOuterJoin((Boolean)e.getNewValue());
 					} else {
 						join.setRightColumnOuterJoin((Boolean)e.getNewValue());
@@ -254,10 +254,10 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			} else if (e.getPropertyName().equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
 				logger.debug("Got right join changed.");
 				SQLJoin changedJoin = (SQLJoin) e.getSource();
-				Container rightJoinContainer = changedJoin.getRightColumn().getParent().getParent();
+				Container rightJoinContainer = changedJoin.getRightColumn().getContainer();
 				logger.debug("There are " + joinMapping.get(rightJoinContainer) + " joins on the table with the changed join.");
 				for (SQLJoin join : joinMapping.get(rightJoinContainer)) {
-					if (join.getLeftColumn().getParent().getParent() == rightJoinContainer) {
+					if (join.getLeftColumn().getContainer() == rightJoinContainer) {
 						logger.debug("Changing left side");
 						join.setLeftColumnOuterJoin((Boolean)e.getNewValue());
 					} else {
@@ -433,11 +433,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			if (groupByAggregateMap.containsKey(col)) {
 				query.append(groupByAggregateMap.get(col).toString() + "(");
 			}
-			String alias = tableAliasMap.get(col.getParent().getParent());
+			String alias = tableAliasMap.get(col.getContainer());
 			if (alias != null) {
 				query.append(alias + ".");
-			} else if (fromTableList.contains(col.getParent().getParent())) {
-				query.append(col.getParent().getParent().getName() + ".");
+			} else if (fromTableList.contains(col.getContainer())) {
+				query.append(col.getContainer().getName() + ".");
 			}
 			query.append(col.getName());
 			if (groupByAggregateMap.containsKey(col)) {
@@ -473,7 +473,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				boolean joinFound = false;
 				if (previousTable != null && joinMapping.get(table) != null) {
 					for (SQLJoin join : joinMapping.get(table)) {
-						if (join.getLeftColumn().getParent().getParent() == previousTable) {
+						if (join.getLeftColumn().getContainer() == previousTable) {
 							joinFound = true;
 							if (join.isLeftColumnOuterJoin() && join.isRightColumnOuterJoin()) {
 								query.append(" \nFULL OUTER JOIN ");
@@ -498,25 +498,25 @@ public class QueryCache extends AbstractWabitObject implements Query {
 					boolean isFirstJoin = true;
 					for (SQLJoin join : joinMapping.get(table)) {
 						Item otherColumn;
-						if (join.getLeftColumn().getParent().getParent() == table) {
+						if (join.getLeftColumn().getContainer() == table) {
 							otherColumn = join.getRightColumn();
 						} else {
 							otherColumn = join.getLeftColumn();
 						}
 						for (int i = 0; i < dfs.getFinishOrder().indexOf(table); i++) {
-							if (otherColumn.getParent().getParent() == dfs.getFinishOrder().get(i)) {
+							if (otherColumn.getContainer() == dfs.getFinishOrder().get(i)) {
 								if (isFirstJoin) {
 									isFirstJoin = false;
 								} else {
 									query.append(" \n    AND ");
 								}
-								String leftAlias = tableAliasMap.get(join.getLeftColumn().getParent().getParent());
+								String leftAlias = tableAliasMap.get(join.getLeftColumn().getContainer());
 								if (leftAlias == null) {
-									leftAlias = join.getLeftColumn().getParent().getParent().getName();
+									leftAlias = join.getLeftColumn().getContainer().getName();
 								}
-								String rightAlias = tableAliasMap.get(join.getRightColumn().getParent().getParent());
+								String rightAlias = tableAliasMap.get(join.getRightColumn().getContainer());
 								if (rightAlias == null) {
-									rightAlias = join.getRightColumn().getParent().getParent().getName();
+									rightAlias = join.getRightColumn().getContainer().getName();
 								}
 								query.append(leftAlias + "." + join.getLeftColumn().getName() + 
 										" " + join.getComparator() + " " + 
@@ -543,11 +543,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 					} else {
 						query.append(" AND ");
 					}
-					String alias = tableAliasMap.get(entry.getKey().getParent().getParent());
+					String alias = tableAliasMap.get(entry.getKey().getContainer());
 					if (alias != null) {
 						query.append(alias + ".");
-					} else if (fromTableList.contains(entry.getKey().getParent().getParent())) {
-						query.append(entry.getKey().getParent().getParent().getName() + ".");
+					} else if (fromTableList.contains(entry.getKey().getContainer())) {
+						query.append(entry.getKey().getContainer().getName() + ".");
 					}
 					query.append(entry.getKey().getName() + " " + entry.getValue());
 				}
@@ -569,11 +569,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				} else {
 					query.append(", ");
 				}
-				String alias = tableAliasMap.get(col.getParent().getParent());
+				String alias = tableAliasMap.get(col.getContainer());
 				if (alias != null) {
 					query.append(alias + ".");
-				} else if (fromTableList.contains(col.getParent().getParent())) {
-					query.append(col.getParent().getParent().getName() + ".");
+				} else if (fromTableList.contains(col.getContainer())) {
+					query.append(col.getContainer().getName() + ".");
 				}
 				query.append(col.getName());
 			}
@@ -593,11 +593,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(groupByAggregateMap.get(column).toString() + "(");
 				}
-				String alias = tableAliasMap.get(column.getParent().getParent());
+				String alias = tableAliasMap.get(column.getContainer());
 				if (alias != null) {
 					query.append(alias + ".");
-				} else if (fromTableList.contains(column.getParent().getParent())) {
-					query.append(column.getParent().getParent().getName() + ".");
+				} else if (fromTableList.contains(column.getContainer())) {
+					query.append(column.getContainer().getName() + ".");
 				}
 				query.append(column.getName());
 				if (groupByAggregateMap.get(column) != null) {
@@ -625,11 +625,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				if (groupByAggregateMap.containsKey(col)) {
 					query.append(groupByAggregateMap.get(col) + "(");
 				}
-				String alias = tableAliasMap.get(col.getParent().getParent());
+				String alias = tableAliasMap.get(col.getContainer());
 				if (alias != null) {
 					query.append(alias + ".");
-				} else if (fromTableList.contains(col.getParent().getParent())) {
-					query.append(col.getParent().getParent().getName() + ".");
+				} else if (fromTableList.contains(col.getContainer())) {
+					query.append(col.getContainer().getName() + ".");
 				}
 				query.append(col.getName());
 				if (groupByAggregateMap.containsKey(col)) {
@@ -752,11 +752,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public void removeTable(Container table) {
 		fromTableList.remove(table);
 		tableAliasMap.remove(table);
-		table.removeChangeListener(tableAliasListener);
-		for (Section section : table.getSections()) {
-			for (Item col : section.getItems()) {
-				removeItem(col);
-			}
+		table.removePropertyChangeListener(tableAliasListener);
+		for (Item col : table.getItems()) {
+			removeItem(col);
 		}
 		if (!compoundEdit) {
 			firePropertyChange(PROPERTY_QUERY, table, null);
@@ -765,11 +763,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 
 	public void addTable(Container container) {
 		fromTableList.add(container);
-		container.addChangeListener(tableAliasListener);
-		for (Section section : container.getSections()) {
-			for (Item col : section.getItems()) {
-				addItem(col);
-			}
+		container.addPropertyChangeListener(tableAliasListener);
+		for (Item col : container.getItems()) {
+			addItem(col);
 		}
 		if (!compoundEdit) {
 			firePropertyChange(PROPERTY_QUERY, null, container);
@@ -792,7 +788,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		Item leftColumn = joinLine.getLeftColumn();
 		Item rightColumn = joinLine.getRightColumn();
 
-		List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getParent().getParent());
+		List<SQLJoin> leftJoinList = joinMapping.get(leftColumn.getContainer());
 		for (SQLJoin join : leftJoinList) {
 			if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
 				leftJoinList.remove(join);
@@ -800,7 +796,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			}
 		}
 
-		List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getParent().getParent());
+		List<SQLJoin> rightJoinList = joinMapping.get(rightColumn.getContainer());
 		for (SQLJoin join : rightJoinList) {
 			if (leftColumn == join.getLeftColumn() && rightColumn == join.getRightColumn()) {
 				rightJoinList.remove(join);
@@ -816,8 +812,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		join.addJoinChangeListener(joinChangeListener);
 		Item leftColumn = join.getLeftColumn();
 		Item rightColumn = join.getRightColumn();
-		Container leftContainer = leftColumn.getParent().getParent();
-		Container rightContainer = rightColumn.getParent().getParent();
+		Container leftContainer = leftColumn.getContainer();
+		Container rightContainer = rightColumn.getContainer();
 		if (joinMapping.get(leftContainer) == null) {
 			List<SQLJoin> joinList = new ArrayList<SQLJoin>();
 			joinList.add(join);
@@ -825,9 +821,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		} else {
 			if (joinMapping.get(leftContainer).size() > 0) {
 				SQLJoin prevJoin = joinMapping.get(leftContainer).get(0);
-				if (prevJoin.getLeftColumn().getParent().getParent() == leftContainer) {
+				if (prevJoin.getLeftColumn().getContainer() == leftContainer) {
 					join.setLeftColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
-				} else if (prevJoin.getRightColumn().getParent().getParent() == leftContainer) {
+				} else if (prevJoin.getRightColumn().getContainer() == leftContainer) {
 					join.setLeftColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
 				}
 			}
@@ -842,9 +838,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		} else {
 			if (joinMapping.get(rightContainer).size() > 0) {
 				SQLJoin prevJoin = joinMapping.get(rightContainer).get(0);
-				if (prevJoin.getLeftColumn().getParent().getParent() == rightContainer) {
+				if (prevJoin.getLeftColumn().getContainer() == rightContainer) {
 					join.setRightColumnOuterJoin(prevJoin.isLeftColumnOuterJoin());
-				} else if (prevJoin.getRightColumn().getParent().getParent() == rightContainer) {
+				} else if (prevJoin.getRightColumn().getContainer() == rightContainer) {
 					join.setRightColumnOuterJoin(prevJoin.isRightColumnOuterJoin());
 				} else {
 					throw new IllegalStateException("A table contains a join that is not connected to any of its columns in the table.");
@@ -864,9 +860,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public void removeItem(Item col) {
 		logger.debug("Item name is " + col.getName());
 		whereMapping.remove(col);
-		col.removeChangeListener(aliasListener);
-		col.removeChangeListener(selectedColumnListener);
-		col.removeChangeListener(whereListener);
+		col.removePropertyChangeListener(aliasListener);
+		col.removePropertyChangeListener(selectedColumnListener);
+		col.removePropertyChangeListener(whereListener);
 		removeColumnSelection(col);
 		if (!compoundEdit) {
 			firePropertyChange(PROPERTY_QUERY, col, null);
@@ -877,9 +873,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * This adds the appropriate listeners to the new Item.
 	 */
 	public void addItem(Item col) {
-		col.addChangeListener(aliasListener);
-		col.addChangeListener(selectedColumnListener);
-		col.addChangeListener(whereListener);
+		col.addPropertyChangeListener(aliasListener);
+		col.addPropertyChangeListener(selectedColumnListener);
+		col.addPropertyChangeListener(whereListener);
 	}
 	
 	/**

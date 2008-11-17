@@ -20,15 +20,16 @@
 package ca.sqlpower.wabit.query;
 
 import java.awt.geom.Point2D;
-import java.beans.PropertyChangeListener;
 import java.util.List;
+
+import ca.sqlpower.wabit.WabitObject;
 
 
 /**
  * A container model stores an object that has multiple items 
  * stored in different sections.
  */
-public interface Container {
+public interface Container extends WabitObject {
 	
 	/**
 	 * Defines the property change to be a name change on the container.
@@ -43,13 +44,8 @@ public interface Container {
 	/**
 	 * Gets all of the sections of the contained object.
 	 */
-	List<Section> getSections();
+	List<Item> getItems();
 	
-	/**
-	 * Gets the name of the object this container holds.
-	 */
-	String getName();
-
 	/**
 	 * Gets the Item wrapper that contains the given item. Returns null if the
 	 * object is not contained in this container.
@@ -69,10 +65,6 @@ public interface Container {
 	void setAlias(String alias);
 	
 	String getAlias();
-	
-	void addChangeListener(PropertyChangeListener l);
-	
-	void removeChangeListener(PropertyChangeListener l);
 	
 	/**
 	 * Sets the position of the container. This will allow any view to understand

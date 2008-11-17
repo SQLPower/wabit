@@ -17,7 +17,9 @@ import javax.swing.text.StyleConstants;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
@@ -29,7 +31,7 @@ import edu.umd.cs.piccolox.pswing.PSwing;
 /**
  * This PNode represents a SQL column on a table.
  */
-public class UnmodifiableItemPNode extends PNode {
+public class UnmodifiableItemPNode extends PNode implements WabitNode {
 	
 	private static final Logger logger = Logger.getLogger(UnmodifiableItemPNode.class);
 
@@ -200,7 +202,7 @@ public class UnmodifiableItemPNode extends PNode {
 
 	public UnmodifiableItemPNode(QueryPen mouseStates, PCanvas canvas, Item i) {
 		this.item = i;
-		item.addChangeListener(itemChangeListener);
+		item.addPropertyChangeListener(itemChangeListener);
 		mouseState = mouseStates;
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		joinedLines = new ArrayList<JoinLine>();
@@ -305,6 +307,14 @@ public class UnmodifiableItemPNode extends PNode {
 		whereText.translate(xpos - whereText.getXOffset(), 0);
 		setWidth(getFullBounds().getWidth());
 		setHeight(getFullBounds().getHeight());
+	}
+
+	public void cleanup() {
+		item.removePropertyChangeListener(itemChangeListener);
+	}
+
+	public WabitObject getModel() {
+		return item;
 	}
 
 }

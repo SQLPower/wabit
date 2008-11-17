@@ -56,7 +56,9 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.LogAction;
+import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 
@@ -74,7 +76,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final WabitProject project;
 	
 	private JTree projectTree;
-	private QueryPanel queryPanel;
 	private JSplitPane wabitPane;
 	private JFrame frame;
 	private static JLabel statusLabel;
@@ -139,15 +140,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	projectTree.setCellRenderer(new ProjectTreeCellRenderer());
 
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
-        queryPanel = new QueryPanel(this, new QueryCache());
-		setEditorPanel(queryPanel);
+		setEditorPanel(new QueryCache());
     	
 		//prefs
-    	if(prefs.get("DividerLocatons", null) != null) {
-            String[] dividerLocations = prefs.get("DividerLocatons", null).split(",");
-            queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
-            queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
-            wabitPane.setDividerLocation(Integer.parseInt(dividerLocations[2]));
+    	if(prefs.get("MainDividerLocaton", null) != null) {
+            String[] dividerLocations = prefs.get("MainDividerLocaton", null).split(",");
+            wabitPane.setDividerLocation(Integer.parseInt(dividerLocations[0]));
         }
         
         JPanel statusPane = new JPanel(new BorderLayout());
@@ -200,8 +198,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         	@Override
 			public void windowClosing(WindowEvent e) {
                 try {
-                	prefs.put("DividerLocatons", String.format("%d,%d,%d", queryPanel.getTopRightSplitPane().getDividerLocation(),
-                			queryPanel.getFullSplitPane().getDividerLocation(), wabitPane.getDividerLocation()));
+                	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
                     prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
                     prefs.flush();
                 } catch (BackingStoreException ex) {
@@ -283,17 +280,35 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return frame;
 	}
 	
-	public void setEditorPanel(DataEntryPanel entryPanel) {
+	public void setEditorPanel(Object entryPanelModel) {
 		if (currentEditorPanel != null && currentEditorPanel.hasUnsavedChanges()) {
 			int retval = JOptionPane.showConfirmDialog(frame, "There are unsaved changes. Discard?", "Discard changes", JOptionPane.YES_NO_OPTION);
 			if (retval == JOptionPane.NO_OPTION) {
 				return;
 			}
+		}
+		if (currentEditorPanel != null) {
+			if (currentEditorPanel instanceof QueryPanel) {
+				QueryPanel query = (QueryPanel)currentEditorPanel;
+				prefs.put("QueryDividerLocaton", String.format("%d,%d", query.getTopRightSplitPane().getDividerLocation(), query.getFullSplitPane().getDividerLocation()));
+			}
 			currentEditorPanel.discardChanges();
 			wabitPane.remove(currentEditorPanel.getPanel());
 		}
-		currentEditorPanel = entryPanel;
-		wabitPane.add(entryPanel.getPanel(), JSplitPane.RIGHT);
+		if (entryPanelModel instanceof QueryCache) {
+			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
+		   	if(prefs.get("QueryDividerLocatons", null) != null) {
+	            String[] dividerLocations = prefs.get("QueryDividerLocatons", null).split(",");
+	            queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
+	            queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
+		   	}
+		   	currentEditorPanel = queryPanel;
+		} else if (entryPanelModel instanceof Layout) {
+			currentEditorPanel = new ReportLayoutPanel((Layout)entryPanelModel);
+		} else {
+			throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
+		}
+		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
 	}
 	
 }

@@ -24,6 +24,9 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
+
 
 
 /**
@@ -31,7 +34,7 @@ import java.util.List;
  * statement. This will also store how the two columns are being
  * compared. 
  */
-public class SQLJoin {
+public class SQLJoin extends AbstractWabitObject {
 	
 	/**
 	 * This enum Comparators stores all the comparators.
@@ -200,5 +203,17 @@ public class SQLJoin {
 	 */
 	public void removeAllListeners() {
 		joinChangeListeners.clear();
+	}
+
+	public boolean allowsChildren() {
+		return false;
+	}
+
+	public int childPositionOffset(Class<? extends WabitObject> childType) {
+		return 0;
+	}
+
+	public List<? extends WabitObject> getChildren() {
+		return null;
 	}
 }

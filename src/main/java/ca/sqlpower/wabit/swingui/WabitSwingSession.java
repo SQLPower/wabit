@@ -36,7 +36,9 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 
 	/**
 	 * Sets the panel that allows editing of the current selection in the tree.
+	 * A new panel will be created based on the type of model passed into this method
+	 * if the user has no changes or wants to discard the current changes.
 	 */
-	void setEditorPanel(DataEntryPanel entryPanel);
+	void setEditorPanel(Object entryPanelModel);
 
 }
