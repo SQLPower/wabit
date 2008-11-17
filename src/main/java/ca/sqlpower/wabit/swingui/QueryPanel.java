@@ -27,6 +27,7 @@ import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceDragEvent;
 import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
@@ -237,23 +238,7 @@ public class QueryPanel implements DataEntryPanel {
 				}
 				
 				Transferable dndTransferable = new SQLObjectSelection(list);
-				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceListener() {
-					public void dropActionChanged(DragSourceDragEvent dsde) {
-						//do nothing
-					}
-					public void dragOver(DragSourceDragEvent dsde) {
-						//do nothing
-					}
-					public void dragExit(DragSourceEvent dse) {
-						//do nothing
-					}
-					public void dragEnter(DragSourceDragEvent dsde) {
-						//do nothing
-					}
-					public void dragDropEnd(DragSourceDropEvent dsde) {
-						//do nothing
-					}
-				});
+				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {});
 			}
 		});
 

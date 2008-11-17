@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
@@ -122,11 +123,13 @@ public class QueryPen implements MouseState {
 		public void drop(DropTargetDropEvent dtde) {
 			if (!dtde.isLocalTransfer()) {
 			    logger.debug("Rejecting non-local transfer");
+			    dtde.rejectDrop();
 				return;
 			}
 			
 			if (!dtde.isDataFlavorSupported(SQLObjectSelection.LOCAL_SQLOBJECT_ARRAY_FLAVOUR)) {
                 logger.debug("Rejecting transfer of unknown flavour");
+                dtde.rejectDrop();
 				return;
 			}
 
@@ -134,8 +137,10 @@ public class QueryPen implements MouseState {
 			try {
 				draggedObjects = (SQLObject[]) dtde.getTransferable().getTransferData(SQLObjectSelection.LOCAL_SQLOBJECT_ARRAY_FLAVOUR);
 			} catch (UnsupportedFlavorException e) {
+				dtde.dropComplete(false);
 				throw new RuntimeException(e);
 			} catch (IOException e) {
+				dtde.dropComplete(false);
 				throw new RuntimeException(e);
 			}
 			
@@ -238,6 +243,7 @@ public class QueryPen implements MouseState {
 					
 				} else {
 					logger.debug("Rejecting drop of non-SQLTable SQLObject: " + draggedSQLObject);
+					dtde.rejectDrop();
 				}
 			}
 			
@@ -246,7 +252,7 @@ public class QueryPen implements MouseState {
 		public void dragOver(DropTargetDragEvent dtde) {
 			//no-op
 		}
-
+		
 		public void dragExit(DropTargetEvent dte) {
 			//no-op
 		}
