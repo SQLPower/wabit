@@ -140,6 +140,8 @@ public class Page extends AbstractWabitObject {
         addGuide(new Guide(Axis.VERTICAL, width - DPI));
         addGuide(new Guide(Axis.HORIZONTAL, DPI));
         addGuide(new Guide(Axis.HORIZONTAL, height - DPI));
+        
+        setDefaultFont(Font.decode("dialog 8"));
     }
 
     public int getWidth() {

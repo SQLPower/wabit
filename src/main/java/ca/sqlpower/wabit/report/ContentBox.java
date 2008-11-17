@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.Font;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +36,12 @@ public class ContentBox extends AbstractWabitObject {
     private int width;
     private int height;
 
+    /**
+     * The font for this content box's contents. If null, the containing page's
+     * default font will be used.
+     */
+    private Font font;
+    
     /**
      * The renderer that provides visual content for this box.
      */
@@ -106,5 +113,18 @@ public class ContentBox extends AbstractWabitObject {
         return Collections.emptyList();
     }
 
-    
+    public Font getFont() {
+        if (font == null && getParent() != null) {
+            return getParent().getDefaultFont();
+        } else {
+            return font;
+        }
+    }
+
+    public void setFont(Font font) {
+        Font oldFont = this.font;
+        this.font = font;
+        firePropertyChange("font", oldFont, font);
+    }
+
 }

@@ -40,9 +40,11 @@ public class ContentBoxNode extends PNode implements WabitNode {
     
     private final ContentBox contentBox;
 
-    private Color borderColour = Color.BLACK;
+    private Color borderColour = new Color(0xcccccc);
     private BasicStroke borderStroke = new BasicStroke(1f);
 
+    private Color textColour = Color.BLACK;
+    
     public ContentBoxNode(ContentBox contentBox) {
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
@@ -71,12 +73,15 @@ public class ContentBoxNode extends PNode implements WabitNode {
         g2.setStroke(SPSUtils.getAdjustedStroke(borderStroke, camera.getViewScale()));
         g2.draw(getBounds());
         
+        g2.setColor(textColour);
+        
         ReportContentRenderer contentRenderer = contentBox.getContentRenderer();
         if (contentRenderer != null) {
             logger.debug("Rendering content");
             Graphics2D contentGraphics = (Graphics2D) g2.create(
                     (int) getX(), (int) getY(),
                     (int) getWidth(), (int) getHeight());
+            contentGraphics.setFont(contentBox.getFont()); // XXX could use piccolo attribute to do this magically
             contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale());
             contentGraphics.dispose();
         } else {
