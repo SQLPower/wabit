@@ -171,11 +171,11 @@ public class JoinLine extends PNode {
 		private void maybeShowPopup(PInputEvent event) {
 			if (event.isPopupTrigger()) {
 				optionBox.translate(event.getPosition().getX() - optionBox.getFullBounds().getX() - BORDER_WIDTH, event.getPosition().getY() - optionBox.getFullBounds().getY() - BORDER_WIDTH);
-				if (event.getPosition().getX()>= textCircle.getX() && event.getPosition().getX()<= textCircle.getX()+ textCircle.getWidth()
-						&& event.getPosition().getY()>= textCircle.getY() && event.getPosition().getY()<= textCircle.getY() + textCircle.getHeight()) {
-						canvas.getLayer().addChild(optionBox);
-						return;
-					}
+				if (checkClickOnPath(event.getPosition().getX(), event.getPosition().getY(), textCircle)) {
+					canvas.getLayer().addChild(optionBox);
+					logger.debug("Clicked on textCircle");
+					return;
+				} 
 				
 				if (canvas.getLayer().getAllNodes().contains(optionBox)) {
 					canvas.getLayer().removeChild(optionBox);
@@ -482,7 +482,7 @@ public class JoinLine extends PNode {
 		iter.currentSegment(linePoints);
 		iter.next();
 		if (textCircle.getPathReference().contains(mouseX, mouseY)) {
-			return false;
+			return true;
 		}
 		while (!iter.isDone()) {
 			oldPoints = new Point2D.Float(linePoints[0], linePoints[1]);
