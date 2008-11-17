@@ -353,7 +353,7 @@ public class QueryPanel implements DataEntryPanel {
     	
     	queryPen.getQueryPenBar().addSeparator();
     	
-    	queryPen.getQueryPenBar().add(new CreateLayoutFromQueryAction(session.getProject(), queryCache));
+    	queryPen.getQueryPenBar().add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 
     	JPanel queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);

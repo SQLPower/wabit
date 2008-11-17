@@ -34,6 +34,8 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Label.HorizontalAlignment;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
@@ -49,17 +51,29 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
      */
     private final Query query;
 
-    public CreateLayoutFromQueryAction(WabitProject wabitProject, Query query) {
+    private final WabitSwingSession session;
+
+    public CreateLayoutFromQueryAction(WabitSwingSession session, WabitProject wabitProject, Query query) {
         super("Create Layout...", ADD_LAYOUT_ICON);
+        this.session = session;
         this.project = wabitProject;
         this.query = query;
     }
     
     public void actionPerformed(ActionEvent e) {
-        createDefaultLayout(project, query);
+        Layout newLayout = createDefaultLayout(project, query);
+        session.setEditorPanel(new ReportLayoutPanel(newLayout));
     }
     
-    public static void createDefaultLayout(WabitProject project, Query query) {
+    /**
+     * Creates a new layout with standard margins, headers, and footers. The body
+     * of the content is provided by the given query.
+     * 
+     * @param project The project that the new layout will be added to
+     * @param query The query to use for the body content.
+     * @return The new layout that was added to the project.
+     */
+    public static Layout createDefaultLayout(WabitProject project, Query query) {
         Layout l = new Layout(query.getName() + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();
@@ -107,5 +121,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         footer.setY(p.getLowerMarginOffset());
         
         project.addLayout(l);
+        
+        return l;
     }
 }
