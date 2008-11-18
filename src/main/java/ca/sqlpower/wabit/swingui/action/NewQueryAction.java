@@ -22,23 +22,32 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.tree.TreePath;
 
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class NewQueryAction extends AbstractAction {
 	
     private final WabitProject project;
+    private final WabitSwingSession session;
 
-    public NewQueryAction(WabitProject project) {
+    public NewQueryAction(WabitSwingSession session) {
         super("New Query");
-        this.project = project;
+        this.project = session.getProject();
+        this.session = session;
     }
 
     public void actionPerformed(ActionEvent e) {
         QueryCache query = new QueryCache();
         query.setName("New Query");
 		project.addQuery(query);
+		session.setEditorPanel(query);
+		System.out.println(session.getTree().getRowCount());
+		TreePath path = session.getTree().getPathForRow(session.getTree().getRowCount()-1);
+		session.getTree().setSelectionPath(path);
+		
     }
 
 }

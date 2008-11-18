@@ -21,10 +21,10 @@ package ca.sqlpower.wabit.swingui;
 
 
 import javax.swing.JFrame;
+import javax.swing.JTree;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSession;
 
@@ -40,5 +40,7 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	 * if the user has no changes or wants to discard the current changes.
 	 */
 	void setEditorPanel(Object entryPanelModel);
+	
+	JTree getTree();
 
 }

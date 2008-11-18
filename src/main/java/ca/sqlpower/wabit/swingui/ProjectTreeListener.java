@@ -103,7 +103,7 @@ public class ProjectTreeListener extends MouseAdapter {
 
 		menu.addSeparator();
 
-		menu.add(new NewQueryAction(session.getProject()));
+		menu.add(new NewQueryAction(session));
 
 		menu.add(new NewLayoutAction(session.getProject()));
 
