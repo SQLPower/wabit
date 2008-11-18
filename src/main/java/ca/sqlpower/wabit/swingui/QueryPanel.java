@@ -210,6 +210,7 @@ public class QueryPanel implements DataEntryPanel {
 							(SPDataSource) reportComboBox.getSelectedItem()));
 					DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 					dragTree.setModel(tempTreeModel);
+					dragTree.setVisible(true);
 				} catch (ArchitectException e) {
 					throw new RuntimeException(
 							"Could not add DataSource to rootNode", e);
@@ -219,8 +220,9 @@ public class QueryPanel implements DataEntryPanel {
 		});
 		if (queryCache.getDataSource() != null) {
 			reportComboBox.setSelectedItem(queryCache.getDataSource());
+			dragTree.setVisible(true);
 		} else {
-			//reportComboBox.setSelectedIndex(0);
+			dragTree.setVisible(false);
 		}
 		dragTree.setCellRenderer(new DBTreeCellRenderer());
 		DragSource ds = new DragSource();
