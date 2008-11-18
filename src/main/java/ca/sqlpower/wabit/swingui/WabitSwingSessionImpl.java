@@ -69,6 +69,11 @@ import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
  */
 public class WabitSwingSessionImpl implements WabitSwingSession {
 	
+	/**
+	 * A constant for storing the location of the query dividers in prefs.
+	 */
+	private static final String QUERY_DIVIDER_LOCATON = "QueryDividerLocaton";
+
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private final WabitSessionContext sessionContext;
@@ -241,6 +246,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * parties.
 	 */
     public void close() {
+    	
+    	if (!removeEditorPanel()) {
+    		return;
+    	}
+    	
     	SessionLifecycleEvent<WabitSession> e =
     		new SessionLifecycleEvent<WabitSession>(this);
     	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
@@ -281,24 +291,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public void setEditorPanel(Object entryPanelModel) {
-		if (currentEditorPanel != null && currentEditorPanel.hasUnsavedChanges()) {
-			int retval = JOptionPane.showConfirmDialog(frame, "There are unsaved changes. Discard?", "Discard changes", JOptionPane.YES_NO_OPTION);
-			if (retval == JOptionPane.NO_OPTION) {
-				return;
-			}
-		}
-		if (currentEditorPanel != null) {
-			if (currentEditorPanel instanceof QueryPanel) {
-				QueryPanel query = (QueryPanel)currentEditorPanel;
-				prefs.put("QueryDividerLocaton", String.format("%d,%d", query.getTopRightSplitPane().getDividerLocation(), query.getFullSplitPane().getDividerLocation()));
-			}
-			currentEditorPanel.discardChanges();
-			wabitPane.remove(currentEditorPanel.getPanel());
+		if (!removeEditorPanel()) {
+			return;
 		}
 		if (entryPanelModel instanceof QueryCache) {
 			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
-		   	if(prefs.get("QueryDividerLocatons", null) != null) {
-	            String[] dividerLocations = prefs.get("QueryDividerLocatons", null).split(",");
+		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
+	            String[] dividerLocations = prefs.get(QUERY_DIVIDER_LOCATON, null).split(",");
 	            queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
 	            queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
 		   	}
@@ -309,6 +308,30 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
+	}
+	
+	/**
+	 * This will close the editor panel the user is currently modifying if 
+	 * the user has no changes or discards their changes. This will return true
+	 * if the panel was properly closed or false if it was not closed (ie: due to
+	 * unsaved changes).
+	 */
+	private boolean removeEditorPanel() {
+		if (currentEditorPanel != null && currentEditorPanel.hasUnsavedChanges()) {
+			int retval = JOptionPane.showConfirmDialog(frame, "There are unsaved changes. Discard?", "Discard changes", JOptionPane.YES_NO_OPTION);
+			if (retval == JOptionPane.NO_OPTION) {
+				return false;
+			}
+		}
+		if (currentEditorPanel != null) {
+			if (currentEditorPanel instanceof QueryPanel) {
+				QueryPanel query = (QueryPanel)currentEditorPanel;
+				prefs.put(QUERY_DIVIDER_LOCATON, String.format("%d,%d", query.getTopRightSplitPane().getDividerLocation(), query.getFullSplitPane().getDividerLocation()));
+			}
+			currentEditorPanel.discardChanges();
+			wabitPane.remove(currentEditorPanel.getPanel());
+		}
+		return true;
 	}
 	
 }
