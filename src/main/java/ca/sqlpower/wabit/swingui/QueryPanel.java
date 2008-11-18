@@ -296,6 +296,9 @@ public class QueryPanel implements DataEntryPanel {
 		});
     	
 		buildUI();
+
+		executeQueryInCache();
+		
 	}
 
 	
