@@ -191,6 +191,7 @@ public class QueryPanel implements DataEntryPanel {
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = cache;
 		queryPen = new QueryPen(session, this, queryCache);
+		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
 		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
 		queryUIComponents.enableMultipleQueries(false);
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox());
