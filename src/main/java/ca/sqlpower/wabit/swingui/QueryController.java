@@ -230,6 +230,7 @@ public class QueryController {
 				throw new IllegalStateException("The data source combo box does not have data sources in it.");
 			}
 			queryCache.setDataSource((SPDataSource) selectedItem);
+			logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
 		}
 	};
 

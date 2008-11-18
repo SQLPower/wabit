@@ -216,7 +216,11 @@ public class QueryPanel implements DataEntryPanel {
 
 			}
 		});
-		reportComboBox.setSelectedIndex(0);
+		if (queryCache.getDataSource() != null) {
+			reportComboBox.setSelectedItem(queryCache.getDataSource());
+		} else {
+			reportComboBox.setSelectedIndex(0);
+		}
 		dragTree.setCellRenderer(new DBTreeCellRenderer());
 		DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(dragTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
