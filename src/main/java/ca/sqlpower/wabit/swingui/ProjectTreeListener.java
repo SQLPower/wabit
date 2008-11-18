@@ -116,7 +116,7 @@ public class ProjectTreeListener extends MouseAdapter {
      * action that adds that data source to the project. 
      */
 	public JMenu createDataSourcesMenu() {
-        JMenu dbcsMenu = new JMenu("Add data source"); //$NON-NLS-1$
+        JMenu dbcsMenu = new JMenu("Add Data Source"); //$NON-NLS-1$
 //        dbcsMenu.add(new JMenuItem(new NewDataSourceAction(this)));
 //        dbcsMenu.addSeparator();
 
