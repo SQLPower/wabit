@@ -369,6 +369,7 @@ public class QueryPanel implements DataEntryPanel {
 		});
     	
     	groupingCheckBox = new JCheckBox("Grouping");
+    	groupingCheckBox.setSelected(queryCache.isGroupingEnabled());
     	groupingCheckBox.addActionListener(new AbstractAction() {
 
     		public void actionPerformed(ActionEvent e) {
