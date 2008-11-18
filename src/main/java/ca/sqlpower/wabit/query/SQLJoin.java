@@ -40,7 +40,7 @@ public class SQLJoin extends AbstractWabitObject {
 	 * This enum Comparators stores all the comparators.
 	 */
 	public enum Comparators {
-		EQUAL_TOO ("="),
+		EQUAL_TO ("="),
 	    GREATER_THAN (">"),
 	    LESS_THAN   ("<"),
 	    GREATER_EQUAL  (">="),
@@ -53,13 +53,11 @@ public class SQLJoin extends AbstractWabitObject {
 	    
 	    private String comparator;
 
-	    Comparators(String op)
-	    {
+	    Comparators(String op) {
 	    	comparator = op;
 	    }
 
-	    public String getComparator()
-	    {
+	    public String getComparator() {
 	        return comparator;
 	    }
 	}
