@@ -44,6 +44,6 @@ public class AddDataSourceAction extends AbstractAction {
     }
     
     public void actionPerformed(ActionEvent e) {
-        project.addDataSource(new JDBCDataSource(dataSource));
+        project.addDataSource(dataSource);
     }
 }
