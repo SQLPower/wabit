@@ -19,14 +19,28 @@
 
 package ca.sqlpower.wabit;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.DatabaseListChangeEvent;
+import ca.sqlpower.sql.DatabaseListChangeListener;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.SPDataSourceType;
 import ca.sqlpower.wabit.report.Layout;
 
-public class WabitProject extends AbstractWabitObject {
-
+public class WabitProject extends AbstractWabitObject implements DataSourceCollection {
+	
+	
+	private static final Logger logger = Logger.getLogger(WabitProject.class);
+	
     /**
      * The data sources that feed the queries for this project.
      */
@@ -40,12 +54,18 @@ public class WabitProject extends AbstractWabitObject {
      */
     private final List<Query> queries = new ArrayList<Query>();
     
+	/**
+	 * The list of Listeners to notify when a datasource is added or removed.
+	 */
+	List<DatabaseListChangeListener> listeners;
+    
     /**
      * The report layouts in this project.
      */
     private final List<Layout> layouts = new ArrayList<Layout>();
 
     public WabitProject() {
+    	listeners = new ArrayList<DatabaseListChangeListener>();
         setName("New Project");
     }
     
@@ -58,17 +78,25 @@ public class WabitProject extends AbstractWabitObject {
     }
     
     public void addDataSource(WabitDataSource ds) {
+    	logger.debug("adding WabitDataSource");
         int index = dataSources.size();
         dataSources.add(index, ds);
         ds.setParent(this);
         fireChildAdded(WabitDataSource.class, ds, index);
+        if(ds instanceof JDBCDataSource) {
+        	fireAddEvent(((JDBCDataSource)ds).getSPDataSource());
+        }
     }
 
     public boolean removeDataSource(WabitDataSource ds) {
+    	logger.debug("removing WabitDataSource");
     	int index = dataSources.indexOf(ds);
     	if (index != -1) {
     		dataSources.remove(ds);
     		fireChildRemoved(WabitDataSource.class, ds, index);
+    		if(ds instanceof JDBCDataSource) {
+    			fireRemoveEvent(index, ((JDBCDataSource)ds).getSPDataSource());
+    		}
     		return true;
     	} else {
     		return false;
@@ -139,5 +167,129 @@ public class WabitProject extends AbstractWabitObject {
 	
 	public boolean allowsChildren() {
 		return true;
+	}
+
+	public void addDataSource(SPDataSource dbcs) {
+		String newName = dbcs.getDisplayName();
+		for (WabitDataSource o : dataSources) {
+			if (o instanceof JDBCDataSource) {
+				SPDataSource oneDbcs = ((JDBCDataSource) o).getSPDataSource();
+				if (newName.equalsIgnoreCase(oneDbcs.getDisplayName())) {
+					throw new IllegalArgumentException(
+							"There is already a datasource with the name " + newName);
+				}
+			}
+		}
+		logger.debug("adding SPDataSource");
+		addDataSource(new JDBCDataSource(dbcs));
+		
+	}
+	
+	public void removeDataSource(SPDataSource dbcs) {
+		logger.debug("removing SPDataSource");
+		removeDataSource(new JDBCDataSource(dbcs));
+	}
+
+	public void addDataSourceType(SPDataSourceType dataSourceType) {
+		throw new UnsupportedOperationException("We currently do not support this");
+		
+	}
+
+	public void addDatabaseListChangeListener(DatabaseListChangeListener l) {
+		synchronized(listeners) {
+			logger.debug("added DatabaseListChangeListener :"+ l.toString());
+			listeners.add(l);
+		}
+	}
+	
+    private void fireAddEvent(SPDataSource dbcs) {
+    	logger.debug("firing databaseAddedEvent :");
+		int index = dataSources.size()-1;
+		DatabaseListChangeEvent e = new DatabaseListChangeEvent(this, index, dbcs);
+    	synchronized(listeners) {
+			for(DatabaseListChangeListener listener : listeners) {
+				logger.debug("\n"+ listener.toString());
+				listener.databaseAdded(e);
+			}
+		}
+	}
+
+    private void fireRemoveEvent(int i, SPDataSource dbcs) {
+    	logger.debug("firing databaseRemovedEvent:");
+    	DatabaseListChangeEvent e = new DatabaseListChangeEvent(this, i, dbcs);
+    	synchronized(listeners) {
+			for(DatabaseListChangeListener listener : listeners) {
+				logger.debug("\n"+ listener.toString());
+				listener.databaseRemoved(e);
+			}
+		}
+    }
+
+    public List<SPDataSource> getConnections() {
+    	ArrayList<SPDataSource> list = new ArrayList<SPDataSource>();
+    	Iterator it = dataSources.iterator();
+    	while (it.hasNext()) {
+    		Object next = it.next();
+    		if (next instanceof JDBCDataSource) {
+    			list.add(((JDBCDataSource)next).getSPDataSource());
+    		}
+    	}
+    	Collections.sort(list, new SPDataSource.DefaultComparator());
+    	return list;
+    }
+
+	public SPDataSource getDataSource(String name) {
+	     Iterator it = dataSources.iterator();
+	        while (it.hasNext()) {
+	            Object next = it.next();
+	            if (next instanceof JDBCDataSource) {
+	                SPDataSource ds = ((JDBCDataSource)next).getSPDataSource();
+	                if (ds.getName().equals(name)) return ds;
+	            }
+	        }
+		return null;
+	}
+
+	public List<SPDataSourceType> getDataSourceTypes() {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
+
+	public void mergeDataSource(SPDataSource dbcs) {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
+
+	public void mergeDataSourceType(SPDataSourceType dst) {
+		throw new UnsupportedOperationException("We currently do not support this");
+		
+	}
+
+	public void read(File location) throws IOException {
+		throw new UnsupportedOperationException("We currently do not support this");
+		
+	}
+
+	public void read(InputStream inStream) throws IOException {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
+	
+
+	public boolean removeDataSourceType(SPDataSourceType dataSourceType) {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
+
+	public void removeDatabaseListChangeListener(DatabaseListChangeListener l) {
+    	synchronized(listeners) {
+    		listeners.remove(l);
+    	}
+	}
+
+	public void write() throws IOException {
+		throw new UnsupportedOperationException("We currently do not support this");
+		
+	}
+
+	public void write(File location) throws IOException {
+		throw new UnsupportedOperationException("We currently do not support this");
+		
 	}
 }

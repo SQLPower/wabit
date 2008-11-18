@@ -192,7 +192,7 @@ public class QueryPanel implements DataEntryPanel {
 		queryCache = cache;
 		queryPen = new QueryPen(session, this, queryCache);
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
-		queryUIComponents = new SQLQueryUIComponents(session, session.getContext().getDataSources(), mainSplitPane);
+		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane);
 		queryUIComponents.enableMultipleQueries(false);
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox());
 		queuedQueryCache = new ArrayList<QueryCache>();
@@ -220,7 +220,7 @@ public class QueryPanel implements DataEntryPanel {
 		if (queryCache.getDataSource() != null) {
 			reportComboBox.setSelectedItem(queryCache.getDataSource());
 		} else {
-			reportComboBox.setSelectedIndex(0);
+			//reportComboBox.setSelectedIndex(0);
 		}
 		dragTree.setCellRenderer(new DBTreeCellRenderer());
 		DragSource ds = new DragSource();

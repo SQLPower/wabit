@@ -53,4 +53,8 @@ public class JDBCDataSource extends AbstractWabitObject implements WabitDataSour
 	public List<WabitObject> getChildren() {
 		return Collections.emptyList();
 	}
+	
+	public SPDataSource getSPDataSource() {
+		return dataSource;
+	}
 }
