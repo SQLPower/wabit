@@ -468,13 +468,9 @@ public class JoinLine extends PNode implements WabitNode {
 	 *  flip the symbols when joined tables are swapped
 	 */
 	public void handleJoinedTablesSwapped () {
-		if (isJoinedTablesSwapped && !oldIsJoinedTableSwapped) {
+		if (isJoinedTablesSwapped != oldIsJoinedTableSwapped) {
 			viewCom = getOppositeSymbol(viewCom);
 			editorPane.setText(viewCom);
-			symbolText.syncWithDocument();
-			oldIsJoinedTableSwapped = isJoinedTablesSwapped;
-		} else if (oldIsJoinedTableSwapped && !isJoinedTablesSwapped) {
-			editorPane.setText(getOppositeSymbol(viewCom));
 			symbolText.syncWithDocument();
 			oldIsJoinedTableSwapped = isJoinedTablesSwapped;
 		} 
