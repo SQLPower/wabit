@@ -97,6 +97,7 @@ public class ConstantPNode extends PNode implements WabitNode {
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		
 		selectionCheckbox = new JCheckBox();
+		selectionCheckbox.setSelected(item.isSelected());
 		PSwing swingCheckbox = new PSwing(selectionCheckbox);
 		addChild(swingCheckbox);
 		selectionCheckbox.addActionListener(new ActionListener() {
