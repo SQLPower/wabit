@@ -44,7 +44,6 @@ public class NewQueryAction extends AbstractAction {
         query.setName("New Query");
 		project.addQuery(query);
 		session.setEditorPanel(query);
-		System.out.println(session.getTree().getRowCount());
 		TreePath path = session.getTree().getPathForRow(session.getTree().getRowCount()-1);
 		session.getTree().setSelectionPath(path);
 		
