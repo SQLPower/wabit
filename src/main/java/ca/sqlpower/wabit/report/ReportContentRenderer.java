@@ -21,10 +21,13 @@ package ca.sqlpower.wabit.report;
 
 import java.awt.Graphics2D;
 
+import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.wabit.WabitObject;
+
 /**
  * Interface for providers of rendered (absolute layout) content.
  */
-public interface ReportContentRenderer {
+public interface ReportContentRenderer extends WabitObject {
 
     /**
      * Renders as much report content as will fit within the bounds of the given
@@ -48,4 +51,14 @@ public interface ReportContentRenderer {
      *         all content renderers involved return false.
      */
     boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor);
+    
+    /**
+     * Returns the data entry panel that the user can use to manipulate all
+     * the properties of this content renderer. Everything that can be maniuplated
+     * in the panel can also be done programatically (via the API) through the
+     * JavaBeans properties of this report content renderer.
+     * <p>
+     * Keep in mind this properties panel cannot be used in a headless environment!
+     */
+    DataEntryPanel getPropertiesPanel();
 }

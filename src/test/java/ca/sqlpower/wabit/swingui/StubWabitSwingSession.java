@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
+import javax.swing.JTree;
 
 import org.apache.log4j.Logger;
 
@@ -88,4 +89,9 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		// TODO Auto-generated method stub
 		
 	}
+
+    public JTree getTree() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

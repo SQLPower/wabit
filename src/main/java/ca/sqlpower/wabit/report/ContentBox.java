@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Font;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +30,10 @@ import ca.sqlpower.wabit.WabitObject;
 
 /**
  * Represents a box on the page which has an absolute position and size.
+ * The content of the box is provided by a ContentRenderer implementation.
+ * Whenever the content renderer's appearance changes, this box will fire
+ * a PropertyChangeEvent with the property name "content". The old and new
+ * values will
  */
 public class ContentBox extends AbstractWabitObject {
 
@@ -47,15 +53,29 @@ public class ContentBox extends AbstractWabitObject {
      */
     private ReportContentRenderer contentRenderer;
     
+    private PropertyChangeListener rendererChangeHandler = new PropertyChangeListener() {
+
+        public void propertyChange(PropertyChangeEvent evt) {
+            firePropertyChange("content", null, null);
+        }
+        
+    };
+    
     public ContentBox() {
         setName("Empty content box");
     }
     
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
+        if (oldContentRenderer != null) {
+            oldContentRenderer.removePropertyChangeListener(rendererChangeHandler);
+        }
         this.contentRenderer = contentRenderer;
         setName("Content from " + contentRenderer);
         firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
+        if (contentRenderer != null) {
+            contentRenderer.addPropertyChangeListener(rendererChangeHandler);
+        }
     }
     
     public ReportContentRenderer getContentRenderer() {

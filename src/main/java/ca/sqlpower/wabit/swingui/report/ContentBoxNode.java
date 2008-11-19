@@ -22,19 +22,29 @@ package ca.sqlpower.wabit.swingui.report;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Toolkit;
+import java.awt.Window;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+import javax.swing.JDialog;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
-import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.util.PPaintContext;
 
-public class ContentBoxNode extends PNode implements WabitNode {
+public class ContentBoxNode extends PNode implements ReportNode {
 
     private static final Logger logger = Logger.getLogger(ContentBoxNode.class);
     
@@ -44,11 +54,43 @@ public class ContentBoxNode extends PNode implements WabitNode {
     private BasicStroke borderStroke = new BasicStroke(1f);
 
     private Color textColour = Color.BLACK;
+
+    private PInputEventListener mouseInputHandler = new PBasicInputEventHandler() {
+        @Override
+        public void mouseClicked(PInputEvent event) {
+            super.mouseClicked(event);
+            if (event.getClickCount() == 2) {
+                DataEntryPanel propertiesPanel = getPropertiesPanel();
+                if (propertiesPanel == null) {
+                    Toolkit.getDefaultToolkit().beep();
+                } else {
+                    String propertiesPanelName = "TODO"; //getPropertiesPanelName();
+                    JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(
+                            propertiesPanel, dialogOwner, propertiesPanelName, "OK");
+                    d.setVisible(true);
+                }
+            }
+        }
+    };
     
-    public ContentBoxNode(ContentBox contentBox) {
+    /**
+     * Reacts to changes in the content box by repainting this pnode.
+     */
+    private final PropertyChangeListener modelChangeHandler = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            repaint();
+        }
+    };
+    
+    private final Window dialogOwner;
+    
+    public ContentBoxNode(Window dialogOwner, ContentBox contentBox) {
+        this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
+        addInputEventListener(mouseInputHandler);
+        contentBox.addPropertyChangeListener(modelChangeHandler);
     }
     
     @Override
@@ -106,10 +148,23 @@ public class ContentBoxNode extends PNode implements WabitNode {
     }
 
     public void cleanup() {
-        // no cleanup needed at this time
+        contentBox.removePropertyChangeListener(modelChangeHandler);
     }
 
     public ContentBox getModel() {
         return contentBox;
+    }
+
+    public DataEntryPanel getPropertiesPanel() {
+        if (contentBox.getContentRenderer() != null) {
+            DataEntryPanel propertiesPanel = contentBox.getContentRenderer().getPropertiesPanel();
+            if (propertiesPanel == null) {
+                logger.debug("Content renderer has no properties dialog: " + contentBox.getContentRenderer());
+            }
+            return propertiesPanel;
+        } else {
+            logger.debug("Content box has no renderer: " + contentBox);
+            return null;
+        }
     }
 }

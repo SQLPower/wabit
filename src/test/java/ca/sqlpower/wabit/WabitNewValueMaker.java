@@ -26,6 +26,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Guide.Axis;
@@ -54,6 +55,18 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 newValue = new Guide(Axis.HORIZONTAL, ((Guide) oldVal).getOffset() + 1);
             } else {
                 newValue = new Guide(Axis.HORIZONTAL, 123);
+            }
+        } else if (valueType.equals(Label.HorizontalAlignment.class)) {
+            if (oldVal == Label.HorizontalAlignment.CENTER) {
+                newValue = Label.HorizontalAlignment.LEFT;
+            } else {
+                newValue = Label.HorizontalAlignment.CENTER;
+            }
+        } else if (valueType.equals(Label.VerticalAlignment.class)) {
+            if (oldVal == Label.VerticalAlignment.MIDDLE) {
+                newValue = Label.VerticalAlignment.TOP;
+            } else {
+                newValue = Label.VerticalAlignment.MIDDLE;
             }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);

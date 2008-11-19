@@ -303,7 +303,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		   	}
 		   	currentEditorPanel = queryPanel;
 		} else if (entryPanelModel instanceof Layout) {
-			currentEditorPanel = new ReportLayoutPanel((Layout)entryPanelModel);
+			currentEditorPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
 		} else {
 			throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
 		}

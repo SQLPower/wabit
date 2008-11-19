@@ -19,21 +19,50 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.Component;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.List;
+
+import javax.swing.Box;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JToggleButton;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.swingui.FontSelector;
+import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.Variables;
+import ca.sqlpower.wabit.WabitObject;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
 
 /**
  * A simple report content item that prints out some text with optional variable
  * substitution. Variables are described in the documentation for the
  * {@link Variables} class.
  */
-public class Label implements ReportContentRenderer {
+public class Label extends AbstractWabitObject implements ReportContentRenderer {
 
+    private static final char DOWN_ARROW = '\u25be';
+    
     public static enum HorizontalAlignment { LEFT, CENTER, RIGHT }
     public static enum VerticalAlignment { TOP, MIDDLE, BOTTOM }
     
@@ -49,6 +78,11 @@ public class Label implements ReportContentRenderer {
     private VerticalAlignment vAlignment = VerticalAlignment.MIDDLE;
     
     private final VariableContext variableContext;
+    
+    /**
+     * The font that this label is using to display text.
+     */
+    private Font font;
     
     /**
      * Creates a new label with the given initial text.
@@ -70,7 +104,9 @@ public class Label implements ReportContentRenderer {
      * in the class-level docs of {@link Variables}.
      */
     public void setText(String text) {
+        String oldText = this.text;
         this.text = text;
+        firePropertyChange("text", oldText, text);
     }
     
     /**
@@ -85,7 +121,9 @@ public class Label implements ReportContentRenderer {
     }
 
     public void setHorizontalAlignment(HorizontalAlignment alignment) {
+        HorizontalAlignment oldAlignment = this.hAlignment;
         hAlignment = alignment;
+        firePropertyChange("horizontalAlignment", oldAlignment, alignment);
     }
 
     public VerticalAlignment getVerticalAlignment() {
@@ -93,14 +131,27 @@ public class Label implements ReportContentRenderer {
     }
 
     public void setVerticalAlignment(VerticalAlignment alignment) {
+        VerticalAlignment oldAlignment = vAlignment;
         vAlignment = alignment;
+        firePropertyChange("verticalAlignment", oldAlignment, alignment);
     }
 
+    public void setFont(Font font) {
+        Font oldFont = this.font;
+        this.font = font;
+        firePropertyChange("font", oldFont, font);
+    }
+    
+    public Font getFont() {
+        return font;
+    }
+    
     /**
      * Renders this label to the given graphics, with the baseline centered in the content box.
      */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
         String[] textToRender = Variables.substitute(text, variableContext).split("\n");
+        g.setFont(getFont());
         FontMetrics fm = g.getFontMetrics();
         int textHeight = fm.getHeight() * textToRender.length;
         
@@ -133,5 +184,105 @@ public class Label implements ReportContentRenderer {
             y += fm.getHeight();
         }
         return false;
+    }
+    
+    public DataEntryPanel getPropertiesPanel() {
+        final Icon LEFT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_left.png"));
+        final Icon RIGHT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_right.png"));
+        final Icon CENTRE_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_center.png"));
+        
+        final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
+        
+        JButton variableButton = new JButton("Variable " + DOWN_ARROW);
+        variableButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JPopupMenu menu = new JPopupMenu();
+                for (String varname : variableContext.getVariableNames()) {
+                    menu.add(varname);//(new InsertVariableAction(varname));
+                }
+                Component invoker = (Component) e.getSource();
+                menu.show(invoker, invoker.getHeight(), 0);
+            }
+        });
+        
+        ButtonGroup alignmentGroup = new ButtonGroup();
+        final JToggleButton leftAlign = new JToggleButton(LEFT_ALIGN_ICON, hAlignment == HorizontalAlignment.LEFT);
+        alignmentGroup.add(leftAlign);
+        final JToggleButton centreAlign = new JToggleButton(CENTRE_ALIGN_ICON, hAlignment == HorizontalAlignment.CENTER);
+        alignmentGroup.add(centreAlign);
+        final JToggleButton rightAlign = new JToggleButton(RIGHT_ALIGN_ICON, hAlignment == HorizontalAlignment.RIGHT);
+        alignmentGroup.add(rightAlign);
+        
+        // TODO vertical alignment
+        
+        Box alignmentBox = Box.createHorizontalBox();
+        alignmentBox.add(leftAlign);
+        alignmentBox.add(centreAlign);
+        alignmentBox.add(rightAlign);
+        alignmentBox.add(Box.createHorizontalGlue());
+        alignmentBox.add(variableButton);
+        fb.append("Alignment", alignmentBox);
+
+        fb.appendRow("fill:125dlu:grow");
+        fb.nextLine();
+        final JTextArea textArea = new JTextArea(text);
+        JLabel textLabel = fb.append("Text", new JScrollPane(textArea));
+        textLabel.setVerticalTextPosition(JLabel.TOP);
+        
+        fb.nextLine();
+        final FontSelector fontSelector = new FontSelector(font);
+        fontSelector.setShowingPreview(false);
+        fontSelector.addPropertyChangeListener(new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                logger.debug("Changing font to: " + fontSelector.getSelectedFont());
+                textArea.setFont(fontSelector.getSelectedFont());
+            }
+        });
+        fb.append("", fontSelector.getPanel());
+        
+        DataEntryPanel dep = new DataEntryPanel() {
+
+            public boolean applyChanges() {
+                fontSelector.applyChanges();
+                setText(textArea.getText());
+                setFont(fontSelector.getSelectedFont());
+                if (leftAlign.isSelected()) {
+                    setHorizontalAlignment(HorizontalAlignment.LEFT);
+                } else if (centreAlign.isSelected()) {
+                    setHorizontalAlignment(HorizontalAlignment.CENTER);
+                } else if (rightAlign.isSelected()) {
+                    setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                }
+                
+                // TODO alignment
+                return true;
+            }
+
+            public void discardChanges() {
+                // no op
+            }
+
+            public JComponent getPanel() {
+                return fb.getPanel();
+            }
+
+            public boolean hasUnsavedChanges() {
+                return true;
+            }
+            
+        };
+        return dep;
+    }
+
+    public boolean allowsChildren() {
+        return false;
+    }
+
+    public int childPositionOffset(Class<? extends WabitObject> childType) {
+        throw new UnsupportedOperationException("Labels don't have children");
+    }
+
+    public List<? extends WabitObject> getChildren() {
+        return Collections.emptyList();
     }
 }

@@ -27,17 +27,21 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
+import ca.sqlpower.wabit.WabitObject;
 
 /**
  * Renders a JDBC result set using configurable absolute column widths.
  */
-public class ResultSetRenderer implements ReportContentRenderer {
+public class ResultSetRenderer extends AbstractWabitObject implements ReportContentRenderer {
 
     private static final Logger logger = Logger.getLogger(ResultSetRenderer.class);
     
@@ -184,6 +188,20 @@ public class ResultSetRenderer implements ReportContentRenderer {
             return string;
         }
     }
+
+    public DataEntryPanel getPropertiesPanel() {
+        throw new RuntimeException("not implemented yet"); // TODO
+    }
     
-    
+    public boolean allowsChildren() {
+        return false;
+    }
+
+    public int childPositionOffset(Class<? extends WabitObject> childType) {
+        throw new UnsupportedOperationException("Labels don't have children");
+    }
+
+    public List<? extends WabitObject> getChildren() {
+        return Collections.emptyList();
+    }
 }

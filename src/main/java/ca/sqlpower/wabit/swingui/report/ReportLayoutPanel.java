@@ -38,6 +38,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitNode;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 import edu.umd.cs.piccolo.PCanvas;
@@ -55,7 +56,7 @@ public class ReportLayoutPanel implements DataEntryPanel {
     private final Layout report;
     private final PageNode pageNode;
     
-    public ReportLayoutPanel(Layout report) {
+    public ReportLayoutPanel(WabitSwingSession session, Layout report) {
         this.report = report;
         canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -64,7 +65,7 @@ public class ReportLayoutPanel implements DataEntryPanel {
         canvas.setBackground(Color.LIGHT_GRAY);
         canvas.setPreferredSize(new Dimension(400,600));
         
-        pageNode = new PageNode(report.getPage());
+        pageNode = new PageNode(session, report.getPage());
         canvas.getLayer().addChild(pageNode);
         PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
@@ -75,7 +76,7 @@ public class ReportLayoutPanel implements DataEntryPanel {
         InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
         inputMap.put(KeyStroke.getKeyStroke('b'), AddContentBoxAction.class);
         
-        canvas.getActionMap().put(AddContentBoxAction.class, new AddContentBoxAction(report, pageNode));
+        canvas.getActionMap().put(AddContentBoxAction.class, new AddContentBoxAction(session, report, pageNode));
     }
     
     private class MouseInputHandler implements PInputEventListener {
@@ -86,33 +87,6 @@ public class ReportLayoutPanel implements DataEntryPanel {
         
     }
     
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                
-                WabitProject project = new WabitProject();
-                Layout layout = new Layout("My Layout");
-                project.addLayout(layout);
-                layout.getPage().setName("cows");
-                
-                JTree tree = new JTree(new ProjectTreeModel(project));
-                tree.setCellRenderer(new ProjectTreeCellRenderer());
-                
-                ReportLayoutPanel p = new ReportLayoutPanel(layout);
-                
-                JFrame f = new JFrame("Report layout");
-                JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(tree), p.canvas);
-                splitPane.setDividerLocation(200);
-                f.setContentPane(splitPane);
-                f.pack();
-                f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                f.setVisible(true);
-                
-                p.canvas.getCamera().animateViewToCenterBounds(p.pageNode.getFullBounds(), true, 750);
-            }
-        });
-    }
-
     /**
      * Frees any resources and references that would not have been freed otherwise (by virtue
      * of this panel being removed from the GUI).

@@ -28,6 +28,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.swingui.WabitNode;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import edu.umd.cs.piccolo.PNode;
 
 public class PageNode extends PNode implements WabitNode {
@@ -35,8 +36,11 @@ public class PageNode extends PNode implements WabitNode {
     private static final Logger logger = Logger.getLogger(PageNode.class);
     
     private final Page page;
+
+    private final WabitSwingSession session;
     
-    public PageNode(Page page) {
+    public PageNode(WabitSwingSession session, Page page) {
+        this.session = session;
         this.page = page;
         
         for (WabitObject pageChild : page.getChildren()) {
@@ -44,7 +48,7 @@ public class PageNode extends PNode implements WabitNode {
                 addChild(new GuideNode((Guide) pageChild));
             } else if (pageChild instanceof ContentBox) {
                 logger.debug("Adding content box node for " + pageChild);
-                addChild(new ContentBoxNode((ContentBox) pageChild));
+                addChild(new ContentBoxNode(session.getFrame(), (ContentBox) pageChild));
             } else {
                 throw new UnsupportedOperationException(
                         "Don't know what view class to use for page child: " + pageChild);

@@ -33,12 +33,10 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sql.WebResultHTMLFormatter;
-import ca.sqlpower.sql.WebResultSet;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class AddContentBoxAction extends AbstractAction {
 
@@ -47,14 +45,17 @@ public class AddContentBoxAction extends AbstractAction {
     private final Layout report;
     private final PageNode addTo;
 
-    public AddContentBoxAction(Layout report, PageNode addTo) {
+    private final WabitSwingSession session;
+
+    public AddContentBoxAction(WabitSwingSession session, Layout report, PageNode addTo) {
         super("Add Content Box");
+        this.session = session;
         this.report = report;
         this.addTo = addTo;
     }
     
     public void actionPerformed(ActionEvent e) {
-        ContentBoxNode newCBNode = new ContentBoxNode(new ContentBox());
+        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), new ContentBox());
         newCBNode.setBounds(addTo.getWidth() / 2, addTo.getHeight() / 2, 30, 30); // XXX should be near mouse pointer
         addTo.addChild(newCBNode);
         
