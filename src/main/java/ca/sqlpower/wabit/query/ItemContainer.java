@@ -75,6 +75,7 @@ public class ItemContainer extends AbstractWabitObject implements Container {
 	
 	public void addItem(Item item) {
 		itemList.add(item);
+		item.setParent(this);
 		firePropertyChange(Container.CONTAINTER_ITEM_ADDED, null, item);
 		fireChildAdded(Item.class, item, itemList.indexOf(item));
 	}
