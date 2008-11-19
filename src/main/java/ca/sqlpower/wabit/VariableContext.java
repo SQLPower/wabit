@@ -37,13 +37,11 @@ public interface VariableContext {
      * a variable is defined, look it up in the set returned by
      * {@link #getVariableNames()}.
      * 
-     * @param <T>
-     *            The type of the variable's value
      * @param name
      *            The name of the variable
      * @param defaultValue
      *            The value to return if the variable is not defined
      * @return The value of the variable.
      */
-    <T> T getVariableValue(String name, T defaultValue);
+    Object getVariableValue(String name, Object defaultValue);
 }

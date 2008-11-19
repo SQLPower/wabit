@@ -34,10 +34,9 @@ public class TestingVariableContext implements VariableContext {
         return vars.keySet();
     }
 
-    public <T> T getVariableValue(String name, T defaultValue) {
+    public Object getVariableValue(String name, Object defaultValue) {
         if (vars.containsKey(name)) {
-            Class<T> valueClass = (Class<T>) defaultValue.getClass();
-            return valueClass.cast(vars.get(name));
+            return vars.get(name);
         } else { 
             return defaultValue;
         }

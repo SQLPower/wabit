@@ -22,6 +22,8 @@ package ca.sqlpower.wabit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 /**
  * A collection of static utility methods for dealing with variables.
  * 
@@ -36,6 +38,8 @@ import java.util.regex.Pattern;
  */
 public class Variables {
 
+    private static final Logger logger = Logger.getLogger(Variables.class);
+    
     /**
      * Substitutes any number of variable references in the given string, returning
      * the resultant string with all variable references replaced by the corresponding
@@ -48,6 +52,8 @@ public class Variables {
     public static String substitute(String textWithVars, VariableContext variableContext) {
         Pattern p = Pattern.compile("\\$\\{([$a-zA-Z0-9_]+)\\}");
         
+        logger.debug("Performing variable substitution on " + textWithVars);
+        
         StringBuilder text = new StringBuilder();
         Matcher matcher = p.matcher(textWithVars);
         
@@ -55,12 +61,13 @@ public class Variables {
         while (!matcher.hitEnd()) {
             if (matcher.find()) {
                 String variableName = matcher.group(1);
-                String variableValue;
+                Object variableValue;
                 if (variableName.equals("$")) {
                     variableValue = "$";
                 } else {
-                    variableValue = variableContext.getVariableValue(variableName, "MISSING_VAR:"+variableName);
+                    variableValue = variableContext.getVariableValue(variableName, (Object) ("MISSING_VAR:" + variableName));
                 }
+                logger.debug("Found variable " + variableName + " = " + variableValue);
                 text.append(textWithVars.substring(currentIndex, matcher.start()));
                 text.append(variableValue);
                 currentIndex = matcher.end();
