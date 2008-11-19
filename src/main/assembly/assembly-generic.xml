@@ -23,6 +23,13 @@
         <include>*.jar</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>src/main/resources/jdbc</directory>
+      <outputDirectory>jdbc</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
   </fileSets>
   
   <dependencySets>

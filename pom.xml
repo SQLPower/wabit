@@ -8,6 +8,14 @@
 	<name>wabit</name>
 	<url>http://code.google.com/p/wabit</url>
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>jdbc/</exclude>
+				</excludes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -44,7 +52,7 @@
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 						<manifestEntries>
-							<Class-Path>lib/architect_dbtree_lib.jar lib/architect_lib.jar lib/piccolo.jar lib/piccolox.jar lib/rsyntaxtextarea.jar</Class-Path>
+							<Class-Path>jdbc/ lib/architect_dbtree_lib.jar lib/architect_lib.jar lib/piccolo.jar lib/piccolox.jar lib/rsyntaxtextarea.jar</Class-Path>
 						</manifestEntries>
 					</archive>
 				</configuration>
