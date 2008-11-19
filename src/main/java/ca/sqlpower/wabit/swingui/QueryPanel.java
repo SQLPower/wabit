@@ -168,7 +168,7 @@ public class QueryPanel implements DataEntryPanel {
 	 * This is the TopRight SplitPane of wabbit that divides the QueryTabbedPen and the dragTree
 	 * with comboBox
 	 */
-	private JSplitPane rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+	private final JSplitPane rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
 	/**
 	 * This is the root of the JTree on the right of the query builder. This
@@ -418,7 +418,6 @@ public class QueryPanel implements DataEntryPanel {
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
     	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
     	
-    	rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
     	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
     	
