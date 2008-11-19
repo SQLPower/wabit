@@ -195,12 +195,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	private final Map<Container, List<SQLJoin>> joinMapping;
 	
 	/**
-	 * This maps the where clause defined on a column specific basis to their
-	 * columns.
-	 */
-	private final Map<Item, String> whereMapping;
-	
-	/**
 	 * This is the global where clause that is for all non-column-specific where
 	 * entries.
 	 */
@@ -278,24 +272,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		}
 	};
 	
-	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(Item.PROPERTY_WHERE)) {
-				Item item = (Item) e.getSource();
-				if (e.getNewValue() != null && ((String)e.getNewValue()).trim().length() > 0) {
-					whereMapping.put(item, (String)e.getNewValue());
-				} else {
-					whereMapping.remove(item);
-				}
-				if (!compoundEdit) {
-					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
-				}
-			} else if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
-				setGlobalWhereClause((String)e.getNewValue());
-			}
-		}
-	};
-	
 	private final PropertyChangeListener tableAliasListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Container.CONTAINTER_ALIAS_CHANGED)) {
@@ -362,7 +338,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		selectedColumns = new ArrayList<Item>();
 		fromTableList = new ArrayList<Container>();
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
-		whereMapping = new HashMap<Item, String>();
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		groupByList = new ArrayList<Item>();
 		havingMap = new HashMap<Item, String>();
@@ -379,7 +354,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		fromTableList = new ArrayList<Container>();
 		tableAliasMap = new HashMap<Container, String>();
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
-		whereMapping = new HashMap<Item, String>();
 		groupByList = new ArrayList<Item>();
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
 		havingMap = new HashMap<Item, String>();
@@ -390,7 +364,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		fromTableList.addAll(copy.getFromTableList());
 		tableAliasMap.putAll(copy.getTableAliasMap());
 		joinMapping.putAll(copy.getJoinMapping());
-		whereMapping.putAll(copy.getWhereMapping());
 		groupByList.addAll(copy.getGroupByList());
 		groupByAggregateMap.putAll(copy.getGroupByAggregateMap());
 		havingMap.putAll(copy.getHavingMap());
@@ -552,32 +525,44 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			previousTable = table;
 		}
 		query.append(" ");
-		if (!whereMapping.isEmpty() || (globalWhereClause != null && globalWhereClause.length() > 0)) {
-			query.append(" \nWHERE");
-			boolean isFirstWhere = true;
-			for (Map.Entry<Item, String> entry : whereMapping.entrySet()) {
-				if (entry.getValue().length() > 0) {
-					if (isFirstWhere) {
-						query.append(" ");
-						isFirstWhere = false;
-					} else {
-						query.append(" AND ");
-					}
-					String alias = tableAliasMap.get(entry.getKey().getContainer());
-					if (alias != null) {
-						query.append(alias + ".");
-					} else if (fromTableList.contains(entry.getKey().getContainer())) {
-						query.append(entry.getKey().getContainer().getName() + ".");
-					}
-					query.append(entry.getKey().getName() + " " + entry.getValue());
+		boolean isFirstWhere = true;
+		Map<Item, String> whereMapping = new HashMap<Item, String>();
+		for (Item item : constantsContainer.getItems()) {
+			if (item.getWhere() != null && item.getWhere().trim().length() > 0) {
+				whereMapping.put(item, item.getWhere());
+			}
+		}
+		for (Container container : fromTableList) {
+			for (Item item : container.getItems()) {
+				if (item.getWhere() != null && item.getWhere().trim().length() > 0) {
+					whereMapping.put(item, item.getWhere());
 				}
 			}
-			if (!isFirstWhere && (globalWhereClause != null && globalWhereClause.length() > 0)) {
-				query.append(" AND");
+		}
+		for (Map.Entry<Item, String> entry : whereMapping.entrySet()) {
+			if (entry.getValue().length() > 0) {
+				if (isFirstWhere) {
+					query.append(" \nWHERE ");
+					isFirstWhere = false;
+				} else {
+					query.append(" AND ");
+				}
+				String alias = tableAliasMap.get(entry.getKey().getContainer());
+				if (alias != null) {
+					query.append(alias + ".");
+				} else if (fromTableList.contains(entry.getKey().getContainer())) {
+					query.append(entry.getKey().getContainer().getName() + ".");
+				}
+				query.append(entry.getKey().getName() + " " + entry.getValue());
 			}
-			if (globalWhereClause != null) {
-				query.append(" " + globalWhereClause);
+		}
+		if ((globalWhereClause != null && globalWhereClause.length() > 0)) {
+			if (!isFirstWhere) {
+				query.append(" AND"); 
+			} else {
+				query.append(" \nWHERE ");
 			}
+			query.append(" " + globalWhereClause);
 		}
 		if (!groupByList.isEmpty()) {
 			query.append("\nGROUP BY");
@@ -881,10 +866,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	public void removeItem(Item col) {
 		logger.debug("Item name is " + col.getName());
-		whereMapping.remove(col);
 		col.removePropertyChangeListener(aliasListener);
 		col.removePropertyChangeListener(selectedColumnListener);
-		col.removePropertyChangeListener(whereListener);
 		removeColumnSelection(col);
 		if (!compoundEdit) {
 			firePropertyChange(PROPERTY_QUERY, col, null);
@@ -897,7 +880,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public void addItem(Item col) {
 		col.addPropertyChangeListener(aliasListener);
 		col.addPropertyChangeListener(selectedColumnListener);
-		col.addPropertyChangeListener(whereListener);
 	}
 	
 	/**
@@ -1022,10 +1004,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			}
 		}
 		return joinSet;
-	}
-
-	protected Map<Item, String> getWhereMapping() {
-		return Collections.unmodifiableMap(whereMapping);
 	}
 
 	public String getGlobalWhereClause() {
