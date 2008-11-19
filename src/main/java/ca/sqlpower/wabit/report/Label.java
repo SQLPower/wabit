@@ -80,7 +80,8 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     private final VariableContext variableContext;
     
     /**
-     * The font that this label is using to display text.
+     * The font that this label is using to display text. If null, getFont()
+     * will return the parent content box's font.
      */
     private Font font;
     
@@ -143,7 +144,11 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     }
     
     public Font getFont() {
-        return font;
+        if (font != null) {
+            return font;
+        } else {
+            return getParent().getFont();
+        }
     }
     
     /**
@@ -163,7 +168,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         } else if (vAlignment == VerticalAlignment.MIDDLE) {
             y = contentBox.getHeight()/2 - textHeight/2 + fm.getAscent();
         } else if (vAlignment == VerticalAlignment.BOTTOM) {
-            y = contentBox.getHeight() - textHeight - fm.getDescent();
+            y = contentBox.getHeight() - textHeight + fm.getAscent();
         } else {
             throw new IllegalStateException("Unknown vertical alignment: " + vAlignment);
         }
@@ -190,6 +195,10 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         final Icon LEFT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_left.png"));
         final Icon RIGHT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_right.png"));
         final Icon CENTRE_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_center.png"));
+
+        final Icon TOP_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_top.png"));
+        final Icon MIDDLE_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_middle.png"));
+        final Icon BOTTOM_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_bottom.png"));
         
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
@@ -205,32 +214,47 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
             }
         });
         
-        ButtonGroup alignmentGroup = new ButtonGroup();
+        ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(LEFT_ALIGN_ICON, hAlignment == HorizontalAlignment.LEFT);
-        alignmentGroup.add(leftAlign);
+        hAlignmentGroup.add(leftAlign);
         final JToggleButton centreAlign = new JToggleButton(CENTRE_ALIGN_ICON, hAlignment == HorizontalAlignment.CENTER);
-        alignmentGroup.add(centreAlign);
+        hAlignmentGroup.add(centreAlign);
         final JToggleButton rightAlign = new JToggleButton(RIGHT_ALIGN_ICON, hAlignment == HorizontalAlignment.RIGHT);
-        alignmentGroup.add(rightAlign);
-        
-        // TODO vertical alignment
-        
+        hAlignmentGroup.add(rightAlign);
+
+        ButtonGroup vAlignmentGroup = new ButtonGroup();
+        final JToggleButton topAlign = new JToggleButton(TOP_ALIGN_ICON, vAlignment == VerticalAlignment.TOP);
+        vAlignmentGroup.add(topAlign);
+        final JToggleButton middleAlign = new JToggleButton(MIDDLE_ALIGN_ICON, vAlignment == VerticalAlignment.MIDDLE);
+        vAlignmentGroup.add(middleAlign);
+        final JToggleButton bottomAlign = new JToggleButton(BOTTOM_ALIGN_ICON, vAlignment == VerticalAlignment.BOTTOM);
+        vAlignmentGroup.add(bottomAlign);
+
         Box alignmentBox = Box.createHorizontalBox();
         alignmentBox.add(leftAlign);
         alignmentBox.add(centreAlign);
         alignmentBox.add(rightAlign);
+        alignmentBox.add(Box.createHorizontalStrut(5));
+        alignmentBox.add(topAlign);
+        alignmentBox.add(middleAlign);
+        alignmentBox.add(bottomAlign);
         alignmentBox.add(Box.createHorizontalGlue());
         alignmentBox.add(variableButton);
         fb.append("Alignment", alignmentBox);
 
-        fb.appendRow("fill:125dlu:grow");
+        fb.appendRelatedComponentsGapRow();
+        fb.nextLine();
+        
+        fb.appendRow("fill:90dlu:grow");
         fb.nextLine();
         final JTextArea textArea = new JTextArea(text);
+        textArea.setFont(getFont());
         JLabel textLabel = fb.append("Text", new JScrollPane(textArea));
         textLabel.setVerticalTextPosition(JLabel.TOP);
         
         fb.nextLine();
-        final FontSelector fontSelector = new FontSelector(font);
+        final FontSelector fontSelector = new FontSelector(getFont());
+        logger.debug("FontSelector got passed Font " + getFont());
         fontSelector.setShowingPreview(false);
         fontSelector.addPropertyChangeListener(new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
@@ -238,14 +262,17 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
                 textArea.setFont(fontSelector.getSelectedFont());
             }
         });
-        fb.append("", fontSelector.getPanel());
+        fb.append("Font", fontSelector.getPanel());
         
         DataEntryPanel dep = new DataEntryPanel() {
 
             public boolean applyChanges() {
+
                 fontSelector.applyChanges();
-                setText(textArea.getText());
                 setFont(fontSelector.getSelectedFont());
+
+                setText(textArea.getText());
+                
                 if (leftAlign.isSelected()) {
                     setHorizontalAlignment(HorizontalAlignment.LEFT);
                 } else if (centreAlign.isSelected()) {
@@ -253,8 +280,15 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
                 } else if (rightAlign.isSelected()) {
                     setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 }
-                
-                // TODO alignment
+
+                if (topAlign.isSelected()) {
+                    setVerticalAlignment(VerticalAlignment.TOP);
+                } else if (middleAlign.isSelected()) {
+                    setVerticalAlignment(VerticalAlignment.MIDDLE);
+                } else if (bottomAlign.isSelected()) {
+                    setVerticalAlignment(VerticalAlignment.BOTTOM);
+                }
+
                 return true;
             }
 
@@ -274,6 +308,11 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         return dep;
     }
 
+    @Override
+    public ContentBox getParent() {
+        return (ContentBox) super.getParent();
+    }
+    
     public boolean allowsChildren() {
         return false;
     }

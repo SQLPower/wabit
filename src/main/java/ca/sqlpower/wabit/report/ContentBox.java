@@ -64,17 +64,36 @@ public class ContentBox extends AbstractWabitObject {
     public ContentBox() {
         setName("Empty content box");
     }
-    
+
+    /**
+     * Sets the given content renderer as this box's provider of rendered
+     * content.
+     * <p>
+     * Although content renderers are considered children of the content box
+     * (and this method does cause child added/removed events), a content box
+     * can only have one content renderer at a time, so if you call this method
+     * when the current content renderer is non-null, the old renderer will be
+     * replaced by the new one.
+     * 
+     * @param contentRenderer
+     *            The new content renderer to use. Can be null, which means to
+     *            remove the content render and render this content box
+     *            incontent.
+     */
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
             oldContentRenderer.removePropertyChangeListener(rendererChangeHandler);
+            oldContentRenderer.setParent(null);
+            fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
         this.contentRenderer = contentRenderer;
         setName("Content from " + contentRenderer);
         firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
         if (contentRenderer != null) {
+            contentRenderer.setParent(this);
             contentRenderer.addPropertyChangeListener(rendererChangeHandler);
+            fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         }
     }
     
@@ -122,15 +141,28 @@ public class ContentBox extends AbstractWabitObject {
     }
 
     public boolean allowsChildren() {
-        return false;
+        return true;
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        throw new UnsupportedOperationException("Content boxes don't have children");
+        if (childType == ReportContentRenderer.class) {
+            return 0;
+        } else {
+            throw new UnsupportedOperationException("Content boxes don't have children of type " + childType);
+        }
     }
 
+    /**
+     * Included to complete the WabitObject implementation. For direct use of
+     * this class, it's usually better to use {@link #getContentRenderer()} because
+     * there can only ever be 0 or 1 children.
+     */
     public List<WabitObject> getChildren() {
-        return Collections.emptyList();
+        if (contentRenderer == null) {
+            return Collections.emptyList();
+        } else {
+            return Collections.singletonList((WabitObject) getContentRenderer());
+        }
     }
 
     public Font getFont() {
