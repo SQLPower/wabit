@@ -26,9 +26,10 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
@@ -56,17 +57,17 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = new Guide(Axis.HORIZONTAL, 123);
             }
-        } else if (valueType.equals(Label.HorizontalAlignment.class)) {
-            if (oldVal == Label.HorizontalAlignment.CENTER) {
-                newValue = Label.HorizontalAlignment.LEFT;
+        } else if (valueType.equals(HorizontalAlignment.class)) {
+            if (oldVal == HorizontalAlignment.CENTER) {
+                newValue = HorizontalAlignment.LEFT;
             } else {
-                newValue = Label.HorizontalAlignment.CENTER;
+                newValue = HorizontalAlignment.CENTER;
             }
-        } else if (valueType.equals(Label.VerticalAlignment.class)) {
-            if (oldVal == Label.VerticalAlignment.MIDDLE) {
-                newValue = Label.VerticalAlignment.TOP;
+        } else if (valueType.equals(VerticalAlignment.class)) {
+            if (oldVal == VerticalAlignment.MIDDLE) {
+                newValue = VerticalAlignment.TOP;
             } else {
-                newValue = Label.VerticalAlignment.MIDDLE;
+                newValue = VerticalAlignment.MIDDLE;
             }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);

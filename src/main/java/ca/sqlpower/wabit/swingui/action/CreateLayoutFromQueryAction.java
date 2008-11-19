@@ -28,12 +28,12 @@ import javax.swing.ImageIcon;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
-import ca.sqlpower.wabit.report.Label.HorizontalAlignment;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 

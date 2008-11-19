@@ -59,9 +59,6 @@ import com.jgoodies.forms.layout.FormLayout;
  */
 public class Label extends AbstractWabitObject implements ReportContentRenderer {
 
-    public static enum HorizontalAlignment { LEFT, CENTER, RIGHT }
-    public static enum VerticalAlignment { TOP, MIDDLE, BOTTOM }
-    
     private static final Logger logger = Logger.getLogger(Label.class);
     
     /**
@@ -156,42 +153,23 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         logger.debug("Rendering...");
         logger.debug("Text before: " + text);
         String[] textToRender = Variables.substitute(text, variableContext).split("\n");
-        logger.debug("Text after: " + Arrays.toString(textToRender));
         g.setFont(getFont());
         FontMetrics fm = g.getFontMetrics();
         int textHeight = fm.getHeight() * textToRender.length;
         
-        logger.debug("Rendering label text: " + textToRender);
+        logger.debug("Rendering label text: " + Arrays.toString(textToRender));
         
-        int y;
-        if (vAlignment == VerticalAlignment.TOP) {
-            y = fm.getHeight();
-        } else if (vAlignment == VerticalAlignment.MIDDLE) {
-            y = contentBox.getHeight()/2 - textHeight/2 + fm.getAscent();
-        } else if (vAlignment == VerticalAlignment.BOTTOM) {
-            y = contentBox.getHeight() - textHeight + fm.getAscent();
-        } else {
-            throw new IllegalStateException("Unknown vertical alignment: " + vAlignment);
-        }
+        int y = vAlignment.calculateStartY(contentBox.getHeight(), textHeight, fm);
         
         for (String text : textToRender) {
             int textWidth = fm.stringWidth(text);
-            int x;
-            if (hAlignment == HorizontalAlignment.LEFT) {
-                x = 0;
-            } else if (hAlignment == HorizontalAlignment.CENTER) {
-                x = contentBox.getWidth()/2 - textWidth/2;
-            } else if (hAlignment == HorizontalAlignment.RIGHT) {
-                x = contentBox.getWidth() - textWidth;
-            } else {
-                throw new IllegalStateException("Unknown horizontal alignment: " + hAlignment);
-            }
+            int x = hAlignment.computeStartX(contentBox.getWidth(), textWidth);
             g.drawString(text, x, y);
             y += fm.getHeight();
         }
         return false;
     }
-    
+
     public DataEntryPanel getPropertiesPanel() {
         final Icon LEFT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_left.png"));
         final Icon RIGHT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_right.png"));
