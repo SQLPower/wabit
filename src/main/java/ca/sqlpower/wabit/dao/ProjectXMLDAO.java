@@ -29,6 +29,7 @@ import java.util.Map;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
@@ -71,6 +72,18 @@ public class ProjectXMLDAO {
 		printAttribute("name", project.getName());
 		xml.println(out, ">");
 		xml.indent++;
+		
+		xml.println(out, "<data-sources>");
+		xml.indent++;
+		
+		for (WabitDataSource ds : project.getDataSources()) {
+			xml.print(out, "<data-source");
+			printAttribute("name", ds.getName());
+			xml.println(out, "/>");
+		}
+		
+		xml.indent--;
+		xml.println(out, "</data-sources>");
 		
 		for (Query query : project.getQueries()) {
 			if (query instanceof QueryCache) {

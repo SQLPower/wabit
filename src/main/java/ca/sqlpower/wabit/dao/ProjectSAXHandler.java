@@ -121,6 +121,14 @@ public class ProjectSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <project>: " + aname + "=" + aval);
         		}
         	}
+        } else if (name.equals("data-source")) {
+        	String dsName = attributes.getValue("name");
+        	checkMandatory("name", dsName);
+        	SPDataSource ds = context.getDataSources().getDataSource(dsName);
+        	if (ds == null) {
+        		throw new NullPointerException("The data source with the name " + dsName + " was not found in this context.");
+        	}
+        	session.getProject().addDataSource(ds);
         } else if (name.equals("query")) {
         	query = new QueryCache();
         	uuidToItemMap = new HashMap<String, Item>();
@@ -132,7 +140,11 @@ public class ProjectSAXHandler extends DefaultHandler {
         			query.setName(aval);
         		} else if (aname.equals("data-source")) { 
         			checkMandatory("data-source", aval);
-        			SPDataSource ds = context.getDataSources().getDataSource(aval);
+        			SPDataSource ds = session.getProject().getDataSource(aval);
+        			if (ds == null) {
+        				logger.debug("Project has data sources " + session.getProject().getDataSources());
+        				throw new NullPointerException("Could not retrieve " + aval + " from the list of data sources.");
+        			}
         			query.setDataSource(ds);
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
