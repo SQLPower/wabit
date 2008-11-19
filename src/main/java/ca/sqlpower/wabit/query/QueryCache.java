@@ -45,6 +45,8 @@ import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
+import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -310,6 +312,15 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		}
 	};
 	
+	private final WabitChildListener tableChildListener = new WabitChildListener() {
+		public void wabitChildRemoved(WabitChildEvent e) {
+			removeItem((Item)e.getChild());
+		}
+		public void wabitChildAdded(WabitChildEvent e) {
+			addItem((Item)e.getChild());
+		}
+	}; 
+	
 	/**
 	 * This container holds the items that are considered constants in the SQL statement.
 	 * This could include functions or other elements that don't belong in a table.
@@ -336,6 +347,15 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	private SPDataSource dataSource;
 	
 	public QueryCache() {
+		this((String)null);
+	}
+	
+	/**
+	 * The uuid defines the unique id of this query cache. If null
+	 * is passed in a new UUID will be generated.
+	 */
+	public QueryCache(String uuid) {
+		super(uuid);
 		tableAliasMap = new HashMap<Container, String>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		orderByList = new ArrayList<Item>();
@@ -753,6 +773,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		fromTableList.remove(table);
 		tableAliasMap.remove(table);
 		table.removePropertyChangeListener(tableAliasListener);
+		table.removeChildListener(tableChildListener);
 		for (Item col : table.getItems()) {
 			removeItem(col);
 		}
@@ -764,6 +785,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public void addTable(Container container) {
 		fromTableList.add(container);
 		container.addPropertyChangeListener(tableAliasListener);
+		container.addChildListener(tableChildListener);
 		for (Item col : container.getItems()) {
 			addItem(col);
 		}

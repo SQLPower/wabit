@@ -37,4 +37,9 @@ public class StubWabitSessionContext implements WabitSessionContext {
 	public void registerChildSession(WabitSession child) {
 	}
 
+	public WabitSession createSession() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

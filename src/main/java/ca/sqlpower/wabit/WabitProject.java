@@ -160,6 +160,10 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         
         throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
     }
+    
+    public List<Query> getQueries() {
+    	return Collections.unmodifiableList(queries);
+    }
 
 	public WabitObject getParent() {
 		return null;

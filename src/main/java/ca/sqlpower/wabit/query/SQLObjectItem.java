@@ -30,7 +30,7 @@ import ca.sqlpower.wabit.WabitObject;
  */
 public class SQLObjectItem extends AbstractWabitObject implements Item {
 	
-	private final SQLObject sqlObject;
+	private SQLObject sqlObject;
 	
 	private String alias;
 	
@@ -45,7 +45,23 @@ public class SQLObjectItem extends AbstractWabitObject implements Item {
 		this.selected = false;
 	}
 	
+	/**
+	 * If a null uuid is given to this constructor a new UUID will
+	 * be generated.
+	 */
+	public SQLObjectItem(String name, String uuid) {
+		super(uuid);
+		sqlObject = null;
+		super.setName(name);
+		this.alias = "";
+		this.where = "";
+		this.selected = false;
+	}
+	
 	public String getName() {
+		if (sqlObject == null) {
+			return super.getName();
+		}
 		return sqlObject.getName();
 	}
 	
@@ -53,7 +69,19 @@ public class SQLObjectItem extends AbstractWabitObject implements Item {
 		throw new IllegalStateException("Cannot set the name of a SQL object retrieved from the database through a query.");
 	}
 	
+	public void setItem(SQLObject object) {
+		sqlObject = object;
+	}
+	
+	/**
+	 * Since the sql objects are loaded lazily this can be a moderately long
+	 * operation if the file was loaded but the sql objects themselves have
+	 * not yet been loaded.
+	 */
 	public Object getItem() {
+		if (sqlObject == null) {
+			((TableContainer) getParent()).loadTableByQualifiedName();
+		}
 		return sqlObject;
 	}
 	

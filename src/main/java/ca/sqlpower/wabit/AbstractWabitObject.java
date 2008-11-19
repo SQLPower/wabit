@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public abstract class AbstractWabitObject implements WabitObject {
 
@@ -30,6 +31,28 @@ public abstract class AbstractWabitObject implements WabitObject {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private WabitObject parent;
     private String name;
+    
+    /**
+     * This UUID is for saving and loading to allow saved files to be diff friendly.
+     */
+    private final UUID uuid;
+    
+    public AbstractWabitObject() {
+    	uuid = UUID.randomUUID();
+    }
+
+	/**
+	 * The uuid string passed in must be the toString representation of the UUID
+	 * for this object. If the uuid string given is null then a new UUID will be
+	 * automatically generated.
+	 */
+    public AbstractWabitObject(String uuid) {
+    	if (uuid == null) {
+    		this.uuid = UUID.randomUUID();
+    	} else {
+    		this.uuid = UUID.fromString(uuid);
+    	}
+    }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {
         pcs.addPropertyChangeListener(l);
@@ -120,4 +143,8 @@ public abstract class AbstractWabitObject implements WabitObject {
         this.name = name;
         firePropertyChange("name", oldName, name);
     }
+	
+	public UUID getUUID() {
+		return uuid;
+	}
 }

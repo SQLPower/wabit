@@ -36,11 +36,20 @@ public class StringItem extends AbstractWabitObject implements Item {
 	private String where;
 
 	public StringItem(String name) {
+		this(name, null);
+	}
+	
+	/**
+	 * If a null uuid is given a new UUID will be generated.
+	 */
+	public StringItem(String name, String uuid) {
+		super(uuid);
 		this.alias = "";
 		this.where = "";
 		this.selected = false;
 		setName(name);
 	}
+	
 	public Object getItem() {
 		return getName();
 	}

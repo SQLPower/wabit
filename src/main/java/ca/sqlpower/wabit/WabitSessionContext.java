@@ -44,5 +44,11 @@ public interface WabitSessionContext {
 	 */
 	boolean isMacOSX();
 	
+	/**
+	 * This will create an appropriate session for the current context and will
+	 * register the session with the context.
+	 */
+	WabitSession createSession();
+	
 
 }

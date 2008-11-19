@@ -97,6 +97,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public boolean isMacOSX() {
 		return MAC_OS_X ; 
 	}
-	
+
+	/**
+	 * This does not create a session as there is no current core session implementation.
+	 */
+	public WabitSession createSession() {
+		throw new UnsupportedOperationException("There is no session defined for the core objects.");
+	}
 	
 }

@@ -25,6 +25,7 @@ import javax.swing.JTree;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.StubWabitSessionContext;
@@ -86,6 +87,11 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	}
 
 	public void setEditorPanel(Object entryPanelModel) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void buildUI() throws ArchitectException {
 		// TODO Auto-generated method stub
 		
 	}

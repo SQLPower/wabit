@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.util.List;
+import java.util.UUID;
 
 public class StubWabitObject implements WabitObject {
 
@@ -58,5 +59,9 @@ public class StubWabitObject implements WabitObject {
 
     public void setParent(WabitObject parent) {
     }
+
+	public UUID getUUID() {
+		return null;
+	}
 
 }

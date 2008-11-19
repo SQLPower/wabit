@@ -19,35 +19,27 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.io.IOException;
 
-import javax.swing.JFrame;
-import javax.swing.JTree;
-
-import org.apache.log4j.Logger;
-
-import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitSessionContextImpl;
 
-public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
-	
-    Logger getUserInformationLogger();
-    
-    JFrame getFrame();
+/**
+ * This is the swing version of the WabitSessionContext. Swing specific operations for
+ * the context will be done in this implementation 
+ */
+public class WabitSwingSessionContextImpl extends WabitSessionContextImpl {
 
-	/**
-	 * Sets the panel that allows editing of the current selection in the tree.
-	 * A new panel will be created based on the type of model passed into this method
-	 * if the user has no changes or wants to discard the current changes.
-	 */
-	void setEditorPanel(Object entryPanelModel);
+	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
+			throws IOException {
+		super(terminateWhenLastSessionCloses);
+	}
 	
-	/**
-	 *  Builds and displays the GUI.
-	 * @throws ArchitectException 
-	 */
-	void buildUI() throws ArchitectException;
-	
-	JTree getTree();
+	@Override
+	public WabitSession createSession() {
+		WabitSwingSession session = new WabitSwingSessionImpl(this);
+		registerChildSession(session);
+		return session;
+	}
 
 }

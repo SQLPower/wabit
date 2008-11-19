@@ -54,10 +54,11 @@ import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.LogAction;
+import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
@@ -169,6 +170,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
+		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
+		fileMenu.add(new SaveProjectAction(this));
         
 		JMenu windowMenu = new JMenu("Window");
 		fileMenu.setMnemonic('w');
@@ -269,7 +272,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     public static void  main(String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	WabitSessionContext context = new WabitSessionContextImpl(true);
+    	WabitSessionContext context = new WabitSwingSessionContextImpl(true);
         WabitSwingSessionImpl wss = new WabitSwingSessionImpl(context);
         wss.buildUI();
     }

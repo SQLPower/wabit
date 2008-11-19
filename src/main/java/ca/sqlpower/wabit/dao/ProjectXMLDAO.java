@@ -28,10 +28,13 @@ import java.util.Map;
 
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
+import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
+import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.xml.XMLHelper;
 
 public class ProjectXMLDAO {
@@ -46,8 +49,14 @@ public class ProjectXMLDAO {
 	 * creates our save file.
 	 */
 	private final XMLHelper xml;
+
+	/**
+	 * The project this DAO will write to a file.
+	 */
+	private final WabitProject project;
 	
-	public ProjectXMLDAO(OutputStream out) {
+	public ProjectXMLDAO(OutputStream out, WabitProject project) {
+		this.project = project;
 		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
 		xml = new XMLHelper();
 	}
@@ -58,7 +67,21 @@ public class ProjectXMLDAO {
 		xml.println(out, "<wabit export-format=\"1.0.0\">");
 		xml.indent++;
 
-		//TODO: Actually save something on save
+		xml.print(out, "<project");
+		printAttribute("name", project.getName());
+		xml.println(out, ">");
+		xml.indent++;
+		
+		for (Query query : project.getQueries()) {
+			if (query instanceof QueryCache) {
+				saveQueryCache((QueryCache)query);
+			} else {
+				throw new IllegalStateException("Trying to store a query of type " + query.getClass() + " which is unhandled by saving.");
+			}
+		}
+		
+		xml.indent--;
+		xml.println(out, "</project>");
 		
 		xml.indent--;
 		xml.println(out, "</wabit>");
@@ -75,8 +98,6 @@ public class ProjectXMLDAO {
 
 		Map<Item, String> itemIdMap = new HashMap<Item, String>();
 
-		int columnId = 0;
-		
 		xml.print(out, "<constants");
 		Container constants = cache.getConstantsContainer();
 		printAttribute("xpos", constants.getPosition().getX());
@@ -85,14 +106,12 @@ public class ProjectXMLDAO {
 		xml.indent++;
 		for (Item item : constants.getItems()) {
 			xml.print(out, "<column");
-			String ident = "COL" + columnId;
-			printAttribute("id", ident);
-			itemIdMap.put(item, ident);
+			printAttribute("id", item.getUUID().toString());
+			itemIdMap.put(item, item.getUUID().toString());
 			printAttribute("name", item.getName());
 			printAttribute("alias", item.getAlias());
 			printAttribute("where-text", item.getWhere());
 			xml.println(out, "/>");
-			columnId++;
 		}
 		xml.indent--;
 		xml.println(out, "</constants>");
@@ -100,6 +119,13 @@ public class ProjectXMLDAO {
 		for (Container table : cache.getFromTableList()) {
 			xml.print(out, "<table");
 			printAttribute("name", table.getName());
+			TableContainer tableContainer = (TableContainer)table;
+			if (!tableContainer.getSchema().equals("")) {
+				printAttribute("schema", tableContainer.getSchema());
+			}
+			if (!tableContainer.getCatalog().equals("")) {
+				printAttribute("catalog", tableContainer.getCatalog());
+			}
 			printAttribute("alias", table.getAlias());
 			printAttribute("xpos", table.getPosition().getX());
 			printAttribute("ypos", table.getPosition().getY());
@@ -107,14 +133,12 @@ public class ProjectXMLDAO {
 			xml.indent++;
 			for (Item item : table.getItems()) {
 				xml.print(out, "<column");
-				String ident = "COL" + columnId;
-				printAttribute("id", ident);
-				itemIdMap.put(item, ident);
+				printAttribute("id", item.getUUID().toString());
+				itemIdMap.put(item, item.getUUID().toString());
 				printAttribute("name", item.getName());
 				printAttribute("alias", item.getAlias());
 				printAttribute("where-text", item.getWhere());
 				xml.println(out, "/>");
-				columnId++;
 			}
 			xml.indent--;
 			xml.println(out, "</table>");

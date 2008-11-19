@@ -348,7 +348,7 @@ public class QueryPanel implements DataEntryPanel {
 					try {
 						logger.debug("Starting save");
 						FileOutputStream out = new FileOutputStream(fc.getSelectedFile());
-						dao = new ProjectXMLDAO(out);
+						dao = new ProjectXMLDAO(out, session.getProject());
 						dao.saveQueryCache(queryCache);
 						dao.close();
 						out.flush();

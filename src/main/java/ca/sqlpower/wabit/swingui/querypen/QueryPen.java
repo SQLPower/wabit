@@ -152,7 +152,7 @@ public class QueryPen implements MouseState, WabitNode {
 				
 				if (draggedSQLObject instanceof SQLTable) {
 					SQLTable table = (SQLTable) draggedSQLObject;
-					TableContainer model = new TableContainer(table);
+					TableContainer model = new TableContainer(QueryPen.this.model, table);
 
 					ContainerPane pane = new ContainerPane(mouseState, canvas, model);
 					pane.addQueryChangeListener(queryChangeListener);

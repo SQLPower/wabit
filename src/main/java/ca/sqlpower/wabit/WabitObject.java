@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.util.List;
+import java.util.UUID;
 
 public interface WabitObject {
 
@@ -47,4 +48,7 @@ public interface WabitObject {
      * Returns the short name for this object.
      */
     String getName();
+    
+    UUID getUUID();
+    
 }
