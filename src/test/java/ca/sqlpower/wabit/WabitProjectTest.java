@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class WabitProjectTest extends AbstractWabitObjectTest {
 
     private WabitProject project;
@@ -27,6 +30,13 @@ public class WabitProjectTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         project = new WabitProject();
+    }
+    
+    @Override
+    public Set<String> getPropertiesToIgnoreForEvents() {
+    	Set<String> ignore = new HashSet<String>();
+    	ignore.add("dataSourceTypes");
+    	return ignore;
     }
     
     @Override
