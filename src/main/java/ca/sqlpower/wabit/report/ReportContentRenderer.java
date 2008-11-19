@@ -58,7 +58,11 @@ public interface ReportContentRenderer extends WabitObject {
      * in the panel can also be done programatically (via the API) through the
      * JavaBeans properties of this report content renderer.
      * <p>
-     * Keep in mind this properties panel cannot be used in a headless environment!
+     * NOTE: We thought we could get away with defining this here, because it's convenient
+     * to have the properties panel provided by the content renderer itself. However,
+     * it has proven to be a bit too much of a violation of the system design to put this
+     * Swing stuff into the core classes that implement this interface. So this method
+     * will be removed soon.
      */
     DataEntryPanel getPropertiesPanel();
 }

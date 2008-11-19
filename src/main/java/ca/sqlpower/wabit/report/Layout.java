@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import ca.sqlpower.sql.NoRowidException;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
 /**
@@ -62,6 +63,7 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
     public Layout(String name) {
         setName(name);
         page.setParent(this);
+        updateBuiltinVariables();
     }
     
     /**
@@ -85,6 +87,12 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
         return null;
     }
     
+    protected void updateBuiltinVariables() {
+        setVariable("now", new Date());
+        setVariable("system_user", System.getProperty("user.name"));
+        setVariable("wabit_version", WabitVersion.VERSION);
+    }
+    
     public Page getPage() {
         return page;
     }
@@ -93,11 +101,10 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
         return vars.keySet();
     }
 
-    public <T> T getVariableValue(String name, T defaultValue) {
+    public Object getVariableValue(String name, Object defaultValue) {
         if (vars.containsKey(name)) {
-            Class<T> valueClass = (Class<T>) defaultValue.getClass();
-            return valueClass.cast(vars.get(name));
-        } else { 
+            return vars.get(name);
+        } else {
             return defaultValue;
         }
     }

@@ -19,14 +19,12 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,7 +35,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToggleButton;
@@ -50,6 +47,7 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.Variables;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.swingui.InsertVariableButton;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -61,8 +59,6 @@ import com.jgoodies.forms.layout.FormLayout;
  */
 public class Label extends AbstractWabitObject implements ReportContentRenderer {
 
-    private static final char DOWN_ARROW = '\u25be';
-    
     public static enum HorizontalAlignment { LEFT, CENTER, RIGHT }
     public static enum VerticalAlignment { TOP, MIDDLE, BOTTOM }
     
@@ -146,8 +142,10 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public Font getFont() {
         if (font != null) {
             return font;
-        } else {
+        } else if (getParent() != null) {
             return getParent().getFont();
+        } else {
+            return null;
         }
     }
     
@@ -155,7 +153,10 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * Renders this label to the given graphics, with the baseline centered in the content box.
      */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
+        logger.debug("Rendering...");
+        logger.debug("Text before: " + text);
         String[] textToRender = Variables.substitute(text, variableContext).split("\n");
+        logger.debug("Text after: " + Arrays.toString(textToRender));
         g.setFont(getFont());
         FontMetrics fm = g.getFontMetrics();
         int textHeight = fm.getHeight() * textToRender.length;
@@ -202,17 +203,8 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
-        JButton variableButton = new JButton("Variable " + DOWN_ARROW);
-        variableButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JPopupMenu menu = new JPopupMenu();
-                for (String varname : variableContext.getVariableNames()) {
-                    menu.add(varname);//(new InsertVariableAction(varname));
-                }
-                Component invoker = (Component) e.getSource();
-                menu.show(invoker, invoker.getHeight(), 0);
-            }
-        });
+        final JTextArea textArea = new JTextArea(text);
+        JButton variableButton = new InsertVariableButton(variableContext, textArea);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(LEFT_ALIGN_ICON, hAlignment == HorizontalAlignment.LEFT);
@@ -247,7 +239,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         
         fb.appendRow("fill:90dlu:grow");
         fb.nextLine();
-        final JTextArea textArea = new JTextArea(text);
         textArea.setFont(getFont());
         JLabel textLabel = fb.append("Text", new JScrollPane(textArea));
         textLabel.setVerticalTextPosition(JLabel.TOP);
