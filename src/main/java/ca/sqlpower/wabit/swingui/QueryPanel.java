@@ -49,6 +49,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -184,6 +185,16 @@ public class QueryPanel implements DataEntryPanel {
 			executeQueryInCache();
 		}
 	};
+
+	/**
+	 * This is the panel that holds the QueryPen and the GUI SQL select in the tabbed pane.
+	 */
+	private JPanel queryPenPanel;
+
+	/**
+	 * This is the panel that holds the text editor for the query.
+	 */
+	private JPanel queryToolPanel;
 	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
@@ -194,7 +205,7 @@ public class QueryPanel implements DataEntryPanel {
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
 		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane);
 		queryUIComponents.enableMultipleQueries(false);
-		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox());
+		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea());
 		queuedQueryCache = new ArrayList<QueryCache>();
 		
 		dragTree = new JTree();
@@ -308,7 +319,7 @@ public class QueryPanel implements DataEntryPanel {
 	private void buildUI() {
 		JPanel resultPanel = queryUIComponents.getFirstResultPanel();
 
-		JPanel queryToolPanel = new JPanel(new BorderLayout());
+		queryToolPanel = new JPanel(new BorderLayout());
 		JToolBar queryToolBar = new JToolBar();
 		JButton executeButton = queryUIComponents.getExecuteButton();
 		queryToolBar.add(executeButton);
@@ -367,14 +378,29 @@ public class QueryPanel implements DataEntryPanel {
     	
     	queryPen.getQueryPenBar().add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 
-    	JPanel queryPenPanel = new JPanel(new BorderLayout());
+    	queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
     	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
     	queryPenAndTextTabPane.add(queryPenPanel,"PlayPen");
     	queryPenAndTextTabPane.add(queryToolPanel,SQL_TEXT_TAB_HEADING);
+    	if (queryCache.isQueryModified()) {
+    		queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
+    		queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+    	}
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent() && queryCache.isQueryModified()) {
+					//This is temporary until we can parse the user string and set the query cache to look like 
+					//the query the user modified.
+					int retval = JOptionPane.showConfirmDialog(getPanel(), "Changes will be lost to the SQL script if you go back to the PlayPen. \nDo you wish to continue?", "Changing", JOptionPane.YES_NO_OPTION);
+					if (retval != JOptionPane.OK_OPTION) {
+						queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
+					} else {
+						queryCache.removeUserModifications();
+					}
+				} else {
+					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+				}
 			}
 		});
     	

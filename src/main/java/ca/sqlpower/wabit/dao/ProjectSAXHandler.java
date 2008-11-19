@@ -309,6 +309,10 @@ public class ProjectSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("Could not get a column to add order by to the select statement. Trying to match UUID " + uuid);
         	}
         	query.setSortOrder(item, OrderByArgument.valueOf(direction));
+        } else if (name.equals("query-string")) {
+        	String queryString = attributes.getValue("string");
+        	checkMandatory("string", queryString);
+        	query.setUserModifiedQuery(queryString);
         }
 		
 	}

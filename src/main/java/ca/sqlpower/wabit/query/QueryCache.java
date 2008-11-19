@@ -322,6 +322,13 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	private SPDataSource dataSource;
 	
+	/**
+	 * This is the text of the query if the user edited the text manually. This means
+	 * that the parts of the query cache will not represent the new query text the user
+	 * created. If this is null then the user did not change the query manually.
+	 */
+	private String userModifiedQuery = null;
+	
 	public QueryCache() {
 		this((String)null);
 	}
@@ -410,6 +417,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * Generates the query based on the cache.
 	 */
 	public String generateQuery() {
+		if (userModifiedQuery != null) {
+			return userModifiedQuery;
+		}
 		if (selectedColumns.size() ==  0) {
 			return "";
 		}
@@ -1036,6 +1046,30 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	
 	public void setDataSource(SPDataSource dataSource) {
 		this.dataSource = dataSource;
+	}
+	
+	/**
+	 * If this is set then only this query string will be returned by the generateQuery method
+	 * and the query cache will not accurately represent the query.
+	 * @param query
+	 */
+	public void setUserModifiedQuery(String query) {
+		userModifiedQuery = query;
+	}
+	
+	/**
+	 * Returns true if the user manually edited the text of the query. Returns false otherwise.
+	 */
+	public boolean isQueryModified() {
+		return userModifiedQuery != null;
+	}
+	
+	/**
+	 * Resets the manual modifications the user did to the text of the query so the textual
+	 * query is the same as the query cache.
+	 */
+	public void removeUserModifications() {
+		userModifiedQuery = null;
 	}
 	
 }

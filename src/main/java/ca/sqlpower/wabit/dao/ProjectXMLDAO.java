@@ -205,9 +205,11 @@ public class ProjectXMLDAO {
 			xml.println(out, "/>");
 		}
 		
-		xml.print(out, "<query-string");
-		printAttribute("string", cache.generateQuery());
-		xml.println(out, "/>");		
+		if (cache.isQueryModified()) {
+			xml.print(out, "<query-string");
+			printAttribute("string", cache.generateQuery());
+			xml.println(out, "/>");		
+		}
 
 		xml.indent--;
 		xml.println(out, "</query>");

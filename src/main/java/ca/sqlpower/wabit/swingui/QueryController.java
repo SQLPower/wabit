@@ -30,12 +30,15 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumnModel;
+import javax.swing.text.JTextComponent;
 
 import org.apache.log4j.Logger;
 
@@ -233,6 +236,21 @@ public class QueryController {
 			logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
 		}
 	};
+	
+	/**
+	 * This listener will set the query cache text to the user defined query.
+	 */
+	private final DocumentListener queryTextListener = new DocumentListener() {
+		public void removeUpdate(DocumentEvent e) {
+			queryCache.setUserModifiedQuery(queryText.getText());
+		}
+		public void insertUpdate(DocumentEvent e) {
+			queryCache.setUserModifiedQuery(queryText.getText());	
+		}
+		public void changedUpdate(DocumentEvent e) {
+			queryCache.setUserModifiedQuery(queryText.getText());	
+		}
+	};
 
 	/**
 	 * The combo box that holds all of the data sources available to the query.
@@ -245,6 +263,12 @@ public class QueryController {
 	 * The query pen this controller is listening to.
 	 */
 	private final QueryPen pen;
+
+	/**
+	 * This is the text component that the user can edit to manually
+	 * edit the SQL query.
+	 */
+	private final JTextComponent queryText;
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
@@ -252,15 +276,17 @@ public class QueryController {
 	 * a listener added so the {@link QueryCache} can track which database to execute
 	 * on.
 	 */
-	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox) {
+	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent) {
 		queryCache = cache;
 		this.pen = pen;
 		this.dataSourceComboBox = dataSourceComboBox;
+		queryText = textComponent;
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
+		queryText.getDocument().addDocumentListener(queryTextListener);
 	}
 	
 	/**
@@ -273,6 +299,7 @@ public class QueryController {
 		pen.removeQueryListener(whereListener);
 		pen.removeQueryListener(tableItemListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);
+		queryText.getDocument().removeDocumentListener(queryTextListener);
 		unlistenToCellRenderer();
 	}
 	
