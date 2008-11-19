@@ -85,7 +85,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private JFrame frame;
 	private static JLabel statusLabel;
 	
-	private final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContext.class);
+	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
 	/**
 	 * All information useful to the user in a log format should be logged here.
