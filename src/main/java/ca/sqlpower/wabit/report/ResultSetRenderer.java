@@ -26,19 +26,28 @@ import java.awt.Graphics2D;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.Format;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -76,6 +85,44 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     private static final int DEFAULT_COL_WIDTH = 72;
     
+    private enum DataType { NUMERIC , DATE, TEXT };
+    
+    private static DataType getDataType(String className) {
+    	try {
+			return getDataType(Class.forName(className));
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("Invalid class Name cannot find class",e);
+		}
+    }
+    private static DataType getDataType(Class<?> clazz) {
+    	logger.debug("trying to compare class Name:"+ clazz.toString());
+    	
+    	
+    	if(clazz.isAssignableFrom(String.class)) {
+    		logger.debug("class Name identified as a TEXT");
+    		return(DataType.TEXT);
+    	} else if(clazz.isAssignableFrom(Number.class)) {
+    		logger.debug("class Name identified as a NUMERIC"+ Number.class);
+    		return(DataType.NUMERIC);
+    	} else if(clazz.isAssignableFrom(Integer.class)) {
+    		logger.debug("class Name identified as a NUMERIC");
+    		return(DataType.NUMERIC);
+    	} else if(clazz.isAssignableFrom(Timestamp.class)) {
+    		logger.debug("class Name identified as a DATE");
+    		return(DataType.DATE);
+    	} else if(clazz.isAssignableFrom(Date.class)) {
+    		logger.debug("class Name identified as a DATE");
+    		return(DataType.DATE);
+    	} else if(clazz.isAssignableFrom(BigDecimal.class)) {
+    		logger.debug("class Name identified as a NUMERIC");
+    		return(DataType.NUMERIC);
+    	} else {
+    		logger.debug("failed on the class"+ clazz.toString());
+    	}
+    	return null;
+    	
+    }
+    
     // TODO this should probably be a Wabit Object (child of ResultSetRenderer)
     private static class ColumnInfo {
 
@@ -87,6 +134,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         int width = DEFAULT_COL_WIDTH;
         
         HorizontalAlignment hAlign = HorizontalAlignment.LEFT;
+        
+        DataType dataType = null;
         
         Format format = null;
         
@@ -112,6 +161,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         public void setHorizontalAlignment(HorizontalAlignment align) {
             hAlign = align;
         }
+        public DataType getDataType() {
+        	return dataType;
+        }
+        
+        public void setDataType(DataType type) {
+        	logger.debug("setting data type to"+ type);
+        	dataType = type;
+        }
         public Format getFormat() {
             return format;
         }
@@ -122,6 +179,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     private final List<ColumnInfo> columnInfo = new ArrayList<ColumnInfo>();
     
+    /**
+     * Lists of Formatting Options for number and date
+     */
+    private final List<DecimalFormat> numberFormats = new ArrayList<DecimalFormat>();
+    private final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>();
     /**
      * The string that will be rendered for null values in the result set.
      */
@@ -154,6 +216,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     public ResultSetRenderer(Query query) {
         ResultSet executedRs = null;
+        setUpFormats();
         try {
             executedRs = query.execute(); // TODO run in background
             initColumns(executedRs.getMetaData());
@@ -162,6 +225,53 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
         setName("Result Set Renderer for " + query.getName());
         rs = executedRs;
+    }
+    
+    /**
+     * Adds some formats to the Numeric format as well as the Date Format
+     * 
+     */
+    private void setUpFormats() {
+    	// adding date Formats
+    	dateFormats.add(new SimpleDateFormat("yyy/MM/dd"));
+    	dateFormats.add(new SimpleDateFormat("yyy-MM-dd"));
+    	dateFormats.add(new SimpleDateFormat("yyy MM dd h:mm:ss"));
+    	dateFormats.add(new SimpleDateFormat("yyy/MM/dd h:mm:ss"));
+    	dateFormats.add(new SimpleDateFormat("yyy-MM-dd h:mm:ss"));
+    	dateFormats.add(new SimpleDateFormat("MMMM d, yy h:mm:ss"));
+    	dateFormats.add(new SimpleDateFormat("MMMM d, yy"));
+    	dateFormats.add(new SimpleDateFormat("MMMM d, yyyy"));
+    	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateTimeInstance());
+    	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateInstance());
+    	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getTimeInstance());
+    	
+    	numberFormats.add(new DecimalFormat("#,##0.00"));
+    	numberFormats.add(new DecimalFormat("#,##0.00%"));
+    	numberFormats.add(new DecimalFormat("(#,000.00)"));
+    	numberFormats.add(new DecimalFormat("(#,000)"));
+    	numberFormats.add(new DecimalFormat("##0.##E0"));
+    	numberFormats.add((DecimalFormat)NumberFormat.getCurrencyInstance());
+    	numberFormats.add((DecimalFormat)NumberFormat.getInstance());
+    	numberFormats.add((DecimalFormat)NumberFormat.getPercentInstance());
+    }
+    
+    private Format getFormat(DataType dataType, String pattern){
+    	logger.debug("dataType is"+ dataType+ " pattern is "+ pattern);
+    	if(dataType == DataType.NUMERIC) {
+    		for(DecimalFormat decimalFormat : numberFormats) {
+    			if(decimalFormat.toPattern().equals(pattern)){
+    				return decimalFormat;
+    			}
+    		}
+    	} else if(dataType == DataType.DATE) {
+    		for(SimpleDateFormat dateFormat: dateFormats) {
+    			if((dateFormat.toPattern()).equals(pattern)){
+    				return dateFormat;
+    			}
+    		}
+    	}
+    	
+    	return null;
     }
 
     /**
@@ -172,7 +282,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     private void initColumns(ResultSetMetaData rsmd) throws SQLException {
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
+        	logger.debug(rsmd.getColumnClassName(col));
             ColumnInfo ci = new ColumnInfo(rsmd.getColumnLabel(col));
+            ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
             columnInfo.add(ci);
         }
     }
@@ -250,7 +362,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 
                 for (int col = 1; col <= colCount; col++) {
                     ColumnInfo ci = columnInfo.get(col-1);
-                    String formattedValue = replaceNull(rs.getString(col)); // TODO format
+                    Object value = rs.getObject(col);
+                    String formattedValue;
+                    if (ci.getFormat() != null && value != null) {
+                    	logger.debug("Format iss:"+ ci.getFormat()+ "string is:"+ rs.getString(col));
+                    	formattedValue = ci.getFormat().format(value);
+                    } else {
+                    	formattedValue = replaceNull(rs.getString(col));
+                    }
                     int offset = ci.getHorizontalAlignment().computeStartX(
                             ci.getWidth(), fm.stringWidth(formattedValue));
                     g.drawString(formattedValue, x + offset, y); // TODO clip and/or line wrap and/or warn
@@ -432,9 +551,31 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, 1000, 12));
         fb.append(widthSpinner);
         
-        // TODO data type
+        final JComboBox dataTypeComboBox = new JComboBox(DataType.values());
+        final JComboBox formatComboBox = new JComboBox();
         
-        // TODO formatter
+        dataTypeComboBox.setSelectedItem(ci.getDataType());
+
+        fb.append(dataTypeComboBox);
+       
+        if(dataTypeComboBox.getSelectedItem() == DataType.TEXT) {
+        	formatComboBox.setEnabled(false);
+        } else {
+        	setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
+        }
+        fb.append(formatComboBox);
+        dataTypeComboBox.addActionListener(new AbstractAction(){
+
+			public void actionPerformed(ActionEvent e) {
+				if(!(((JComboBox)e.getSource()).getSelectedItem() == DataType.TEXT)
+						&& !(formatComboBox.isEnabled())){
+					formatComboBox.setEnabled(true);
+				} else {
+					formatComboBox.setEnabled(false);
+				}
+				setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
+			}
+		});
         
         final JPanel panel = fb.getPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 3, 3, 5));
@@ -450,6 +591,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 } else if (rightAlign.isSelected()) {
                     ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 }
+                ci.setDataType((DataType)dataTypeComboBox.getSelectedItem());
+                ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
                 ci.setWidth((Integer) widthSpinner.getValue());
                 return true;
             }
@@ -468,6 +611,20 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             
         };
     }
+    
+    private void setItemforFormatComboBox(JComboBox combobox, DataType dataType) {
+    	combobox.removeAllItems();
+    	if(dataType == DataType.NUMERIC) {
+    		for(NumberFormat item : numberFormats) {
+    			combobox.addItem(((DecimalFormat)item).toPattern());
+    		}
+    	} else if(dataType == DataType.DATE) {
+    		for(DateFormat item : dateFormats) {
+    			combobox.addItem(((SimpleDateFormat)item).toPattern());
+    		}
+    	}
+    	
+    }
 
     private JButton createFontButton(final JComponent fontTarget) {
         JButton button = new JButton("Choose...");
@@ -483,5 +640,4 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         });
         return button;
     }
-
 }
