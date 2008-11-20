@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Color;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -39,10 +41,16 @@ public class PageNode extends PNode implements WabitNode {
 
     private final WabitSwingSession session;
     
+    private final PropertyChangeListener pageChangeHandler = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            setBounds(0, 0, page.getWidth(), page.getHeight());
+        }
+    };
+    
     public PageNode(WabitSwingSession session, Page page) {
         this.session = session;
         this.page = page;
-        
+        page.addPropertyChangeListener(pageChangeHandler);
         for (WabitObject pageChild : page.getChildren()) {
             if (pageChild instanceof Guide) {
                 addChild(new GuideNode((Guide) pageChild));
@@ -88,7 +96,7 @@ public class PageNode extends PNode implements WabitNode {
     }
 
     public void cleanup() {
-        // no cleanup needed right now
+        page.removePropertyChangeListener(pageChangeHandler);
     }
 
     public Page getModel() {
