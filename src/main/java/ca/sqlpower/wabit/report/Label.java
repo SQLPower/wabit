@@ -30,8 +30,6 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -47,6 +45,7 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.Variables;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.swingui.Icons;
 import ca.sqlpower.wabit.swingui.InsertVariableButton;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -171,33 +170,26 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     }
 
     public DataEntryPanel getPropertiesPanel() {
-        final Icon LEFT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_left.png"));
-        final Icon RIGHT_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_right.png"));
-        final Icon CENTRE_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_center.png"));
-
-        final Icon TOP_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_top.png"));
-        final Icon MIDDLE_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_middle.png"));
-        final Icon BOTTOM_ALIGN_ICON = new ImageIcon(getClass().getResource("/icons/text_align_bottom.png"));
-        
+       
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
         final JTextArea textArea = new JTextArea(text);
         JButton variableButton = new InsertVariableButton(variableContext, textArea);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
-        final JToggleButton leftAlign = new JToggleButton(LEFT_ALIGN_ICON, hAlignment == HorizontalAlignment.LEFT);
+        final JToggleButton leftAlign = new JToggleButton(Icons.LEFT_ALIGN_ICON, hAlignment == HorizontalAlignment.LEFT);
         hAlignmentGroup.add(leftAlign);
-        final JToggleButton centreAlign = new JToggleButton(CENTRE_ALIGN_ICON, hAlignment == HorizontalAlignment.CENTER);
+        final JToggleButton centreAlign = new JToggleButton(Icons.CENTRE_ALIGN_ICON, hAlignment == HorizontalAlignment.CENTER);
         hAlignmentGroup.add(centreAlign);
-        final JToggleButton rightAlign = new JToggleButton(RIGHT_ALIGN_ICON, hAlignment == HorizontalAlignment.RIGHT);
+        final JToggleButton rightAlign = new JToggleButton(Icons.RIGHT_ALIGN_ICON, hAlignment == HorizontalAlignment.RIGHT);
         hAlignmentGroup.add(rightAlign);
 
         ButtonGroup vAlignmentGroup = new ButtonGroup();
-        final JToggleButton topAlign = new JToggleButton(TOP_ALIGN_ICON, vAlignment == VerticalAlignment.TOP);
+        final JToggleButton topAlign = new JToggleButton(Icons.TOP_ALIGN_ICON, vAlignment == VerticalAlignment.TOP);
         vAlignmentGroup.add(topAlign);
-        final JToggleButton middleAlign = new JToggleButton(MIDDLE_ALIGN_ICON, vAlignment == VerticalAlignment.MIDDLE);
+        final JToggleButton middleAlign = new JToggleButton(Icons.MIDDLE_ALIGN_ICON, vAlignment == VerticalAlignment.MIDDLE);
         vAlignmentGroup.add(middleAlign);
-        final JToggleButton bottomAlign = new JToggleButton(BOTTOM_ALIGN_ICON, vAlignment == VerticalAlignment.BOTTOM);
+        final JToggleButton bottomAlign = new JToggleButton(Icons.BOTTOM_ALIGN_ICON, vAlignment == VerticalAlignment.BOTTOM);
         vAlignmentGroup.add(bottomAlign);
 
         Box alignmentBox = Box.createHorizontalBox();
