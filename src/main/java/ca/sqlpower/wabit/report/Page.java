@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Font;
+import java.awt.geom.AffineTransform;
+import java.awt.print.PageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -92,6 +94,49 @@ public class Page extends AbstractWabitObject {
     }
     
     /**
+     * Indicates the transformation that should be applied when this page is rendered.
+     * Portrait is normal (the identity transform), landscape is rotated 90 degrees
+     * clockwise, and reverse landscape is rotated 90 degrees counterclockwise.
+     * <p>
+     * The orientation doesn't affect what width and height the page reports having;
+     * it simply prescribes which direction should be "up" for rendered content.
+     */
+    public static enum PageOrientation {
+        PORTRAIT(PageFormat.PORTRAIT, AffineTransform.getRotateInstance(0.0)),
+        LANDSCAPE(PageFormat.LANDSCAPE, AffineTransform.getRotateInstance(-Math.PI / 2.0)),
+        REVERSE_LANDSCAPE(PageFormat.REVERSE_LANDSCAPE, AffineTransform.getRotateInstance(Math.PI / 2.0));
+        
+        private final int printApiCode;
+        private final AffineTransform transform;
+
+        PageOrientation(int printApiCode, AffineTransform transform) {
+            this.printApiCode = printApiCode;
+            this.transform = transform;
+        }
+
+        /**
+         * Returns the correct integer code for this orientation in the Java
+         * Print API.
+         */
+        public int getPrintApiCode() {
+            return printApiCode;
+        }
+
+        public static PageOrientation forPrintApiCode(int apiCode) {
+            for (PageOrientation po : values()) {
+                if (po.printApiCode == apiCode) {
+                    return po;
+                }
+            }
+            throw new IllegalArgumentException("Unknown Java Print orientation code: " + apiCode);
+        }
+
+        public AffineTransform getTransform() {
+            return transform;
+        }
+    }
+    
+    /**
      * Page width, inclusive of margins and non-printable area.
      */
     private int width;
@@ -100,6 +145,11 @@ public class Page extends AbstractWabitObject {
      * Page height, inclusive of margins and non-printable area.
      */
     private int height;
+    
+    /**
+     * Indicates the orientation for this page's contents.
+     */
+    private PageOrientation orientation = PageOrientation.PORTRAIT;
     
     /**
      * The content boxes that provide the page's content and define its layout.
@@ -174,6 +224,16 @@ public class Page extends AbstractWabitObject {
         Font oldFont = this.defaultFont;
         this.defaultFont = defaultFont;
         firePropertyChange("defaultFont", oldFont, defaultFont);
+    }
+    
+    public PageOrientation getOrientation() {
+        return orientation;
+    }
+    
+    public void setOrientation(PageOrientation orientation) {
+        PageOrientation oldOrientation = this.orientation;
+        this.orientation = orientation;
+        firePropertyChange("orientation", oldOrientation, orientation);
     }
     
     public void addContentBox(ContentBox addme) {

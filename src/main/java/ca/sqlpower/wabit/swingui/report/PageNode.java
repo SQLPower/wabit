@@ -29,6 +29,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import edu.umd.cs.piccolo.PNode;
@@ -39,16 +40,13 @@ public class PageNode extends PNode implements WabitNode {
     
     private final Page page;
 
-    private final WabitSwingSession session;
-    
     private final PropertyChangeListener pageChangeHandler = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent evt) {
-            setBounds(0, 0, page.getWidth(), page.getHeight());
+            updateBoundsFromPage();
         }
     };
     
     public PageNode(WabitSwingSession session, Page page) {
-        this.session = session;
         this.page = page;
         page.addPropertyChangeListener(pageChangeHandler);
         for (WabitObject pageChild : page.getChildren()) {
@@ -62,19 +60,29 @@ public class PageNode extends PNode implements WabitNode {
                         "Don't know what view class to use for page child: " + pageChild);
             }
         }
-        
-        setBounds(0, 0, page.getWidth(), page.getHeight());
+
+        updateBoundsFromPage();
         setPaint(Color.WHITE);
     }
     
+    private void updateBoundsFromPage() {
+        if (page.getOrientation() == PageOrientation.PORTRAIT) {
+            super.setBounds(0, 0, page.getWidth(), page.getHeight());
+        } else {
+            super.setBounds(0, 0, page.getHeight(), page.getWidth());
+        }
+    }
+    
+    /**
+     * This method sets the bounds of the page object itself. The page will
+     * then fire a change event, which will cause us to update this PNode's
+     * bounds to match.
+     */
     @Override
     public boolean setBounds(double x, double y, double width, double height) {
-        boolean boundsSet = super.setBounds(x, y, width, height);
-        if (boundsSet) {
-            page.setWidth((int) width);
-            page.setHeight((int) height);
-        }
-        return boundsSet;
+        page.setWidth((int) width);
+        page.setHeight((int) height);
+        return true;
     }
 
     /**

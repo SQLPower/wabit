@@ -31,6 +31,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -68,6 +69,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 newValue = VerticalAlignment.TOP;
             } else {
                 newValue = VerticalAlignment.MIDDLE;
+            }
+        } else if (valueType.equals(PageOrientation.class)) {
+            if (oldVal == PageOrientation.PORTRAIT) {
+                newValue = PageOrientation.LANDSCAPE;
+            } else {
+                newValue = PageOrientation.PORTRAIT;
             }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);

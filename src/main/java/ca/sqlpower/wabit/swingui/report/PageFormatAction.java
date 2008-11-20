@@ -29,6 +29,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 /**
  * An action that invokes a native page format dialog which allows the
@@ -47,6 +48,7 @@ public class PageFormatAction extends AbstractAction {
     
     public void actionPerformed(ActionEvent e) {
         PageFormat pageFormat = new PageFormat();
+        pageFormat.setOrientation(page.getOrientation().getPrintApiCode());
         Paper paper = new Paper();
         paper.setSize(page.getWidth(), page.getHeight());
         paper.setImageableArea(
@@ -59,6 +61,7 @@ public class PageFormatAction extends AbstractAction {
         
         page.setWidth((int) paper.getWidth());
         page.setHeight((int) paper.getHeight());
+        page.setOrientation(PageOrientation.forPrintApiCode(pageFormat.getOrientation()));
         // TODO update margins
     }
 }
