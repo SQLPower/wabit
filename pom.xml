@@ -105,6 +105,7 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
+						<id>izpack2exe</id>
 						<phase>package</phase>
 						<configuration>
 							<tasks>
@@ -117,6 +118,48 @@
 										value="--output=../../../../target/Wabit-Setup-Windows-${project.version}.exe" />
 									<arg value="--with-7z=./7za" />
 								</exec>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>appbundle</id>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<taskdef name="jarbundler" 
+										classpath="src/main/installer/osx/jarbundler.jar:src/main/installer/osx/xercesImpl.jar:src/main/installer/osx/xml-apis.jar"
+										classname="net.sourceforge.jarbundler.JarBundler"/>
+								<!-- The pre-compiled osx adapter class (it only compiles on OS X) -->
+								<copy file="src/main/installer/osx/osx_adapter.jar" todir="target/lib" />
+								
+								<copy todir="target/jdbc">
+									<fileset dir="src/main/resources/jdbc"/>
+								</copy>
+								
+
+								<!-- jarbundler is from sourceforge, defined near top of file -->
+								<jarbundler dir="target" name="Wabit"
+									version="${project.version}" mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionImpl"
+									jvmversion="1.5+"
+									shortname="Wabit" stubfile="src/main/installer/osx/JavaApplicationStub"
+									vmoptions="-Xmx600m">
+									<jarfileset dir="target" includes="lib/*.jar" />
+									<jarfileset dir="target" includes="wabit.jar" />
+									<jarfileset dir="target" includes="jdbc/*.jar" />
+									<extraclasspathfilelist dir="KICKME"
+										files="jdbc" />
+								</jarbundler>
+
+								<!--
+									XXX this is stupid. we should modify the jarbundler task to
+									allow literal strings in the classpath
+								-->
+								<replace
+									file="target/Wabit.app/Contents/Info.plist"
+									token="KICKME" value="$JAVAROOT" />
 							</tasks>
 						</configuration>
 						<goals>
