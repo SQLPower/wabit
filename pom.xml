@@ -101,6 +101,30 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<exec executable="python" dir="src/main/installer/izpack2exe">
+									<arg value="izpack2exe.py" />
+									<arg
+										value="--file=../../../../target/Wabit-Setup-Windows-${project.version}.jar" />
+									<arg value="--no-upx" />
+									<arg
+										value="--output=../../../../target/Wabit-Setup-Windows-${project.version}.exe" />
+									<arg value="--with-7z=7za" />
+								</exec>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
