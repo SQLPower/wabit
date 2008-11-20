@@ -34,8 +34,8 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
@@ -97,29 +97,41 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         header.setY(p.getUpperMarginOffset() - header.getHeight());
         
         // shameless self promotion
-        ContentBox shameless = new ContentBox();
-        Label selfPromotionLabel = new Label(l,
-                "This report was produced by SQL Power's Wabit\n" +
-                "[insert branded dancing bunnies]");
-        selfPromotionLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-        shameless.setContentRenderer(selfPromotionLabel);
-        p.addContentBox(shameless);
-        shameless.setWidth(pageBodyWidth - header.getWidth());
-        shameless.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
-        shameless.setX(header.getX() + header.getWidth());
-        shameless.setY(p.getUpperMarginOffset() - shameless.getHeight());
+        ContentBox dateHeader = new ContentBox();
+        Label dateLabel = new Label(l, "Generated on ${now}");
+        dateLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        dateHeader.setContentRenderer(dateLabel);
+        p.addContentBox(dateHeader);
+        dateHeader.setWidth(pageBodyWidth - header.getWidth());
+        dateHeader.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
+        dateHeader.setX(header.getX() + header.getWidth());
+        dateHeader.setY(p.getUpperMarginOffset() - dateHeader.getHeight());
         
         ContentBox footer = new ContentBox();
-        Label footerLabel = new Label(l, "Page ${page.number} of ${page.totalPages}");
+        Label footerLabel = new Label(l, "Page ${page_current} of ${page_count}");
         footerLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
         footer.setContentRenderer(footerLabel);
         // TODO add option for horizontal and vertical alignment (left, center, right, top, middle, bottom) in label
         p.addContentBox(footer);
         footer.setWidth(pageBodyWidth);
-        footer.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
+        footer.setHeight(Page.DPI / 3); // TODO base this on the actual font metrics or something
         footer.setX(p.getLeftMarginOffset());
         footer.setY(p.getLowerMarginOffset());
         
+        // shameless self promotion
+        ContentBox shameless = new ContentBox();
+        Label selfPromotionLabel = new Label(l,
+                "Made with Wabit ${wabit_version} - Free Reporting That Just Works.  http://www.sqlpower.ca/wabit");
+        selfPromotionLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        selfPromotionLabel.setVerticalAlignment(VerticalAlignment.TOP);
+        shameless.setContentRenderer(selfPromotionLabel);
+        p.addContentBox(shameless);
+        shameless.setWidth(pageBodyWidth);
+        shameless.setHeight(Page.DPI / 3); // TODO base this on the actual font metrics or something
+        shameless.setX(p.getLeftMarginOffset());
+        shameless.setY(footer.getY() + footer.getHeight());
+        
+
         project.addLayout(l);
         
         return l;
