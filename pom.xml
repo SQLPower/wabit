@@ -115,7 +115,7 @@
 									<arg value="--no-upx" />
 									<arg
 										value="--output=../../../../target/Wabit-Setup-Windows-${project.version}.exe" />
-									<arg value="--with-7z=7za" />
+									<arg value="--with-7z=./7za" />
 								</exec>
 							</tasks>
 						</configuration>
