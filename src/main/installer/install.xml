@@ -16,6 +16,7 @@
 		<langpack iso3="eng"/>
 	</locale>
 	<resources>
+		<res id="shortcutSpec.xml" src="../src/main/installer/WabitShortcut.xml"/>
 		<res id="LicencePanel.licence" src="../LICENSE" />
 	</resources>
 	<panels>
@@ -42,6 +43,9 @@
 			</fileset>
 			<fileset dir="../" targetdir="$INSTALL_PATH">
 				<include name="LICENSE"/>
+			</fileset>
+			<fileset dir="../src/main/installer" targetdir="$INSTALL_PATH">
+				<include name="*.ico"/>
 			</fileset>
 		</pack>
 	</packs>

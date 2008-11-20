@@ -1,0 +1,18 @@
+<shortcuts>
+	<programGroup defaultName="SQL Power Suite"
+		location="applications"/>
+	<shortcut name="Wabit" target="javaw.exe"
+		programGroup="yes"
+		commandLine="-Xmx600m -jar wabit.jar"
+		workingDirectory="$INSTALL_PATH"
+		description="Wabit Ad-hoc Query and Reporting Tool"
+		desktop="yes" 
+		startMenu="yes">
+	</shortcut>
+	
+	<shortcut name="Uninstall Wabit" target="$INSTALL_PATH/uninstaller/uninstaller.jar"
+		programGroup="yes"
+		description="Remove the Wabit Ad-hoc Query and Reporting Tool"
+		iconFile="$INSTALL_PATH/uninstall.ico" desktop="no" >
+	</shortcut>
+</shortcuts>

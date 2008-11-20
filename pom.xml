@@ -96,7 +96,7 @@
 						<configuration>
 							<izpackBasedir>target/</izpackBasedir>
 							<descriptor>src/main/installer/install.xml</descriptor>
-							<installerFile>target/Architect-Setup-Windows-jdbc-${project.version}</installerFile>
+							<installerFile>target/Wabit-Setup-Windows-${project.version}</installerFile>
 						</configuration>
 					</execution>
 				</executions>
