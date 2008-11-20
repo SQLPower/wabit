@@ -1,0 +1,52 @@
+<installation version="1.0">
+	<!-- comment -->
+	<info>
+		<appname>Wabit</appname>
+		<appversion>@{app.version}</appversion>
+		<url>http://www.sqlpower.ca/</url>
+		<javaversion>1.5</javaversion>
+	</info>
+	<guiprefs height="600" resizable="yes" width="800">
+		<laf name="metouia">
+			<os family="unix"/>
+		</laf>
+	</guiprefs>
+
+	<locale>
+		<langpack iso3="eng"/>
+	</locale>
+	<resources>
+		<res id="LicencePanel.licence" src="../LICENSE" />
+	</resources>
+	<panels>
+		<panel classname="HelloPanel"/>
+		<panel classname="LicencePanel"/>
+		<panel classname="TargetPanel"/>
+		<panel classname="InstallPanel"/>
+		<panel classname="ShortcutPanel"/>
+		<panel classname="SimpleFinishPanel"/>
+	</panels>
+	<packs>
+		<pack name="Core" required="yes">
+			<description>Architect Core Files</description>
+			<fileset dir="../target/" targetdir="$INSTALL_PATH">
+				<include name="architect.jar"/>
+			</fileset>
+			<fileset dir="../target/lib" targetdir="$INSTALL_PATH/lib">
+				<include name="*.jar"/>
+			</fileset>
+			<!-- the directory jdbc is referenced in the manifest as well as
+				various targets. -->
+			<fileset dir="../src/main/resources/jdbc" targetdir="$INSTALL_PATH/jdbc">
+				<include name="*.jar"/>
+			</fileset>
+			<fileset dir="../" targetdir="$INSTALL_PATH">
+				<include name="LICENSE"/>
+			</fileset>
+			<fileset dir="../src/main/resources" targetdir="$INSTALL_PATH">
+				<include name="*.png"/>
+			</fileset>
+		</pack>
+	</packs>
+	<native type="izpack" name="ShellLink.dll"/>
+</installation>
