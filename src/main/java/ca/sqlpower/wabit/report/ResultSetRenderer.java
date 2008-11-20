@@ -592,7 +592,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                     ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 }
                 ci.setDataType((DataType)dataTypeComboBox.getSelectedItem());
-                ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
+                if(((String)formatComboBox.getSelectedItem()).equals("Default")) {
+                	  ci.setFormat(null);
+                }else {
+                	ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
+                }
                 ci.setWidth((Integer) widthSpinner.getValue());
                 return true;
             }
@@ -614,6 +618,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     private void setItemforFormatComboBox(JComboBox combobox, DataType dataType) {
     	combobox.removeAllItems();
+    	combobox.addItem("Default");
     	if(dataType == DataType.NUMERIC) {
     		for(NumberFormat item : numberFormats) {
     			combobox.addItem(((DecimalFormat)item).toPattern());
