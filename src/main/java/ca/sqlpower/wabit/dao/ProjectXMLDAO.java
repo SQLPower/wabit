@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.awt.Font;
 import java.io.BufferedWriter;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -30,12 +31,19 @@ import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.xml.XMLHelper;
 
 public class ProjectXMLDAO {
@@ -93,6 +101,10 @@ public class ProjectXMLDAO {
 			}
 		}
 		
+		for (Layout layout : project.getLayouts()) {
+			saveLayout(layout);
+		}
+		
 		xml.indent--;
 		xml.println(out, "</project>");
 		
@@ -102,6 +114,90 @@ public class ProjectXMLDAO {
 		out.close();
 	}
 	
+	/**
+	 * This saves a layout. This will not close the print writer passed into the constructor.
+	 * If this save method is used to export the query cache somewhere then close should be 
+	 * called on it to flush the print writer and close it.
+	 */
+	public void saveLayout(Layout layout) {
+		xml.print(out, "<layout");
+		printAttribute("name", layout.getName());
+		xml.println(out, ">");
+		xml.indent++;
+		
+		Page page = layout.getPage();
+		xml.print(out, "<layout-page");
+		printAttribute("name", page.getName());
+		printAttribute("height", page.getHeight());
+		printAttribute("width", page.getWidth());
+		saveFont(page.getDefaultFont());
+		xml.println(out, ">");
+		xml.indent++;
+		
+		for (WabitObject object : page.getChildren()) {
+			if (object instanceof ContentBox) {
+				ContentBox box = (ContentBox) object;
+				xml.print(out, "<content-box");
+				printAttribute("name", box.getName());
+				printAttribute("width", box.getWidth());
+				printAttribute("height", box.getHeight());
+				printAttribute("xpos", box.getX());
+				printAttribute("ypos", box.getY());
+				xml.println(out, ">");
+				saveFont(box.getFont());
+				
+				xml.indent++;
+				if (box.getContentRenderer() != null) {
+					if (box.getContentRenderer() instanceof Label) {
+						Label label = (Label) box.getContentRenderer();
+						xml.print(out, "<content-label");
+						printAttribute("name", label.getName());
+						printAttribute("text", label.getText());
+						printAttribute("horizontal-align", label.getHorizontalAlignment().name());
+						printAttribute("vertical-align", label.getVerticalAlignment().name());
+						saveFont(label.getFont());
+						xml.println(out, "/>");
+					} else if (box.getContentRenderer() instanceof ResultSetRenderer) {
+						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
+						xml.print(out, "<content-result-set");
+						printAttribute("name", rsRenderer.getName());
+						xml.println(out, "/>");
+					} else {
+						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
+					}
+				}
+				xml.indent--;
+				xml.println(out, "</content-box>");
+			} else if (object instanceof Guide) {
+				Guide guide = (Guide) object;
+				xml.print(out, "<guide");
+				printAttribute("axis", guide.getAxis().name());
+				printAttribute("offset", guide.getOffset());
+				xml.println(out, "/>");
+			} else {
+				throw new ClassCastException("Cannot save page element of type " + object.getClass());
+			}
+		}
+		
+		xml.indent--;
+		xml.println(out, "</layout-page>");
+		
+		xml.indent--;
+		xml.println(out, "</layout>");
+	}
+	
+	/**
+	 * This will save a font to the print writer.
+	 */
+	private void saveFont(Font font) {
+		
+	}
+	
+	/**
+	 * This saves a query cache. This will not close the print writer passed into the constructor.
+	 * If this save method is used to export the query cache somewhere then close should be 
+	 * called on it to flush the print writer and close it.
+	 */
 	public void saveQueryCache(QueryCache cache) {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
@@ -226,6 +322,10 @@ public class ProjectXMLDAO {
     }
     
     private void printAttribute(String name, double value) {
+    	xml.niprint(out, " " + name + "=\"" + value + "\"");
+    }
+    
+    private void printAttribute(String name, int value) {
     	xml.niprint(out, " " + name + "=\"" + value + "\"");
     }
     

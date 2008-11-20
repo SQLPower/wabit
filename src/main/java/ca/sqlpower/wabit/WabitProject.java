@@ -164,6 +164,10 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
     public List<Query> getQueries() {
     	return Collections.unmodifiableList(queries);
     }
+    
+    public List<Layout> getLayouts() {
+    	return Collections.unmodifiableList(layouts);
+    }
 
 	public WabitObject getParent() {
 		return null;

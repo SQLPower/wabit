@@ -33,6 +33,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.query.Container;
@@ -43,6 +44,14 @@ import ca.sqlpower.wabit.query.SQLObjectItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
+import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.VerticalAlignment;
+import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
  * This will be used with a parser to load a saved project from a file.
@@ -94,6 +103,16 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * This context will store the session created by this SAX handler.
 	 */
 	private final WabitSessionContext context;
+
+	/**
+	 * This layout stores the current layout being loaded by this SAX handler.
+	 */
+	private Layout layout;
+
+	/**
+	 * This is the current content box being loaded by this SAX handler.
+	 */
+	private ContentBox contentBox;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -313,6 +332,86 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
         	query.setUserModifiedQuery(queryString);
+        } else if (name.equals("layout")) {
+    		String layoutName = attributes.getValue("name");
+    		checkMandatory("name", layoutName);
+    		layout = new Layout(layoutName);
+    		session.getProject().addLayout(layout);
+   
+        } else if (name.equals("layout-page")) {
+        	String pageName = attributes.getValue("name");
+        	checkMandatory("name", pageName);
+        	Page page = layout.getPage();
+        	//Remove all guides from the page as they will be loaded in a later
+        	//part of this handler.
+        	for (WabitObject object : page.getChildren()) {
+        		if (object instanceof Guide) {
+        			page.removeGuide((Guide) object);
+        		}
+        	}
+			page.setName(pageName);
+         	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("name")) {
+        			// already loaded
+        		} else if (aname.equals("height")) {
+        			page.setHeight(Integer.parseInt(aval));
+        		} else if (aname.equals("width")) {
+        			page.setWidth(Integer.parseInt(aval));
+        		} else {
+        			logger.warn("Unexpected attribute of <layout-page>: " + aname + "=" + aval);
+        		}
+        	}
+        } else if (name.equals("content-box")) {
+        	String boxName = attributes.getValue("name");
+        	checkMandatory("name", boxName);
+        	contentBox = new ContentBox();
+        	layout.getPage().addContentBox(contentBox);
+         	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("name")) {
+        			// already loaded
+        		} else if (aname.equals("width")) {
+        			contentBox.setWidth(Integer.parseInt(aval));
+        		} else if (aname.equals("height")) {
+        			contentBox.setHeight(Integer.parseInt(aval));
+        		} else if (aname.equals("xpos")) {
+        			contentBox.setX(Integer.parseInt(aval));
+        		} else if (aname.equals("ypos")) {
+        			contentBox.setY(Integer.parseInt(aval));
+        		} else {
+        			logger.warn("Unexpected attribute of <content-box>: " + aname + "=" + aval);
+        		}
+         	}
+        } else if (name.equals("content-label")) {
+        	Label label = new Label(layout);
+        	contentBox.setContentRenderer(label);
+         	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("name")) {
+        			label.setName(aval);
+        		} else if (aname.equals("text")) {
+        			label.setText(aval);
+        		} else if (aname.equals("horizontal-align")) {
+        			label.setHorizontalAlignment(HorizontalAlignment.valueOf(aval));
+        		} else if (aname.equals("vertical-align")) {
+        			label.setVerticalAlignment(VerticalAlignment.valueOf(aval));
+        		} else {
+        			logger.warn("Unexpected attribute of <content-label>: " + aname + "=" + aval);
+        		}
+         	}
+        } else if (name.equals("content-result-set")) {
+        	
+        } else if (name.equals("guide")) {
+        	String axisName = attributes.getValue("axis");
+        	String offsetAmount = attributes.getValue("offset");
+        	checkMandatory("axis", axisName);
+        	checkMandatory("offset", offsetAmount);
+        	Guide guide = new Guide(Axis.valueOf(axisName), Integer.parseInt(offsetAmount));
+        	layout.getPage().addGuide(guide);
         }
 		
 	}

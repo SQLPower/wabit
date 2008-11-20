@@ -292,4 +292,14 @@ public class Page extends AbstractWabitObject {
         children.addAll(guides);
         return Collections.unmodifiableList(children);
     }
+    
+    /**
+     * Removes the first instance of this guide from the Page. Returns
+     * true if the guide was successfully removed. Returns false otherwise.
+     * @param guide
+     * @return
+     */
+    public boolean removeGuide(Guide guide) {
+    	return guides.remove(guide);
+    }
 }
