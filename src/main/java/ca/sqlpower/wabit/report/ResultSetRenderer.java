@@ -35,12 +35,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -147,6 +149,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         this.rs = rs;
         ResultSetMetaData rsmd = rs.getMetaData();
         initColumns(rsmd);
+        setName("Result Set Renderer");
     }
 
     public ResultSetRenderer(Query query) {
@@ -157,6 +160,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         } catch (Exception ex) {
             executeException = ex;
         }
+        setName("Result Set Renderer for " + query.getName());
         rs = executedRs;
     }
 
@@ -230,7 +234,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             y += fm.getHeight();
             g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
             
-            g.setFont(bodyFont);
+            g.setFont(getBodyFont());
             fm = g.getFontMetrics();
             while ( rs.next() && ((y + fm.getHeight()) < contentBox.getHeight()) ) {
                 x = 0;
@@ -283,7 +287,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
     
     public void setHeaderFont(Font headerFont) {
+        Font oldFont = getHeaderFont();
         this.headerFont = headerFont;
+        firePropertyChange("headerFont", oldFont, getHeaderFont());
     }
     
     public Font getBodyFont() {
@@ -297,7 +303,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
     
     public void setBodyFont(Font bodyFont) {
+        Font oldFont = getBodyFont();
         this.bodyFont = bodyFont;
+        firePropertyChange("bodyFont", oldFont, getBodyFont());
     }
     
     public String getNullString() {
@@ -305,7 +313,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
     
     public void setNullString(String nullString) {
+        String oldNullString = this.nullString;
         this.nullString = nullString;
+        firePropertyChange("nullString", oldNullString, nullString);
     }
     
     @Override
@@ -389,7 +399,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     public DataEntryPanel createColumnPropsPanel(final ColumnInfo ci) {
 
         FormLayout layout = new FormLayout("fill:pref:grow");
-        final DefaultFormBuilder fb = new DefaultFormBuilder(layout);
+        DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
         final JTextField columnLabel = new JTextField(ci.getLabel());
         fb.append(columnLabel);
@@ -419,6 +429,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         
         // TODO formatter
         
+        final JPanel panel = fb.getPanel();
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 3, 3, 5));
+        
         return new DataEntryPanel() {
 
             public boolean applyChanges() {
@@ -439,7 +452,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
 
             public JComponent getPanel() {
-                return fb.getPanel();
+                return panel;
             }
 
             public boolean hasUnsavedChanges() {
