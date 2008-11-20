@@ -130,9 +130,9 @@ public class ProjectXMLDAO {
 		printAttribute("name", page.getName());
 		printAttribute("height", page.getHeight());
 		printAttribute("width", page.getWidth());
-		saveFont(page.getDefaultFont());
 		xml.println(out, ">");
 		xml.indent++;
+		saveFont(page.getDefaultFont());
 		
 		for (WabitObject object : page.getChildren()) {
 			if (object instanceof ContentBox) {
@@ -144,9 +144,9 @@ public class ProjectXMLDAO {
 				printAttribute("xpos", box.getX());
 				printAttribute("ypos", box.getY());
 				xml.println(out, ">");
+				xml.indent++;
 				saveFont(box.getFont());
 				
-				xml.indent++;
 				if (box.getContentRenderer() != null) {
 					if (box.getContentRenderer() instanceof Label) {
 						Label label = (Label) box.getContentRenderer();
@@ -155,8 +155,9 @@ public class ProjectXMLDAO {
 						printAttribute("text", label.getText());
 						printAttribute("horizontal-align", label.getHorizontalAlignment().name());
 						printAttribute("vertical-align", label.getVerticalAlignment().name());
+						xml.println(out, ">");
 						saveFont(label.getFont());
-						xml.println(out, "/>");
+						xml.println(out, "</content-label>");
 					} else if (box.getContentRenderer() instanceof ResultSetRenderer) {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
 						xml.print(out, "<content-result-set");
@@ -187,10 +188,15 @@ public class ProjectXMLDAO {
 	}
 	
 	/**
-	 * This will save a font to the print writer.
+	 * This will save a font to the print writer. The font tag must be contained within tags of 
+	 * the font's parent object.
 	 */
 	private void saveFont(Font font) {
-		
+		xml.print(out, "<font");
+		printAttribute("name", font.getFamily());
+		printAttribute("size", font.getSize());
+		printAttribute("style", font.getStyle());
+		xml.println(out, "/>");
 	}
 	
 	/**
@@ -201,7 +207,9 @@ public class ProjectXMLDAO {
 	public void saveQueryCache(QueryCache cache) {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
-		printAttribute("data-source", cache.getDataSource().getName());
+		if (cache.getDataSource() != null) {
+			printAttribute("data-source", cache.getDataSource().getName());
+		}
 		xml.println(out, ">");
 		xml.indent++;
 

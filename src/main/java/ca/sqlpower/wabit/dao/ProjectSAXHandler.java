@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -412,6 +413,21 @@ public class ProjectSAXHandler extends DefaultHandler {
         	checkMandatory("offset", offsetAmount);
         	Guide guide = new Guide(Axis.valueOf(axisName), Integer.parseInt(offsetAmount));
         	layout.getPage().addGuide(guide);
+        } else if (name.equals("font")) {
+        	String fontName = attributes.getValue("name");
+        	String fontSize = attributes.getValue("size");
+        	String fontStyle= attributes.getValue("style");
+        	checkMandatory("name", fontName);
+        	checkMandatory("style", fontStyle);
+        	checkMandatory("size", fontSize);
+        	Font font = new Font(fontName, Integer.parseInt(fontStyle), Integer.parseInt(fontSize));
+        	if (parentIs("layout-page")) {
+        		layout.getPage().setDefaultFont(font);
+        	} else if (parentIs("content-box")) {
+        		contentBox.setFont(font);
+        	} else if (parentIs("content-label")) {
+        		((Label) contentBox.getContentRenderer()).setFont(font);
+        	}
         }
 		
 	}
