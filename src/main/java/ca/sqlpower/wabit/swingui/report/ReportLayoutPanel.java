@@ -19,28 +19,23 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.util.Iterator;
 
 import javax.swing.InputMap;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTree;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -52,6 +47,7 @@ public class ReportLayoutPanel implements DataEntryPanel {
 
     private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
     
+    private final JPanel panel;
     private final PCanvas canvas;
     private final Layout report;
     private final PageNode pageNode;
@@ -77,6 +73,13 @@ public class ReportLayoutPanel implements DataEntryPanel {
         inputMap.put(KeyStroke.getKeyStroke('b'), AddContentBoxAction.class);
         
         canvas.getActionMap().put(AddContentBoxAction.class, new AddContentBoxAction(session, report, pageNode));
+        
+        JToolBar toolbar = new JToolBar();
+        toolbar.add(new PageFormatAction(report.getPage()));
+        
+        panel = new JPanel(new BorderLayout());
+        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(canvas, BorderLayout.CENTER);  // XXX: scrollpane?
     }
     
     private class MouseInputHandler implements PInputEventListener {
@@ -124,7 +127,7 @@ public class ReportLayoutPanel implements DataEntryPanel {
     }
 
     public JComponent getPanel() {
-        return canvas; // XXX: scrollpane?
+        return panel;
     }
 
     public boolean hasUnsavedChanges() {

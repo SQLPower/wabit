@@ -19,6 +19,10 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.Graphics;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -41,7 +45,7 @@ import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 /**
  * Represents a report layout in the Wabit.
  */
-public class Layout extends AbstractWabitObject implements Runnable, Callable<Void>, VariableContext {
+public class Layout extends AbstractWabitObject implements Printable, VariableContext {
 
     private static final Logger logger = Logger.getLogger(Layout.class);
     
@@ -64,27 +68,6 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
         setName(name);
         page.setParent(this);
         updateBuiltinVariables();
-    }
-    
-    /**
-     * A wrapper for {@link #call()} that achieves two purposes: firstly, it allows Report
-     * to implement Runnable; secondly it conveniently wraps any checked exceptions
-     * declared by call() in a RuntimeException when/if they are thrown. 
-     */
-    public void run() {
-        try {
-            call();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Creates the report.
-     */
-    public Void call() throws SQLException, IOException, NoRowidException {
-        // TODO render output
-        return null;
     }
     
     protected void updateBuiltinVariables() {
@@ -127,6 +110,16 @@ public class Layout extends AbstractWabitObject implements Runnable, Callable<Vo
     
     public boolean allowsChildren() {
     	return true;
+    }
+
+    /**
+     * Prints a page of this report to the given graphics context.
+     * 
+     * @param pageIndex the zero-based page number to print
+     */
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        
+        return Printable.NO_SUCH_PAGE;
     }
 
 }
