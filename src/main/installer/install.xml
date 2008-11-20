@@ -2,8 +2,8 @@
 	<!-- comment -->
 	<info>
 		<appname>Wabit</appname>
-		<appversion>@{app.version}</appversion>
-		<url>http://www.sqlpower.ca/</url>
+		<appversion>0.9.1</appversion>
+		<url>http://code.google.com/p/wabit</url>
 		<javaversion>1.5</javaversion>
 	</info>
 	<guiprefs height="600" resizable="yes" width="800">
@@ -29,8 +29,8 @@
 	<packs>
 		<pack name="Core" required="yes">
 			<description>Architect Core Files</description>
-			<fileset dir="../target/" targetdir="$INSTALL_PATH">
-				<include name="architect.jar"/>
+			<fileset dir="./" targetdir="$INSTALL_PATH">
+				<include name="wabit.jar"/>
 			</fileset>
 			<fileset dir="../target/lib" targetdir="$INSTALL_PATH/lib">
 				<include name="*.jar"/>
@@ -42,9 +42,6 @@
 			</fileset>
 			<fileset dir="../" targetdir="$INSTALL_PATH">
 				<include name="LICENSE"/>
-			</fileset>
-			<fileset dir="../src/main/resources" targetdir="$INSTALL_PATH">
-				<include name="*.png"/>
 			</fileset>
 		</pack>
 	</packs>
