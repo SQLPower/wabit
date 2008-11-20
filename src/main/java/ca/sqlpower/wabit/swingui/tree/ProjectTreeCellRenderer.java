@@ -48,17 +48,22 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
         if (value instanceof WabitObject) {
             WabitObject wo = (WabitObject) value;
             
+            r.setText(wo.getName());
+
             if (wo instanceof WabitDataSource) {
                 r.setIcon(DBTreeCellRenderer.DB_ICON);
             } else if (wo instanceof Page) {
+                Page page = (Page) wo;
                 r.setIcon(PAGE_ICON);
+                r.setText(page.getName() + " (" + page.getWidth() + "x" + page.getHeight() + ")");
             } else if (wo instanceof Layout) {
                 r.setIcon(LAYOUT_ICON);
             } else if (wo instanceof ContentBox) {
+                ContentBox cb = (ContentBox) wo;
                 r.setIcon(BOX_ICON);
+                r.setText("Content ("+cb.getX()+","+cb.getY()+" "+cb.getWidth()+"x"+cb.getHeight()+")");
             }
 
-            r.setText(wo.getName());
         }
         return r;
     }
