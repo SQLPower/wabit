@@ -149,7 +149,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * Renders this label to the given graphics, with the baseline centered in the content box.
      */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
-        logger.debug("Rendering...");
+        logger.debug("Rendering label...");
         logger.debug("Text before: " + text);
         String[] textToRender = Variables.substitute(text, variableContext).split("\n");
         g.setFont(getFont());
@@ -284,5 +284,9 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 
     public List<? extends WabitObject> getChildren() {
         return Collections.emptyList();
+    }
+
+    public void resetToFirstPage() {
+        // no op -- labels don't paginate
     }
 }

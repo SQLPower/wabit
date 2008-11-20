@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.awt.Font;
 import java.awt.geom.AffineTransform;
 import java.awt.print.PageFormat;
+import java.awt.print.Paper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -258,6 +259,13 @@ public class Page extends AbstractWabitObject {
     	}
     }
     
+    /**
+     * Returns an unmodifiable view of this page's content boxes.
+     */
+    public List<ContentBox> getContentBoxes() {
+        return Collections.unmodifiableList(contentBoxes);
+    }
+    
     public void addGuide(Guide addme) {
         if (addme.getParent() != null) {
             throw new IllegalStateException("That guide already belongs to a different page");
@@ -361,5 +369,53 @@ public class Page extends AbstractWabitObject {
      */
     public boolean removeGuide(Guide guide) {
     	return guides.remove(guide);
+    }
+
+    /**
+     * Gets a page format instance that describes this page's geometry in terms
+     * of the Java print API.
+     * 
+     * @return A throwaway PageFormat object that describes this page's current
+     *         geometry. Changes to the returned PageFormat object will not
+     *         affect this page in any way.
+     */
+    public PageFormat getPageFormat() {
+        PageFormat pageFormat = new PageFormat();
+        pageFormat.setOrientation(getOrientation().getPrintApiCode());
+        Paper paper = new Paper();
+        paper.setSize(getWidth(), getHeight());
+
+        // the imageable area on the page format we return determines the clipping
+        // region for the print API, so we always want to set it as big as possible
+        // regardless of our own margin guides
+        paper.setImageableArea(0, 0, paper.getWidth(), paper.getHeight());
+
+        pageFormat.setPaper(paper);
+        
+        return pageFormat;
+    }
+    
+    /**
+     * Applies the given Java print API page format to this page object. The aspects that
+     * are affected are:
+     * <ul>
+     *  <li>width (paper width)
+     *  <li>height (paper height)
+     *  <li>orientation
+     *  <li>TODO: margins (determined by imageable area)
+     * </ul>
+     * If any changes are made to the page as a result of this operation, property change
+     * events for the individually affected properties will be fired as if those methods
+     * had been called directly.
+     * 
+     * @param pageFormat The page format to apply to this page.
+     */
+    public void applyPageFormat(PageFormat pageFormat) {
+        Paper paper = pageFormat.getPaper();
+        
+        setWidth((int) paper.getWidth());
+        setHeight((int) paper.getHeight());
+        setOrientation(PageOrientation.forPrintApiCode(pageFormat.getOrientation()));
+        // TODO update margins
     }
 }

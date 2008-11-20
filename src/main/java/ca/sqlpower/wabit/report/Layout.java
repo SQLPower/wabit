@@ -19,23 +19,22 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.print.PageFormat;
+import java.awt.print.Pageable;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.sql.NoRowidException;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
@@ -45,7 +44,7 @@ import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 /**
  * Represents a report layout in the Wabit.
  */
-public class Layout extends AbstractWabitObject implements Printable, VariableContext {
+public class Layout extends AbstractWabitObject implements Pageable, Printable, VariableContext {
 
     private static final Logger logger = Logger.getLogger(Layout.class);
     
@@ -57,6 +56,8 @@ public class Layout extends AbstractWabitObject implements Printable, VariableCo
      * have one arrangement of page content, and this is it.
      */
     private Page page = new Page("Default Page", StandardPageSizes.US_LETTER);
+    
+    private int pageCount = Integer.MAX_VALUE;
     
     /**
      * The variables defined for this report.
@@ -74,6 +75,8 @@ public class Layout extends AbstractWabitObject implements Printable, VariableCo
         setVariable("now", new Date());
         setVariable("system_user", System.getProperty("user.name"));
         setVariable("wabit_version", WabitVersion.VERSION);
+        setVariable("page_number", 0);
+        setVariable("page_count", 0);
     }
     
     public Page getPage() {
@@ -119,7 +122,53 @@ public class Layout extends AbstractWabitObject implements Printable, VariableCo
      */
     public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
         
-        return Printable.NO_SUCH_PAGE;
+        // TODO count pages up front
+        // TODO handle skipped pages
+        
+        if (pageIndex == 0) {
+            for (ContentBox cb : page.getContentBoxes()) {
+                cb.getContentRenderer().resetToFirstPage();
+            }
+        }
+        if (pageIndex >= pageCount) {
+            return Printable.NO_SUCH_PAGE;
+        }
+        
+        Graphics2D g2 = (Graphics2D) graphics;
+        g2.setColor(Color.BLACK);
+        setVariable("page_number", pageIndex + 1);
+        boolean needMorePages = false;
+        for (ContentBox cb : page.getContentBoxes()) {
+            logger.debug("(Page " + (pageIndex + 1) + ") rendering content box: "+ cb);
+            ReportContentRenderer r = cb.getContentRenderer();
+            if (r == null) {
+                logger.debug("Skipping content box with no renderer: " + cb);
+                continue;
+            }
+            Graphics2D contentGraphics = (Graphics2D) g2.create(
+                    (int) cb.getX(), (int) cb.getY(),
+                    (int) cb.getWidth(), (int) cb.getHeight());
+            needMorePages |= r.renderReportContent(contentGraphics, cb, 1.0);
+            contentGraphics.dispose();
+        }
+        if (!needMorePages) {
+            pageCount = pageIndex + 1;
+        }
+        return Printable.PAGE_EXISTS;
+    }
+
+    public int getNumberOfPages() {
+        // TODO actually count pages
+        setVariable("page_count", Pageable.UNKNOWN_NUMBER_OF_PAGES);
+        return Pageable.UNKNOWN_NUMBER_OF_PAGES;
+    }
+
+    public PageFormat getPageFormat(int pageIndex) throws IndexOutOfBoundsException {
+        return page.getPageFormat();
+    }
+
+    public Printable getPrintable(int pageIndex) throws IndexOutOfBoundsException {
+        return this;
     }
 
 }

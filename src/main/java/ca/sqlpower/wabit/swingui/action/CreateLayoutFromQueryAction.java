@@ -108,7 +108,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         dateHeader.setY(p.getUpperMarginOffset() - dateHeader.getHeight());
         
         ContentBox footer = new ContentBox();
-        Label footerLabel = new Label(l, "Page ${page_current} of ${page_count}");
+        Label footerLabel = new Label(l, "Page ${page_number} of ${page_count}");
         footerLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
         footer.setContentRenderer(footerLabel);
         // TODO add option for horizontal and vertical alignment (left, center, right, top, middle, bottom) in label

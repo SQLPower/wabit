@@ -124,6 +124,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
                     (int) getX(), (int) getY(),
                     (int) getWidth(), (int) getHeight());
             contentGraphics.setFont(contentBox.getFont()); // XXX could use piccolo attribute to do this magically
+            contentRenderer.resetToFirstPage();
             contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale());
             contentGraphics.dispose();
         } else {

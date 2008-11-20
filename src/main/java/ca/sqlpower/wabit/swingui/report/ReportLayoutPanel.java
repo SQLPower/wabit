@@ -76,6 +76,7 @@ public class ReportLayoutPanel implements DataEntryPanel {
         
         JToolBar toolbar = new JToolBar();
         toolbar.add(new PageFormatAction(report.getPage()));
+        toolbar.add(new PrintAction(report));
         
         panel = new JPanel(new BorderLayout());
         panel.add(toolbar, BorderLayout.NORTH);

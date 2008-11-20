@@ -32,6 +32,18 @@ public interface ReportContentRenderer extends WabitObject {
     /**
      * Renders as much report content as will fit within the bounds of the given
      * content box.
+     * <p>
+     * Report content renderers can be implemented in two different ways:
+     * <ul>
+     *  <li>Label-like renderers attempt to show all their content every time
+     *      they are called, and never ask for another page. These renderers
+     *      don't necessarily render exactly the same content on every page--a
+     *      footer label with a page number variable is a good example.
+     *  <li>Resultset-like renderers that show as much content as possible each
+     *      time they are called, and keep track of what to start rendering on the
+     *      next call. These types of renderers ask for more pages until they
+     *      have nothing left to render. If called again, they simply do not draw
+     *      anything.
      * 
      * @param g
      *            The graphics to render into. The origin (top left corner or
@@ -51,6 +63,13 @@ public interface ReportContentRenderer extends WabitObject {
      *         all content renderers involved return false.
      */
     boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor);
+
+    /**
+     * Tells this content renderer that the next call to
+     * {@link #renderReportContent(Graphics2D, ContentBox, double)} should
+     * produce the first page of output again.
+     */
+    void resetToFirstPage();
     
     /**
      * Returns the data entry panel that the user can use to manipulate all

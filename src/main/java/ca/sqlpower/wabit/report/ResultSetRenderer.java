@@ -177,6 +177,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
     }
 
+    public void resetToFirstPage() {
+        try {
+            if (rs != null) rs.beforeFirst();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
         if (executeException != null) {
             return renderFailure(g, contentBox, scaleFactor);
@@ -216,7 +224,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor) {
         try {
-            rs.beforeFirst(); // XXX temporary--must define API for resetting renderers
             ResultSetMetaData rsmd = rs.getMetaData();
             
             g.setFont(getHeaderFont());
@@ -476,4 +483,5 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         });
         return button;
     }
+
 }

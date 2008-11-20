@@ -20,34 +20,35 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.event.ActionEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.Paper;
+import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
+import ca.sqlpower.wabit.report.Layout;
 
-/**
- * An action that invokes a native page format dialog which allows the
- * user to modify the page size and rotation of a given page.
- */
-public class PageFormatAction extends AbstractAction {
+public class PrintAction extends AbstractAction {
 
-    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/page_white_wrench.png"));
-    
-    private final Page page;
+    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/printer.png"));
+    private final Layout layout;
 
-    public PageFormatAction(Page page) {
-        super("Page Format...", ICON);
-        this.page = page;
+    public PrintAction(Layout layout) {
+        super("Print...", ICON);
+        this.layout = layout;
     }
     
     public void actionPerformed(ActionEvent e) {
-        PageFormat pageFormat = PrinterJob.getPrinterJob().pageDialog(page.getPageFormat());
-        page.applyPageFormat(pageFormat);
+        PrinterJob job = PrinterJob.getPrinterJob();
+        job.setPageable(layout);
+        boolean ok = job.printDialog();
+        if (ok) {
+            try {
+                job.print();
+            } catch (PrinterException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 }
