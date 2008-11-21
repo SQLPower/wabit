@@ -22,17 +22,22 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
+import ca.sqlpower.validation.swingui.StatusComponent;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 
 public class CanvasZoomOutAction extends AbstractAction {
 
+	public static final Icon ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_out16.png"));		
 	protected static final double ZOOM_CONSTANT = 0.1;
 	private final PCanvas canvas;
 
 
 	public CanvasZoomOutAction(PCanvas canvas) {
+		super("", ICON);
 		this.canvas = canvas;
 	}
 

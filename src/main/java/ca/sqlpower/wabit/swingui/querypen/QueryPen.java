@@ -69,7 +69,6 @@ import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.SQLObjectSelection;
@@ -79,7 +78,6 @@ import ca.sqlpower.wabit.swingui.action.CanvasZoomInAction;
 import ca.sqlpower.wabit.swingui.action.CanvasZoomOutAction;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
-import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -444,38 +442,22 @@ public class QueryPen implements MouseState, WabitNode {
         joinLayer = new PLayer();
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
-        
-        ImageIcon zoomInIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"));
-       
+               
         zoomInAction = new CanvasZoomInAction(canvas); 
         zoomInButton = new JButton(zoomInAction);
         zoomInButton.setToolTipText( ZOOM_IN_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift +)");
-        zoomInButton.setIcon(zoomInIcon);
         canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
-                
                 , ZOOM_IN_ACTION);
-        canvas.getActionMap().put(ZOOM_IN_ACTION, zoomInAction);
-        ImageIcon zoomOutIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_out16.png"));
-        
+        canvas.getActionMap().put(ZOOM_IN_ACTION, zoomInAction);        
         zoomOutAction = new CanvasZoomOutAction(canvas);
         canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
-                
                 , ZOOM_OUT_ACTION);
         canvas.getActionMap().put(ZOOM_OUT_ACTION, zoomOutAction);
         
-        zoomOutButton = new JButton(new AbstractAction(){
-			public void actionPerformed(ActionEvent e) {
-				PCamera camera = canvas.getCamera();
-				if (camera.getViewScale() > ZOOM_CONSTANT) {
-					camera.setViewScale(camera.getViewScale() - ZOOM_CONSTANT);
-				}
-			}
-		});
+        zoomOutButton = new JButton(zoomOutAction);
         zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift -)");
-        zoomOutButton.setIcon(zoomOutIcon);
-        
         ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/join.png"));
         AbstractAction joinAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
