@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
@@ -444,11 +445,18 @@ public class QueryPanel implements DataEntryPanel {
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
     	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
     	
+    	rightTopPane.setOneTouchExpandable(true);
+    	rightTopPane.setResizeWeight(1);
     	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
     	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
+    	rightTreePanel.setMinimumSize(new Dimension(0, 0));
     	
+    	mainSplitPane.setOneTouchExpandable(true);
+    	mainSplitPane.setResizeWeight(1);
     	mainSplitPane.add(rightTopPane, JSplitPane.TOP);
-    	mainSplitPane.add(southPanelBuilder.getPanel(), JSplitPane.BOTTOM);
+    	JPanel southPanel = southPanelBuilder.getPanel();
+		mainSplitPane.add(southPanel, JSplitPane.BOTTOM);
+		southPanel.setMinimumSize(new Dimension(0, 0));
 }
 	
 	/**
