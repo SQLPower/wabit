@@ -52,6 +52,7 @@ import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -324,6 +325,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		} else if (entryPanelModel instanceof WabitProject) {
 			currentEditorPanel = new ProjectPanel(this);
 		} else {
+			if (entryPanelModel instanceof WabitObject && ((WabitObject) entryPanelModel).getParent() != null) {
+				setEditorPanel(((WabitObject) entryPanelModel).getParent()); 
+			}
 			throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
@@ -350,6 +354,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			currentEditorPanel.discardChanges();
 			wabitPane.remove(currentEditorPanel.getPanel());
 		}
+		currentEditorPanel = null;
 		return true;
 	}
 	
