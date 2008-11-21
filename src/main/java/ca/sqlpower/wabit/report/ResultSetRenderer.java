@@ -134,6 +134,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     private Font bodyFont;
     
+    /**
+     * The query that provides the content data for this renderer.
+     */
+    private final Query query;
+    
+    /**
+     * A cached copy of the result set that came from the Query object.
+     * TODO: dump this when the query changes, (delay re-executing it until it's needed again)  
+     */
     private final ResultSet rs;
 
     /**
@@ -142,20 +151,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     private Exception executeException;
 
-    /**
-     * Creates a new renderer that gets its results from the given web result set.
-     * 
-     * @param rs The result set to render. Must be scrollable (that is, calling beforeFirst()
-     * must reposition the current row cursor just above the first row).
-     */
-    public ResultSetRenderer(ResultSet rs) throws SQLException {
-        this.rs = rs;
-        ResultSetMetaData rsmd = rs.getMetaData();
-        initColumns(rsmd);
-        setName("Result Set Renderer");
-    }
-
     public ResultSetRenderer(Query query) {
+        this.query = query;
+        // TODO listen to query for changes
         ResultSet executedRs = null;
         setUpFormats();
         try {
@@ -391,6 +389,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     @Override
     public ContentBox getParent() {
         return (ContentBox) super.getParent();
+    }
+    
+    public Query getQuery() {
+        return query;
     }
     
     public DataEntryPanel getPropertiesPanel() {

@@ -20,22 +20,13 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 import javax.swing.AbstractAction;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.sql.CachedRowSet;
-import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class AddContentBoxAction extends AbstractAction {
@@ -58,47 +49,5 @@ public class AddContentBoxAction extends AbstractAction {
         ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), new ContentBox());
         newCBNode.setBounds(addTo.getWidth() / 2, addTo.getHeight() / 2, 30, 30); // XXX should be near mouse pointer
         addTo.addChild(newCBNode);
-        
-        // XXX temporary from here to end of method
-        
-        Connection con = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            PlDotIni dataSources = new PlDotIni();
-            dataSources.read(new File(System.getProperty("user.home"), "pl.ini"));
-            SPDataSource ds = dataSources.getDataSource("Local PostgreSQL fuerth");
-            
-            String sqlQuery = "select * from activity";
-            
-            con = ds.createConnection();
-            stmt = con.createStatement();
-            rs = stmt.executeQuery(sqlQuery);
-
-            CachedRowSet crs = new CachedRowSet();
-            crs.populate(rs);
-            ResultSetRenderer rsr = new ResultSetRenderer(crs);
-            newCBNode.getModel().setContentRenderer(rsr);
-            
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-            } catch (SQLException ex) {
-                logger.warn("Failed to close result set. Squishing this exception: ", ex);
-            }
-            try {
-                if (stmt != null) stmt.close();
-            } catch (SQLException ex) {
-                logger.warn("Failed to close statement. Squishing this exception: ", ex);
-            }
-            try {
-                if (con != null) con.close();
-            } catch (SQLException ex) {
-                logger.warn("Failed to close database connection. Squishing this exception: ", ex);
-            }
-        }
-
     }
 }
