@@ -125,6 +125,7 @@ public class PDFAction extends AbstractAction {
     public static void writePDF(File file, Layout layout)
     throws DocumentException, FileNotFoundException, PrinterException {
         
+    	layout.getNumberOfPages();
         Page page = layout.getPage();
         OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
         Rectangle pageSize;

@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
@@ -158,9 +159,13 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     }
 
     public int getNumberOfPages() {
-        // TODO actually count pages
-        setVariable("page_count", Pageable.UNKNOWN_NUMBER_OF_PAGES);
-        return Pageable.UNKNOWN_NUMBER_OF_PAGES;
+    	try {
+    		countPages();
+    		setVariable("page_count", pageCount);
+    		return pageCount;
+    	} catch (PrinterException ex) {
+    		throw new RuntimeException("Print exception occured while counting pages", ex);
+    	}
     }
 
     public PageFormat getPageFormat(int pageIndex) throws IndexOutOfBoundsException {
@@ -171,4 +176,20 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         return this;
     }
 
+    private int countPages() throws PrinterException {
+    	boolean done = false;
+    	int pageNum = 0;
+    	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+    	Graphics g = dummyImage.getGraphics();
+    	try {
+	    	while (!done) {
+	    		int result = print(g, getPageFormat(pageNum), pageNum);
+	    		if (result == Printable.NO_SUCH_PAGE) break;
+	    		pageNum++;
+	    	}
+    	} finally {
+    		g.dispose();
+    	}
+    	return pageNum;
+    }
 }
