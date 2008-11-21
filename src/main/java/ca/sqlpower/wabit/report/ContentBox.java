@@ -27,6 +27,7 @@ import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
 
 /**
  * Represents a box on the page which has an absolute position and size.
@@ -83,7 +84,7 @@ public class ContentBox extends AbstractWabitObject {
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
-            oldContentRenderer.removePropertyChangeListener(rendererChangeHandler);
+            WabitUtils.listenToHierarchy(oldContentRenderer, rendererChangeHandler, null);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
@@ -92,7 +93,7 @@ public class ContentBox extends AbstractWabitObject {
         firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
         if (contentRenderer != null) {
             contentRenderer.setParent(this);
-            contentRenderer.addPropertyChangeListener(rendererChangeHandler);
+            WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, null);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         }
     }
