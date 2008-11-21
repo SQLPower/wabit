@@ -34,6 +34,9 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
@@ -85,6 +88,30 @@ public class ProjectTreeListener extends MouseAdapter {
 		}
 		return lastPathComponent;
 	}
+	
+	
+	private class DeleteFromTreeAction extends AbstractAction {
+		
+		Object item ;
+		public DeleteFromTreeAction(Object node) {
+			super("Delete");
+			item = node;
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			
+			if(item instanceof Query) {
+				session.getProject().removeQuery((Query)item);
+			} else if (item instanceof WabitDataSource) {
+				session.getProject().removeDataSource((WabitDataSource)item);
+			} else if (item instanceof Layout) {
+				session.getProject().removeLayout((Layout)item);
+			} else {
+				logger.debug("This shoudl not Happen");
+			}
+			
+		}
+	}
 
 	/**
 	 * This will Display a List of options once you right click on the ProjectTree.
@@ -110,13 +137,16 @@ public class ProjectTreeListener extends MouseAdapter {
 
 		menu.add(new NewLayoutAction(session.getProject()));
 		
-		
 		Object lastPathComponent = getLastPathComponent(e);
 		if (lastPathComponent != null) {
 			menu.addSeparator();
 			
 			JTree tree = (JTree) e.getSource();
 			menu.add(new EditCellAction(tree));
+		}
+		if (lastPathComponent instanceof Query || lastPathComponent instanceof WabitDataSource
+				|| lastPathComponent instanceof Layout) {
+			menu.add(new DeleteFromTreeAction(lastPathComponent));
 		}
 
 		menu.show(e.getComponent(), e.getX(), e.getY());

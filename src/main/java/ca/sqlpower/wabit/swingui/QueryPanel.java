@@ -218,11 +218,13 @@ public class QueryPanel implements DataEntryPanel {
 					for (int i = rootNode.getChildren().size() - 1; i >= 0; i--) {
 						rootNode.removeChild(i);
 					}
-					rootNode.addChild(new SQLDatabase(
-							(SPDataSource) reportComboBox.getSelectedItem()));
-					DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
-					dragTree.setModel(tempTreeModel);
-					dragTree.setVisible(true);
+					if(reportComboBox.getSelectedItem() != null) {
+						rootNode.addChild(new SQLDatabase(
+								(SPDataSource) reportComboBox.getSelectedItem()));
+						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
+						dragTree.setModel(tempTreeModel);
+						dragTree.setVisible(true);
+					} 
 				} catch (ArchitectException e) {
 					throw new RuntimeException(
 							"Could not add DataSource to rootNode", e);
@@ -230,9 +232,13 @@ public class QueryPanel implements DataEntryPanel {
 
 			}
 		});
-		if (queryCache.getDataSource() != null) {
+		if (session.getProject().getDataSources().size() != 0 ) {
+			if(queryCache.getDataSource() == null) {
+				dragTree.setVisible(false);
+			} else {
 			reportComboBox.setSelectedItem(queryCache.getDataSource());
 			dragTree.setVisible(true);
+			}
 		} else {
 			dragTree.setVisible(false);
 		}
