@@ -129,22 +129,22 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<taskdef name="jarbundler" 
-										classpath="src/main/installer/osx/jarbundler.jar:src/main/installer/osx/xercesImpl.jar:src/main/installer/osx/xml-apis.jar"
-										classname="net.sourceforge.jarbundler.JarBundler"/>
+								<taskdef name="jarbundler"
+									classpath="src/main/installer/osx/jarbundler.jar:src/main/installer/osx/xercesImpl.jar:src/main/installer/osx/xml-apis.jar"
+									classname="net.sourceforge.jarbundler.JarBundler" />
 								<!-- The pre-compiled osx adapter class (it only compiles on OS X) -->
 								<copy file="src/main/installer/osx/osx_adapter.jar" todir="target/lib" />
-								
+
 								<copy todir="target/jdbc">
-									<fileset dir="src/main/resources/jdbc"/>
+									<fileset dir="src/main/resources/jdbc" />
 								</copy>
-								
+
 
 								<!-- jarbundler is from sourceforge, defined near top of file -->
-								<jarbundler dir="target" name="Wabit"
-									version="${project.version}" mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionImpl"
-									jvmversion="1.5+"
-									shortname="Wabit" stubfile="src/main/installer/osx/JavaApplicationStub"
+								<jarbundler dir="target" name="Wabit" version="${project.version}"
+									mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionImpl"
+									jvmversion="1.5+" shortname="Wabit"
+									stubfile="src/main/installer/osx/JavaApplicationStub"
 									vmoptions="-Xmx600m">
 									<jarfileset dir="target" includes="lib/*.jar" />
 									<jarfileset dir="target" includes="wabit.jar" />
@@ -157,9 +157,14 @@
 									XXX this is stupid. we should modify the jarbundler task to
 									allow literal strings in the classpath
 								-->
-								<replace
-									file="target/Wabit.app/Contents/Info.plist"
+								<replace file="target/Wabit.app/Contents/Info.plist"
 									token="KICKME" value="$JAVAROOT" />
+
+								<tar destfile="target/Wabit-OSX-${project.version}.tar.gz"
+									compression="gzip">
+									<tarfileset dir="target" includes="Wabit.app/**" />
+									<tarfileset dir="." includes="LICENSE" />
+								</tar>
 							</tasks>
 						</configuration>
 						<goals>
