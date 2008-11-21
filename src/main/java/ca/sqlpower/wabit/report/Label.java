@@ -145,11 +145,13 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
             return null;
         }
     }
-    
-    /**
-     * Renders this label to the given graphics, with the baseline centered in the content box.
-     */
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
+
+	/**
+	 * Renders this label to the given graphics, with the baseline centered in
+	 * the content box. Note that specifying a pageIndex has no effect, since
+	 * Labels are intended to be the same on every page.
+	 */
+    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
         logger.debug("Rendering label...");
         logger.debug("Text before: " + text);
         String[] textToRender = Variables.substitute(text, variableContext).split("\n");

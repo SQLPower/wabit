@@ -151,6 +151,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     private Exception executeException;
 
+    private List<Integer> pageRowNumberList = new ArrayList<Integer>();
+    
     public ResultSetRenderer(Query query) {
         this.query = query;
         // TODO listen to query for changes
@@ -239,15 +241,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
     }
 
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor) {
+    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
         if (executeException != null) {
-            return renderFailure(g, contentBox, scaleFactor);
+            return renderFailure(g, contentBox, scaleFactor, pageIndex);
         } else {
-            return renderSuccess(g, contentBox, scaleFactor);
+            return renderSuccess(g, contentBox, scaleFactor, pageIndex);
         }
     }
     
-    public boolean renderFailure(Graphics2D g, ContentBox contentBox, double scaleFactor) {
+    public boolean renderFailure(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
         List<String> errorMessage = new ArrayList<String>();
         if (executeException instanceof QueryException) {
             QueryException qe = (QueryException) executeException;
@@ -276,9 +278,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         return false;
     }
 
-    public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor) {
+    public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
         try {
-            ResultSetMetaData rsmd = rs.getMetaData();
+        	if (pageIndex >= pageRowNumberList.size() || pageRowNumberList.get(pageIndex) == null) {
+        		while (pageRowNumberList.size() < pageIndex) {
+        			pageRowNumberList.add(null);
+        		}
+        		pageRowNumberList.add(rs.getRow());
+        	}
+        	
+        	int pageToSet = pageRowNumberList.get(pageIndex);
+        	rs.absolute(pageRowNumberList.get(pageIndex));
+   			
+        	ResultSetMetaData rsmd = rs.getMetaData();
             
             g.setFont(getHeaderFont());
             FontMetrics fm = g.getFontMetrics();
@@ -297,6 +309,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             
             g.setFont(getBodyFont());
             fm = g.getFontMetrics();
+            
             while ( rs.next() && ((y + fm.getHeight()) < contentBox.getHeight()) ) {
                 x = 0;
                 y += fm.getHeight();
