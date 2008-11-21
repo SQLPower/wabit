@@ -80,12 +80,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     private static final Logger logger = Logger.getLogger(ResultSetRenderer.class);
     
-    /**
-     * Default column width.
-     */
-    private static final int DEFAULT_COL_WIDTH = 72;
-    
-    private enum DataType { NUMERIC , DATE, TEXT };
+    private static final String defaultFormatString = "Default Format";
     
     private static DataType getDataType(String className) {
     	try {
@@ -121,60 +116,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	}
     	return null;
     	
-    }
-    
-    // TODO this should probably be a Wabit Object (child of ResultSetRenderer)
-    private static class ColumnInfo {
-
-        String label;
-        
-        /**
-         * Column width in Graphics2D units (screen pixels or 1/72 of an inch when printed).
-         */
-        int width = DEFAULT_COL_WIDTH;
-        
-        HorizontalAlignment hAlign = HorizontalAlignment.LEFT;
-        
-        DataType dataType = null;
-        
-        Format format = null;
-        
-        public ColumnInfo(String label) {
-            setLabel(label);
-        }
-        
-        public String getLabel() {
-            return label;
-        }
-        public void setLabel(String label) {
-            this.label = label;
-        }
-        public int getWidth() {
-            return width;
-        }
-        public void setWidth(int width) {
-            this.width = width;
-        }
-        public HorizontalAlignment getHorizontalAlignment() {
-            return hAlign;
-        }
-        public void setHorizontalAlignment(HorizontalAlignment align) {
-            hAlign = align;
-        }
-        public DataType getDataType() {
-        	return dataType;
-        }
-        
-        public void setDataType(DataType type) {
-        	logger.debug("setting data type to"+ type);
-        	dataType = type;
-        }
-        public Format getFormat() {
-            return format;
-        }
-        public void setFormat(Format format) {
-            this.format = format;
-        }
     }
     
     private final List<ColumnInfo> columnInfo = new ArrayList<ColumnInfo>();
@@ -285,7 +226,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         	logger.debug(rsmd.getColumnClassName(col));
             ColumnInfo ci = new ColumnInfo(rsmd.getColumnLabel(col));
             ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
+            ci.setParent(ResultSetRenderer.this);
             columnInfo.add(ci);
+            fireChildAdded(ColumnInfo.class, ci, col-1);
+            
         }
     }
 
@@ -391,15 +335,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public boolean allowsChildren() {
-        return false;
+        return true;
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        throw new UnsupportedOperationException("Labels don't have children");
+        return columnInfo.indexOf(childType);
     }
 
     public List<? extends WabitObject> getChildren() {
-        return Collections.emptyList();
+        return Collections.unmodifiableList(columnInfo);
     }
     
     public Font getHeaderFont() {
@@ -567,11 +511,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         dataTypeComboBox.addActionListener(new AbstractAction(){
 
 			public void actionPerformed(ActionEvent e) {
-				if(!(((JComboBox)e.getSource()).getSelectedItem() == DataType.TEXT)
-						&& !(formatComboBox.isEnabled())){
-					formatComboBox.setEnabled(true);
-				} else {
+				if(((JComboBox)e.getSource()).getSelectedItem() == DataType.TEXT){
 					formatComboBox.setEnabled(false);
+				} else {
+					formatComboBox.setEnabled(true);
 				}
 				setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
 			}
@@ -589,12 +532,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 } else if (centreAlign.isSelected()) {
                     ci.setHorizontalAlignment(HorizontalAlignment.CENTER);
                 } else if (rightAlign.isSelected()) {
-                    ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+                	ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
                 }
                 ci.setDataType((DataType)dataTypeComboBox.getSelectedItem());
-                if(((String)formatComboBox.getSelectedItem()).equals("Default")) {
-                	  ci.setFormat(null);
-                }else {
+                logger.debug("formatCombobBox.getSelectedItem is"+ (String)formatComboBox.getSelectedItem());
+                
+                if (formatComboBox.getSelectedItem() != null &&
+                		((String)formatComboBox.getSelectedItem()).equals(defaultFormatString)) {
+                		ci.setFormat(null);
+                	}
+                else {
                 	ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
                 }
                 ci.setWidth((Integer) widthSpinner.getValue());
@@ -602,7 +549,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
 
             public void discardChanges() {
-                // no op
+            	// no op
             }
 
             public JComponent getPanel() {
@@ -618,7 +565,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     private void setItemforFormatComboBox(JComboBox combobox, DataType dataType) {
     	combobox.removeAllItems();
-    	combobox.addItem("Default");
+    	combobox.addItem(defaultFormatString);
     	if(dataType == DataType.NUMERIC) {
     		for(NumberFormat item : numberFormats) {
     			combobox.addItem(((DecimalFormat)item).toPattern());
