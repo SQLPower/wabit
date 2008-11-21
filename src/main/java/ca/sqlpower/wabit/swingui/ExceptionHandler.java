@@ -19,28 +19,17 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 
-import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.swingui.SPSUtils;
 
 /**
- * This is the swing version of the WabitSessionContext. Swing specific operations for
- * the context will be done in this implementation 
+ * This is a basic uncaught exception handler implementation.
  */
-public class WabitSwingSessionContextImpl extends WabitSessionContextImpl {
-
-	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
-			throws IOException {
-		super(terminateWhenLastSessionCloses);
-		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
-	}
+public class ExceptionHandler implements UncaughtExceptionHandler {
 	
-	@Override
-	public WabitSession createSession() {
-		WabitSwingSession session = new WabitSwingSessionImpl(this);
-		registerChildSession(session);
-		return session;
+	public void uncaughtException(Thread t, Throwable e) {
+		SPSUtils.showExceptionDialogNoReport("An unexpected exception has occured: ", e);
 	}
 
 }
