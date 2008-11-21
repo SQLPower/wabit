@@ -76,6 +76,7 @@ public class Guide extends AbstractWabitObject {
         int oldOffset = this.offset;
         this.offset = guideOffset;
         firePropertyChange("offset", oldOffset, guideOffset);
+        dragSnappedEdges(oldOffset, guideOffset);
         setName(axis + " guide @" + offset);
     }
 
@@ -83,4 +84,37 @@ public class Guide extends AbstractWabitObject {
         return axis;
     }
 
+    @Override
+    public Page getParent() {
+        return (Page) super.getParent();
+    }
+
+    /**
+     * Moves all the box edges that were snapped to this guide at the old offset
+     * to the given new offset.
+     * <p>
+     * XXX: this could be done by having snapped boxes listen to the guides they
+     * were snapped to if the snapping behaviour was moved into the model (it's
+     * currently in the view's GuideAwareSelection...thing)
+     */
+    private void dragSnappedEdges(int oldOffset, int newOffset) {
+        if (getParent() == null) return;
+        for (ContentBox cb : getParent().getContentBoxes()) {
+            if (axis == Axis.HORIZONTAL) {
+                if (oldOffset == cb.getY()) {
+                    cb.setY(newOffset);
+                    cb.setHeight(cb.getHeight() + (oldOffset - newOffset));
+                } else if (oldOffset == (cb.getY() + cb.getHeight())) {
+                    cb.setHeight(cb.getHeight() + (newOffset - oldOffset));
+                }
+            } else {
+                if (oldOffset == cb.getX()) {
+                    cb.setX(newOffset);
+                    cb.setWidth(cb.getWidth() + (oldOffset - newOffset));
+                } else if (oldOffset == (cb.getX() + cb.getWidth())) {
+                    cb.setWidth(cb.getWidth() + (newOffset - oldOffset));
+                }
+            }
+        }
+    }
 }
