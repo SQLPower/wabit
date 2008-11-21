@@ -27,8 +27,13 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
 public class ColumnInfo extends AbstractWabitObject{
-	
-	String label;
+
+    /**
+     * The label that should be rendered as this column's header. This is
+     * distinct from the name (see {@link #getName()}), which is used as the key
+     * for matching this columninfo to column alias in the query.
+     */
+    private String label;
 
 	/**
 	 * Column width in Graphics2D units (screen pixels or 1/72 of an inch when printed).
@@ -40,16 +45,17 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String COLUMN_LABEL_CHANGED = "label";
 	public static final String WIDTH_CHANGED = "width";
 	
-	int width = DEFAULT_COL_WIDTH;
+	private int width = DEFAULT_COL_WIDTH;
 
-	HorizontalAlignment hAlign = HorizontalAlignment.LEFT;
+	private HorizontalAlignment hAlign = HorizontalAlignment.LEFT;
 
-	DataType dataType = null;
+	private DataType dataType = null;
 
-	Format format = null;
+	private Format format = null;
 
 	public ColumnInfo(String label) {
 		setLabel(label);
+		setName(label);
 	}
 
 	public String getLabel() {

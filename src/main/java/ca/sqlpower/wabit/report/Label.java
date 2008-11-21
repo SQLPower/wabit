@@ -86,10 +86,11 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public Label(VariableContext variableContext, String text) {
         this.variableContext = variableContext;
         this.text = text;
+        setName("Label");
     }
     
     public Label(VariableContext variableContext) {
-        this.variableContext = variableContext;
+        this(variableContext, null);
     }
     
     /**

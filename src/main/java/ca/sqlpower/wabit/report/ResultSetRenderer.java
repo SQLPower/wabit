@@ -162,7 +162,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         } catch (Exception ex) {
             executeException = ex;
         }
-        setName("Result Set Renderer for " + query.getName());
+        setName("Result Set: " + query.getName());
         rs = executedRs;
     }
     

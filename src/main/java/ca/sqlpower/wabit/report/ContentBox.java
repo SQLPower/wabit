@@ -63,7 +63,8 @@ public class ContentBox extends AbstractWabitObject {
     };
     
     public ContentBox() {
-        setName("Empty content box");
+        // This is just to initialize this content box's name
+        setContentRenderer(null);
     }
 
     /**
@@ -89,12 +90,14 @@ public class ContentBox extends AbstractWabitObject {
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
         this.contentRenderer = contentRenderer;
-        setName("Content from " + contentRenderer);
         firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
         if (contentRenderer != null) {
+            setName("Content from " + contentRenderer.getName());
             contentRenderer.setParent(this);
             WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, null);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
+        } else {
+            setName("Empty content box");
         }
     }
     

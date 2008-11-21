@@ -64,7 +64,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
                 if (propertiesPanel == null) {
                     Toolkit.getDefaultToolkit().beep();
                 } else {
-                    String propertiesPanelName = "TODO"; //getPropertiesPanelName();
+                    String propertiesPanelName = "Properties for " + contentBox.getName();
                     JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(
                             propertiesPanel, dialogOwner, propertiesPanelName, "OK");
                     d.setVisible(true);

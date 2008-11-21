@@ -56,6 +56,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
@@ -131,7 +132,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		statusLabel= new JLabel();
 		
-		frame = new JFrame("Power*Wabit");
+		frame = new JFrame("Wabit " + WabitVersion.VERSION);
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 	}
