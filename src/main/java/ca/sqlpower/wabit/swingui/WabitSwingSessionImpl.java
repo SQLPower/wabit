@@ -327,8 +327,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		} else {
 			if (entryPanelModel instanceof WabitObject && ((WabitObject) entryPanelModel).getParent() != null) {
 				setEditorPanel(((WabitObject) entryPanelModel).getParent()); 
+			} else {
+				throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
 			}
-			throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
 	}
