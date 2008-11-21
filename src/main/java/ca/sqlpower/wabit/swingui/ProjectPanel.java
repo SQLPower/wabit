@@ -63,6 +63,9 @@ public class ProjectPanel implements DataEntryPanel {
 	private final AbstractAction addDSToProjectAction = new AbstractAction("Add To Project") {
 		public void actionPerformed(ActionEvent e) {
 			SPDataSource ds = dbConnectionManager.getSelectedConnection();
+			if (ds == null) {
+				return;
+			}
 			boolean isDSAlreadyAdded = false;
 			for (WabitDataSource wds : session.getProject().getDataSources()) {
 				if (wds instanceof JDBCDataSource) {
