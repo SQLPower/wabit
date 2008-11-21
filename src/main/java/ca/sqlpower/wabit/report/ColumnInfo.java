@@ -28,12 +28,12 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class ColumnInfo extends AbstractWabitObject{
 
-    /**
-     * The label that should be rendered as this column's header. This is
-     * distinct from the name (see {@link #getName()}), which is used as the key
-     * for matching this columninfo to column alias in the query.
-     */
-    private String label;
+	/**
+	 * The columnInfoKey is used as the key for matching this columninfo to
+	 * column alias in the query. This is distinct from the name (see
+	 * {@link #getName()}), which should be rendered as this column's header.
+	 */
+    private String columnInfoKey;
 
 	/**
 	 * Column width in Graphics2D units (screen pixels or 1/72 of an inch when printed).
@@ -42,7 +42,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String FORMAT_CHANGED = "format";
 	public static final String DATATYPE_CHANGED = "dataType";
 	public static final String HORIZONAL_ALIGNMENT_CHANGED = "horizontalAlignment";
-	public static final String COLUMN_LABEL_CHANGED = "label";
+	public static final String COLUMN_INFO_KEY_CHANGED = "columnInfoKey";
 	public static final String WIDTH_CHANGED = "width";
 	
 	private int width = DEFAULT_COL_WIDTH;
@@ -54,16 +54,16 @@ public class ColumnInfo extends AbstractWabitObject{
 	private Format format = null;
 
 	public ColumnInfo(String label) {
-		setLabel(label);
+		setColumnInfoKey(label);
 		setName(label);
 	}
 
-	public String getLabel() {
-		return label;
+	public String getColumnInfoKey() {
+		return columnInfoKey;
 	}
-	public void setLabel(String label) {
-		firePropertyChange(COLUMN_LABEL_CHANGED, this.label, label);
-		this.label = label;
+	public void setColumnInfoKey(String label) {
+		firePropertyChange(COLUMN_INFO_KEY_CHANGED, this.columnInfoKey, label);
+		this.columnInfoKey = label;
 	}
 	public int getWidth() {
 		return width;

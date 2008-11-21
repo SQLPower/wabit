@@ -288,7 +288,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             
             for (int col = 1; col <= colCount; col++) {
                 ColumnInfo ci = columnInfo.get(col-1);
-                g.drawString(replaceNull(ci.getLabel()), x, y);
+                g.drawString(replaceNull(ci.getName()), x, y);
                 x += ci.getWidth();
             }
             
@@ -473,7 +473,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         FormLayout layout = new FormLayout("fill:pref:grow");
         DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
-        final JTextField columnLabel = new JTextField(ci.getLabel());
+        final JTextField columnLabel = new JTextField(ci.getColumnInfoKey());
         fb.append(columnLabel);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
@@ -528,7 +528,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         return new DataEntryPanel() {
 
             public boolean applyChanges() {
-                ci.setLabel(columnLabel.getText());
+                ci.setColumnInfoKey(columnLabel.getText());
                 if (leftAlign.isSelected()) {
                     ci.setHorizontalAlignment(HorizontalAlignment.LEFT);
                 } else if (centreAlign.isSelected()) {
