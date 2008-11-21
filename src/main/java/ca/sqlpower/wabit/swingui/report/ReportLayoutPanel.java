@@ -36,12 +36,15 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.action.CanvasZoomInAction;
+import ca.sqlpower.wabit.swingui.action.CanvasZoomOutAction;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
+import edu.umd.cs.piccolox.swing.PScrollPane;
 
 public class ReportLayoutPanel implements DataEntryPanel {
 
@@ -77,10 +80,12 @@ public class ReportLayoutPanel implements DataEntryPanel {
         JToolBar toolbar = new JToolBar();
         toolbar.add(new PageFormatAction(report.getPage()));
         toolbar.add(new PrintAction(report));
+        toolbar.add(new CanvasZoomInAction(canvas));
+        toolbar.add(new CanvasZoomOutAction(canvas));
         
         panel = new JPanel(new BorderLayout());
         panel.add(toolbar, BorderLayout.NORTH);
-        panel.add(canvas, BorderLayout.CENTER);  // XXX: scrollpane?
+        panel.add(new PScrollPane(canvas), BorderLayout.CENTER);
     }
     
     private class MouseInputHandler implements PInputEventListener {
