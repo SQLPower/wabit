@@ -160,11 +160,18 @@
 								<replace file="target/Wabit.app/Contents/Info.plist"
 									token="KICKME" value="$JAVAROOT" />
 
-								<tar destfile="target/Wabit-OSX-${project.version}.tar.gz"
-									compression="gzip">
-									<tarfileset dir="target" includes="Wabit.app/**" />
-									<tarfileset dir="." includes="LICENSE" />
-								</tar>
+								<exec executable="tar" dir="target">
+									<arg value="-cpzf" />
+									<arg value="Wabit-OSX-${project.version}.tar.gz"/>
+									<arg value="../LICENSE"/>
+									<arg value="Wabit.app"/>
+								</exec>
+
+<!--								<tar destfile="target/Wabit-OSX-${project.version}.tar.gz"-->
+<!--									compression="gzip">-->
+<!--									<tarfileset dir="target" includes="Wabit.app/**" />-->
+<!--									<tarfileset dir="." includes="LICENSE" />-->
+<!--								</tar>-->
 							</tasks>
 						</configuration>
 						<goals>
@@ -216,13 +223,13 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/architect_dbtree_lib.jar</systemPath>
 		</dependency>
-		      <dependency>
-            <groupId>ca.sqlpower.architect.util</groupId>
-            <artifactId>architect-test-util</artifactId>
-            <version>0.9.12alpha</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/architect_test_util_lib.jar</systemPath>
-        </dependency>
+		<dependency>
+			<groupId>ca.sqlpower.architect.util</groupId>
+			<artifactId>architect-test-util</artifactId>
+			<version>0.9.12alpha</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/architect_test_util_lib.jar</systemPath>
+		</dependency>
 		<dependency>
 			<groupId>org.fife</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
