@@ -421,25 +421,19 @@ public class QueryPanel implements DataEntryPanel {
     			executeQueryInCache();
     		}
     	});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, pref, 3dlu, min(pref;50dlu)"
-    			,"pref, 2dlu, pref, 2dlu,  pref, fill:min(pref;100dlu):grow");
+    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, max(pref;50dlu), 3dlu, pref, 3dlu, pref"
+    			,"pref, pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
-    	southPanelBuilder.append(new JLabel(""));
-    	southPanelBuilder.append(new JLabel(""));
+    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText());
+    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel());
     	southPanelBuilder.append(new JLabel("Row Limit"));
     	JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
     	rowLimitSpinner.setValue(new Integer(1000));
     	southPanelBuilder.append(rowLimitSpinner);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.nextLine();
-    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText(), 5);
-    	southPanelBuilder.nextLine();
-    	southPanelBuilder.nextLine();
     	southPanelBuilder.append(groupingCheckBox);
-    	southPanelBuilder.append(new JLabel(""));
-    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel(),3);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(resultPanel, 7);
+    	southPanelBuilder.append(resultPanel, 9);
     	
     	JPanel rightTreePanel = new JPanel(new BorderLayout());
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
