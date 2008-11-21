@@ -150,13 +150,17 @@ public class ProjectSAXHandler extends DefaultHandler {
         	}
         	session.getProject().addDataSource(ds);
         } else if (name.equals("query")) {
-        	query = new QueryCache();
+        	String uuid = attributes.getValue("uuid");
+        	checkMandatory("uuid", uuid);
+        	query = new QueryCache(uuid);
         	uuidToItemMap = new HashMap<String, Item>();
         	session.getProject().addQuery(query);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
-        		if (aname.equals("name")) {
+        		if (aname.equals("uuid")) {
+        			// already loaded
+        		} else if (aname.equals("name")) {
         			query.setName(aval);
         		} else if (aname.equals("data-source")) { 
         			checkMandatory("data-source", aval);
@@ -165,17 +169,22 @@ public class ProjectSAXHandler extends DefaultHandler {
         				logger.debug("Project has data sources " + session.getProject().getDataSources());
         				throw new NullPointerException("Could not retrieve " + aval + " from the list of data sources.");
         			}
+        			logger.debug("Setting data source in query " + uuid + " to " + ds.getName());
         			query.setDataSource(ds);
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
         	}
         } else if (name.equals("constants")) {
-        	Container constants = query.getConstantsContainer();
+        	String uuid = attributes.getValue("uuid");
+        	checkMandatory("uuid", uuid);
+        	Container constants = query.newConstantsContainer(uuid);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
-        		if (aname.equals("xpos")) {
+        		if (aname.equals("uuid")) {
+        			// already loaded
+        		} else if (aname.equals("xpos")) {
         			constants.setPosition(new Point2D.Double(Double.parseDouble(aval), constants.getPosition().getY()));
         			logger.debug("Constants container is at position " + constants.getPosition());
         		} else if (aname.equals("ypos")) {
@@ -188,14 +197,16 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String tableName = attributes.getValue("name");
         	String schema = attributes.getValue("schema");
         	String catalog = attributes.getValue("catalog");
+        	String uuid = attributes.getValue("uuid");
+        	checkMandatory("uuid", uuid);
         	checkMandatory("name", tableName);
         	checkMandatory("schema", schema);
         	checkMandatory("catalog", catalog);
-        	TableContainer table = new TableContainer(query, tableName, schema, catalog, new ArrayList<SQLObjectItem>());
+        	TableContainer table = new TableContainer(uuid, query, tableName, schema, catalog, new ArrayList<SQLObjectItem>());
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
-        		if (aname.equals("name") || aname.equals("schema") || aname.equals("catalog")) {
+        		if (aname.equals("name") || aname.equals("schema") || aname.equals("catalog") || aname.equals("uuid")) {
         			// already loaded.
         		} else if (aname.equals("xpos")) {
         			table.setPosition(new Point2D.Double(Double.parseDouble(aval), table.getPosition().getY()));
@@ -460,7 +471,7 @@ public class ProjectSAXHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String name)
     		throws SAXException {
     	if (name.equals("table")) {
-    		TableContainer table = new TableContainer(query, container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
+    		TableContainer table = new TableContainer(container.getUUID().toString(), query, container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
     		query.addTable(table);

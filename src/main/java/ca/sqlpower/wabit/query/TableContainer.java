@@ -115,7 +115,8 @@ public class TableContainer extends AbstractWabitObject implements Container {
 	 * to retrieve the table from the database. The items of this container will have it's object
 	 * set when the table is loaded.
 	 */
-	public TableContainer(QueryCache cache, String name, String schema, String catalog, List<SQLObjectItem> items) {
+	public TableContainer(String uuid, QueryCache cache, String name, String schema, String catalog, List<SQLObjectItem> items) {
+		super(uuid);
 		this.cache = cache;
 		this.schema = schema;
 		this.catalog = catalog;
@@ -219,6 +220,7 @@ public class TableContainer extends AbstractWabitObject implements Container {
 	 */
 	void loadTableByQualifiedName() {
 		if (table == null) {
+			logger.debug("Cache has data source " + cache.getDataSource());
 			SQLDatabase db = new SQLDatabase(cache.getDataSource());
 			try {
 				table = db.getTableByName(catalog, schema, super.getName());
@@ -227,6 +229,19 @@ public class TableContainer extends AbstractWabitObject implements Container {
 			}
 			loadColumnsFromTable(table);
 		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof TableContainer && ((TableContainer) obj).getUUID().equals(getUUID())) {
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return 31 * 17 + getUUID().hashCode();
 	}
 
 }

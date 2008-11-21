@@ -297,11 +297,19 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		}
 	}; 
 	
+	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals(Item.PROPERTY_WHERE) && !compoundEdit) {
+				firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+			}
+		}
+	};
+	
 	/**
 	 * This container holds the items that are considered constants in the SQL statement.
 	 * This could include functions or other elements that don't belong in a table.
 	 */
-	private final Container constantsContainer;
+	private Container constantsContainer;
 	
 	/**
 	 * If true the query cache will be in an editing state. When in this
@@ -878,6 +886,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		logger.debug("Item name is " + col.getName());
 		col.removePropertyChangeListener(aliasListener);
 		col.removePropertyChangeListener(selectedColumnListener);
+		col.removePropertyChangeListener(whereListener);
 		removeColumnSelection(col);
 		if (!compoundEdit) {
 			firePropertyChange(PROPERTY_QUERY, col, null);
@@ -890,6 +899,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public void addItem(Item col) {
 		col.addPropertyChangeListener(aliasListener);
 		col.addPropertyChangeListener(selectedColumnListener);
+		col.addPropertyChangeListener(whereListener);
 	}
 	
 	/**
@@ -1070,6 +1080,15 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	public void removeUserModifications() {
 		userModifiedQuery = null;
+	}
+
+	/**
+	 * Creates a new constants container for this QueryCache. This should
+	 * only be used in loading.
+	 */
+	public Container newConstantsContainer(String uuid) {
+		constantsContainer = new ItemContainer("Constants", uuid);
+		return constantsContainer;
 	}
 	
 }

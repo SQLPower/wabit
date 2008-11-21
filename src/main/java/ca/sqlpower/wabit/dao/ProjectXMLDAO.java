@@ -207,6 +207,7 @@ public class ProjectXMLDAO {
 	public void saveQueryCache(QueryCache cache) {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
+		printAttribute("uuid", cache.getUUID().toString());
 		if (cache.getDataSource() != null) {
 			printAttribute("data-source", cache.getDataSource().getName());
 		}
@@ -217,6 +218,7 @@ public class ProjectXMLDAO {
 
 		xml.print(out, "<constants");
 		Container constants = cache.getConstantsContainer();
+		printAttribute("uuid", constants.getUUID().toString());
 		printAttribute("xpos", constants.getPosition().getX());
 		printAttribute("ypos", constants.getPosition().getY());
 		xml.println(out, ">");
@@ -236,6 +238,7 @@ public class ProjectXMLDAO {
 		for (Container table : cache.getFromTableList()) {
 			xml.print(out, "<table");
 			printAttribute("name", table.getName());
+			printAttribute("uuid", table.getUUID().toString());
 			TableContainer tableContainer = (TableContainer)table;
 			if (!tableContainer.getSchema().equals("")) {
 				printAttribute("schema", tableContainer.getSchema());

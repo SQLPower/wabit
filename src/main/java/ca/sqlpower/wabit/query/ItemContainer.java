@@ -54,12 +54,22 @@ public class ItemContainer extends AbstractWabitObject implements Container {
 	private Point2D position;
 	
 	public ItemContainer(String name) {
+		this(name, null);
+	}
+	
+	/**
+	 * This constructor allows defining a specific UUID when creating a container.
+	 * This should only be used in loading. Giving a null UUID will automatically 
+	 * generate a UUID.
+	 */
+	public ItemContainer(String name, String uuid) {
+		super(uuid);
 		this.name = name;
 		itemList = new ArrayList<Item>();
 		logger.debug("Container created.");
 		position = new Point(0, 0);
 	}
-	
+
 	public Object getContainedObject() {
 		return Collections.unmodifiableList(itemList);
 	}
@@ -129,6 +139,19 @@ public class ItemContainer extends AbstractWabitObject implements Container {
 
 	public List<? extends WabitObject> getChildren() {
 		return itemList;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ItemContainer && ((ItemContainer) obj).getUUID().equals(getUUID())) {
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return 31 * 17 + getUUID().hashCode();
 	}
 
 }

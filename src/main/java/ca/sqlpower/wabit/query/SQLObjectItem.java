@@ -139,5 +139,22 @@ public class SQLObjectItem extends AbstractWabitObject implements Item {
 	public Container getContainer() {
 		return (Container) getParent();
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof SQLObjectItem) {
+			if (((SQLObjectItem) obj).getUUID().equals(getUUID())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		int result = 17;
+		result = 31 * result + getUUID().hashCode();
+		return result;
+	}
 
 }
