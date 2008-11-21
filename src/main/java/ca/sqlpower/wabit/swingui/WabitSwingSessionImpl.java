@@ -61,6 +61,7 @@ import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
 
@@ -153,7 +154,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	
 		projectTree = new JTree(new ProjectTreeModel(project));
 		projectTree.addMouseListener(new ProjectTreeListener(this));
-    	projectTree.setCellRenderer(new ProjectTreeCellRenderer());
+    	ProjectTreeCellRenderer renderer = new ProjectTreeCellRenderer();
+		projectTree.setCellRenderer(renderer);
+    	projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
+    	projectTree.setEditable(true);
 
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
 		setEditorPanel(project);

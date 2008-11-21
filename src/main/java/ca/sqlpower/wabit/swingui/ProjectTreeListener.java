@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
+import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 
@@ -65,6 +66,15 @@ public class ProjectTreeListener extends MouseAdapter {
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		Object lastPathComponent = getLastPathComponent(e);
+		if (e.isPopupTrigger()) {
+			maybeShowPopup(e);
+		} else if (lastPathComponent != null) {
+			session.setEditorPanel(lastPathComponent);
+		}
+	}
+
+	private Object getLastPathComponent(MouseEvent e) {
 		JTree t = (JTree) e.getSource();
 		int row = t.getRowForLocation(e.getX(), e.getY());
 		TreePath tp = t.getPathForRow(row);
@@ -73,11 +83,7 @@ public class ProjectTreeListener extends MouseAdapter {
 			lastPathComponent = tp.getLastPathComponent();
 			logger.debug("Clicked on " + lastPathComponent.getClass());
 		}
-		if (e.isPopupTrigger()) {
-			maybeShowPopup(e);
-		} else if (lastPathComponent != null) {
-			session.setEditorPanel(lastPathComponent);
-		}
+		return lastPathComponent;
 	}
 
 	/**
@@ -87,7 +93,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		if (!e.isPopupTrigger()) {
 			return;
 		}
-
+		
 		JPopupMenu menu = new JPopupMenu();
 		menu.add(new AbstractAction("Database Connection Manager...") {
 
@@ -103,6 +109,15 @@ public class ProjectTreeListener extends MouseAdapter {
 		menu.add(new NewQueryAction(session));
 
 		menu.add(new NewLayoutAction(session.getProject()));
+		
+		
+		Object lastPathComponent = getLastPathComponent(e);
+		if (lastPathComponent != null) {
+			menu.addSeparator();
+			
+			JTree tree = (JTree) e.getSource();
+			menu.add(new EditCellAction(tree));
+		}
 
 		menu.show(e.getComponent(), e.getX(), e.getY());
 	}
