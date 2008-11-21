@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitProject;
@@ -100,4 +101,9 @@ public class StubWabitSwingSession implements WabitSwingSession {
         // TODO Auto-generated method stub
         return null;
     }
+
+	public DatabaseConnectionManager getDbConnectionManager() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.wabit.WabitSession;
 
 public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
@@ -49,5 +50,7 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	void buildUI() throws ArchitectException;
 	
 	JTree getTree();
+	
+	DatabaseConnectionManager getDbConnectionManager();
 
 }

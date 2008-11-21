@@ -21,10 +21,22 @@ package ca.sqlpower.wabit;
 
 import java.sql.ResultSet;
 
+import ca.sqlpower.sql.SPDataSource;
+
 public class StubQuery extends StubWabitObject implements Query {
 
     public ResultSet execute() throws QueryException {
         return null;
     }
+
+	public void setDataSource(SPDataSource ds) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setName(String string) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

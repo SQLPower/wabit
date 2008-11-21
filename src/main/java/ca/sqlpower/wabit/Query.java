@@ -22,6 +22,8 @@ package ca.sqlpower.wabit;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import ca.sqlpower.sql.SPDataSource;
+
 /**
  * The interface for anything that can provide data in a report. The canonical
  * example is an SQL query.
@@ -42,5 +44,9 @@ public interface Query extends WabitObject {
      *             If the query fails to execute for any reason.
      */
     public ResultSet execute() throws QueryException;
+    
+    void setDataSource(SPDataSource ds);
+
+	void setName(String string);
     
 }

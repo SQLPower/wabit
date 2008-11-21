@@ -34,7 +34,6 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
@@ -48,12 +47,10 @@ public class ProjectTreeListener extends MouseAdapter {
 	
 	private static final Logger logger = Logger.getLogger(ProjectTreeListener.class);
 	
-	DatabaseConnectionManager dbConnectionManager;
 	private final WabitSwingSession session;
 
 	public ProjectTreeListener(WabitSwingSession session) {
 		this.session = session;
-		dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources());
 	}
 
 	@Override
@@ -95,7 +92,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		menu.add(new AbstractAction("Database Connection Manager...") {
 
 			public void actionPerformed(ActionEvent e) {
-				dbConnectionManager.showDialog(session.getFrame());
+				session.getDbConnectionManager().showDialog(session.getFrame());
 			}
 		});
 

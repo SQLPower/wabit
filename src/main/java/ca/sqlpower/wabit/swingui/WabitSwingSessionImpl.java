@@ -49,6 +49,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.wabit.WabitProject;
@@ -76,14 +77,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private static final String QUERY_DIVIDER_LOCATON = "QueryDividerLocaton";
 
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
-	
+
 	private final WabitSessionContext sessionContext;
 	
 	private final WabitProject project;
 	
 	private JTree projectTree;
 	private JSplitPane wabitPane;
-	private JFrame frame;
+	private final JFrame frame;
 	private static JLabel statusLabel;
 	
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
@@ -108,6 +109,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * project. This will allow editing the currently selected element in the JTree.
 	 */
 	private DataEntryPanel currentEditorPanel;
+	
+	/**
+	 * This DB connection manager will allow editing the db connections in the
+	 * pl.ini file. This DB connection manager can be used anywhere needed in 
+	 * wabit. 
+	 */
+	private final DatabaseConnectionManager dbConnectionManager;
 
 	/**
 	 * Creates a new session 
@@ -121,6 +129,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		statusLabel= new JLabel();
 		
+		frame = new JFrame("Power*Wabit");
+		
+		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 	}
 	/**
 	 * sets the StatusMessage
@@ -134,7 +145,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * @throws ArchitectException 
 	 */
     public void buildUI() throws ArchitectException {
-        frame = new JFrame("Power*Wabit");
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
@@ -146,7 +156,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	projectTree.setCellRenderer(new ProjectTreeCellRenderer());
 
         wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
-		setEditorPanel(new QueryCache());
+		setEditorPanel(project);
     	
 		//prefs
     	if(prefs.get("MainDividerLocaton", null) != null) {
@@ -307,6 +317,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		   	currentEditorPanel = queryPanel;
 		} else if (entryPanelModel instanceof Layout) {
 			currentEditorPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
+		} else if (entryPanelModel instanceof WabitProject) {
+			currentEditorPanel = new ProjectPanel(this);
 		} else {
 			throw new IllegalStateException("Unknown model for the defined types of entry panels. The type is " + entryPanelModel.getClass());
 		}
@@ -335,6 +347,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			wabitPane.remove(currentEditorPanel.getPanel());
 		}
 		return true;
+	}
+	
+	public DatabaseConnectionManager getDbConnectionManager() {
+		return dbConnectionManager;
 	}
 	
 }
