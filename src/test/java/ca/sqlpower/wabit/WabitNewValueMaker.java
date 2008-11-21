@@ -25,6 +25,7 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Layout;
@@ -75,6 +76,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 newValue = PageOrientation.LANDSCAPE;
             } else {
                 newValue = PageOrientation.PORTRAIT;
+            }
+        } else if (valueType.equals(DataType.class)) {
+            if (oldVal == DataType.DATE) {
+                newValue = DataType.NUMERIC;
+            } else {
+                newValue = DataType.DATE;
             }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
