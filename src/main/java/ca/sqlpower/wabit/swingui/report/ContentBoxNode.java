@@ -78,7 +78,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
      */
     private final PropertyChangeListener modelChangeHandler = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent evt) {
+        	updateBoundsFromContentBox();
             repaint();
+            
         }
     };
     
@@ -91,18 +93,31 @@ public class ContentBoxNode extends PNode implements ReportNode {
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
         addInputEventListener(mouseInputHandler);
         contentBox.addPropertyChangeListener(modelChangeHandler);
+        updateBoundsFromContentBox();
+    }
+    
+    private void updateBoundsFromContentBox() {
+        super.setBounds(contentBox.getX(), contentBox.getY(),
+        		contentBox.getWidth(), contentBox.getHeight());
     }
     
     @Override
     public boolean setBounds(double x, double y, double width, double height) {
-        boolean boundsSet = super.setBounds(x, y, width, height);
-        if (boundsSet) {
-            contentBox.setX((int) x);
-            contentBox.setY((int) y);
-            contentBox.setWidth((int) width);
-            contentBox.setHeight((int) height);
-        }
-        return boundsSet;
+    	logger.debug("settingBounds: x="+x+" y="+y+" width="+width+" height="+ height);
+    	contentBox.setX((int) x);
+    	contentBox.setY((int) y);
+    	contentBox.setWidth((int) width);
+    	contentBox.setHeight((int) height);
+        return true;
+    }
+    
+    @Override
+    public void offset(double dx, double dy) {
+    	logger.debug("setting offset: x="+dx+" y="+dy);
+    	double x = contentBox.getX()+dx;
+    	double y = contentBox.getY()+dy;
+    	contentBox.setX((int)x);
+    	contentBox.setY((int)y);
     }
     
     @Override
