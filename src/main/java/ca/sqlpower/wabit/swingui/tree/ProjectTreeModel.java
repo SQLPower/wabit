@@ -93,7 +93,7 @@ public class ProjectTreeModel implements TreeModel {
     }
 
     public void valueForPathChanged(TreePath path, Object newValue) {
-        throw new UnsupportedOperationException("Editing not currently supported");
+    	fireTreeStructureChanged(new TreeModelEvent(newValue, path));
     }
 
     // -------------- treeModel event source support -----------------
