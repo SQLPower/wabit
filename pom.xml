@@ -211,6 +211,13 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/architect_dbtree_lib.jar</systemPath>
 		</dependency>
+		      <dependency>
+            <groupId>ca.sqlpower.architect.util</groupId>
+            <artifactId>architect-test-util</artifactId>
+            <version>0.9.12alpha</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/architect_test_util_lib.jar</systemPath>
+        </dependency>
 		<dependency>
 			<groupId>org.fife</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>

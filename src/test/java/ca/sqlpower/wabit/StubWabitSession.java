@@ -19,26 +19,41 @@
 
 package ca.sqlpower.wabit;
 
-import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.swingui.event.SessionLifecycleListener;
 
-public class StubWabitSessionContext implements WabitSessionContext {
+public class StubWabitSession implements WabitSession {
+	
+	private final WabitSessionContext context;
+	private WabitProject project;
 
-	public void deregisterChildSession(WabitSession child) {
+	public StubWabitSession(WabitSessionContext context) {
+		this.context = context;
+		project = new WabitProject();
 	}
 
-	public DataSourceCollection getDataSources() {
-		return null;
+	public void addSessionLifecycleListener(
+			SessionLifecycleListener<WabitSession> l) {
+		// TODO Auto-generated method stub
+
 	}
 
-	public boolean isMacOSX() {
-		return false;
+	public void close() {
+		// TODO Auto-generated method stub
+
 	}
 
-	public void registerChildSession(WabitSession child) {
+	public WabitSessionContext getContext() {
+		return context;
 	}
 
-	public WabitSession createSession() {
-		return new StubWabitSession(this);
+	public WabitProject getProject() {
+		return project;
+	}
+
+	public void removeSessionLifecycleListener(
+			SessionLifecycleListener<WabitSession> l) {
+		// TODO Auto-generated method stub
+
 	}
 
 }
