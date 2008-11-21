@@ -125,7 +125,7 @@ public class PDFAction extends AbstractAction {
     public static void writePDF(File file, Layout layout)
     throws DocumentException, FileNotFoundException, PrinterException {
         
-    	layout.getNumberOfPages();
+    	int numPages = layout.getNumberOfPages();
         Page page = layout.getPage();
         OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
         Rectangle pageSize;
@@ -144,7 +144,7 @@ public class PDFAction extends AbstractAction {
         Graphics2D pdfGraphics = null;
         try {
             int pageNum = 0;
-            for (;;) {
+            while(pageNum < numPages) {
                     pdfGraphics = pdfContent.createGraphics(pageSize.getWidth(), pageSize.getHeight());
                 int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
                 
