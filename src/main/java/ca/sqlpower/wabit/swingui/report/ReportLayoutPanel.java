@@ -87,7 +87,10 @@ public class ReportLayoutPanel implements DataEntryPanel {
         
         panel = new JPanel(new BorderLayout());
         panel.add(toolbar, BorderLayout.NORTH);
-        panel.add(new PScrollPane(canvas), BorderLayout.CENTER);
+        PScrollPane canvasScrollPane = new PScrollPane(canvas);
+		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);
+		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
+        panel.add(canvasScrollPane, BorderLayout.CENTER);
     }
     
     private class MouseInputHandler implements PInputEventListener {
