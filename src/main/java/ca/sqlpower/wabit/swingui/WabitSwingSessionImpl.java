@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -90,6 +91,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final JFrame frame;
 	private static JLabel statusLabel;
 	
+	private static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
+	
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
 	/**
@@ -133,6 +136,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		statusLabel= new JLabel();
 		
 		frame = new JFrame("Wabit " + WabitVersion.VERSION);
+		frame.setIconImage(FRAME_ICON.getImage());
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 	}
