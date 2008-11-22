@@ -122,10 +122,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
      * @param pageIndex the zero-based page number to print
      */
     public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
-        
-        // TODO count pages up front
-        // TODO handle skipped pages
-        
+                
         if (pageIndex == 0) {
             for (ContentBox cb : page.getContentBoxes()) {
                 cb.getContentRenderer().resetToFirstPage();
