@@ -151,6 +151,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     private Exception executeException;
 
+    /**
+	 * A list containing the ResultSet row numbers that each page starts with.
+	 * The List index corresponds with the page index.
+	 */
     private List<Integer> pageRowNumberList = new ArrayList<Integer>();
     
     public ResultSetRenderer(Query query) {
