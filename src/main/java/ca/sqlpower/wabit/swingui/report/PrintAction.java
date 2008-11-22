@@ -36,6 +36,7 @@ public class PrintAction extends AbstractAction {
 
     public PrintAction(Layout layout) {
         super("Print...", ICON);
+        putValue(SHORT_DESCRIPTION, "Print Report");
         this.layout = layout;
     }
     

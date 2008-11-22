@@ -68,6 +68,7 @@ public class PDFAction extends AbstractAction {
 
     public PDFAction(Component dialogOwner, Layout layout) {
         super("Create PDF...", ICON);
+        putValue(SHORT_DESCRIPTION, "Export report as PDF");
         this.dialogOwner = dialogOwner;
         this.layout = layout;
     }

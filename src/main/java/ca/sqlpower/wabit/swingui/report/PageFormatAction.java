@@ -43,6 +43,7 @@ public class PageFormatAction extends AbstractAction {
 
     public PageFormatAction(Page page) {
         super("Page Format...", ICON);
+        putValue(SHORT_DESCRIPTION, "Change paper size and orientation");
         this.page = page;
     }
     

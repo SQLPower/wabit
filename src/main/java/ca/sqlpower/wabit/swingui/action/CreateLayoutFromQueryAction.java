@@ -55,6 +55,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
 
     public CreateLayoutFromQueryAction(WabitSwingSession session, WabitProject wabitProject, Query query) {
         super("Create Layout...", ADD_LAYOUT_ICON);
+        putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
         this.session = session;
         this.project = wabitProject;
         this.query = query;
