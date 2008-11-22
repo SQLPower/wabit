@@ -24,6 +24,8 @@ import java.io.BufferedWriter;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +40,9 @@ import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
+import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
@@ -162,7 +166,42 @@ public class ProjectXMLDAO {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
 						xml.print(out, "<content-result-set");
 						printAttribute("name", rsRenderer.getName());
-						xml.println(out, "/>");
+						printAttribute("query-id", rsRenderer.getQuery().getUUID().toString());
+						printAttribute("null-string", rsRenderer.getNullString());
+						xml.println(out, ">");
+						xml.indent++;
+						saveFont(rsRenderer.getHeaderFont(), "header-font");
+						saveFont(rsRenderer.getBodyFont(), "body-font");
+						for (WabitObject rendererChild : rsRenderer.getChildren()) {
+							ColumnInfo ci = (ColumnInfo) rendererChild;
+							xml.print(out, "<column-info");
+							printAttribute("name", ci.getName());
+							printAttribute("width", ci.getWidth());
+							printAttribute("column-info-key", ci.getColumnInfoKey());
+							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
+							printAttribute("data-type", ci.getDataType().name());
+							xml.println(out, ">");
+							xml.indent++;
+							if (ci.getFormat() instanceof SimpleDateFormat) {
+								xml.print(out, "<date-format");
+								SimpleDateFormat dateFormat = (SimpleDateFormat) ci.getFormat();
+								printAttribute("format", dateFormat.toPattern());
+								xml.println(out, "/>");
+							} else if (ci.getFormat() instanceof DecimalFormat) {
+								xml.print(out, "<decimal-format");
+								DecimalFormat decimalFormat = (DecimalFormat) ci.getFormat();
+								printAttribute("format", decimalFormat.toPattern());
+								xml.println(out, "/>");
+							} else if (ci.getFormat() == null) {
+								// This is a default format
+							} else {
+								throw new ClassCastException("Cannot cast format of type " + ci.getFormat().getClass() + " to a known format type when saving.");
+							}
+							xml.indent--;
+							xml.println(out, "</column-info>");
+						}
+						xml.indent--;
+						xml.println(out, "</content-result-set>");
 					} else {
 						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
 					}
@@ -189,14 +228,22 @@ public class ProjectXMLDAO {
 	
 	/**
 	 * This will save a font to the print writer. The font tag must be contained within tags of 
-	 * the font's parent object.
+	 * the font's parent object. This allows giving a specific font name for the XML tag.
 	 */
-	private void saveFont(Font font) {
-		xml.print(out, "<font");
+	private void saveFont(Font font, String fontName) {
+		xml.print(out, "<" + fontName);
 		printAttribute("name", font.getFamily());
 		printAttribute("size", font.getSize());
 		printAttribute("style", font.getStyle());
 		xml.println(out, "/>");
+	}
+	
+	/**
+	 * This will save a font to the print writer. The font tag must be contained within tags of 
+	 * the font's parent object.
+	 */
+	private void saveFont(Font font) {
+		saveFont(font, "font");
 	}
 	
 	/**

@@ -21,12 +21,15 @@ package ca.sqlpower.wabit.dao;
 
 import java.awt.Font;
 import java.awt.geom.Point2D;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -34,6 +37,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -45,12 +49,15 @@ import ca.sqlpower.wabit.query.SQLObjectItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
 
@@ -114,6 +121,19 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * This is the current content box being loaded by this SAX handler.
 	 */
 	private ContentBox contentBox;
+
+	/**
+	 * This is the current result set renderer being loaded by this SAX handler.
+	 */
+	private ResultSetRenderer rsRenderer;
+
+	private ColumnInfo colInfo;
+
+	/**
+	 * The list of column info items we are loading for the current result set
+	 * renderer we are loading.
+	 */
+	private List<ColumnInfo> columnInfoList = new ArrayList<ColumnInfo>();
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -416,7 +436,79 @@ public class ProjectSAXHandler extends DefaultHandler {
         		}
          	}
         } else if (name.equals("content-result-set")) {
-        	
+        	String queryID = attributes.getValue("query-id");
+        	checkMandatory("query-id", queryID);
+        	Query query = null;
+        	for (Query q : session.getProject().getQueries()) {
+        		if (q.getUUID().equals(UUID.fromString(queryID))) {
+        			query = q;
+        			break;
+        		}
+        	}
+        	rsRenderer = new ResultSetRenderer(query);
+         	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("query-id")) {
+        			//already loaded
+        		} else if (aname.equals("name")) {
+        			rsRenderer.setName(aval);
+        		} else if (aname.equals("null-string")) {
+        			rsRenderer.setNullString(aval);
+        		}
+         	}
+			columnInfoList.clear();
+        } else if (name.equals("header-font")) {
+        	if (parentIs("content-result-set")) {
+        		rsRenderer.setHeaderFont(loadFont(attributes));
+        	} else {
+        		throw new IllegalStateException("There are no header fonts defined for the parent " + xmlContext.get(xmlContext.size() - 2));
+        	}
+        } else if (name.equals("body-font")) {
+        	if (parentIs("content-result-set")) {
+        		rsRenderer.setBodyFont(loadFont(attributes));
+        	} else {
+        		throw new IllegalStateException("There are no body fonts defined for the parent " + xmlContext.get(xmlContext.size() - 2));
+        	}
+        } else if (name.equals("column-info")) {
+        	String colInfoName = attributes.getValue("name");
+        	String colInfoKey = attributes.getValue("column-info-key");
+        	checkMandatory("column-info-key", colInfoKey);
+        	checkMandatory("name", colInfoName);
+        	colInfo = new ColumnInfo(colInfoName);
+        	colInfo.setColumnInfoKey(colInfoKey);
+        	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("column-info-key") || aname.equals("name")) {
+        			//already loaded
+        		} else if (aname.equals("width")) {
+        			colInfo.setWidth(Integer.parseInt(aval));
+        		} else if (aname.equals("horizontal-align")) {
+        			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(aval));
+        		} else if (aname.equals("data-type")) {
+        			colInfo.setDataType(DataType.valueOf(aval));
+        		}else {
+        			logger.warn("Unexpected attribute of <column-info>: " + aname + "=" + aval);
+        		}
+        	}
+        	columnInfoList.add(colInfo);
+        } else if (name.equals("date-format")) {
+        	if (parentIs("column-info")) {
+        		String format = attributes.getValue("format");
+        		checkMandatory("format", format);
+        		colInfo.setFormat(new SimpleDateFormat(format));
+        	} else {
+        		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
+        	}
+        } else if (name.equals("decimal-format")) {
+        	if (parentIs("column-info")) {
+        		String format = attributes.getValue("format");
+        		checkMandatory("format", format);
+        		colInfo.setFormat(new DecimalFormat(format));
+        	} else {
+        		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
+        	}
         } else if (name.equals("guide")) {
         	String axisName = attributes.getValue("axis");
         	String offsetAmount = attributes.getValue("offset");
@@ -425,13 +517,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	Guide guide = new Guide(Axis.valueOf(axisName), Integer.parseInt(offsetAmount));
         	layout.getPage().addGuide(guide);
         } else if (name.equals("font")) {
-        	String fontName = attributes.getValue("name");
-        	String fontSize = attributes.getValue("size");
-        	String fontStyle= attributes.getValue("style");
-        	checkMandatory("name", fontName);
-        	checkMandatory("style", fontStyle);
-        	checkMandatory("size", fontSize);
-        	Font font = new Font(fontName, Integer.parseInt(fontStyle), Integer.parseInt(fontSize));
+        	Font font = loadFont(attributes);
         	if (parentIs("layout-page")) {
         		layout.getPage().setDefaultFont(font);
         	} else if (parentIs("content-box")) {
@@ -441,6 +527,20 @@ public class ProjectSAXHandler extends DefaultHandler {
         	}
         }
 		
+	}
+
+	/**
+	 * This loads a font based on the given attributes.
+	 */
+	private Font loadFont(Attributes attributes) throws SAXException {
+		String fontName = attributes.getValue("name");
+		String fontSize = attributes.getValue("size");
+		String fontStyle= attributes.getValue("style");
+		checkMandatory("name", fontName);
+		checkMandatory("style", fontStyle);
+		checkMandatory("size", fontSize);
+		Font font = new Font(fontName, Integer.parseInt(fontStyle), Integer.parseInt(fontSize));
+		return font;
 	}
 	
     /**
@@ -475,6 +575,13 @@ public class ProjectSAXHandler extends DefaultHandler {
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
     		query.addTable(table);
+    	} else if (name.equals("content-result-set")) {
+    		ResultSetRenderer newRSRenderer = new ResultSetRenderer(rsRenderer.getQuery(), columnInfoList);
+    		newRSRenderer.setBodyFont(rsRenderer.getBodyFont());
+    		newRSRenderer.setHeaderFont(rsRenderer.getHeaderFont());
+    		newRSRenderer.setName(rsRenderer.getName());
+    		newRSRenderer.setNullString(rsRenderer.getNullString());
+    		contentBox.setContentRenderer(newRSRenderer);
     	}
     	xmlContext.pop();
     }

@@ -40,7 +40,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -158,21 +160,24 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     private List<Integer> pageRowNumberList = new ArrayList<Integer>();
     
     public ResultSetRenderer(Query query) {
+    	this(query, Collections.EMPTY_LIST);
+    }
+    
+    public ResultSetRenderer(Query query, List<ColumnInfo> columnInfoList) {
         this.query = query;
         // TODO listen to query for changes
         ResultSet executedRs = null;
         setUpFormats();
         try {
             executedRs = query.execute(); // TODO run in background
-            initColumns(executedRs.getMetaData());
+            initColumns(executedRs.getMetaData(), columnInfoList);
         } catch (Exception ex) {
             executeException = ex;
         }
         setName("Result Set: " + query.getName());
         rs = executedRs;
-    }
-    
-    /**
+	}
+	/**
      * Adds some formats to the Numeric format as well as the Date Format
      * 
      */
@@ -219,16 +224,33 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	return null;
     }
 
-    /**
-     * Constructor subroutine.
-     * 
-     * @param rsmd The metadata for the current result set.
-     * @throws SQLException If the resultset metadata methods fail.
-     */
-    private void initColumns(ResultSetMetaData rsmd) throws SQLException {
+	/**
+	 * Constructor subroutine.
+	 * 
+	 * @param rsmd
+	 *            The metadata for the current result set.
+	 * @param columnInfoList
+	 *            The list of column information for the result set. This allows
+	 *            defining column information from a load.
+	 * @throws SQLException
+	 *             If the resultset metadata methods fail.
+	 */
+    private void initColumns(ResultSetMetaData rsmd, List<ColumnInfo> columnInfoList) throws SQLException {
+    	Map<String, ColumnInfo> colKeyToInfoMap = new HashMap<String, ColumnInfo>();
+    	for (ColumnInfo info : columnInfoList) {
+    		logger.debug("Loaded key " + info.getColumnInfoKey());
+    		colKeyToInfoMap.put(info.getColumnInfoKey(), info);
+    	}
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
-            ColumnInfo ci = new ColumnInfo(rsmd.getColumnLabel(col));
+        	String columnKey = rsmd.getColumnLabel(col);
+        	logger.debug("Matching key " + columnKey);
+        	ColumnInfo ci;
+        	if (colKeyToInfoMap.get(columnKey) != null) {
+        		ci = colKeyToInfoMap.get(columnKey);
+        	} else {
+        		ci = new ColumnInfo(columnKey);
+        	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
             ci.setParent(ResultSetRenderer.this);
             columnInfo.add(ci);
@@ -490,7 +512,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         FormLayout layout = new FormLayout("fill:pref:grow");
         DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
-        final JTextField columnLabel = new JTextField(ci.getColumnInfoKey());
+        final JTextField columnLabel = new JTextField(ci.getName());
         fb.append(columnLabel);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
@@ -545,7 +567,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         return new DataEntryPanel() {
 
             public boolean applyChanges() {
-                ci.setColumnInfoKey(columnLabel.getText());
+                ci.setName(columnLabel.getText());
                 if (leftAlign.isSelected()) {
                     ci.setHorizontalAlignment(HorizontalAlignment.LEFT);
                 } else if (centreAlign.isSelected()) {
