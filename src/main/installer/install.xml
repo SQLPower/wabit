@@ -16,6 +16,7 @@
 		<langpack iso3="eng"/>
 	</locale>
 	<resources>
+		<res id="Installer.image" src="../src/main/resources/icons/wabit-400.png"/>
 		<res id="shortcutSpec.xml" src="../src/main/installer/WabitShortcut.xml"/>
 		<res id="LicencePanel.licence" src="../LICENSE" />
 	</resources>

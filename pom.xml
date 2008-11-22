@@ -143,6 +143,7 @@
 								<!-- jarbundler is from sourceforge, defined near top of file -->
 								<jarbundler dir="target" name="Wabit" version="${project.version}"
 									mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionImpl"
+									icon="src/main/resources/icons/wabit.icns"
 									jvmversion="1.5+" shortname="Wabit"
 									stubfile="src/main/installer/osx/JavaApplicationStub"
 									vmoptions="-Xmx600m">
