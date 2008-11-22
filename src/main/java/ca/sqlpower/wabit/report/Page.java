@@ -203,7 +203,15 @@ public class Page extends AbstractWabitObject {
         int oldWidth = this.width;
         this.width = width;
         firePropertyChange("width", oldWidth, width);
-        // TODO adjust right margin for new page size?
+        adjustMarginForPageWidth(oldWidth, width);
+    }
+    
+    private void adjustMarginForPageWidth(int oldWidth, int newWidth) {
+        Guide rightMargin = getGuideWithLargestOffset(Axis.VERTICAL);
+        if (rightMargin != null) {
+            int oldMarginWidth = oldWidth - rightMargin.getOffset();
+            rightMargin.setOffset(newWidth - oldMarginWidth); // XXX respect orientation!
+        }
     }
 
     public int getHeight() {
@@ -214,9 +222,17 @@ public class Page extends AbstractWabitObject {
         int oldHeight = this.height;
         this.height = height;
         firePropertyChange("height", oldHeight, height);
-        // TODO adjust bottom margin for new page size?
+        adjustMarginForPageHeight(oldHeight, height); // XXX respect orientation!
     }
 
+    private void adjustMarginForPageHeight(int oldHeight, int newHeight) {
+        Guide bottomMargin = getGuideWithLargestOffset(Axis.HORIZONTAL);
+        if (bottomMargin != null) {
+            int oldMarginHeight = oldHeight - bottomMargin.getOffset();
+            bottomMargin.setOffset(newHeight - oldMarginHeight);
+        }
+    }
+    
     public Font getDefaultFont() {
         return defaultFont;
     }
@@ -235,6 +251,15 @@ public class Page extends AbstractWabitObject {
         PageOrientation oldOrientation = this.orientation;
         this.orientation = orientation;
         firePropertyChange("orientation", oldOrientation, orientation);
+        if (oldOrientation != orientation) {
+            if (oldOrientation == PageOrientation.PORTRAIT) {
+                adjustMarginForPageHeight(getHeight(), getWidth());
+                adjustMarginForPageWidth(getWidth(), getHeight());
+            } else {
+                adjustMarginForPageHeight(getWidth(), getHeight());
+                adjustMarginForPageWidth(getHeight(), getWidth());
+            }
+        }
     }
     
     public void addContentBox(ContentBox addme) {
