@@ -45,7 +45,7 @@
 			<fileset dir="../" targetdir="$INSTALL_PATH">
 				<include name="LICENSE"/>
 			</fileset>
-			<fileset dir="../src/main/installer" targetdir="$INSTALL_PATH">
+			<fileset dir="../src/main/resources/icons" targetdir="$INSTALL_PATH">
 				<include name="*.ico"/>
 			</fileset>
 		</pack>

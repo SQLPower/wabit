@@ -6,6 +6,7 @@
 		commandLine="-Xmx600m -jar wabit.jar"
 		workingDirectory="$INSTALL_PATH"
 		description="Wabit Ad-hoc Query and Reporting Tool"
+		iconFile="$INSTALL_PATH/wabit.ico" 
 		desktop="yes" 
 		startMenu="yes">
 	</shortcut>
