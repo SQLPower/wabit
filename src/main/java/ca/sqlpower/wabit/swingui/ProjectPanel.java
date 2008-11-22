@@ -25,23 +25,27 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.CellConstraints;
-import com.jgoodies.forms.layout.FormLayout;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
+import ca.sqlpower.swingui.db.JDBCDriverPanel;
 import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.query.QueryCache;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.CellConstraints;
+import com.jgoodies.forms.layout.FormLayout;
 
 /**
  * This panel will display information about the project. It will
@@ -93,10 +97,24 @@ public class ProjectPanel implements DataEntryPanel {
 	}
 	
 	private void buildUI() {
-		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, pref, pref:grow", "pref, pref, pref, pref"));
+		Icon wabitIcon =
+            new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabit-400.png"));
+		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, fill:pref, pref:grow", "pref, pref, pref, pref"));
 		CellConstraints cc = new CellConstraints();
-		builder.add(new JLabel("Welcome to Wabit"), cc.xy(2, 1));
-		builder.add(new JLabel("To get started in creating a report add data sources to your project."), cc.xy(2, 3));
+		builder.add(new JLabel("<html><h2>Welcome to Wabit " + WabitVersion.VERSION, JLabel.CENTER), cc.xy(2, 1));
+		builder.add(new JLabel(wabitIcon), cc.xy(2, 2));
+		builder.add(new JLabel(
+				"<html><br><br>" +
+				"<p>Creating a report in Wabit involves three steps:" +
+				"<ol>" +
+				" <li> add a data source to your project" +
+				" <li> formulate a query with the help of the query builder" +
+				" <li> create a page layout for your query" +
+				"</ol>" +
+				"<br>" +
+				"<p>Your page layout can be printed directly or saved to a PDF file." +
+				"<p>To add a data source to your project, choose one from the list<br>" +
+				"   below and press the <i>Add To Project</i> button."), cc.xy(2, 3));
 		List<Action> actionList = new ArrayList<Action>();
 		actionList.add(addDSToProjectAction);
 		dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
