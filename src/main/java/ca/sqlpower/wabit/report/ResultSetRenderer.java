@@ -263,6 +263,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     public void resetToFirstPage() {
         try {
             if (rs != null) rs.beforeFirst();
+            pageRowNumberList.clear();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -314,6 +315,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         		pageRowNumberList.add(rs.getRow());
         	}
         	
+        	logger.debug("Setting result set to start at " + pageRowNumberList.get(pageIndex));
         	int pageToSet = pageRowNumberList.get(pageIndex);
         	rs.absolute(pageRowNumberList.get(pageIndex));
    			
@@ -339,7 +341,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             
             List<String> lastRenderedRow = new ArrayList<String>();
             Map<ColumnInfo, Double> subtotalForCols = new HashMap<ColumnInfo, Double>();
+            int rowCount = 0;
             while ( rs.next() && ((y + fm.getHeight()) < contentBox.getHeight()) ) {
+            	rowCount++;
             	List<String> renderedRow = new ArrayList<String>();
             	
                 x = 0;
@@ -393,6 +397,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	}
                 }
             }
+            logger.debug("Content box has height " + contentBox.getHeight() + " ended at row " + rs.getRow() + " in result set.");
+            logger.debug("Printed " + rowCount + " rows in the current result set renderer.");
             y += fm.getHeight();
             renderSubtotals(g, fm, y, colCount, subtotalForCols);
             return !rs.isAfterLast();
