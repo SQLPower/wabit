@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
@@ -64,6 +66,8 @@ public class ConstantPNode extends PNode implements WabitNode {
 	private EditablePStyledTextWithOptionBox whereText;
 	
 	private final List<PropertyChangeListener> changeListeners;
+	
+	private final PCanvas canvas;
 	
 	private EditStyledTextListener removeItemListener = new EditStyledTextListener() {
 		private String oldText;
@@ -119,6 +123,7 @@ public class ConstantPNode extends PNode implements WabitNode {
 
 	public ConstantPNode(Item source, QueryPen mouseStates, PCanvas canvas) {
 		this.item = source;
+		this.canvas = canvas;
 		item.addPropertyChangeListener(itemChangeListener);
 		
 		// We need to know when the Model does a SetName so that we can update the View Side.
@@ -137,6 +142,7 @@ public class ConstantPNode extends PNode implements WabitNode {
 				if(item instanceof StringCountItem) {
 					if(!((StringCountItem)item).isGroupingEnabled()) {
 						selectionCheckbox.setSelected(false);
+						JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(ConstantPNode.this.canvas), "GroupBy must be enabled to select this constant.");
 					}
 					item.setSelected(selectionCheckbox.isSelected());
 				} else {
