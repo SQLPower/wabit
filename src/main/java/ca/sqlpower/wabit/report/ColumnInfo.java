@@ -44,6 +44,8 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String HORIZONAL_ALIGNMENT_CHANGED = "horizontalAlignment";
 	public static final String COLUMN_INFO_KEY_CHANGED = "columnInfoKey";
 	public static final String WIDTH_CHANGED = "width";
+	private static final String WILL_BREAK_CHANGED = "willBreak";
+	private static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
 	
 	private int width = DEFAULT_COL_WIDTH;
 
@@ -52,6 +54,18 @@ public class ColumnInfo extends AbstractWabitObject{
 	private DataType dataType = null;
 
 	private Format format = null;
+	
+	/**
+	 * Defines if the column described by this information
+	 * should have a break after every value change.
+	 */
+	private boolean willBreak = false;
+	
+	/**
+	 * defines if this column should be totaled before each new break. Only
+	 * numeric columns should allow subtotals.
+	 */
+	private boolean willSubtotal = false;
 
 	public ColumnInfo(String label) {
 		setColumnInfoKey(label);
@@ -105,6 +119,24 @@ public class ColumnInfo extends AbstractWabitObject{
 
 	public List<? extends WabitObject> getChildren() {
 		return Collections.emptyList();
+	}
+
+	public boolean getWillBreak() {
+		return willBreak;
+	}
+
+	public void setWillBreak(boolean willBreak) {
+		firePropertyChange(WILL_BREAK_CHANGED, this.willBreak, willBreak);
+		this.willBreak = willBreak;
+	}
+
+	public boolean getWillSubtotal() {
+		return willSubtotal;
+	}
+
+	public void setWillSubtotal(boolean subtotal) {
+		firePropertyChange(WILL_SUBTOTAL_CHANGED, this.willSubtotal, subtotal);
+		this.willSubtotal = subtotal;
 	}
 }
 

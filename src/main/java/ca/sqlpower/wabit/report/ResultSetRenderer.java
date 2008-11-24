@@ -49,6 +49,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -336,10 +337,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             g.setFont(getBodyFont());
             fm = g.getFontMetrics();
             
+            List<String> lastRenderedRow = new ArrayList<String>();
+            Map<ColumnInfo, Double> subtotalForCols = new HashMap<ColumnInfo, Double>();
             while ( rs.next() && ((y + fm.getHeight()) < contentBox.getHeight()) ) {
+            	List<String> renderedRow = new ArrayList<String>();
+            	
                 x = 0;
-                y += fm.getHeight();
-                
                 
                 for (int col = 1; col <= colCount; col++) {
                     ColumnInfo ci = columnInfo.get(col-1);
@@ -351,17 +354,94 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                     } else {
                     	formattedValue = replaceNull(rs.getString(col));
                     }
-                    int offset = ci.getHorizontalAlignment().computeStartX(
-                            ci.getWidth(), fm.stringWidth(formattedValue));
-                    g.drawString(formattedValue, x + offset, y); // TODO clip and/or line wrap and/or warn
-                    x += ci.getWidth();
+                    renderedRow.add(formattedValue);
+                }
+                
+                for (int i = 0; i < colCount; i++) {
+                	ColumnInfo ci = columnInfo.get(i);
+                	if (ci.getWillBreak() && i < lastRenderedRow.size() && !lastRenderedRow.get(i).equals(renderedRow.get(i))) {
+                		y = renderSubtotals(g, fm, y, colCount,
+                				subtotalForCols);
+                		g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
+                		subtotalForCols.clear();
+                		break;
+                	}
+                }
+                
+                y += fm.getHeight();
+                lastRenderedRow.clear();
+                for (int col = 0; col < colCount; col++) {
+                	ColumnInfo ci = columnInfo.get(col);
+                	String formattedValue = renderedRow.get(col);
+                	int offset = ci.getHorizontalAlignment().computeStartX(
+                			ci.getWidth(), fm.stringWidth(formattedValue));
+                	g.drawString(formattedValue, x + offset, y); // TODO clip and/or line wrap and/or warn
+                	x += ci.getWidth();
+                	lastRenderedRow.add(formattedValue);
+                	if (ci.getDataType().equals(DataType.NUMERIC)) {
+                		try {
+                			if (subtotalForCols.get(ci) == null) {
+                				subtotalForCols.put(ci, Double.parseDouble(rs.getString(col + 1)));
+                			} else {
+                				subtotalForCols.put(ci, subtotalForCols.get(ci) + Double.parseDouble(formattedValue));
+                			}
+                		} catch (NumberFormatException e) {
+                			//If the formatted value is null then the parse of a double
+                			//will fail. We will not sum null values and treat them as 0.
+                		}
+                	}
                 }
             }
+            renderSubtotals(g, fm, y, colCount, subtotalForCols);
             return !rs.isAfterLast();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
+    
+    /**
+     * This will render the subtotals at the current y position.
+     * @param g The graphic to render the subtotals to.
+     * @param fm The current font metrics.
+     * @param y The y position for the subtotals to start at.
+     * @param colCount The number of columns that exist in the result set.
+     * @param subtotalForCols A map that maps column info to their subtotal if they have one.
+     * @return The new y position after the subtotal rows.
+     */
+	private int renderSubtotals(Graphics2D g, FontMetrics fm, int y,
+			int colCount, Map<ColumnInfo, Double> subtotalForCols) {
+		if (!subtotalForCols.isEmpty()) {
+			int localX = 0;
+
+			boolean firstSubtotal = true;
+			for (int subCol = 0; subCol < colCount; subCol++) {
+				ColumnInfo colInfo = columnInfo.get(subCol);
+				Double subtotal = subtotalForCols.get(colInfo);
+				if (colInfo.getWillSubtotal() && subtotal != null) {
+					if (firstSubtotal) {
+						y += 2 * fm.getHeight();
+						g.setFont(getHeaderFont());
+						g.drawString("Subtotal", 0, y);
+						y += g.getFontMetrics().getHeight();
+						g.setFont(getBodyFont());
+						firstSubtotal = false;
+					}
+					String formattedValue;
+					if (colInfo.getFormat() != null) {
+						formattedValue = colInfo.getFormat().format(subtotal);
+					} else {
+						formattedValue = subtotal.toString();
+					}
+					int offset = colInfo.getHorizontalAlignment().computeStartX(
+							colInfo.getWidth(), fm.stringWidth(formattedValue));
+					g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
+				}
+				localX += colInfo.getWidth();
+			}
+			y += fm.getHeight();
+		}
+		return y;
+	}
 
     private String replaceNull(String string) {
         if (string == null) {
@@ -560,6 +640,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 				setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
 			}
 		});
+        final JCheckBox breakCheckbox = new JCheckBox("Break on Column");
+        final JCheckBox subtotalCheckbox = new JCheckBox("Subtotal");
+        fb.append(breakCheckbox);
+        breakCheckbox.setSelected(ci.getWillBreak());
+        if (ci.getDataType().equals(DataType.NUMERIC)) {
+        	fb.append(subtotalCheckbox);
+        	subtotalCheckbox.setSelected(ci.getWillSubtotal());
+        }
         
         final JPanel panel = fb.getPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 3, 3, 5));
@@ -586,6 +674,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
                 }
                 ci.setWidth((Integer) widthSpinner.getValue());
+                
+                ci.setWillBreak(breakCheckbox.isSelected());
+                ci.setWillSubtotal(subtotalCheckbox.isSelected());
+                
                 return true;
             }
 

@@ -42,7 +42,6 @@ import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
@@ -180,6 +179,8 @@ public class ProjectXMLDAO {
 							printAttribute("column-info-key", ci.getColumnInfoKey());
 							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
 							printAttribute("data-type", ci.getDataType().name());
+							printAttribute("break-on-column", Boolean.toString(ci.getWillBreak()));
+							printAttribute("will-subtotal", Boolean.toString(ci.getWillSubtotal()));
 							xml.println(out, ">");
 							xml.indent++;
 							if (ci.getFormat() instanceof SimpleDateFormat) {

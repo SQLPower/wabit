@@ -488,6 +488,10 @@ public class ProjectSAXHandler extends DefaultHandler {
         			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(aval));
         		} else if (aname.equals("data-type")) {
         			colInfo.setDataType(DataType.valueOf(aval));
+        		} else if (aname.equals("break-on-column")) {
+        			colInfo.setWillBreak(Boolean.parseBoolean(aval));
+        		} else if (aname.equals("will-subtotal")) {
+        			colInfo.setWillSubtotal(Boolean.parseBoolean(aval));
         		}else {
         			logger.warn("Unexpected attribute of <column-info>: " + aname + "=" + aval);
         		}
