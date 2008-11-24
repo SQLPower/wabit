@@ -21,9 +21,6 @@ package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -437,17 +434,8 @@ public class QueryPen implements MouseState, WabitNode {
 		} else {
 			acceleratorKeyString= "Ctrl";
 		}
-		canvas = new PSwingCanvas() {
-			@Override
-			public void paintComponent(Graphics g) {
-				setBackground(new Color(0x00ffffff, true));
-				Graphics2D g2 = (Graphics2D) g;
-				g2.setPaint(new GradientPaint(0, 0, BG_TOP_LEFT_COLOUR, getWidth(), getHeight(), BG_BOTTOM_RIGHT_COLOUR));
-				g2.fillRect(0, 0, getWidth(), getHeight());
-				super.paintComponent(g);
-			}
-		};
-
+		canvas = new PSwingCanvas();
+		canvas.setBackground(Color.black);
 		canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING); 
 		scrollPane = new PScrollPane(canvas);
