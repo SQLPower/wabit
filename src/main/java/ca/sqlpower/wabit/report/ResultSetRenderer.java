@@ -360,6 +360,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 for (int i = 0; i < colCount; i++) {
                 	ColumnInfo ci = columnInfo.get(i);
                 	if (ci.getWillBreak() && i < lastRenderedRow.size() && !lastRenderedRow.get(i).equals(renderedRow.get(i))) {
+                		y += fm.getHeight();
                 		y = renderSubtotals(g, fm, y, colCount,
                 				subtotalForCols);
                 		g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
@@ -392,6 +393,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	}
                 }
             }
+            y += fm.getHeight();
             renderSubtotals(g, fm, y, colCount, subtotalForCols);
             return !rs.isAfterLast();
         } catch (Exception ex) {
@@ -419,7 +421,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 				Double subtotal = subtotalForCols.get(colInfo);
 				if (colInfo.getWillSubtotal() && subtotal != null) {
 					if (firstSubtotal) {
-						y += 2 * fm.getHeight();
+						y += fm.getHeight();
 						g.setFont(getHeaderFont());
 						g.drawString("Subtotal", 0, y);
 						y += g.getFontMetrics().getHeight();
