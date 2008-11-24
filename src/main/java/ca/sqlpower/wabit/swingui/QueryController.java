@@ -43,11 +43,13 @@ import javax.swing.text.JTextComponent;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
+import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -156,7 +158,12 @@ public class QueryController {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
 				Item column = queryCache.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
-				queryCache.setGrouping(column, (String)e.getNewValue());
+				if(column instanceof StringCountItem) {
+					logger.debug("this column is a StringCountItem, we will only setGrouping to Count");
+					queryCache.setGrouping(column, "COUNT");
+				} else {
+					queryCache.setGrouping(column, (String)e.getNewValue());
+				}
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
 				int indexOfTextField = cellRenderer.getTextFields().indexOf((JTextField)e.getSource());

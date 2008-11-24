@@ -315,7 +315,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 	/**
 	 * Adds the item to this ConstanstPane in a new ConstantPNode.
 	 */
-	private void addItem(Item item) {
+	public void addItem(Item item) {
 		ConstantPNode newConstantNode = new ConstantPNode(item, mouseState, canvas);
 		newConstantNode.addChangeListener(resizeListener);
 		newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);

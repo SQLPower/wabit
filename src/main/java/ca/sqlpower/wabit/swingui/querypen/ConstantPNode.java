@@ -32,6 +32,8 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
@@ -67,12 +69,11 @@ public class ConstantPNode extends PNode implements WabitNode {
 		private String oldText;
 		public void editingStopping() {
 			if (constantText.getEditorPane().getText().length() <= 0) {
-				for (PropertyChangeListener l : changeListeners) {
-					l.propertyChange(new PropertyChangeEvent(ConstantPNode.this, Item.PROPERTY_ITEM_REMOVED, item, null));
-				}
-				item.getContainer().removeItem(item);
+				removeItem();
 			} else if (item instanceof StringItem) {
 				((StringItem)item).setName(constantText.getEditorPane().getText());
+			}else if (item instanceof StringCountItem) {
+				((StringCountItem)item).setName(constantText.getEditorPane().getText());
 			}
 			for (PropertyChangeListener listener : changeListeners) {
 				listener.propertyChange(new PropertyChangeEvent(constantText, Item.PROPERTY_ITEM, oldText, constantText.getEditorPane().getText().trim()));
@@ -83,6 +84,14 @@ public class ConstantPNode extends PNode implements WabitNode {
 		}
 	};
 	
+	private void removeItem() {
+		logger.debug("removing item");
+		for (PropertyChangeListener l : changeListeners) {
+			l.propertyChange(new PropertyChangeEvent(ConstantPNode.this, Item.PROPERTY_ITEM_REMOVED, item, null));
+		}
+		item.getContainer().removeItem(item);
+	}
+	
 	private final PropertyChangeListener itemChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			for (PropertyChangeListener l : changeListeners) {
@@ -90,10 +99,33 @@ public class ConstantPNode extends PNode implements WabitNode {
 			}
 		}
 	};
+	
+	private final PropertyChangeListener modelChangeListener = new PropertyChangeListener(){
+
+		public void propertyChange(PropertyChangeEvent evt) {
+			if(evt.getPropertyName().equals(Item.PROPERTY_ITEM)) {
+				constantText.getEditorPane().setText(evt.getNewValue().toString());
+				if(constantText.getEditorPane().getText().length() <= 0) {
+					removeItem();
+				} else {
+				logger.debug("Model Name changed, updating view");
+				constantText.syncWithDocument();
+				}
+			} else if(evt.getPropertyName().equals(QueryCache.GROUPING_CHANGED)) {
+					selectionCheckbox.setSelected(false);
+			}
+			
+		}};
 
 	public ConstantPNode(Item source, QueryPen mouseStates, PCanvas canvas) {
 		this.item = source;
 		item.addPropertyChangeListener(itemChangeListener);
+		
+		// We need to know when the Model does a SetName so that we can update the View Side.
+		if(item instanceof StringCountItem) {
+			logger.debug("item is an instance of StringCountItem, adding modelNameChangeListener");
+			item.addPropertyChangeListener(modelChangeListener);
+		}
 		changeListeners = new ArrayList<PropertyChangeListener>();
 		
 		selectionCheckbox = new JCheckBox();
@@ -102,7 +134,14 @@ public class ConstantPNode extends PNode implements WabitNode {
 		addChild(swingCheckbox);
 		selectionCheckbox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				item.setSelected(selectionCheckbox.isSelected());
+				if(item instanceof StringCountItem) {
+					if(!((StringCountItem)item).isGroupingEnabled()) {
+						selectionCheckbox.setSelected(false);
+					}
+					item.setSelected(selectionCheckbox.isSelected());
+				} else {
+					item.setSelected(selectionCheckbox.isSelected());
+				}
 			}
 		});
 		

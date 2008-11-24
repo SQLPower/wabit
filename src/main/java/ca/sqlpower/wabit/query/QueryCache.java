@@ -65,6 +65,15 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	private static final String PROPERTY_QUERY = "query";
 	
+	
+	public static final String GROUPING_CHANGED = " GROUPING_CHANGED";
+	
+	
+	/**
+	 * A property name that is thrown when the Table is removed.
+	 */
+	public static final String PROPERTY_TABLE_REMOVED = "PROPERTY_TABLE_REMOVED"; 
+	
 	/**
 	 * The grouping function defined on a group by event if the column is
 	 * to be grouped by and not aggregated on.
@@ -405,6 +414,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			groupByAggregateMap.clear();
 			havingMap.clear();
 		}
+		firePropertyChange(GROUPING_CHANGED, groupingEnabled, enabled);
 		groupingEnabled = enabled;
 	}
 	
@@ -442,7 +452,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				query.append(", ");
 			}
 			if (groupByAggregateMap.containsKey(col)) {
-				query.append(groupByAggregateMap.get(col).toString() + "(");
+				if(col instanceof StringCountItem) {
+					query.append(col.getName());
+				} else {
+					query.append(groupByAggregateMap.get(col).toString() + "(");
+				}
 			}
 			String alias = tableAliasMap.get(col.getContainer());
 			if (alias != null) {
@@ -450,8 +464,10 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			} else if (fromTableList.contains(col.getContainer())) {
 				query.append(col.getContainer().getName() + ".");
 			}
-			query.append(col.getName());
-			if (groupByAggregateMap.containsKey(col)) {
+			if(!(col instanceof StringCountItem)) {
+				query.append(col.getName());			
+			}
+			if (groupByAggregateMap.containsKey(col) && !(col instanceof StringCountItem)) {
 				query.append(")");
 			}
 			if (col.getAlias() != null && col.getAlias().trim().length() > 0) {
@@ -633,14 +649,13 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		}
 		
 		if (!orderByArgumentMap.isEmpty()) {
-			query.append("\nORDER BY");
 			boolean isFirstOrder = true;
 			for (Item col : orderByList) {
 				if (col instanceof StringItem) {
 					continue;
 				}
 				if (isFirstOrder) {
-					query.append(" ");
+					query.append("\nORDER BY ");
 					isFirstOrder = false;
 				} else {
 					query.append(", ");
@@ -781,7 +796,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			removeItem(col);
 		}
 		if (!compoundEdit) {
-			firePropertyChange(PROPERTY_QUERY, table, null);
+			firePropertyChange(PROPERTY_TABLE_REMOVED, table, null);
 		}
 	}
 
@@ -916,7 +931,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			groupByAggregateMap.remove(column);
 			logger.debug("Added " + column.getName() + " to group by list.");
 		} else {
-			if (SQLGroupFunction.valueOf(groupByAggregate).equals(groupByAggregateMap.get(column))) {
+			if (SQLGroupFunction.valueOf(groupByAggregate).equals(groupByAggregateMap.get(column)) 
+					&& !(column instanceof StringCountItem)) {
 				return;
 			}
 			groupByAggregateMap.put(column, SQLGroupFunction.valueOf(groupByAggregate));

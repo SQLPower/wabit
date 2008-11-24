@@ -69,6 +69,7 @@ import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
+import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.SQLObjectSelection;
@@ -188,6 +189,10 @@ public class QueryPen implements MouseState, WabitNode {
 					}
 					
 					topLayer.addChild(pane);
+					if(QueryPen.this.model.getFromTableList().isEmpty()) {
+						StringCountItem countItem = new StringCountItem(QueryPen.this.model);
+						QueryPen.this.model.getConstantsContainer().addItem(countItem);
+					}
 					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_ADDED, null, pane.getModel()));
 					for (UnmodifiableItemPNode itemNode : pane.getContainedItems()) {
 						itemNode.setInSelected(true);
