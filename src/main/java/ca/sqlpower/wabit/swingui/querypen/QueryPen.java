@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -34,6 +35,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -50,11 +53,15 @@ import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -75,8 +82,6 @@ import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.SQLObjectSelection;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.action.CanvasZoomInAction;
-import ca.sqlpower.wabit.swingui.action.CanvasZoomOutAction;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 import edu.umd.cs.piccolo.PLayer;
@@ -283,8 +288,6 @@ public class QueryPen implements MouseState, WabitNode {
 		}
 	}
 
-	protected static final double ZOOM_CONSTANT = 0.1;
-
 	private static final float SELECTION_TRANSPARENCY = 0.33f;
 
 	/**
@@ -308,8 +311,6 @@ public class QueryPen implements MouseState, WabitNode {
 	 */
 	private final PLayer topLayer;
 	
-	private final JButton zoomInButton;
-	private final JButton zoomOutButton;
 	private final JButton createJoinButton;
 	
 	/**
@@ -346,6 +347,16 @@ public class QueryPen implements MouseState, WabitNode {
 	 * things or add unusual values to a select statement.
 	 */
 	private ConstantsPane constantsContainer;
+	
+	/**
+	 * This slider will zoom the canvas in and out.
+	 */
+	private JSlider zoomSlider;
+	
+	/**
+	 * This panel contains the zoom slider and its associated images.
+	 */
+	private JPanel zoomSliderContainer;
 
 	/**
 	 * Deletes the selected item from the QueryPen.
@@ -425,8 +436,8 @@ public class QueryPen implements MouseState, WabitNode {
         queryPenBar.setToolTipText("QueryPen Toolbar");
         queryPenBar.add(deleteButton);
         queryPenBar.add(getCreateJoinButton());
-        queryPenBar.add(getZoomInButton());
-        queryPenBar.add(getZoomOutButton());
+        queryPenBar.addSeparator();
+        queryPenBar.add(getZoomSliderContainer());
         
         panel.add(queryPenBar, BorderLayout.NORTH);
         panel.setBackground(Color.WHITE);
@@ -461,21 +472,45 @@ public class QueryPen implements MouseState, WabitNode {
         canvas.getRoot().addChild(joinLayer);
         canvas.getCamera().addLayer(0, joinLayer);
                
-        zoomInAction = new CanvasZoomInAction(canvas); 
-        zoomInButton = new JButton(zoomInAction);
-        zoomInButton.setToolTipText( ZOOM_IN_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift +)");
-        canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+        final int defaultSliderValue = 500;
+        zoomSlider = new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
+        zoomSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				canvas.getCamera().setViewScale((double)zoomSlider.getValue()/defaultSliderValue);
+			}
+		});
+        zoomSlider.addMouseListener(new MouseAdapter() {
+        	@Override
+        	public void mouseReleased(MouseEvent e) {
+        		if ((e.getModifiers() & Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) > 0) {
+        			zoomSlider.setValue(defaultSliderValue);
+        		}
+        	}
+		});
+        zoomInAction = new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				zoomSlider.setValue(zoomSlider.getValue() + 50);
+			}
+		};
+        zoomSliderContainer = new JPanel(new BorderLayout());
+        zoomSliderContainer.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
+        zoomSliderContainer.add(zoomSlider, BorderLayout.CENTER);
+        zoomSliderContainer.add(new JLabel(new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/zoom_in16.png"))), BorderLayout.EAST);
+        zoomSliderContainer.add(new JLabel(new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/zoom_out16.png"))), BorderLayout.WEST);
+        panel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
                 , ZOOM_IN_ACTION);
-        canvas.getActionMap().put(ZOOM_IN_ACTION, zoomInAction);        
-        zoomOutAction = new CanvasZoomOutAction(canvas);
-        canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+        panel.getActionMap().put(ZOOM_IN_ACTION, zoomInAction);        
+        zoomOutAction = new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				zoomSlider.setValue(zoomSlider.getValue() - 50);
+			}
+		};
+        panel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_MASK)
                 , ZOOM_OUT_ACTION);
-        canvas.getActionMap().put(ZOOM_OUT_ACTION, zoomOutAction);
+        panel.getActionMap().put(ZOOM_OUT_ACTION, zoomOutAction);
         
-        zoomOutButton = new JButton(zoomOutAction);
-        zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift -)");
         ImageIcon joinIcon = new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/j.png"));
         AbstractAction joinAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
@@ -559,12 +594,12 @@ public class QueryPen implements MouseState, WabitNode {
 		return scrollPane;
 	}
 
-	public JButton getZoomInButton() {
-		return zoomInButton;
+	public JSlider getZoomSlider() {
+		return zoomSlider;
 	}
-
-	public JButton getZoomOutButton() {
-		return zoomOutButton;
+	
+	public JPanel getZoomSliderContainer() {
+		return zoomSliderContainer;
 	}
 	
 	public JButton getCreateJoinButton() {
