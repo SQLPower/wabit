@@ -115,6 +115,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * project. This will allow editing the currently selected element in the JTree.
 	 */
 	private DataEntryPanel currentEditorPanel;
+
+	/**
+	 * This is the model of the current panel.
+	 */
+	private Object currentEditorPanelModel;
 	
 	/**
 	 * This DB connection manager will allow editing the db connections in the
@@ -122,6 +127,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * wabit. 
 	 */
 	private final DatabaseConnectionManager dbConnectionManager;
+
 
 	/**
 	 * Creates a new session 
@@ -314,9 +320,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public void setEditorPanel(Object entryPanelModel) {
+		if (entryPanelModel == currentEditorPanelModel) {
+			return;
+		}
 		if (!removeEditorPanel()) {
 			return;
 		}
+		currentEditorPanelModel = entryPanelModel;
 		if (entryPanelModel instanceof QueryCache) {
 			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
 		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
