@@ -105,10 +105,18 @@ public class QueryPen implements MouseState, WabitNode {
     
     private static final int TABLE_SPACE = 5;
     
-	protected static final Color BG_TOP_LEFT_COLOUR = new Color(0x333333);
-
-	protected static final Color BG_BOTTOM_RIGHT_COLOUR = new Color(0x000000);
+	public static final Color SELECTED_CONTAINER_COLOUR = new Color(0xff9900);
+	
+	public static final Color SELECTED_CONTAINER_GRADIENT_COLOUR = new Color(0xffcc66);
     
+	public static final Color UNSELECTED_CONTAINER_COLOUR = new Color(0x999999);
+	
+	public static final Color UNSELECTED_CONTAINER_GRADIENT_COLOUR = new Color(0xcccccc);
+	
+	public static final float CONTAINER_ROUND_CORNER_RADIUS = 8f;
+	
+	public static final Color WHERE_BACKGROUND_COLOUR = new Color(0xeeeeee);
+	
     private JPanel panel;
     
     
@@ -212,7 +220,7 @@ public class QueryPen implements MouseState, WabitNode {
 									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
 									logger.debug("FK item node is " + fkItemNode);
 									if (pkItemNode != null && fkItemNode != null) {
-										JoinLine join = new JoinLine(canvas, pkItemNode, fkItemNode);
+										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
@@ -234,7 +242,7 @@ public class QueryPen implements MouseState, WabitNode {
 									if (pkItemNode != null && fkItemNode != null) {
 										logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
 										logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
-										JoinLine join = new JoinLine(canvas, fkItemNode, pkItemNode);
+										JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
 										join.getModel().addJoinChangeListener(queryChangeListener);
 										joinLayer.addChild(join);
 										for (PropertyChangeListener l : queryListeners) {
@@ -539,7 +547,7 @@ public class QueryPen implements MouseState, WabitNode {
 			}
         }
         for (SQLJoin join : model.getJoins()) {
-        	joinLayer.addChild(new JoinLine(canvas, loadedItemPNodes.get(join.getLeftColumn()), loadedItemPNodes.get(join.getRightColumn()), join));
+        	joinLayer.addChild(new JoinLine(QueryPen.this, canvas, loadedItemPNodes.get(join.getLeftColumn()), loadedItemPNodes.get(join.getRightColumn()), join));
         }
 	}
 	
@@ -630,7 +638,7 @@ public class QueryPen implements MouseState, WabitNode {
 		return acceleratorKeyString;
 	}
 	
-	public PSwingCanvas getQueryPenCavas () {
+	public PSwingCanvas getQueryPenCanvas () {
 		return canvas;
 	}
 

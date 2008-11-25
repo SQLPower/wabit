@@ -347,10 +347,10 @@ public class QueryPanel implements DataEntryPanel {
     	playPenExecuteButton.setIcon(executeIcon);
     	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ queryPen.getAcceleratorKeyString()+ " R)");
     	queryPen.getQueryPenBar().add(playPenExecuteButton, 0);
-    	queryPen.getQueryPenCavas().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+    	queryPen.getQueryPenCanvas().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
                 , QUERY_EXECUTE);
-    	queryPen.getQueryPenCavas().getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
+    	queryPen.getQueryPenCanvas().getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
     	
     	queryPen.getQueryPenBar().addSeparator();
     	

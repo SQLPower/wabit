@@ -44,6 +44,7 @@ import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
@@ -224,14 +225,16 @@ public class JoinLine extends PNode implements WabitNode {
 			updateLine();
 		}
 	};
+
+	private final QueryPen queryPen;
 	
 	/**
 	 * This will create a join line with properties taken from the model. The ItemPNodes passed in must
 	 * contain the left and right items respectively so the JoinLine can connect itself correctly. Failing
 	 * to pass in the correct ItemPNodes will result in an IllegalStateException.
 	 */
-	public JoinLine(PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode, SQLJoin model) throws IllegalStateException {
-		this(c, leftNode, rightNode);
+	public JoinLine(QueryPen queryPen, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode, SQLJoin model) throws IllegalStateException {
+		this(queryPen, c, leftNode, rightNode);
 		if (model.getLeftColumn() != leftNode.getItem()) {
 			throw new IllegalStateException("The left column items were not equal.");
 		}
@@ -249,8 +252,9 @@ public class JoinLine extends PNode implements WabitNode {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
+	public JoinLine(QueryPen queryPen, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
 		super();
+		this.queryPen = queryPen;
 		this.canvas = c;
 		model = new SQLJoin(leftNode.getItem(), rightNode.getItem());
 
@@ -274,11 +278,14 @@ public class JoinLine extends PNode implements WabitNode {
 		
 		leftPath = new PPath();
 		addChild(leftPath);
+		leftPath.setStroke(new BasicStroke(2));
 		rightPath = new PPath();
 		addChild(rightPath);
+		rightPath.setStroke(new BasicStroke(2));
 		
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
+		textCircle.setStroke(new BasicStroke(2));
 		
 		oldIsJoinedTableSwapped = false;
 		viewCom = "=";
@@ -558,6 +565,28 @@ public class JoinLine extends PNode implements WabitNode {
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	protected void paint(PPaintContext paintContext) {
+		setFocusColour(false);
+		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
+		if (hasFocus) {
+			setFocusColour(hasFocus);
+		}
+		super.paint(paintContext);
+	}
+	
+	private void setFocusColour(boolean hasFocus) {
+		if (hasFocus) {
+			leftPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
+			rightPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
+			textCircle.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
+		} else {
+			leftPath.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
+			rightPath.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
+			textCircle.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
+		}
 	}
 
 	public void cleanup() {
