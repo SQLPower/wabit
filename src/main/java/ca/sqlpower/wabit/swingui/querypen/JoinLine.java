@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
@@ -27,6 +28,7 @@ import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.UIManager;
 import javax.swing.text.StyleConstants;
@@ -41,6 +43,7 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
+import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -227,6 +230,18 @@ public class JoinLine extends PNode implements WabitNode {
 	};
 
 	private final QueryPen queryPen;
+
+	/**
+	 * This join icon will be displayed when the join is first created and when it is in
+	 * an equality. If the two columns in the join is not being equated on a circle with
+	 * the comparator will be show instead.
+	 */
+	private ImageIcon joinIcon;
+
+	/**
+	 * This is the PNode wrapper to the JoinIcon.
+	 */
+	private PImage imageNode;
 	
 	/**
 	 * This will create a join line with properties taken from the model. The ItemPNodes passed in must
@@ -283,6 +298,11 @@ public class JoinLine extends PNode implements WabitNode {
 		addChild(rightPath);
 		rightPath.setStroke(new BasicStroke(2));
 		
+		joinIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/j.png"));
+		imageNode = new PImage(joinIcon.getImage());
+		imageNode.setPaint(Color.BLACK);
+		addChild(imageNode);
+		imageNode.setVisible(false);
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
 		textCircle.setStroke(new BasicStroke(2));
@@ -464,6 +484,17 @@ public class JoinLine extends PNode implements WabitNode {
 				(float)(textMidY - BORDER_WIDTH),
 				(float)symbolText.getWidth() + 2 * BORDER_WIDTH,
 				(float)symbolText.getHeight() + 2 * BORDER_WIDTH);
+		
+		logger.debug("The model's comparator is \"" + model.getComparator() + "\" looking for " + SQLJoin.Comparators.EQUAL_TO.getComparator());
+		if (model.getComparator().equals(SQLJoin.Comparators.EQUAL_TO.getComparator())) {
+			imageNode.setX(midX - imageNode.getWidth()/2);
+			imageNode.setY(midY - imageNode.getHeight()/2);
+			imageNode.setVisible(true);
+			textCircle.setVisible(false);
+		} else {
+			imageNode.setVisible(false);
+			textCircle.setVisible(true);
+		}
 		
 		Rectangle2D boundUnion = textCircle.getBounds();
 		boundUnion = boundUnion.createUnion(leftPath.getBounds());

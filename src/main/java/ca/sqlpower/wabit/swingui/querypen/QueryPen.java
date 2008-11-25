@@ -476,7 +476,7 @@ public class QueryPen implements MouseState, WabitNode {
         
         zoomOutButton = new JButton(zoomOutAction);
         zoomOutButton.setToolTipText(ZOOM_OUT_ACTION+ " (Shortcut "+ acceleratorKeyString+ " Shift -)");
-        ImageIcon joinIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/join.png"));
+        ImageIcon joinIcon = new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/j.png"));
         AbstractAction joinAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		setMouseState(MouseStates.CREATE_JOIN);
