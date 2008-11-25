@@ -413,11 +413,18 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public void setGroupingEnabled(boolean enabled) {
 		logger.debug("Setting grouping enabled to " + enabled);
 		if (!groupingEnabled && enabled) {
+			startCompoundEdit();
 			for (Item col : selectedColumns) {
 				if (!groupByAggregateMap.containsKey(col)) {
 					groupByList.add(col);
 				}
 			}
+			for (Item item : getSelectedColumns()) {
+				if (item instanceof StringItem) {
+					setGrouping(item, SQLGroupFunction.COUNT.toString());
+				}
+			}
+			endCompoundEdit();
 		} else if (!enabled) {
 			groupByList.clear();
 			groupByAggregateMap.clear();

@@ -388,13 +388,6 @@ public class QueryPanel implements DataEntryPanel {
 
     		public void actionPerformed(ActionEvent e) {
     			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
-    			if (groupingCheckBox.isSelected()) {
-    				for (Item item :queryCache.getSelectedColumns()) {
-    					if (item instanceof StringItem) {
-    						queryCache.setGrouping(item, SQLGroupFunction.COUNT.toString());
-    					}
-    				}
-    			}
     			executeQueryInCache();
     		}
     	});
