@@ -174,7 +174,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 	
 	public void setJoiningState(boolean state){
 		if(!state) {
-			setPaint(Color.WHITE);
+			setPaint(new Color(0x00ffffff, true));
 			repaint();
 		}
 		isInJoiningState = state;
@@ -233,7 +233,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 			@Override
 			public void mouseExited(PInputEvent event) {
 				if(!isInJoiningState) {
-					setPaint(Color.WHITE);
+					setPaint(new Color(0x00ffffff, true));
 					repaint();
 				}
 			}
@@ -272,7 +272,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 
 	public void setIsJoined(boolean joined) {
 		isJoined = joined;
-		setPaint(Color.WHITE);
+		setPaint(new Color(0x00ffffff, true));
 		repaint();
 		highLightText();
 	}

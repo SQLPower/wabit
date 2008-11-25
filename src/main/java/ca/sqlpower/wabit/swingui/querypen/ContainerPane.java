@@ -73,6 +73,11 @@ public class ContainerPane extends PNode implements WabitNode {
 	 * The size of separators between different fields.
 	 */
 	private static final int SEPARATOR_SIZE = 5;
+
+	/**
+	 * The stroke size of the lines in the container pane.
+	 */
+	private static final float STROKE_SIZE = 2;
 	
 	private final Container model;
 
@@ -218,6 +223,11 @@ public class ContainerPane extends PNode implements WabitNode {
 	 */
 	private PPath headerBackground;
 
+	/**
+	 * This will give the where fields a background colour.
+	 */
+	private PNode whereBackground;
+
 	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
 		logger.debug("Container alias is " + model.getAlias());
@@ -273,15 +283,23 @@ public class ContainerPane extends PNode implements WabitNode {
 		
 		PBounds fullBounds = getFullBounds();
 		outerRect = PPath.createRoundRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2, QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
-		outerRect.setStroke(new BasicStroke(2));
+		outerRect.setStroke(new BasicStroke(STROKE_SIZE));
 		headerBackground = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)outerRect.getWidth() - 1, (float)(modelNameText.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE + QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
 		headerBackground.setStrokePaint(new Color(0x00ffffff, true));
 		headerBackClip = new PClip();
 		headerBackClip.addChild(headerBackground);
-		headerBackClip.setPathToRectangle((float)outerRect.getX(), (float)outerRect.getY(), (float)outerRect.getWidth(), (float)(modelNameText.getHeight() + BORDER_SIZE) * 2 + 2 * BORDER_SIZE);
+		float headerClipHeight = (float)(modelNameText.getHeight() + BORDER_SIZE) * 2 + 2 * BORDER_SIZE;
+		headerBackClip.setPathToRectangle((float)outerRect.getX(), (float)outerRect.getY(), (float)outerRect.getWidth(), headerClipHeight);
 		headerBackClip.setStrokePaint(new Color(0x00ffffff, true));
+		whereBackground = new PNode();
+		whereBackground.translate(outerRect.getX() + whereHeader.getFullBounds().getX() + BORDER_SIZE, outerRect.getY() + headerClipHeight);
+		whereBackground.setWidth(outerRect.getWidth() - whereHeader.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
+		whereBackground.setHeight(outerRect.getHeight() - headerClipHeight - STROKE_SIZE - 1);
+		whereBackground.setPaint(QueryPen.WHERE_BACKGROUND_COLOUR);
+		addChild(whereBackground);
 		addChild(headerBackClip);
 		this.addChild(outerRect);
+		whereBackground.moveToBack();
 		headerBackClip.moveToBack();
 		outerRect.moveToBack();
 		setBounds(outerRect.getBounds());
@@ -432,8 +450,12 @@ public class ContainerPane extends PNode implements WabitNode {
 	public void removeQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.remove(l);
 	}
-	
-	private void repositionWhereClauses() {
+
+	/**
+	 * Repositions the where clauses of all of the items in this container as well
+	 * as the where header. This returns the new x location of the where clauses.
+	 */
+	private double repositionWhereClauses() {
 		double maxXPos = swingCheckBox.getFullBounds().width + SEPARATOR_SIZE + columnNameHeader.getWidth() + SEPARATOR_SIZE;
 		for (UnmodifiableItemPNode itemNode : containedItems) {
 			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
@@ -442,6 +464,8 @@ public class ContainerPane extends PNode implements WabitNode {
 		for (UnmodifiableItemPNode itemNode : containedItems) {
 			itemNode.positionWhere(maxXPos);
 		}
+		
+		return maxXPos;
 	}
 	
 	public List<UnmodifiableItemPNode> getContainedItems() {
@@ -473,7 +497,7 @@ public class ContainerPane extends PNode implements WabitNode {
 	}
 	
 	private void repositionWhereAndResize() {
-		repositionWhereClauses();
+		double maxWhereXPos = repositionWhereClauses();
 		if (outerRect != null) {
 			double maxWidth = Math.max(header.getFullBounds().getWidth(), modelNameText.getFullBounds().getWidth());
 			logger.debug("Header width is " + header.getFullBounds().getWidth() + " and the container name has width " + modelNameText.getFullBounds().getWidth());
@@ -489,6 +513,12 @@ public class ContainerPane extends PNode implements WabitNode {
 			
 			int numStaticRows = 2;
 			outerRect.setHeight((modelNameText.getHeight() + BORDER_SIZE) * (numStaticRows + containedItems.size()) + BORDER_SIZE * 3);
+			
+			headerBackground.setWidth(maxWidth);
+			headerBackClip.setWidth(maxWidth);
+			whereBackground.translate(maxWhereXPos - whereHeader.getXOffset(), 0);
+			whereBackground.setWidth(outerRect.getWidth() - whereBackground.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
+			whereBackground.setHeight(outerRect.getHeight() - whereBackground.getFullBounds().getY() - STROKE_SIZE - BORDER_SIZE - 1);
 			
 			setBounds(outerRect.getBounds());
 		}
