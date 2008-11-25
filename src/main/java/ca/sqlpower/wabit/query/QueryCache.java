@@ -367,6 +367,15 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		havingMap = new HashMap<Item, String>();
 		
 		constantsContainer = new ItemContainer("Constants");
+		StringItem currentTime = new StringItem("current_time");
+		constantsContainer.addItem(currentTime);
+		addItem(currentTime);
+		StringItem currentDate = new StringItem("current_date");
+		constantsContainer.addItem(currentDate);
+		addItem(currentDate);
+		StringItem user = new StringItem("user");
+		constantsContainer.addItem(user);
+		addItem(user);
 	}
 	
 	/**
@@ -435,6 +444,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * Generates the query based on the cache.
 	 */
 	public String generateQuery() {
+		logger.debug("Data source is " + dataSource + " while generating the query.");
+		ConstantConverter converter = ConstantConverter.getConverter(dataSource);
 		if (userModifiedQuery != null) {
 			return userModifiedQuery;
 		}
@@ -465,7 +476,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				query.append(col.getContainer().getName() + ".");
 			}
 			if(!(col instanceof StringCountItem)) {
-				query.append(col.getName());			
+				query.append(converter.getName(col));			
 			}
 			if (groupByAggregateMap.containsKey(col) && !(col instanceof StringCountItem)) {
 				query.append(")");
