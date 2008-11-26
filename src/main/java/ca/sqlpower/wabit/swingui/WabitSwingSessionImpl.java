@@ -326,6 +326,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		if (!removeEditorPanel()) {
 			return;
 		}
+		int dividerLoc = wabitPane.getDividerLocation();
 		currentEditorPanelModel = entryPanelModel;
 		if (entryPanelModel instanceof QueryCache) {
 			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
@@ -347,6 +348,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
+		wabitPane.setDividerLocation(dividerLoc);
 	}
 	
 	/**
