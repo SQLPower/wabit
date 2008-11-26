@@ -514,15 +514,15 @@ public class JoinLine extends PNode implements WabitNode {
 				(float)symbolText.getHeight() + 2 * BORDER_WIDTH);
 		
 		logger.debug("The model's comparator is \"" + model.getComparator() + "\" looking for " + SQLJoin.Comparators.EQUAL_TO.getComparator());
+		selectedImageNode.setX(midX - selectedImageNode.getWidth()/2);
+		selectedImageNode.setY(midY - selectedImageNode.getHeight()/2);
+		unselectedImageNode.setX(midX - unselectedImageNode.getWidth()/2);
+		unselectedImageNode.setY(midY - unselectedImageNode.getHeight()/2);
+		selectedImageBackground.setX(midX - unselectedImageNode.getWidth()/2);
+		selectedImageBackground.setY(midY - unselectedImageNode.getHeight()/2);
 		if (model.getComparator().equals(SQLJoin.Comparators.EQUAL_TO.getComparator())) {
-			selectedImageNode.setX(midX - selectedImageNode.getWidth()/2);
-			selectedImageNode.setY(midY - selectedImageNode.getHeight()/2);
 			selectedImageNode.setVisible(false);
-			unselectedImageNode.setX(midX - unselectedImageNode.getWidth()/2);
-			unselectedImageNode.setY(midY - unselectedImageNode.getHeight()/2);
 			unselectedImageNode.setVisible(true);
-			selectedImageBackground.setX(midX - unselectedImageNode.getWidth()/2);
-			selectedImageBackground.setY(midY - unselectedImageNode.getHeight()/2);
 			selectedImageBackground.setVisible(true);
 			textCircle.setVisible(false);
 		} else {
