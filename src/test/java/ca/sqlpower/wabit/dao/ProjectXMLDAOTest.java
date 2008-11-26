@@ -262,7 +262,7 @@ public class ProjectXMLDAOTest extends TestCase {
 //		setAllSetters(container, getPropertiesToIgnore());
 //		query.addJoin(join);
 		
-		assertTrue("Grouping must be enabled to check the group by aggregate and having text", query.isGroupingEnabled());
+//		assertTrue("Grouping must be enabled to check the group by aggregate and having text", query.isGroupingEnabled());
 //		query.setGrouping(column, groupByAggregate);
 //		query.setHavingClause(item, havingText);
 //		query.setSortOrder(item, arg);
