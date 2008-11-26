@@ -635,6 +635,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         	formatComboBox.setEnabled(false);
         } else {
         	setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
+        	if (ci.getFormat() != null) {
+        		if (ci.getFormat() instanceof SimpleDateFormat) {
+        			formatComboBox.setSelectedItem(((SimpleDateFormat) ci.getFormat()).toPattern());
+        		} else if (ci.getFormat() instanceof DecimalFormat) {
+        			formatComboBox.setSelectedItem(((DecimalFormat) ci.getFormat()).toPattern());
+        		} else {
+        			throw new ClassCastException("Cannot cast the format " + ci.getFormat().getClass() + " to a known format");
+        		}
+        	}
         }
         fb.append(formatComboBox);
         dataTypeComboBox.addActionListener(new AbstractAction(){
