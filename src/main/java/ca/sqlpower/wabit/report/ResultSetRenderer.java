@@ -121,7 +121,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	} else {
     		logger.debug("failed on the class"+ clazz.toString());
     	}
-    	return null;
+    	return DataType.TEXT;
     	
     }
     
