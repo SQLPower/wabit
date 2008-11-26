@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.report;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.query.StringItem;
 
 public class ColumnInfoTest extends AbstractWabitObjectTest {
 
@@ -29,7 +30,7 @@ public class ColumnInfoTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        ci = new ColumnInfo("column name");
+        ci = new ColumnInfo(new StringItem("Item"), "column name");
     }
     
     @Override

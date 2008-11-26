@@ -73,6 +73,8 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.swingui.Icons;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -166,6 +168,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 * The List index corresponds with the page index.
 	 */
     private List<Integer> pageRowNumberList = new ArrayList<Integer>();
+
+    /**
+     * This is a copy of the query at the time of execution of the query. This will
+     * let us get the items belonging to each query.
+     */
+	private QueryCache cachedQuery;
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
@@ -190,13 +198,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	private void executeQuery() {
         ResultSet executedRs = null;
         executeException = null;
+        cachedQuery = new QueryCache((QueryCache) query);
 		try {
-            executedRs = query.execute(); // TODO run in background
+            executedRs = cachedQuery.execute(); // TODO run in background
             initColumns(executedRs.getMetaData());
         } catch (Exception ex) {
             executeException = ex;
         }
-        setName("Result Set: " + query.getName());
+        setName("Result Set: " + cachedQuery.getName());
         rs = executedRs;
 	}
 	
@@ -259,21 +268,22 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 *             If the resultset metadata methods fail.
 	 */
     private void initColumns(ResultSetMetaData rsmd) throws SQLException {
-    	Map<String, ColumnInfo> colKeyToInfoMap = new HashMap<String, ColumnInfo>();
+    	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
     	for (ColumnInfo info : columnInfo) {
-    		logger.debug("Loaded key " + info.getColumnInfoKey());
-    		colKeyToInfoMap.put(info.getColumnInfoKey(), info);
+    		logger.debug("Loaded key " + info.getColumnInfoItem());
+    		colKeyToInfoMap.put(info.getColumnInfoItem(), info);
     	}
     	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
+        	Item item = cachedQuery.getSelectedColumns().get(col - 1);
         	String columnKey = rsmd.getColumnLabel(col);
-        	logger.debug("Matching key " + columnKey);
+        	logger.debug("Matching key " + item.getName());
         	ColumnInfo ci;
-        	if (colKeyToInfoMap.get(columnKey) != null) {
-        		ci = colKeyToInfoMap.get(columnKey);
+        	if (colKeyToInfoMap.get(item) != null) {
+        		ci = colKeyToInfoMap.get(item);
         	} else {
-        		ci = new ColumnInfo(columnKey);
+        		ci = new ColumnInfo(item, columnKey);
         	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
             ci.setParent(ResultSetRenderer.this);

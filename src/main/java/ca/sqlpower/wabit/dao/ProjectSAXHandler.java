@@ -92,9 +92,10 @@ public class ProjectSAXHandler extends DefaultHandler {
 	/**
 	 * This maps all of the currently loaded Items with their UUIDs. This
 	 * will let the loaded elements of a query be able to hook up to the correct
-	 * items. This map will be empty at the start of loading each query.
+	 * items. This map will keep the item values throughout loading to allow access
+	 * to all items throughout the file.
 	 */
-	private Map<String, Item> uuidToItemMap;
+	private final Map<String, Item> uuidToItemMap = new HashMap<String, Item>();
 	
 	/**
 	 * This is the current container being loaded in by this SAX handler.
@@ -173,7 +174,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	query = new QueryCache(uuid);
-        	uuidToItemMap = new HashMap<String, Item>();
         	session.getProject().addQuery(query);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -472,11 +472,10 @@ public class ProjectSAXHandler extends DefaultHandler {
         	}
         } else if (name.equals("column-info")) {
         	String colInfoName = attributes.getValue("name");
-        	String colInfoKey = attributes.getValue("column-info-key");
-        	checkMandatory("column-info-key", colInfoKey);
+        	String colInfoKey = attributes.getValue("column-info-item-id");
+        	checkMandatory("column-info-item-id", colInfoKey);
         	checkMandatory("name", colInfoName);
-        	colInfo = new ColumnInfo(colInfoName);
-        	colInfo.setColumnInfoKey(colInfoKey);
+        	colInfo = new ColumnInfo(uuidToItemMap.get(colInfoKey), colInfoName);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);

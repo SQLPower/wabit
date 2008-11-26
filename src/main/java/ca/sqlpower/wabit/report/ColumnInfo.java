@@ -25,15 +25,14 @@ import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.query.Item;
 
 public class ColumnInfo extends AbstractWabitObject{
 
 	/**
-	 * The columnInfoKey is used as the key for matching this columninfo to
-	 * column alias in the query. This is distinct from the name (see
-	 * {@link #getName()}), which should be rendered as this column's header.
+	 * The item this column information is describing.
 	 */
-    private String columnInfoKey;
+    private Item columnInfoItem;
 
 	/**
 	 * Column width in Graphics2D units (screen pixels or 1/72 of an inch when printed).
@@ -67,17 +66,17 @@ public class ColumnInfo extends AbstractWabitObject{
 	 */
 	private boolean willSubtotal = false;
 
-	public ColumnInfo(String label) {
-		setColumnInfoKey(label);
+	public ColumnInfo(Item item, String label) {
+		setColumnInfoItem(item);
 		setName(label);
 	}
 
-	public String getColumnInfoKey() {
-		return columnInfoKey;
+	public Item getColumnInfoItem() {
+		return columnInfoItem;
 	}
-	public void setColumnInfoKey(String label) {
-		firePropertyChange(COLUMN_INFO_KEY_CHANGED, this.columnInfoKey, label);
-		this.columnInfoKey = label;
+	public void setColumnInfoItem(Item item) {
+		firePropertyChange(COLUMN_INFO_KEY_CHANGED, this.columnInfoItem, item);
+		this.columnInfoItem = item;
 	}
 	public int getWidth() {
 		return width;

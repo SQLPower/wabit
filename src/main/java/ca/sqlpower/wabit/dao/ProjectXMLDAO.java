@@ -176,7 +176,7 @@ public class ProjectXMLDAO {
 							xml.print(out, "<column-info");
 							printAttribute("name", ci.getName());
 							printAttribute("width", ci.getWidth());
-							printAttribute("column-info-key", ci.getColumnInfoKey());
+							printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID().toString());
 							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
 							printAttribute("data-type", ci.getDataType().name());
 							printAttribute("break-on-column", Boolean.toString(ci.getWillBreak()));
