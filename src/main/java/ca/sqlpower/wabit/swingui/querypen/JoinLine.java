@@ -235,13 +235,35 @@ public class JoinLine extends PNode implements WabitNode {
 	 * This join icon will be displayed when the join is first created and when it is in
 	 * an equality. If the two columns in the join is not being equated on a circle with
 	 * the comparator will be show instead.
+	 * <p>
+	 * This icon is for when the join is selected.
 	 */
-	private ImageIcon joinIcon;
+	private final ImageIcon joinSelectedIcon;
+	
+	/**
+	 * This join icon will be displayed when the join is first created and when it is in
+	 * an equality. If the two columns in the join is not being equated on a circle with
+	 * the comparator will be show instead.
+	 * <p>
+	 * This icon is for when the join is selected.
+	 */
+	private final ImageIcon joinUnselectedIcon;
 
 	/**
-	 * This is the PNode wrapper to the JoinIcon.
+	 * This is the PNode wrapper to the JoinIcon. This contains the selected image.
 	 */
-	private PImage imageNode;
+	private PImage selectedImageNode;
+
+	/**
+	 * This is the PNode wrapper to the JoinIcon. This contains the unselected image.
+	 */
+	private PImage unselectedImageNode;
+
+	/**
+	 * This is a background to the images. This will prevent the line from going
+	 * behind the join images and making the image more clear.
+	 */
+	private PNode selectedImageBackground;
 	
 	/**
 	 * This will create a join line with properties taken from the model. The ItemPNodes passed in must
@@ -298,11 +320,17 @@ public class JoinLine extends PNode implements WabitNode {
 		addChild(rightPath);
 		rightPath.setStroke(new BasicStroke(2));
 		
-		joinIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/j.png"));
-		imageNode = new PImage(joinIcon.getImage());
-		imageNode.setPaint(Color.BLACK);
-		addChild(imageNode);
-		imageNode.setVisible(false);
+		joinSelectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/j_on.png"));
+		joinUnselectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/j_off.png"));
+		selectedImageNode = new PImage(joinSelectedIcon.getImage());
+		unselectedImageNode = new PImage(joinUnselectedIcon.getImage());
+		selectedImageBackground = new PNode();
+		selectedImageBackground.setBounds(selectedImageNode.getBounds());
+		addChild(selectedImageBackground);
+		selectedImageBackground.setPaint(Color.BLACK);
+		addChild(selectedImageNode);
+		addChild(unselectedImageNode);
+		selectedImageNode.setVisible(false);
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
 		textCircle.setStroke(new BasicStroke(2));
@@ -487,12 +515,20 @@ public class JoinLine extends PNode implements WabitNode {
 		
 		logger.debug("The model's comparator is \"" + model.getComparator() + "\" looking for " + SQLJoin.Comparators.EQUAL_TO.getComparator());
 		if (model.getComparator().equals(SQLJoin.Comparators.EQUAL_TO.getComparator())) {
-			imageNode.setX(midX - imageNode.getWidth()/2);
-			imageNode.setY(midY - imageNode.getHeight()/2);
-			imageNode.setVisible(true);
+			selectedImageNode.setX(midX - selectedImageNode.getWidth()/2);
+			selectedImageNode.setY(midY - selectedImageNode.getHeight()/2);
+			selectedImageNode.setVisible(false);
+			unselectedImageNode.setX(midX - unselectedImageNode.getWidth()/2);
+			unselectedImageNode.setY(midY - unselectedImageNode.getHeight()/2);
+			unselectedImageNode.setVisible(true);
+			selectedImageBackground.setX(midX - unselectedImageNode.getWidth()/2);
+			selectedImageBackground.setY(midY - unselectedImageNode.getHeight()/2);
+			selectedImageBackground.setVisible(true);
 			textCircle.setVisible(false);
 		} else {
-			imageNode.setVisible(false);
+			selectedImageNode.setVisible(false);
+			unselectedImageNode.setVisible(false);
+			selectedImageBackground.setVisible(false);
 			textCircle.setVisible(true);
 		}
 		
@@ -613,10 +649,14 @@ public class JoinLine extends PNode implements WabitNode {
 			leftPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
 			rightPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
 			textCircle.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
+			unselectedImageNode.setVisible(false);
+			selectedImageNode.setVisible(true);
 		} else {
 			leftPath.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
 			rightPath.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
 			textCircle.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
+			unselectedImageNode.setVisible(true);
+			selectedImageNode.setVisible(false);
 		}
 	}
 
