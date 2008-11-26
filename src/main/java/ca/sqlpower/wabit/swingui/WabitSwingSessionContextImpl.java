@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import java.io.IOException;
 
+import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 
@@ -31,7 +32,7 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 public class WabitSwingSessionContextImpl extends WabitSessionContextImpl {
 
 	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
-			throws IOException {
+			throws IOException, ArchitectException {
 		super(terminateWhenLastSessionCloses);
 		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 	}

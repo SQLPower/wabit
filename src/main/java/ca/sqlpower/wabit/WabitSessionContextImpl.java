@@ -23,7 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
+import org.apache.log4j.Logger;
+
+import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.architect.ArchitectRuntimeException;
+import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 
@@ -35,8 +41,15 @@ import ca.sqlpower.sql.PlDotIni;
  * just typical.
  */
 public class WabitSessionContextImpl implements WabitSessionContext {
+	
+	private static final Logger logger = Logger.getLogger(WabitSessionContextImpl.class);
 
-	private final DataSourceCollection dataSources;
+	/**
+	 * This is a preference that stores the location of the pl.ini.
+	 */
+	private static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
+	
+	private DataSourceCollection dataSources;
 	private final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
 	/**
@@ -49,6 +62,16 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *  Stores true when the OS is MAC
 	 */
     private static final boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
+    
+    /**
+     * This is the path to the user's pl.ini file.
+     */
+    private String plDotIniPath;
+    
+    /**
+     * This prefs node stores context specific prefs. At current this is the pl.ini location.
+     */
+    private final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
 	
 	/**
 	 * Creates a new Wabit session context.
@@ -58,17 +81,19 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *            when its last session closes.
 	 * @throws IOException
 	 *             If the startup configuration files can't be read
+	 * @throws ArchitectException If the pl.ini is invalid.
 	 */
-	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses) throws IOException {
+	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses) throws IOException, ArchitectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
-		dataSources = new PlDotIni();
-		dataSources.read(new File(System.getProperty("user.home"), "pl.ini"));
+		
+        setPlDotIniPath(prefs.get(PREFS_PL_INI_PATH, null));
+        logger.debug("pl.ini is at " + getPlDotIniPath());
+        
+        setPlDotIniPath(ArchitectUtils.checkForValidPlDotIni(getPlDotIniPath(), "Wabit"));
+        
+		getDataSources();
 	}
 
-	public DataSourceCollection getDataSources() {
-		return dataSources;
-	}
-	
 	/**
 	 * Adds the given Wabit session to the list of child sessions for this
 	 * context. This is normally done by the sessions themselves, so you
@@ -77,6 +102,34 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public void registerChildSession(WabitSession child) {
 		childSessions.add(child);
 	}
+	
+	/**
+     * Tries to read the plDotIni if it hasn't been done already.  If it can't be read,
+     * returns null and leaves the plDotIni property as null as well. See {@link #plDotIni}.
+     */
+    public DataSourceCollection getDataSources() {
+        String path = getPlDotIniPath();
+        if (path == null) return null;
+        
+        if (dataSources == null) {
+        	dataSources = new PlDotIni();
+            try {
+                logger.debug("Reading PL.INI defaults");
+                dataSources.read(getClass().getClassLoader().getResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
+            } catch (IOException e) {
+                throw new ArchitectRuntimeException(new ArchitectException("Failed to read system resource default_database_types.ini",e));
+            }
+            try {
+                if (dataSources != null) {
+                    logger.debug("Reading new PL.INI instance");
+                    dataSources.read(new File(path));
+                }
+            } catch (IOException e) {
+                throw new ArchitectRuntimeException(new ArchitectException("Failed to read pl.ini at \""+getPlDotIniPath()+"\"", e));
+            }
+        }
+        return dataSources;
+    }
 
 	/**
 	 * Removes the given Wabit session from the list of child sessions for this
@@ -85,6 +138,17 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	public void deregisterChildSession(WabitSession child) {
 		childSessions.remove(child);
+		
+		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
+		if (childSessions.isEmpty()) {
+			logger.debug("Saving pl.ini");
+	        prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
+			try {
+	            dataSources.write(new File(getPlDotIniPath()));
+	        } catch (IOException e) {
+	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
+	        }
+		}
 		
 		if (terminateWhenLastSessionCloses && childSessions.isEmpty()) {
 			System.exit(0);
@@ -103,6 +167,14 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	public WabitSession createSession() {
 		throw new UnsupportedOperationException("There is no session defined for the core objects.");
+	}
+
+	public void setPlDotIniPath(String plDotIniPath) {
+		this.plDotIniPath = plDotIniPath;
+	}
+
+	public String getPlDotIniPath() {
+		return plDotIniPath;
 	}
 	
 }
