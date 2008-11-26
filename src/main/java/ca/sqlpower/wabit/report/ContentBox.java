@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 
@@ -61,6 +63,19 @@ public class ContentBox extends AbstractWabitObject {
         }
         
     };
+
+    /**
+     * This is an empty child listener for the content box. If a null child listener
+     * is added to the listener list a NPE will be thrown when any of the events fire.
+     */
+    private final WabitChildListener emptyChildListener = new WabitChildListener() {
+		public void wabitChildRemoved(WabitChildEvent e) {
+			//do nothing.
+		}
+		public void wabitChildAdded(WabitChildEvent e) {
+			//do nothing.
+		}
+	};
     
     public ContentBox() {
         // This is just to initialize this content box's name
@@ -85,7 +100,7 @@ public class ContentBox extends AbstractWabitObject {
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
-            WabitUtils.listenToHierarchy(oldContentRenderer, rendererChangeHandler, null);
+            WabitUtils.listenToHierarchy(oldContentRenderer, rendererChangeHandler, emptyChildListener);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
@@ -94,7 +109,7 @@ public class ContentBox extends AbstractWabitObject {
         if (contentRenderer != null) {
             setName("Content from " + contentRenderer.getName());
             contentRenderer.setParent(this);
-            WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, null);
+            WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, emptyChildListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         } else {
             setName("Empty content box");

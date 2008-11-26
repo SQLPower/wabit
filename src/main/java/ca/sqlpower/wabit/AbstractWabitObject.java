@@ -63,6 +63,9 @@ public abstract class AbstractWabitObject implements WabitObject {
     }
     
     public void addChildListener(WabitChildListener l) {
+    	if (l == null) {
+    		throw new NullPointerException("Cannot add child listeners that are null.");
+    	}
         childListeners.add(l);
     }
 

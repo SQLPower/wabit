@@ -26,6 +26,8 @@ import java.awt.Graphics2D;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -121,7 +123,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	
     }
     
-    private final List<ColumnInfo> columnInfo = new ArrayList<ColumnInfo>();
+    private final List<ColumnInfo> columnInfo;
     
     /**
      * Lists of Formatting Options for number and date
@@ -146,7 +148,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * A cached copy of the result set that came from the Query object.
      * TODO: dump this when the query changes, (delay re-executing it until it's needed again)  
      */
-    private final ResultSet rs;
+    private ResultSet rs;
+    
+    /**
+     * If this is true then a new result set needs to be fetched from the database. 
+     */
+    private boolean refreshResultSet = false;
 
     /**
      * If the query fails to execute, the corresponding exception will be saved here and
@@ -161,23 +168,38 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     private List<Integer> pageRowNumberList = new ArrayList<Integer>();
     
     public ResultSetRenderer(Query query) {
-    	this(query, Collections.EMPTY_LIST);
+    	this(query, new ArrayList<ColumnInfo>());
     }
     
     public ResultSetRenderer(Query query, List<ColumnInfo> columnInfoList) {
         this.query = query;
-        // TODO listen to query for changes
-        ResultSet executedRs = null;
+        query.addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				refreshResultSet = true;
+			}
+		});
         setUpFormats();
-        try {
+        columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
+        executeQuery();
+	}
+    
+    /**
+     * This will execute the query contained in this result set and
+     * set the result set to be a new result set.
+     */
+	private void executeQuery() {
+        ResultSet executedRs = null;
+        executeException = null;
+		try {
             executedRs = query.execute(); // TODO run in background
-            initColumns(executedRs.getMetaData(), columnInfoList);
+            initColumns(executedRs.getMetaData());
         } catch (Exception ex) {
             executeException = ex;
         }
         setName("Result Set: " + query.getName());
         rs = executedRs;
 	}
+	
 	/**
      * Adds some formats to the Numeric format as well as the Date Format
      * 
@@ -230,18 +252,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 * 
 	 * @param rsmd
 	 *            The metadata for the current result set.
-	 * @param columnInfoList
+	 * @param columnInfo
 	 *            The list of column information for the result set. This allows
 	 *            defining column information from a load.
 	 * @throws SQLException
 	 *             If the resultset metadata methods fail.
 	 */
-    private void initColumns(ResultSetMetaData rsmd, List<ColumnInfo> columnInfoList) throws SQLException {
+    private void initColumns(ResultSetMetaData rsmd) throws SQLException {
     	Map<String, ColumnInfo> colKeyToInfoMap = new HashMap<String, ColumnInfo>();
-    	for (ColumnInfo info : columnInfoList) {
+    	for (ColumnInfo info : columnInfo) {
     		logger.debug("Loaded key " + info.getColumnInfoKey());
     		colKeyToInfoMap.put(info.getColumnInfoKey(), info);
     	}
+    	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
         	String columnKey = rsmd.getColumnLabel(col);
@@ -254,9 +277,32 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
             ci.setParent(ResultSetRenderer.this);
-            columnInfo.add(ci);
-            fireChildAdded(ColumnInfo.class, ci, col-1);
-            
+            newColumnInfo.add(ci);
+        }
+        
+        logger.debug("Initializing columns: now have " + newColumnInfo.size() + " columns, previously had " + columnInfo.size());
+        for (int i = Math.min(newColumnInfo.size(), columnInfo.size()) - 1; i >= 0; i--) {
+        	if (newColumnInfo.get(i) != columnInfo.get(i)) {
+        		ColumnInfo removedColumn = columnInfo.remove(i);
+        		fireChildRemoved(ColumnInfo.class, removedColumn, i);
+        		columnInfo.add(i, newColumnInfo.get(i));
+        		fireChildAdded(ColumnInfo.class, newColumnInfo.get(i), i);
+        	}
+        }
+        
+        if (newColumnInfo.size() > columnInfo.size()) {
+        	logger.debug("New columns have been added. There should be " + (newColumnInfo.size() - columnInfo.size()) + " columns added.");
+        	for (int i = columnInfo.size(); i < newColumnInfo.size(); i++) {
+        		columnInfo.add(newColumnInfo.get(i));
+        		logger.debug("Adding column info to position " + i);
+        		fireChildAdded(ColumnInfo.class, columnInfo.get(i), i);
+        	}
+        } else if (newColumnInfo.size() < columnInfo.size()) {
+        	logger.debug("Columns have been removed. There should be " + (columnInfo.size() - newColumnInfo.size()) + " columns removed.");
+        	for (int i = columnInfo.size() - 1; i >= newColumnInfo.size(); i--) {
+        		ColumnInfo removedCI = columnInfo.remove(i);
+        		fireChildRemoved(ColumnInfo.class, removedCI, i);
+        	}
         }
     }
 
@@ -270,6 +316,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
+    	if (refreshResultSet) {
+    		executeQuery();
+    		refreshResultSet = false;
+    	}
         if (executeException != null) {
             return renderFailure(g, contentBox, scaleFactor, pageIndex);
         } else {
@@ -289,6 +339,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             Throwable cause = executeException.getCause();
             while (cause != null) {
                 errorMessage.add("Caused by: " + cause);
+                cause = cause.getCause();
+            }
+            logger.debug("Exception on rendering " + executeException.getMessage());
+            for (StackTraceElement ste : executeException.getStackTrace()) {
+            	logger.debug(ste);
             }
         }
         FontMetrics fm = g.getFontMetrics();
@@ -464,7 +519,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        return columnInfo.indexOf(childType);
+        return 0;
     }
 
     public List<? extends WabitObject> getChildren() {
