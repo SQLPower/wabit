@@ -407,6 +407,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		
 		setName(copy.getName());
 		setParent(copy.getParent());
+		setDataSource(copy.getDataSource());
 		constantsContainer = copy.getConstantsContainer();
 	}
 	
