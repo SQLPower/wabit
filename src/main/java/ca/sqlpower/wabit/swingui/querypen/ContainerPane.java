@@ -513,7 +513,7 @@ public class ContainerPane extends PNode implements WabitNode {
 			
 			headerBackground.setWidth(maxWidth);
 			headerBackClip.setWidth(maxWidth);
-			whereBackground.translate(maxWhereXPos - whereHeader.getXOffset(), 0);
+			whereBackground.translate(maxWhereXPos - whereBackground.getXOffset(), 0);
 			whereBackground.setWidth(outerRect.getWidth() - whereBackground.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
 			whereBackground.setHeight(outerRect.getHeight() - whereBackground.getFullBounds().getY() - STROKE_SIZE - BORDER_SIZE - 1);
 			
