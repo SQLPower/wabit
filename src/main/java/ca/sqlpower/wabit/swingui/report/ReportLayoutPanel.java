@@ -24,16 +24,14 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DragSourceAdapter;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Iterator;
 
+import javax.swing.AbstractAction;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
@@ -51,13 +49,14 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.querypen.MouseState;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -66,21 +65,43 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
-public class ReportLayoutPanel implements DataEntryPanel {
+public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 
     private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
+    public static final Icon ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/shape_square_add.png"));		
     
     private final JPanel panel;
     private final PCanvas canvas;
     private final PageNode pageNode;
+    private final Layout report;
     
+	/**
+	 * The mouse state in this LayoutPanel.
+	 */
+	private MouseStates mouseState = MouseStates.READY;
+	
+    /**
+     * The cursor manager for this Query pen.
+     */
+	private final CursorManager cursorManager;
+	
+	
+	private final AbstractAction addContentBoxAction = new AbstractAction("",  ReportLayoutPanel.ICON){
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_BOX);
+			cursorManager.placeModeStarted();
+		}
+	};
+	
     public ReportLayoutPanel(WabitSwingSession session, Layout report) {
-        canvas = new PCanvas();
+        this.report = report;
+		canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
         canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
         canvas.setPanEventHandler(null);
         canvas.setBackground(Color.LIGHT_GRAY);
         canvas.setPreferredSize(new Dimension(400,600));
+        cursorManager = new CursorManager(canvas);
         
         pageNode = new PageNode(session, report.getPage());
         canvas.getLayer().addChild(pageNode);
@@ -90,11 +111,21 @@ public class ReportLayoutPanel implements DataEntryPanel {
         canvas.addInputEventListener(new MouseInputHandler());
         canvas.getRoot().getDefaultInputManager().setKeyboardFocus(selectionEventHandler);
         
-        InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
-        inputMap.put(KeyStroke.getKeyStroke('b'), AddContentBoxAction.class);
         
-        canvas.getActionMap().put(AddContentBoxAction.class, new AddContentBoxAction(session, report, pageNode));
-        
+        AbstractAction cancelBoxCreateAction = new AbstractAction() {
+        	public void actionPerformed(ActionEvent e) {
+        		if (mouseState == MouseStates.CREATE_BOX) {
+        			setMouseState(MouseStates.READY);
+        			cursorManager.placeModeFinished();
+        		}
+        	}
+        };
+		
+        canvas.getActionMap().put(addContentBoxAction.getClass(), addContentBoxAction);
+		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
+		inputMap.put(KeyStroke.getKeyStroke('b'), addContentBoxAction.getClass());
+		
+		canvas.addInputEventListener(new CreateBoxEventHandler(session, this));
         JToolBar toolbar = new JToolBar();
         toolbar.add(new PageFormatAction(report.getPage()));
         toolbar.add(new PrintAction(report));
@@ -121,6 +152,8 @@ public class ReportLayoutPanel implements DataEntryPanel {
         zoomPanel.add(new JLabel(new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"))), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
         toolbar.add(zoomPanel);
+        toolbar.addSeparator();
+        toolbar.add(addContentBoxAction);
         
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.add(toolbar, BorderLayout.NORTH);
@@ -142,18 +175,12 @@ public class ReportLayoutPanel implements DataEntryPanel {
 			}
 		});
         mainSplitPane.add(new JScrollPane(queryList), JSplitPane.RIGHT);
-        DragSource ds = new DragSource();
-		ds.createDefaultDragGestureRecognizer(queryList, DnDConstants.ACTION_COPY, new DragGestureListener() {
-			public void dragGestureRecognized(DragGestureEvent dge) {
-				Transferable dndTransferable = new ReportQueryTransferable((Query[]) queryList.getSelectedValues());
-				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {
-					//This is a drag source adapter with empty methods.
-				});
-			}
-		});
-        
+                
         panel = new JPanel(new BorderLayout());
         panel.add(mainSplitPane, BorderLayout.CENTER);
+        
+        panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelBoxCreateAction.getClass());
     }
     
     private class MouseInputHandler implements PInputEventListener {
@@ -207,4 +234,26 @@ public class ReportLayoutPanel implements DataEntryPanel {
     public boolean hasUnsavedChanges() {
         return false;
     }
+
+	public MouseStates getMouseState() {
+		return this.mouseState;
+	}
+
+	public void setMouseState(MouseStates state) {
+		this.mouseState = state;		
+	}
+
+	public Layout getReport() {
+		return report;
+	}
+
+	public PageNode getPageNode() {
+		return pageNode;
+	}
+
+	public CursorManager getCursorManager() {
+		return cursorManager;
+	}
+
+	
 }

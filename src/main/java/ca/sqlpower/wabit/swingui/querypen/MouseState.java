@@ -27,7 +27,7 @@ public interface MouseState {
 	/**
 	 * The states a mouse can be on the query pen.
 	 */
-	public enum MouseStates {READY, CREATE_JOIN}
+	public enum MouseStates {READY, CREATE_JOIN, CREATE_BOX}
 	
 	public MouseStates getMouseState();
 	
