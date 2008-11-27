@@ -24,17 +24,18 @@ import java.beans.PropertyChangeListener;
 
 import org.apache.log4j.Logger;
 
+/**
+ * This a special class that does similar things as {@link StringItem}. It
+ * listens to the Tables that are being added to the query and creates a
+ * constant Item for doing count(*). This item should also be removed when no
+ * tables exist in the query.
+ */
 public class StringCountItem extends StringItem implements Item {
 	
 	private static Logger logger = Logger.getLogger(StringCountItem.class);
 
 	private final QueryCache queryCache;
 	
-	/**
-	 * This a special class that does similar things as {@link StringItem}.It listens to the Tables
-	 * that are dropped into the queryPen and creates a constant Item for doing count(*);
-	 * 
-	 */
 	public StringCountItem(QueryCache query) {
 		super("");
 		this.queryCache = query;
@@ -56,8 +57,8 @@ public class StringCountItem extends StringItem implements Item {
 						firePropertyChange(QueryCache.GROUPING_CHANGED,evt.getOldValue(), evt.getNewValue());
 					}
 				}
-				
-			}});
+			}
+		});
 	}
 	public boolean isGroupingEnabled() {
 		return queryCache.isGroupingEnabled();
