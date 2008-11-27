@@ -21,23 +21,43 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceAdapter;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Iterator;
 
+import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.ListCellRenderer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.validation.swingui.StatusComponent;
+import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.action.CanvasZoomInAction;
-import ca.sqlpower.wabit.swingui.action.CanvasZoomOutAction;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -52,11 +72,9 @@ public class ReportLayoutPanel implements DataEntryPanel {
     
     private final JPanel panel;
     private final PCanvas canvas;
-    private final Layout report;
     private final PageNode pageNode;
     
     public ReportLayoutPanel(WabitSwingSession session, Layout report) {
-        this.report = report;
         canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
         canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -82,15 +100,60 @@ public class ReportLayoutPanel implements DataEntryPanel {
         toolbar.add(new PrintAction(report));
         toolbar.add(new PDFAction(toolbar, report));
         toolbar.addSeparator();
-        toolbar.add(new CanvasZoomInAction(canvas));
-        toolbar.add(new CanvasZoomOutAction(canvas));
+        JPanel zoomPanel = new JPanel(new BorderLayout());
+        zoomPanel.add(new JLabel(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"))), BorderLayout.WEST);
+        final int defaultSliderValue = 500;
+        final JSlider zoomSlider = new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
+        zoomSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				canvas.getCamera().setViewScale((double)zoomSlider.getValue()/defaultSliderValue);
+			}
+		});
+        zoomSlider.addMouseListener(new MouseAdapter() {
+        	@Override
+        	public void mouseReleased(MouseEvent e) {
+        		if ((e.getModifiers() & Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) > 0) {
+        			zoomSlider.setValue(defaultSliderValue);
+        		}
+        	}
+		});
+        zoomPanel.add(zoomSlider, BorderLayout.CENTER);
+        zoomPanel.add(new JLabel(new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"))), BorderLayout.EAST);
+        zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
+        toolbar.add(zoomPanel);
         
-        panel = new JPanel(new BorderLayout());
-        panel.add(toolbar, BorderLayout.NORTH);
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.add(toolbar, BorderLayout.NORTH);
         PScrollPane canvasScrollPane = new PScrollPane(canvas);
 		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-        panel.add(canvasScrollPane, BorderLayout.CENTER);
+        leftPanel.add(canvasScrollPane, BorderLayout.CENTER);
+        
+        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplitPane.setOneTouchExpandable(true);
+        mainSplitPane.setResizeWeight(1);
+        mainSplitPane.add(leftPanel, JSplitPane.LEFT);
+        
+        final JList queryList = new JList(session.getProject().getQueries().toArray());
+        queryList.setCellRenderer(new ListCellRenderer() {
+			public Component getListCellRendererComponent(JList list, Object value,
+					int index, boolean isSelected, boolean cellHasFocus) {
+				return new JLabel(((WabitObject) value).getName());
+			}
+		});
+        mainSplitPane.add(new JScrollPane(queryList), JSplitPane.RIGHT);
+        DragSource ds = new DragSource();
+		ds.createDefaultDragGestureRecognizer(queryList, DnDConstants.ACTION_COPY, new DragGestureListener() {
+			public void dragGestureRecognized(DragGestureEvent dge) {
+				Transferable dndTransferable = new ReportQueryTransferable((Query[]) queryList.getSelectedValues());
+				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {
+					//This is a drag source adapter with empty methods.
+				});
+			}
+		});
+        
+        panel = new JPanel(new BorderLayout());
+        panel.add(mainSplitPane, BorderLayout.CENTER);
     }
     
     private class MouseInputHandler implements PInputEventListener {
