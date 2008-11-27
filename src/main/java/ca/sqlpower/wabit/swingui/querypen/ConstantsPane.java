@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
@@ -367,10 +366,10 @@ public class ConstantsPane extends PNode implements WabitNode {
 		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
 		if (hasFocus) {
 			outerRect.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			headerBackground.setPaint(new GradientPaint(0, 0, QueryPen.SELECTED_CONTAINER_GRADIENT_COLOUR, 0, (float)headerBackground.getHeight(), QueryPen.SELECTED_CONTAINER_COLOUR));
+			headerBackground.setPaint(QueryPen.SELECTED_CONTAINER_COLOUR);
 		} else {
 			outerRect.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			headerBackground.setPaint(new GradientPaint(0, 0, QueryPen.UNSELECTED_CONTAINER_GRADIENT_COLOUR, 0, (float)headerBackground.getHeight(), QueryPen.UNSELECTED_CONTAINER_COLOUR));
+			headerBackground.setPaint(QueryPen.UNSELECTED_CONTAINER_GRADIENT_COLOUR);
 		}
 	}
 	
