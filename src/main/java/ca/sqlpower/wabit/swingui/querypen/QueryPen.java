@@ -87,7 +87,6 @@ import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
-import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.pswing.PSwingCanvas;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
@@ -335,7 +334,7 @@ public class QueryPen implements MouseState, WabitNode {
 	/**
 	 * A SelectionEventHandler that supports multiple select on Tables for deletion and dragging.
 	 */
-	private PSelectionEventHandler selectionEventHandler;
+	private QueryPenSelectionEventHandler selectionEventHandler;
 	
     /**
      * The cursor manager for this Query pen.
@@ -586,7 +585,7 @@ public class QueryPen implements MouseState, WabitNode {
         }
 	}
 	
-	public PSelectionEventHandler getMultipleSelectEventHandler(){
+	public QueryPenSelectionEventHandler getMultipleSelectEventHandler(){
 		return selectionEventHandler;
 	}
 	

@@ -34,6 +34,8 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -197,6 +199,12 @@ public class ContainerPane extends PNode implements WabitNode {
 			repositionWhereAndResize();
 		}
 	};
+	
+	private final ChangeListener selectionChangeListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+			setFocusColour();
+		}
+	};
 
 	private EditablePStyledText modelNameText;
 
@@ -313,6 +321,9 @@ public class ContainerPane extends PNode implements WabitNode {
 			}
 		});
 		setVisibleAliasText();
+		
+		queryPen.getMultipleSelectEventHandler().addSelectionChangeListener(selectionChangeListener);
+		setFocusColour();
 	}
 
 	/**
@@ -417,17 +428,8 @@ public class ContainerPane extends PNode implements WabitNode {
 		return false;
 	}
 	
-	@Override
-	protected void paint(PPaintContext paintContext) {
-		setFocusColour(false);
+	private void setFocusColour() {
 		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
-		if (hasFocus) {
-			setFocusColour(hasFocus);
-		}
-		super.paint(paintContext);
-	}
-	
-	private void setFocusColour(boolean hasFocus) {
 		if (hasFocus) {
 			outerRect.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
 			for (PPath line : separatorLines) {
@@ -550,6 +552,7 @@ public class ContainerPane extends PNode implements WabitNode {
 				((WabitNode)o).cleanup();
 			}
 		}
+		queryPen.getMultipleSelectEventHandler().removeSelectionChangeListener(selectionChangeListener);
 	}
 	
 }

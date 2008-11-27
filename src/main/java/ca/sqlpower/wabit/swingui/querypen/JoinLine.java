@@ -31,6 +31,8 @@ import java.beans.PropertyChangeListener;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.StyleConstants;
 
 import org.apache.log4j.Logger;
@@ -226,6 +228,12 @@ public class JoinLine extends PNode implements WabitNode {
 	private final PropertyChangeListener joinListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			updateLine();
+		}
+	};
+	
+	private final ChangeListener selectionChangeListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+			setFocusColour();
 		}
 	};
 
@@ -429,6 +437,9 @@ public class JoinLine extends PNode implements WabitNode {
 		joinCombo.addChild(outerRect);
 		joinCombo.setBounds(outerRect.getBounds());
 		outerRect.moveToBack();
+		
+		queryPen.getMultipleSelectEventHandler().addSelectionChangeListener(selectionChangeListener);
+		setFocusColour();
 	}
 
 	/**
@@ -634,17 +645,8 @@ public class JoinLine extends PNode implements WabitNode {
 		return false;
 	}
 	
-	@Override
-	protected void paint(PPaintContext paintContext) {
-		setFocusColour(false);
+	private void setFocusColour() {
 		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
-		if (hasFocus) {
-			setFocusColour(hasFocus);
-		}
-		super.paint(paintContext);
-	}
-	
-	private void setFocusColour(boolean hasFocus) {
 		if (hasFocus) {
 			leftPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
 			rightPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
@@ -662,5 +664,6 @@ public class JoinLine extends PNode implements WabitNode {
 
 	public void cleanup() {
 		model.removeJoinChangeListener(joinListener);
+		queryPen.getMultipleSelectEventHandler().removeSelectionChangeListener(selectionChangeListener);
 	}
 }

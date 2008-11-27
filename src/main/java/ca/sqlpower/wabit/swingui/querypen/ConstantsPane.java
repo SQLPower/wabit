@@ -31,6 +31,8 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -42,7 +44,6 @@ import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
-import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.nodes.PClip;
 import edu.umd.cs.piccolox.nodes.PStyledText;
@@ -147,6 +148,12 @@ public class ConstantsPane extends PNode implements WabitNode {
 				listener.propertyChange(evt);
 			}
 			repositionAndResize();
+		}
+	};
+	
+	private final ChangeListener selectionChangeListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+			setFocusColour();
 		}
 	};
 
@@ -273,6 +280,9 @@ public class ConstantsPane extends PNode implements WabitNode {
 			}
 		});
 		
+		queryPen.getMultipleSelectEventHandler().addSelectionChangeListener(selectionChangeListener);
+		setFocusColour();
+		
 	}
 	
 	/**
@@ -357,17 +367,8 @@ public class ConstantsPane extends PNode implements WabitNode {
 		return false;
 	}
 	
-	@Override
-	protected void paint(PPaintContext paintContext) {
-		setFocusColour(false);
+	private void setFocusColour() {
 		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
-		if (hasFocus) {
-			setFocusColour(hasFocus);
-		}
-		super.paint(paintContext);
-	}
-	
-	private void setFocusColour(boolean hasFocus) {
 		if (hasFocus) {
 			outerRect.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
 			headerBackground.setPaint(new GradientPaint(0, 0, QueryPen.SELECTED_CONTAINER_GRADIENT_COLOUR, 0, (float)headerBackground.getHeight(), QueryPen.SELECTED_CONTAINER_COLOUR));
@@ -404,6 +405,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 				((WabitNode)o).cleanup();
 			}
 		}
+		queryPen.getMultipleSelectEventHandler().removeSelectionChangeListener(selectionChangeListener);
 	}
 
 	public WabitObject getModel() {
