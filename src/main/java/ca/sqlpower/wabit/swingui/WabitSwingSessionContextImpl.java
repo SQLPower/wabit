@@ -40,7 +40,6 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl {
 	@Override
 	public WabitSession createSession() {
 		WabitSwingSession session = new WabitSwingSessionImpl(this);
-		registerChildSession(session);
 		return session;
 	}
 
