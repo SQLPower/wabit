@@ -31,8 +31,6 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
@@ -45,6 +43,9 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PPickPath;
+import edu.umd.cs.piccolox.event.PNotification;
+import edu.umd.cs.piccolox.event.PNotificationCenter;
+import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.nodes.PClip;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 import edu.umd.cs.piccolox.pswing.PSwing;
@@ -151,12 +152,6 @@ public class ConstantsPane extends PNode implements WabitNode {
 		}
 	};
 	
-	private final ChangeListener selectionChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
-			setFocusColour();
-		}
-	};
-
 	/**
 	 * This node contains all of the column headers for this pane.
 	 */
@@ -279,9 +274,9 @@ public class ConstantsPane extends PNode implements WabitNode {
 				}
 			}
 		});
-		
-		queryPen.getMultipleSelectEventHandler().addSelectionChangeListener(selectionChangeListener);
-		setFocusColour();
+
+		PNotificationCenter.defaultCenter().addListener(this, "setFocusColour", PSelectionEventHandler.SELECTION_CHANGED_NOTIFICATION, null);
+		setFocusColour(new PNotification(null, null, null));
 		
 	}
 	
@@ -367,7 +362,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 		return false;
 	}
 	
-	private void setFocusColour() {
+	public void setFocusColour(PNotification notification) {
 		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
 		if (hasFocus) {
 			outerRect.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
@@ -405,7 +400,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 				((WabitNode)o).cleanup();
 			}
 		}
-		queryPen.getMultipleSelectEventHandler().removeSelectionChangeListener(selectionChangeListener);
+		PNotificationCenter.defaultCenter().removeListener(this);
 	}
 
 	public WabitObject getModel() {

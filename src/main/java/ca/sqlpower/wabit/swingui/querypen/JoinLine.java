@@ -51,6 +51,9 @@ import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PPickPath;
+import edu.umd.cs.piccolox.event.PNotification;
+import edu.umd.cs.piccolox.event.PNotificationCenter;
+import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
@@ -228,12 +231,6 @@ public class JoinLine extends PNode implements WabitNode {
 	private final PropertyChangeListener joinListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			updateLine();
-		}
-	};
-	
-	private final ChangeListener selectionChangeListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
-			setFocusColour();
 		}
 	};
 
@@ -437,9 +434,9 @@ public class JoinLine extends PNode implements WabitNode {
 		joinCombo.addChild(outerRect);
 		joinCombo.setBounds(outerRect.getBounds());
 		outerRect.moveToBack();
-		
-		queryPen.getMultipleSelectEventHandler().addSelectionChangeListener(selectionChangeListener);
-		setFocusColour();
+
+		PNotificationCenter.defaultCenter().addListener(this, "setFocusColour", PSelectionEventHandler.SELECTION_CHANGED_NOTIFICATION, null);
+		setFocusColour(new PNotification(null, null, null));
 	}
 
 	/**
@@ -532,8 +529,7 @@ public class JoinLine extends PNode implements WabitNode {
 		selectedImageBackground.setX(midX - unselectedImageNode.getWidth()/2);
 		selectedImageBackground.setY(midY - unselectedImageNode.getHeight()/2);
 		if (model.getComparator().equals(SQLJoin.Comparators.EQUAL_TO.getComparator())) {
-			selectedImageNode.setVisible(false);
-			unselectedImageNode.setVisible(true);
+			setFocusColour(new PNotification(null, null, null));
 			selectedImageBackground.setVisible(true);
 			textCircle.setVisible(false);
 		} else {
@@ -645,7 +641,7 @@ public class JoinLine extends PNode implements WabitNode {
 		return false;
 	}
 	
-	private void setFocusColour() {
+	public void setFocusColour(PNotification notification) {
 		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
 		if (hasFocus) {
 			leftPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
@@ -664,6 +660,6 @@ public class JoinLine extends PNode implements WabitNode {
 
 	public void cleanup() {
 		model.removeJoinChangeListener(joinListener);
-		queryPen.getMultipleSelectEventHandler().removeSelectionChangeListener(selectionChangeListener);
+		PNotificationCenter.defaultCenter().removeListener(this);
 	}
 }

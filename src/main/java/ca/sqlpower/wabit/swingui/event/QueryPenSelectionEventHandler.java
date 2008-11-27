@@ -19,12 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.event;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import ca.sqlpower.wabit.swingui.querypen.ConstantsPane;
 import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
@@ -46,8 +42,6 @@ import edu.umd.cs.piccolox.event.PSelectionEventHandler;
  */
 public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 	
-	private final List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
-
 	public QueryPenSelectionEventHandler(PNode marqueeParent,
 			List<?> selectableParents) {
 		super(marqueeParent, selectableParents);
@@ -113,30 +107,6 @@ public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 	@Override
 	public void decorateSelectedNode(PNode node) {
 		//Containers should decorate themselves not add resize bubbles.
-	}
-	
-	@Override
-	protected void endMarqueeSelection(PInputEvent e) {
-		super.endMarqueeSelection(e);
-		for (int i = changeListeners.size() - 1; i >= 0; i--) {
-			changeListeners.get(i).stateChanged(new ChangeEvent(this));
-		}
-	}
-	
-	@Override
-	protected void endStandardSelection(PInputEvent e) {
-		super.endStandardSelection(e);
-		for (int i = changeListeners.size() - 1; i >= 0; i--) {
-			changeListeners.get(i).stateChanged(new ChangeEvent(this));
-		}
-	}
-	
-	public void addSelectionChangeListener(ChangeListener l) {
-		changeListeners.add(l);
-	}
-	
-	public boolean removeSelectionChangeListener(ChangeListener l) {
-		return changeListeners.remove(l);
 	}
 	
 }
