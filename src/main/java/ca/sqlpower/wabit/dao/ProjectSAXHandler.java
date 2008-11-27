@@ -472,10 +472,23 @@ public class ProjectSAXHandler extends DefaultHandler {
         	}
         } else if (name.equals("column-info")) {
         	String colInfoName = attributes.getValue("name");
-        	String colInfoKey = attributes.getValue("column-info-item-id");
-        	checkMandatory("column-info-item-id", colInfoKey);
+        	String colInfoItem = attributes.getValue("column-info-item-id");
+        	
+        	//For backwards compatability with 0.9.1
+        	String colInfoKey = attributes.getValue("column-info-key");
+        	if (colInfoKey != null && colInfoItem == null) {
+        		QueryCache q = (QueryCache) rsRenderer.getQuery();
+        		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
+        			Item item = entry.getValue();
+        			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {
+        				colInfoItem = entry.getKey();
+        				break;
+        			}
+        		}
+        	}
+        	
         	checkMandatory("name", colInfoName);
-        	colInfo = new ColumnInfo(uuidToItemMap.get(colInfoKey), colInfoName);
+        	colInfo = new ColumnInfo(uuidToItemMap.get(colInfoItem), colInfoName);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
