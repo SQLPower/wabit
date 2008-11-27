@@ -26,6 +26,7 @@ import java.awt.Graphics2D;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
@@ -88,6 +89,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     private static final Logger logger = Logger.getLogger(ResultSetRenderer.class);
     
     private static final String defaultFormatString = "Default Format";
+
+	private static final int COLUMN_WIDTH_BUFFER = 5;
     
     private static DataType getDataType(String className) {
     	try {
@@ -201,7 +204,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         cachedQuery = new QueryCache((QueryCache) query);
 		try {
             executedRs = cachedQuery.execute(); // TODO run in background
-            initColumns(executedRs.getMetaData());
+            initColumns(executedRs);
         } catch (Exception ex) {
             executeException = ex;
         }
@@ -267,7 +270,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 * @throws SQLException
 	 *             If the resultset metadata methods fail.
 	 */
-    private void initColumns(ResultSetMetaData rsmd) throws SQLException {
+    private void initColumns(ResultSet rs) throws SQLException {
+    	ResultSetMetaData rsmd = rs.getMetaData();
     	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
     	for (ColumnInfo info : columnInfo) {
     		logger.debug("Loaded key " + info.getColumnInfoItem());
@@ -284,6 +288,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         		ci = colKeyToInfoMap.get(item);
         	} else {
         		ci = new ColumnInfo(item, columnKey);
+        		ci.setWidth(-1);
         	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
             ci.setParent(ResultSetRenderer.this);
@@ -403,6 +408,29 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             
             g.setFont(getBodyFont());
             fm = g.getFontMetrics();
+            
+            for (ColumnInfo ci : columnInfo) {
+            	if (ci.getWidth() < 0) {
+            		int currentRow = rs.getRow();
+            		rs.beforeFirst();
+            		int columnIndex = columnInfo.indexOf(ci) + 1;
+					double maxWidth = fm.getStringBounds(rs.getMetaData().getColumnName(columnIndex), g).getWidth();
+					double currentHeight = 0;
+            		while (rs.next() && currentHeight < contentBox.getHeight()) {
+            			if (rs.getString(columnIndex) == null) {
+            				continue;
+            			}
+            			Rectangle2D stringBounds = fm.getStringBounds(rs.getString(columnIndex), g);
+						double stringLength = stringBounds.getWidth();
+            			currentHeight += stringBounds.getHeight();
+            			if (stringLength > maxWidth) {
+            				maxWidth = stringLength;
+            			}
+            		}
+            		rs.absolute(currentRow);
+            		ci.setWidth((int) maxWidth + COLUMN_WIDTH_BUFFER);
+            	}
+            }
             
             List<String> lastRenderedRow = new ArrayList<String>();
             Map<ColumnInfo, Double> subtotalForCols = new HashMap<ColumnInfo, Double>();
