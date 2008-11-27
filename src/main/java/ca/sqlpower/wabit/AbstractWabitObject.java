@@ -134,7 +134,9 @@ public abstract class AbstractWabitObject implements WabitObject {
 	public void setParent(WabitObject parent) {
 	    WabitObject oldParent = this.parent;
 		this.parent = parent;
-		firePropertyChange("parent", oldParent, parent);
+		if(parent != null) {
+			firePropertyChange("parent", oldParent, parent);
+		}
 	}
 	
 	public String getName() {
