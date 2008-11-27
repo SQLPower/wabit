@@ -24,13 +24,29 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceAdapter;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
@@ -43,7 +59,7 @@ import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
-import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -52,8 +68,10 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -71,6 +89,69 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
     public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/shape_square_add.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
+    
+    private class QueryDropListener implements DropTargetListener {
+
+		public void dragEnter(DropTargetDragEvent dtde) {
+			//no-op
+		}
+
+		public void dragExit(DropTargetEvent dte) {
+			//no-op
+		}
+
+		public void dragOver(DropTargetDragEvent dtde) {
+			//no-op
+		}
+
+		public void drop(DropTargetDropEvent dtde) {
+			if (!dtde.isLocalTransfer()) {
+			    logger.debug("Rejecting non-local transfer");
+			    dtde.rejectDrop();
+				return;
+			}
+			
+			if (!dtde.isDataFlavorSupported(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR)) {
+                logger.debug("Rejecting transfer of unknown flavour");
+                dtde.rejectDrop();
+				return;
+			}			
+			
+			Query[] queries;
+			try {
+				queries = (Query[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
+			} catch (UnsupportedFlavorException e) {
+				dtde.dropComplete(false);
+				dtde.rejectDrop();
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				dtde.dropComplete(false);
+				dtde.rejectDrop();
+				throw new RuntimeException(e);
+			}
+			
+			for (Query query : queries) {
+				ContentBox contentBox = new ContentBox();
+				ResultSetRenderer rsRenderer = new ResultSetRenderer(query);
+				contentBox.setContentRenderer(rsRenderer);
+				ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+						contentBox);
+				newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+						(report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
+						pageNode.getHeight() / 10);
+				pageNode.addChild(newCBNode);
+			}
+			
+			dtde.dropComplete(true);
+			dtde.acceptDrop(dtde.getDropAction());
+			
+		}
+
+		public void dropActionChanged(DropTargetDragEvent dtde) {
+			//no-op
+		}
+    	
+    }
     
     private final JPanel panel;
     private final PCanvas canvas;
@@ -95,6 +176,8 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		}
 	};
 	
+	private final WabitSwingSession session;
+	
 	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_HORIZONTAL_GUIDE);
@@ -110,7 +193,8 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 	};
 	
     public ReportLayoutPanel(WabitSwingSession session, Layout report) {
-        this.report = report;
+        this.session = session;
+		this.report = report;
 		canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
         canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -186,13 +270,36 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         mainSplitPane.setResizeWeight(1);
         mainSplitPane.add(leftPanel, JSplitPane.LEFT);
         
-        final JList queryList = new JList(session.getProject().getQueries().toArray());
-        queryList.setCellRenderer(new ListCellRenderer() {
+        final JList queryList = new JList(new QueryListModel(session.getProject()));
+        queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        queryList.setCellRenderer(new DefaultListCellRenderer() {
+        	@Override
 			public Component getListCellRendererComponent(JList list, Object value,
 					int index, boolean isSelected, boolean cellHasFocus) {
-				return new JLabel(((WabitObject) value).getName());
+				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
+				((JLabel) c).setText(((Query) value).getName());
+				return c;
 			}
 		});
+        
+        DragSource ds = new DragSource();
+		ds.createDefaultDragGestureRecognizer(queryList, DnDConstants.ACTION_COPY, new DragGestureListener() {
+			public void dragGestureRecognized(DragGestureEvent dge) {
+				if (queryList.getSelectedValues() == null && queryList.getSelectedValues().length > 0) {
+					return;
+				}
+				List<Query> queries = new ArrayList<Query>();
+				for (Object q : queryList.getSelectedValues()) {
+					queries.add((Query) q);
+				}
+				Transferable dndTransferable = new ReportQueryTransferable(queries);
+				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {
+					//This is a drag source adapter with empty methods.
+				});
+			}
+		});
+		new DropTarget(canvas, new QueryDropListener());
+		
         mainSplitPane.add(new JScrollPane(queryList), JSplitPane.RIGHT);
                 
         panel = new JPanel(new BorderLayout());
