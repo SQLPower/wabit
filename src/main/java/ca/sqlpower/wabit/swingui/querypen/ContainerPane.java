@@ -338,6 +338,7 @@ public class ContainerPane extends PNode implements WabitNode {
 		
 		PNode itemHeader = new PNode();
 		JCheckBox allCheckBox = new JCheckBox();
+		allCheckBox.setOpaque(false);
 		allCheckBox.addActionListener(new AbstractAction(){
 
 			public void actionPerformed(ActionEvent e) {

@@ -196,6 +196,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 		header = new PNode();
 		header.translate(0, title.getHeight() + BORDER_SIZE);
 		final JCheckBox checkbox = new JCheckBox();
+		checkbox.setOpaque(false);
 		checkbox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				for (ConstantPNode node : constantPNodeList) {

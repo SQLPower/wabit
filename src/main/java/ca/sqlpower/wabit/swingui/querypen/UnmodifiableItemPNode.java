@@ -206,6 +206,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 		joinedLines = new ArrayList<JoinLine>();
 		
 		isInSelectCheckBox = new JCheckBox();
+		isInSelectCheckBox.setOpaque(false);
 		swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
 		
