@@ -20,19 +20,22 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
+import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
-public class CreateBoxEventHandler extends PBasicInputEventHandler {
+public class CreateNodeEventHandler extends PBasicInputEventHandler {
 
 	private final WabitSwingSession session;
 
 	private final ReportLayoutPanel panel;
 
-	public CreateBoxEventHandler(WabitSwingSession session, ReportLayoutPanel panel) {
+	public CreateNodeEventHandler(WabitSwingSession session, ReportLayoutPanel panel) {
 		this.session = session;
 		this.panel = panel;
 	}
@@ -48,16 +51,20 @@ public class CreateBoxEventHandler extends PBasicInputEventHandler {
 			ContentBox contentBox = new ContentBox();
 			Label label = new Label(panel.getReport(), "New Content Box");
 			contentBox.setContentRenderer(label);
-			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
-					contentBox);
-			newCBNode.setBounds(event.getPosition().getX(), event.getPosition()
-					.getY(), (panel.getReport().getPage()
-					.getRightMarginOffset() - panel.getReport().getPage()
-					.getLeftMarginOffset()) / 2, panel.getPageNode()
-					.getHeight() / 10);
+			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
+			Page page = panel.getReport().getPage();
+			newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
 			panel.getPageNode().addChild(newCBNode);
-			panel.setMouseState(MouseStates.READY);
-			panel.getCursorManager().placeModeFinished();
+		} else if (panel.getMouseState().equals(MouseStates.CREATE_HORIZONTAL_GUIDE)) {
+			Guide tmpGuide = new Guide(Axis.HORIZONTAL, (int)event.getPosition().getY());
+			panel.getPageNode().getModel().addGuide(tmpGuide);
+			panel.getPageNode().addChild(new GuideNode(tmpGuide));
+		}  else if (panel.getMouseState().equals(MouseStates.CREATE_VERTICAL_GUIDE)) {
+			Guide tmpGuide = new Guide(Axis.VERTICAL, (int)event.getPosition().getX());
+			panel.getPageNode().getModel().addGuide(tmpGuide);
+			panel.getPageNode().addChild(new GuideNode(tmpGuide));
 		}
+		panel.setMouseState(MouseStates.READY);
+		panel.getCursorManager().placeModeFinished();
 	}
 }

@@ -29,11 +29,11 @@ import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.query.SQLJoin;
+import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
 import ca.sqlpower.wabit.swingui.querypen.ConstantPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
-import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;

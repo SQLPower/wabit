@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.swingui.WabitNode;
-import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
+import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;

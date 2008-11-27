@@ -78,6 +78,7 @@ import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.TableContainer;
+import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.SQLObjectSelection;
 import ca.sqlpower.wabit.swingui.WabitNode;

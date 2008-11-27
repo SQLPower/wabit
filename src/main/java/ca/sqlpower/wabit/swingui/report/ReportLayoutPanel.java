@@ -54,9 +54,9 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.querypen.MouseState;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -68,7 +68,9 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 
     private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
-    public static final Icon ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/shape_square_add.png"));		
+    public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/shape_square_add.png"));		
+    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
+    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
     
     private final JPanel panel;
     private final PCanvas canvas;
@@ -86,9 +88,23 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 	private final CursorManager cursorManager;
 	
 	
-	private final AbstractAction addContentBoxAction = new AbstractAction("",  ReportLayoutPanel.ICON){
+	private final AbstractAction addContentBoxAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_BOX);
+			cursorManager.placeModeStarted();
+		}
+	};
+	
+	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_HORIZONTAL_GUIDE);
+			cursorManager.placeModeStarted();
+		}
+	};
+	
+	private final AbstractAction addVerticalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_VERTICAL_GUIDE_ICON){
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_VERTICAL_GUIDE);
 			cursorManager.placeModeStarted();
 		}
 	};
@@ -114,7 +130,8 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         
         AbstractAction cancelBoxCreateAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
-        		if (mouseState == MouseStates.CREATE_BOX) {
+        		if (mouseState == MouseStates.CREATE_BOX || mouseState == MouseStates.CREATE_HORIZONTAL_GUIDE 
+        				|| mouseState == MouseStates.CREATE_VERTICAL_GUIDE ) {
         			setMouseState(MouseStates.READY);
         			cursorManager.placeModeFinished();
         		}
@@ -125,7 +142,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
 		inputMap.put(KeyStroke.getKeyStroke('b'), addContentBoxAction.getClass());
 		
-		canvas.addInputEventListener(new CreateBoxEventHandler(session, this));
+		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
         JToolBar toolbar = new JToolBar();
         toolbar.add(new PageFormatAction(report.getPage()));
         toolbar.add(new PrintAction(report));
@@ -154,6 +171,8 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         toolbar.add(zoomPanel);
         toolbar.addSeparator();
         toolbar.add(addContentBoxAction);
+        toolbar.add(addHorizontalGuideAction);
+        toolbar.add(addVerticalGuideAction);
         
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.add(toolbar, BorderLayout.NORTH);

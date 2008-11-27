@@ -23,8 +23,8 @@ import java.awt.geom.Point2D;
 
 import javax.swing.text.JTextComponent;
 
-import ca.sqlpower.wabit.swingui.querypen.MouseState;
-import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
+import ca.sqlpower.wabit.swingui.MouseState;
+import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolox.event.PStyledTextEventHandler;
