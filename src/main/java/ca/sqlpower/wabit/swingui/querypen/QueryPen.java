@@ -691,4 +691,11 @@ public class QueryPen implements MouseState, WabitNode {
 			}
 		}
 	}
+
+	public void setZoom(int zoomLevel) {
+		if (zoomLevel > zoomSlider.getMinimum() && zoomLevel < zoomSlider.getMaximum()) {
+			zoomSlider.setValue( zoomLevel);
+		}
+		
+	}
 }

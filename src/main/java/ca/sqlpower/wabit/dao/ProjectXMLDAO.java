@@ -256,6 +256,7 @@ public class ProjectXMLDAO {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
 		printAttribute("uuid", cache.getUUID().toString());
+		printAttribute("zoom", cache.getZoomLevel());
 		if (cache.getDataSource() != null) {
 			printAttribute("data-source", cache.getDataSource().getName());
 		}

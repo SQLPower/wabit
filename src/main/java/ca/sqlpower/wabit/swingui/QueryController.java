@@ -28,8 +28,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JComboBox;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -43,7 +45,6 @@ import javax.swing.text.JTextComponent;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
@@ -276,6 +277,14 @@ public class QueryController {
 	 * edit the SQL query.
 	 */
 	private final JTextComponent queryText;
+
+	private final JSlider zoomSlider;
+
+	private final ChangeListener zoomListener = new ChangeListener() {
+		public void stateChanged(ChangeEvent e) {
+			queryCache.setZoomLevel(zoomSlider.getValue());
+		}
+	};
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
@@ -283,17 +292,19 @@ public class QueryController {
 	 * a listener added so the {@link QueryCache} can track which database to execute
 	 * on.
 	 */
-	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent) {
+	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {
 		queryCache = cache;
 		this.pen = pen;
 		this.dataSourceComboBox = dataSourceComboBox;
 		queryText = textComponent;
+		this.zoomSlider = zoomSlider;
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
 		queryText.getDocument().addDocumentListener(queryTextListener);
+		zoomSlider.addChangeListener(zoomListener );
 	}
 	
 	/**
@@ -307,6 +318,7 @@ public class QueryController {
 		pen.removeQueryListener(tableItemListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);
 		queryText.getDocument().removeDocumentListener(queryTextListener);
+		zoomSlider.removeChangeListener(zoomListener);
 		unlistenToCellRenderer();
 	}
 	

@@ -215,6 +215,11 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	private final Map<Container, String> tableAliasMap;
 	
 	/**
+	 * This is the level of the zoom in the query.
+	 */
+	private int zoomLevel;
+	
+	/**
 	 * Listens for changes to the alias on the item and fires events to its 
 	 * listeners if the alias was changed.
 	 */
@@ -1124,6 +1129,14 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public Container newConstantsContainer(String uuid) {
 		constantsContainer = new ItemContainer("Constants", uuid);
 		return constantsContainer;
+	}
+
+	public void setZoomLevel(int zoomLevel) {
+		this.zoomLevel = zoomLevel;
+	}
+
+	public int getZoomLevel() {
+		return zoomLevel;
 	}
 	
 }

@@ -81,7 +81,6 @@ import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
@@ -201,7 +200,8 @@ public class QueryPanel implements DataEntryPanel {
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
 		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane);
 		queryUIComponents.enableMultipleQueries(false);
-		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea());
+		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
+		queryPen.setZoom(queryCache.getZoomLevel());
 		queuedQueryCache = new ArrayList<QueryCache>();
 		
 		dragTree = new JTree();

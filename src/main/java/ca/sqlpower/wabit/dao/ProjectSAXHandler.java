@@ -191,6 +191,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			}
         			logger.debug("Setting data source in query " + uuid + " to " + ds.getName());
         			query.setDataSource(ds);
+        		} else if (aname.equals("zoom")) {
+        			query.setZoomLevel(Integer.parseInt(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
