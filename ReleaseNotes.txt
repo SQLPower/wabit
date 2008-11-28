@@ -15,11 +15,16 @@ Changes in 0.9.2
     * Added buttons for creating horizontal and vertical guides
     * Guides can now be deleted
     * Added a Zoom to Fit button
+    * The query results will update when the query changes
+    * Columns auto-size when the layout is first created
 
   Bug Fixes
     * The application now creates a default pl.ini (database configuration file) if it does not exist.
     * Changes to the query in the Query Editor now get reflected in the Report Layout Editor
     * Delete content boxes in the Report Layout now also removes it from the left-hand tree
+    * Printing on multiple pages no longer loses rows between the pages.
+    * Printing across multiple pages will increase the number of pages as necessary instead of
+      being stuck at the previous page count.
 
 
 Changes in 0.9.1
