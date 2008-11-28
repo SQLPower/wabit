@@ -165,7 +165,12 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
      * The cursor manager for this Query pen.
      */
 	private final CursorManager cursorManager;
-	
+
+	/**
+	 * This split pane will split the layout editor between the page layout
+	 * and the list of queries that can be dragged into the layout.
+	 */
+	private JSplitPane mainSplitPane;
 	
 	private final AbstractAction addContentBoxAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
 		public void actionPerformed(ActionEvent e) {
@@ -266,7 +271,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
         leftPanel.add(canvasScrollPane, BorderLayout.CENTER);
         
-        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplitPane.setOneTouchExpandable(true);
         mainSplitPane.setResizeWeight(1);
         mainSplitPane.add(leftPanel, JSplitPane.LEFT);
@@ -372,6 +377,10 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 
 	public CursorManager getCursorManager() {
 		return cursorManager;
+	}
+
+	public JSplitPane getSplitPane() {
+		return mainSplitPane;
 	}
 
 	

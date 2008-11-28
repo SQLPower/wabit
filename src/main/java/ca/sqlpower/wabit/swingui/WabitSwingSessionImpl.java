@@ -80,6 +80,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private static final String QUERY_DIVIDER_LOCATON = "QueryDividerLocaton";
 
+	/**
+	 * A constant for storing the location of the divider for layouts in prefs.
+	 */
+	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
+	
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 
 	private final WabitSessionContext sessionContext;
@@ -92,6 +97,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private static JLabel statusLabel;
 	
 	private static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
+
 	
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
@@ -337,7 +343,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		   	}
 		   	currentEditorPanel = queryPanel;
 		} else if (entryPanelModel instanceof Layout) {
-			currentEditorPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
+			ReportLayoutPanel rlPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
+			if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {
+				rlPanel.getSplitPane().setDividerLocation(Integer.parseInt(prefs.get(LAYOUT_DIVIDER_LOCATION, null)));
+			}
+			currentEditorPanel = rlPanel;
 		} else if (entryPanelModel instanceof WabitProject) {
 			currentEditorPanel = new ProjectPanel(this);
 		} else {
@@ -368,6 +378,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			if (currentEditorPanel instanceof QueryPanel) {
 				QueryPanel query = (QueryPanel)currentEditorPanel;
 				prefs.put(QUERY_DIVIDER_LOCATON, String.format("%d,%d", query.getTopRightSplitPane().getDividerLocation(), query.getFullSplitPane().getDividerLocation()));
+			} else if (currentEditorPanel instanceof ReportLayoutPanel) {
+				prefs.put(LAYOUT_DIVIDER_LOCATION, String.format("%d", ((ReportLayoutPanel) currentEditorPanel).getSplitPane().getDividerLocation()));
 			}
 			currentEditorPanel.discardChanges();
 			wabitPane.remove(currentEditorPanel.getPanel());
