@@ -39,4 +39,9 @@ public class StubQuery extends StubWabitObject implements Query {
 		
 	}
 
+	public String generateQuery() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

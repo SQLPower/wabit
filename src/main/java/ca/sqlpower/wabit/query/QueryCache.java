@@ -387,7 +387,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * A copy constructor for the query cache. This will not
 	 * hook up listeners.
 	 */
-	public QueryCache(QueryCache copy) {
+	public QueryCache(Query copy) {
 		selectedColumns = new ArrayList<Item>();
 		fromTableList = new ArrayList<Container>();
 		tableAliasMap = new HashMap<Container, String>();
@@ -398,22 +398,31 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		orderByList = new ArrayList<Item>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		
-		selectedColumns.addAll(copy.getSelectedColumns());
-		fromTableList.addAll(copy.getFromTableList());
-		tableAliasMap.putAll(copy.getTableAliasMap());
-		joinMapping.putAll(copy.getJoinMapping());
-		groupByList.addAll(copy.getGroupByList());
-		groupByAggregateMap.putAll(copy.getGroupByAggregateMap());
-		havingMap.putAll(copy.getHavingMap());
-		orderByList.addAll(copy.getOrderByList());
-		orderByArgumentMap.putAll(copy.getOrderByArgumentMap());
-		globalWhereClause = copy.getGlobalWhereClause();
-		groupingEnabled = copy.isGroupingEnabled();
-		
 		setName(copy.getName());
 		setParent(copy.getParent());
-		setDataSource(copy.getDataSource());
-		constantsContainer = copy.getConstantsContainer();
+		if (copy instanceof QueryCache) {
+			QueryCache query = (QueryCache) copy;
+
+			selectedColumns.addAll(query.getSelectedColumns());
+			fromTableList.addAll(query.getFromTableList());
+			tableAliasMap.putAll(query.getTableAliasMap());
+			joinMapping.putAll(query.getJoinMapping());
+			groupByList.addAll(query.getGroupByList());
+			groupByAggregateMap.putAll(query.getGroupByAggregateMap());
+			havingMap.putAll(query.getHavingMap());
+			orderByList.addAll(query.getOrderByList());
+			orderByArgumentMap.putAll(query.getOrderByArgumentMap());
+			globalWhereClause = query.getGlobalWhereClause();
+			groupingEnabled = query.isGroupingEnabled();
+
+
+			setDataSource(query.getDataSource());
+			constantsContainer = query.getConstantsContainer();
+			userModifiedQuery = query.getUserModifiedQuery();
+		} else {
+			userModifiedQuery = copy.generateQuery();
+			logger.warn("Unknown query type " + copy.getClass() + " to make a cached query of.");
+		}
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -1137,6 +1146,13 @@ public class QueryCache extends AbstractWabitObject implements Query {
 
 	public int getZoomLevel() {
 		return zoomLevel;
+	}
+	
+	/**
+	 * Used for constructing copies of the query cache.
+	 */
+	protected String getUserModifiedQuery() {
+		return userModifiedQuery;
 	}
 	
 }

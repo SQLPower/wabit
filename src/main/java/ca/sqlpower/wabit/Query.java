@@ -48,5 +48,7 @@ public interface Query extends WabitObject {
     void setDataSource(SPDataSource ds);
 
 	void setName(String string);
+	
+	String generateQuery();
     
 }
