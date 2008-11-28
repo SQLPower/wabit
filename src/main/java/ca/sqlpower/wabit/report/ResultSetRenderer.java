@@ -201,14 +201,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	private void executeQuery() {
         ResultSet executedRs = null;
         executeException = null;
-        cachedQuery = new QueryCache((QueryCache) query);
 		try {
-            executedRs = cachedQuery.execute(); // TODO run in background
+            executedRs = query.execute(); // TODO run in background
             initColumns(executedRs);
         } catch (Exception ex) {
             executeException = ex;
         }
-        setName("Result Set: " + cachedQuery.getName());
+        setName("Result Set: " + query.getName());
         rs = executedRs;
 	}
 	
