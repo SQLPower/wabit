@@ -371,6 +371,17 @@ public class ProjectSAXHandler extends DefaultHandler {
     		checkMandatory("name", layoutName);
     		layout = new Layout(layoutName);
     		session.getProject().addLayout(layout);
+          	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("name")) {
+        			//already loaded
+        		} else if (aname.equals("zoom")) {
+        			layout.setZoomLevel(Integer.parseInt(aval));
+        		} else {
+        			logger.warn("Unexpected attribute of <layout>: " + aname + "=" + aval);
+        		}
+          	}
    
         } else if (name.equals("layout-page")) {
         	String pageName = attributes.getValue("name");

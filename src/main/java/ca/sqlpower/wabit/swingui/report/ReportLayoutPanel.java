@@ -77,8 +77,6 @@ import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.swing.PScrollPane;
@@ -208,7 +206,6 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
-        canvas.addInputEventListener(new MouseInputHandler());
         canvas.getRoot().getDefaultInputManager().setKeyboardFocus(selectionEventHandler);
         
         
@@ -238,7 +235,8 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         final JSlider zoomSlider = new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
         zoomSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				canvas.getCamera().setViewScale((double)zoomSlider.getValue()/defaultSliderValue);
+				canvas.getCamera().setViewScale((double) zoomSlider.getValue()/defaultSliderValue);
+				ReportLayoutPanel.this.report.setZoomLevel(zoomSlider.getValue());
 			}
 		});
         zoomSlider.addMouseListener(new MouseAdapter() {
@@ -249,6 +247,9 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         		}
         	}
 		});
+        if (report.getZoomLevel() > zoomSlider.getMinimum() && report.getZoomLevel() < zoomSlider.getMaximum()) {
+        	zoomSlider.setValue(report.getZoomLevel());
+        }
         zoomPanel.add(zoomSlider, BorderLayout.CENTER);
         zoomPanel.add(new JLabel(new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"))), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
@@ -307,14 +308,6 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         
         panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelBoxCreateAction.getClass());
-    }
-    
-    private class MouseInputHandler implements PInputEventListener {
-
-        public void processEvent(PInputEvent event, int type) {
-            logger.debug("Processing event: " + event);
-        }
-        
     }
     
     /**

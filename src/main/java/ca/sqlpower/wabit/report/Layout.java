@@ -64,6 +64,11 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
      * The variables defined for this report.
      */
     private final Map<String, Object> vars = new HashMap<String, Object>();
+    
+    /**
+     * This is the zoom level for the views of this layout.
+     */
+    private int zoomLevel;
 
     
     public Layout(String name) {
@@ -189,4 +194,12 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     	}
     	return pageNum;
     }
+
+	public void setZoomLevel(int zoomLevel) {
+		this.zoomLevel = zoomLevel;
+	}
+
+	public int getZoomLevel() {
+		return zoomLevel;
+	}
 }

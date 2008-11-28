@@ -125,6 +125,7 @@ public class ProjectXMLDAO {
 	public void saveLayout(Layout layout) {
 		xml.print(out, "<layout");
 		printAttribute("name", layout.getName());
+		printAttribute("zoom", layout.getZoomLevel());
 		xml.println(out, ">");
 		xml.indent++;
 		
