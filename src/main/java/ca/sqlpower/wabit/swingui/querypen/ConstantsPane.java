@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
@@ -200,7 +201,11 @@ public class ConstantsPane extends PNode implements WabitNode {
 			public void actionPerformed(ActionEvent e) {
 				for (ConstantPNode node : constantPNodeList) {
 					if(node.isInSelect() != ((JCheckBox)e.getSource()).isSelected()) {
-						node.setSelected(checkbox.isSelected());
+						if (node.getModel() instanceof StringCountItem && queryPen.getModel().isGroupingEnabled()) {
+							node.setSelected(checkbox.isSelected());
+						} else if (!(node.getModel() instanceof StringCountItem)) {
+							node.setSelected(checkbox.isSelected());
+						}
 					}
 				}
 			}
