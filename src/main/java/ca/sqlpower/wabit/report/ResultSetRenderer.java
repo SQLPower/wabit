@@ -435,7 +435,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             List<String> lastRenderedRow = new ArrayList<String>();
             Map<ColumnInfo, Double> subtotalForCols = new HashMap<ColumnInfo, Double>();
             int rowCount = 0;
-            while ( rs.next() && ((y + fm.getHeight()) < contentBox.getHeight()) ) {
+            while (((y + fm.getHeight()) < contentBox.getHeight()) && rs.next()) {
             	rowCount++;
             	List<String> renderedRow = new ArrayList<String>();
             	
@@ -454,16 +454,61 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                     renderedRow.add(formattedValue);
                 }
                 
+                List<String> nextRenderedRow = new ArrayList<String>();
+                if (rs.next()) {
+                	for (int col = 1; col <= colCount; col++) {
+                		ColumnInfo ci = columnInfo.get(col-1);
+                		Object value = rs.getObject(col);
+                		String formattedValue;
+                		if (ci.getFormat() != null && value != null) {
+                			logger.debug("Format iss:"+ ci.getFormat()+ "string is:"+ rs.getString(col));
+                			formattedValue = ci.getFormat().format(value);
+                		} else {
+                			formattedValue = replaceNull(rs.getString(col));
+                		}
+                		nextRenderedRow.add(formattedValue);
+                	}
+                	rs.previous();
+                }
+                
+                //Decides if there is enough space for the last row before the subtotal
+                //and the subtotal itself.
+                if (!subtotalForCols.isEmpty() && !renderedRow.isEmpty() && !nextRenderedRow.isEmpty()) {
+                	boolean nextContentBox = false;
+                	for (int i = 0; i < colCount; i++) {
+                		ColumnInfo ci = columnInfo.get(i);
+                		if ((ci.getWillBreak() && !nextRenderedRow.get(i).equals(renderedRow.get(i))) 
+                				&& (y + fm.getHeight() + subtotalHeight(g)) > contentBox.getHeight()) {
+                			nextContentBox = true;
+                			break;
+                		}
+                	}
+                	if (nextContentBox) {
+                		rs.previous();
+                		break;
+                	}
+                }
+                
+                boolean spaceForNextLine = true;
                 for (int i = 0; i < colCount; i++) {
                 	ColumnInfo ci = columnInfo.get(i);
                 	if (ci.getWillBreak() && i < lastRenderedRow.size() && !lastRenderedRow.get(i).equals(renderedRow.get(i))) {
+                		y = renderSubtotals(g, fm, y, colCount, subtotalForCols);
+                		if ((y + fm.getHeight() * 2) > contentBox.getHeight()) {
+                			spaceForNextLine = false;
+                			break;
+                		}
                 		y += fm.getHeight();
-                		y = renderSubtotals(g, fm, y, colCount,
-                				subtotalForCols);
+                		logger.debug("Printing break line: y height = " + y + ", font height = " + fm.getHeight() + " content box height = " + contentBox.getHeight());
                 		g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
                 		subtotalForCols.clear();
                 		break;
                 	}
+                }
+                if (!spaceForNextLine) {
+                	logger.debug("Not enough space for newline.");
+                	rs.previous();
+                	break;
                 }
                 
                 y += fm.getHeight();
@@ -479,7 +524,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	if (ci.getDataType().equals(DataType.NUMERIC)) {
                 		try {
                 			if (subtotalForCols.get(ci) == null) {
-                				subtotalForCols.put(ci, Double.parseDouble(rs.getString(col + 1)));
+                				subtotalForCols.put(ci, Double.parseDouble(formattedValue));
                 			} else {
                 				subtotalForCols.put(ci, subtotalForCols.get(ci) + Double.parseDouble(formattedValue));
                 			}
@@ -492,8 +537,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
             logger.debug("Content box has height " + contentBox.getHeight() + " ended at row " + rs.getRow() + " in result set.");
             logger.debug("Printed " + rowCount + " rows in the current result set renderer.");
-            y += fm.getHeight();
-            renderSubtotals(g, fm, y, colCount, subtotalForCols);
+            if (rs.isAfterLast() && !subtotalForCols.isEmpty()) {
+            	renderSubtotals(g, fm, y, colCount, subtotalForCols);
+            }
             return !rs.isAfterLast();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -514,6 +560,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		if (!subtotalForCols.isEmpty()) {
 			int localX = 0;
 
+			y += fm.getHeight();
 			boolean firstSubtotal = true;
 			for (int subCol = 0; subCol < colCount; subCol++) {
 				ColumnInfo colInfo = columnInfo.get(subCol);
@@ -539,9 +586,23 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 				}
 				localX += colInfo.getWidth();
 			}
-			y += fm.getHeight();
 		}
 		return y;
+	}
+	
+	/**
+	 * This will return the height of the subtotal displayed by
+	 * renderSubtotals.
+	 */
+	private int subtotalHeight(Graphics2D g) {
+		Font currentFont = g.getFont();
+		int subtotalHeight = 0;
+		g.setFont(getHeaderFont());
+		subtotalHeight += g.getFontMetrics().getHeight();
+		g.setFont(getBodyFont());
+		subtotalHeight += 2 * g.getFontMetrics().getHeight();
+		g.setFont(currentFont);
+		return subtotalHeight;
 	}
 
     private String replaceNull(String string) {
