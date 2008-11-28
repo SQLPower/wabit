@@ -176,7 +176,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * This is a copy of the query at the time of execution of the query. This will
      * let us get the items belonging to each query.
      */
-	private QueryCache cachedQuery;
+	private Query cachedQuery;
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
@@ -201,13 +201,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	private void executeQuery() {
         ResultSet executedRs = null;
         executeException = null;
+        cachedQuery = new QueryCache((QueryCache) query);
 		try {
-            executedRs = query.execute(); // TODO run in background
+            executedRs = cachedQuery.execute(); // TODO run in background
             initColumns(executedRs);
         } catch (Exception ex) {
             executeException = ex;
         }
-        setName("Result Set: " + query.getName());
+        setName("Result Set: " + cachedQuery.getName());
         rs = executedRs;
 	}
 	
@@ -279,7 +280,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
-        	Item item = cachedQuery.getSelectedColumns().get(col - 1);
+        	Item item = ((QueryCache) cachedQuery).getSelectedColumns().get(col - 1);
         	String columnKey = rsmd.getColumnLabel(col);
         	logger.debug("Matching key " + item.getName());
         	ColumnInfo ci;
