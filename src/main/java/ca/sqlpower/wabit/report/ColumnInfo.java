@@ -41,7 +41,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String FORMAT_CHANGED = "format";
 	public static final String DATATYPE_CHANGED = "dataType";
 	public static final String HORIZONAL_ALIGNMENT_CHANGED = "horizontalAlignment";
-	public static final String COLUMN_INFO_KEY_CHANGED = "columnInfoKey";
+	public static final String COLUMN_INFO_ITEM_CHANGED = "columnInfoItem";
 	public static final String WIDTH_CHANGED = "width";
 	private static final String WILL_BREAK_CHANGED = "willBreak";
 	private static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
@@ -75,7 +75,7 @@ public class ColumnInfo extends AbstractWabitObject{
 		return columnInfoItem;
 	}
 	public void setColumnInfoItem(Item item) {
-		firePropertyChange(COLUMN_INFO_KEY_CHANGED, this.columnInfoItem, item);
+		firePropertyChange(COLUMN_INFO_ITEM_CHANGED, this.columnInfoItem, item);
 		this.columnInfoItem = item;
 	}
 	public int getWidth() {

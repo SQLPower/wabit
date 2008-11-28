@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.replay;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
+import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
@@ -83,6 +84,9 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = DataType.DATE;
             }
+        } else if (valueType.equals(Item.class)) {
+        	newValue = createMock(Item.class);
+        	replay(newValue);
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
