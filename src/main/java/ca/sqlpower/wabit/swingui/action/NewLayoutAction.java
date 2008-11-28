@@ -25,6 +25,7 @@ import javax.swing.AbstractAction;
 
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * An action that adds a new empty layout to a particular project every time it
@@ -32,14 +33,16 @@ import ca.sqlpower.wabit.report.Layout;
  */
 public class NewLayoutAction extends AbstractAction {
 
-    private final WabitProject project;
+	private final WabitSwingSession session;
 
-    public NewLayoutAction(WabitProject project) {
+    public NewLayoutAction(WabitSwingSession session) {
         super("New Layout");
-        this.project = project;
+		this.session = session;
     }
 
     public void actionPerformed(ActionEvent e) {
-        project.addLayout(new Layout("New Layout"));
+        Layout layout = new Layout("New Layout");
+		session.getProject().addLayout(layout);
+		session.setEditorPanel(layout);
     }
 }
