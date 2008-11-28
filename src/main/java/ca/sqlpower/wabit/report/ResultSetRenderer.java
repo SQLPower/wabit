@@ -435,6 +435,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             List<String> lastRenderedRow = new ArrayList<String>();
             Map<ColumnInfo, Double> subtotalForCols = new HashMap<ColumnInfo, Double>();
             int rowCount = 0;
+            logger.debug("Content box has height " + contentBox.getHeight() + " and next height will be " + (y + fm.getHeight()));
+            if (contentBox.getHeight() < (y + fm.getHeight())) {
+            	return false;
+            }
             while (((y + fm.getHeight()) < contentBox.getHeight()) && rs.next()) {
             	rowCount++;
             	List<String> renderedRow = new ArrayList<String>();
