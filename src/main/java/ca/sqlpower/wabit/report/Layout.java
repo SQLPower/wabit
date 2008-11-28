@@ -133,6 +133,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
                 cb.getContentRenderer().resetToFirstPage();
             }
         }
+        logger.debug("Page count is " + pageCount + " looking or page indexed " + pageIndex);
         if (pageIndex >= pageCount) {
             return Printable.NO_SUCH_PAGE;
         }
@@ -181,6 +182,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     private int countPages() throws PrinterException {
     	boolean done = false;
     	int pageNum = 0;
+    	pageCount = Integer.MAX_VALUE;
     	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
     	Graphics g = dummyImage.getGraphics();
     	try {
