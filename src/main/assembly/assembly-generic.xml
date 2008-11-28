@@ -1,5 +1,4 @@
 <assembly>
-  <id>generic</id>
   <formats>
     <format>tar.gz</format>
   </formats>
