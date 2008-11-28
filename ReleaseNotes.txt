@@ -1,0 +1,26 @@
+Wabit Release Notes
+
+Changes in 0.9.2
+  User Interface
+    * Zooming in Query and Report Editors are now done with a slider
+    * New graphical look in the Query Editor
+    * Application layout settings are remembered in between sessions
+
+  Query Editor
+    * Added new constants including Count(*), current date, current time, and user
+  
+  Report Layout Editor
+    * Support for defining breaks and subtotals
+    * Queries can be added into a report using drag-and-drop
+    * Added buttons for creating horizontal and vertical guides
+    * Guides can now be deleted
+    * Added a Zoom to Fit button
+
+  Bug Fixes
+    * The application now creates a default pl.ini (database configuration file) if it does not exist.
+    * Changes to the query in the Query Editor now get reflected in the Report Layout Editor
+    * Delete content boxes in the Report Layout now also removes it from the left-hand tree
+
+
+Changes in 0.9.1
+  * Initial release
