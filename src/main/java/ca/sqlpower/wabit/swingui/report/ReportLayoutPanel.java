@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -71,6 +72,7 @@ import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
@@ -83,10 +85,27 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 
 public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 
-    private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
+	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
     public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/shape_square_add.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
+    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_fit16.png"));
+    
+    private final JSlider zoomSlider;
+    
+    /**
+	 * The amount to scale the camera view by so that there is a slight space
+	 * between the outside guides and the viewable canvas, for better viewing.
+	 */
+    private static final double AUT0_FIT_SPACER = 0.1;
+
+    /**
+     * The amount to multiply the exact zoom factor by in order to come up
+     * with the actual zoom factor to use.  The default value of 0.9 leaves
+     * at 10% border of empty space around the zoomed region, which is
+     * usually a good comfortable amount. 
+     */
+    private static final double OVER_ZOOM_COEFF = 0.97;
     
     private class QueryDropListener implements DropTargetListener {
 
@@ -195,6 +214,18 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		}
 	};
 	
+	private final AbstractAction zoomToFitAction = new AbstractAction("", ZOOM_TO_FIT_ICON){
+		public void actionPerformed(ActionEvent e) {
+			Rectangle rect = canvas.getVisibleRect();
+			Page page = pageNode.getModel();
+			double zoom = Math.min(rect.getHeight() / (page.getLowerMarginOffset() - page.getUpperMarginOffset()),
+					rect.getWidth() / (page.getRightMarginOffset() - page.getLeftMarginOffset()));
+			zoom *= OVER_ZOOM_COEFF;
+			canvas.getCamera().setViewScale(zoom);
+			zoomSlider.setValue((int)((zoomSlider.getMaximum() - zoomSlider.getMinimum()) / 2 * zoom));
+			canvas.getCamera().setViewOffset(- (page.getLeftMarginOffset() * zoom - page.getLeftMarginOffset() * AUT0_FIT_SPACER), -(page.getUpperMarginOffset() * zoom - page.getUpperMarginOffset()*AUT0_FIT_SPACER));
+		}};
+	
     public ReportLayoutPanel(WabitSwingSession session, Layout report) {
         this.session = session;
 		this.report = report;
@@ -208,6 +239,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         
         pageNode = new PageNode(session, report.getPage());
         canvas.getLayer().addChild(pageNode);
+        pageNode.setBounds(0, 0, pageNode.getWidth(), pageNode.getHeight());
         PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
@@ -237,7 +269,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         JPanel zoomPanel = new JPanel(new BorderLayout());
         zoomPanel.add(new JLabel(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"))), BorderLayout.WEST);
         final int defaultSliderValue = 500;
-        final JSlider zoomSlider = new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
+        zoomSlider= new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
         zoomSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				canvas.getCamera().setViewScale((double) zoomSlider.getValue()/defaultSliderValue);
@@ -263,6 +295,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         toolbar.add(addContentBoxAction);
         toolbar.add(addHorizontalGuideAction);
         toolbar.add(addVerticalGuideAction);
+        toolbar.add(zoomToFitAction);
         
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.add(toolbar, BorderLayout.NORTH);
