@@ -48,6 +48,8 @@ import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 public class Layout extends AbstractWabitObject implements Pageable, Printable, VariableContext {
 
     private static final Logger logger = Logger.getLogger(Layout.class);
+
+	private static final String PROPERTY_ZOOM = "zoomLevel";
     
     /**
      * The page size and margin info.
@@ -198,6 +200,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     }
 
 	public void setZoomLevel(int zoomLevel) {
+		firePropertyChange(PROPERTY_ZOOM, this.zoomLevel, zoomLevel);
 		this.zoomLevel = zoomLevel;
 	}
 
