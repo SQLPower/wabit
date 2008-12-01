@@ -704,17 +704,18 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         fb.nextLine();
         
         fb.appendRow("fill:pref");
-        Box box = Box.createHorizontalBox();
+        Box box = Box.createVerticalBox();
         final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
+        final FormLayout columnLayout = new FormLayout("pref:grow, 5dlu, pref:grow, 5dlu, pref:grow, 5dlu, pref:grow", "pref, pref");
         for (ColumnInfo ci : columnInfo) {
-            DataEntryPanel columnPropsPanel = createColumnPropsPanel(ci);
+            DataEntryPanel columnPropsPanel = createColumnPropsPanel(columnLayout, ci);
             columnPanels.add(columnPropsPanel);
             box.add(columnPropsPanel.getPanel());
             box.add(Box.createHorizontalStrut(5));
         }
         JScrollPane columnScrollPane = new JScrollPane(box,
-                JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        columnScrollPane.setPreferredSize(new Dimension(600, columnScrollPane.getPreferredSize().height));
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        columnScrollPane.setPreferredSize(new Dimension(columnScrollPane.getPreferredSize().width, 400));
         fb.append("Column info", columnScrollPane, 3);
         
         return new DataEntryPanel() {
@@ -753,13 +754,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     }
     
-    public DataEntryPanel createColumnPropsPanel(final ColumnInfo ci) {
+    public DataEntryPanel createColumnPropsPanel(FormLayout layout, final ColumnInfo ci) {
 
-        FormLayout layout = new FormLayout("fill:pref:grow");
         DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
         final JTextField columnLabel = new JTextField(ci.getName());
         fb.append(columnLabel);
+        
+        // TODO better UI (auto/manual, and manual is based on a jtable with resizable headers)
+        final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, 1000, 12));
+        fb.append(widthSpinner);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(
@@ -778,9 +782,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         alignmentBox.add(Box.createHorizontalGlue());
         fb.append(alignmentBox);
         
-        // TODO better UI (auto/manual, and manual is based on a jtable with resizable headers)
-        final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, 1000, 12));
-        fb.append(widthSpinner);
+        fb.nextLine();
         
         final JComboBox dataTypeComboBox = new JComboBox(DataType.values());
         final JComboBox formatComboBox = new JComboBox();
