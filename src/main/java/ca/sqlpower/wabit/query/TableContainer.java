@@ -118,8 +118,16 @@ public class TableContainer extends AbstractWabitObject implements Container {
 	public TableContainer(String uuid, QueryCache cache, String name, String schema, String catalog, List<SQLObjectItem> items) {
 		super(uuid);
 		this.cache = cache;
-		this.schema = schema;
-		this.catalog = catalog;
+		if (schema != null) {
+			this.schema = schema;
+		} else {
+			this.schema = "";
+		}
+		if (catalog != null) {
+			this.catalog = catalog;
+		} else {
+			this.catalog = "";
+		}
 		setName(name);
 		table = null;
 		alias = "";

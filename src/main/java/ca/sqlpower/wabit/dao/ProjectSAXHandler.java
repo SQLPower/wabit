@@ -222,8 +222,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	checkMandatory("name", tableName);
-        	checkMandatory("schema", schema);
-        	checkMandatory("catalog", catalog);
         	TableContainer table = new TableContainer(uuid, query, tableName, schema, catalog, new ArrayList<SQLObjectItem>());
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
