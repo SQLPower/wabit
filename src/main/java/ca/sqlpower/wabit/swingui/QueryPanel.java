@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
@@ -30,7 +29,6 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -39,7 +37,6 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -55,7 +52,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.KeyStroke;
 import javax.swing.ListModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -78,11 +74,9 @@ import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
-import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -94,8 +88,6 @@ public class QueryPanel implements DataEntryPanel {
 	
 	private static final String SQL_TEXT_TAB_HEADING = "SQL";
     
-	private static final String QUERY_EXECUTE = "Execute";
-	
 	/**
 	 * This is a listModel that just returns the row Number for the rowHeaderRender
 	 */
@@ -337,24 +329,6 @@ public class QueryPanel implements DataEntryPanel {
 		queryCache.addPropertyChangeListener(queryCacheListener);
     	JPanel playPen = queryPen.createQueryPen();
     	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
-    	AbstractAction queryExecuteAction = new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				executeQueryInCache();
-			}
-		};
-    	JButton playPenExecuteButton = new JButton(queryExecuteAction);
-    	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/execute.png"));
-    	playPenExecuteButton.setIcon(executeIcon);
-    	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ queryPen.getAcceleratorKeyString()+ " R)");
-    	queryPen.getQueryPenBar().add(playPenExecuteButton, 0);
-    	queryPen.getQueryPenCanvas().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-                KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
-                , QUERY_EXECUTE);
-    	queryPen.getQueryPenCanvas().getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
-    	
-    	queryPen.getQueryPenBar().addSeparator();
-    	
-    	queryPen.getQueryPenBar().add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 
     	queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
@@ -508,7 +482,7 @@ public class QueryPanel implements DataEntryPanel {
 	 * This will execute the current query in the QueryCache and
 	 * store a copy of the QueryCache in the queued list.
 	 */
-	private synchronized void executeQueryInCache() {
+	public synchronized void executeQueryInCache() {
 		queuedQueryCache.add(new QueryCache(queryCache));
 		queryUIComponents.executeQuery(queryCache.generateQuery());
 		

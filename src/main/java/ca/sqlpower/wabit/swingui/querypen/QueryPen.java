@@ -71,6 +71,8 @@ import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.swingui.CursorManager;
+import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.BrowserUtil;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
@@ -83,6 +85,7 @@ import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.SQLObjectSelection;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 import edu.umd.cs.piccolo.PLayer;
@@ -121,6 +124,8 @@ public class QueryPen implements MouseState, WabitNode {
 	public static final float CONTAINER_ROUND_CORNER_RADIUS = 8f;
 	
 	public static final Color WHERE_BACKGROUND_COLOUR = new Color(0xeeeeee);
+	
+	private static final String QUERY_EXECUTE = "Execute";
 	
     private JPanel panel;
     
@@ -425,6 +430,10 @@ public class QueryPen implements MouseState, WabitNode {
 		}
 	};
 
+	private final QueryPanel queryPanel;
+
+	private final WabitSwingSession session;
+
 	public JPanel createQueryPen() {
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
@@ -432,19 +441,57 @@ public class QueryPen implements MouseState, WabitNode {
         JButton deleteButton = new JButton(getDeleteAction());
         deleteButton.setToolTipText(DELETE_ACTION+ " (Shortcut Delete)");
         deleteButton.setIcon(joinIcon);
+        JToolBar queryPenBarChild = new JToolBar(JToolBar.HORIZONTAL);
+        queryPenBarChild.setFloatable(false);
         queryPenBar = new JToolBar(JToolBar.HORIZONTAL);
-        queryPenBar.setToolTipText("QueryPen Toolbar");
-        queryPenBar.add(deleteButton);
-        queryPenBar.add(getCreateJoinButton());
-        queryPenBar.addSeparator();
-        queryPenBar.add(getZoomSliderContainer());
+        queryPenBar.setLayout(new BorderLayout());
+    	AbstractAction queryExecuteAction = new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				queryPanel.executeQueryInCache();
+			}
+		};
+    	JButton playPenExecuteButton = new JButton(queryExecuteAction);
+    	ImageIcon executeIcon = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/execute.png"));
+    	playPenExecuteButton.setIcon(executeIcon);
+    	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ getAcceleratorKeyString()+ " R)");
+    	queryPenBarChild.add(playPenExecuteButton);
+    	canvas.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask())
+                , QUERY_EXECUTE);
+    	canvas.getActionMap().put(QUERY_EXECUTE, queryExecuteAction);
+    	
+    	queryPenBarChild.setToolTipText("QueryPen Toolbar");
+    	queryPenBarChild.add(deleteButton);
+    	queryPenBarChild.add(getCreateJoinButton());
+    	queryPenBarChild.addSeparator();
+    	queryPenBarChild.add(getZoomSliderContainer());
         
+    	queryPenBarChild.addSeparator();
+        
+    	queryPenBarChild.add(new CreateLayoutFromQueryAction(session, session.getProject(), model));
+    	
+    	
+        JToolBar queryPenWabitBar = new JToolBar(JToolBar.HORIZONTAL);
+        queryPenWabitBar.setFloatable(false);
+        queryPenWabitBar.add(new AbstractAction("Wabit", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-16.png"))) {
+			public void actionPerformed(ActionEvent e) {
+				try {
+                    BrowserUtil.launch(SPSUtils.FORUM_URL);
+                } catch (IOException e1) {
+                    throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
+                }
+			}
+        });
+        queryPenBar.add(queryPenBarChild, BorderLayout.CENTER);
+        queryPenBar.add(queryPenWabitBar, BorderLayout.EAST);
         panel.add(queryPenBar, BorderLayout.NORTH);
         panel.setBackground(Color.WHITE);
 		return panel;
 	}
 	
 	public QueryPen(WabitSwingSession s, QueryPanel queryPanel, QueryCache model) {
+		this.session = s;
+		this.queryPanel = queryPanel;
 		this.model = model;
 		panel = new JPanel();
 	    cursorManager = new CursorManager(panel);
@@ -659,10 +706,6 @@ public class QueryPen implements MouseState, WabitNode {
 	
 	public void removeQueryListener(PropertyChangeListener l) {
 		queryListeners.remove(l);
-	}
-	
-	public JToolBar getQueryPenBar () {
-		return queryPenBar;
 	}
 	
 	public QueryCache getModel() {
