@@ -23,9 +23,11 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,14 +40,11 @@ import junit.framework.TestCase;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 
+import ca.sqlpower.architect.SQLDatabase;
 import ca.sqlpower.architect.SQLTable;
-import ca.sqlpower.architect.util.FakeSQLDatabase;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.testutil.MockJDBCConnection;
-import ca.sqlpower.testutil.MockJDBCResultSet;
-import ca.sqlpower.testutil.MockJDBCResultSetMetaData;
 import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
@@ -55,6 +54,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.StringItem;
+import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.Layout;
 
 public class ProjectXMLDAOTest extends TestCase {
@@ -62,9 +62,11 @@ public class ProjectXMLDAOTest extends TestCase {
 	/**
 	 * This is a fake database to be used in testing.
 	 */
-	private FakeSQLDatabase db;
+	private SQLDatabase db;
 	private PlDotIni plIni;
 	private StubWabitSessionContext context;
+	private Connection con;
+	private Statement stmt;
 
 	private List<String> getPropertiesToIgnore() {
 		List<String> ignoreList = new ArrayList<String>();
@@ -190,45 +192,15 @@ public class ProjectXMLDAOTest extends TestCase {
 	
 	@Override
 	protected void setUp() throws Exception {
-		db = new FakeSQLDatabase(
-                "jdbc:mock:" +
-                "dbmd.catalogTerm=Catalog" +
-                "&dbmd.schemaTerm=Schema" +
-                "&catalogs=cat" +
-                "&schemas.cat=schem" +
-                "&tables.cat.schem=wabit_table1, wabit_table2" +
-                "&columns.cat.schem.wabit_table1=pk,string_col,number_col,date_col,bool_col");
-		
-        SQLTable matchTable = db.getTableByName("cat", "schem", "wabit_table1");
-        matchTable.getColumnByName("pk").setType(Types.INTEGER);
-        matchTable.getColumnByName("string_col").setType(Types.VARCHAR);
-        matchTable.getColumnByName("number_col").setType(Types.NUMERIC);
-        matchTable.getColumnByName("date_col").setType(Types.TIMESTAMP);
-        matchTable.getColumnByName("bool_col").setType(Types.BOOLEAN);
-        
-        MockJDBCConnection con = db.getConnection();
-        MockJDBCResultSet rs = new MockJDBCResultSet(5);
-        rs.addRow(new Object[] { 1, "string value", 100.0, new Timestamp(1234), false });
-        MockJDBCResultSetMetaData rsmd = rs.getMetaData();
-        rsmd.setColumnName(1, "pk");
-        rsmd.setColumnType(1, Types.INTEGER);
-        
-        rsmd.setColumnName(2, "string_col");
-        rsmd.setColumnType(2, Types.VARCHAR);
-        
-        rsmd.setColumnName(3, "number_col");
-        rsmd.setColumnType(3, Types.NUMERIC);
-        
-        rsmd.setColumnName(4, "date_col");
-        rsmd.setColumnType(4, Types.TIMESTAMP);
+		plIni = new PlDotIni();
+        plIni.read(new File("src/test/java/pl.regression.ini"));
+        SPDataSource ds = plIni.getDataSource("regression_test");
 
-        rsmd.setColumnName(5, "bool_col");
-        rsmd.setColumnType(5, Types.BOOLEAN);
-
-        con.registerResultSet("SELECT.*FROM cat.schem.match_table.*", rs);
+        db = new SQLDatabase(ds);
         
-        plIni = new PlDotIni();
-        plIni.addDataSource(db.getDataSource());
+        con = db.getConnection();
+        stmt = con.createStatement();
+        stmt.execute("create table wabit_table1 (pk integer, string_col varchar, number_col numeric, date_col timestamp, bool_col boolean)");
         
         context = new StubWabitSessionContext() {
             @Override
@@ -237,6 +209,16 @@ public class ProjectXMLDAOTest extends TestCase {
             }
             
         };
+	}
+	
+	@Override
+	protected void tearDown() throws Exception {
+		if (stmt != null) {
+			stmt.close();
+		}
+		if (con != null) {
+			con.close();
+		}
 	}
 	
 	public void testSaveAndLoad() throws Exception {
@@ -257,9 +239,9 @@ public class ProjectXMLDAOTest extends TestCase {
 
 		//TODO: implement the rest of this test case for the commented out sections of 
 		//a query and layouts.
-//		TableContainer container = new TableContainer(query, db.getTableByName("cat", "schem", "wabit_table1"));
-//		query.addTable(container);
-//		setAllSetters(container, getPropertiesToIgnore());
+		TableContainer container = new TableContainer(query, db.getTableByName("wabit_table1"));
+		query.addTable(container);
+		setAllSetters(container, getPropertiesToIgnore());
 //		query.addJoin(join);
 		
 //		assertTrue("Grouping must be enabled to check the group by aggregate and having text", query.isGroupingEnabled());
