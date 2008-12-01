@@ -21,6 +21,9 @@ package ca.sqlpower.wabit;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
+
+import java.awt.Color;
+
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
@@ -87,6 +90,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         } else if (valueType.equals(Item.class)) {
         	newValue = createMock(Item.class);
         	replay(newValue);
+        } else if (valueType.equals(Color.class)) {
+        	if (oldVal != null) {
+        		newValue = new Color(0x224466);
+        	} else {
+        		newValue = new Color(0x001122);
+        	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

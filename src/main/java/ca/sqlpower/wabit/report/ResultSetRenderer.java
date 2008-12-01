@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -67,6 +68,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.FontSelector;
@@ -177,6 +179,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * let us get the items belonging to each query.
      */
 	private Query cachedQuery;
+	
+	/**
+	 * This will store the background colour for the result set renderer.
+	 */
+	private Color backgroundColour;
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
@@ -703,6 +710,23 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         fb.append("Null string", nullStringField);
         fb.nextLine();
         
+        final JLabel colourLabel = new JLabel(" ");
+       	colourLabel.setBackground(getBackgroundColour());
+        colourLabel.setOpaque(true);
+        final JComboBox colourCombo = new JComboBox();
+        colourCombo.setRenderer(new ColorCellRenderer(85, 30));
+        for (BackgroundColours bgColour : BackgroundColours.values()) {
+        	colourCombo.addItem(bgColour.getColour());
+        }
+        colourCombo.setSelectedItem(backgroundColour);
+        colourCombo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Color colour = (Color) colourCombo.getSelectedItem();
+				colourLabel.setBackground(colour);
+			}
+		});
+        fb.append("Background", colourLabel, colourCombo);
+        
         fb.appendRow("fill:pref");
         Box box = Box.createVerticalBox();
         final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
@@ -724,6 +748,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 setHeaderFont(headerFontExample.getFont());
                 setBodyFont(bodyFontExample.getFont());
                 setNullString(nullStringField.getText());
+                setBackgroundColour((Color) colourCombo.getSelectedItem());
                 
                 boolean applied = true;
                 for (DataEntryPanel columnPropsPanel : columnPanels) {
@@ -902,4 +927,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         });
         return button;
     }
+    
+	public void setBackgroundColour(Color backgroundColour) {
+		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
+		this.backgroundColour = backgroundColour;
+	}
+	
+	public Color getBackgroundColour() {
+		return backgroundColour;
+	}
 }

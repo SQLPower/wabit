@@ -159,6 +159,9 @@ public class ProjectXMLDAO {
 						printAttribute("text", label.getText());
 						printAttribute("horizontal-align", label.getHorizontalAlignment().name());
 						printAttribute("vertical-align", label.getVerticalAlignment().name());
+						if (label.getBackgroundColour() != null) {
+							printAttribute("bg-colour", label.getBackgroundColour().getRGB());
+						}
 						xml.println(out, ">");
 						saveFont(label.getFont());
 						xml.println(out, "</content-label>");
@@ -168,6 +171,9 @@ public class ProjectXMLDAO {
 						printAttribute("name", rsRenderer.getName());
 						printAttribute("query-id", rsRenderer.getQuery().getUUID().toString());
 						printAttribute("null-string", rsRenderer.getNullString());
+						if (rsRenderer.getBackgroundColour() != null) {
+							printAttribute("bg-colour", rsRenderer.getBackgroundColour().getRGB());
+						}
 						xml.println(out, ">");
 						xml.indent++;
 						saveFont(rsRenderer.getHeaderFont(), "header-font");

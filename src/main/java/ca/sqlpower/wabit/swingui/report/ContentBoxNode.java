@@ -122,6 +122,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     @Override
     protected void paint(PPaintContext paintContext) {
+    	if (contentBox.getContentRenderer().getBackgroundColour() != null) {
+    		setPaint(contentBox.getContentRenderer().getBackgroundColour());
+    	}
         super.paint(paintContext);
         PCamera camera = paintContext.getCamera();
         Graphics2D g2 = paintContext.getGraphics();

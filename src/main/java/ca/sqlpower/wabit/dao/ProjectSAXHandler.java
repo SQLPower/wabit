@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
@@ -442,6 +443,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			label.setHorizontalAlignment(HorizontalAlignment.valueOf(aval));
         		} else if (aname.equals("vertical-align")) {
         			label.setVerticalAlignment(VerticalAlignment.valueOf(aval));
+        		} else if (aname.equals("bg-colour")) {
+        			label.setBackgroundColour(new Color(Integer.parseInt(aval)));
         		} else {
         			logger.warn("Unexpected attribute of <content-label>: " + aname + "=" + aval);
         		}
@@ -466,6 +469,12 @@ public class ProjectSAXHandler extends DefaultHandler {
         			rsRenderer.setName(aval);
         		} else if (aname.equals("null-string")) {
         			rsRenderer.setNullString(aval);
+        		} else if (aname.equals("bg-colour")) {
+        			Color color = new Color(Integer.parseInt(aval));
+					logger.debug("Renderer has background " + color.getRed() + ", " + color.getBlue() + ", " + color.getGreen());
+        			rsRenderer.setBackgroundColour(color);
+        		} else {
+        			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
         		}
          	}
 			columnInfoList.clear();
@@ -608,6 +617,7 @@ public class ProjectSAXHandler extends DefaultHandler {
     		newRSRenderer.setHeaderFont(rsRenderer.getHeaderFont());
     		newRSRenderer.setName(rsRenderer.getName());
     		newRSRenderer.setNullString(rsRenderer.getNullString());
+    		newRSRenderer.setBackgroundColour(rsRenderer.getBackgroundColour());
     		contentBox.setContentRenderer(newRSRenderer);
     	}
     	xmlContext.pop();
