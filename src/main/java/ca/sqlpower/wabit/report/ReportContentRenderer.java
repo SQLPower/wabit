@@ -36,7 +36,6 @@ public interface ReportContentRenderer extends WabitObject {
 		YELLOW(new Color(0xffffcc)),
 		GREEN(new Color(0xccffcc)), 
 		LIGHT_BLUE(new Color(0xccffff)), 
-		AQUA(new Color(0x99ffff)),
 		PURPLE(new Color(0xccccff)),
 		BLUE(new Color(0x99ccff)),
 		PINK(new Color(0xffccff)),
