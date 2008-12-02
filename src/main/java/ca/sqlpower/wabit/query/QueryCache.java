@@ -529,7 +529,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				}
 				query.append(qualifiedName + " " + alias + " \n  ON ");
 				if (joinMapping.get(table) == null || joinMapping.get(table).isEmpty()) {
-					query.append("TRUE");
+					query.append("0 = 0");
 				} else {
 					boolean isFirstJoin = true;
 					for (SQLJoin join : joinMapping.get(table)) {
@@ -561,7 +561,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 						}
 					}
 					if (isFirstJoin) {
-						query.append("TRUE");
+						query.append("0 = 0");
 					}
 				}
 			}
