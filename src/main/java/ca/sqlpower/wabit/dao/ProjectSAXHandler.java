@@ -69,6 +69,7 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
 import com.sun.mail.util.BASE64DecoderStream;
 
@@ -504,6 +505,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			Color color = new Color(Integer.parseInt(aval));
 					logger.debug("Renderer has background " + color.getRed() + ", " + color.getBlue() + ", " + color.getGreen());
         			rsRenderer.setBackgroundColour(color);
+        		} else if (aname.equals("border")) {
+        			rsRenderer.setBorderType(BorderStyles.valueOf(aval));
         		} else {
         			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
         		}
@@ -649,6 +652,7 @@ public class ProjectSAXHandler extends DefaultHandler {
     		newRSRenderer.setName(rsRenderer.getName());
     		newRSRenderer.setNullString(rsRenderer.getNullString());
     		newRSRenderer.setBackgroundColour(rsRenderer.getBackgroundColour());
+    		newRSRenderer.setBorderType(rsRenderer.getBorderType());
     		contentBox.setContentRenderer(newRSRenderer);
     	} else if (name.equals("image-renderer")) {
     		byte[] byteArray = BASE64DecoderStream.decode(byteStream.toByteArray());

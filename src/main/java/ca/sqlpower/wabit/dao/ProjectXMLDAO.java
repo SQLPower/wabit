@@ -190,6 +190,7 @@ public class ProjectXMLDAO {
 						printAttribute("name", rsRenderer.getName());
 						printAttribute("query-id", rsRenderer.getQuery().getUUID().toString());
 						printAttribute("null-string", rsRenderer.getNullString());
+						printAttribute("border", rsRenderer.getBorderType().name());
 						if (rsRenderer.getBackgroundColour() != null) {
 							printAttribute("bg-colour", rsRenderer.getBackgroundColour().getRGB());
 						}

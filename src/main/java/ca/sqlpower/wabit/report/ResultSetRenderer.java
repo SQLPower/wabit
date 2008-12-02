@@ -130,6 +130,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	
     }
     
+    /**
+     * These border styles gives a border to the result set. The border
+     * style is set on the renderer and is applied to each cell.
+     */
+    public enum BorderStyles {
+    	NONE,
+    	OUTSIDE,
+    	INSIDE,
+    	FULL,
+    	VERTICAL,
+    	HORIZONTAL
+    }
+    
+    private BorderStyles borderType = BorderStyles.NONE;
+    
     private final List<ColumnInfo> columnInfo;
     
     /**
@@ -404,10 +419,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             int y = fm.getAscent();
             int colCount = rsmd.getColumnCount();
             
+            if (borderType == BorderStyles.FULL || borderType == BorderStyles.OUTSIDE) {
+            	x += 2;
+            }
             for (int col = 1; col <= colCount; col++) {
                 ColumnInfo ci = columnInfo.get(col-1);
                 g.drawString(replaceNull(ci.getName()), x, y);
                 x += ci.getWidth();
+                if (borderType == BorderStyles.VERTICAL || borderType == BorderStyles.FULL || borderType == BorderStyles.INSIDE) {
+                	x += 2;
+                }
             }
             
             y += fm.getHeight();
@@ -451,6 +472,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             	List<String> renderedRow = new ArrayList<String>();
             	
                 x = 0;
+                if (borderType == BorderStyles.FULL || borderType == BorderStyles.INSIDE) {
+                	x += 2;
+                }
                 
                 for (int col = 1; col <= colCount; col++) {
                     ColumnInfo ci = columnInfo.get(col-1);
@@ -526,6 +550,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 lastRenderedRow.clear();
                 for (int col = 0; col < colCount; col++) {
                 	ColumnInfo ci = columnInfo.get(col);
+                	if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && col != 0) {
+                		g.drawLine(x, 0, x, contentBox.getHeight() - 1);
+                		x += 2;
+                	}
                 	String formattedValue = renderedRow.get(col);
                 	int offset = ci.getHorizontalAlignment().computeStartX(
                 			ci.getWidth(), fm.stringWidth(formattedValue));
@@ -545,11 +573,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 		}
                 	}
                 }
+                if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) {
+                	g.drawLine(0, y + fm.getHeight() / 4, contentBox.getWidth() - 1, y + fm.getHeight() / 4);
+                	y += fm.getHeight() / 2;
+                }
             }
             logger.debug("Content box has height " + contentBox.getHeight() + " ended at row " + rs.getRow() + " in result set.");
             logger.debug("Printed " + rowCount + " rows in the current result set renderer.");
             if (rs.isAfterLast() && !subtotalForCols.isEmpty()) {
             	renderSubtotals(g, fm, y, colCount, subtotalForCols);
+            }
+        	if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
+        		g.drawLine(0, 0, 0, contentBox.getHeight() - 1);
+        		g.drawLine(contentBox.getWidth() - 1, 0, contentBox.getWidth() - 1, contentBox.getHeight());
+            	g.drawLine(0, contentBox.getHeight() - 1, contentBox.getWidth() - 1, contentBox.getHeight() - 1);
+            	g.drawLine(0, 0, contentBox.getWidth() - 1, 0);
             }
             return !rs.isAfterLast();
         } catch (Exception ex) {
@@ -574,13 +612,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			y += fm.getHeight();
 			boolean firstSubtotal = true;
 			for (int subCol = 0; subCol < colCount; subCol++) {
+				if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
+					localX += 2;
+				}
 				ColumnInfo colInfo = columnInfo.get(subCol);
 				Double subtotal = subtotalForCols.get(colInfo);
 				if (colInfo.getWillSubtotal() && subtotal != null) {
 					if (firstSubtotal) {
 						y += fm.getHeight();
 						g.setFont(getHeaderFont());
-						g.drawString("Subtotal", 0, y);
+						g.drawString("Subtotal", 2, y);
 						y += g.getFontMetrics().getHeight();
 						g.setFont(getBodyFont());
 						firstSubtotal = false;
@@ -726,6 +767,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			}
 		});
         fb.append("Background", colourLabel, colourCombo);
+        fb.nextLine();
+        final JComboBox borderComboBox = new JComboBox(BorderStyles.values());
+        borderComboBox.setSelectedItem(borderType);
+        fb.append("Border", borderComboBox);
+        fb.nextLine();
         
         fb.appendRow("fill:pref");
         Box box = Box.createVerticalBox();
@@ -744,11 +790,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         
         return new DataEntryPanel() {
 
-            public boolean applyChanges() {
+			public boolean applyChanges() {
                 setHeaderFont(headerFontExample.getFont());
                 setBodyFont(bodyFontExample.getFont());
                 setNullString(nullStringField.getText());
                 setBackgroundColour((Color) colourCombo.getSelectedItem());
+                borderType = (BorderStyles) borderComboBox.getSelectedItem();
                 
                 boolean applied = true;
                 for (DataEntryPanel columnPropsPanel : columnPanels) {
@@ -935,5 +982,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	
 	public Color getBackgroundColour() {
 		return backgroundColour;
+	}
+	public BorderStyles getBorderType() {
+		return borderType;
+	}
+	public void setBorderType(BorderStyles borderType) {
+		firePropertyChange("borderType", this.borderType, borderType);
+		this.borderType = borderType;
 	}
 }
