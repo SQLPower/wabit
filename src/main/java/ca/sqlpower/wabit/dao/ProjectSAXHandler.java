@@ -22,15 +22,22 @@ package ca.sqlpower.wabit.dao;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.UUID;
+
+import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -55,12 +62,15 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
+import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
+
+import com.sun.mail.util.BASE64DecoderStream;
 
 /**
  * This will be used with a parser to load a saved project from a file.
@@ -136,6 +146,14 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * renderer we are loading.
 	 */
 	private List<ColumnInfo> columnInfoList = new ArrayList<ColumnInfo>();
+
+	/**
+	 * This stores the currently loading Image renderer. This will be null if no image
+	 * renderer is being loaded.
+	 */
+	private ImageRenderer imageRenderer;
+
+	private ByteArrayOutputStream byteStream;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -449,6 +467,19 @@ public class ProjectSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <content-label>: " + aname + "=" + aval);
         		}
          	}
+        } else if (name.equals("image-renderer")) {
+        	imageRenderer = new ImageRenderer(contentBox, null, false);
+        	contentBox.setContentRenderer(imageRenderer);
+         	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("name")) {
+        			imageRenderer.setName(aval);
+        		} else {
+        			logger.warn("Unexpected attribute of <image-renderer>: " + aname + "=" + aval);
+        		}
+         	}
+         	byteStream = new ByteArrayOutputStream();
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
@@ -619,8 +650,30 @@ public class ProjectSAXHandler extends DefaultHandler {
     		newRSRenderer.setNullString(rsRenderer.getNullString());
     		newRSRenderer.setBackgroundColour(rsRenderer.getBackgroundColour());
     		contentBox.setContentRenderer(newRSRenderer);
+    	} else if (name.equals("image-renderer")) {
+    		byte[] byteArray = BASE64DecoderStream.decode(byteStream.toByteArray());
+    		logger.debug("Decoding byte stream: Stream has " + byteStream.toString().length() + " and array has " + Arrays.toString(byteArray));
+    		try {
+				BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));				
+				imageRenderer.setImage(img);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			imageRenderer = null;
     	}
     	xmlContext.pop();
+    }
+    
+    @Override
+    public void characters(char[] ch, int start, int length)
+    		throws SAXException {
+    	if (imageRenderer != null) {
+    		logger.debug("Starting characters at " + start + " and ending at " + length);
+    		for (int i = start; i < start+length; i++) {
+    			byteStream.write((byte)ch[i]);
+    		}
+    		logger.debug("Byte stream has " + byteStream.toString());
+    	}
     }
 
 	public List<WabitSession> getSessions() {

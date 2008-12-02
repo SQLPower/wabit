@@ -20,14 +20,22 @@
 package ca.sqlpower.wabit.dao;
 
 import java.awt.Font;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
+
+import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
@@ -43,13 +51,18 @@ import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.xml.XMLHelper;
 
+import com.sun.mail.util.BASE64EncoderStream;
+
 public class ProjectXMLDAO {
+	
+	private static final Logger logger = Logger.getLogger(ProjectXMLDAO.class);
 
 	/**
 	 * This output stream will be used to  write the project to a file.
@@ -67,9 +80,15 @@ public class ProjectXMLDAO {
 	 */
 	private final WabitProject project;
 	
+	/**
+	 * This is the output stream contained by the print writer.
+	 */
+	private final OutputStream outputStream;
+	
 	public ProjectXMLDAO(OutputStream out, WabitProject project) {
 		this.project = project;
 		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
+		outputStream = out;
 		xml = new XMLHelper();
 	}
 	
@@ -210,6 +229,30 @@ public class ProjectXMLDAO {
 						}
 						xml.indent--;
 						xml.println(out, "</content-result-set>");
+					} else if (box.getContentRenderer() instanceof ImageRenderer) {
+						ImageRenderer imgRenderer = (ImageRenderer) box.getContentRenderer();
+						xml.print(out, "<image-renderer");
+						printAttribute("name", imgRenderer.getName());
+						xml.print(out, ">");
+						BufferedImage image = imgRenderer.getImage();
+						if (image != null) {
+							try {
+								out.flush();
+								ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+								ImageIO.write(image, "PNG", byteStream);
+								byte[] byteArray = BASE64EncoderStream.encode(byteStream.toByteArray());
+								char[] charArray = new char[byteArray.length];
+								for (int i = 0; i < byteArray.length; i++) {
+									charArray[i] = (char)byteArray[i];
+								}
+								logger.debug("Encoded length is " + byteArray.length);
+								logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
+								out.write(charArray);
+							} catch (IOException e) {
+								throw new RuntimeException(e);
+							}
+						}
+						out.println("</image-renderer>");
 					} else {
 						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
 					}

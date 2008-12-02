@@ -86,10 +86,11 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
-    public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/shape_square_add.png"));		
+    public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/text_add.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_fit16.png"));
+    private static final Icon CREATE_IMAGE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/image_add.png"));
     
     private final JSlider zoomSlider;
     
@@ -198,6 +199,20 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		}
 	};
 	
+	private final AbstractAction addImageBoxAction = new AbstractAction("",  ReportLayoutPanel.CREATE_IMAGE_ICON){
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_IMAGE);
+			cursorManager.placeModeStarted();
+		}
+	};
+	
+	private final AbstractAction addImageAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_IMAGE);
+			cursorManager.placeModeStarted();
+		}
+	};
+	
 	private final WabitSwingSession session;
 	
 	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
@@ -260,6 +275,9 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
 		inputMap.put(KeyStroke.getKeyStroke('b'), addContentBoxAction.getClass());
 		
+		canvas.getActionMap().put(addImageAction.getClass(), addImageAction);
+		inputMap.put(KeyStroke.getKeyStroke('i'), addImageAction.getClass());
+		
 		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
         JToolBar toolbar = new JToolBar();
         toolbar.add(new PageFormatAction(report.getPage()));
@@ -293,6 +311,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         toolbar.add(zoomPanel);
         toolbar.addSeparator();
         toolbar.add(addContentBoxAction);
+        toolbar.add(addImageBoxAction);
         toolbar.add(addHorizontalGuideAction);
         toolbar.add(addVerticalGuideAction);
         toolbar.add(zoomToFitAction);

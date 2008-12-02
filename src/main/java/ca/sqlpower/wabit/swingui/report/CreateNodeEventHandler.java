@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui.report;
 
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Guide.Axis;
@@ -63,6 +64,14 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			Guide tmpGuide = new Guide(Axis.VERTICAL, (int)event.getPosition().getX());
 			panel.getPageNode().getModel().addGuide(tmpGuide);
 			panel.getPageNode().addChild(new GuideNode(tmpGuide));
+		} else if (panel.getMouseState().equals(MouseStates.CREATE_IMAGE)) {
+			ContentBox contentBox = new ContentBox();
+			ImageRenderer image = new ImageRenderer(contentBox, session.getFrame(), true);
+			contentBox.setContentRenderer(image);
+			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
+			newCBNode.setX(event.getPosition().getX());
+			newCBNode.setY(event.getPosition().getY());
+			panel.getPageNode().addChild(newCBNode);
 		}
 		panel.setMouseState(MouseStates.READY);
 		panel.getCursorManager().placeModeFinished();

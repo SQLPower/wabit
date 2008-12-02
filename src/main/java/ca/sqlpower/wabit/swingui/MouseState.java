@@ -32,7 +32,8 @@ public interface MouseState {
 		CREATE_JOIN, 
 		CREATE_BOX, 
 		CREATE_HORIZONTAL_GUIDE, 
-		CREATE_VERTICAL_GUIDE
+		CREATE_VERTICAL_GUIDE, 
+		CREATE_IMAGE
 	}
 	
 	public MouseStates getMouseState();
