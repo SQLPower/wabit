@@ -37,6 +37,7 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
+import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -95,6 +96,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         		newValue = new Color(0x224466);
         	} else {
         		newValue = new Color(0x001122);
+        	}
+        } else if (valueType.equals(BorderStyles.class)) {
+        	if (oldVal != null) {
+        		newValue = BorderStyles.FULL;
+        	} else {
+        		newValue = BorderStyles.NONE;
         	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
