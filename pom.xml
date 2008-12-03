@@ -207,7 +207,7 @@
 				<configuration>
 					<targetJdk>1.5</targetJdk>
 					<excludes>
-						<exclude>ca/sqlpower/wabit/sql/parser/SQLANTLR*.java</exclude>
+						<exclude>**/SQLANTLR*.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
