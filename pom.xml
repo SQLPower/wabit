@@ -1,3 +1,13 @@
+<!--
+	Some helpful Maven commands: 
+	* 'mvn assembly:assembly' to build the distributables 
+	* 'mvn test' to run the unit tests 
+	* 'mvn surefire-report:report' to run the unit test and build an HTML report
+	* 'mvn javadoc:javadoc' to generate the Javadoc for the source code
+	* 'mvn pmd:pmd' to run the PMD code analysis tool
+	* 'mvn pmd:cpd' to run the PMD Copy Paste Detector
+	* 'mvn findbugs:findbugs' to run FindBugs. (You may have increasing the heap size by setting MAVEN_OPTS)
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -21,6 +31,10 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+					<fork>true</fork>
+					<!-- Set this if you wish to use a different JDK from your default -->
+					<!-- <executable>${JAVA_HOME}/bin/javac</executable> -->
+					<compilerVersion>1.5</compilerVersion>
 					<source>1.5</source>
 					<target>1.5</target>
 				</configuration>
@@ -184,6 +198,22 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<configuration>
+					<targetJdk>1.5</targetJdk>
+					<excludes>
+						<exclude>ca/sqlpower/wabit/sql/parser/SQLANTLR*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
