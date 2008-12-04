@@ -343,7 +343,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(queryList, DnDConstants.ACTION_COPY, new DragGestureListener() {
 			public void dragGestureRecognized(DragGestureEvent dge) {
-				if (queryList.getSelectedValues() == null && queryList.getSelectedValues().length > 0) {
+				if (queryList.getSelectedValues() == null || queryList.getSelectedValues().length <= 0) {
 					return;
 				}
 				List<Query> queries = new ArrayList<Query>();
