@@ -374,7 +374,13 @@ public class QueryPanel implements DataEntryPanel {
     	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText());
     	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel());
     	southPanelBuilder.append(new JLabel("Row Limit"));
-    	JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
+    	final JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
+    	rowLimitSpinner.addChangeListener(new ChangeListener(){
+
+			public void stateChanged(ChangeEvent e) {
+				executeQueryInCache();
+			}
+		});
     	rowLimitSpinner.setValue(new Integer(1000));
     	southPanelBuilder.append(rowLimitSpinner);
     	southPanelBuilder.nextLine();
