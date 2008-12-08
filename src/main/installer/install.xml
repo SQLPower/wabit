@@ -2,53 +2,67 @@
 	<!-- comment -->
 	<info>
 		<appname>Wabit</appname>
-		<appversion>0.9.2</appversion>
-		<url>http://code.google.com/p/wabit</url>
+		<appversion>0.9.3</appversion>
+		<url>http://code.google.com/p/wabit
+		</url>
 		<javaversion>1.5</javaversion>
 	</info>
 	<guiprefs height="600" resizable="yes" width="800">
 		<laf name="metouia">
-			<os family="unix"/>
+			<os family="unix" />
 		</laf>
 	</guiprefs>
 
 	<locale>
-		<langpack iso3="eng"/>
+		<langpack iso3="eng" />
 	</locale>
 	<resources>
-		<res id="Installer.image" src="../src/main/resources/icons/wabit-400.png"/>
-		<res id="shortcutSpec.xml" src="../src/main/installer/WabitShortcut.xml"/>
+		<res id="Installer.image" src="../src/main/resources/icons/wabit-400.png" />
+		<res id="shortcutSpec.xml" src="../src/main/installer/WabitShortcut.xml" />
 		<res id="LicencePanel.licence" src="../LICENSE" />
+		<res id="RegistrySpec.xml" src="../src/main/installer/RegistrySpec.xml" />
 	</resources>
+
+	<listeners>
+		<listener installer="SummaryLoggerInstallerListener" />
+		<listener installer="RegistryInstallerListener" uninstaller="RegistryUninstallerListener">
+			<os family="windows" />
+		</listener>
+	</listeners>
 	<panels>
-		<panel classname="HelloPanel"/>
-		<panel classname="LicencePanel"/>
-		<panel classname="TargetPanel"/>
-		<panel classname="InstallPanel"/>
-		<panel classname="ShortcutPanel"/>
-		<panel classname="SimpleFinishPanel"/>
+		<panel classname="HelloPanel" />
+		<panel classname="LicencePanel" />
+		<panel classname="TargetPanel" />
+		<panel classname="InstallPanel" />
+		<panel classname="ShortcutPanel" />
+		<panel classname="SimpleFinishPanel" />
 	</panels>
 	<packs>
 		<pack name="Core" required="yes">
-			<description>Architect Core Files</description>
+			<description>Wabit Core Files</description>
 			<fileset dir="./" targetdir="$INSTALL_PATH">
-				<include name="wabit.jar"/>
+				<include name="wabit.jar" />
 			</fileset>
 			<fileset dir="../target/lib" targetdir="$INSTALL_PATH/lib">
-				<include name="*.jar"/>
+				<include name="*.jar" />
 			</fileset>
-			<!-- the directory jdbc is referenced in the manifest as well as
-				various targets. -->
+			<!--
+				the directory jdbc is referenced in the manifest as well as various
+				targets.
+			-->
 			<fileset dir="../src/main/resources/jdbc" targetdir="$INSTALL_PATH/jdbc">
-				<include name="*.jar"/>
+				<include name="*.jar" />
 			</fileset>
 			<fileset dir="../" targetdir="$INSTALL_PATH">
-				<include name="LICENSE"/>
+				<include name="LICENSE" />
 			</fileset>
 			<fileset dir="../src/main/resources/icons" targetdir="$INSTALL_PATH">
-				<include name="*.ico"/>
+				<include name="*.ico" />
 			</fileset>
 		</pack>
 	</packs>
-	<native type="izpack" name="ShellLink.dll"/>
+	<native type="izpack" name="ShellLink.dll" />
+		<native type="3rdparty" name="COIOSHelper.dll" stage="both">
+        <os family="windows"/>
+    </native>
 </installation>

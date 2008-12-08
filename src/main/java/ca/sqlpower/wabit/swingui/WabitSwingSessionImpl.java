@@ -22,6 +22,10 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +44,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.log4j.Level;
@@ -49,6 +54,7 @@ import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
@@ -58,6 +64,7 @@ import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
@@ -301,12 +308,50 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * 
      * @throws Exception if startup fails
      */
-    public static void  main(String[] args) throws Exception {
+    public static void  main(final String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	WabitSessionContext context = new WabitSwingSessionContextImpl(true);
-        WabitSwingSessionImpl wss = new WabitSwingSessionImpl(context);
-        wss.buildUI();
+    	
+    	SwingUtilities.invokeLater(new Runnable() {
+
+			public void run() {
+				try {
+					WabitSessionContext context = new WabitSwingSessionContextImpl(true);
+					
+					final File importFile;
+					if (args.length > 0) {
+						importFile = new File(args[0]);
+					} else {
+						importFile = null;
+					}
+					
+					WabitSwingSessionImpl wss;
+					
+					if (importFile != null) {
+						BufferedInputStream in = null;
+						try {
+							in = new BufferedInputStream(new FileInputStream(importFile));
+						} catch (FileNotFoundException e1) {
+							throw new RuntimeException(e1);
+						}
+						LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
+						List<WabitSession> sessions = projectLoader.loadProjects();
+						for (WabitSession session : sessions) {
+							((WabitSwingSession)session).buildUI();
+						}
+					} else {
+						wss = new WabitSwingSessionImpl(context);
+						wss.buildUI();
+					}
+				} catch (Exception ex) {
+					 ex.printStackTrace();
+					// We wish we had a parent component to direct the dialog but this is being invoked, so
+					// everything else blew up.
+					SPSUtils.showExceptionDialogNoReport("An unexpected error occured while launching Wabit",ex);
+				}
+			}
+    	});
+    	
     }
 
     public WabitProject getProject() {
