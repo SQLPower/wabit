@@ -45,6 +45,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String WIDTH_CHANGED = "width";
 	private static final String WILL_BREAK_CHANGED = "willBreak";
 	private static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
+	private static final String COLUMN_ALIAS = "columnAlias";
 	
 	private int width = DEFAULT_COL_WIDTH;
 
@@ -163,6 +164,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	}
 
 	public void setColumnAlias(String columnAlias) {
+		firePropertyChange(COLUMN_ALIAS, this.columnAlias, columnAlias);
 		this.columnAlias = columnAlias;
 	}
 
