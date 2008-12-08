@@ -525,6 +525,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("There are no body fonts defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("column-info")) {
+        	colInfo = null;
         	String colInfoName = attributes.getValue("name");
         	String colInfoItem = attributes.getValue("column-info-item-id");
         	
@@ -539,10 +540,20 @@ public class ProjectSAXHandler extends DefaultHandler {
         				break;
         			}
         		}
+        		if (colInfoItem == null) {
+        			colInfo = new ColumnInfo(colInfoKey, colInfoName);
+        		}
+        	}
+        	
+        	String colAlias = attributes.getValue("column-alias");
+        	if (colInfo == null && colAlias != null && colInfoItem == null) {
+        		colInfo = new ColumnInfo(colAlias, colInfoName);
         	}
         	
         	checkMandatory("name", colInfoName);
-        	colInfo = new ColumnInfo(uuidToItemMap.get(colInfoItem), colInfoName);
+        	if (colInfo == null) {
+        		colInfo = new ColumnInfo(uuidToItemMap.get(colInfoItem), colInfoName);
+        	}
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);

@@ -44,4 +44,9 @@ public class StubQuery extends StubWabitObject implements Query {
 		return null;
 	}
 
+	public boolean isScriptModified() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

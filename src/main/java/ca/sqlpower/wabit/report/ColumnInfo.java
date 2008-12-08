@@ -65,12 +65,36 @@ public class ColumnInfo extends AbstractWabitObject{
 	 * numeric columns should allow subtotals.
 	 */
 	private boolean willSubtotal = false;
+	
+	/**
+	 * This is the alias of the column this information is for. If an Item
+	 * does not exist for the column because the query has been user modified
+	 * then the ColumnInfo will use the alias instead.
+	 * Using the alias instead of the Item can result in lost column information
+	 * if two or more columns have the same name. 
+	 */
+	private String columnAlias;
 
 	public ColumnInfo(Item item, String label) {
 		setColumnInfoItem(item);
 		setName(label);
+		
+	}
+	
+	public ColumnInfo(String label) {
+		setColumnAlias(label);
+		setName(label);
+	}
+	
+	public ColumnInfo(String alias, String label) {
+		setColumnAlias(alias);
+		setName(label);
 	}
 
+	/**
+	 * This value can be null. There is no Item defined for columns that 
+	 * are generated from users modifying the SQL script manually.
+	 */
 	public Item getColumnInfoItem() {
 		return columnInfoItem;
 	}
@@ -136,6 +160,14 @@ public class ColumnInfo extends AbstractWabitObject{
 	public void setWillSubtotal(boolean subtotal) {
 		firePropertyChange(WILL_SUBTOTAL_CHANGED, this.willSubtotal, subtotal);
 		this.willSubtotal = subtotal;
+	}
+
+	public void setColumnAlias(String columnAlias) {
+		this.columnAlias = columnAlias;
+	}
+
+	public String getColumnAlias() {
+		return columnAlias;
 	}
 }
 

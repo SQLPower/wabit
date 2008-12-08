@@ -77,6 +77,7 @@ import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -321,6 +322,8 @@ public class QueryPanel implements DataEntryPanel {
 		queryToolBar.add(queryUIComponents.getClearButton());
 		queryToolBar.add(queryUIComponents.getUndoButton());
 		queryToolBar.add(queryUIComponents.getRedoButton());
+		queryToolBar.addSeparator();
+		queryToolBar.add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 		
 		queryToolPanel.add(queryToolBar, BorderLayout.NORTH);
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
@@ -335,13 +338,13 @@ public class QueryPanel implements DataEntryPanel {
     	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
     	queryPenAndTextTabPane.add(queryPenPanel,"PlayPen");
     	queryPenAndTextTabPane.add(queryToolPanel,SQL_TEXT_TAB_HEADING);
-    	if (queryCache.isQueryModified()) {
+    	if (queryCache.isScriptModified()) {
     		queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
     		queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
     	}
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent() && queryCache.isQueryModified()) {
+				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent() && queryCache.isScriptModified()) {
 					//This is temporary until we can parse the user string and set the query cache to look like 
 					//the query the user modified.
 					int retval = JOptionPane.showConfirmDialog(getPanel(), "Changes will be lost to the SQL script if you go back to the PlayPen. \nDo you wish to continue?", "Changing", JOptionPane.YES_NO_OPTION);

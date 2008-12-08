@@ -1088,7 +1088,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	/**
 	 * Returns true if the user manually edited the text of the query. Returns false otherwise.
 	 */
-	public boolean isQueryModified() {
+	public boolean isScriptModified() {
 		return userModifiedQuery != null;
 	}
 	

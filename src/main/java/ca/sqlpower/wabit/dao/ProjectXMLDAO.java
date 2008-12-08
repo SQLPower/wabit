@@ -203,7 +203,10 @@ public class ProjectXMLDAO {
 							xml.print(out, "<column-info");
 							printAttribute("name", ci.getName());
 							printAttribute("width", ci.getWidth());
-							printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID().toString());
+							if (ci.getColumnInfoItem() != null) {
+								printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID().toString());
+							}
+							printAttribute("column-alias", ci.getColumnAlias());
 							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
 							printAttribute("data-type", ci.getDataType().name());
 							printAttribute("break-on-column", Boolean.toString(ci.getWillBreak()));
@@ -412,7 +415,7 @@ public class ProjectXMLDAO {
 			xml.println(out, "/>");
 		}
 		
-		if (cache.isQueryModified()) {
+		if (cache.isScriptModified()) {
 			xml.print(out, "<query-string");
 			printAttribute("string", cache.generateQuery());
 			xml.println(out, "/>");		

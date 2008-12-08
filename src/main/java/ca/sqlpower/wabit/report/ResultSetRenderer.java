@@ -299,18 +299,32 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     		logger.debug("Loaded key " + info.getColumnInfoItem());
     		colKeyToInfoMap.put(info.getColumnInfoItem(), info);
     	}
+    	Map<String, ColumnInfo> colAliasToInfoMap = new HashMap<String, ColumnInfo>();
+    	for (ColumnInfo info : columnInfo) {
+    		colAliasToInfoMap.put(info.getColumnAlias(), info);
+    	}
     	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
-        	Item item = ((QueryCache) cachedQuery).getSelectedColumns().get(col - 1);
-        	String columnKey = rsmd.getColumnLabel(col);
-        	logger.debug("Matching key " + item.getName());
         	ColumnInfo ci;
-        	if (colKeyToInfoMap.get(item) != null) {
-        		ci = colKeyToInfoMap.get(item);
+        	if (((QueryCache) cachedQuery).isScriptModified()) {
+        		String columnKey = rsmd.getColumnLabel(col);
+        		if (colAliasToInfoMap.get(columnKey) != null) {
+        			ci = colAliasToInfoMap.get(columnKey);
+        		} else {
+        			ci = new ColumnInfo(columnKey);
+        			ci.setWidth(-1);
+        		}
         	} else {
-        		ci = new ColumnInfo(item, columnKey);
-        		ci.setWidth(-1);
+        		Item item = ((QueryCache) cachedQuery).getSelectedColumns().get(col - 1);
+        		String columnKey = rsmd.getColumnLabel(col);
+        		logger.debug("Matching key " + item.getName());
+        		if (colKeyToInfoMap.get(item) != null) {
+        			ci = colKeyToInfoMap.get(item);
+        		} else {
+        			ci = new ColumnInfo(item, columnKey);
+        			ci.setWidth(-1);
+        		}
         	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
             ci.setParent(ResultSetRenderer.this);
@@ -353,7 +367,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
-    	if (refreshResultSet) {
+    	if (refreshResultSet || query.isScriptModified()) {
     		executeQuery();
     		refreshResultSet = false;
     	}

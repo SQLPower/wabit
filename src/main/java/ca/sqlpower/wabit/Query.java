@@ -50,5 +50,11 @@ public interface Query extends WabitObject {
 	void setName(String string);
 	
 	String generateQuery();
+
+	/**
+	 * Returns true if the user edited the script by hand. False if it is generated
+	 * by parts of the query tool.
+	 */
+	public boolean isScriptModified();
     
 }
