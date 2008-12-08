@@ -228,8 +228,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                         Integer.parseInt(frameBounds[3]));
             }
         } else {
-        	frame.setSize(950, 550);
-        	frame.setLocation(300, 200);
+        	frame.setSize(1050, 750);
+        	frame.setLocation(200, 100);
         }
 
         frame.setVisible(true);
