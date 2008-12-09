@@ -30,6 +30,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
@@ -62,7 +63,8 @@ public class LoadProjectsAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 		JFileChooser fc = new JFileChooser();
 		fc.setDialogTitle("Select the file to load from.");
-	
+		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
+		
 		File importFile = null;
 		int fcChoice = fc.showOpenDialog(session.getFrame());
 
