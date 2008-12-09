@@ -20,12 +20,14 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
@@ -34,6 +36,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
  */
 public class SaveProjectAction extends AbstractAction {
 
+	private static final String WABIT_FILE_EXTENSION = ".wabit";
 	/**
 	 * The project in this session will be saved to a file.
 	 */
@@ -47,7 +50,8 @@ public class SaveProjectAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 		JFileChooser fc = new JFileChooser();
 		fc.setDialogTitle("Select the file to save to.");
-	
+		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
+		
 		int fcChoice = fc.showSaveDialog(session.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
@@ -56,7 +60,13 @@ public class SaveProjectAction extends AbstractAction {
 		
 		FileOutputStream out = null;
 		try {
-			out = new FileOutputStream(fc.getSelectedFile());
+			File selectedFile = fc.getSelectedFile();
+
+			if (!selectedFile.getPath().endsWith(WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
+				selectedFile = new File(selectedFile.getPath()+WABIT_FILE_EXTENSION); //$NON-NLS-1$
+            }
+			
+			out = new FileOutputStream(selectedFile);
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
