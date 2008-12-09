@@ -17,7 +17,7 @@
 		<langpack iso3="eng" />
 	</locale>
 	<resources>
-		<res id="Installer.image" src="../src/main/resources/icons/wabit-400.png" />
+		<res id="Installer.image" src="../src/main/resources/icons/wabit-128.png" />
 		<res id="shortcutSpec.xml" src="../src/main/installer/WabitShortcut.xml" />
 		<res id="LicencePanel.licence" src="../LICENSE" />
 		<res id="RegistrySpec.xml" src="../src/main/installer/RegistrySpec.xml" />
@@ -58,6 +58,9 @@
 			</fileset>
 			<fileset dir="../src/main/resources/icons" targetdir="$INSTALL_PATH">
 				<include name="*.ico" />
+			</fileset>
+			<fileset dir="../src/main/installer" targetdir="$INSTALL_PATH">
+				<include name="uninstall.ico" />
 			</fileset>
 		</pack>
 	</packs>
