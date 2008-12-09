@@ -70,6 +70,8 @@ import ca.sqlpower.architect.SQLObject;
 import ca.sqlpower.architect.SQLRelationship;
 import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
+import ca.sqlpower.sql.jdbcwrapper.DatabaseMetaDataDecorator;
+import ca.sqlpower.sql.jdbcwrapper.DatabaseMetaDataDecorator.CacheType;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.BrowserUtil;
@@ -175,102 +177,107 @@ public class QueryPen implements MouseState, WabitNode {
 			for (Object draggedSQLObject : draggedObjects) {
 				
 				if (draggedSQLObject instanceof SQLTable) {
-					SQLTable table = (SQLTable) draggedSQLObject;
-					TableContainer model = new TableContainer(QueryPen.this.model, table);
-
-					ContainerPane pane = new ContainerPane(mouseState, canvas, model);
-					pane.addQueryChangeListener(queryChangeListener);
-					Point location = dtde.getLocation();
-					Point2D movedLoc = canvas.getCamera().localToView(location);
-					pane.translate(movedLoc.getX() + tempTranslateLocation, movedLoc.getY());
-					tempTranslateLocation += pane.getWidth() + TABLE_SPACE;
-					
-					int aliasCounter = 0;
-					ArrayList<String> aliasNames = new ArrayList<String>();
-					
-					// This basically check if there exist a table with the same name as the one being dropped
-					// compare all the alias names to see which number it needs to not create a duplicate table name.
-					for(Object node: topLayer.getAllNodes()) {
-						if(node instanceof ContainerPane) {
-							ContainerPane containerNode = (ContainerPane)node;
-							if(containerNode.getModelTextName().equals(pane.getModelTextName())){
-								logger.debug("Found same tableName, going to alias");
-								aliasNames.add(containerNode.getModel().getAlias());
-							}
-						}
+				    try {
+				    	DatabaseMetaDataDecorator.putHint(DatabaseMetaDataDecorator.CACHE_TYPE, CacheType.EAGER_CACHE);
+    					SQLTable table = (SQLTable) draggedSQLObject;
+    					TableContainer model = new TableContainer(QueryPen.this.model, table);
+    
+    					ContainerPane pane = new ContainerPane(mouseState, canvas, model);
+    					pane.addQueryChangeListener(queryChangeListener);
+    					Point location = dtde.getLocation();
+    					Point2D movedLoc = canvas.getCamera().localToView(location);
+    					pane.translate(movedLoc.getX() + tempTranslateLocation, movedLoc.getY());
+    					tempTranslateLocation += pane.getWidth() + TABLE_SPACE;
+    					
+    					int aliasCounter = 0;
+    					ArrayList<String> aliasNames = new ArrayList<String>();
+    					
+    					// This basically check if there exist a table with the same name as the one being dropped
+    					// compare all the alias names to see which number it needs to not create a duplicate table name.
+    					for(Object node: topLayer.getAllNodes()) {
+    						if(node instanceof ContainerPane) {
+    							ContainerPane containerNode = (ContainerPane)node;
+    							if(containerNode.getModelTextName().equals(pane.getModelTextName())){
+    								logger.debug("Found same tableName, going to alias");
+    								aliasNames.add(containerNode.getModel().getAlias());
+    							}
+    						}
+    					}
+    					Collections.sort(aliasNames);
+    					for(String alias : aliasNames) {
+    						if(alias.equals(pane.getModel().getName()+ "_"+ aliasCounter)
+    								|| alias.equals("")) {
+    							aliasCounter++;
+    						}
+    					}
+    					if(aliasCounter != 0) {
+    						pane.setContainerAlias(pane.getModel().getName()+ "_"+ aliasCounter);
+    					}
+    					
+    					topLayer.addChild(pane);
+    					if(QueryPen.this.model.getFromTableList().isEmpty()) {
+    						StringCountItem countItem = new StringCountItem(QueryPen.this.model);
+    						QueryPen.this.model.getConstantsContainer().addItem(countItem);
+    					}
+    					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_ADDED, null, pane.getModel()));
+    					for (UnmodifiableItemPNode itemNode : pane.getContainedItems()) {
+    						itemNode.setInSelected(true);
+    					}
+    					
+    					try {
+    						for (SQLRelationship relation : table.getExportedKeys()) {
+    							List<ContainerPane> fkContainers = getContainerPane(relation.getFkTable());
+    							for (ContainerPane fkContainer : fkContainers) {
+    								for (ColumnMapping mapping : relation.getMappings()) {
+    									logger.debug("PK container has model name " + pane.getModel().getName() + " looking for col named " + mapping.getPkColumn().getName());
+    									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
+    									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
+    									logger.debug("FK item node is " + fkItemNode);
+    									if (pkItemNode != null && fkItemNode != null) {
+    										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+    										join.getModel().addJoinChangeListener(queryChangeListener);
+    										joinLayer.addChild(join);
+    										for (PropertyChangeListener l : queryListeners) {
+    											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
+    										}
+    									} else {
+    										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
+    									}
+    								}
+    							}
+    						}
+    						
+    						for (SQLRelationship relation : table.getImportedKeys()) {
+    							List<ContainerPane> pkContainers = getContainerPane(relation.getPkTable());
+    							for (ContainerPane pkContainer : pkContainers) {
+    								for (ColumnMapping mapping : relation.getMappings()) {
+    									UnmodifiableItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
+    									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
+    									if (pkItemNode != null && fkItemNode != null) {
+    										logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
+    										logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
+    										JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
+    										join.getModel().addJoinChangeListener(queryChangeListener);
+    										joinLayer.addChild(join);
+    										for (PropertyChangeListener l : queryListeners) {
+    											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
+    										}
+    									} else {
+    										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
+    									}
+    								}
+    							}
+    						}
+    					} catch (ArchitectException e) {
+    						throw new RuntimeException(e);
+    					}
+    
+    					canvas.repaint();
+    					dtde.acceptDrop(dtde.getDropAction());
+    					dtde.dropComplete(true);
+				    } finally {
+				    	DatabaseMetaDataDecorator.putHint(DatabaseMetaDataDecorator.CACHE_TYPE, CacheType.NO_CACHE);
 					}
-					Collections.sort(aliasNames);
-					for(String alias : aliasNames) {
-						if(alias.equals(pane.getModel().getName()+ "_"+ aliasCounter)
-								|| alias.equals("")) {
-							aliasCounter++;
-						}
-					}
-					if(aliasCounter != 0) {
-						pane.setContainerAlias(pane.getModel().getName()+ "_"+ aliasCounter);
-					}
-					
-					topLayer.addChild(pane);
-					if(QueryPen.this.model.getFromTableList().isEmpty()) {
-						StringCountItem countItem = new StringCountItem(QueryPen.this.model);
-						QueryPen.this.model.getConstantsContainer().addItem(countItem);
-					}
-					queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_ADDED, null, pane.getModel()));
-					for (UnmodifiableItemPNode itemNode : pane.getContainedItems()) {
-						itemNode.setInSelected(true);
-					}
-					
-					try {
-						for (SQLRelationship relation : table.getExportedKeys()) {
-							List<ContainerPane> fkContainers = getContainerPane(relation.getFkTable());
-							for (ContainerPane fkContainer : fkContainers) {
-								for (ColumnMapping mapping : relation.getMappings()) {
-									logger.debug("PK container has model name " + pane.getModel().getName() + " looking for col named " + mapping.getPkColumn().getName());
-									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getPkColumn());
-									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
-									logger.debug("FK item node is " + fkItemNode);
-									if (pkItemNode != null && fkItemNode != null) {
-										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
-										join.getModel().addJoinChangeListener(queryChangeListener);
-										joinLayer.addChild(join);
-										for (PropertyChangeListener l : queryListeners) {
-											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
-										}
-									} else {
-										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
-									}
-								}
-							}
-						}
-						
-						for (SQLRelationship relation : table.getImportedKeys()) {
-							List<ContainerPane> pkContainers = getContainerPane(relation.getPkTable());
-							for (ContainerPane pkContainer : pkContainers) {
-								for (ColumnMapping mapping : relation.getMappings()) {
-									UnmodifiableItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
-									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
-									if (pkItemNode != null && fkItemNode != null) {
-										logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
-										logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
-										JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
-										join.getModel().addJoinChangeListener(queryChangeListener);
-										joinLayer.addChild(join);
-										for (PropertyChangeListener l : queryListeners) {
-											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
-										}
-									} else {
-										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
-									}
-								}
-							}
-						}
-					} catch (ArchitectException e) {
-						throw new RuntimeException(e);
-					}
-
-					canvas.repaint();
-					dtde.acceptDrop(dtde.getDropAction());
-					dtde.dropComplete(true);
 					
 				} else {
 					logger.debug("Rejecting drop of non-SQLTable SQLObject: " + draggedSQLObject);
