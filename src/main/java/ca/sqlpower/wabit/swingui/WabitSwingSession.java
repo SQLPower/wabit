@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.swingui;
 
 
+import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JTree;
 
@@ -52,5 +54,15 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	JTree getTree();
 	
 	DatabaseConnectionManager getDbConnectionManager();
+	
+	/**
+	 * Set the file that the session was most recently loaded from or saved to.
+	 */
+	void setCurrentFile(File file);
+	
+	/**
+	 * Get the file that the session was most recently loaded from or saved to.
+	 */
+	File getCurrentFile();
 
 }

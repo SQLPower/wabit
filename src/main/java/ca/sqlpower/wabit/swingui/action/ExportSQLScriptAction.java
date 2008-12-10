@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,6 +32,7 @@ import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * This action will export the given query as a SQL Script file when it is executed.
@@ -44,23 +44,20 @@ public class ExportSQLScriptAction extends AbstractAction {
 
 	private final Query query;
 	
-	/**
-	 * A component to parent dialogs to.
-	 */
-	private final Component parent;
+	private final WabitSwingSession session;
 
-	public ExportSQLScriptAction(Component parent, Query query) {
+	public ExportSQLScriptAction(WabitSwingSession session, Query query) {
 		super("Export SQL");
-		this.parent = parent;
+		this.session = session;
 		this.query = query;
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser chooser = new JFileChooser();
+		JFileChooser chooser = new JFileChooser(session.getCurrentFile());
 		chooser.setDialogTitle("Select the file to save to.");
 		chooser.addChoosableFileFilter(SPSUtils.SQL_FILE_FILTER);
 		
-		int retval = chooser.showSaveDialog(parent);
+		int retval = chooser.showSaveDialog(session.getFrame());
 		if (retval != JFileChooser.APPROVE_OPTION) {
 			return;
 		}

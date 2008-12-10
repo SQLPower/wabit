@@ -49,7 +49,7 @@ public class ExportQueryAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser();
+		JFileChooser fc = new JFileChooser(session.getCurrentFile());
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		

@@ -28,7 +28,6 @@ import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -46,7 +45,7 @@ public class ExportLayoutAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser();
+		JFileChooser fc = new JFileChooser(session.getCurrentFile());
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		

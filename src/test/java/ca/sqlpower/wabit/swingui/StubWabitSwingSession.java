@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JTree;
@@ -105,5 +107,15 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	public DatabaseConnectionManager getDbConnectionManager() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public File getCurrentFile() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setCurrentFile(File file) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -48,19 +48,27 @@ public class SaveProjectAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser();
+		save();
+	}
+	
+	/**
+	 * Saves the project to a user specified file. Returns true if the file was
+	 * saved. Returns false if the file was not saved or cancelled.
+	 */
+	public boolean save() {
+		JFileChooser fc = new JFileChooser(session.getCurrentFile());
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
 		int fcChoice = fc.showSaveDialog(session.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
-		    return;
+		    return false;
 		}
 		
 		FileOutputStream out = null;
+		File selectedFile = fc.getSelectedFile();
 		try {
-			File selectedFile = fc.getSelectedFile();
 
 			if (!selectedFile.getPath().endsWith(WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
 				selectedFile = new File(selectedFile.getPath()+WABIT_FILE_EXTENSION); //$NON-NLS-1$
@@ -73,6 +81,10 @@ public class SaveProjectAction extends AbstractAction {
 		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
 		
 		projectSaver.save();
+		
+		this.session.setCurrentFile(selectedFile);
+		
+		return true;
 	}
 
 }

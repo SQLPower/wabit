@@ -475,7 +475,7 @@ public class QueryPen implements MouseState, WabitNode {
     	JButton exportQuery = new JButton(new ExportQueryAction(session, model));
     	exportQuery.setToolTipText("Export query to Wabit file.");
     	queryPenBarChild.add(exportQuery);
-    	JButton exportSQL = new JButton(new ExportSQLScriptAction(panel, model));
+    	JButton exportSQL = new JButton(new ExportSQLScriptAction(session, model));
     	exportSQL.setToolTipText("Export query to SQL script.");
     	queryPenBarChild.add(exportSQL);
     	queryPenBarChild.addSeparator();

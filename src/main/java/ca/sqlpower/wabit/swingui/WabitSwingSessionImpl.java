@@ -23,10 +23,15 @@ import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
@@ -45,6 +50,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.log4j.Level;
@@ -65,6 +71,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
+import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
@@ -94,6 +101,33 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
 	
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
+	
+	private class WindowClosingListener extends WindowAdapter {
+		
+		@Override
+		public void windowClosing(WindowEvent e) {
+			if (hasUnsavedChanges()) {
+				int response = JOptionPane.showOptionDialog(frame,
+						"You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
+	                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+	                    new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	            if (response == 0) {
+	                sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
+	                frame.dispose();
+	            } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
+	            	return;
+	            } else {
+	            	if (new SaveProjectAction(WabitSwingSessionImpl.this).save()) {
+	            		sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
+	            		frame.dispose();
+	            	}
+	            }
+			} else {
+				sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
+				frame.dispose();
+			}
+		}
+	}
 
 	private final WabitSessionContext sessionContext;
 	
@@ -141,8 +175,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * wabit. 
 	 */
 	private final DatabaseConnectionManager dbConnectionManager;
-
-
+	
+	/**
+	 * This is the most recent file loaded in this session or the last file that the session
+	 * was saved to. This will be null if no file has been loaded or the project has not
+	 * been saved yet.
+	 */
+	private File currentFile = null;
+	
 	/**
 	 * Creates a new session 
 	 * 
@@ -157,6 +197,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		frame = new JFrame("Wabit " + WabitVersion.VERSION);
 		frame.setIconImage(FRAME_ICON.getImage());
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowClosingListener());
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 	}
@@ -254,7 +296,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                     logger.log(Level.WARN,"Failed to flush preferences", ex);
                 }
 
-				close();
 			}});
 
         logger.debug("UI is built.");
@@ -437,6 +478,46 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	public DatabaseConnectionManager getDbConnectionManager() {
 		return dbConnectionManager;
+	}
+	
+	private boolean hasUnsavedChanges() {
+		if (currentFile == null) {
+			return project.getChildren().size() > 0;
+		}
+		
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		new ProjectXMLDAO(out, project).save();
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader(currentFile));
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		
+		char[] buffer = new char[out.toString().toCharArray().length];
+		
+		try {
+			reader.read(buffer, 0, out.toString().toCharArray().length);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		for (int i = 0; i < out.toString().toCharArray().length && i < buffer.length; i++) {
+			if (out.toString().toCharArray()[i] != buffer[i]) {
+				logger.debug("Difference at position " + i + " character " + out.toString().toCharArray()[i] + " " + buffer[i]);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public void setCurrentFile(File savedOrLoadedFile) {
+		this.currentFile = savedOrLoadedFile;
+	}
+	
+	public File getCurrentFile() {
+		return currentFile;
 	}
 	
 }

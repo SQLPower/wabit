@@ -35,7 +35,6 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * This action will load in projects from a user selected file to a given
@@ -52,16 +51,16 @@ public class LoadProjectsAction extends AbstractAction {
 	/**
 	 * This session will be used to parent dialogs from this action to.
 	 */
-	private final WabitSwingSessionImpl session;
+	private final WabitSwingSession session;
 
-	public LoadProjectsAction(WabitSwingSessionImpl session, WabitSessionContext context) {
+	public LoadProjectsAction(WabitSwingSession session, WabitSessionContext context) {
 		super("Load Project");
 		this.session = session;
 		this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser();
+		JFileChooser fc = new JFileChooser(session.getCurrentFile());
 		fc.setDialogTitle("Select the file to load from.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
@@ -84,10 +83,12 @@ public class LoadProjectsAction extends AbstractAction {
 		for (WabitSession session : sessions) {
 			try {
 				((WabitSwingSession)session).buildUI();
+				((WabitSwingSession)session).setCurrentFile(importFile);
 			} catch (ArchitectException e1) {
 				throw new RuntimeException(e1);
 			}
 		}
+		
 	}
 
 }

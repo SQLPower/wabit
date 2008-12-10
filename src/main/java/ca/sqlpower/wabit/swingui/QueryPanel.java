@@ -335,7 +335,7 @@ public class QueryPanel implements DataEntryPanel {
 		JButton exportQuery = new JButton(new ExportQueryAction(session, queryCache));
 		exportQuery.setToolTipText("Export query to Wabit file.");
 		queryToolBar.add(exportQuery);
-		JButton exportSQL = new JButton(new ExportSQLScriptAction(mainSplitPane, queryCache));
+		JButton exportSQL = new JButton(new ExportSQLScriptAction(session, queryCache));
 		exportSQL.setToolTipText("Export query to SQL script.");
 		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
@@ -584,5 +584,9 @@ public class QueryPanel implements DataEntryPanel {
 		queryController.disconnect();
 		queryCache.removePropertyChangeListener(queryCacheListener);
 		logger.debug("Removed the query panel change listener on the query cache");
+	}
+	
+	public QueryCache getQueryCache() {
+		return queryCache;
 	}
 }
