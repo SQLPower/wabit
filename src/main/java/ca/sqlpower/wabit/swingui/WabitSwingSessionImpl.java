@@ -67,6 +67,7 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
@@ -211,6 +212,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		menuBar.add(fileMenu);
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
 		fileMenu.add(new SaveProjectAction(this));
+		fileMenu.add(new ImportProjectAction(this, this.getContext()));
         
 		JMenu windowMenu = new JMenu("Window");
 		fileMenu.setMnemonic('w');
