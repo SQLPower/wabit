@@ -49,4 +49,9 @@ public class StubQuery extends StubWabitObject implements Query {
 		return false;
 	}
 
+	public WabitDataSource getWabitDataSource() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

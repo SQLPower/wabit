@@ -43,10 +43,12 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -1070,6 +1072,10 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	
 	public SPDataSource getDataSource() {
 		return dataSource;
+	}
+	
+	public WabitDataSource getWabitDataSource() {
+		return new JDBCDataSource(dataSource);
 	}
 	
 	public void setDataSource(SPDataSource dataSource) {

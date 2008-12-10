@@ -28,23 +28,24 @@ import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
- * This will save a given project to a user specified file.
+ * This action will export a given query to a file that
+ * can be opened as a separate project.
  */
-public class SaveProjectAction extends AbstractAction {
+public class ExportQuery extends AbstractAction {
 
-	public static final String WABIT_FILE_EXTENSION = ".wabit";
-	/**
-	 * The project in this session will be saved to a file.
-	 */
 	private final WabitSwingSession session;
+	private final Query query;
 
-	public SaveProjectAction(WabitSwingSession session) {
-		super("Save Project");
+	public ExportQuery(WabitSwingSession session, Query query) {
+		super("Export Query");
 		this.session = session;
+		this.query = query;
+		
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -62,8 +63,8 @@ public class SaveProjectAction extends AbstractAction {
 		try {
 			File selectedFile = fc.getSelectedFile();
 
-			if (!selectedFile.getPath().endsWith(WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
-				selectedFile = new File(selectedFile.getPath()+WABIT_FILE_EXTENSION); //$NON-NLS-1$
+			if (!selectedFile.getPath().endsWith(SaveProjectAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
+				selectedFile = new File(selectedFile.getPath()+SaveProjectAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
             }
 			
 			out = new FileOutputStream(selectedFile);
@@ -72,7 +73,8 @@ public class SaveProjectAction extends AbstractAction {
 		}
 		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
 		
-		projectSaver.save();
+		projectSaver.save(query);
+
 	}
 
 }

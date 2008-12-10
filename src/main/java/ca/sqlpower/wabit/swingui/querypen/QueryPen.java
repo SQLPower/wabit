@@ -88,6 +88,7 @@ import ca.sqlpower.wabit.swingui.SQLObjectSelection;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
+import ca.sqlpower.wabit.swingui.action.ExportQuery;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScript;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
@@ -471,7 +472,12 @@ public class QueryPen implements MouseState, WabitNode {
     	queryPenBarChild.setToolTipText("QueryPen Toolbar");
     	
     	queryPenBarChild.addSeparator();
-    	queryPenBarChild.add(new ExportSQLScript(panel, model));
+    	JButton exportQuery = new JButton(new ExportQuery(session, model));
+    	exportQuery.setToolTipText("Export query to Wabit file.");
+    	queryPenBarChild.add(exportQuery);
+    	JButton exportSQL = new JButton(new ExportSQLScript(panel, model));
+    	exportSQL.setToolTipText("Export query to SQL script.");
+    	queryPenBarChild.add(exportSQL);
     	queryPenBarChild.addSeparator();
     	
     	queryPenBarChild.add(deleteButton);

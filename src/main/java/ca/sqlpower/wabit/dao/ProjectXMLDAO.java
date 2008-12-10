@@ -29,8 +29,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -85,6 +88,10 @@ public class ProjectXMLDAO {
 	 */
 	private final OutputStream outputStream;
 	
+	/**
+	 * This will construct a XML DAO to save the entire project or parts of 
+	 * the project to be loaded in later.
+	 */
 	public ProjectXMLDAO(OutputStream out, WabitProject project) {
 		this.project = project;
 		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
@@ -92,7 +99,20 @@ public class ProjectXMLDAO {
 		xml = new XMLHelper();
 	}
 	
+	/**
+	 * This XML DAO will save a specific query in a project as XML.
+	 * The query can then be loaded as a stand-alone project or be imported
+	 * into another project.
+	 */
+	public void save(Query query) {
+		save(Collections.singletonList(query.getWabitDataSource()), Collections.singletonList(query), new ArrayList<Layout>());
+	}
+	
 	public void save() {
+		save(project.getDataSources(), project.getQueries(), project.getLayouts());
+	}
+	
+	private void save(List<WabitDataSource> dataSources, List<Query> queries, List<Layout> layouts) {
 		xml.println(out, "<?xml version='1.0' encoding='UTF-8'?>");
 		xml.println(out, "");
 		xml.println(out, "<wabit export-format=\"1.0.0\">");
@@ -103,19 +123,9 @@ public class ProjectXMLDAO {
 		xml.println(out, ">");
 		xml.indent++;
 		
-		xml.println(out, "<data-sources>");
-		xml.indent++;
+		saveDataSources(dataSources);
 		
-		for (WabitDataSource ds : project.getDataSources()) {
-			xml.print(out, "<data-source");
-			printAttribute("name", ds.getName());
-			xml.println(out, "/>");
-		}
-		
-		xml.indent--;
-		xml.println(out, "</data-sources>");
-		
-		for (Query query : project.getQueries()) {
+		for (Query query : queries) {
 			if (query instanceof QueryCache) {
 				saveQueryCache((QueryCache)query);
 			} else {
@@ -123,7 +133,7 @@ public class ProjectXMLDAO {
 			}
 		}
 		
-		for (Layout layout : project.getLayouts()) {
+		for (Layout layout : layouts) {
 			saveLayout(layout);
 		}
 		
@@ -134,6 +144,20 @@ public class ProjectXMLDAO {
 		xml.println(out, "</wabit>");
 		out.flush();
 		out.close();
+	}
+
+	private void saveDataSources(List<WabitDataSource> dataSources) {
+		xml.println(out, "<data-sources>");
+		xml.indent++;
+		
+		for (WabitDataSource ds : dataSources) {
+			xml.print(out, "<data-source");
+			printAttribute("name", ds.getName());
+			xml.println(out, "/>");
+		}
+		
+		xml.indent--;
+		xml.println(out, "</data-sources>");
 	}
 	
 	/**

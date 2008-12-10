@@ -83,6 +83,7 @@ import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
+import ca.sqlpower.wabit.swingui.action.ExportQuery;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScript;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -331,7 +332,12 @@ public class QueryPanel implements DataEntryPanel {
 		queryToolBar.add(queryUIComponents.getUndoButton());
 		queryToolBar.add(queryUIComponents.getRedoButton());
 		queryToolBar.addSeparator();
-		queryToolBar.add(new ExportSQLScript(mainSplitPane, queryCache));
+		JButton exportQuery = new JButton(new ExportQuery(session, queryCache));
+		exportQuery.setToolTipText("Export query to Wabit file.");
+		queryToolBar.add(exportQuery);
+		JButton exportSQL = new JButton(new ExportSQLScript(mainSplitPane, queryCache));
+		exportSQL.setToolTipText("Export query to SQL script.");
+		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
 		queryToolBar.add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 		
