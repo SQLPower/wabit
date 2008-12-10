@@ -374,7 +374,6 @@ public class QueryPanel implements DataEntryPanel {
     	if (queryCache.isScriptModified()) {
     		queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
     		queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
-    		queryUIComponents.getUndoManager().discardAllEdits();
     	}
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
