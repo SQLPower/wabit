@@ -79,6 +79,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -286,6 +287,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         toolbar.add(new PageFormatAction(report.getPage()));
         toolbar.add(new PrintAction(report));
         toolbar.add(new PDFAction(toolbar, report));
+        toolbar.add(new ExportLayoutAction(session, report));
         toolbar.addSeparator();
         JPanel zoomPanel = new JPanel(new BorderLayout());
         zoomPanel.add(new JLabel(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"))), BorderLayout.WEST);

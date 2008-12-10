@@ -33,8 +33,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -58,6 +60,7 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.xml.XMLHelper;
 
@@ -106,6 +109,25 @@ public class ProjectXMLDAO {
 	 */
 	public void save(Query query) {
 		save(Collections.singletonList(query.getWabitDataSource()), Collections.singletonList(query), new ArrayList<Layout>());
+	}
+	
+	public void save(Layout layout) {
+		Set<Query> queries = new HashSet<Query>();
+		for (Page page : layout.getChildren()) {
+			for (ContentBox contentBox : page.getContentBoxes()) {
+				ReportContentRenderer rcr = contentBox.getContentRenderer();
+				if (rcr instanceof ResultSetRenderer) {
+					queries.add(((ResultSetRenderer) rcr).getQuery());
+				}
+			}
+		}
+		
+		Set<WabitDataSource> dataSources = new HashSet<WabitDataSource>();
+		for (Query query : queries) {
+			dataSources.add(query.getWabitDataSource());
+		}
+		
+		save(new ArrayList<WabitDataSource>(dataSources), new ArrayList<Query>(queries), Collections.singletonList(layout));
 	}
 	
 	public void save() {
@@ -165,7 +187,7 @@ public class ProjectXMLDAO {
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	public void saveLayout(Layout layout) {
+	private void saveLayout(Layout layout) {
 		xml.print(out, "<layout");
 		printAttribute("name", layout.getName());
 		printAttribute("zoom", layout.getZoomLevel());
@@ -330,7 +352,7 @@ public class ProjectXMLDAO {
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	public void saveQueryCache(QueryCache cache) {
+	private void saveQueryCache(QueryCache cache) {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
 		printAttribute("uuid", cache.getUUID().toString());
