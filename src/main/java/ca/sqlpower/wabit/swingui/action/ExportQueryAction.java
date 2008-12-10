@@ -36,12 +36,12 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
  * This action will export a given query to a file that
  * can be opened as a separate project.
  */
-public class ExportQuery extends AbstractAction {
+public class ExportQueryAction extends AbstractAction {
 
 	private final WabitSwingSession session;
 	private final Query query;
 
-	public ExportQuery(WabitSwingSession session, Query query) {
+	public ExportQueryAction(WabitSwingSession session, Query query) {
 		super("Export Query");
 		this.session = session;
 		this.query = query;

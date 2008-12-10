@@ -38,7 +38,7 @@ import ca.sqlpower.wabit.Query;
  * This action will export the given query as a SQL Script file when it is executed.
  * A prompt will be displayed for users to select a file location as well.
  */
-public class ExportSQLScript extends AbstractAction {
+public class ExportSQLScriptAction extends AbstractAction {
 	
 	private static final String SQL_FILE_EXTENSION = ".sql";
 
@@ -49,7 +49,7 @@ public class ExportSQLScript extends AbstractAction {
 	 */
 	private final Component parent;
 
-	public ExportSQLScript(Component parent, Query query) {
+	public ExportSQLScriptAction(Component parent, Query query) {
 		super("Export SQL");
 		this.parent = parent;
 		this.query = query;
