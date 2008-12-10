@@ -31,12 +31,14 @@ import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -69,11 +71,14 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.util.BrowserUtil;
+import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
@@ -316,6 +321,7 @@ public class QueryPanel implements DataEntryPanel {
 
 		queryToolPanel = new JPanel(new BorderLayout());
 		JToolBar queryToolBar = new JToolBar();
+		queryToolBar.setFloatable(false);
 		JButton executeButton = queryUIComponents.getExecuteButton();
 		queryToolBar.add(executeButton);
 		queryToolBar.add(queryUIComponents.getStopButton());
@@ -325,7 +331,24 @@ public class QueryPanel implements DataEntryPanel {
 		queryToolBar.addSeparator();
 		queryToolBar.add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 		
-		queryToolPanel.add(queryToolBar, BorderLayout.NORTH);
+		JToolBar wabitBar = new JToolBar();
+		wabitBar.setFloatable(false);
+		wabitBar.add(new AbstractAction("Wabit", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-16.png"))) {
+			public void actionPerformed(ActionEvent e) {
+				try {
+                    BrowserUtil.launch(SPSUtils.FORUM_URL);
+                } catch (IOException e1) {
+                    throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
+                }
+			}
+        });
+		
+		JToolBar toolBar = new JToolBar();
+		toolBar.setLayout(new BorderLayout());
+		toolBar.add(queryToolBar, BorderLayout.CENTER);
+		toolBar.add(wabitBar, BorderLayout.EAST);
+		
+		queryToolPanel.add(toolBar, BorderLayout.NORTH);
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	queryPenAndTextTabPane = new JTabbedPane();

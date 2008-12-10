@@ -68,6 +68,8 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.BrowserUtil;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -280,6 +282,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		
 		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
         JToolBar toolbar = new JToolBar();
+        toolbar.setFloatable(false);
         toolbar.add(new PageFormatAction(report.getPage()));
         toolbar.add(new PrintAction(report));
         toolbar.add(new PDFAction(toolbar, report));
@@ -316,8 +319,25 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         toolbar.add(addVerticalGuideAction);
         toolbar.add(zoomToFitAction);
         
+        JToolBar wabitBar = new JToolBar();
+        wabitBar.setFloatable(false);
+        wabitBar.add(new AbstractAction("Wabit", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-16.png"))) {
+			public void actionPerformed(ActionEvent e) {
+				try {
+                    BrowserUtil.launch(SPSUtils.FORUM_URL);
+                } catch (IOException e1) {
+                    throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
+                }
+			}
+        });
+        
+        JToolBar mainbar = new JToolBar();
+        mainbar.setLayout(new BorderLayout());
+        mainbar.add(toolbar, BorderLayout.CENTER);
+        mainbar.add(wabitBar, BorderLayout.EAST);
+        
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(toolbar, BorderLayout.NORTH);
+        leftPanel.add(mainbar, BorderLayout.NORTH);
         PScrollPane canvasScrollPane = new PScrollPane(canvas);
 		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
