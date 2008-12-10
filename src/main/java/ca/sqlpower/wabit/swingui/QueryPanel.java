@@ -83,6 +83,7 @@ import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
+import ca.sqlpower.wabit.swingui.action.ExportSQLScript;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -325,9 +326,12 @@ public class QueryPanel implements DataEntryPanel {
 		JButton executeButton = queryUIComponents.getExecuteButton();
 		queryToolBar.add(executeButton);
 		queryToolBar.add(queryUIComponents.getStopButton());
+		queryToolBar.addSeparator();
 		queryToolBar.add(queryUIComponents.getClearButton());
 		queryToolBar.add(queryUIComponents.getUndoButton());
 		queryToolBar.add(queryUIComponents.getRedoButton());
+		queryToolBar.addSeparator();
+		queryToolBar.add(new ExportSQLScript(mainSplitPane, queryCache));
 		queryToolBar.addSeparator();
 		queryToolBar.add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
 		
