@@ -383,7 +383,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("query-string")) {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
-        	query.setUserModifiedQuery(queryString);
+        	query.defineUserModifiedQuery(queryString);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);

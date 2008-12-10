@@ -374,19 +374,32 @@ public class QueryPanel implements DataEntryPanel {
     	if (queryCache.isScriptModified()) {
     		queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
     		queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+    		queryUIComponents.getUndoManager().discardAllEdits();
     	}
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent() && queryCache.isScriptModified()) {
+				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					//This is temporary until we can parse the user string and set the query cache to look like 
 					//the query the user modified.
-					int retval = JOptionPane.showConfirmDialog(getPanel(), "Changes will be lost to the SQL script if you go back to the PlayPen. \nDo you wish to continue?", "Changing", JOptionPane.YES_NO_OPTION);
+					int retval = JOptionPane.OK_OPTION;
+					if (queryCache.isScriptModified()) {
+						JOptionPane.showConfirmDialog(getPanel(), "Changes will be lost to the SQL script if you go back to the PlayPen. \nDo you wish to continue?", "Changing", JOptionPane.YES_NO_OPTION);
+					}
+					
 					if (retval != JOptionPane.OK_OPTION) {
 						queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
 					} else {
+						
+						//The RTextArea needs to have its text set to the empty string
+						//or else it will set its text to the empty string before changing
+						//its text when we come back to the query side and it will get
+						//the query in a state where it thinks the user changed the query twice.
+						queryUIComponents.getQueryArea().setText("");
+						
 						queryCache.removeUserModifications();
 					}
-				} else {
+					
+				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 				}
 			}

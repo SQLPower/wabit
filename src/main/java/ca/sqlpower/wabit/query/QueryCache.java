@@ -1085,9 +1085,13 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	/**
 	 * If this is set then only this query string will be returned by the generateQuery method
 	 * and the query cache will not accurately represent the query.
-	 * @param query
 	 */
-	public void setUserModifiedQuery(String query) {
+	public void defineUserModifiedQuery(String query) {
+		String generatedQuery = generateQuery();
+		logger.debug("Generated query is " + generatedQuery + " and given query is " + query);
+		if (generatedQuery.equals(query)) {
+			return;
+		}
 		userModifiedQuery = query;
 	}
 	
@@ -1103,6 +1107,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * query is the same as the query cache.
 	 */
 	public void removeUserModifications() {
+		logger.debug("Removing user modified query.");
 		userModifiedQuery = null;
 	}
 
