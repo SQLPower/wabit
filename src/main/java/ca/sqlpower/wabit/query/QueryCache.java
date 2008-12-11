@@ -707,6 +707,13 @@ public class QueryCache extends AbstractWabitObject implements Query {
      *             If the query fails to execute for any reason.
      */
 	public ResultSet execute() throws QueryException {
+		if (dataSource == null) {
+			try {
+				return new CachedRowSet();
+			} catch (SQLException e) {
+				throw new QueryException("Could not create an empty result set.", e);
+			}
+		}
 	    String sql = generateQuery();
 	    Connection con = null;
 	    Statement stmt = null;
