@@ -27,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.architect.ArchitectException;
@@ -54,7 +55,7 @@ public class LoadProjectsAction extends AbstractAction {
 	private final WabitSwingSession session;
 
 	public LoadProjectsAction(WabitSwingSession session, WabitSessionContext context) {
-		super("Load Project");
+		super("Load...", new ImageIcon(LoadProjectsAction.class.getClassLoader().getResource("icons/wabit_load.png")));
 		this.session = session;
 		this.context = context;
 	}

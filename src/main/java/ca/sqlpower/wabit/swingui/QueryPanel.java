@@ -55,6 +55,7 @@ import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListModel;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.tree.TreePath;
@@ -85,6 +86,7 @@ import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
+import ca.sqlpower.wabit.swingui.action.ForumAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -325,11 +327,22 @@ public class QueryPanel implements DataEntryPanel {
 		JToolBar queryToolBar = new JToolBar();
 		queryToolBar.setFloatable(false);
 		JButton executeButton = queryUIComponents.getExecuteButton();
+		ImageIcon executeIcon = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/wabit_execute.png"));
+		executeButton.setIcon(executeIcon);
+		executeButton.setText("");
 		queryToolBar.add(executeButton);
+		queryUIComponents.getStopButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/stop.png")));
+		queryUIComponents.getStopButton().setText("");
 		queryToolBar.add(queryUIComponents.getStopButton());
 		queryToolBar.addSeparator();
+		queryUIComponents.getClearButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/page_white.png")));
+		queryUIComponents.getClearButton().setText("");
 		queryToolBar.add(queryUIComponents.getClearButton());
+		queryUIComponents.getUndoButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/undo_arrow16.png")));
+		queryUIComponents.getUndoButton().setText("");
 		queryToolBar.add(queryUIComponents.getUndoButton());
+		queryUIComponents.getRedoButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/redo_arrow16.png")));
+		queryUIComponents.getRedoButton().setText("");
 		queryToolBar.add(queryUIComponents.getRedoButton());
 		queryToolBar.addSeparator();
 		JButton exportQuery = new JButton(new ExportQueryAction(session, queryCache));
@@ -343,15 +356,9 @@ public class QueryPanel implements DataEntryPanel {
 		
 		JToolBar wabitBar = new JToolBar();
 		wabitBar.setFloatable(false);
-		wabitBar.add(new AbstractAction("Wabit", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-16.png"))) {
-			public void actionPerformed(ActionEvent e) {
-				try {
-                    BrowserUtil.launch(SPSUtils.FORUM_URL);
-                } catch (IOException e1) {
-                    throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
-                }
-			}
-        });
+		JButton forumButton = new JButton(new ForumAction());
+		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		wabitBar.add(forumButton);
 		
 		JToolBar toolBar = new JToolBar();
 		toolBar.setLayout(new BorderLayout());

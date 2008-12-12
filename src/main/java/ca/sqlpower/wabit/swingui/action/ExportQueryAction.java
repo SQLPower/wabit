@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
@@ -42,7 +43,7 @@ public class ExportQueryAction extends AbstractAction {
 	private final Query query;
 
 	public ExportQueryAction(WabitSwingSession session, Query query) {
-		super("Export Query");
+		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabit-exportQuery.png")));
 		this.session = session;
 		this.query = query;
 		

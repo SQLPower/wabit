@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
@@ -38,7 +39,7 @@ public class ExportLayoutAction extends AbstractAction {
 	private final Layout layout;
 
 	public ExportLayoutAction(WabitSwingSession session, Layout layout) {
-		super("Export Layout");
+		super("", new ImageIcon(ExportLayoutAction.class.getClassLoader().getResource("icons/wabit_exportLayout.png")));
 		this.session = session;
 		this.layout = layout;
 		

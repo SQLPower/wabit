@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
@@ -43,7 +44,7 @@ public class SaveProjectAction extends AbstractAction {
 	private final WabitSwingSession session;
 
 	public SaveProjectAction(WabitSwingSession session) {
-		super("Save Project");
+		super("Save As...", new ImageIcon(SaveProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
 		this.session = session;
 	}
 

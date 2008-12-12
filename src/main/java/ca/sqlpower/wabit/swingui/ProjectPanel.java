@@ -34,10 +34,12 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.html.HTMLEditorKit;
@@ -141,7 +143,7 @@ public class ProjectPanel implements DataEntryPanel {
 	 * This action is used in the DB connection manager to add the selected db
 	 * to the project.
 	 */
-	private final AbstractAction addDSToProjectAction = new AbstractAction("Add To Project") {
+	private final AbstractAction addDSToProjectAction = new AbstractAction("Start", new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabitStart.png"))) {
 		public void actionPerformed(ActionEvent e) {
 			SPDataSource ds = dbConnectionManager.getSelectedConnection();
 			if (ds == null) {
@@ -176,20 +178,21 @@ public class ProjectPanel implements DataEntryPanel {
 	private void buildUI() {
 		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, fill:pref, pref:grow", "pref, pref, pref"));
 		CellConstraints cc = new CellConstraints();
-		builder.add(LogoLayout.generateLogoPanel(), cc.xyw(1, 1, 3));
+		JPanel logoPanel = LogoLayout.generateLogoPanel();
+		builder.add(logoPanel, cc.xyw(1, 1, 3));
         HTMLEditorKit htmlKit = new HTMLEditorKit();
         final JEditorPane htmlComponent = new JEditorPane();
         htmlComponent.setEditorKit(htmlKit);
         htmlComponent.setText(
 				"<html><br><br>" +
-				"<p>Creating a report in Wabit involves three steps:" +
+				"<p>Creating a Report in Wabit involves three steps:" +
 				"<ol>" +
-				" <li> add a data source to your project" +
-				" <li> formulate a query with the help of the query builder" +
-				" <li> create a page layout for your query" +
+				" <li> Add a Data Source to your Project" +
+				" <li> Formulate a Query with the help of the Query Builder" +
+				" <li> Create a Page Layout for your Query" +
 				"</ol>" +
-				"<p>Your page layout can be printed directly or saved to a PDF file." +
-				"<p>To add a data source to your project, choose one from the list below and press the <i>Add To Project</i> button." +
+				"<p>Your Page Layout can be printed directly or saved to a PDF file." +
+				"<p>To add a Data Source to your project, choose one from the list below and press the <i>Start</i> button." +
 				"<br>" +
 				"<p>Please visit our <a href=\"" + SPSUtils.FORUM_URL + "\">support forum</a>   if you have any questions, comments, suggestions, or if you just need a friend.");
         builder.add(htmlComponent, cc.xy(2, 2));
@@ -213,13 +216,19 @@ public class ProjectPanel implements DataEntryPanel {
         });
 		
 		List<Action> actionList = new ArrayList<Action>();
+		addDSToProjectAction.putValue(DatabaseConnectionManager.VERTICAL_TEXT_POSITION, SwingConstants.BOTTOM);
+		addDSToProjectAction.putValue(DatabaseConnectionManager.HORIZONTAL_TEXT_POSITION, SwingConstants.CENTER);
+		addDSToProjectAction.putValue(DatabaseConnectionManager.ADDITIONAL_BUTTON_HEIGHT, (int) new JButton(addDSToProjectAction).getPreferredSize().getHeight() * 2);
 		actionList.add(addDSToProjectAction);
 		dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
 				new DefaultDataSourceDialogFactory(), 
 				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
 				actionList, session.getFrame(), false);
 		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
-		panel.add(builder.getPanel(), BorderLayout.CENTER);
+		JPanel builderPanel = builder.getPanel();
+		panel.add(builderPanel, BorderLayout.CENTER);
+		
+		logoPanel.getLayout().layoutContainer(logoPanel);
 	}
 	
 	public boolean applyChanges() {

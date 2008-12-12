@@ -51,6 +51,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -61,6 +62,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -68,8 +70,6 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.util.BrowserUtil;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -80,6 +80,7 @@ import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
+import ca.sqlpower.wabit.swingui.action.ForumAction;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -323,15 +324,9 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
         
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
-        wabitBar.add(new AbstractAction("Wabit", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-16.png"))) {
-			public void actionPerformed(ActionEvent e) {
-				try {
-                    BrowserUtil.launch(SPSUtils.FORUM_URL);
-                } catch (IOException e1) {
-                    throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
-                }
-			}
-        });
+        JButton forumButton = new JButton(new ForumAction());
+		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		wabitBar.add(forumButton);
         
         JToolBar mainbar = new JToolBar();
         mainbar.setLayout(new BorderLayout());
@@ -358,6 +353,7 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 					int index, boolean isSelected, boolean cellHasFocus) {
 				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
 				((JLabel) c).setText(((Query) value).getName());
+				((JLabel) c).setIcon(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png")));
 				return c;
 			}
 		});

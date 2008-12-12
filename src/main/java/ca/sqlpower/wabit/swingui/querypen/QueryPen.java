@@ -60,6 +60,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -73,9 +74,6 @@ import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.sql.jdbcwrapper.DatabaseMetaDataDecorator;
 import ca.sqlpower.sql.jdbcwrapper.DatabaseMetaDataDecorator.CacheType;
 import ca.sqlpower.swingui.CursorManager;
-import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.util.BrowserUtil;
-import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
@@ -90,6 +88,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
+import ca.sqlpower.wabit.swingui.action.ForumAction;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 import edu.umd.cs.piccolo.PLayer;
@@ -460,7 +459,7 @@ public class QueryPen implements MouseState, WabitNode {
 			}
 		};
     	JButton playPenExecuteButton = new JButton(queryExecuteAction);
-    	ImageIcon executeIcon = new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/execute.png"));
+    	ImageIcon executeIcon = new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/wabit_execute.png"));
     	playPenExecuteButton.setIcon(executeIcon);
     	playPenExecuteButton.setToolTipText(QUERY_EXECUTE + "(Shortcut "+ getAcceleratorKeyString()+ " R)");
     	queryPenBarChild.add(playPenExecuteButton);
@@ -491,15 +490,9 @@ public class QueryPen implements MouseState, WabitNode {
     	
         JToolBar queryPenWabitBar = new JToolBar(JToolBar.HORIZONTAL);
         queryPenWabitBar.setFloatable(false);
-        queryPenWabitBar.add(new AbstractAction("Wabit", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-16.png"))) {
-			public void actionPerformed(ActionEvent e) {
-				try {
-                    BrowserUtil.launch(SPSUtils.FORUM_URL);
-                } catch (IOException e1) {
-                    throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
-                }
-			}
-        });
+        JButton forumButton = new JButton(new ForumAction());
+		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		queryPenWabitBar.add(forumButton);
         queryPenBar.add(queryPenBarChild, BorderLayout.CENTER);
         queryPenBar.add(queryPenWabitBar, BorderLayout.EAST);
         panel.add(queryPenBar, BorderLayout.NORTH);

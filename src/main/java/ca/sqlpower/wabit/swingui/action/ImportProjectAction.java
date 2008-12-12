@@ -56,7 +56,7 @@ public class ImportProjectAction extends AbstractAction {
 	private final WabitSwingSessionImpl session;
 
 	public ImportProjectAction(WabitSwingSessionImpl session, WabitSessionContext context) {
-		super("Import Project...");
+		super("Import...");
 		this.session = session;
 		this.context = context;
 	}
