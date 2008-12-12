@@ -25,16 +25,17 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.LayoutManager;
-import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
@@ -66,6 +67,11 @@ import com.jgoodies.forms.layout.FormLayout;
  * also allow the user to add and remove data sources.
  */
 public class ProjectPanel implements DataEntryPanel {
+	
+	private static final ImageIcon SELECT_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_selected.png"));
+	private static final ImageIcon OVER_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
+	private static final ImageIcon DOWN_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_down.png"));
+	private static final ImageIcon UP_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
 	
     private static class LogoLayout implements LayoutManager {
 
@@ -139,36 +145,6 @@ public class ProjectPanel implements DataEntryPanel {
 	private final WabitSwingSession session;
 	private DatabaseConnectionManager dbConnectionManager;
 	
-	/**
-	 * This action is used in the DB connection manager to add the selected db
-	 * to the project.
-	 */
-	private final AbstractAction addDSToProjectAction = new AbstractAction("Start", new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabitStart.png"))) {
-		public void actionPerformed(ActionEvent e) {
-			SPDataSource ds = dbConnectionManager.getSelectedConnection();
-			if (ds == null) {
-				return;
-			}
-			boolean isDSAlreadyAdded = false;
-			for (WabitDataSource wds : session.getProject().getDataSources()) {
-				if (wds instanceof JDBCDataSource) {
-					JDBCDataSource jdbc = (JDBCDataSource) wds;
-					if (jdbc.getSPDataSource() == ds) {
-						isDSAlreadyAdded = true;
-					}
-				}
-			}
-			if (!isDSAlreadyAdded) {
-				session.getProject().addDataSource(ds);
-			}
-			Query query = new QueryCache();
-			query.setName("New " + ds.getName() + " query");
-			session.getProject().addQuery(query);
-			query.setDataSource(ds);
-			session.setEditorPanel(query);
-		}
-	}; 
-	
 	public ProjectPanel(WabitSwingSession session) {
 		this.session = session;
 		panel = new JPanel(new BorderLayout());
@@ -214,21 +190,112 @@ public class ProjectPanel implements DataEntryPanel {
                 }
             }
         });
+
+        List<JComponent> componentList = new ArrayList<JComponent>();
+        DefaultFormBuilder startPanel = new DefaultFormBuilder(new FormLayout("fill:pref", "pref, pref"));
+        final JLabel startImageLabel = new JLabel(UP_START_ICON);
+        startImageLabel.setFocusable(true);
+        startPanel.add(startImageLabel);
+        startImageLabel.addMouseListener(new MouseListener() {
+        	boolean inside = false;
+        	boolean pressed = false;
+			public void mouseReleased(MouseEvent e) {
+				pressed = false;
+				if (startImageLabel.isFocusOwner()) {
+					startImageLabel.setIcon(SELECT_START_ICON);
+				} else if (inside) {
+					startImageLabel.setIcon(OVER_START_ICON);
+					addDSToProject();
+				} else {
+					startImageLabel.setIcon(UP_START_ICON);
+				}
+			}
 		
-		List<Action> actionList = new ArrayList<Action>();
-		addDSToProjectAction.putValue(DatabaseConnectionManager.VERTICAL_TEXT_POSITION, SwingConstants.BOTTOM);
-		addDSToProjectAction.putValue(DatabaseConnectionManager.HORIZONTAL_TEXT_POSITION, SwingConstants.CENTER);
-		addDSToProjectAction.putValue(DatabaseConnectionManager.ADDITIONAL_BUTTON_HEIGHT, (int) new JButton(addDSToProjectAction).getPreferredSize().getHeight() * 2);
-		actionList.add(addDSToProjectAction);
+			public void mousePressed(MouseEvent e) {
+				startImageLabel.requestFocusInWindow();
+				pressed = true;
+				startImageLabel.setIcon(DOWN_START_ICON);
+			}
+		
+			public void mouseExited(MouseEvent e) {
+				inside = false;
+				if (startImageLabel.isFocusOwner()) {
+					startImageLabel.setIcon(SELECT_START_ICON);
+				} else if (pressed) {
+					startImageLabel.setIcon(DOWN_START_ICON);
+				} else {
+					startImageLabel.setIcon(UP_START_ICON);
+				}
+			}
+		
+			public void mouseEntered(MouseEvent e) {
+				inside = true;
+				if (startImageLabel.isFocusOwner()) {
+					startImageLabel.setIcon(SELECT_START_ICON);
+				} else if (pressed) {
+					startImageLabel.setIcon(DOWN_START_ICON);
+				} else {
+					startImageLabel.setIcon(OVER_START_ICON);
+				}
+			}
+		
+			public void mouseClicked(MouseEvent e) {
+				// do nothing
+			}
+		});
+        startImageLabel.addFocusListener(new FocusListener() {
+		
+			public void focusLost(FocusEvent e) {
+				startImageLabel.setIcon(UP_START_ICON);
+			}
+		
+			public void focusGained(FocusEvent e) {
+				//do nothing.
+			}
+		});
+        
+        JLabel startTextLabel = new JLabel("Start");
+        startTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        startPanel.nextLine();
+		startPanel.add(startTextLabel);
+        componentList.add(startPanel.getPanel());
 		dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
 				new DefaultDataSourceDialogFactory(), 
 				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
-				actionList, session.getFrame(), false);
+				new ArrayList<Action>(), componentList, session.getFrame(), false);
 		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
 		JPanel builderPanel = builder.getPanel();
 		panel.add(builderPanel, BorderLayout.CENTER);
 		
 		logoPanel.getLayout().layoutContainer(logoPanel);
+	}
+	
+	/**
+	 * This method is used in the DB connection manager to add the selected db
+	 * to the project.
+	 */
+	private void addDSToProject() {
+		SPDataSource ds = dbConnectionManager.getSelectedConnection();
+		if (ds == null) {
+			return;
+		}
+		boolean isDSAlreadyAdded = false;
+		for (WabitDataSource wds : session.getProject().getDataSources()) {
+			if (wds instanceof JDBCDataSource) {
+				JDBCDataSource jdbc = (JDBCDataSource) wds;
+				if (jdbc.getSPDataSource() == ds) {
+					isDSAlreadyAdded = true;
+				}
+			}
+		}
+		if (!isDSAlreadyAdded) {
+			session.getProject().addDataSource(ds);
+		}
+		Query query = new QueryCache();
+		query.setName("New " + ds.getName() + " query");
+		session.getProject().addQuery(query);
+		query.setDataSource(ds);
+		session.setEditorPanel(query);
 	}
 	
 	public boolean applyChanges() {
