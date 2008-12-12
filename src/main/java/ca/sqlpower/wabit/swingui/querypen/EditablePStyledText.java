@@ -19,6 +19,11 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Stroke;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -37,7 +42,9 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.swingui.event.ExtendedStyledTextEventHandler;
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
@@ -96,11 +103,29 @@ public class EditablePStyledText extends PStyledText {
 	 */
 	private List<EditStyledTextListener> editingListeners;
 	
-	public EditablePStyledText(QueryPen mouseState, PCanvas canvas) {
-		this("", mouseState, canvas);
+	/**
+	 * Tells the paint method if we should show a border or not. The border will show
+	 * when the user has moused over the component.
+	 */
+	private boolean showHoverBorder;
+	
+	/**
+	 * The minimum width of this component. If the component gets resized to a smaller
+	 * amount then the width will be set to this value.
+	 */
+	private int minimumWidth;
+	
+	/**
+	 * The minimum height of this component. If the component gets resized to a smaller
+	 * amount then the height will be set to this value.
+	 */
+	private int minimumHeight;
+	
+	public EditablePStyledText(QueryPen queryPen, PCanvas canvas) {
+		this("", queryPen, canvas);
 	}
 	
-	public EditablePStyledText(String startingText, QueryPen mouseStates, PCanvas canvas) {
+	public EditablePStyledText(String startingText, QueryPen queryPen, PCanvas canvas) {
 		editorPane = new JEditorPane();
 		editingListeners = new ArrayList<EditStyledTextListener>();
 		
@@ -113,7 +138,7 @@ public class EditablePStyledText extends PStyledText {
 		doc.setParagraphAttributes(0, editorPane.getText().length(), attributeSet, false);
 		setDocument(editorPane.getDocument());
 		
-		styledTextEventHandler = new ExtendedStyledTextEventHandler(mouseStates, canvas, editorPane) {
+		styledTextEventHandler = new ExtendedStyledTextEventHandler(queryPen, canvas, editorPane) {
 			@Override
 			public void startEditing(PInputEvent event, PStyledText text) {
 				for (EditStyledTextListener l : editingListeners) {
@@ -150,6 +175,54 @@ public class EditablePStyledText extends PStyledText {
 		});
 		
 		editorPane.addFocusListener(editorFocusListener);
+		
+		addInputEventListener(new PBasicInputEventHandler() {
+			
+			@Override
+			public void mouseEntered(PInputEvent event) {
+				showHoverBorder = true;
+				repaint();
+			}
+			
+			@Override
+			public void mouseExited(PInputEvent event) {
+				showHoverBorder = false;
+				repaint();
+			}
+		});
+		
+	}
+	
+	@Override
+	protected void paint(PPaintContext paintContext) {
+		super.paint(paintContext);
+		Graphics2D g = paintContext.getGraphics();
+		Paint oldPaint = g.getPaint();
+		Stroke oldStroke = g.getStroke();
+		g.setStroke(new BasicStroke(1));
+		g.setPaint(Color.GRAY);
+		if (showHoverBorder) {
+			g.drawRect((int) getBounds().getX(), (int) getBounds().getY(), (int) getBounds().getWidth() , (int) getBounds().getHeight());
+		}
+		g.setStroke(oldStroke);
+		g.setPaint(oldPaint);
+	}
+	
+	/**
+	 * This will allow classes extending this class to get the focus listener that
+	 * will stop the edit when focus is lost. Other classes may want to define different
+	 * behaviour when focus is lost.
+	 */
+	protected FocusListener getEditorFocusListener() {
+		return editorFocusListener;
+	}
+	
+	/**
+	 * Allows classes extending this class to get the styledTextEventHandler that
+	 * handles text replacements for this class.
+	 */
+	protected ExtendedStyledTextEventHandler getStyledTextEventHandler() {
+		return styledTextEventHandler;
 	}
 	
 	public void addEditStyledTextListener(EditStyledTextListener l) {
