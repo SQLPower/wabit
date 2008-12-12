@@ -64,8 +64,8 @@ public class ExportQueryAction extends AbstractAction {
 		try {
 			File selectedFile = fc.getSelectedFile();
 
-			if (!selectedFile.getPath().endsWith(SaveProjectAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
-				selectedFile = new File(selectedFile.getPath()+SaveProjectAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
+			if (!selectedFile.getPath().endsWith(SaveAsProjectAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
+				selectedFile = new File(selectedFile.getPath()+SaveAsProjectAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
             }
 			
 			out = new FileOutputStream(selectedFile);

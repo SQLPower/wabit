@@ -30,22 +30,33 @@ import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
-import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
-public class ExportLayoutAction extends AbstractAction {
+/**
+ * This will save a given project to a user specified file.
+ */
+public class SaveAsProjectAction extends AbstractAction {
 
+	public static final String WABIT_FILE_EXTENSION = ".wabit";
+	/**
+	 * The project in this session will be saved to a file.
+	 */
 	private final WabitSwingSession session;
-	private final Layout layout;
 
-	public ExportLayoutAction(WabitSwingSession session, Layout layout) {
-		super("", new ImageIcon(ExportLayoutAction.class.getClassLoader().getResource("icons/wabit_exportLayout.png")));
+	public SaveAsProjectAction(WabitSwingSession session) {
+		super("Save As...", new ImageIcon(SaveAsProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
 		this.session = session;
-		this.layout = layout;
-		
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		save();
+	}
+	
+	/**
+	 * Saves the project to a user specified file. Returns true if the file was
+	 * saved. Returns false if the file was not saved or cancelled.
+	 */
+	public boolean save() {
 		JFileChooser fc = new JFileChooser(session.getCurrentFile());
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
@@ -53,15 +64,15 @@ public class ExportLayoutAction extends AbstractAction {
 		int fcChoice = fc.showSaveDialog(session.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
-		    return;
+		    return false;
 		}
 		
 		FileOutputStream out = null;
+		File selectedFile = fc.getSelectedFile();
 		try {
-			File selectedFile = fc.getSelectedFile();
 
-			if (!selectedFile.getPath().endsWith(SaveAsProjectAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
-				selectedFile = new File(selectedFile.getPath()+SaveAsProjectAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
+			if (!selectedFile.getPath().endsWith(WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
+				selectedFile = new File(selectedFile.getPath()+WABIT_FILE_EXTENSION); //$NON-NLS-1$
             }
 			
 			out = new FileOutputStream(selectedFile);
@@ -70,7 +81,11 @@ public class ExportLayoutAction extends AbstractAction {
 		}
 		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
 		
-		projectSaver.save(layout);
-
+		projectSaver.save();
+		
+		this.session.setCurrentFile(selectedFile);
+		
+		return true;
 	}
+
 }

@@ -81,6 +81,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.LogAction;
+import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
@@ -124,7 +125,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	            } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
 	            	return;
 	            } else {
-	            	if (new SaveProjectAction(WabitSwingSessionImpl.this).save()) {
+	            	if (new SaveAsProjectAction(WabitSwingSessionImpl.this).save()) {
 	            		sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
 	            		frame.dispose();
 	            	}
@@ -278,7 +279,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
+		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
+		fileMenu.add(new SaveAsProjectAction(this));
+		fileMenu.addSeparator();
 		fileMenu.add(new ImportProjectAction(this, this.getContext()));
         
 		JMenu windowMenu = new JMenu("Window");
