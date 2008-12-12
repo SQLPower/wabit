@@ -112,28 +112,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private class WindowClosingListener extends WindowAdapter {
 		
+		private final WabitSwingSession session;
+
+		public WindowClosingListener(WabitSwingSession session) {
+			this.session = session;
+		}
+		
 		@Override
 		public void windowClosing(WindowEvent e) {
-			if (hasUnsavedChanges()) {
-				int response = JOptionPane.showOptionDialog(frame,
-						"You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
-	                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
-	                    new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	            if (response == 0) {
-	                sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
-	                frame.dispose();
-	            } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
-	            	return;
-	            } else {
-	            	if (new SaveAsProjectAction(WabitSwingSessionImpl.this).save()) {
-	            		sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
-	            		frame.dispose();
-	            	}
-	            }
-			} else {
-				sessionContext.deregisterChildSession(WabitSwingSessionImpl.this);
-				frame.dispose();
-			}
+	    	session.close();
 		}
 	}
 
@@ -206,7 +193,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame = new JFrame("Wabit " + WabitVersion.VERSION);
 		frame.setIconImage(FRAME_ICON.getImage());
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		frame.addWindowListener(new WindowClosingListener());
+		frame.addWindowListener(new WindowClosingListener(this));
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 	}
@@ -301,6 +288,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         if (prefs.get("frameBounds", null) != null) {
             String[] frameBounds = prefs.get("frameBounds", null).split(",");
             if (frameBounds.length == 4) {
+            	logger.debug("Frame bounds are " + Integer.parseInt(frameBounds[0]) + ", " + Integer.parseInt(frameBounds[1]) + ", " +
+                        Integer.parseInt(frameBounds[2]) + ", " + Integer.parseInt(frameBounds[3]));
                 frame.setBounds(
                         Integer.parseInt(frameBounds[0]),
                         Integer.parseInt(frameBounds[1]),
@@ -313,19 +302,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
 
         frame.setVisible(true);
-        frame.addWindowListener(new WindowAdapter() {
-        	
-        	@Override
-			public void windowClosing(WindowEvent e) {
-                try {
-                	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
-                    prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
-                    prefs.flush();
-                } catch (BackingStoreException ex) {
-                    logger.log(Level.WARN,"Failed to flush preferences", ex);
-                }
-
-			}});
 
         logger.debug("UI is built.");
     }
@@ -351,29 +327,53 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	public void removeSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.remove(l);
 	}
-
-	/**
-	 * Ends this session, disposing its frame and releasing any system
-	 * resources that were obtained explicitly by this session. Also
-	 * fires a sessionClosing lifecycle event, so any resources used up
-	 * by subsystems dependent on this session can be freed by the appropriate
-	 * parties.
-	 */
-    public void close() {
-    	
-    	if (!removeEditorPanel()) {
+	
+	public void close() {
+		if (!removeEditorPanel()) {
     		return;
     	}
-    	
-    	SessionLifecycleEvent<WabitSession> e =
-    		new SessionLifecycleEvent<WabitSession>(this);
-    	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
-    		lifecycleListeners.get(i).sessionClosing(e);
-    	}
-    	frame.dispose();
-    	sessionContext.deregisterChildSession(this);
-    }
-    
+		setEditorPanel(project);
+		
+    	try {
+        	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
+            prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
+            prefs.flush();
+        } catch (BackingStoreException ex) {
+            logger.log(Level.WARN,"Failed to flush preferences", ex);
+        }
+        
+        boolean closing = false;
+		if (hasUnsavedChanges()) {
+			int response = JOptionPane.showOptionDialog(frame,
+					"You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+                    new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            if (response == 0) {
+                sessionContext.deregisterChildSession(this);
+                frame.dispose();
+            } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
+            	return;
+            } else {
+            	if (new SaveAsProjectAction(this).save()) {
+            		closing = true;
+            	}
+            }
+		} else {
+			closing = true;
+		}
+		
+		if (closing) {
+	    	SessionLifecycleEvent<WabitSession> lifecycleEvent =
+	    		new SessionLifecycleEvent<WabitSession>(this);
+	    	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
+	    		lifecycleListeners.get(i).sessionClosing(lifecycleEvent);
+	    	}
+	    	
+	    	sessionContext.deregisterChildSession(this);
+    		frame.dispose();
+		}
+	}
+
     /**
      * Launches the Wabit application by loading the configuration and
      * displaying the GUI.
@@ -502,6 +502,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			wabitPane.remove(currentEditorPanel.getPanel());
 		}
 		currentEditorPanel = null;
+		currentEditorPanelModel = null;
 		return true;
 	}
 	
