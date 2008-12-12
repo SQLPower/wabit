@@ -203,6 +203,7 @@ public class ProjectPanel implements DataEntryPanel {
 				pressed = false;
 				if (startImageLabel.isFocusOwner()) {
 					startImageLabel.setIcon(SELECT_START_ICON);
+					addDSToProject();
 				} else if (inside) {
 					startImageLabel.setIcon(OVER_START_ICON);
 					addDSToProject();
