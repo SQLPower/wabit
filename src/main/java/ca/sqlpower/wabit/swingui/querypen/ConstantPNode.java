@@ -158,7 +158,7 @@ public class ConstantPNode extends PNode implements WabitNode {
 		constantText.translate(swingCheckbox.getFullBounds().getWidth() + SPACING_SIZE, yPos);
 		addChild(constantText);
 		
-		if (!item.getAlias().equals(LONG_EMPTY_STRING)) {
+		if (item.getAlias().trim().length() > 0) {
 			aliasText = new EditablePStyledText(item.getAlias(), mouseStates, canvas);
 		} else {
 			aliasText = new EditablePStyledText(LONG_EMPTY_STRING, mouseStates, canvas);
@@ -168,11 +168,11 @@ public class ConstantPNode extends PNode implements WabitNode {
 			private boolean isEditing = false;
 			public void editingStopping() {
 				if (isEditing) {
+					item.setAlias(aliasText.getEditorPane().getText().trim());
 					if (aliasText.getEditorPane().getText().trim().length() <= 0) {
 						aliasText.getEditorPane().setText(LONG_EMPTY_STRING);
 						aliasText.syncWithDocument();
 					}
-					item.setAlias(aliasText.getEditorPane().getText());
 				}
 				isEditing = false;
 			}
@@ -184,7 +184,7 @@ public class ConstantPNode extends PNode implements WabitNode {
 		aliasText.translate(swingCheckbox.getFullBounds().getWidth() + constantText.getWidth() + 2 * SPACING_SIZE, yPos);
 		addChild(aliasText);
 		
-		if (!item.getWhere().equals(LONG_EMPTY_STRING)) {
+		if (item.getWhere().trim().length() > 0) {
 			whereText = new EditablePStyledTextWithOptionBox(item.getWhere(), mouseStates, canvas);
 		} else {
 			whereText = new EditablePStyledTextWithOptionBox(LONG_EMPTY_STRING, mouseStates, canvas);
@@ -194,11 +194,11 @@ public class ConstantPNode extends PNode implements WabitNode {
 			private boolean isEditing = false;
 			public void editingStopping() {
 				if (isEditing) {
+					item.setWhere(whereText.getEditorPane().getText().trim());
 					if (whereText.getEditorPane().getText().trim().length() <= 0) {
 						whereText.getEditorPane().setText(LONG_EMPTY_STRING);
 						whereText.syncWithDocument();
 					}
-					item.setWhere(whereText.getEditorPane().getText());
 				}
 				isEditing = false;
 			}

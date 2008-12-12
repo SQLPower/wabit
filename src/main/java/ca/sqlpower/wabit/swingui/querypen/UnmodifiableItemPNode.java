@@ -128,11 +128,11 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 	
 	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
 		public void editingStopping() {
+			item.setWhere(getWhereText());
 			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
 				whereText.getEditorPane().setText(WHERE_START_TEXT);
 				whereText.syncWithDocument();
 			}
-			item.setWhere(getWhereText());
 		}
 		public void editingStarting() {
 			if (whereText.getEditorPane().getText().equals(WHERE_START_TEXT)) {
@@ -252,8 +252,10 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 		setHeight(getFullBounds().getHeight());
 		
 		isInSelectCheckBox.setSelected(item.isSelected());
-		whereText.getEditorPane().setText(item.getWhere());
-		whereText.syncWithDocument();
+		if (item.getWhere().trim().length() > 0) {
+			whereText.getEditorPane().setText(item.getWhere());
+			whereText.syncWithDocument();
+		}
 		setVisibleAliasText();
 	}
 	
