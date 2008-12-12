@@ -243,7 +243,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 		addingNewItemPNode.translate(0, (title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE);
 		addChild(addingNewItemPNode);
 		
-		outerRect = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)(getFullBounds().getWidth() + 2 * BORDER_SIZE), (float)(getFullBounds().getHeight() + 2 * BORDER_SIZE), QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
+		outerRect = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)(getFullBounds().getWidth() + 2 * BORDER_SIZE), (float)(getFullBounds().getHeight() + 3 * BORDER_SIZE), QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
 		outerRect.setStroke(new BasicStroke(STROKE_SIZE));
 		headerBackground = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)outerRect.getWidth() - 1, (float)(title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE + QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
 		headerBackground.setStrokePaint(new Color(0x00ffffff, true));
@@ -322,7 +322,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 		headerBackground.setWidth(maxWidth + 2 * BORDER_SIZE);
 		headerBackClip.setWidth(maxWidth + 2 * BORDER_SIZE);
 				
-		outerRect.setHeight((title.getHeight() + BORDER_SIZE) * (3 + constantPNodeList.size()) + BORDER_SIZE);
+		outerRect.setHeight((title.getHeight() + BORDER_SIZE) * (3 + constantPNodeList.size()) + (2 * BORDER_SIZE));
 		
 		whereBackground.translate(translateWhereX - whereBackground.getFullBounds().getX(), 0);
 		whereBackground.setWidth(outerRect.getWidth() - whereBackground.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
