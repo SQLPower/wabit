@@ -36,6 +36,7 @@ public class ForumAction extends AbstractAction {
 	
 	public ForumAction() {
 		super("", new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-24px.png")));
+		putValue(SHORT_DESCRIPTION, "Go to Wabit support forum");		
 	}
 	
 	public void actionPerformed(ActionEvent e) {

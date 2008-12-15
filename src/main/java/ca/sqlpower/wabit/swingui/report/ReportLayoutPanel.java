@@ -47,6 +47,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -281,6 +282,12 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		
 		canvas.getActionMap().put(addImageAction.getClass(), addImageAction);
 		inputMap.put(KeyStroke.getKeyStroke('i'), addImageAction.getClass());
+		
+		addContentBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
+		addImageBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add image");
+		addHorizontalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add horizontal guide");
+		addVerticalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add vertical guide");
+		zoomToFitAction.putValue(Action.SHORT_DESCRIPTION, "Zoom to fit");
 		
 		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
         JToolBar toolbar = new JToolBar();
