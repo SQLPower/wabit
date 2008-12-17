@@ -392,7 +392,7 @@ public class QueryPanel implements DataEntryPanel {
 					//the query the user modified.
 					int retval = JOptionPane.OK_OPTION;
 					if (queryCache.isScriptModified()) {
-						JOptionPane.showConfirmDialog(getPanel(), "Changes will be lost to the SQL script if you go back to the PlayPen. \nDo you wish to continue?", "Changing", JOptionPane.YES_NO_OPTION);
+						retval = JOptionPane.showConfirmDialog(getPanel(), "Changes will be lost to the SQL script if you go back to the PlayPen. \nDo you wish to continue?", "Changing", JOptionPane.YES_NO_OPTION);
 					}
 					
 					if (retval != JOptionPane.OK_OPTION) {
