@@ -270,7 +270,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
 		fileMenu.addSeparator();
-		fileMenu.add(new ImportProjectAction(this, this.getContext()));
+		fileMenu.add(new ImportProjectAction(this));
         
 		JMenu windowMenu = new JMenu("Window");
 		fileMenu.setMnemonic('w');
