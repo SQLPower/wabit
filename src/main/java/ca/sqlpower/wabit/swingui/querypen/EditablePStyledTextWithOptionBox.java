@@ -131,20 +131,20 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 			background.setBounds(newOption.getBounds().getX(), newOption.getBounds().getY()
 					,newOption.getBounds().getWidth()+ 3, newOption.getBounds().getHeight()+3);
 			newOption.addChild(background);
+			background.setPaint(Color.gray);
+			background.setVisible(false);
 			newOption.addInputEventListener(new PBasicInputEventHandler() {
 				
 				
 				@Override
 				public void mouseEntered(PInputEvent event) {
-					newOption.addChild(background);
-					setBackground(Color.gray, background);
+					background.setVisible(true);
 					newOption.repaint();
 				}
 				
 				@Override
 				public void mouseExited(PInputEvent event) {
-					newOption.removeChild(background);
-					setBackground(Color.white, background);
+					background.setVisible(false);
 					newOption.repaint();
 				}
 				
@@ -160,10 +160,6 @@ private static final Logger logger = Logger.getLogger(EditablePStyledText.class)
 					}
 				}
 				
-				public void setBackground(Color color,PNode background){	
-					background.setPaint(color);
-					
-				}
 			});
 			yLoc++;
 			if(yLoc > 4) {
