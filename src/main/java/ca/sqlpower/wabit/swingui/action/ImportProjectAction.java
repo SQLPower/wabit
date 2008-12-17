@@ -43,22 +43,16 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
  */
 public class ImportProjectAction extends AbstractAction {
 
-	/**
-	 * This is the context within Wabit that will have the projects
-	 * loaded into.
-	 */
-	private final WabitSessionContext context;
-	
+
 	/**
 	 * This session contains the project we will be loading into.
 	 * This session will also be used to parent dialogs from this action to.
 	 */
 	private final WabitSwingSessionImpl session;
 
-	public ImportProjectAction(WabitSwingSessionImpl session, WabitSessionContext context) {
+	public ImportProjectAction(WabitSwingSessionImpl session) {
 		super("Import...");
 		this.session = session;
-		this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -80,12 +74,12 @@ public class ImportProjectAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
+		LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(session.getContext(), in);
 		List<WabitSession> sessions = projectLoader.loadProjects();
 		for (WabitSession sess : sessions) {
 			List<WabitDataSource> dataSources = sess.getProject().getDataSources();
 			for (int i = dataSources.size() - 1; i >= 0; i--) {
-				if (session.getProject().getDataSources().contains(dataSources.get(i))) {
+				if (!(session.getProject().getDataSources().contains(dataSources.get(i)))) {
 					session.getProject().addDataSource(dataSources.get(i));
 				}
 				sess.getProject().removeDataSource(dataSources.get(i));
