@@ -235,11 +235,15 @@ public class QueryPen implements MouseState, WabitNode {
     									UnmodifiableItemPNode fkItemNode = fkContainer.getItemPNode(mapping.getFkColumn());
     									logger.debug("FK item node is " + fkItemNode);
     									if (pkItemNode != null && fkItemNode != null) {
-    										JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
-    										join.getModel().addJoinChangeListener(queryChangeListener);
-    										joinLayer.addChild(join);
-    										for (PropertyChangeListener l : queryListeners) {
-    											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
+    										if (pkItemNode.getParent() != fkItemNode.getParent()) {
+    											JoinLine join = new JoinLine(QueryPen.this, canvas, pkItemNode, fkItemNode);
+    											join.getModel().addJoinChangeListener(queryChangeListener);
+    											joinLayer.addChild(join);
+    											for (PropertyChangeListener l : queryListeners) {
+    												l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
+    											}
+    										} else {
+    											logger.debug("we don't allow items joining on the same table");
     										}
     									} else {
     										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
@@ -255,13 +259,17 @@ public class QueryPen implements MouseState, WabitNode {
     									UnmodifiableItemPNode fkItemNode = pkContainer.getItemPNode(mapping.getPkColumn());
     									UnmodifiableItemPNode pkItemNode = pane.getItemPNode(mapping.getFkColumn());
     									if (pkItemNode != null && fkItemNode != null) {
-    										logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
-    										logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
-    										JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
-    										join.getModel().addJoinChangeListener(queryChangeListener);
-    										joinLayer.addChild(join);
-    										for (PropertyChangeListener l : queryListeners) {
-    											l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
+    										if (pkItemNode.getParent() != fkItemNode.getParent()) {
+    											logger.debug(" pkItemNode" + ((ContainerPane)pkItemNode.getParent()).getModel().getName());
+    											logger.debug(" fkItemNode" + ((ContainerPane)fkItemNode.getParent()).getModel().getName());
+    											JoinLine join = new JoinLine(QueryPen.this, canvas, fkItemNode, pkItemNode);
+    											join.getModel().addJoinChangeListener(queryChangeListener);
+    											joinLayer.addChild(join);
+    											for (PropertyChangeListener l : queryListeners) {
+    												l.propertyChange(new PropertyChangeEvent(canvas, SQLJoin.PROPERTY_JOIN_ADDED, null, join.getModel()));
+    											}
+    										} else {
+    											logger.debug("we don't allow items joining on the same table");
     										}
     									} else {
     										throw new IllegalStateException("Trying to join two columns, one of which does not exist");
