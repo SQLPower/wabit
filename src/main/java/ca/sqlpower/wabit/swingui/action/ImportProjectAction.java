@@ -96,6 +96,8 @@ public class ImportProjectAction extends AbstractAction {
 				sess.getProject().removeLayout(layouts.get(i));
 			}
 			
+			sess.getContext().deregisterChildSession(sess);
+			
 		}
 	}
 
