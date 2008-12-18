@@ -40,6 +40,7 @@ import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -308,7 +309,7 @@ public class ProjectPanel implements DataEntryPanel {
 	}
 
 	public JComponent getPanel() {
-		return panel;
+		return new JScrollPane(panel);
 	}
 
 	public boolean hasUnsavedChanges() {
