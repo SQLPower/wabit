@@ -264,11 +264,6 @@ public class JoinLine extends PNode implements WabitNode {
 	 */
 	private PImage unselectedImageNode;
 
-	/**
-	 * This is a background to the images. This will prevent the line from going
-	 * behind the join images and making the image more clear.
-	 */
-	private PNode selectedImageBackground;
 	
 	/**
 	 * This will create a join line with properties taken from the model. The ItemPNodes passed in must
@@ -325,14 +320,10 @@ public class JoinLine extends PNode implements WabitNode {
 		addChild(rightPath);
 		rightPath.setStroke(new BasicStroke(2));
 		
-		joinSelectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/j_on.png"));
-		joinUnselectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/j_off.png"));
+		joinSelectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/node_on.png"));
+		joinUnselectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/node_off.png"));
 		selectedImageNode = new PImage(joinSelectedIcon.getImage());
 		unselectedImageNode = new PImage(joinUnselectedIcon.getImage());
-		selectedImageBackground = new PNode();
-		selectedImageBackground.setBounds(selectedImageNode.getBounds());
-		addChild(selectedImageBackground);
-		selectedImageBackground.setPaint(Color.BLACK);
 		addChild(selectedImageNode);
 		addChild(unselectedImageNode);
 		selectedImageNode.setVisible(false);
@@ -363,6 +354,7 @@ public class JoinLine extends PNode implements WabitNode {
 						model.setComparator(viewCom );
 					}
 					canvas.getLayer().removeChild(optionBox);
+					updateLine();
 				}
 			});
 			optionBox.addChild(tempText);
@@ -526,17 +518,15 @@ public class JoinLine extends PNode implements WabitNode {
 		selectedImageNode.setY(midY - selectedImageNode.getHeight()/2);
 		unselectedImageNode.setX(midX - unselectedImageNode.getWidth()/2);
 		unselectedImageNode.setY(midY - unselectedImageNode.getHeight()/2);
-		selectedImageBackground.setX(midX - unselectedImageNode.getWidth()/2);
-		selectedImageBackground.setY(midY - unselectedImageNode.getHeight()/2);
 		if (model.getComparator().equals(SQLJoin.Comparators.EQUAL_TO.getComparator())) {
-			setFocusColour(new PNotification(null, null, null));
-			selectedImageBackground.setVisible(true);
 			textCircle.setVisible(false);
+			symbolText.setVisible(false);
+			setFocusColour(new PNotification(null, null, null));
 		} else {
 			selectedImageNode.setVisible(false);
 			unselectedImageNode.setVisible(false);
-			selectedImageBackground.setVisible(false);
 			textCircle.setVisible(true);
+			symbolText.setVisible(true);
 		}
 		
 		Rectangle2D boundUnion = textCircle.getBounds();
