@@ -1,6 +1,26 @@
 Wabit Release Notes
 
-Changes in 0.9.2
+Noteworthy Changes in 0.9.3
+  User Interface
+    * Rearranged the layout of column info in the Properties Panel of a result set so that 
+      they are shown in rows to make better usage of space.
+    * If there are unsaved changes to the project, the user gets prompted to save
+
+  Report Layout Editor
+    * Report Content Boxes can have a background colour added.
+    * Reports can now have images imbedded into them
+    * Result sets can now have borders added to them
+    
+  Query Pen
+    * Performance when dragging in tables from an Oracle Database into the Query Pen 
+      should be improved
+    * It is now possible to save your Query as a SQL file
+    
+  Other
+    * Windows file associations should now work for Wabit Project (.wabit) files
+
+
+Noteworthy Changes in 0.9.2
   User Interface
     * Zooming in Query and Report Editors are now done with a slider
     * New graphical look in the Query Editor
@@ -27,5 +47,5 @@ Changes in 0.9.2
       being stuck at the previous page count.
 
 
-Changes in 0.9.1
+Noteworthy Changes in 0.9.1
   * Initial release
