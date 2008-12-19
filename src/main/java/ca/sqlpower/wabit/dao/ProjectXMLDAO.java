@@ -173,6 +173,9 @@ public class ProjectXMLDAO {
 		xml.indent++;
 		
 		for (WabitDataSource ds : dataSources) {
+			if (ds == null) {
+				continue;
+			}
 			xml.print(out, "<data-source");
 			printAttribute("name", ds.getName());
 			xml.println(out, "/>");

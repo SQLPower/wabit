@@ -708,11 +708,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
      */
 	public ResultSet execute() throws QueryException {
 		if (dataSource == null) {
-			try {
-				return new CachedRowSet();
-			} catch (SQLException e) {
-				throw new QueryException("Could not create an empty result set.", e);
-			}
+			throw new NullPointerException("Data source is null.");
 		}
 	    String sql = generateQuery();
 	    Connection con = null;
@@ -1082,6 +1078,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	}
 	
 	public WabitDataSource getWabitDataSource() {
+		if (dataSource == null) {
+			return null;
+		}
 		return new JDBCDataSource(dataSource);
 	}
 	
