@@ -27,15 +27,14 @@ import java.io.FileNotFoundException;
 import java.util.List;
 
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * This action will load in projects from a user selected file to a given
@@ -52,19 +51,18 @@ public class LoadProjectsAction extends AbstractAction {
 	/**
 	 * This session will be used to parent dialogs from this action to.
 	 */
-	private final WabitSwingSession session;
+	private final WabitSwingSessionImpl session;
 
-	public LoadProjectsAction(WabitSwingSession session, WabitSessionContext context) {
-		super("Load...", new ImageIcon(LoadProjectsAction.class.getClassLoader().getResource("icons/wabit_load.png")));
+	public LoadProjectsAction(WabitSwingSessionImpl session, WabitSessionContext context) {
+		super("Load Project");
 		this.session = session;
 		this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser(session.getCurrentFile());
+		JFileChooser fc = new JFileChooser();
 		fc.setDialogTitle("Select the file to load from.");
-		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
-		
+	
 		File importFile = null;
 		int fcChoice = fc.showOpenDialog(session.getFrame());
 
@@ -84,12 +82,10 @@ public class LoadProjectsAction extends AbstractAction {
 		for (WabitSession session : sessions) {
 			try {
 				((WabitSwingSession)session).buildUI();
-				((WabitSwingSession)session).setCurrentFile(importFile);
 			} catch (ArchitectException e1) {
 				throw new RuntimeException(e1);
 			}
 		}
-		
 	}
 
 }

@@ -48,8 +48,6 @@ import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 public class Layout extends AbstractWabitObject implements Pageable, Printable, VariableContext {
 
     private static final Logger logger = Logger.getLogger(Layout.class);
-
-	private static final String PROPERTY_ZOOM = "zoomLevel";
     
     /**
      * The page size and margin info.
@@ -66,11 +64,6 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
      * The variables defined for this report.
      */
     private final Map<String, Object> vars = new HashMap<String, Object>();
-    
-    /**
-     * This is the zoom level for the views of this layout.
-     */
-    private int zoomLevel;
 
     
     public Layout(String name) {
@@ -135,7 +128,6 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
                 cb.getContentRenderer().resetToFirstPage();
             }
         }
-        logger.debug("Page count is " + pageCount + " looking or page indexed " + pageIndex);
         if (pageIndex >= pageCount) {
             return Printable.NO_SUCH_PAGE;
         }
@@ -184,7 +176,6 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     private int countPages() throws PrinterException {
     	boolean done = false;
     	int pageNum = 0;
-    	pageCount = Integer.MAX_VALUE;
     	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
     	Graphics g = dummyImage.getGraphics();
     	try {
@@ -198,13 +189,4 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     	}
     	return pageNum;
     }
-
-	public void setZoomLevel(int zoomLevel) {
-		firePropertyChange(PROPERTY_ZOOM, this.zoomLevel, zoomLevel);
-		this.zoomLevel = zoomLevel;
-	}
-
-	public int getZoomLevel() {
-		return zoomLevel;
-	}
 }

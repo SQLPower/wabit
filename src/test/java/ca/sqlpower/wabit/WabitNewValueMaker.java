@@ -21,13 +21,9 @@ package ca.sqlpower.wabit;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
-
-import java.awt.Color;
-
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
-import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
@@ -37,7 +33,6 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
-import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -88,21 +83,6 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = DataType.DATE;
             }
-        } else if (valueType.equals(Item.class)) {
-        	newValue = createMock(Item.class);
-        	replay(newValue);
-        } else if (valueType.equals(Color.class)) {
-        	if (oldVal != null) {
-        		newValue = new Color(0x224466);
-        	} else {
-        		newValue = new Color(0x001122);
-        	}
-        } else if (valueType.equals(BorderStyles.class)) {
-        	if (oldVal != null) {
-        		newValue = BorderStyles.FULL;
-        	} else {
-        		newValue = BorderStyles.NONE;
-        	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

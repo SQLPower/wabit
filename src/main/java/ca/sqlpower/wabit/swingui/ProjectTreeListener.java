@@ -135,7 +135,7 @@ public class ProjectTreeListener extends MouseAdapter {
 
 		menu.add(new NewQueryAction(session));
 
-		menu.add(new NewLayoutAction(session));
+		menu.add(new NewLayoutAction(session.getProject()));
 		
 		Object lastPathComponent = getLastPathComponent(e);
 		if (lastPathComponent != null) {

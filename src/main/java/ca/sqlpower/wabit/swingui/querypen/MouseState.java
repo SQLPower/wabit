@@ -17,15 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.query;
+package ca.sqlpower.wabit.swingui.querypen;
 
-public class MySQLConstantConverter extends ConstantConverter {
+/**
+ * Classes that contain a mouse state should implement this interface.
+ */
+public interface MouseState {
 
-	@Override
-	public String getName(Item col) {
-		if (col instanceof StringItem && col.getName().toLowerCase().equals("user")) {
-			return col.getName() + "()";
-		}
-		return super.getName(col);
-	}
+	/**
+	 * The states a mouse can be on the query pen.
+	 */
+	public enum MouseStates {READY, CREATE_JOIN}
+	
+	public MouseStates getMouseState();
+	
+	public void setMouseState(MouseStates state);
 }

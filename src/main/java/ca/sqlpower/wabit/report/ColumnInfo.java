@@ -25,14 +25,15 @@ import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.query.Item;
 
 public class ColumnInfo extends AbstractWabitObject{
 
 	/**
-	 * The item this column information is describing.
+	 * The columnInfoKey is used as the key for matching this columninfo to
+	 * column alias in the query. This is distinct from the name (see
+	 * {@link #getName()}), which should be rendered as this column's header.
 	 */
-    private Item columnInfoItem;
+    private String columnInfoKey;
 
 	/**
 	 * Column width in Graphics2D units (screen pixels or 1/72 of an inch when printed).
@@ -41,11 +42,8 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String FORMAT_CHANGED = "format";
 	public static final String DATATYPE_CHANGED = "dataType";
 	public static final String HORIZONAL_ALIGNMENT_CHANGED = "horizontalAlignment";
-	public static final String COLUMN_INFO_ITEM_CHANGED = "columnInfoItem";
+	public static final String COLUMN_INFO_KEY_CHANGED = "columnInfoKey";
 	public static final String WIDTH_CHANGED = "width";
-	private static final String WILL_BREAK_CHANGED = "willBreak";
-	private static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
-	private static final String COLUMN_ALIAS = "columnAlias";
 	
 	private int width = DEFAULT_COL_WIDTH;
 
@@ -54,54 +52,18 @@ public class ColumnInfo extends AbstractWabitObject{
 	private DataType dataType = null;
 
 	private Format format = null;
-	
-	/**
-	 * Defines if the column described by this information
-	 * should have a break after every value change.
-	 */
-	private boolean willBreak = false;
-	
-	/**
-	 * defines if this column should be totaled before each new break. Only
-	 * numeric columns should allow subtotals.
-	 */
-	private boolean willSubtotal = false;
-	
-	/**
-	 * This is the alias of the column this information is for. If an Item
-	 * does not exist for the column because the query has been user modified
-	 * then the ColumnInfo will use the alias instead.
-	 * Using the alias instead of the Item can result in lost column information
-	 * if two or more columns have the same name. 
-	 */
-	private String columnAlias;
 
-	public ColumnInfo(Item item, String label) {
-		setColumnInfoItem(item);
-		setName(label);
-		
-	}
-	
 	public ColumnInfo(String label) {
-		setColumnAlias(label);
-		setName(label);
-	}
-	
-	public ColumnInfo(String alias, String label) {
-		setColumnAlias(alias);
+		setColumnInfoKey(label);
 		setName(label);
 	}
 
-	/**
-	 * This value can be null. There is no Item defined for columns that 
-	 * are generated from users modifying the SQL script manually.
-	 */
-	public Item getColumnInfoItem() {
-		return columnInfoItem;
+	public String getColumnInfoKey() {
+		return columnInfoKey;
 	}
-	public void setColumnInfoItem(Item item) {
-		firePropertyChange(COLUMN_INFO_ITEM_CHANGED, this.columnInfoItem, item);
-		this.columnInfoItem = item;
+	public void setColumnInfoKey(String label) {
+		firePropertyChange(COLUMN_INFO_KEY_CHANGED, this.columnInfoKey, label);
+		this.columnInfoKey = label;
 	}
 	public int getWidth() {
 		return width;
@@ -143,33 +105,6 @@ public class ColumnInfo extends AbstractWabitObject{
 
 	public List<? extends WabitObject> getChildren() {
 		return Collections.emptyList();
-	}
-
-	public boolean getWillBreak() {
-		return willBreak;
-	}
-
-	public void setWillBreak(boolean willBreak) {
-		firePropertyChange(WILL_BREAK_CHANGED, this.willBreak, willBreak);
-		this.willBreak = willBreak;
-	}
-
-	public boolean getWillSubtotal() {
-		return willSubtotal;
-	}
-
-	public void setWillSubtotal(boolean subtotal) {
-		firePropertyChange(WILL_SUBTOTAL_CHANGED, this.willSubtotal, subtotal);
-		this.willSubtotal = subtotal;
-	}
-
-	public void setColumnAlias(String columnAlias) {
-		firePropertyChange(COLUMN_ALIAS, this.columnAlias, columnAlias);
-		this.columnAlias = columnAlias;
-	}
-
-	public String getColumnAlias() {
-		return columnAlias;
 	}
 }
 

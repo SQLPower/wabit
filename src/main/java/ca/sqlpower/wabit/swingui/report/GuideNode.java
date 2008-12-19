@@ -21,21 +21,17 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.AbstractAction;
-import javax.swing.JPopupMenu;
-
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitNode;
@@ -180,35 +176,6 @@ public class GuideNode extends PNode implements WabitNode {
             double offset = model.getAxis() == Axis.HORIZONTAL ? pagePosition.getY() : pagePosition.getX();
             model.setOffset((int) offset);
         }
-        
-        @Override
-    	public void mouseClicked(PInputEvent e) {
-    		maybeShowPopup(e);
-    	}
-
-    	@Override
-    	public void mousePressed(PInputEvent e) {
-    		maybeShowPopup(e);
-    	}
-    	
-    	@Override
-    	public void mouseReleased(PInputEvent e) {    		
-    		maybeShowPopup(e);
-    	}
-    	
-    	private void maybeShowPopup(PInputEvent e) {
-    		if (!e.isPopupTrigger()) {
-    			return;
-    		}
-    		JPopupMenu menu = new JPopupMenu();
-    		menu.add(new AbstractAction("Delete Guide") {
-				public void actionPerformed(ActionEvent e) {
-					model.getParent().removeGuide(model);
-					removeFromParent();
-				}
-			});
-    		menu.show((Component)e.getComponent(), (int)e.getCanvasPosition().getX(), (int)e.getCanvasPosition().getY());
-    	}
     }
     
     private PropertyChangeListener modelChangeHandler = new PropertyChangeListener() {

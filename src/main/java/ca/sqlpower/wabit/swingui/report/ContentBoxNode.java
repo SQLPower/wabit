@@ -122,9 +122,6 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     @Override
     protected void paint(PPaintContext paintContext) {
-    	if (contentBox.getContentRenderer().getBackgroundColour() != null) {
-    		setPaint(contentBox.getContentRenderer().getBackgroundColour());
-    	}
         super.paint(paintContext);
         PCamera camera = paintContext.getCamera();
         Graphics2D g2 = paintContext.getGraphics();
@@ -153,6 +150,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     @Override
     public void setParent(PNode newParent) {
+        super.setParent(newParent);
         
         if (newParent instanceof PageNode) {
             Page p = ((PageNode) newParent).getModel();
@@ -162,10 +160,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
                     p.addContentBox(contentBox);
                 }
             }
-        } else if ( newParent == null) {
-        	contentBox.getParent().removeContentBox(contentBox);
         }
-        super.setParent(newParent);
     }
 
     public void cleanup() {

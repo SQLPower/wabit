@@ -24,7 +24,7 @@ import java.util.List;
 
 import ca.sqlpower.wabit.swingui.querypen.ConstantsPane;
 import ca.sqlpower.wabit.swingui.querypen.ContainerPane;
-import ca.sqlpower.wabit.swingui.querypen.JoinLine;
+import ca.sqlpower.wabit.swingui.querypen.EditablePStyledText;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PDimension;
@@ -41,7 +41,7 @@ import edu.umd.cs.piccolox.event.PSelectionEventHandler;
  * tables are.
  */
 public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
-	
+
 	public QueryPenSelectionEventHandler(PNode marqueeParent,
 			List<?> selectableParents) {
 		super(marqueeParent, selectableParents);
@@ -81,32 +81,17 @@ public class QueryPenSelectionEventHandler extends PSelectionEventHandler {
 		// Option indicator not down - clear selection, and start fresh
 		PNode pickedNode = pie.getPath().getPickedNode();
 		
-		while (pickedNode != null) {
-			if(pickedNode instanceof ConstantsPane 
-					|| pickedNode instanceof ContainerPane 
-					|| pickedNode instanceof JoinLine) {
-				break;
-			}
+		if(pickedNode instanceof EditablePStyledText) {
 			pickedNode = pickedNode.getParent();
 		}
-		
-		if (pickedNode == null) {
-			return;
-		}
-		
 		if (!(getSelection().contains(pickedNode) && (pickedNode instanceof ContainerPane
 				|| pickedNode instanceof ConstantsPane))) {
 			unselectAll();
 		}
 
-		if (isSelectable(pickedNode)) {
-			select(pickedNode);
+		if (isSelectable(pie.getPath().getPickedNode())) {
+			select(pie.getPath().getPickedNode());
 		}
 	}
-	
-	@Override
-	public void decorateSelectedNode(PNode node) {
-		//Containers should decorate themselves not add resize bubbles.
-	}
-	
+
 }

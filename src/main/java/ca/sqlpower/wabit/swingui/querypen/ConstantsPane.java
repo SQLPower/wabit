@@ -19,9 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -36,17 +35,12 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PPickPath;
-import edu.umd.cs.piccolox.event.PNotification;
-import edu.umd.cs.piccolox.event.PNotificationCenter;
-import edu.umd.cs.piccolox.event.PSelectionEventHandler;
-import edu.umd.cs.piccolox.nodes.PClip;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 import edu.umd.cs.piccolox.pswing.PSwing;
 
@@ -64,8 +58,6 @@ public class ConstantsPane extends PNode implements WabitNode {
 	
 	private static final int BORDER_SIZE = 5;
 	
-	private static final int STROKE_SIZE = 2;
-	
 	/**
 	 * The string in the addingNewItemPNode so users can tell where to click
 	 * to add a new item string.
@@ -73,7 +65,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 	private static final String ADDING_ITEM_STRING = "Add...";
 	
 	private final PCanvas canvas;
-	private final QueryPen queryPen;
+	private final QueryPen mouseState;
 
 	private final Container model;
 	
@@ -96,6 +88,8 @@ public class ConstantsPane extends PNode implements WabitNode {
 	 */
 	private EditablePStyledText addingNewItemPNode;
 
+	private PPath headerLine;
+	
 	/**
 	 * This contains all the {@link ConstantPNode} objects that are contained
 	 * and displayed by this ConstantsPane.
@@ -151,7 +145,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 			repositionAndResize();
 		}
 	};
-	
+
 	/**
 	 * This node contains all of the column headers for this pane.
 	 */
@@ -161,27 +155,9 @@ public class ConstantsPane extends PNode implements WabitNode {
 	 * This checkbox will allow the user to check and uncheck all of the constanst in one click.
 	 */
 	private PSwing allSelectCheckbox;
-
-	/**
-	 * This header background will be placed behind the container header and the
-	 * column headers. This will allow specifying a gradient across the header.
-	 * This background needs to be taller than its clipping region so the
-	 * rounded bottom gets clipped away.
-	 */
-	private PPath headerBackground;
-
-	/**
-	 * This clipping region will clip the header background to give it a flat line at the bottom.
-	 */
-	private PClip headerBackClip;
-
-	/**
-	 * This is the background for the area where the user can add where text.
-	 */
-	private PNode whereBackground;
 	
 	public ConstantsPane(QueryPen mouseState, PCanvas canvas, Container containerModel) {
-		this.queryPen = mouseState;
+		this.mouseState = mouseState;
 		this.canvas = canvas;
 		this.model = containerModel;
 
@@ -196,33 +172,27 @@ public class ConstantsPane extends PNode implements WabitNode {
 		header = new PNode();
 		header.translate(0, title.getHeight() + BORDER_SIZE);
 		final JCheckBox checkbox = new JCheckBox();
-		checkbox.setOpaque(false);
 		checkbox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				for (ConstantPNode node : constantPNodeList) {
 					if(node.isInSelect() != ((JCheckBox)e.getSource()).isSelected()) {
-						if (node.getModel() instanceof StringCountItem && queryPen.getModel().isGroupingEnabled()) {
-							node.setSelected(checkbox.isSelected());
-						} else if (!(node.getModel() instanceof StringCountItem)) {
-							node.setSelected(checkbox.isSelected());
-						}
+						node.setSelected(checkbox.isSelected());
 					}
 				}
 			}
 		});
 		allSelectCheckbox = new PSwing(checkbox);
 		header.addChild(allSelectCheckbox);
-		columnHeader = new EditablePStyledText("select all/none", mouseState, canvas);
+		columnHeader = new EditablePStyledText("Column", mouseState, canvas);
 		double headerYPos = (allSelectCheckbox.getFullBounds().getHeight() - columnHeader.getHeight())/2;
 		double checkboxWidth = allSelectCheckbox.getFullBounds().getWidth();
-		columnHeader.translate(checkboxWidth , headerYPos);
+		columnHeader.translate(checkboxWidth + BORDER_SIZE, headerYPos);
 		header.addChild(columnHeader);
-		aliasHeader = new EditablePStyledText("alias", mouseState, canvas);
+		aliasHeader = new EditablePStyledText("Alias", mouseState, canvas);
 		aliasHeader.translate(checkboxWidth + columnHeader.getWidth() + 2 * BORDER_SIZE, headerYPos);
 		header.addChild(aliasHeader);
-		whereHeader = new EditablePStyledText("where", mouseState, canvas);
-		double whereHeaderX = checkboxWidth + columnHeader.getWidth() + aliasHeader.getWidth() + 3 * BORDER_SIZE;
-		whereHeader.translate(whereHeaderX, headerYPos);
+		whereHeader = new EditablePStyledText("Where", mouseState, canvas);
+		whereHeader.translate(checkboxWidth + columnHeader.getWidth() + aliasHeader.getWidth() + 3 * BORDER_SIZE, headerYPos);
 		header.addChild(whereHeader);
 		addChild(header);
 		
@@ -243,25 +213,10 @@ public class ConstantsPane extends PNode implements WabitNode {
 		addingNewItemPNode.translate(0, (title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE);
 		addChild(addingNewItemPNode);
 		
-		outerRect = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)(getFullBounds().getWidth() + 2 * BORDER_SIZE), (float)(getFullBounds().getHeight() + 3 * BORDER_SIZE), QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
-		outerRect.setStroke(new BasicStroke(STROKE_SIZE));
-		headerBackground = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)outerRect.getWidth() - 1, (float)(title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE + QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
-		headerBackground.setStrokePaint(new Color(0x00ffffff, true));
-		headerBackClip = new PClip();
-		headerBackClip.addChild(headerBackground);
-		float headerClipHeight = (float)(title.getHeight() + BORDER_SIZE) * 2 + 2 * BORDER_SIZE;
-		headerBackClip.setPathToRectangle((float)outerRect.getX(), (float)outerRect.getY(), (float)outerRect.getWidth(), headerClipHeight);
-		headerBackClip.setStrokePaint(new Color(0x00ffffff, true));
-		whereBackground = new PNode();
-		whereBackground.translate(outerRect.getX() + whereHeaderX + BORDER_SIZE, outerRect.getY() + headerClipHeight);
-		whereBackground.setWidth(outerRect.getWidth() - whereHeaderX - STROKE_SIZE - BORDER_SIZE - 1);
-		whereBackground.setHeight(outerRect.getHeight() - headerClipHeight - STROKE_SIZE - 1);
-		whereBackground.setPaint(QueryPen.WHERE_BACKGROUND_COLOUR);
-		addChild(whereBackground);
-		addChild(headerBackClip);
+		outerRect = PPath.createRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)(getFullBounds().getWidth() + 2 * BORDER_SIZE), (float)(getFullBounds().getHeight() + 2 * BORDER_SIZE));
+		headerLine = PPath.createRectangle((float)outerRect.getX(), (float)(title.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE, (float)outerRect.getWidth(), (float)0);
+		addChild(headerLine);
 		addChild(outerRect);
-		whereBackground.moveToBack();
-		headerBackClip.moveToBack();
 		outerRect.moveToBack();
 		setBounds(outerRect.getBounds());
 		translate(-getGlobalBounds().getX(), -getGlobalBounds().getY());
@@ -279,9 +234,6 @@ public class ConstantsPane extends PNode implements WabitNode {
 				}
 			}
 		});
-
-		PNotificationCenter.defaultCenter().addListener(this, "setFocusColour", PSelectionEventHandler.SELECTION_CHANGED_NOTIFICATION, null);
-		setFocusColour(new PNotification(null, null, null));
 		
 	}
 	
@@ -319,15 +271,9 @@ public class ConstantsPane extends PNode implements WabitNode {
 			maxWidth = Math.max(maxWidth, node.getFullBounds().getWidth());
 		}
 		outerRect.setWidth(maxWidth + 2 * BORDER_SIZE);
-		headerBackground.setWidth(maxWidth + 2 * BORDER_SIZE);
-		headerBackClip.setWidth(maxWidth + 2 * BORDER_SIZE);
+		headerLine.setWidth(maxWidth + 2 * BORDER_SIZE);
 				
-		outerRect.setHeight((title.getHeight() + BORDER_SIZE) * (3 + constantPNodeList.size()) + (2 * BORDER_SIZE));
-		
-		whereBackground.translate(translateWhereX - whereBackground.getFullBounds().getX(), 0);
-		whereBackground.setWidth(outerRect.getWidth() - whereBackground.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
-		whereBackground.setHeight(outerRect.getHeight() - whereBackground.getFullBounds().getY() - STROKE_SIZE - BORDER_SIZE - 1);
-		
+		outerRect.setHeight((title.getHeight() + BORDER_SIZE) * (3 + constantPNodeList.size()) + BORDER_SIZE);
 		setBounds(outerRect.getBounds());
 	}
 	
@@ -338,7 +284,6 @@ public class ConstantsPane extends PNode implements WabitNode {
 	 */
 	public boolean fullPick(PPickPath pickPath) {
 		if (super.fullPick(pickPath)) {
-			
 			PNode picked = pickPath.getPickedNode();
 			
 			// this code won't work with internal cameras, because it doesn't pop
@@ -367,22 +312,11 @@ public class ConstantsPane extends PNode implements WabitNode {
 		return false;
 	}
 	
-	public void setFocusColour(PNotification notification) {
-		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
-		if (hasFocus) {
-			outerRect.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			headerBackground.setPaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-		} else {
-			outerRect.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			headerBackground.setPaint(QueryPen.UNSELECTED_CONTAINER_GRADIENT_COLOUR);
-		}
-	}
-	
 	/**
 	 * Adds the item to this ConstanstPane in a new ConstantPNode.
 	 */
-	public void addItem(Item item) {
-		ConstantPNode newConstantNode = new ConstantPNode(item, queryPen, canvas);
+	private void addItem(Item item) {
+		ConstantPNode newConstantNode = new ConstantPNode(item, mouseState, canvas);
 		newConstantNode.addChangeListener(resizeListener);
 		newConstantNode.translate(0, (title.getHeight() + BORDER_SIZE) * (2 + constantPNodeList.size()) + BORDER_SIZE);
 		constantPNodeList.add(newConstantNode);
@@ -405,7 +339,6 @@ public class ConstantsPane extends PNode implements WabitNode {
 				((WabitNode)o).cleanup();
 			}
 		}
-		PNotificationCenter.defaultCenter().removeListener(this);
 	}
 
 	public WabitObject getModel() {

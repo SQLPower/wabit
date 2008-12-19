@@ -19,25 +19,17 @@
 
 package ca.sqlpower.wabit.dao;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.UUID;
-
-import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -54,7 +46,6 @@ import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.SQLObjectItem;
-import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
@@ -63,16 +54,12 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
-import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.Guide.Axis;
-import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
-
-import com.sun.mail.util.BASE64DecoderStream;
 
 /**
  * This will be used with a parser to load a saved project from a file.
@@ -80,8 +67,6 @@ import com.sun.mail.util.BASE64DecoderStream;
 public class ProjectSAXHandler extends DefaultHandler {
 	
 	private static final Logger logger = Logger.getLogger(ProjectSAXHandler.class);
-
-	private static final String COUNT_STAR = "COUNT(*)";
 	
 	/**
 	 * This list will store all of the sessions loaded by this SAX handler.
@@ -107,10 +92,9 @@ public class ProjectSAXHandler extends DefaultHandler {
 	/**
 	 * This maps all of the currently loaded Items with their UUIDs. This
 	 * will let the loaded elements of a query be able to hook up to the correct
-	 * items. This map will keep the item values throughout loading to allow access
-	 * to all items throughout the file.
+	 * items. This map will be empty at the start of loading each query.
 	 */
-	private final Map<String, Item> uuidToItemMap = new HashMap<String, Item>();
+	private Map<String, Item> uuidToItemMap;
 	
 	/**
 	 * This is the current container being loaded in by this SAX handler.
@@ -150,14 +134,6 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * renderer we are loading.
 	 */
 	private List<ColumnInfo> columnInfoList = new ArrayList<ColumnInfo>();
-
-	/**
-	 * This stores the currently loading Image renderer. This will be null if no image
-	 * renderer is being loaded.
-	 */
-	private ImageRenderer imageRenderer;
-
-	private ByteArrayOutputStream byteStream;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -197,6 +173,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	query = new QueryCache(uuid);
+        	uuidToItemMap = new HashMap<String, Item>();
         	session.getProject().addQuery(query);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -214,8 +191,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         			}
         			logger.debug("Setting data source in query " + uuid + " to " + ds.getName());
         			query.setDataSource(ds);
-        		} else if (aname.equals("zoom")) {
-        			query.setZoomLevel(Integer.parseInt(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
@@ -245,6 +220,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	checkMandatory("name", tableName);
+        	checkMandatory("schema", schema);
+        	checkMandatory("catalog", catalog);
         	TableContainer table = new TableContainer(uuid, query, tableName, schema, catalog, new ArrayList<SQLObjectItem>());
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -269,7 +246,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         		String uuid = attributes.getValue("id");
         		checkMandatory("name", itemName);
         		checkMandatory("id", uuid);
-        		Item item = (itemName.equals(COUNT_STAR)) ? new StringCountItem(query) : new StringItem(itemName, uuid);
+        		Item item = new StringItem(itemName, uuid);
             	for (int i = 0; i < attributes.getLength(); i++) {
             		String aname = attributes.getQName(i);
             		String aval = attributes.getValue(i);
@@ -386,23 +363,12 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("query-string")) {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
-        	query.defineUserModifiedQuery(queryString);
+        	query.setUserModifiedQuery(queryString);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
     		layout = new Layout(layoutName);
     		session.getProject().addLayout(layout);
-          	for (int i = 0; i < attributes.getLength(); i++) {
-        		String aname = attributes.getQName(i);
-        		String aval = attributes.getValue(i);
-        		if (aname.equals("name")) {
-        			//already loaded
-        		} else if (aname.equals("zoom")) {
-        			layout.setZoomLevel(Integer.parseInt(aval));
-        		} else {
-        			logger.warn("Unexpected attribute of <layout>: " + aname + "=" + aval);
-        		}
-          	}
    
         } else if (name.equals("layout-page")) {
         	String pageName = attributes.getValue("name");
@@ -465,25 +431,10 @@ public class ProjectSAXHandler extends DefaultHandler {
         			label.setHorizontalAlignment(HorizontalAlignment.valueOf(aval));
         		} else if (aname.equals("vertical-align")) {
         			label.setVerticalAlignment(VerticalAlignment.valueOf(aval));
-        		} else if (aname.equals("bg-colour")) {
-        			label.setBackgroundColour(new Color(Integer.parseInt(aval)));
         		} else {
         			logger.warn("Unexpected attribute of <content-label>: " + aname + "=" + aval);
         		}
          	}
-        } else if (name.equals("image-renderer")) {
-        	imageRenderer = new ImageRenderer(contentBox, null, false);
-        	contentBox.setContentRenderer(imageRenderer);
-         	for (int i = 0; i < attributes.getLength(); i++) {
-        		String aname = attributes.getQName(i);
-        		String aval = attributes.getValue(i);
-        		if (aname.equals("name")) {
-        			imageRenderer.setName(aval);
-        		} else {
-        			logger.warn("Unexpected attribute of <image-renderer>: " + aname + "=" + aval);
-        		}
-         	}
-         	byteStream = new ByteArrayOutputStream();
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
@@ -504,14 +455,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         			rsRenderer.setName(aval);
         		} else if (aname.equals("null-string")) {
         			rsRenderer.setNullString(aval);
-        		} else if (aname.equals("bg-colour")) {
-        			Color color = new Color(Integer.parseInt(aval));
-					logger.debug("Renderer has background " + color.getRed() + ", " + color.getBlue() + ", " + color.getGreen());
-        			rsRenderer.setBackgroundColour(color);
-        		} else if (aname.equals("border")) {
-        			rsRenderer.setBorderType(BorderStyles.valueOf(aval));
-        		} else {
-        			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
         		}
          	}
 			columnInfoList.clear();
@@ -528,35 +471,12 @@ public class ProjectSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("There are no body fonts defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("column-info")) {
-        	colInfo = null;
         	String colInfoName = attributes.getValue("name");
-        	String colInfoItem = attributes.getValue("column-info-item-id");
-        	
-        	//For backwards compatability with 0.9.1
         	String colInfoKey = attributes.getValue("column-info-key");
-        	if (colInfoKey != null && colInfoItem == null) {
-        		QueryCache q = (QueryCache) rsRenderer.getQuery();
-        		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
-        			Item item = entry.getValue();
-        			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {
-        				colInfoItem = entry.getKey();
-        				break;
-        			}
-        		}
-        		if (colInfoItem == null) {
-        			colInfo = new ColumnInfo(colInfoKey, colInfoName);
-        		}
-        	}
-        	
-        	String colAlias = attributes.getValue("column-alias");
-        	if (colInfo == null && colAlias != null && colInfoItem == null) {
-        		colInfo = new ColumnInfo(colAlias, colInfoName);
-        	}
-        	
+        	checkMandatory("column-info-key", colInfoKey);
         	checkMandatory("name", colInfoName);
-        	if (colInfo == null) {
-        		colInfo = new ColumnInfo(uuidToItemMap.get(colInfoItem), colInfoName);
-        	}
+        	colInfo = new ColumnInfo(colInfoName);
+        	colInfo.setColumnInfoKey(colInfoKey);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -568,10 +488,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(aval));
         		} else if (aname.equals("data-type")) {
         			colInfo.setDataType(DataType.valueOf(aval));
-        		} else if (aname.equals("break-on-column")) {
-        			colInfo.setWillBreak(Boolean.parseBoolean(aval));
-        		} else if (aname.equals("will-subtotal")) {
-        			colInfo.setWillSubtotal(Boolean.parseBoolean(aval));
         		}else {
         			logger.warn("Unexpected attribute of <column-info>: " + aname + "=" + aval);
         		}
@@ -665,33 +581,9 @@ public class ProjectSAXHandler extends DefaultHandler {
     		newRSRenderer.setHeaderFont(rsRenderer.getHeaderFont());
     		newRSRenderer.setName(rsRenderer.getName());
     		newRSRenderer.setNullString(rsRenderer.getNullString());
-    		newRSRenderer.setBackgroundColour(rsRenderer.getBackgroundColour());
-    		newRSRenderer.setBorderType(rsRenderer.getBorderType());
     		contentBox.setContentRenderer(newRSRenderer);
-    	} else if (name.equals("image-renderer")) {
-    		byte[] byteArray = BASE64DecoderStream.decode(byteStream.toByteArray());
-    		logger.debug("Decoding byte stream: Stream has " + byteStream.toString().length() + " and array has " + Arrays.toString(byteArray));
-    		try {
-				BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));				
-				imageRenderer.setImage(img);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-			imageRenderer = null;
     	}
     	xmlContext.pop();
-    }
-    
-    @Override
-    public void characters(char[] ch, int start, int length)
-    		throws SAXException {
-    	if (imageRenderer != null) {
-    		logger.debug("Starting characters at " + start + " and ending at " + length);
-    		for (int i = start; i < start+length; i++) {
-    			byteStream.write((byte)ch[i]);
-    		}
-    		logger.debug("Byte stream has " + byteStream.toString());
-    	}
     }
 
 	public List<WabitSession> getSessions() {

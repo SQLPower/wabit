@@ -29,11 +29,11 @@ import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
 import ca.sqlpower.wabit.swingui.querypen.ConstantPNode;
 import ca.sqlpower.wabit.swingui.querypen.JoinLine;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.swingui.querypen.UnmodifiableItemPNode;
+import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
@@ -45,7 +45,7 @@ import edu.umd.cs.piccolo.event.PInputEvent;
  */
 public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	
-	private QueryPen queryPen;
+	private QueryPen mouseStatePane;
 	private UnmodifiableItemPNode leftText;
 	private UnmodifiableItemPNode rightText;
 	private PLayer joinLayer;
@@ -66,7 +66,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	private List<PropertyChangeListener> createJoinListeners = new ArrayList<PropertyChangeListener>();
 
 	public CreateJoinEventHandler(QueryPen mouseStatePane, PLayer joinLayer, PCanvas canvas, CursorManager cursorManager) {
-		this.queryPen = mouseStatePane;
+		this.mouseStatePane = mouseStatePane;
 		this.joinLayer = joinLayer;
 		this.canvas = canvas;
 		this.cursorManager = cursorManager;
@@ -77,7 +77,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 	@Override
 	public void mousePressed(PInputEvent event) {
 		super.mousePressed(event);
-		if (queryPen.getMouseState().equals(MouseStates.CREATE_JOIN)) {
+		if (mouseStatePane.getMouseState().equals(MouseStates.CREATE_JOIN)) {
 			PNode pick = event.getPickedNode();
 			while (pick != null && !(pick instanceof UnmodifiableItemPNode)) {
 				
@@ -106,7 +106,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 						rightText = tempNode;
 						mouseFirstClickX = mouseSecondClickX = 0;
 					}
-					JoinLine join = new JoinLine(queryPen, canvas, leftText, rightText);
+					JoinLine join = new JoinLine(canvas, leftText, rightText);
 					join.getModel().addJoinChangeListener(changeListener);
 					joinLayer.addChild(join);
 					for(PropertyChangeListener listener : createJoinListeners) {
@@ -129,7 +129,7 @@ public class CreateJoinEventHandler extends PBasicInputEventHandler {
 		leftText = null;
 		rightText = null;
 		cursorManager.placeModeFinished();
-		queryPen.setMouseState(MouseStates.READY);
+		mouseStatePane.setMouseState(MouseStates.READY);
 	}
 	
 	public void addCreateJoinListener(PropertyChangeListener l) {

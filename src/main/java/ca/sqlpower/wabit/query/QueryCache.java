@@ -43,12 +43,10 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -66,15 +64,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * rather than a specific query change.
 	 */
 	private static final String PROPERTY_QUERY = "query";
-	
-	
-	public static final String GROUPING_CHANGED = " GROUPING_CHANGED";
-	
-	
-	/**
-	 * A property name that is thrown when the Table is removed.
-	 */
-	public static final String PROPERTY_TABLE_REMOVED = "PROPERTY_TABLE_REMOVED"; 
 	
 	/**
 	 * The grouping function defined on a group by event if the column is
@@ -212,9 +201,9 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	private String globalWhereClause;
 	
 	/**
-	 * This is the level of the zoom in the query.
+	 * This maps containers to aliases used in a select statement.
 	 */
-	private int zoomLevel;
+	private final Map<Container, String> tableAliasMap;
 	
 	/**
 	 * Listens for changes to the alias on the item and fires events to its 
@@ -283,6 +272,22 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		}
 	};
 	
+	private final PropertyChangeListener tableAliasListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent e) {
+			if (e.getPropertyName().equals(Container.CONTAINTER_ALIAS_CHANGED)) {
+				Container pane = (Container)e.getSource();
+				if (pane.getAlias() == null || pane.getAlias().length() <= 0) {
+					tableAliasMap.remove(pane);
+				} else {
+					tableAliasMap.put(pane, pane.getAlias());
+				}
+				if (!compoundEdit) {
+					firePropertyChange(e.getPropertyName(), e.getOldValue(), e.getNewValue());
+				}
+			}
+		}
+	};
+	
 	private final WabitChildListener tableChildListener = new WabitChildListener() {
 		public void wabitChildRemoved(WabitChildEvent e) {
 			removeItem((Item)e.getChild());
@@ -342,6 +347,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	public QueryCache(String uuid) {
 		super(uuid);
+		tableAliasMap = new HashMap<Container, String>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		orderByList = new ArrayList<Item>();
 		selectedColumns = new ArrayList<Item>();
@@ -352,24 +358,16 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		havingMap = new HashMap<Item, String>();
 		
 		constantsContainer = new ItemContainer("Constants");
-		StringItem currentTime = new StringItem("current_time");
-		constantsContainer.addItem(currentTime);
-		addItem(currentTime);
-		StringItem currentDate = new StringItem("current_date");
-		constantsContainer.addItem(currentDate);
-		addItem(currentDate);
-		StringItem user = new StringItem("user");
-		constantsContainer.addItem(user);
-		addItem(user);
 	}
 	
 	/**
 	 * A copy constructor for the query cache. This will not
 	 * hook up listeners.
 	 */
-	public QueryCache(Query copy) {
+	public QueryCache(QueryCache copy) {
 		selectedColumns = new ArrayList<Item>();
 		fromTableList = new ArrayList<Container>();
+		tableAliasMap = new HashMap<Container, String>();
 		joinMapping = new HashMap<Container, List<SQLJoin>>();
 		groupByList = new ArrayList<Item>();
 		groupByAggregateMap = new HashMap<Item, SQLGroupFunction>();
@@ -377,53 +375,36 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		orderByList = new ArrayList<Item>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		
+		selectedColumns.addAll(copy.getSelectedColumns());
+		fromTableList.addAll(copy.getFromTableList());
+		tableAliasMap.putAll(copy.getTableAliasMap());
+		joinMapping.putAll(copy.getJoinMapping());
+		groupByList.addAll(copy.getGroupByList());
+		groupByAggregateMap.putAll(copy.getGroupByAggregateMap());
+		havingMap.putAll(copy.getHavingMap());
+		orderByList.addAll(copy.getOrderByList());
+		orderByArgumentMap.putAll(copy.getOrderByArgumentMap());
+		globalWhereClause = copy.getGlobalWhereClause();
+		groupingEnabled = copy.isGroupingEnabled();
+		
 		setName(copy.getName());
 		setParent(copy.getParent());
-		if (copy instanceof QueryCache) {
-			QueryCache query = (QueryCache) copy;
-
-			selectedColumns.addAll(query.getSelectedColumns());
-			fromTableList.addAll(query.getFromTableList());
-			joinMapping.putAll(query.getJoinMapping());
-			groupByList.addAll(query.getGroupByList());
-			groupByAggregateMap.putAll(query.getGroupByAggregateMap());
-			havingMap.putAll(query.getHavingMap());
-			orderByList.addAll(query.getOrderByList());
-			orderByArgumentMap.putAll(query.getOrderByArgumentMap());
-			globalWhereClause = query.getGlobalWhereClause();
-			groupingEnabled = query.isGroupingEnabled();
-
-
-			setDataSource(query.getDataSource());
-			constantsContainer = query.getConstantsContainer();
-			userModifiedQuery = query.getUserModifiedQuery();
-		} else {
-			userModifiedQuery = copy.generateQuery();
-			logger.warn("Unknown query type " + copy.getClass() + " to make a cached query of.");
-		}
+		constantsContainer = copy.getConstantsContainer();
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
 		logger.debug("Setting grouping enabled to " + enabled);
 		if (!groupingEnabled && enabled) {
-			startCompoundEdit();
 			for (Item col : selectedColumns) {
 				if (!groupByAggregateMap.containsKey(col)) {
 					groupByList.add(col);
 				}
 			}
-			for (Item item : getSelectedColumns()) {
-				if (item instanceof StringItem) {
-					setGrouping(item, SQLGroupFunction.COUNT.toString());
-				}
-			}
-			endCompoundEdit();
 		} else if (!enabled) {
 			groupByList.clear();
 			groupByAggregateMap.clear();
 			havingMap.clear();
 		}
-		firePropertyChange(GROUPING_CHANGED, groupingEnabled, enabled);
 		groupingEnabled = enabled;
 	}
 	
@@ -444,8 +425,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * Generates the query based on the cache.
 	 */
 	public String generateQuery() {
-		logger.debug("Data source is " + dataSource + " while generating the query.");
-		ConstantConverter converter = ConstantConverter.getConverter(dataSource);
 		if (userModifiedQuery != null) {
 			return userModifiedQuery;
 		}
@@ -463,22 +442,16 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				query.append(", ");
 			}
 			if (groupByAggregateMap.containsKey(col)) {
-				if(col instanceof StringCountItem) {
-					query.append(col.getName());
-				} else {
-					query.append(groupByAggregateMap.get(col).toString() + "(");
-				}
+				query.append(groupByAggregateMap.get(col).toString() + "(");
 			}
-			String alias = col.getContainer().getAlias();
-			if (alias != null && alias.length() > 0) {
+			String alias = tableAliasMap.get(col.getContainer());
+			if (alias != null) {
 				query.append(alias + ".");
 			} else if (fromTableList.contains(col.getContainer())) {
 				query.append(col.getContainer().getName() + ".");
 			}
-			if(!(col instanceof StringCountItem)) {
-				query.append(converter.getName(col));			
-			}
-			if (groupByAggregateMap.containsKey(col) && !(col instanceof StringCountItem)) {
+			query.append(col.getName());
+			if (groupByAggregateMap.containsKey(col)) {
 				query.append(")");
 			}
 			if (col.getAlias() != null && col.getAlias().trim().length() > 0) {
@@ -500,8 +473,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			} else {
 				qualifiedName = table.getName();
 			}
-			String alias = table.getAlias();
-			if (alias == null || alias.length() <= 0) {
+			String alias = tableAliasMap.get(table);
+			if (alias == null) {
 				alias = table.getName();
 			}
 			if (isFirstFrom) {
@@ -531,7 +504,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				}
 				query.append(qualifiedName + " " + alias + " \n  ON ");
 				if (joinMapping.get(table) == null || joinMapping.get(table).isEmpty()) {
-					query.append("0 = 0");
+					query.append("TRUE");
 				} else {
 					boolean isFirstJoin = true;
 					for (SQLJoin join : joinMapping.get(table)) {
@@ -548,12 +521,12 @@ public class QueryCache extends AbstractWabitObject implements Query {
 								} else {
 									query.append(" \n    AND ");
 								}
-								String leftAlias = join.getLeftColumn().getContainer().getAlias();
-								if (leftAlias == null || leftAlias.length() <= 0) {
+								String leftAlias = tableAliasMap.get(join.getLeftColumn().getContainer());
+								if (leftAlias == null) {
 									leftAlias = join.getLeftColumn().getContainer().getName();
 								}
-								String rightAlias = join.getRightColumn().getContainer().getAlias();
-								if (rightAlias == null || rightAlias.length() <= 0) {
+								String rightAlias = tableAliasMap.get(join.getRightColumn().getContainer());
+								if (rightAlias == null) {
 									rightAlias = join.getRightColumn().getContainer().getName();
 								}
 								query.append(leftAlias + "." + join.getLeftColumn().getName() + 
@@ -563,7 +536,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 						}
 					}
 					if (isFirstJoin) {
-						query.append("0 = 0");
+						query.append("TRUE");
 					}
 				}
 			}
@@ -592,8 +565,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				} else {
 					query.append(" AND ");
 				}
-				String alias = entry.getKey().getContainer().getAlias();
-				if (alias != null && alias.length() > 0) {
+				String alias = tableAliasMap.get(entry.getKey().getContainer());
+				if (alias != null) {
 					query.append(alias + ".");
 				} else if (fromTableList.contains(entry.getKey().getContainer())) {
 					query.append(entry.getKey().getContainer().getName() + ".");
@@ -619,8 +592,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				} else {
 					query.append(", ");
 				}
-				String alias = col.getContainer().getAlias();
-				if (alias != null && alias.length() > 0) {
+				String alias = tableAliasMap.get(col.getContainer());
+				if (alias != null) {
 					query.append(alias + ".");
 				} else if (fromTableList.contains(col.getContainer())) {
 					query.append(col.getContainer().getName() + ".");
@@ -643,8 +616,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				if (groupByAggregateMap.get(column) != null) {
 					query.append(groupByAggregateMap.get(column).toString() + "(");
 				}
-				String alias = column.getContainer().getAlias();
-				if (alias != null && alias.length() > 0) {
+				String alias = tableAliasMap.get(column.getContainer());
+				if (alias != null) {
 					query.append(alias + ".");
 				} else if (fromTableList.contains(column.getContainer())) {
 					query.append(column.getContainer().getName() + ".");
@@ -660,13 +633,14 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		}
 		
 		if (!orderByArgumentMap.isEmpty()) {
+			query.append("\nORDER BY");
 			boolean isFirstOrder = true;
 			for (Item col : orderByList) {
 				if (col instanceof StringItem) {
 					continue;
 				}
 				if (isFirstOrder) {
-					query.append("\nORDER BY ");
+					query.append(" ");
 					isFirstOrder = false;
 				} else {
 					query.append(", ");
@@ -674,8 +648,8 @@ public class QueryCache extends AbstractWabitObject implements Query {
 				if (groupByAggregateMap.containsKey(col)) {
 					query.append(groupByAggregateMap.get(col) + "(");
 				}
-				String alias = col.getContainer().getAlias();
-				if (alias != null && alias.length() > 0) {
+				String alias = tableAliasMap.get(col.getContainer());
+				if (alias != null) {
 					query.append(alias + ".");
 				} else if (fromTableList.contains(col.getContainer())) {
 					query.append(col.getContainer().getName() + ".");
@@ -707,9 +681,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
      *             If the query fails to execute for any reason.
      */
 	public ResultSet execute() throws QueryException {
-		if (dataSource == null) {
-			throw new NullPointerException("Data source is null.");
-		}
 	    String sql = generateQuery();
 	    Connection con = null;
 	    Statement stmt = null;
@@ -803,17 +774,20 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	
 	public void removeTable(Container table) {
 		fromTableList.remove(table);
+		tableAliasMap.remove(table);
+		table.removePropertyChangeListener(tableAliasListener);
 		table.removeChildListener(tableChildListener);
 		for (Item col : table.getItems()) {
 			removeItem(col);
 		}
 		if (!compoundEdit) {
-			firePropertyChange(PROPERTY_TABLE_REMOVED, table, null);
+			firePropertyChange(PROPERTY_QUERY, table, null);
 		}
 	}
 
 	public void addTable(Container container) {
 		fromTableList.add(container);
+		container.addPropertyChangeListener(tableAliasListener);
 		container.addChildListener(tableChildListener);
 		for (Item col : container.getItems()) {
 			addItem(col);
@@ -942,8 +916,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			groupByAggregateMap.remove(column);
 			logger.debug("Added " + column.getName() + " to group by list.");
 		} else {
-			if (SQLGroupFunction.valueOf(groupByAggregate).equals(groupByAggregateMap.get(column)) 
-					&& !(column instanceof StringCountItem)) {
+			if (SQLGroupFunction.valueOf(groupByAggregate).equals(groupByAggregateMap.get(column))) {
 				return;
 			}
 			groupByAggregateMap.put(column, SQLGroupFunction.valueOf(groupByAggregate));
@@ -1057,6 +1030,10 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		return globalWhereClause;
 	}
 
+	protected Map<Container, String> getTableAliasMap() {
+		return Collections.unmodifiableMap(tableAliasMap);
+	}
+
 	public boolean allowsChildren() {
 		return false;
 	}
@@ -1077,13 +1054,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		return dataSource;
 	}
 	
-	public WabitDataSource getWabitDataSource() {
-		if (dataSource == null) {
-			return null;
-		}
-		return new JDBCDataSource(dataSource);
-	}
-	
 	public void setDataSource(SPDataSource dataSource) {
 		this.dataSource = dataSource;
 	}
@@ -1091,20 +1061,16 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	/**
 	 * If this is set then only this query string will be returned by the generateQuery method
 	 * and the query cache will not accurately represent the query.
+	 * @param query
 	 */
-	public void defineUserModifiedQuery(String query) {
-		String generatedQuery = generateQuery();
-		logger.debug("Generated query is " + generatedQuery + " and given query is " + query);
-		if (generatedQuery.equals(query)) {
-			return;
-		}
+	public void setUserModifiedQuery(String query) {
 		userModifiedQuery = query;
 	}
 	
 	/**
 	 * Returns true if the user manually edited the text of the query. Returns false otherwise.
 	 */
-	public boolean isScriptModified() {
+	public boolean isQueryModified() {
 		return userModifiedQuery != null;
 	}
 	
@@ -1113,7 +1079,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * query is the same as the query cache.
 	 */
 	public void removeUserModifications() {
-		logger.debug("Removing user modified query.");
 		userModifiedQuery = null;
 	}
 
@@ -1124,21 +1089,6 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	public Container newConstantsContainer(String uuid) {
 		constantsContainer = new ItemContainer("Constants", uuid);
 		return constantsContainer;
-	}
-
-	public void setZoomLevel(int zoomLevel) {
-		this.zoomLevel = zoomLevel;
-	}
-
-	public int getZoomLevel() {
-		return zoomLevel;
-	}
-	
-	/**
-	 * Used for constructing copies of the query cache.
-	 */
-	protected String getUserModifiedQuery() {
-		return userModifiedQuery;
 	}
 	
 }

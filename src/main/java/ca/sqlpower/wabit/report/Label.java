@@ -19,13 +19,9 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
@@ -35,17 +31,14 @@ import java.util.List;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToggleButton;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -83,11 +76,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * will return the parent content box's font.
      */
     private Font font;
-
-    /**
-     * The background colour defined for this label.
-     */
-	private Color backgroundColour;
     
     /**
      * Creates a new label with the given initial text.
@@ -240,27 +228,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         });
         fb.append("Font", fontSelector.getPanel());
         
-        fb.nextLine();
-        final JLabel colourLabel = new JLabel(" ");
-       	colourLabel.setBackground(getBackgroundColour());
-        colourLabel.setOpaque(true);
-        final JComboBox colourCombo = new JComboBox();
-        colourCombo.setRenderer(new ColorCellRenderer(85, 30));
-        for (BackgroundColours bgColour : BackgroundColours.values()) {
-        	colourCombo.addItem(bgColour.getColour());
-        }
-        colourCombo.setSelectedItem(backgroundColour);
-        colourCombo.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Color colour = (Color) colourCombo.getSelectedItem();
-				colourLabel.setBackground(colour);
-			}
-		});
-        JPanel colourPanel = new JPanel(new BorderLayout());
-        colourPanel.add(colourLabel, BorderLayout.CENTER);
-        colourPanel.add(colourCombo, BorderLayout.EAST);
-        fb.append("Background", colourPanel);
-        
         DataEntryPanel dep = new DataEntryPanel() {
 
             public boolean applyChanges() {
@@ -285,8 +252,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
                 } else if (bottomAlign.isSelected()) {
                     setVerticalAlignment(VerticalAlignment.BOTTOM);
                 }
-                
-                setBackgroundColour((Color) colourCombo.getSelectedItem());
 
                 return true;
             }
@@ -327,13 +292,4 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public void resetToFirstPage() {
         // no op -- labels don't paginate
     }
-
-	public Color getBackgroundColour() {
-		return backgroundColour;
-	}
-
-	public void setBackgroundColour(Color backgroundColour) {
-		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
-		this.backgroundColour = backgroundColour;
-	}
 }

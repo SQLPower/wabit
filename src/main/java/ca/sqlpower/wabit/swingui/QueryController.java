@@ -28,10 +28,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JComboBox;
-import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -50,7 +48,6 @@ import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
@@ -159,12 +156,7 @@ public class QueryController {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
 				Item column = queryCache.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
-				if(column instanceof StringCountItem) {
-					logger.debug("this column is a StringCountItem, we will only setGrouping to Count");
-					queryCache.setGrouping(column, "COUNT");
-				} else {
-					queryCache.setGrouping(column, (String)e.getNewValue());
-				}
+				queryCache.setGrouping(column, (String)e.getNewValue());
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
 				int indexOfTextField = cellRenderer.getTextFields().indexOf((JTextField)e.getSource());
@@ -250,13 +242,13 @@ public class QueryController {
 	 */
 	private final DocumentListener queryTextListener = new DocumentListener() {
 		public void removeUpdate(DocumentEvent e) {
-			queryCache.defineUserModifiedQuery(queryText.getText());
+			queryCache.setUserModifiedQuery(queryText.getText());
 		}
 		public void insertUpdate(DocumentEvent e) {
-			queryCache.defineUserModifiedQuery(queryText.getText());	
+			queryCache.setUserModifiedQuery(queryText.getText());	
 		}
 		public void changedUpdate(DocumentEvent e) {
-			queryCache.defineUserModifiedQuery(queryText.getText());	
+			queryCache.setUserModifiedQuery(queryText.getText());	
 		}
 	};
 
@@ -277,14 +269,6 @@ public class QueryController {
 	 * edit the SQL query.
 	 */
 	private final JTextComponent queryText;
-
-	private final JSlider zoomSlider;
-
-	private final ChangeListener zoomListener = new ChangeListener() {
-		public void stateChanged(ChangeEvent e) {
-			queryCache.setZoomLevel(zoomSlider.getValue());
-		}
-	};
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
@@ -292,19 +276,17 @@ public class QueryController {
 	 * a listener added so the {@link QueryCache} can track which database to execute
 	 * on.
 	 */
-	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {
+	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent) {
 		queryCache = cache;
 		this.pen = pen;
 		this.dataSourceComboBox = dataSourceComboBox;
 		queryText = textComponent;
-		this.zoomSlider = zoomSlider;
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
 		queryText.getDocument().addDocumentListener(queryTextListener);
-		zoomSlider.addChangeListener(zoomListener );
 	}
 	
 	/**
@@ -318,7 +300,6 @@ public class QueryController {
 		pen.removeQueryListener(tableItemListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);
 		queryText.getDocument().removeDocumentListener(queryTextListener);
-		zoomSlider.removeChangeListener(zoomListener);
 		unlistenToCellRenderer();
 	}
 	

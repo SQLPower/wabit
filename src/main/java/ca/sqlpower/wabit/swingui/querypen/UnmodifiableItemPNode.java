@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.swingui.WabitNode;
-import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
+import ca.sqlpower.wabit.swingui.querypen.MouseState.MouseStates;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -128,11 +128,11 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 	
 	private EditStyledTextListener whereTextListener = new EditStyledTextListener() {
 		public void editingStopping() {
-			item.setWhere(getWhereText());
 			if (whereText.getEditorPane().getText() == null || whereText.getEditorPane().getText().length() == 0) {
 				whereText.getEditorPane().setText(WHERE_START_TEXT);
 				whereText.syncWithDocument();
 			}
+			item.setWhere(getWhereText());
 		}
 		public void editingStarting() {
 			if (whereText.getEditorPane().getText().equals(WHERE_START_TEXT)) {
@@ -174,7 +174,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 	
 	public void setJoiningState(boolean state){
 		if(!state) {
-			setPaint(new Color(0x00ffffff, true));
+			setPaint(Color.WHITE);
 			repaint();
 		}
 		isInJoiningState = state;
@@ -206,7 +206,6 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 		joinedLines = new ArrayList<JoinLine>();
 		
 		isInSelectCheckBox = new JCheckBox();
-		isInSelectCheckBox.setOpaque(false);
 		swingCheckBox = new PSwing(isInSelectCheckBox);
 		addChild(swingCheckBox);
 		
@@ -234,7 +233,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 			@Override
 			public void mouseExited(PInputEvent event) {
 				if(!isInJoiningState) {
-					setPaint(new Color(0x00ffffff, true));
+					setPaint(Color.WHITE);
 					repaint();
 				}
 			}
@@ -252,10 +251,8 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 		setHeight(getFullBounds().getHeight());
 		
 		isInSelectCheckBox.setSelected(item.isSelected());
-		if (item.getWhere().trim().length() > 0) {
-			whereText.getEditorPane().setText(item.getWhere());
-			whereText.syncWithDocument();
-		}
+		whereText.getEditorPane().setText(item.getWhere());
+		whereText.syncWithDocument();
 		setVisibleAliasText();
 	}
 	
@@ -275,7 +272,7 @@ public class UnmodifiableItemPNode extends PNode implements WabitNode {
 
 	public void setIsJoined(boolean joined) {
 		isJoined = joined;
-		setPaint(new Color(0x00ffffff, true));
+		setPaint(Color.WHITE);
 		repaint();
 		highLightText();
 	}

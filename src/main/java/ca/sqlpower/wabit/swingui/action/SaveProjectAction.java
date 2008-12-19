@@ -24,38 +24,45 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
- * This will save the file to the place where the user last loaded or saved.
- * If the user has not yet saved or loaded it will prompt the user for a file location
- * and name.
+ * This will save a given project to a user specified file.
  */
 public class SaveProjectAction extends AbstractAction {
-	
+
+	/**
+	 * The project in this session will be saved to a file.
+	 */
 	private final WabitSwingSession session;
 
 	public SaveProjectAction(WabitSwingSession session) {
-		super("Save", new ImageIcon(SaveProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+		super("Save Project");
 		this.session = session;
-		
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		if (session.getCurrentFile() != null) {
-			ProjectXMLDAO projectSaver;
-			try {
-				projectSaver = new ProjectXMLDAO(new FileOutputStream(session.getCurrentFile()), session.getProject());
-			} catch (FileNotFoundException e1) {
-				throw new RuntimeException(e1);
-			}
-			projectSaver.save();
-		} else {
-			new SaveAsProjectAction(session).actionPerformed(e);
+		JFileChooser fc = new JFileChooser();
+		fc.setDialogTitle("Select the file to save to.");
+	
+		int fcChoice = fc.showSaveDialog(session.getFrame());
+
+		if (fcChoice != JFileChooser.APPROVE_OPTION) {
+		    return;
 		}
+		
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(fc.getSelectedFile());
+		} catch (FileNotFoundException e1) {
+			throw new RuntimeException(e1);
+		}
+		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
+		
+		projectSaver.save();
 	}
 
 }

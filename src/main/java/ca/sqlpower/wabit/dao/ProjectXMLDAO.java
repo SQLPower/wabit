@@ -20,27 +20,14 @@
 package ca.sqlpower.wabit.dao;
 
 import java.awt.Font;
-import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-
-import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
@@ -55,20 +42,15 @@ import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
-import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.xml.XMLHelper;
 
-import com.sun.mail.util.BASE64EncoderStream;
-
 public class ProjectXMLDAO {
-	
-	private static final Logger logger = Logger.getLogger(ProjectXMLDAO.class);
 
 	/**
 	 * This output stream will be used to  write the project to a file.
@@ -86,55 +68,13 @@ public class ProjectXMLDAO {
 	 */
 	private final WabitProject project;
 	
-	/**
-	 * This is the output stream contained by the print writer.
-	 */
-	private final OutputStream outputStream;
-	
-	/**
-	 * This will construct a XML DAO to save the entire project or parts of 
-	 * the project to be loaded in later.
-	 */
 	public ProjectXMLDAO(OutputStream out, WabitProject project) {
 		this.project = project;
 		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
-		outputStream = out;
 		xml = new XMLHelper();
 	}
 	
-	/**
-	 * This XML DAO will save a specific query in a project as XML.
-	 * The query can then be loaded as a stand-alone project or be imported
-	 * into another project.
-	 */
-	public void save(Query query) {
-		save(Collections.singletonList(query.getWabitDataSource()), Collections.singletonList(query), new ArrayList<Layout>());
-	}
-	
-	public void save(Layout layout) {
-		Set<Query> queries = new HashSet<Query>();
-		for (Page page : layout.getChildren()) {
-			for (ContentBox contentBox : page.getContentBoxes()) {
-				ReportContentRenderer rcr = contentBox.getContentRenderer();
-				if (rcr instanceof ResultSetRenderer) {
-					queries.add(((ResultSetRenderer) rcr).getQuery());
-				}
-			}
-		}
-		
-		Set<WabitDataSource> dataSources = new HashSet<WabitDataSource>();
-		for (Query query : queries) {
-			dataSources.add(query.getWabitDataSource());
-		}
-		
-		save(new ArrayList<WabitDataSource>(dataSources), new ArrayList<Query>(queries), Collections.singletonList(layout));
-	}
-	
 	public void save() {
-		save(project.getDataSources(), project.getQueries(), project.getLayouts());
-	}
-	
-	private void save(List<WabitDataSource> dataSources, List<Query> queries, List<Layout> layouts) {
 		xml.println(out, "<?xml version='1.0' encoding='UTF-8'?>");
 		xml.println(out, "");
 		xml.println(out, "<wabit export-format=\"1.0.0\">");
@@ -145,9 +85,19 @@ public class ProjectXMLDAO {
 		xml.println(out, ">");
 		xml.indent++;
 		
-		saveDataSources(dataSources);
+		xml.println(out, "<data-sources>");
+		xml.indent++;
 		
-		for (Query query : queries) {
+		for (WabitDataSource ds : project.getDataSources()) {
+			xml.print(out, "<data-source");
+			printAttribute("name", ds.getName());
+			xml.println(out, "/>");
+		}
+		
+		xml.indent--;
+		xml.println(out, "</data-sources>");
+		
+		for (Query query : project.getQueries()) {
 			if (query instanceof QueryCache) {
 				saveQueryCache((QueryCache)query);
 			} else {
@@ -155,7 +105,7 @@ public class ProjectXMLDAO {
 			}
 		}
 		
-		for (Layout layout : layouts) {
+		for (Layout layout : project.getLayouts()) {
 			saveLayout(layout);
 		}
 		
@@ -167,33 +117,15 @@ public class ProjectXMLDAO {
 		out.flush();
 		out.close();
 	}
-
-	private void saveDataSources(List<WabitDataSource> dataSources) {
-		xml.println(out, "<data-sources>");
-		xml.indent++;
-		
-		for (WabitDataSource ds : dataSources) {
-			if (ds == null) {
-				continue;
-			}
-			xml.print(out, "<data-source");
-			printAttribute("name", ds.getName());
-			xml.println(out, "/>");
-		}
-		
-		xml.indent--;
-		xml.println(out, "</data-sources>");
-	}
 	
 	/**
 	 * This saves a layout. This will not close the print writer passed into the constructor.
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	private void saveLayout(Layout layout) {
+	public void saveLayout(Layout layout) {
 		xml.print(out, "<layout");
 		printAttribute("name", layout.getName());
-		printAttribute("zoom", layout.getZoomLevel());
 		xml.println(out, ">");
 		xml.indent++;
 		
@@ -227,9 +159,6 @@ public class ProjectXMLDAO {
 						printAttribute("text", label.getText());
 						printAttribute("horizontal-align", label.getHorizontalAlignment().name());
 						printAttribute("vertical-align", label.getVerticalAlignment().name());
-						if (label.getBackgroundColour() != null) {
-							printAttribute("bg-colour", label.getBackgroundColour().getRGB());
-						}
 						xml.println(out, ">");
 						saveFont(label.getFont());
 						xml.println(out, "</content-label>");
@@ -239,10 +168,6 @@ public class ProjectXMLDAO {
 						printAttribute("name", rsRenderer.getName());
 						printAttribute("query-id", rsRenderer.getQuery().getUUID().toString());
 						printAttribute("null-string", rsRenderer.getNullString());
-						printAttribute("border", rsRenderer.getBorderType().name());
-						if (rsRenderer.getBackgroundColour() != null) {
-							printAttribute("bg-colour", rsRenderer.getBackgroundColour().getRGB());
-						}
 						xml.println(out, ">");
 						xml.indent++;
 						saveFont(rsRenderer.getHeaderFont(), "header-font");
@@ -252,14 +177,9 @@ public class ProjectXMLDAO {
 							xml.print(out, "<column-info");
 							printAttribute("name", ci.getName());
 							printAttribute("width", ci.getWidth());
-							if (ci.getColumnInfoItem() != null) {
-								printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID().toString());
-							}
-							printAttribute("column-alias", ci.getColumnAlias());
+							printAttribute("column-info-key", ci.getColumnInfoKey());
 							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
 							printAttribute("data-type", ci.getDataType().name());
-							printAttribute("break-on-column", Boolean.toString(ci.getWillBreak()));
-							printAttribute("will-subtotal", Boolean.toString(ci.getWillSubtotal()));
 							xml.println(out, ">");
 							xml.indent++;
 							if (ci.getFormat() instanceof SimpleDateFormat) {
@@ -282,30 +202,6 @@ public class ProjectXMLDAO {
 						}
 						xml.indent--;
 						xml.println(out, "</content-result-set>");
-					} else if (box.getContentRenderer() instanceof ImageRenderer) {
-						ImageRenderer imgRenderer = (ImageRenderer) box.getContentRenderer();
-						xml.print(out, "<image-renderer");
-						printAttribute("name", imgRenderer.getName());
-						xml.print(out, ">");
-						BufferedImage image = imgRenderer.getImage();
-						if (image != null) {
-							try {
-								out.flush();
-								ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-								ImageIO.write(image, "PNG", byteStream);
-								byte[] byteArray = BASE64EncoderStream.encode(byteStream.toByteArray());
-								char[] charArray = new char[byteArray.length];
-								for (int i = 0; i < byteArray.length; i++) {
-									charArray[i] = (char)byteArray[i];
-								}
-								logger.debug("Encoded length is " + byteArray.length);
-								logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
-								out.write(charArray);
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-						}
-						out.println("</image-renderer>");
 					} else {
 						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
 					}
@@ -355,11 +251,10 @@ public class ProjectXMLDAO {
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	private void saveQueryCache(QueryCache cache) {
+	public void saveQueryCache(QueryCache cache) {
 		xml.print(out, "<query");
 		printAttribute("name", cache.getName());
 		printAttribute("uuid", cache.getUUID().toString());
-		printAttribute("zoom", cache.getZoomLevel());
 		if (cache.getDataSource() != null) {
 			printAttribute("data-source", cache.getDataSource().getName());
 		}
@@ -464,7 +359,7 @@ public class ProjectXMLDAO {
 			xml.println(out, "/>");
 		}
 		
-		if (cache.isScriptModified()) {
+		if (cache.isQueryModified()) {
 			xml.print(out, "<query-string");
 			printAttribute("string", cache.generateQuery());
 			xml.println(out, "/>");		

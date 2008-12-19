@@ -19,8 +19,6 @@
 
 package ca.sqlpower.wabit.swingui.querypen;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
@@ -46,10 +44,6 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPickPath;
-import edu.umd.cs.piccolox.event.PNotification;
-import edu.umd.cs.piccolox.event.PNotificationCenter;
-import edu.umd.cs.piccolox.event.PSelectionEventHandler;
-import edu.umd.cs.piccolox.nodes.PClip;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 import edu.umd.cs.piccolox.pswing.PSwing;
 
@@ -74,11 +68,6 @@ public class ContainerPane extends PNode implements WabitNode {
 	 * The size of separators between different fields.
 	 */
 	private static final int SEPARATOR_SIZE = 5;
-
-	/**
-	 * The stroke size of the lines in the container pane.
-	 */
-	private static final float STROKE_SIZE = 2;
 	
 	private final Container model;
 
@@ -93,7 +82,7 @@ public class ContainerPane extends PNode implements WabitNode {
 	 * The pane that contains the current state of the mouse for that this component
 	 * is attached to.
 	 */
-	private QueryPen queryPen;
+	private QueryPen mouseStates;
 	
 	/**
 	 * The canvas this component is being drawn on.
@@ -198,7 +187,7 @@ public class ContainerPane extends PNode implements WabitNode {
 			repositionWhereAndResize();
 		}
 	};
-	
+
 	private EditablePStyledText modelNameText;
 
 	/**
@@ -212,22 +201,6 @@ public class ContainerPane extends PNode implements WabitNode {
 	 * This is the header for column names and aliases.
 	 */
 	private PStyledText columnNameHeader;
-
-	/**
-	 * A clipping region the background header will be clipped to. This removes
-	 * the lower rounding corners of the background.
-	 */
-	private PClip headerBackClip;
-
-	/**
-	 * This will give the header a nice gradient background.
-	 */
-	private PPath headerBackground;
-
-	/**
-	 * This will give the where fields a background colour.
-	 */
-	private PNode whereBackground;
 
 	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
@@ -247,7 +220,7 @@ public class ContainerPane extends PNode implements WabitNode {
 			}
 		});
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
-		this.queryPen = pen;
+		this.mouseStates = pen;
 		this.canvas = canvas;
 		containedItems = new ArrayList<UnmodifiableItemPNode>();
 		separatorLines = new ArrayList<PPath>();
@@ -259,10 +232,10 @@ public class ContainerPane extends PNode implements WabitNode {
 			
 			@Override
 			public void mousePressed(PInputEvent event){
-				if(!queryPen.getMultipleSelectEventHandler().isSelected(ContainerPane.this)){
-					queryPen.getMultipleSelectEventHandler().unselectAll();
+				if(!mouseStates.getMultipleSelectEventHandler().isSelected(ContainerPane.this)){
+					mouseStates.getMultipleSelectEventHandler().unselectAll();
 				}
-				queryPen.getMultipleSelectEventHandler().select(ContainerPane.this);
+				mouseStates.getMultipleSelectEventHandler().select(ContainerPane.this);
 			
 		}});
 		addChild(modelNameText);
@@ -283,25 +256,11 @@ public class ContainerPane extends PNode implements WabitNode {
 		repositionWhereClauses();
 		
 		PBounds fullBounds = getFullBounds();
-		outerRect = PPath.createRoundRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2, QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
-		outerRect.setStroke(new BasicStroke(STROKE_SIZE));
-		headerBackground = PPath.createRoundRectangle((float)-BORDER_SIZE, (float)-BORDER_SIZE, (float)outerRect.getWidth() - 1, (float)(modelNameText.getHeight() + BORDER_SIZE) * 2 + BORDER_SIZE + QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS, QueryPen.CONTAINER_ROUND_CORNER_RADIUS);
-		headerBackground.setStrokePaint(new Color(0x00ffffff, true));
-		headerBackClip = new PClip();
-		headerBackClip.addChild(headerBackground);
-		float headerClipHeight = (float)(modelNameText.getHeight() + BORDER_SIZE) * 2 + 2 * BORDER_SIZE;
-		headerBackClip.setPathToRectangle((float)outerRect.getX(), (float)outerRect.getY(), (float)outerRect.getWidth(), headerClipHeight);
-		headerBackClip.setStrokePaint(new Color(0x00ffffff, true));
-		whereBackground = new PNode();
-		whereBackground.translate(outerRect.getX() + whereHeader.getFullBounds().getX() + BORDER_SIZE, outerRect.getY() + headerClipHeight);
-		whereBackground.setWidth(outerRect.getWidth() - whereHeader.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
-		whereBackground.setHeight(outerRect.getHeight() - headerClipHeight - STROKE_SIZE - 1);
-		whereBackground.setPaint(QueryPen.WHERE_BACKGROUND_COLOUR);
-		addChild(whereBackground);
-		addChild(headerBackClip);
+		PPath headerLine = PPath.createLine((float)getX() - BORDER_SIZE, (float)(getY() +(modelNameText.getHeight()+ BORDER_SIZE)*2+ BORDER_SIZE), (float)(getX() + fullBounds.width + BORDER_SIZE), (float)(getY() + (modelNameText.getHeight()+ BORDER_SIZE)*2+ BORDER_SIZE));
+		separatorLines.add(headerLine);
+		this.addChild(headerLine);
+		outerRect = PPath.createRectangle((float)fullBounds.x - BORDER_SIZE, (float)fullBounds.y - BORDER_SIZE, (float)fullBounds.width + BORDER_SIZE * 2, (float)fullBounds.height + BORDER_SIZE * 2);
 		this.addChild(outerRect);
-		whereBackground.moveToBack();
-		headerBackClip.moveToBack();
 		outerRect.moveToBack();
 		setBounds(outerRect.getBounds());
 		translate(-getGlobalBounds().getX(), -getGlobalBounds().getY());
@@ -314,9 +273,6 @@ public class ContainerPane extends PNode implements WabitNode {
 			}
 		});
 		setVisibleAliasText();
-
-		PNotificationCenter.defaultCenter().addListener(this, "setFocusColour", PSelectionEventHandler.SELECTION_CHANGED_NOTIFICATION, null);
-		setFocusColour(new PNotification(null, null, null));
 	}
 
 	/**
@@ -326,7 +282,7 @@ public class ContainerPane extends PNode implements WabitNode {
 	 */
 	private UnmodifiableItemPNode createTextLine(Item item) {
 		final UnmodifiableItemPNode modelNameText;
-		modelNameText = new UnmodifiableItemPNode(queryPen, canvas, item);
+		modelNameText = new UnmodifiableItemPNode(mouseStates, canvas, item);
 		modelNameText.getItemText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.getWherePStyledText().addPropertyChangeListener(PNode.PROPERTY_BOUNDS, resizeOnEditChangeListener);
 		modelNameText.addQueryChangeListener(itemChangeListener);
@@ -337,7 +293,6 @@ public class ContainerPane extends PNode implements WabitNode {
 		
 		PNode itemHeader = new PNode();
 		JCheckBox allCheckBox = new JCheckBox();
-		allCheckBox.setOpaque(false);
 		allCheckBox.addActionListener(new AbstractAction(){
 
 			public void actionPerformed(ActionEvent e) {
@@ -352,12 +307,12 @@ public class ContainerPane extends PNode implements WabitNode {
 		swingCheckBox = new PSwing(allCheckBox);
 		itemHeader.addChild(swingCheckBox);
 		
-		columnNameHeader = new EditablePStyledText("select all/none", queryPen, canvas);
+		columnNameHeader = new EditablePStyledText("Column/Alias", mouseStates, canvas);
 		double textYTranslation = (swingCheckBox.getFullBounds().height - columnNameHeader.getFullBounds().height)/2;
-		columnNameHeader.translate(swingCheckBox.getFullBounds().width, textYTranslation);
+		columnNameHeader.translate(swingCheckBox.getFullBounds().width + SEPARATOR_SIZE, textYTranslation);
 		itemHeader.addChild(columnNameHeader);
 		
-		whereHeader = new EditablePStyledText("where:", queryPen, canvas);
+		whereHeader = new EditablePStyledText("WHERE:", mouseStates, canvas);
 		whereHeader.translate(0, textYTranslation);
 		itemHeader.addChild(whereHeader);
 	
@@ -422,23 +377,6 @@ public class ContainerPane extends PNode implements WabitNode {
 		return false;
 	}
 	
-	public void setFocusColour(PNotification notification) {
-		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
-		if (hasFocus) {
-			outerRect.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			for (PPath line : separatorLines) {
-				line.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			}
-			headerBackground.setPaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-		} else {
-			outerRect.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			for (PPath line : separatorLines) {
-				line.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			}
-			headerBackground.setPaint(QueryPen.UNSELECTED_CONTAINER_GRADIENT_COLOUR);
-		}
-	}
-	
 	public void addQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.add(l);
 	}
@@ -446,12 +384,8 @@ public class ContainerPane extends PNode implements WabitNode {
 	public void removeQueryChangeListener(PropertyChangeListener l) {
 		queryChangeListeners.remove(l);
 	}
-
-	/**
-	 * Repositions the where clauses of all of the items in this container as well
-	 * as the where header. This returns the new x location of the where clauses.
-	 */
-	private double repositionWhereClauses() {
+	
+	private void repositionWhereClauses() {
 		double maxXPos = swingCheckBox.getFullBounds().width + SEPARATOR_SIZE + columnNameHeader.getWidth() + SEPARATOR_SIZE;
 		for (UnmodifiableItemPNode itemNode : containedItems) {
 			maxXPos = Math.max(maxXPos, itemNode.getDistanceForWhere());
@@ -460,8 +394,6 @@ public class ContainerPane extends PNode implements WabitNode {
 		for (UnmodifiableItemPNode itemNode : containedItems) {
 			itemNode.positionWhere(maxXPos);
 		}
-		
-		return maxXPos;
 	}
 	
 	public List<UnmodifiableItemPNode> getContainedItems() {
@@ -493,7 +425,7 @@ public class ContainerPane extends PNode implements WabitNode {
 	}
 	
 	private void repositionWhereAndResize() {
-		double maxWhereXPos = repositionWhereClauses();
+		repositionWhereClauses();
 		if (outerRect != null) {
 			double maxWidth = Math.max(header.getFullBounds().getWidth(), modelNameText.getFullBounds().getWidth());
 			logger.debug("Header width is " + header.getFullBounds().getWidth() + " and the container name has width " + modelNameText.getFullBounds().getWidth());
@@ -509,12 +441,6 @@ public class ContainerPane extends PNode implements WabitNode {
 			
 			int numStaticRows = 2;
 			outerRect.setHeight((modelNameText.getHeight() + BORDER_SIZE) * (numStaticRows + containedItems.size()) + BORDER_SIZE * 3);
-			
-			headerBackground.setWidth(maxWidth);
-			headerBackClip.setWidth(maxWidth);
-			whereBackground.translate(maxWhereXPos - whereBackground.getXOffset(), 0);
-			whereBackground.setWidth(outerRect.getWidth() - whereBackground.getFullBounds().getX() - STROKE_SIZE - BORDER_SIZE - 1);
-			whereBackground.setHeight(outerRect.getHeight() - whereBackground.getFullBounds().getY() - STROKE_SIZE - BORDER_SIZE - 1);
 			
 			setBounds(outerRect.getBounds());
 		}
@@ -546,7 +472,6 @@ public class ContainerPane extends PNode implements WabitNode {
 				((WabitNode)o).cleanup();
 			}
 		}
-		PNotificationCenter.defaultCenter().removeListener(this);
 	}
 	
 }

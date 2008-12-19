@@ -20,19 +20,8 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,9 +40,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.log4j.Level;
@@ -63,33 +49,24 @@ import ca.sqlpower.architect.ArchitectException;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
-import ca.sqlpower.util.BrowserUtil;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
-import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.LogAction;
-import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
 
 
 /**
@@ -103,26 +80,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private static final String QUERY_DIVIDER_LOCATON = "QueryDividerLocaton";
 
-	/**
-	 * A constant for storing the location of the divider for layouts in prefs.
-	 */
-	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
-	
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
-	
-	private class WindowClosingListener extends WindowAdapter {
-		
-		private final WabitSwingSession session;
-
-		public WindowClosingListener(WabitSwingSession session) {
-			this.session = session;
-		}
-		
-		@Override
-		public void windowClosing(WindowEvent e) {
-	    	session.close();
-		}
-	}
 
 	private final WabitSessionContext sessionContext;
 	
@@ -134,7 +92,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private static JLabel statusLabel;
 	
 	private static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
-
 	
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
@@ -158,11 +115,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * project. This will allow editing the currently selected element in the JTree.
 	 */
 	private DataEntryPanel currentEditorPanel;
-
-	/**
-	 * This is the model of the current panel.
-	 */
-	private Object currentEditorPanelModel;
 	
 	/**
 	 * This DB connection manager will allow editing the db connections in the
@@ -170,14 +122,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * wabit. 
 	 */
 	private final DatabaseConnectionManager dbConnectionManager;
-	
-	/**
-	 * This is the most recent file loaded in this session or the last file that the session
-	 * was saved to. This will be null if no file has been loaded or the project has not
-	 * been saved yet.
-	 */
-	private File currentFile = null;
-	
+
 	/**
 	 * Creates a new session 
 	 * 
@@ -192,8 +137,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		frame = new JFrame("Wabit " + WabitVersion.VERSION);
 		frame.setIconImage(FRAME_ICON.getImage());
-		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		frame.addWindowListener(new WindowClosingListener(this));
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 	}
@@ -222,25 +165,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
     	projectTree.setEditable(true);
 
-    	DefaultFormBuilder treeBuilder = new DefaultFormBuilder(new FormLayout("fill:pref:grow", "fill:pref:grow, pref"));
-    	treeBuilder.add(projectTree);
-    	treeBuilder.nextLine();
-    	JLabel sqlpLabel = new JLabel(new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/sqlp-72.png")));
-    	sqlpLabel.setBackground(Color.WHITE);
-    	sqlpLabel.setOpaque(true);
-    	sqlpLabel.setHorizontalAlignment(SwingConstants.LEFT);
-    	sqlpLabel.addMouseListener(new MouseAdapter() {
-    		@Override
-    		public void mouseReleased(MouseEvent e) {
-    			try {
-    				BrowserUtil.launch(SPSUtils.SQLP_URL);
-    			} catch (IOException e1) {
-    				throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
-    			}
-    		}
-		});
-		treeBuilder.add(sqlpLabel);
-        wabitPane.add(new JScrollPane(treeBuilder.getPanel()), JSplitPane.LEFT);
+        wabitPane.add(new JScrollPane(projectTree), JSplitPane.LEFT);
 		setEditorPanel(project);
     	
 		//prefs
@@ -266,11 +191,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
-		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
-		fileMenu.add(new SaveAsProjectAction(this));
-		fileMenu.addSeparator();
-		fileMenu.add(new ImportProjectAction(this));
         
 		JMenu windowMenu = new JMenu("Window");
 		fileMenu.setMnemonic('w');
@@ -288,8 +209,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         if (prefs.get("frameBounds", null) != null) {
             String[] frameBounds = prefs.get("frameBounds", null).split(",");
             if (frameBounds.length == 4) {
-            	logger.debug("Frame bounds are " + Integer.parseInt(frameBounds[0]) + ", " + Integer.parseInt(frameBounds[1]) + ", " +
-                        Integer.parseInt(frameBounds[2]) + ", " + Integer.parseInt(frameBounds[3]));
                 frame.setBounds(
                         Integer.parseInt(frameBounds[0]),
                         Integer.parseInt(frameBounds[1]),
@@ -297,11 +216,25 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                         Integer.parseInt(frameBounds[3]));
             }
         } else {
-        	frame.setSize(1050, 750);
-        	frame.setLocation(200, 100);
+        	frame.setSize(950, 550);
+        	frame.setLocation(300, 200);
         }
 
         frame.setVisible(true);
+        frame.addWindowListener(new WindowAdapter() {
+        	
+        	@Override
+			public void windowClosing(WindowEvent e) {
+                try {
+                	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
+                    prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
+                    prefs.flush();
+                } catch (BackingStoreException ex) {
+                    logger.log(Level.WARN,"Failed to flush preferences", ex);
+                }
+
+				close();
+			}});
 
         logger.debug("UI is built.");
     }
@@ -327,103 +260,41 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	public void removeSessionLifecycleListener(SessionLifecycleListener<WabitSession> l) {
 		lifecycleListeners.remove(l);
 	}
-	
-	public void close() {
-		if (!removeEditorPanel()) {
+
+	/**
+	 * Ends this session, disposing its frame and releasing any system
+	 * resources that were obtained explicitly by this session. Also
+	 * fires a sessionClosing lifecycle event, so any resources used up
+	 * by subsystems dependent on this session can be freed by the appropriate
+	 * parties.
+	 */
+    public void close() {
+    	
+    	if (!removeEditorPanel()) {
     		return;
     	}
-		setEditorPanel(project);
-		
-    	try {
-        	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
-            prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
-            prefs.flush();
-        } catch (BackingStoreException ex) {
-            logger.log(Level.WARN,"Failed to flush preferences", ex);
-        }
-        
-        boolean closing = false;
-		if (hasUnsavedChanges()) {
-			int response = JOptionPane.showOptionDialog(frame,
-					"You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
-                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
-                    new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            if (response == 0) {
-                sessionContext.deregisterChildSession(this);
-                frame.dispose();
-            } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
-            	return;
-            } else {
-            	if (new SaveAsProjectAction(this).save()) {
-            		closing = true;
-            	}
-            }
-		} else {
-			closing = true;
-		}
-		
-		if (closing) {
-	    	SessionLifecycleEvent<WabitSession> lifecycleEvent =
-	    		new SessionLifecycleEvent<WabitSession>(this);
-	    	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
-	    		lifecycleListeners.get(i).sessionClosing(lifecycleEvent);
-	    	}
-	    	
-	    	sessionContext.deregisterChildSession(this);
-    		frame.dispose();
-		}
-	}
-
+    	
+    	SessionLifecycleEvent<WabitSession> e =
+    		new SessionLifecycleEvent<WabitSession>(this);
+    	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
+    		lifecycleListeners.get(i).sessionClosing(e);
+    	}
+    	frame.dispose();
+    	sessionContext.deregisterChildSession(this);
+    }
+    
     /**
      * Launches the Wabit application by loading the configuration and
      * displaying the GUI.
      * 
      * @throws Exception if startup fails
      */
-    public static void  main(final String[] args) throws Exception {
+    public static void  main(String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	
-    	SwingUtilities.invokeLater(new Runnable() {
-
-			public void run() {
-				try {
-					WabitSessionContext context = new WabitSwingSessionContextImpl(true);
-					
-					final File importFile;
-					if (args.length > 0) {
-						importFile = new File(args[0]);
-					} else {
-						importFile = null;
-					}
-					
-					WabitSwingSessionImpl wss;
-					
-					if (importFile != null) {
-						BufferedInputStream in = null;
-						try {
-							in = new BufferedInputStream(new FileInputStream(importFile));
-						} catch (FileNotFoundException e1) {
-							throw new RuntimeException(e1);
-						}
-						LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
-						List<WabitSession> sessions = projectLoader.loadProjects();
-						for (WabitSession session : sessions) {
-							((WabitSwingSession)session).buildUI();
-						}
-					} else {
-						wss = new WabitSwingSessionImpl(context);
-						wss.buildUI();
-					}
-				} catch (Exception ex) {
-					 ex.printStackTrace();
-					// We wish we had a parent component to direct the dialog but this is being invoked, so
-					// everything else blew up.
-					SPSUtils.showExceptionDialogNoReport("An unexpected error occured while launching Wabit",ex);
-				}
-			}
-    	});
-    	
+    	WabitSessionContext context = new WabitSwingSessionContextImpl(true);
+        WabitSwingSessionImpl wss = new WabitSwingSessionImpl(context);
+        wss.buildUI();
     }
 
     public WabitProject getProject() {
@@ -443,14 +314,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public void setEditorPanel(Object entryPanelModel) {
-		if (entryPanelModel == currentEditorPanelModel) {
-			return;
-		}
 		if (!removeEditorPanel()) {
 			return;
 		}
-		int dividerLoc = wabitPane.getDividerLocation();
-		currentEditorPanelModel = entryPanelModel;
 		if (entryPanelModel instanceof QueryCache) {
 			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
 		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
@@ -460,11 +326,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		   	}
 		   	currentEditorPanel = queryPanel;
 		} else if (entryPanelModel instanceof Layout) {
-			ReportLayoutPanel rlPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
-			if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {
-				rlPanel.getSplitPane().setDividerLocation(Integer.parseInt(prefs.get(LAYOUT_DIVIDER_LOCATION, null)));
-			}
-			currentEditorPanel = rlPanel;
+			currentEditorPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
 		} else if (entryPanelModel instanceof WabitProject) {
 			currentEditorPanel = new ProjectPanel(this);
 		} else {
@@ -475,7 +337,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
-		wabitPane.setDividerLocation(dividerLoc);
 	}
 	
 	/**
@@ -495,59 +356,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			if (currentEditorPanel instanceof QueryPanel) {
 				QueryPanel query = (QueryPanel)currentEditorPanel;
 				prefs.put(QUERY_DIVIDER_LOCATON, String.format("%d,%d", query.getTopRightSplitPane().getDividerLocation(), query.getFullSplitPane().getDividerLocation()));
-			} else if (currentEditorPanel instanceof ReportLayoutPanel) {
-				prefs.put(LAYOUT_DIVIDER_LOCATION, String.format("%d", ((ReportLayoutPanel) currentEditorPanel).getSplitPane().getDividerLocation()));
 			}
 			currentEditorPanel.discardChanges();
 			wabitPane.remove(currentEditorPanel.getPanel());
 		}
 		currentEditorPanel = null;
-		currentEditorPanelModel = null;
 		return true;
 	}
 	
 	public DatabaseConnectionManager getDbConnectionManager() {
 		return dbConnectionManager;
-	}
-	
-	private boolean hasUnsavedChanges() {
-		if (currentFile == null) {
-			return project.getChildren().size() > 0;
-		}
-		
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		new ProjectXMLDAO(out, project).save();
-		BufferedReader reader;
-		try {
-			reader = new BufferedReader(new FileReader(currentFile));
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-		
-		char[] buffer = new char[out.toString().toCharArray().length];
-		
-		try {
-			reader.read(buffer, 0, out.toString().toCharArray().length);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		
-		for (int i = 0; i < out.toString().toCharArray().length && i < buffer.length; i++) {
-			if (out.toString().toCharArray()[i] != buffer[i]) {
-				logger.debug("Difference at position " + i + " character " + out.toString().toCharArray()[i] + " " + buffer[i]);
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	public void setCurrentFile(File savedOrLoadedFile) {
-		this.currentFile = savedOrLoadedFile;
-	}
-	
-	public File getCurrentFile() {
-		return currentFile;
 	}
 	
 }

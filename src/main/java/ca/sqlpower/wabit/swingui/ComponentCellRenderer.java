@@ -33,7 +33,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
@@ -56,7 +55,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TableModelListener;
@@ -90,11 +88,6 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 	 * the text field.
 	 */
 	public static final String PROPERTY_HAVING = "HAVING";
-
-	/**
-	 * This is the background colour of the headers this cell renderer returns.
-	 */
-	private static final Color HEADER_BACKGROUND = new Color(0xe8e8e8);
 
 	private final TableCellRenderer renderer;
 	private final JTableHeader tableHeader;
@@ -219,9 +212,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 
 		Component c = renderer.getTableCellRendererComponent(table, value, 
 				isSelected, hasFocus, row, column);
-		c.setBackground(HEADER_BACKGROUND);
 		if(c instanceof JLabel) {
-			((JLabel) c).setBorder(new EmptyBorder(0, 0, 0, 0));
 			removeAll();
 			int labelYPos;
 			if(!groupingEnabled) {
@@ -245,6 +236,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 				labelHeight = c.getPreferredSize().height;
 				logger.debug("Provided cell renderer for viewIndex="+column+" modelIndex="+modelIndex);
 			}
+			logger.debug("Y position is " + labelYPos);
 			sortDecorator.setTableHeaderYBounds(labelYPos, labelHeight);
 		}
 		return this;

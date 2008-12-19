@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.querypen;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
@@ -28,11 +27,8 @@ import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.UIManager;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.text.StyleConstants;
 
 import org.apache.log4j.Logger;
@@ -45,15 +41,10 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
-import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PPickPath;
-import edu.umd.cs.piccolox.event.PNotification;
-import edu.umd.cs.piccolox.event.PNotificationCenter;
-import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.nodes.PStyledText;
 
 /**
@@ -233,45 +224,14 @@ public class JoinLine extends PNode implements WabitNode {
 			updateLine();
 		}
 	};
-
-	private final QueryPen queryPen;
-
-	/**
-	 * This join icon will be displayed when the join is first created and when it is in
-	 * an equality. If the two columns in the join is not being equated on a circle with
-	 * the comparator will be show instead.
-	 * <p>
-	 * This icon is for when the join is selected.
-	 */
-	private final ImageIcon joinSelectedIcon;
-	
-	/**
-	 * This join icon will be displayed when the join is first created and when it is in
-	 * an equality. If the two columns in the join is not being equated on a circle with
-	 * the comparator will be show instead.
-	 * <p>
-	 * This icon is for when the join is selected.
-	 */
-	private final ImageIcon joinUnselectedIcon;
-
-	/**
-	 * This is the PNode wrapper to the JoinIcon. This contains the selected image.
-	 */
-	private PImage selectedImageNode;
-
-	/**
-	 * This is the PNode wrapper to the JoinIcon. This contains the unselected image.
-	 */
-	private PImage unselectedImageNode;
-
 	
 	/**
 	 * This will create a join line with properties taken from the model. The ItemPNodes passed in must
 	 * contain the left and right items respectively so the JoinLine can connect itself correctly. Failing
 	 * to pass in the correct ItemPNodes will result in an IllegalStateException.
 	 */
-	public JoinLine(QueryPen queryPen, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode, SQLJoin model) throws IllegalStateException {
-		this(queryPen, c, leftNode, rightNode);
+	public JoinLine(PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode, SQLJoin model) throws IllegalStateException {
+		this(c, leftNode, rightNode);
 		if (model.getLeftColumn() != leftNode.getItem()) {
 			throw new IllegalStateException("The left column items were not equal.");
 		}
@@ -289,9 +249,8 @@ public class JoinLine extends PNode implements WabitNode {
 	 * The parent of these nodes will be listened to for movement
 	 * to update the position of the line.
 	 */
-	public JoinLine(QueryPen queryPen, PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
+	public JoinLine(PCanvas c, UnmodifiableItemPNode leftNode, UnmodifiableItemPNode rightNode) {
 		super();
-		this.queryPen = queryPen;
 		this.canvas = c;
 		model = new SQLJoin(leftNode.getItem(), rightNode.getItem());
 
@@ -315,21 +274,11 @@ public class JoinLine extends PNode implements WabitNode {
 		
 		leftPath = new PPath();
 		addChild(leftPath);
-		leftPath.setStroke(new BasicStroke(2));
 		rightPath = new PPath();
 		addChild(rightPath);
-		rightPath.setStroke(new BasicStroke(2));
 		
-		joinSelectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/node_on.png"));
-		joinUnselectedIcon = new ImageIcon(JoinLine.class.getClassLoader().getResource("icons/node_off.png"));
-		selectedImageNode = new PImage(joinSelectedIcon.getImage());
-		unselectedImageNode = new PImage(joinUnselectedIcon.getImage());
-		addChild(selectedImageNode);
-		addChild(unselectedImageNode);
-		selectedImageNode.setVisible(false);
 		textCircle = PPath.createEllipse(0, 0, 0, 0);
 		addChild(textCircle);
-		textCircle.setStroke(new BasicStroke(2));
 		
 		oldIsJoinedTableSwapped = false;
 		viewCom = "=";
@@ -354,7 +303,6 @@ public class JoinLine extends PNode implements WabitNode {
 						model.setComparator(viewCom );
 					}
 					canvas.getLayer().removeChild(optionBox);
-					updateLine();
 				}
 			});
 			optionBox.addChild(tempText);
@@ -426,9 +374,6 @@ public class JoinLine extends PNode implements WabitNode {
 		joinCombo.addChild(outerRect);
 		joinCombo.setBounds(outerRect.getBounds());
 		outerRect.moveToBack();
-
-		PNotificationCenter.defaultCenter().addListener(this, "setFocusColour", PSelectionEventHandler.SELECTION_CHANGED_NOTIFICATION, null);
-		setFocusColour(new PNotification(null, null, null));
 	}
 
 	/**
@@ -512,22 +457,6 @@ public class JoinLine extends PNode implements WabitNode {
 				(float)(textMidY - BORDER_WIDTH),
 				(float)symbolText.getWidth() + 2 * BORDER_WIDTH,
 				(float)symbolText.getHeight() + 2 * BORDER_WIDTH);
-		
-		logger.debug("The model's comparator is \"" + model.getComparator() + "\" looking for " + SQLJoin.Comparators.EQUAL_TO.getComparator());
-		selectedImageNode.setX(midX - selectedImageNode.getWidth()/2);
-		selectedImageNode.setY(midY - selectedImageNode.getHeight()/2);
-		unselectedImageNode.setX(midX - unselectedImageNode.getWidth()/2);
-		unselectedImageNode.setY(midY - unselectedImageNode.getHeight()/2);
-		if (model.getComparator().equals(SQLJoin.Comparators.EQUAL_TO.getComparator())) {
-			textCircle.setVisible(false);
-			symbolText.setVisible(false);
-			setFocusColour(new PNotification(null, null, null));
-		} else {
-			selectedImageNode.setVisible(false);
-			unselectedImageNode.setVisible(false);
-			textCircle.setVisible(true);
-			symbolText.setVisible(true);
-		}
 		
 		Rectangle2D boundUnion = textCircle.getBounds();
 		boundUnion = boundUnion.createUnion(leftPath.getBounds());
@@ -630,26 +559,8 @@ public class JoinLine extends PNode implements WabitNode {
 		}
 		return false;
 	}
-	
-	public void setFocusColour(PNotification notification) {
-		boolean hasFocus = queryPen.getMultipleSelectEventHandler().getSelection().contains(this);
-		if (hasFocus) {
-			leftPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			rightPath.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			textCircle.setStrokePaint(QueryPen.SELECTED_CONTAINER_COLOUR);
-			unselectedImageNode.setVisible(false);
-			selectedImageNode.setVisible(true);
-		} else {
-			leftPath.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			rightPath.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			textCircle.setStrokePaint(QueryPen.UNSELECTED_CONTAINER_COLOUR);
-			unselectedImageNode.setVisible(true);
-			selectedImageNode.setVisible(false);
-		}
-	}
 
 	public void cleanup() {
 		model.removeJoinChangeListener(joinListener);
-		PNotificationCenter.defaultCenter().removeListener(this);
 	}
 }

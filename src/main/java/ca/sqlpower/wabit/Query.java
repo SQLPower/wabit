@@ -48,18 +48,5 @@ public interface Query extends WabitObject {
     void setDataSource(SPDataSource ds);
 
 	void setName(String string);
-
-	String generateQuery();
-	
-	/**
-	 * This is the data source the query is connected to.
-	 */
-	WabitDataSource getWabitDataSource();
-
-	/**
-	 * Returns true if the user edited the script by hand. False if it is generated
-	 * by parts of the query tool.
-	 */
-	public boolean isScriptModified();
     
 }

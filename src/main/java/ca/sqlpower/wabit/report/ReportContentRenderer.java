@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 
 import ca.sqlpower.swingui.DataEntryPanel;
@@ -29,31 +28,6 @@ import ca.sqlpower.wabit.WabitObject;
  * Interface for providers of rendered (absolute layout) content.
  */
 public interface ReportContentRenderer extends WabitObject {
-	
-	public enum BackgroundColours {
-		LIGHT_PINK(new Color(0xffcccc)),
-		ORANGE(new Color(0xffcc99)),
-		YELLOW(new Color(0xffffcc)),
-		GREEN(new Color(0xccffcc)), 
-		LIGHT_BLUE(new Color(0xccffff)), 
-		PURPLE(new Color(0xccccff)),
-		BLUE(new Color(0x99ccff)),
-		PINK(new Color(0xffccff)),
-		DARK_GREY(new Color(0xcccccc)),
-		GREY(new Color(0xdddddd)),
-		LIGHT_GREY(new Color(0xeeeeee)),
-		WHITE(new Color(0xffffff));
-		
-		private final Color colour;
-
-		private BackgroundColours(Color colour) {
-			this.colour = colour;
-		}
-		
-		public Color getColour() {
-			return colour;
-		}
-	}
 
 	/**
 	 * Renders as much report content as will fit within the bounds of the given
@@ -114,6 +88,4 @@ public interface ReportContentRenderer extends WabitObject {
      * will be removed soon.
      */
     DataEntryPanel getPropertiesPanel();
-
-	Color getBackgroundColour();
 }

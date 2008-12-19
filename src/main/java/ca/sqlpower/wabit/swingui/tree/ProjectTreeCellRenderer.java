@@ -27,7 +27,6 @@ import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
-import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -39,7 +38,6 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon PAGE_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/page_white.png"));
     public static final Icon LAYOUT_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/layout.png"));
     public static final Icon BOX_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/shape_square.png"));
-    public static final Icon QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_query.png"));
 
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
@@ -64,8 +62,6 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
                 ContentBox cb = (ContentBox) wo;
                 r.setIcon(BOX_ICON);
                 r.setText("Content ("+cb.getX()+","+cb.getY()+" "+cb.getWidth()+"x"+cb.getHeight()+")");
-            } else if (wo instanceof Query) {
-            	r.setIcon(QUERY_ICON);
             }
 
         }

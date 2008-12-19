@@ -295,7 +295,7 @@ public class Page extends AbstractWabitObject {
         if (addme.getParent() != null) {
             throw new IllegalStateException("That guide already belongs to a different page");
         }
-        int index = guides.size();
+        int index = guides.size() + childPositionOffset(Guide.class);
         addme.setParent(this);
         guides.add(addme);
         fireChildAdded(Guide.class, addme, index);
@@ -392,14 +392,8 @@ public class Page extends AbstractWabitObject {
      * @param guide
      * @return
      */
-    public boolean removeGuide(Guide removeme) {
-    	int index = guides.indexOf(removeme);
-    	if(guides.remove(removeme)) {
-    		fireChildRemoved(Guide.class, removeme, index);
-    		return true;
-    	}
-    	return false;
-    	
+    public boolean removeGuide(Guide guide) {
+    	return guides.remove(guide);
     }
 
     /**

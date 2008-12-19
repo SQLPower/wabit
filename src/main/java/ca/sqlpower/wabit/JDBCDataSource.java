@@ -57,17 +57,4 @@ public class JDBCDataSource extends AbstractWabitObject implements WabitDataSour
 	public SPDataSource getSPDataSource() {
 		return dataSource;
 	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof JDBCDataSource) {
-			return this.dataSource.equals(((JDBCDataSource) obj).getSPDataSource());
-		}
-		return false;
-	}
-	
-	@Override
-	public int hashCode() {
-		return this.dataSource.hashCode();
-	}
 }
