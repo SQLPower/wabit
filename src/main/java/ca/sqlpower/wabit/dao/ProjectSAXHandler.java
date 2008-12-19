@@ -54,6 +54,7 @@ import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.SQLObjectItem;
+import ca.sqlpower.wabit.query.StringCountItem;
 import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
@@ -79,6 +80,8 @@ import com.sun.mail.util.BASE64DecoderStream;
 public class ProjectSAXHandler extends DefaultHandler {
 	
 	private static final Logger logger = Logger.getLogger(ProjectSAXHandler.class);
+
+	private static final String COUNT_STAR = "COUNT(*)";
 	
 	/**
 	 * This list will store all of the sessions loaded by this SAX handler.
@@ -266,7 +269,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         		String uuid = attributes.getValue("id");
         		checkMandatory("name", itemName);
         		checkMandatory("id", uuid);
-        		Item item = new StringItem(itemName, uuid);
+        		Item item = (itemName.equals(COUNT_STAR)) ? new StringCountItem(query) : new StringItem(itemName, uuid);
             	for (int i = 0; i < attributes.getLength(); i++) {
             		String aname = attributes.getQName(i);
             		String aval = attributes.getValue(i);
