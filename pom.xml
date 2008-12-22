@@ -14,7 +14,7 @@
 	<groupId>ca.sqlpower</groupId>
 	<artifactId>wabit</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.3</version>
+	<version>0.9.4</version>
 	<name>wabit</name>
 	<url>http://code.google.com/p/wabit</url>
 	<build>
