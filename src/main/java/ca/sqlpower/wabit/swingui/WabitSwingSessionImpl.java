@@ -20,9 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
@@ -51,7 +48,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
@@ -68,7 +64,6 @@ import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
-import ca.sqlpower.util.BrowserUtil;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
@@ -87,9 +82,6 @@ import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
 
 
 /**
@@ -222,25 +214,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
     	projectTree.setEditable(true);
 
-    	DefaultFormBuilder treeBuilder = new DefaultFormBuilder(new FormLayout("fill:pref:grow", "fill:pref:grow, pref"));
-    	treeBuilder.add(projectTree);
-    	treeBuilder.nextLine();
-    	JLabel sqlpLabel = new JLabel(new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/sqlp-72.png")));
-    	sqlpLabel.setBackground(Color.WHITE);
-    	sqlpLabel.setOpaque(true);
-    	sqlpLabel.setHorizontalAlignment(SwingConstants.LEFT);
-    	sqlpLabel.addMouseListener(new MouseAdapter() {
-    		@Override
-    		public void mouseReleased(MouseEvent e) {
-    			try {
-    				BrowserUtil.launch(SPSUtils.SQLP_URL);
-    			} catch (IOException e1) {
-    				throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
-    			}
-    		}
-		});
-		treeBuilder.add(sqlpLabel);
-        wabitPane.add(new JScrollPane(treeBuilder.getPanel()), JSplitPane.LEFT);
+        wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);
 		setEditorPanel(project);
     	
 		//prefs
