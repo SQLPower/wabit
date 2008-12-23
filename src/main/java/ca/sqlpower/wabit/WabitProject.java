@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.event.UndoableEditListener;
+
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -63,6 +65,14 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
      * The report layouts in this project.
      */
     private final List<Layout> layouts = new ArrayList<Layout>();
+    
+    /**
+     * TODO: These listeners are never fired at current as they are only used for
+     * DS Type undo events in the library currently. These listeners are unused
+     * until the project supports changing DS Types or other undoable edits are
+     * needed for the DS Collection.
+     */
+    private final List<UndoableEditListener> dsCollectionUndoListeners = new ArrayList<UndoableEditListener>();
 
     public WabitProject() {
     	listeners = new ArrayList<DatabaseListChangeListener>();
@@ -299,5 +309,13 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 	public void write(File location) throws IOException {
 		throw new UnsupportedOperationException("We currently do not support this");
 		
+	}
+
+	public void addUndoableEditListener(UndoableEditListener l) {
+		dsCollectionUndoListeners.add(l);
+	}
+
+	public void removeUndoableEditListener(UndoableEditListener l) {
+		dsCollectionUndoListeners.remove(l);
 	}
 }
