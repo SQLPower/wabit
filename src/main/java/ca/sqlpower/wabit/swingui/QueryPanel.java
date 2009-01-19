@@ -20,8 +20,8 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
@@ -29,6 +29,8 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -37,7 +39,6 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
-import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -58,6 +59,7 @@ import javax.swing.ListModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.JTableHeader;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
@@ -73,6 +75,8 @@ import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.swingui.event.TaskTerminationEvent;
+import ca.sqlpower.swingui.event.TaskTerminationListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
@@ -95,6 +99,14 @@ public class QueryPanel implements DataEntryPanel {
 	private static final Logger logger = Logger.getLogger(QueryPanel.class);
 	
 	private static final String SQL_TEXT_TAB_HEADING = "SQL";
+	
+	private static final ImageIcon THROBBER = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/throbber.gif"));
+	
+	/**
+	 * The background colour given to the JTables when they are being updated. This will
+	 * give the users a more noticeable change when there is an update occurring.
+	 */
+	private static final Color REFRESH_GREY = new Color(0xeeeeee);
     
 	/**
 	 * This is a listModel that just returns the row Number for the rowHeaderRender
@@ -124,7 +136,7 @@ public class QueryPanel implements DataEntryPanel {
 	 * This is the panel in the top left of the results table. It will
 	 * give row headers for the group by and having fields.
 	 */
-	private JPanel cornerPanel;
+	private final JPanel cornerPanel;
 	
 	/**
 	 * Stores the parts of the query.
@@ -203,10 +215,28 @@ public class QueryPanel implements DataEntryPanel {
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
 		queryPen.setZoom(queryCache.getZoomLevel());
 		queuedQueryCache = new ArrayList<QueryCache>();
+		reportComboBox = queryUIComponents.getDatabaseComboBox();
+		
+		cornerPanel = new JPanel();
+		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref", "pref, pref, pref"), cornerPanel);
+		groupingLabel.setFont(new JTableHeader().getFont());
+		
+		//Resize grouping and having labels to the height of a combo box to be spaced properly
+		//beside the headers in the results table. This is done by a listener as the components
+		//aren't realized until they are displayed.
+		reportComboBox.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				groupingLabel.setPreferredSize(new Dimension((int) groupingLabel.getPreferredSize().getWidth(), reportComboBox.getHeight()));
+				havingLabel.setPreferredSize(new Dimension((int) havingLabel.getPreferredSize().getWidth(), reportComboBox.getHeight()));
+			}
+		});
+		havingLabel.setFont(new JTableHeader().getFont());
+		builder.append(groupingLabel);
+		builder.append(havingLabel);
+		builder.append(columnNameLabel);
 		
 		dragTree = new JTree();
 		rootNode = new SQLObjectRoot();
-		reportComboBox = queryUIComponents.getDatabaseComboBox();
 		reportComboBox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent event) {
 				try {
@@ -293,21 +323,13 @@ public class QueryPanel implements DataEntryPanel {
 				
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
-				GridLayout layout = new GridLayout(0,1);
-				cornerPanel = new JPanel(layout);
-				if(queryPenAndTextTabPane.getSelectedIndex() == 0) {
-					groupingLabel.setFont(table.getTableHeader().getFont());
-					havingLabel.setFont(table.getTableHeader().getFont());
-					havingLabel.setVerticalAlignment(JLabel.BOTTOM);
-					cornerPanel.add(groupingLabel);
-					cornerPanel.add(havingLabel);
-				}
-				cornerPanel.add(columnNameLabel);
 				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanel);
 				addGroupingTableHeaders();
 				queryController.listenToCellRenderer(renderer);
 				
 				QueryPanel.this.session.getUserInformationLogger().info(queryUIComponents.getLogTextArea().getText());
+				
+				columnNameLabel.setIcon(null);
 			}
 		});
     	
@@ -549,7 +571,10 @@ public class QueryPanel implements DataEntryPanel {
 	public synchronized void executeQueryInCache() {
 		queuedQueryCache.add(new QueryCache(queryCache));
 		queryUIComponents.executeQuery(queryCache.generateQuery());
-		
+		columnNameLabel.setIcon(THROBBER);
+		for (JTable table : queryUIComponents.getResultTables()) {
+			table.setBackground(REFRESH_GREY);
+		}
 	}
 	
 	public JComponent getPanel() {
