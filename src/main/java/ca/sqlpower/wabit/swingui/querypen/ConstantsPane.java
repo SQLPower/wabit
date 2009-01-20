@@ -401,7 +401,7 @@ public class ConstantsPane extends PNode implements WabitNode {
 	public void cleanup() {
 		model.removePropertyChangeListener(itemChangedListener);
 		for (Object o : getAllNodes()) {
-			if (o instanceof WabitNode) {
+			if (o instanceof WabitNode && o != this) {
 				((WabitNode)o).cleanup();
 			}
 		}

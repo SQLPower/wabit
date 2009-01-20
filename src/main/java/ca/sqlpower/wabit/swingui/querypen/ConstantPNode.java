@@ -119,7 +119,8 @@ public class ConstantPNode extends PNode implements WabitNode {
 					selectionCheckbox.setSelected(false);
 			}
 			
-		}};
+		}
+	};
 
 	public ConstantPNode(Item source, QueryPen mouseStates, PCanvas canvas) {
 		this.item = source;
@@ -261,6 +262,7 @@ public class ConstantPNode extends PNode implements WabitNode {
 
 	public void cleanup() {
 		item.removePropertyChangeListener(itemChangeListener);
+		item.removePropertyChangeListener(modelChangeListener);
 	}
 
 	public WabitObject getModel() {

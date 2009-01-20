@@ -199,6 +199,25 @@ public class ContainerPane extends PNode implements WabitNode {
 		}
 	};
 	
+	/**
+	 * This listener is added to the Container to listen for changes to the model. This must be removed
+	 * for the component to be disposed properly.
+	 */
+	private final PropertyChangeListener containerChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
+				addItem((Item)evt.getNewValue());
+				logger.debug("Added " + ((Item)evt.getNewValue()).getName() + " to the container pane.");
+			} else if (evt.getPropertyName().equals(Container.CONTAINER_ITEM_REMOVED)) {
+				removeItem((Item)evt.getOldValue());
+			} else if (evt.getPropertyName().equals(Container.CONTAINTER_ALIAS_CHANGED)) {
+				for (PropertyChangeListener l : queryChangeListeners) {
+					l.propertyChange(evt);
+				}
+			}
+		}
+	};
+	
 	private EditablePStyledText modelNameText;
 
 	/**
@@ -232,20 +251,7 @@ public class ContainerPane extends PNode implements WabitNode {
 	public ContainerPane(QueryPen pen, PCanvas canvas, Container newModel) {
 		model = newModel;
 		logger.debug("Container alias is " + model.getAlias());
-		model.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
-					addItem((Item)evt.getNewValue());
-					logger.debug("Added " + ((Item)evt.getNewValue()).getName() + " to the container pane.");
-				} else if (evt.getPropertyName().equals(Container.CONTAINER_ITEM_REMOVED)) {
-					removeItem((Item)evt.getOldValue());
-				} else if (evt.getPropertyName().equals(Container.CONTAINTER_ALIAS_CHANGED)) {
-					for (PropertyChangeListener l : queryChangeListeners) {
-						l.propertyChange(evt);
-					}
-				}
-			}
-		});
+		model.addPropertyChangeListener(containerChangeListener);
 		queryChangeListeners = new ArrayList<PropertyChangeListener>();
 		this.queryPen = pen;
 		this.canvas = canvas;
@@ -540,9 +546,9 @@ public class ContainerPane extends PNode implements WabitNode {
 	}
 
 	public void cleanup() {
-		model.removePropertyChangeListener(itemChangeListener);
+		model.removePropertyChangeListener(containerChangeListener);
 		for (Object o : getAllNodes()) {
-			if (o instanceof WabitNode) {
+			if (o instanceof WabitNode && o != this) {
 				((WabitNode)o).cleanup();
 			}
 		}

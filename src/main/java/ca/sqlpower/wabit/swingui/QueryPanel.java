@@ -75,8 +75,6 @@ import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.swingui.event.TaskTerminationEvent;
-import ca.sqlpower.swingui.event.TaskTerminationListener;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
@@ -613,15 +611,23 @@ public class QueryPanel implements DataEntryPanel {
 	}
 	
 	/**
-	 * Disconnects all listeners in the query cache.
+	 * Disconnects all listeners in the query cache. Also closes any open database
+	 * connections.
 	 */
 	private void disconnect() {
 		queryController.disconnect();
 		queryCache.removePropertyChangeListener(queryCacheListener);
 		logger.debug("Removed the query panel change listener on the query cache");
+		queryUIComponents.closeConMap();
+		queryUIComponents.disconnectListeners();
+		try {
+			for (int i = rootNode.getChildren().size() - 1; i >= 0; i--) {
+				rootNode.removeChild(i);
+			}
+		} catch (ArchitectException e) {
+			throw new RuntimeException(e);
+		}
+		queryPen.cleanup();
 	}
-	
-	public QueryCache getQueryCache() {
-		return queryCache;
-	}
+
 }

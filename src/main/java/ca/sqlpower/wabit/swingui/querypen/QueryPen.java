@@ -450,6 +450,8 @@ public class QueryPen implements MouseState, WabitNode {
 
 	private final WabitSwingSession session;
 
+	private CreateJoinEventHandler joinCreationListener;
+
 	public JPanel createQueryPen() {
         panel.setLayout(new BorderLayout());
         panel.add(getScrollPane(), BorderLayout.CENTER);
@@ -593,9 +595,9 @@ public class QueryPen implements MouseState, WabitNode {
                 , JOIN_ACTION);
         canvas.getActionMap().put(JOIN_ACTION, joinAction);
         
-        CreateJoinEventHandler createJoinListener = new CreateJoinEventHandler(this, joinLayer, canvas, cursorManager);
-		canvas.addInputEventListener(createJoinListener);
-		createJoinListener.addCreateJoinListener(queryChangeListener);
+        joinCreationListener = new CreateJoinEventHandler(this, joinLayer, canvas, cursorManager);
+		canvas.addInputEventListener(joinCreationListener);
+		joinCreationListener.addCreateJoinListener(queryChangeListener);
         
         new DropTarget(canvas, new QueryPenDropTargetListener(this));
         List<PLayer> layerList = new ArrayList<PLayer>();
