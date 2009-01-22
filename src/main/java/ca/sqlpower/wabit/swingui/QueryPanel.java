@@ -53,6 +53,7 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListModel;
@@ -80,6 +81,7 @@ import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
@@ -99,6 +101,8 @@ public class QueryPanel implements DataEntryPanel {
 	private static final String SQL_TEXT_TAB_HEADING = "SQL";
 	
 	private static final ImageIcon THROBBER = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/throbber.gif"));
+	
+	private static final ImageIcon ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/swingui/query/search.png"));
 	
 	/**
 	 * The background colour given to the JTables when they are being updated. This will
@@ -200,6 +204,11 @@ public class QueryPanel implements DataEntryPanel {
 	 * This is the panel that holds the text editor for the query.
 	 */
 	private JPanel queryToolPanel;
+
+	/**
+	 * The field that will search for a given string across all result sets simultaneously.
+	 */
+	private JTextField searchField;
 	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
@@ -209,7 +218,7 @@ public class QueryPanel implements DataEntryPanel {
 		queryPen = new QueryPen(session, this, queryCache);
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
 		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane);
-		queryUIComponents.enableMultipleQueries(false);
+		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
 		queryPen.setZoom(queryCache.getZoomLevel());
 		queuedQueryCache = new ArrayList<QueryCache>();
@@ -328,6 +337,8 @@ public class QueryPanel implements DataEntryPanel {
 				QueryPanel.this.session.getUserInformationLogger().info(queryUIComponents.getLogTextArea().getText());
 				
 				columnNameLabel.setIcon(null);
+				
+				searchField.setDocument(queryUIComponents.getSearchDocument());
 			}
 		});
     	
@@ -339,7 +350,7 @@ public class QueryPanel implements DataEntryPanel {
 
 	
 	private void buildUI() {
-		JPanel resultPanel = queryUIComponents.getFirstResultPanel();
+		JTabbedPane resultPane = queryUIComponents.getResultTabPane();
 
 		queryToolPanel = new JPanel(new BorderLayout());
 		JToolBar queryToolBar = new JToolBar();
@@ -447,7 +458,11 @@ public class QueryPanel implements DataEntryPanel {
     			,"pref, pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText());
-    	southPanelBuilder.append(queryUIComponents.getFilterAndLabelPanel());
+    	JPanel searchPanel = new JPanel(new BorderLayout());
+    	searchPanel.add(new JLabel(ICON), BorderLayout.WEST);
+    	searchField = new JTextField(queryUIComponents.getSearchDocument(), null, 0);
+		searchPanel.add(searchField, BorderLayout.CENTER);
+    	southPanelBuilder.append(searchPanel);
     	southPanelBuilder.append(new JLabel("Row Limit"));
     	final JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
     	rowLimitSpinner.addChangeListener(new ChangeListener(){
@@ -461,7 +476,7 @@ public class QueryPanel implements DataEntryPanel {
     	southPanelBuilder.nextLine();
     	southPanelBuilder.append(groupingCheckBox);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(resultPanel, 9);
+    	southPanelBuilder.append(resultPane, 9);
     	
     	JPanel rightTreePanel = new JPanel(new BorderLayout());
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
