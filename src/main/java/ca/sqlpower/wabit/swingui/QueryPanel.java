@@ -334,8 +334,6 @@ public class QueryPanel implements DataEntryPanel {
 				addGroupingTableHeaders();
 				queryController.listenToCellRenderer(renderer);
 				
-				QueryPanel.this.session.getUserInformationLogger().info(queryUIComponents.getLogTextArea().getText());
-				
 				columnNameLabel.setIcon(null);
 				
 				searchField.setDocument(queryUIComponents.getSearchDocument());
