@@ -342,8 +342,6 @@ public class QueryPanel implements DataEntryPanel {
     	
 		buildUI();
 
-		executeQueryInCache();
-		
 	}
 
 	
@@ -492,7 +490,7 @@ public class QueryPanel implements DataEntryPanel {
     	JPanel southPanel = southPanelBuilder.getPanel();
 		mainSplitPane.add(southPanel, JSplitPane.BOTTOM);
 		southPanel.setMinimumSize(new Dimension(0, 0));
-}
+	}
 	
 	/**
 	 * This will add a {@link ComponentCellRenderer} to the table headers
