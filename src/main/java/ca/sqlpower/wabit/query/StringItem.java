@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.query;
 
 import java.util.List;
 
-import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
 
@@ -29,7 +28,7 @@ import ca.sqlpower.wabit.WabitObject;
  * This class stores generic strings, such as functions, constants and any other
  * string that can be included in a SQL statement, but is not a column.
  */
-public class StringItem extends AbstractWabitObject implements Item {
+public class StringItem extends AbstractItem {
 	
 	private String alias;
 	private boolean selected;

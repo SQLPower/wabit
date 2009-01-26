@@ -28,7 +28,7 @@ import ca.sqlpower.wabit.WabitObject;
 /**
  * This container item wraps a SQLColumn for use in a ContainerPane.
  */
-public class SQLObjectItem extends AbstractWabitObject implements Item {
+public class SQLObjectItem extends AbstractItem {
 	
 	private SQLObject sqlObject;
 	

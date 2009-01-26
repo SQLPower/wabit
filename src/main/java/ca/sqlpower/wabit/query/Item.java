@@ -71,4 +71,8 @@ public interface Item extends WabitObject {
 	
 	boolean isSelected();
 	
+	Integer getColumnWidth();
+	
+	void setColumnWidth(Integer width);
+	
 }

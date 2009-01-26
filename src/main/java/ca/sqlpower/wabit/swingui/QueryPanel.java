@@ -34,6 +34,7 @@ import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -61,6 +62,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
@@ -103,6 +106,13 @@ public class QueryPanel implements DataEntryPanel {
 	private static final ImageIcon THROBBER = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/throbber.gif"));
 	
 	private static final ImageIcon ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/swingui/query/search.png"));
+	
+	/**
+	 * This is the property name for changes to the width on a {@link TableColumn}.
+	 * The constant COLUMN_WIDTH_PROPERTY is not the property that will be fired
+	 * on a column width change.
+	 */
+	private static final String TABLE_COLUMN_WIDTH = "preferredWidth";
 	
 	/**
 	 * The background colour given to the JTables when they are being updated. This will
@@ -210,6 +220,37 @@ public class QueryPanel implements DataEntryPanel {
 	 */
 	private JTextField searchField;
 	
+	/**
+	 * This is the current column model of the JTable being displayed in the results.
+	 * The column model will tell the query cache the size changes of each column
+	 * to keep them the same size.
+	 */
+	TableColumnModel tableColumnModel;
+	
+	/**
+	 * The listener that will update the column sizes in the model. This will
+	 * allow changing the query while keeping the sizes of the remaining columns
+	 * the same.
+	 */
+	private final PropertyChangeListener resizingColumnChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals(TABLE_COLUMN_WIDTH) && !((Integer) evt.getNewValue()).equals(evt.getOldValue())) {
+				Enumeration<TableColumn> columns = tableColumnModel.getColumns();
+				int i = 0;
+				while (columns.hasMoreElements()) {
+					if (columns.nextElement() == evt.getSource()) {
+						break;
+					}
+					i++;
+				}
+				logger.debug("Received column width change on column " + i + " the new width is " + (Integer) evt.getNewValue());
+				Item resizedItem = queryCache.getSelectedColumns().get(i);
+				resizedItem.setColumnWidth((Integer) evt.getNewValue());
+				
+			}
+		}
+	};
+	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
 		this.session = session;
@@ -308,10 +349,16 @@ public class QueryPanel implements DataEntryPanel {
 		
     	queryUIComponents.addTableChangeListener(new TableChangeListener() {
 			public void tableRemoved(TableChangeEvent e) {
-				// Do Nothing
+				if (tableColumnModel != null) {
+					Enumeration<TableColumn> enumeration = tableColumnModel.getColumns();
+					while (enumeration.hasMoreElements()) {
+						enumeration.nextElement().removePropertyChangeListener(resizingColumnChangeListener);
+					}
+				}
 			}
 		
 			public void tableAdded(TableChangeEvent e) {
+				
 				logger.debug("Table added.");
 				queryController.unlistenToCellRenderer();
 				TableModelSortDecorator sortDecorator = null;
@@ -332,6 +379,13 @@ public class QueryPanel implements DataEntryPanel {
 				
 				((JScrollPane)table.getParent().getParent()).setCorner(JScrollPane.UPPER_LEFT_CORNER, cornerPanel);
 				addGroupingTableHeaders();
+				
+				tableColumnModel = e.getChangedTable().getColumnModel();
+				Enumeration<TableColumn> enumeration = tableColumnModel.getColumns();
+				while (enumeration.hasMoreElements()) {
+					enumeration.nextElement().addPropertyChangeListener(resizingColumnChangeListener);
+				}
+				
 				queryController.listenToCellRenderer(renderer);
 				
 				columnNameLabel.setIcon(null);
@@ -569,6 +623,13 @@ public class QueryPanel implements DataEntryPanel {
 				}
 				renderPanel.setSortingStatus(columnSortMap);
 				
+				for (int i = 0; i < t.getColumnCount(); i++) {
+					Integer width = cache.getSelectedColumns().get(i).getColumnWidth();
+					logger.debug("Width in cache for column " + i + " is " + width);
+					if (width != null) {
+						t.getColumnModel().getColumn(i).setPreferredWidth(width);
+					}
+				}
 			}
 		}
 	}
