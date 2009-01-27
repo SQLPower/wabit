@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,6 +41,13 @@ public class JDBCDataSource extends AbstractWabitObject implements WabitDataSour
 	public JDBCDataSource(SPDataSource ds) {
 	    this.dataSource = ds;
 	    setName(ds.getName());
+	    ds.addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName().equals("name")) {
+					setName(dataSource.getName());
+				}
+			}
+		});
 	    // TODO listen for changes in DS and rebroadcast the appropriate ones
 	}
 	
