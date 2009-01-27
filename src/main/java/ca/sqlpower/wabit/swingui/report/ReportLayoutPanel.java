@@ -70,7 +70,6 @@ import javax.swing.event.ChangeListener;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.CursorManager;
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -79,6 +78,7 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
+import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
 import ca.sqlpower.wabit.swingui.action.ForumAction;
@@ -88,7 +88,7 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
-public class ReportLayoutPanel implements DataEntryPanel, MouseState {
+public class ReportLayoutPanel implements WabitPanel, MouseState {
 
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
     public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/text_add.png"));		
@@ -460,5 +460,12 @@ public class ReportLayoutPanel implements DataEntryPanel, MouseState {
 		return mainSplitPane;
 	}
 
+	public void maximizeEditor() {
+		if (mainSplitPane.getDividerLocation() == mainSplitPane.getMaximumDividerLocation()) {
+			mainSplitPane.setDividerLocation(mainSplitPane.getLastDividerLocation());
+		} else {
+			mainSplitPane.setDividerLocation(mainSplitPane.getMaximumDividerLocation());
+		}
+	}
 	
 }

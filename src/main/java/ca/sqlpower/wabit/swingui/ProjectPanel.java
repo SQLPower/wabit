@@ -67,7 +67,7 @@ import com.jgoodies.forms.layout.FormLayout;
  * This panel will display information about the project. It will
  * also allow the user to add and remove data sources.
  */
-public class ProjectPanel implements DataEntryPanel {
+public class ProjectPanel implements WabitPanel {
 	
 	private static final ImageIcon SELECT_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_selected.png"));
 	private static final ImageIcon OVER_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
@@ -314,6 +314,10 @@ public class ProjectPanel implements DataEntryPanel {
 
 	public boolean hasUnsavedChanges() {
 		return false;
+	}
+
+	public void maximizeEditor() {
+		//Do nothing, the project panel is always maximized.
 	}
 
 }

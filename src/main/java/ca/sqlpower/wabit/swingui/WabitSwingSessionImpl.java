@@ -20,6 +20,9 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
@@ -36,7 +39,9 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -48,6 +53,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
@@ -56,7 +62,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
@@ -149,7 +154,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * This is the current panel to the right of the JTree showing the parts of the 
 	 * project. This will allow editing the currently selected element in the JTree.
 	 */
-	private DataEntryPanel currentEditorPanel;
+	private WabitPanel currentEditorPanel;
 
 	/**
 	 * This is the model of the current panel.
@@ -245,9 +250,22 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.add(new SaveAsProjectAction(this));
 		fileMenu.addSeparator();
 		fileMenu.add(new ImportProjectAction(this));
+		
+		JMenu viewMenu = new JMenu("View");
+		viewMenu.setMnemonic('v');
+		menuBar.add(viewMenu);
+		JMenuItem maxEditor = new JMenuItem(new AbstractAction("Maximize Editor") {
+			public void actionPerformed(ActionEvent e) {
+				if (currentEditorPanel != null) {
+					currentEditorPanel.maximizeEditor();
+				}
+			}
+		});
+		maxEditor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK));
+		viewMenu.add(maxEditor);
         
 		JMenu windowMenu = new JMenu("Window");
-		fileMenu.setMnemonic('w');
+		windowMenu.setMnemonic('w');
 		menuBar.add(windowMenu);
 		JTextArea logTextArea = new JTextArea();
 		DocumentAppender docAppender = new DocumentAppender(logTextArea.getDocument());

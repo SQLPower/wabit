@@ -78,7 +78,6 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
@@ -97,7 +96,7 @@ import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
-public class QueryPanel implements DataEntryPanel {
+public class QueryPanel implements WabitPanel {
 	
 	private static final Logger logger = Logger.getLogger(QueryPanel.class);
 	
@@ -119,6 +118,11 @@ public class QueryPanel implements DataEntryPanel {
 	 * give the users a more noticeable change when there is an update occurring.
 	 */
 	private static final Color REFRESH_GREY = new Color(0xeeeeee);
+
+	/**
+	 * The action for expanding and un-expanding the query and text panel quickly.
+	 */
+	private static final Object EXPAND_ACTION = "expandAction";
     
 	/**
 	 * This is a listModel that just returns the row Number for the rowHeaderRender
@@ -700,6 +704,17 @@ public class QueryPanel implements DataEntryPanel {
 			throw new RuntimeException(e);
 		}
 		queryPen.cleanup();
+	}
+
+	public void maximizeEditor() {
+		if (mainSplitPane.getDividerLocation() == mainSplitPane.getMaximumDividerLocation() 
+				&& rightTopPane.getDividerLocation() == rightTopPane.getMaximumDividerLocation()) {
+			mainSplitPane.setDividerLocation(mainSplitPane.getLastDividerLocation());
+			rightTopPane.setDividerLocation(rightTopPane.getLastDividerLocation());
+		} else {
+			mainSplitPane.setDividerLocation(mainSplitPane.getMaximumDividerLocation());
+			rightTopPane.setDividerLocation(rightTopPane.getMaximumDividerLocation());
+		}
 	}
 
 }
