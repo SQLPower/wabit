@@ -276,7 +276,7 @@ public class ProjectXMLDAOTest extends TestCase {
 			assertPropertiesEqual(oldQuery, newQuery);
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());
 			for (int j = 0; j < oldQuery.getConstantsContainer().getItems().size(); j++) {
-				assertPropertiesEqual(oldQuery.getConstantsContainer().getItems().get(j), newQuery.getConstantsContainer().getItems().get(j), "item");
+				assertPropertiesEqual(oldQuery.getConstantsContainer().getItems().get(j), newQuery.getConstantsContainer().getItems().get(j), "item", "columnWidth");
 			}
 			assertEquals(oldQuery.getFromTableList(), newQuery.getFromTableList());
 			for (int j = 0; j < oldQuery.getFromTableList().size(); j++) {
