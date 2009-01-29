@@ -21,8 +21,7 @@ package ca.sqlpower.wabit.query;
 
 import java.util.List;
 
-import ca.sqlpower.architect.SQLObject;
-import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.wabit.WabitObject;
 
 /**

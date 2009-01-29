@@ -27,11 +27,11 @@ import java.util.prefs.Preferences;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.ArchitectRuntimeException;
 import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 
 /**
  * A placeholder for all state and behaviour that is shared among
@@ -81,9 +81,9 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *            when its last session closes.
 	 * @throws IOException
 	 *             If the startup configuration files can't be read
-	 * @throws ArchitectException If the pl.ini is invalid.
+	 * @throws SQLObjectException If the pl.ini is invalid.
 	 */
-	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses) throws IOException, ArchitectException {
+	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses) throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
 		
         setPlDotIniPath(prefs.get(PREFS_PL_INI_PATH, null));
@@ -117,7 +117,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
                 logger.debug("Reading PL.INI defaults");
                 dataSources.read(getClass().getClassLoader().getResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
             } catch (IOException e) {
-                throw new ArchitectRuntimeException(new ArchitectException("Failed to read system resource default_database_types.ini",e));
+                throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read system resource default_database_types.ini",e));
             }
             try {
                 if (dataSources != null) {
@@ -125,7 +125,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
                     dataSources.read(new File(path));
                 }
             } catch (IOException e) {
-                throw new ArchitectRuntimeException(new ArchitectException("Failed to read pl.ini at \""+getPlDotIniPath()+"\"", e));
+                throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read pl.ini at \""+getPlDotIniPath()+"\"", e));
             }
         }
         return dataSources;

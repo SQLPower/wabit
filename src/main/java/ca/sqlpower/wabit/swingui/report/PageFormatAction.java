@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.event.ActionEvent;
 import java.awt.print.PageFormat;
-import java.awt.print.Paper;
 import java.awt.print.PrinterJob;
 
 import javax.swing.AbstractAction;
@@ -29,7 +28,6 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 /**
  * An action that invokes a native page format dialog which allows the

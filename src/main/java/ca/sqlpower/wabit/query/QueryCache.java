@@ -36,12 +36,12 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.SQLTable;
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.sqlobject.SQLTable;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;

@@ -24,7 +24,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.WabitProject;
 
 /**

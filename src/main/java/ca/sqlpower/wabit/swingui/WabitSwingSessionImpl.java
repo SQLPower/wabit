@@ -41,7 +41,6 @@ import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -61,7 +60,7 @@ import javax.swing.border.EmptyBorder;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
@@ -203,9 +202,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	/**
 	 *  Builds the GUI
-	 * @throws ArchitectException 
+	 * @throws SQLObjectException 
 	 */
-    public void buildUI() throws ArchitectException {
+    public void buildUI() throws SQLObjectException {
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());

@@ -69,15 +69,15 @@ import javax.swing.tree.TreePath;
 import org.apache.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
-import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLDatabase;
-import ca.sqlpower.architect.SQLObject;
-import ca.sqlpower.architect.SQLObjectRoot;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObject;
+import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLObjectRoot;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
@@ -302,7 +302,7 @@ public class QueryPanel implements WabitPanel {
 						dragTree.setModel(tempTreeModel);
 						dragTree.setVisible(true);
 					} 
-				} catch (ArchitectException e) {
+				} catch (SQLObjectException e) {
 					throw new RuntimeException(
 							"Could not add DataSource to rootNode", e);
 				}
@@ -700,7 +700,7 @@ public class QueryPanel implements WabitPanel {
 			for (int i = rootNode.getChildren().size() - 1; i >= 0; i--) {
 				rootNode.removeChild(i);
 			}
-		} catch (ArchitectException e) {
+		} catch (SQLObjectException e) {
 			throw new RuntimeException(e);
 		}
 		queryPen.cleanup();

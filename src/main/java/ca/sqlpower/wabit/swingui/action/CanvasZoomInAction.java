@@ -26,7 +26,6 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import ca.sqlpower.validation.swingui.StatusComponent;
-
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 

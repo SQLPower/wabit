@@ -66,14 +66,14 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.architect.ArchitectException;
-import ca.sqlpower.architect.SQLObject;
-import ca.sqlpower.architect.SQLRelationship;
-import ca.sqlpower.architect.SQLTable;
-import ca.sqlpower.architect.SQLRelationship.ColumnMapping;
 import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.sql.jdbcwrapper.DatabaseMetaDataDecorator;
 import ca.sqlpower.sql.jdbcwrapper.DatabaseMetaDataDecorator.CacheType;
+import ca.sqlpower.sqlobject.SQLObject;
+import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLRelationship;
+import ca.sqlpower.sqlobject.SQLTable;
+import ca.sqlpower.sqlobject.SQLRelationship.ColumnMapping;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
@@ -277,7 +277,7 @@ public class QueryPen implements MouseState, WabitNode {
     								}
     							}
     						}
-    					} catch (ArchitectException e) {
+    					} catch (SQLObjectException e) {
     						throw new RuntimeException(e);
     					}
     

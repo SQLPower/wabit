@@ -30,7 +30,7 @@ import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
-import ca.sqlpower.architect.ArchitectException;
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -85,7 +85,7 @@ public class LoadProjectsAction extends AbstractAction {
 			try {
 				((WabitSwingSession)session).buildUI();
 				((WabitSwingSession)session).setCurrentFile(importFile);
-			} catch (ArchitectException e1) {
+			} catch (SQLObjectException e1) {
 				throw new RuntimeException(e1);
 			}
 		}
