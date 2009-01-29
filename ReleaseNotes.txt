@@ -1,5 +1,16 @@
 Wabit Release Notes
 
+Noteworthy Changes in 0.9.4
+  Query Interface
+    * Queries now have a log tab to display number of lines changed on inserts and updates
+      and tell how long a query took to execute.
+    * Columns in queries now remember their widths.
+    * Empty queries will no longer be executed.
+    
+  Other
+    * Editor windows can now be maximized from the menu.
+    * Fixed memory leaks.
+
 Noteworthy Changes in 0.9.3
   User Interface
     * Rearranged the layout of column info in the Properties Panel of a result set so that 
