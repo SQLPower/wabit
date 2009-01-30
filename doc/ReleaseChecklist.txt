@@ -1,0 +1,74 @@
+                     Wabit release checklist
+
+$Id: ReleaseChecklist.txt 2874 2008-12-12 20:19:05Z jeffrey@sqlpower.ca $
+
+This file is intended as a guide for the person who is packaging, posting,
+and announcing a new release of the Wabit.  This list is probably
+not complete.  If you find yourself performing a step that is not mentioned
+here, please add it!
+
+The items listed here are intended to be in a sensible chronological order.
+If working from top to bottom paints you into a corner, adjust the order so
+that the next person won't run into the same problem.
+
+Good luck with the release!
+
+
+*Comment out all the logging configs set to DEBUG (leave the RootLogger at INFO)
+*Update the wabit.properties file in src/main/resources and the pom.xml to reflect the correct
+ release number.  Normally, this will mean setting the suffix to "" for a full
+ release, or "beta", "rc1", etc for a pre-release.
+*Update the doc/ReleaseNotes.txt file with the latest features and bugfixes.
+*Run the LibraryMegaTest and Wabit tests. It should pass with a flying colour (green)
+*Read the formatted documentation, noting what's missing or incorrect. Then update
+ the documentation. (This will need to be done when Wabit has documentation.)
+*(Clover will be added later) Generate the JUnit and Clover test reports (run the 'clover.test.and.report' build.xml
+ target). This must be done separately from 'dist', otherwise the executables generated will
+ require the clover.jar library to run.
+*Change the systemPath property in the pom.xml to absolute paths for the dependencies of architect_lib.jar,
+ architect_dbtree_lib.jar, and architect_test_util_lib.jar.
+*Run the 'Maven clean' target from the "Run as" menu on the POM to remove the Clover-dependent 
+ compiled class files.
+*Build the distribution (build.xml target "dist") by running the command "mvn assembly:assembly" from a terminal
+ in the Wabit directory. For an official release, this has to be done on OS X, since the tools for creating the dmg 
+ disk image file are unavailable elsewhere.
+*Test the three flavours of binaries (Generic tarball, OS X disk image, Windows
+ installer) for the following:
+ *Rename your PL.INI file so you get the "new user experience" 
+  (Or better yet, create a fresh user account to test from)
+ *File size is close to the expected size (it was ~12.4 MB in 0.9.3)
+ *Archive expands properly or installer works as expected
+ *Try connecting to all databases that the Wabit is preconfigured for (MySQL,
+  PostgreSQL, SQL Server)
+ *Try adding the Oracle driver to the driver manager then connect to an Oracle
+  database
+ *Try creating a new database type from scratch (it could just be a new config for
+  one of the existing types)
+ *Ensure the online help is present
+ *(When documentation exists) Scan through the PDF documentation. Ensure the pictures are included properly
+  (not stretched, properly cropped)
+ *Try saving and loading a project file. Ensure project settings are persistent:
+  data sources, queries and reports and so on
+ *Make sure the app quits once all windows have been closed
+ *For Windows only, test the uninstaller
+*Commit, then tag the release in the SVN repository, if you made it all the way
+ to this point without finding any new problems!
+*Add the current release number without the -alpha suffix to Bugzilla, as well
+ as the next release number with -alpha.
+
+Making the new release available
+*Upload generic, mac, and windows binaries to Google Code
+*Upload user guide (PDF format) to Google Code
+*Upload source code snapshot to Google Code
+*Deprecate all Google Code files related to the previous release
+*Upload the dist directory to the SQL Power web server (/tomcat/virtualhosts/download/x.y.z/)
+*Add/update the architect.version.properties file on an update website domain. The Power*Architect
+will use this to check the latest version number.
+
+Announcing the New Release
+*Post to architect-developers mailing list
+*Front page of Google Code project
+*SQL Power website news item
+*Freshmeat.net
+*apple.com/downloads
+*news wire press release if significant milestone
