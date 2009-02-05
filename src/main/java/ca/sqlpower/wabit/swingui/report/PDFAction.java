@@ -38,8 +38,12 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 
+import ca.sqlpower.swingui.ProgressWatcher;
+import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.util.Monitorable;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
@@ -66,8 +70,11 @@ public class PDFAction extends AbstractAction {
     private final Layout layout;
     private final Component dialogOwner;
 
-    public PDFAction(Component dialogOwner, Layout layout) {
+	private final SwingWorkerRegistry registry;
+
+    public PDFAction(SwingWorkerRegistry registry, Component dialogOwner, Layout layout) {
         super("Create PDF...", ICON);
+		this.registry = registry;
         putValue(SHORT_DESCRIPTION, "Export report as PDF");
         this.dialogOwner = dialogOwner;
         this.layout = layout;
@@ -116,51 +123,15 @@ public class PDFAction extends AbstractAction {
                 }
             } while (promptAgain);
             
-            writePDF(targetFile, layout);
+            LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(registry, targetFile, layout);
+            ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, pdfWorker.getJobSize());
+			ProgressWatcher.watchProgress(monitor, pdfWorker);
+			new Thread(pdfWorker).start();
+			
             
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
     
-    public static void writePDF(File file, Layout layout)
-    throws DocumentException, FileNotFoundException, PrinterException {
-        
-    	int numPages = layout.getNumberOfPages();
-        Page page = layout.getPage();
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-        Rectangle pageSize;
-        if (page.getOrientation() == PageOrientation.PORTRAIT) {
-            pageSize = new Rectangle(page.getWidth(), page.getHeight());
-        } else {
-            pageSize = new Rectangle(page.getHeight(), page.getWidth());
-        }
-
-        Document pdfDoc = new Document(pageSize, 0f, 0f, 0f, 0f);
-        
-        PdfWriter pdfOut = PdfWriter.getInstance(pdfDoc, out);
-        pdfDoc.open();
-        pdfDoc.addCreator("Wabit " + WabitVersion.VERSION);
-        PdfContentByte pdfContent = pdfOut.getDirectContent();
-        Graphics2D pdfGraphics = null;
-        try {
-            int pageNum = 0;
-            while(pageNum < numPages) {
-                    pdfGraphics = pdfContent.createGraphics(pageSize.getWidth(), pageSize.getHeight());
-                int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
-                
-                pdfGraphics.dispose();
-                pdfGraphics = null;
-
-                if (flag == Printable.NO_SUCH_PAGE) break;
-                
-                pdfDoc.newPage();
-                
-                pageNum++;
-            }
-        } finally {
-            if (pdfGraphics != null) pdfGraphics.dispose();
-            if (pdfDoc != null) pdfDoc.close();
-        }
-    }
 }
