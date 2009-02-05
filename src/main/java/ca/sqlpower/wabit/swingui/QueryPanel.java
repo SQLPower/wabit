@@ -519,13 +519,13 @@ public class QueryPanel implements WabitPanel {
     	southPanelBuilder.append(searchPanel);
     	southPanelBuilder.append(new JLabel("Row Limit"));
     	final JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
+    	rowLimitSpinner.setValue(new Integer(1000));
     	rowLimitSpinner.addChangeListener(new ChangeListener(){
 
 			public void stateChanged(ChangeEvent e) {
 				executeQueryInCache();
 			}
 		});
-    	rowLimitSpinner.setValue(new Integer(1000));
     	southPanelBuilder.append(rowLimitSpinner);
     	southPanelBuilder.nextLine();
     	southPanelBuilder.append(groupingCheckBox);
