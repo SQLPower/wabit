@@ -50,6 +50,18 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     private static final Logger logger = Logger.getLogger(Layout.class);
 
 	private static final String PROPERTY_ZOOM = "zoomLevel";
+	
+	/**
+	 * A Boolean property that when true defines the print method calls to be
+	 * used to count the pages in the document. The PAGE_COUNT property only
+	 * increases when it is not counting pages.
+	 */
+	private static final String COUNTING_PAGES = "counting_pages";
+	
+	/**
+	 * A property that defines which page is currently being printed.
+	 */
+	public static final String PAGE_NUMBER = "page_number";
     
     /**
      * The page size and margin info.
@@ -83,7 +95,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         setVariable("now", new Date());
         setVariable("system_user", System.getProperty("user.name"));
         setVariable("wabit_version", WabitVersion.VERSION);
-        setVariable("page_number", 0);
+        setVariable(PAGE_NUMBER, 0);
         setVariable("page_count", 0);
     }
     
@@ -142,7 +154,9 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setColor(Color.BLACK);
-        setVariable("page_number", pageIndex + 1);
+        if (!((Boolean) getVariableValue(COUNTING_PAGES, false))) {
+        	setVariable(PAGE_NUMBER, pageIndex + 1);
+        }
         boolean needMorePages = false;
         for (ContentBox cb : page.getContentBoxes()) {
             logger.debug("(Page " + (pageIndex + 1) + ") rendering content box: "+ cb);
@@ -188,12 +202,14 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
     	Graphics g = dummyImage.getGraphics();
     	try {
+    		setVariable(COUNTING_PAGES, true);
 	    	while (!done) {
 	    		int result = print(g, getPageFormat(pageNum), pageNum);
 	    		if (result == Printable.NO_SUCH_PAGE) break;
 	    		pageNum++;
 	    	}
     	} finally {
+    		setVariable(COUNTING_PAGES, false);
     		g.dispose();
     	}
     	return pageNum;

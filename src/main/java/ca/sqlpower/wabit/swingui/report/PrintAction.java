@@ -19,25 +19,92 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.ProgressMonitor;
 
+import ca.sqlpower.swingui.MonitorableWorker;
+import ca.sqlpower.swingui.ProgressWatcher;
+import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.report.Layout;
 
 public class PrintAction extends AbstractAction {
+	
+	public class PrintWorker extends MonitorableWorker {
+		
+		private boolean started;
+		private boolean finished;
+		private final PrinterJob job;
+		private final int jobSize;
+		private final Layout printingLayout;
+		private int progress;
+
+		public PrintWorker(SwingWorkerRegistry registry, PrinterJob job, Layout layout) {
+			super(registry);
+			printingLayout = layout;
+			this.jobSize = layout.getNumberOfPages();
+			started = false;
+			finished = false;
+			progress = 0;
+			this.job = job;
+		}
+
+		@Override
+		public void doStuff() throws Exception {
+			started = true;
+            job.print();
+		}
+		
+		@Override
+		public void cleanup() throws Exception {
+			finished = true;
+			if (getDoStuffException() != null) {
+				throw new RuntimeException(getDoStuffException());
+			}
+		}
+
+		public Integer getJobSize() {
+			return jobSize;
+		}
+
+		public String getMessage() {
+			return null;
+		}
+
+		public int getProgress() {
+			Object progressObject = printingLayout.getVariableValue(Layout.PAGE_NUMBER, progress);
+			if (progressObject instanceof Integer) {
+				progress = ((Integer) progressObject).intValue();
+			}
+			return progress;
+		}
+
+		public boolean hasStarted() {
+			return started;
+		}
+
+		public boolean isFinished() {
+			return finished;
+		}
+		
+	}
 
     public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/printer.png"));
     private final Layout layout;
+    private final Component dialogOwner;
+	private final SwingWorkerRegistry registry;
 
-    public PrintAction(Layout layout) {
+    public PrintAction(Layout layout, Component dialogOwner, SwingWorkerRegistry registry) {
         super("Print...", ICON);
+		this.registry = registry;
         putValue(SHORT_DESCRIPTION, "Print Report");
         this.layout = layout;
+        this.dialogOwner = dialogOwner;
     }
     
     public void actionPerformed(ActionEvent e) {
@@ -45,11 +112,11 @@ public class PrintAction extends AbstractAction {
         job.setPageable(layout);
         boolean ok = job.printDialog();
         if (ok) {
-            try {
-                job.print();
-            } catch (PrinterException ex) {
-                throw new RuntimeException(ex);
-            }
+        	int jobSize = layout.getNumberOfPages();
+			ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Printing " + layout.getName(), "", 0, jobSize);
+        	PrintWorker worker = new PrintWorker(registry, job, layout);
+			ProgressWatcher.watchProgress(monitor, worker);
+			new Thread(worker).start();
         }
     }
 }

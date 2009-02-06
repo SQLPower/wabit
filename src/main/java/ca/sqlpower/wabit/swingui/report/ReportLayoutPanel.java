@@ -293,7 +293,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         toolbar.add(new PageFormatAction(report.getPage()));
-        toolbar.add(new PrintAction(report));
+        toolbar.add(new PrintAction(report, toolbar, session));
         toolbar.add(new PDFAction(session, toolbar, report));
         toolbar.add(new ExportLayoutAction(session, report));
         toolbar.addSeparator();
