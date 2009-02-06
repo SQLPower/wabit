@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
+import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -27,6 +28,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+
+import javax.swing.JOptionPane;
 
 import ca.sqlpower.swingui.MonitorableWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
@@ -53,20 +56,30 @@ public class LayoutToPDFWorker extends MonitorableWorker {
     private int pageNum;
 	private final File file;
 	private final Layout layout;
+	private final Component dialogOwner;
 
-	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout) {
+	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner) {
 		super(registry);
 		this.file = file;
 		this.layout = layout;
+		this.dialogOwner = dialogOwner;
+		started = false;
 	}
 
 	@Override
 	public void doStuff() throws Exception {
-		writePDF(file, layout);
+		if (layout.compareAndSetCurrentlyPrinting(false, true)) {
+			writePDF(file, layout);
+		} else {
+			JOptionPane.showMessageDialog(dialogOwner, "Could not export to PDF. The layout is currently being exported. Please try again later.", "In Use", JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
 	
 	@Override
 	public void cleanup() throws Exception {
+		if (started) {
+			layout.compareAndSetCurrentlyPrinting(true, false);
+		}
 		if (getDoStuffException() != null) {
 			throw new RuntimeException(getDoStuffException());
 		}

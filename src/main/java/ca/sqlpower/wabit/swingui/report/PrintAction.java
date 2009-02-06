@@ -26,6 +26,7 @@ import java.awt.print.PrinterJob;
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
 import ca.sqlpower.swingui.MonitorableWorker;
@@ -63,6 +64,7 @@ public class PrintAction extends AbstractAction {
 		@Override
 		public void cleanup() throws Exception {
 			finished = true;
+			printingLayout.compareAndSetCurrentlyPrinting(true, false);
 			if (getDoStuffException() != null) {
 				throw new RuntimeException(getDoStuffException());
 			}
@@ -108,15 +110,20 @@ public class PrintAction extends AbstractAction {
     }
     
     public void actionPerformed(ActionEvent e) {
+    	if (!layout.compareAndSetCurrentlyPrinting(false, true)) {
+    		JOptionPane.showMessageDialog(dialogOwner, "The layout is currently exporting. Please try again after it completes.", "In Use", JOptionPane.INFORMATION_MESSAGE);
+    		return;
+    	}
         PrinterJob job = PrinterJob.getPrinterJob();
         job.setPageable(layout);
         boolean ok = job.printDialog();
         if (ok) {
-        	int jobSize = layout.getNumberOfPages();
-			ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Printing " + layout.getName(), "", 0, jobSize);
+			ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Printing " + layout.getName(), "", 0, 1);
         	PrintWorker worker = new PrintWorker(registry, job, layout);
 			ProgressWatcher.watchProgress(monitor, worker);
 			new Thread(worker).start();
+        } else {
+        	layout.compareAndSetCurrentlyPrinting(true, false);
         }
     }
 }

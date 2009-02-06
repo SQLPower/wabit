@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 
@@ -83,6 +84,13 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
      * This is the zoom level for the views of this layout.
      */
     private int zoomLevel;
+    
+    /**
+     * This will define if the layout is currently printing, which is also done by
+     * exporting it to a PDF, as the print method is not safe for two threads to
+     * print the layout at the same time.
+     */
+    private AtomicBoolean currentlyPrinting = new AtomicBoolean(false);
 
     
     public Layout(String name) {
@@ -136,7 +144,8 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     }
 
     /**
-     * Prints a page of this report to the given graphics context.
+     * Prints a page of this report to the given graphics context. Before printing
+     * the currentlyPrinting flag should be set.
      * 
      * @param pageIndex the zero-based page number to print
      */
@@ -177,6 +186,9 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         return Printable.PAGE_EXISTS;
     }
 
+    /**
+     * Before getting the page count the currentlyPrinting flag should be set.
+     */
     public int getNumberOfPages() {
     	try {
     		countPages();
@@ -222,5 +234,13 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
 
 	public int getZoomLevel() {
 		return zoomLevel;
+	}
+
+	public boolean compareAndSetCurrentlyPrinting(boolean expected, boolean updateValue) {
+		return currentlyPrinting.compareAndSet(expected, updateValue);
+	}
+
+	public boolean isCurrentlyPrinting() {
+		return currentlyPrinting.get();
 	}
 }

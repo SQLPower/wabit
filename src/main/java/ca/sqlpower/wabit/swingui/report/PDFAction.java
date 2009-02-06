@@ -123,7 +123,7 @@ public class PDFAction extends AbstractAction {
                 }
             } while (promptAgain);
             
-            LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(registry, targetFile, layout);
+            LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(registry, targetFile, layout, dialogOwner);
             ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, pdfWorker.getJobSize());
 			ProgressWatcher.watchProgress(monitor, pdfWorker);
 			new Thread(pdfWorker).start();
