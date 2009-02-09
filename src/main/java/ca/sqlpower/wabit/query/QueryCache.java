@@ -1098,6 +1098,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		if (generatedQuery.equals(query)) {
 			return;
 		}
+		firePropertyChange(PROPERTY_QUERY, userModifiedQuery, query);
 		userModifiedQuery = query;
 	}
 	

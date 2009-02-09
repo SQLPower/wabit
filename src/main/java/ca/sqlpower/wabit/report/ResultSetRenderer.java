@@ -367,7 +367,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
-    	if (refreshResultSet || query.isScriptModified()) {
+    	if (refreshResultSet) {
     		executeQuery();
     		refreshResultSet = false;
     	}
