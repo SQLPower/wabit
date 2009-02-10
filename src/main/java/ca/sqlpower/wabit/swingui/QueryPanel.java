@@ -495,6 +495,9 @@ public class QueryPanel implements WabitPanel {
 					
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+					if (groupingCheckBox.isSelected()) {
+						executeQueryInCache();
+					}
 				}
 			}
 		});
@@ -565,6 +568,10 @@ public class QueryPanel implements WabitPanel {
 		// the text side so we won't be able to use these components
 		// from the text side and they will cause errors as they won't
 		// be able to synchronize with the new queries being run.
+		if (queryPenAndTextTabPane.getSelectedIndex() == 1) {
+			groupingLabel.setVisible(false);
+			havingLabel.setVisible(false);
+		}
 		if (queryPenAndTextTabPane.getSelectedIndex() == 0) {
 			ArrayList<JTable> tables = queryUIComponents.getResultTables();
 			for(JTable t : tables)	{
