@@ -66,8 +66,13 @@ import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
+import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompterFactory;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
@@ -175,6 +180,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private File currentFile = null;
 	
 	/**
+	 * A {@link UserPrompterFactory} that will create a dialog for users to choose an existing
+	 * DB or create a new one if they load a project with a DB not in their pl.ini.
+	 */
+	private final UserPrompterFactory upfMissingLoadedDB;
+	
+	/**
 	 * Creates a new session 
 	 * 
 	 * @param context
@@ -192,6 +203,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame.addWindowListener(new WindowClosingListener(this));
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
+		
+		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, context.getDataSources());
 	}
 	/**
 	 * sets the StatusMessage
@@ -539,6 +552,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	public File getCurrentFile() {
 		return currentFile;
+	}
+	
+	public UserPrompter createUserPrompter(String question, String okText, String newText, String notOkText, String cancelText, UserPromptType responseType, UserPromptResponse defaultResponseType, Object defaultResponse) {
+		return upfMissingLoadedDB.createUserPrompter(question, okText, newText, notOkText, cancelText, responseType, defaultResponseType, defaultResponse);
 	}
 	
 }

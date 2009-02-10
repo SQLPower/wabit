@@ -45,6 +45,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
@@ -159,14 +162,21 @@ public class ProjectSAXHandler extends DefaultHandler {
 
 	private ByteArrayOutputStream byteStream;
 	
+	/**
+	 * Describes if the loading of the project has been cancelled.
+	 */
+	private boolean cancelled;
+	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
 		sessions = new ArrayList<WabitSession>();
+		cancelled = false;
 	}
 	
 	@Override
 	public void startElement(String uri, String localName, String name,
 			Attributes attributes) throws SAXException {
+		if (cancelled) return;
 
 		xmlContext.push(name);
 
@@ -190,9 +200,19 @@ public class ProjectSAXHandler extends DefaultHandler {
         	checkMandatory("name", dsName);
         	SPDataSource ds = context.getDataSources().getDataSource(dsName);
         	if (ds == null) {
-        		throw new NullPointerException("The data source with the name " + dsName + " was not found in this context.");
+        		UserPrompter prompter = session.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", "OK", "Create New...", "Skip Data Source", "Cancel Load", UserPromptType.DATA_SOURCE, UserPromptResponse.NOT_OK, null);
+        		UserPromptResponse responseType = prompter.promptUser();
+        		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
+        			ds = (SPDataSource) prompter.getUserSelectedResponse();
+        			session.getProject().addDataSource(ds);
+        		} else if (responseType == UserPromptResponse.NOT_OK) {
+        			ds = null;
+        		} else {
+        			cancelled = true;
+        		}
+        	} else {
+        		session.getProject().addDataSource(ds);
         	}
-        	session.getProject().addDataSource(ds);
         } else if (name.equals("query")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
@@ -209,10 +229,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			checkMandatory("data-source", aval);
         			SPDataSource ds = session.getProject().getDataSource(aval);
         			if (ds == null) {
-        				logger.debug("Project has data sources " + session.getProject().getDataSources());
-        				throw new NullPointerException("Could not retrieve " + aval + " from the list of data sources.");
+        				logger.warn("Project has data sources " + session.getProject().getDataSources());
         			}
-        			logger.debug("Setting data source in query " + uuid + " to " + ds.getName());
         			query.setDataSource(ds);
         		} else if (aname.equals("zoom")) {
         			query.setZoomLevel(Integer.parseInt(aval));
@@ -654,6 +672,8 @@ public class ProjectSAXHandler extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String name)
     		throws SAXException {
+    	if (cancelled) return;
+    	
     	if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID().toString(), query, container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
@@ -695,6 +715,8 @@ public class ProjectSAXHandler extends DefaultHandler {
     }
 
 	public List<WabitSession> getSessions() {
+		if (cancelled) return Collections.emptyList();
+		
 		return Collections.unmodifiableList(sessions);
 	}
 	

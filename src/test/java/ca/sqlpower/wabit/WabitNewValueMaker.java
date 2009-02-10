@@ -27,7 +27,10 @@ import java.awt.Color;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
+import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.Item;
+import ca.sqlpower.wabit.query.ItemContainer;
+import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
@@ -102,6 +105,18 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         		newValue = BorderStyles.FULL;
         	} else {
         		newValue = BorderStyles.NONE;
+        	}
+        } else if (valueType.equals(Container.class)) {
+        	if (oldVal != null) {
+        		newValue = new ItemContainer("New Item Container");
+        	} else {
+        		newValue = new ItemContainer("Newer Item Container");
+        	}
+        } else if (valueType.equals(Item.class)) {
+        	if (oldVal != null) {
+        		newValue = new StringItem("New String Item");
+        	} else {
+        		newValue = new StringItem("Newer String Item");
         	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);

@@ -31,6 +31,9 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
@@ -117,5 +120,13 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	public void setCurrentFile(File file) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public UserPrompter createUserPrompter(String question, String okText,
+			String newText, String notOkText, String cancelText,
+			UserPromptType responseType,
+			UserPromptResponse defaultResponseType, Object defaultResponse) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

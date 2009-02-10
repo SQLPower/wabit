@@ -20,6 +20,9 @@
 package ca.sqlpower.wabit;
 
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 
 public class StubWabitSession implements WabitSession {
 	
@@ -54,6 +57,14 @@ public class StubWabitSession implements WabitSession {
 			SessionLifecycleListener<WabitSession> l) {
 		// TODO Auto-generated method stub
 
+	}
+
+	public UserPrompter createUserPrompter(String question, String okText,
+			String newText, String notOkText, String cancelText,
+			UserPromptType responseType,
+			UserPromptResponse defaultResponseType, Object defaultResponse) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
