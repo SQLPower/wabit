@@ -31,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +40,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
@@ -278,6 +280,12 @@ public class ProjectPanel implements WabitPanel {
 	private void addDSToProject() {
 		SPDataSource ds = dbConnectionManager.getSelectedConnection();
 		if (ds == null) {
+			return;
+		}
+		try {
+			ds.createConnection();
+		} catch (SQLException e) {
+			SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
 			return;
 		}
 		boolean isDSAlreadyAdded = false;
