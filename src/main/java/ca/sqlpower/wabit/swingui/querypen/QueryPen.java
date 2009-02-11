@@ -179,6 +179,7 @@ public class QueryPen implements MouseState, WabitNode {
 				
 				if (draggedSQLObject instanceof SQLTable) {
 				    try {
+				    	cursorManager.tableDragStarted();
 				    	model.startCompoundEdit();
 				    	DatabaseMetaDataDecorator.putHint(DatabaseMetaDataDecorator.CACHE_TYPE, CacheType.EAGER_CACHE);
     					SQLTable table = (SQLTable) draggedSQLObject;
@@ -285,7 +286,9 @@ public class QueryPen implements MouseState, WabitNode {
     					canvas.repaint();
     					dtde.acceptDrop(dtde.getDropAction());
     					dtde.dropComplete(true);
+    					    			    					
 				    } finally {
+				    	cursorManager.tableDragFinished();
 				    	DatabaseMetaDataDecorator.putHint(DatabaseMetaDataDecorator.CACHE_TYPE, CacheType.NO_CACHE);
 				    	model.endCompoundEdit();
 					}
