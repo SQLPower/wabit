@@ -81,6 +81,14 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * to be grouped by and not aggregated on.
 	 */
 	public static final String GROUP_BY = "(GROUP BY)";
+
+	/**
+	 * A property change of this type is fired if the user defined
+	 * text of the query is modified. Property changes to the objects
+	 * maintained and monitored by this query will not contain this
+	 * type.
+	 */
+	public static final String PROPERTY_QUERY_TEXT = "propertyQueryText";
 	
 	/**
 	 * The arguments that can be added to a column in the 
@@ -1098,7 +1106,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		if (generatedQuery.equals(query)) {
 			return;
 		}
-		firePropertyChange(PROPERTY_QUERY, userModifiedQuery, query);
+		firePropertyChange(PROPERTY_QUERY_TEXT, userModifiedQuery, query);
 		userModifiedQuery = query;
 	}
 	

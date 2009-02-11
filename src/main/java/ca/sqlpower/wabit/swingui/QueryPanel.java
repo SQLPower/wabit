@@ -205,7 +205,9 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private final PropertyChangeListener queryCacheListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			executeQueryInCache();
+			if (e.getPropertyName() != QueryCache.PROPERTY_QUERY_TEXT) {
+				executeQueryInCache();
+			}
 		}
 	};
 
