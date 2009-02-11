@@ -179,6 +179,7 @@ public class QueryPen implements MouseState, WabitNode {
 				
 				if (draggedSQLObject instanceof SQLTable) {
 				    try {
+				    	model.startCompoundEdit();
 				    	DatabaseMetaDataDecorator.putHint(DatabaseMetaDataDecorator.CACHE_TYPE, CacheType.EAGER_CACHE);
     					SQLTable table = (SQLTable) draggedSQLObject;
     					TableContainer model = new TableContainer(QueryPen.this.model, table);
@@ -286,6 +287,7 @@ public class QueryPen implements MouseState, WabitNode {
     					dtde.dropComplete(true);
 				    } finally {
 				    	DatabaseMetaDataDecorator.putHint(DatabaseMetaDataDecorator.CACHE_TYPE, CacheType.NO_CACHE);
+				    	model.endCompoundEdit();
 					}
 					
 				} else {
@@ -382,37 +384,42 @@ public class QueryPen implements MouseState, WabitNode {
 	/**
 	 * Deletes the selected item from the QueryPen.
 	 */
-	private final Action deleteAction = new AbstractAction(){
+	private final Action deleteAction = new AbstractAction() {
 		public void actionPerformed(ActionEvent e) {
 
-			Iterator<?> selectedIter = selectionEventHandler.getSelection().iterator();
-			while(selectedIter.hasNext()) {
-				PNode pickedNode = (PNode) selectedIter.next();
-				if (pickedNode.getParent() == topLayer) {
-					if (pickedNode == constantsContainer) {
-						return;
-					}
-					topLayer.removeChild(pickedNode);
-					if (pickedNode instanceof ContainerPane) {
-						ContainerPane pane = ((ContainerPane)pickedNode);
-						List<UnmodifiableItemPNode> items = pane.getContainedItems();
+			try {
+				model.startCompoundEdit();
+				Iterator<?> selectedIter = selectionEventHandler.getSelection().iterator();
+				while(selectedIter.hasNext()) {
+					PNode pickedNode = (PNode) selectedIter.next();
+					if (pickedNode.getParent() == topLayer) {
+						if (pickedNode == constantsContainer) {
+							return;
+						}
+						topLayer.removeChild(pickedNode);
+						if (pickedNode instanceof ContainerPane) {
+							ContainerPane pane = ((ContainerPane)pickedNode);
+							List<UnmodifiableItemPNode> items = pane.getContainedItems();
 
-						for(UnmodifiableItemPNode item : items) {
-							List<JoinLine> joinedLines = item.getJoinedLines();
-							for(int i = joinedLines.size()-1; i >= 0 ; i--) {
-								if(joinedLines.get(i).getParent() == joinLayer) {
-									deleteJoinLine(joinedLines.get(i));
+							for(UnmodifiableItemPNode item : items) {
+								List<JoinLine> joinedLines = item.getJoinedLines();
+								for(int i = joinedLines.size()-1; i >= 0 ; i--) {
+									if(joinedLines.get(i).getParent() == joinLayer) {
+										deleteJoinLine(joinedLines.get(i));
+									}
 								}
 							}
+							pane.removeQueryChangeListener(queryChangeListener);
+
+							queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_REMOVED, pane.getModel(), null));
 						}
-						pane.removeQueryChangeListener(queryChangeListener);
-						
-						queryChangeListener.propertyChange(new PropertyChangeEvent(canvas, Container.PROPERTY_TABLE_REMOVED, pane.getModel(), null));
+					}
+					if (pickedNode.getParent() == joinLayer) {
+						deleteJoinLine((JoinLine)pickedNode);
 					}
 				}
-				if (pickedNode.getParent() == joinLayer) {
-					deleteJoinLine((JoinLine)pickedNode);
-				}
+			} finally {
+				model.endCompoundEdit();
 			}
 		}
 	};
