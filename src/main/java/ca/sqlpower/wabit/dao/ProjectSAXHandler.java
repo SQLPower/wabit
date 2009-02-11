@@ -167,9 +167,17 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 */
 	private boolean cancelled;
 	
+	/**
+	 * This map stores old DS names used in the loaded project to the new DS specified
+	 * by the user. Only the data sources that have a new data source specified will
+	 * appear in this map.
+	 */
+	private final Map<String, String> oldToNewDSNames;
+	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
 		sessions = new ArrayList<WabitSession>();
+		oldToNewDSNames = new HashMap<String, String>();
 		cancelled = false;
 	}
 	
@@ -205,6 +213,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
         			session.getProject().addDataSource(ds);
+        			oldToNewDSNames.put(dsName, ds.getName());
         		} else if (responseType == UserPromptResponse.NOT_OK) {
         			ds = null;
         		} else {
@@ -229,7 +238,15 @@ public class ProjectSAXHandler extends DefaultHandler {
         			checkMandatory("data-source", aval);
         			SPDataSource ds = session.getProject().getDataSource(aval);
         			if (ds == null) {
-        				logger.warn("Project has data sources " + session.getProject().getDataSources());
+        				String newDSName = oldToNewDSNames.get(aval);
+        				if (newDSName != null) {
+        					ds = session.getProject().getDataSource(newDSName);
+        					if (ds == null) {
+        						logger.debug("Data source " + aval + " is not in the project. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
+        						throw new NullPointerException("Data source " + newDSName + " was not found in the project.");
+        					}
+        				}
+        				logger.debug("Project has data sources " + session.getProject().getDataSources());
         			}
         			query.setDataSource(ds);
         		} else if (aname.equals("zoom")) {
