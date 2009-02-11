@@ -66,7 +66,6 @@ import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
-import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
@@ -76,7 +75,6 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
@@ -125,7 +123,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 	}
 
-	private final WabitSessionContext sessionContext;
+	private final WabitSwingSessionContext sessionContext;
 	
 	private final WabitProject project;
 	
@@ -190,7 +188,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * 
 	 * @param context
 	 */
-	public WabitSwingSessionImpl(WabitSessionContext context) {
+	public WabitSwingSessionImpl(WabitSwingSessionContext context) {
 	    project = new WabitProject();
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
@@ -257,6 +255,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
+		fileMenu.add(getContext().getRecentMenu());
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
@@ -392,7 +391,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 			public void run() {
 				try {
-					WabitSessionContext context = new WabitSwingSessionContextImpl(true);
+					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(true);
 					
 					final File importFile;
 					if (args.length > 0) {
@@ -434,7 +433,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         return project;
     }
     
-	public WabitSessionContext getContext() {
+	public WabitSwingSessionContext getContext() {
 		return sessionContext;
 	}
 	

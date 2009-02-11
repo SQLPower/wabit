@@ -19,28 +19,46 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.io.File;
 import java.io.IOException;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
  * the context will be done in this implementation 
  */
-public class WabitSwingSessionContextImpl extends WabitSessionContextImpl {
+public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implements WabitSwingSessionContext {
+
+	private RecentMenu recentMenu;
 
 	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
 			throws IOException, SQLObjectException {
 		super(terminateWhenLastSessionCloses);
 		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
+		
+		recentMenu = new RecentMenu(this.getClass()) {
+			
+			@Override
+			public void loadFile(String fileName) throws IOException {
+				File file = new File(fileName);
+				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
+			}
+		};
 	}
 	
 	@Override
 	public WabitSession createSession() {
 		WabitSwingSession session = new WabitSwingSessionImpl(this);
 		return session;
+	}
+	
+	public RecentMenu getRecentMenu() {
+		return recentMenu;
 	}
 
 }

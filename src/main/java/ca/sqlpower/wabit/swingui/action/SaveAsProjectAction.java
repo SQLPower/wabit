@@ -31,6 +31,7 @@ import javax.swing.JFileChooser;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This will save a given project to a user specified file.
@@ -84,6 +85,8 @@ public class SaveAsProjectAction extends AbstractAction {
 		projectSaver.save();
 		
 		this.session.setCurrentFile(selectedFile);
+		
+		((WabitSwingSessionContext) session.getContext()).getRecentMenu().putRecentFileName(selectedFile.getAbsolutePath());
 		
 		return true;
 	}

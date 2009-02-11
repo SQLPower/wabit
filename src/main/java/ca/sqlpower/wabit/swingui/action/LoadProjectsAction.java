@@ -33,9 +33,9 @@ import javax.swing.JFileChooser;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This action will load in projects from a user selected file to a given
@@ -47,14 +47,14 @@ public class LoadProjectsAction extends AbstractAction {
 	 * This is the context within Wabit that will have the projects
 	 * loaded into.
 	 */
-	private final WabitSessionContext context;
+	private final WabitSwingSessionContext context;
 	
 	/**
 	 * This session will be used to parent dialogs from this action to.
 	 */
 	private final WabitSwingSession session;
 
-	public LoadProjectsAction(WabitSwingSession session, WabitSessionContext context) {
+	public LoadProjectsAction(WabitSwingSession session, WabitSwingSessionContext context) {
 		super("Load...", new ImageIcon(LoadProjectsAction.class.getClassLoader().getResource("icons/wabit_load.png")));
 		this.session = session;
 		this.context = context;
@@ -73,6 +73,14 @@ public class LoadProjectsAction extends AbstractAction {
 		}
 		importFile = fc.getSelectedFile();
 
+		loadFile(importFile, context);
+		
+	}
+
+	/**
+	 * This will load a Wabit project file in a new session in the given context.
+	 */
+	public static void loadFile(File importFile, WabitSwingSessionContext context) {
 		BufferedInputStream in = null;
 		try {
 			in = new BufferedInputStream(new FileInputStream(importFile));
@@ -89,7 +97,7 @@ public class LoadProjectsAction extends AbstractAction {
 				throw new RuntimeException(e1);
 			}
 		}
-		
+		context.getRecentMenu().putRecentFileName(importFile.getAbsolutePath());
 	}
 
 }
