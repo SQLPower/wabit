@@ -25,11 +25,9 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -40,6 +38,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -61,6 +60,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
@@ -76,7 +76,6 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitVersion;
-import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
@@ -106,6 +105,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * A constant for storing the location of the divider for layouts in prefs.
 	 */
 	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
+	
+	/**
+	 * An icon for a new Wabit project.
+	 */
+	private static final Icon NEW_PROJECT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
 	
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
@@ -254,6 +258,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
+		fileMenu.add(new AbstractAction("New", NEW_PROJECT_ICON) {
+		
+			public void actionPerformed(ActionEvent e) {
+				WabitSwingSession wss = new WabitSwingSessionImpl(getContext());
+				try {
+					wss.buildUI();
+				} catch (SQLObjectException e1) {
+					throw new SQLObjectRuntimeException(e1);
+				}		
+			}
+		});
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
 		fileMenu.add(getContext().getRecentMenu());
 		fileMenu.addSeparator();
@@ -357,7 +372,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
             	return;
             } else {
-            	if (new SaveAsProjectAction(this).save()) {
+            	if (SaveProjectAction.save(WabitSwingSessionImpl.this)) {
             		closing = true;
             	}
             }
@@ -397,22 +412,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 					if (args.length > 0) {
 						importFile = new File(args[0]);
 					} else {
-						importFile = null;
+						importFile = context.getRecentMenu().getMostRecentFile();
 					}
 					
 					WabitSwingSessionImpl wss;
 					
 					if (importFile != null) {
-						BufferedInputStream in = null;
 						try {
-							in = new BufferedInputStream(new FileInputStream(importFile));
-						} catch (FileNotFoundException e1) {
-							throw new RuntimeException(e1);
-						}
-						LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
-						List<WabitSession> sessions = projectLoader.loadProjects();
-						for (WabitSession session : sessions) {
-							((WabitSwingSession)session).buildUI();
+							LoadProjectsAction.loadFile(importFile, context);
+						} catch (Throwable e) {
+							wss = new WabitSwingSessionImpl(context);
+							wss.buildUI();
 						}
 					} else {
 						wss = new WabitSwingSessionImpl(context);

@@ -45,6 +45,18 @@ public class SaveProjectAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		save(session);
+	}
+
+	/**
+	 * Saves the session's project to the file it was opened from or to a user
+	 * specified file if the project was new.
+	 * 
+	 * @param session
+	 *            The session to be saved
+	 * @return If the save was successful or not
+	 */
+	public static boolean save(WabitSwingSession session) {
 		if (session.getCurrentFile() != null) {
 			ProjectXMLDAO projectSaver;
 			try {
@@ -53,8 +65,9 @@ public class SaveProjectAction extends AbstractAction {
 				throw new RuntimeException(e1);
 			}
 			projectSaver.save();
+			return true;
 		} else {
-			new SaveAsProjectAction(session).actionPerformed(e);
+			return new SaveAsProjectAction(session).save();
 		}
 	}
 
