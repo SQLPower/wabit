@@ -175,7 +175,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     /**
      * If this is true then a new result set needs to be fetched from the database. 
      */
-    private boolean refreshResultSet = false;
+    private boolean refreshResultSet;
 
     /**
      * If the query fails to execute, the corresponding exception will be saved here and
@@ -213,7 +213,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		});
         setUpFormats();
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
-        executeQuery();
+        refreshResultSet = true;
 	}
     
     /**
