@@ -545,14 +545,14 @@ public class QueryPanel implements WabitPanel {
     	rightTopPane.setResizeWeight(1);
     	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
     	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
-    	rightTreePanel.setMinimumSize(new Dimension(0, 0));
+    	rightTreePanel.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
     	
     	mainSplitPane.setOneTouchExpandable(true);
     	mainSplitPane.setResizeWeight(1);
     	mainSplitPane.add(rightTopPane, JSplitPane.TOP);
     	JPanel southPanel = southPanelBuilder.getPanel();
 		mainSplitPane.add(southPanel, JSplitPane.BOTTOM);
-		southPanel.setMinimumSize(new Dimension(0, 0));
+		southPanel.setMinimumSize(new Dimension(0, ICON.getIconHeight() * 5));
 	}
 	
 	/**
