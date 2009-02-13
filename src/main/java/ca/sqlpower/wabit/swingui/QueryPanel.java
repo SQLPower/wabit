@@ -411,6 +411,17 @@ public class QueryPanel implements WabitPanel {
 		queryToolPanel = new JPanel(new BorderLayout());
 		JToolBar queryToolBar = new JToolBar();
 		queryToolBar.setFloatable(false);
+		JButton prevQueryButton = queryUIComponents.getPrevQueryButton();
+		prevQueryButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/arrow_left.png")));
+		prevQueryButton.setToolTipText("Previous Executed Query");
+		prevQueryButton.setText("");
+		queryToolBar.add(prevQueryButton);
+		JButton nextQueryButton = queryUIComponents.getNextQueryButton();
+		nextQueryButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/arrow_right.png")));
+		nextQueryButton.setToolTipText("Next Executed Query");
+		nextQueryButton.setText("");
+		queryToolBar.add(nextQueryButton);
+		queryToolBar.addSeparator();
 		JButton executeButton = queryUIComponents.getExecuteButton();
 		ImageIcon executeIcon = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/wabit_execute.png"));
 		executeButton.setIcon(executeIcon);
