@@ -9,6 +9,12 @@
       </includes>
     </fileSet>
     <fileSet>
+      <includes>
+        <include>movie.properties</include>
+        <include>movie.script</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>target</directory>
       <outputDirectory></outputDirectory>
       <includes>

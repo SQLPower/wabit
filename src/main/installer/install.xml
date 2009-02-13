@@ -56,6 +56,10 @@
 			<fileset dir="../" targetdir="$INSTALL_PATH">
 				<include name="LICENSE" />
 			</fileset>
+			         <fileset dir="../" targetdir="$INSTALL_PATH">
+                <include name="movie.properties" />
+                <include name="movie.script" />
+            </fileset>
 			<fileset dir="../src/main/resources/icons" targetdir="$INSTALL_PATH">
 				<include name="*.ico" />
 			</fileset>

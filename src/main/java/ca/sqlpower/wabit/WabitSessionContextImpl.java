@@ -116,6 +116,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             try {
                 logger.debug("Reading PL.INI defaults");
                 dataSources.read(getClass().getClassLoader().getResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
+                dataSources.read(WabitSessionContextImpl.class.getResourceAsStream("/ca/sqlpower/wabit/example_database.ini"));
             } catch (IOException e) {
                 throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read system resource default_database_types.ini",e));
             }

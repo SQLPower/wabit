@@ -181,6 +181,8 @@
 									<arg value="Wabit-OSX-${project.version}.tar.gz"/>
 									<arg value="../LICENSE"/>
 									<arg value="Wabit.app"/>
+									<arg value="../movie.script"/>
+									<arg value="../movie.properties"/>
 								</exec>
 
 <!--								<tar destfile="target/Wabit-OSX-${project.version}.tar.gz"-->
