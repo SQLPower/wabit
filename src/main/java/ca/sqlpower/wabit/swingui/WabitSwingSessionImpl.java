@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -38,8 +39,11 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -61,7 +65,10 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
+import ca.sqlpower.swingui.AboutPanel;
+import ca.sqlpower.swingui.CommonCloseAction;
 import ca.sqlpower.swingui.DocumentAppender;
+import ca.sqlpower.swingui.JDefaultButton;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -111,6 +118,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private static final Icon NEW_PROJECT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
 	
+	/**
+	 * An icon for the aboutAction in the Help menu.
+	 */
+	private static final Icon ABOUT__ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/wabit-16.png"));
+	
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private class WindowClosingListener extends WindowAdapter {
@@ -147,6 +159,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private final Logger userInformationLogger = Logger.getLogger("User Info Log");
 
+	/**
+     * Controls a few GUI tweaks that we do on OS X, such as moving menu items around.
+     */
+	public static final boolean MAC_OS_X =
+        System.getProperty("os.name").toLowerCase().startsWith("mac os x");
+	
 	/**
 	 * The list of all currently-registered background tasks.
 	 */
@@ -302,6 +320,47 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu helpMenu = new JMenu("Help");
 		helpMenu.setMnemonic('h');
 		menuBar.add(helpMenu);
+		if (!MAC_OS_X) {
+            helpMenu.add(new AbstractAction("About Wabit...",ABOUT__ICON) {
+            	
+    			public void actionPerformed(ActionEvent evt) {
+    				// This is one of the few JDIalogs that can not get replaced
+    				// with a call to DataEntryPanelBuilder, because an About
+    				// box must have only ONE button...
+    				final JDialog d = new JDialog(getFrame(),
+    											  "About Wabit");
+    				JPanel cp = new JPanel(new BorderLayout(12,12));
+    				cp.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
+    				
+    				ImageIcon icon = SPSUtils.createIcon("wabit-128", "Wabit Logo");
+    				
+    				final AboutPanel aboutPanel = new AboutPanel(icon, "Wabit", "ca/sqlpower/wabit/wabit.properties", WabitVersion.VERSION.toString());
+    				cp.add(aboutPanel, BorderLayout.CENTER);
+    	
+    				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    	
+    				Action okAction = new AbstractAction() {
+    					public void actionPerformed(ActionEvent evt) {
+    							aboutPanel.applyChanges();
+    							d.setVisible(false);
+    					}
+    				};
+    				okAction.putValue(Action.NAME, "OK");
+    				JDefaultButton okButton = new JDefaultButton(okAction);
+    				buttonPanel.add(okButton);
+    	
+    				cp.add(buttonPanel, BorderLayout.SOUTH);
+    				SPSUtils.makeJDialogCancellable(
+    						d, new CommonCloseAction(d));
+    				d.getRootPane().setDefaultButton(okButton);
+    				d.setContentPane(cp);
+    				d.pack();
+    				d.setLocationRelativeTo(getFrame());
+    				d.setVisible(true);
+    			}
+    	    });
+            helpMenu.addSeparator();
+        }
 		helpMenu.add(SPSUtils.forumAction);
 	
 		frame.setJMenuBar(menuBar);
