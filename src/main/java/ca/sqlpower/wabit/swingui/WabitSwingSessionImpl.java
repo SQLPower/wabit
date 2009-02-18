@@ -299,6 +299,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenuItem logMenuItem = new JMenuItem(new LogAction(frame, logTextArea ));
 		windowMenu.add(logMenuItem);
 		
+		JMenu helpMenu = new JMenu("Help");
+		helpMenu.setMnemonic('h');
+		menuBar.add(helpMenu);
+		helpMenu.add(SPSUtils.forumAction);
+	
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
         
