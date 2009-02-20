@@ -25,7 +25,6 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.DataSourceUserPrompter;
 import ca.sqlpower.swingui.ModalDialogUserPrompter;
-import ca.sqlpower.swingui.db.DataSourceDialogFactory;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;

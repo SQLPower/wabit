@@ -23,16 +23,9 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.FileDialog;
 import java.awt.Frame;
-import java.awt.Graphics2D;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
@@ -43,17 +36,7 @@ import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.util.Monitorable;
-import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
-
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfWriter;
 
 public class PDFAction extends AbstractAction {
 

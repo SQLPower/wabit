@@ -25,8 +25,6 @@ import java.io.File;
 import javax.swing.JFrame;
 import javax.swing.JTree;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
@@ -34,8 +32,6 @@ import ca.sqlpower.wabit.WabitSession;
 
 public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	
-    Logger getUserInformationLogger();
-    
     JFrame getFrame();
 
 	/**

@@ -53,7 +53,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -67,7 +66,6 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.AboutPanel;
 import ca.sqlpower.swingui.CommonCloseAction;
-import ca.sqlpower.swingui.DocumentAppender;
 import ca.sqlpower.swingui.JDefaultButton;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
@@ -88,7 +86,6 @@ import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
-import ca.sqlpower.wabit.swingui.action.LogAction;
 import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
@@ -153,12 +150,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
-	/**
-	 * All information useful to the user in a log format should be logged here.
-	 * The user can get access to the contents of this log from the window's menu.
-	 */
-	private final Logger userInformationLogger = Logger.getLogger("User Info Log");
-
 	/**
      * Controls a few GUI tweaks that we do on OS X, such as moving menu items around.
      */
@@ -308,15 +299,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		maxEditor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK));
 		viewMenu.add(maxEditor);
         
-		JMenu windowMenu = new JMenu("Window");
-		windowMenu.setMnemonic('w');
-		menuBar.add(windowMenu);
-		JTextArea logTextArea = new JTextArea();
-		DocumentAppender docAppender = new DocumentAppender(logTextArea.getDocument());
-		userInformationLogger.addAppender(docAppender);
-		JMenuItem logMenuItem = new JMenuItem(new LogAction(frame, logTextArea ));
-		windowMenu.add(logMenuItem);
-		
 		JMenu helpMenu = new JMenu("Help");
 		helpMenu.setMnemonic('h');
 		menuBar.add(helpMenu);
@@ -509,10 +491,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     
 	public WabitSwingSessionContext getContext() {
 		return sessionContext;
-	}
-	
-	public Logger getUserInformationLogger() {
-		return userInformationLogger;
 	}
 	
 	public JFrame getFrame() {
