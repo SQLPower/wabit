@@ -142,6 +142,10 @@ public class ProjectTreeListener extends MouseAdapter {
 			menu.addSeparator();
 			
 			JTree tree = (JTree) e.getSource();
+			//For some bizarre reason, you cannot select a node
+			//in the JTree on right-click. So the coordinates for e.getSource()
+			//are different from e.getPoint()
+			tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
 			menu.add(new EditCellAction(tree));
 		}
 		if (lastPathComponent instanceof Query || lastPathComponent instanceof WabitDataSource
