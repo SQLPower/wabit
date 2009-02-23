@@ -1587,7 +1587,7 @@
 			to be set, and a name needs to be given to the connection. Once the data source
 			is specified the connection can be tested with the "Test Connection" button.
 			If there are any problems with the JDBC driver refer to the JDBC drivers section
-			<xref linkend="jdbc_drivers" />. After adding the data source select it from the list and press the
+			<xref linkend="setup_database.database_types.jdbc_driver" />. After adding the data source select it from the list and press the
 			start button.
 		    </para>
 		    
@@ -1693,23 +1693,6 @@
 			</para>
 		
 		</section>
-		
-	</chapter>
-	
-	<chapter id="jdbc_drivers">
-		
-		<title>JDBC Drivers</title>
-		
-		<section>
-		
-		    <title>Intro</title>
-		
-		    <para>
-		    Start.    
-		    </para>
-		
-		</section>
-
 	</chapter>
 	
 	<chapter id="appendices">
