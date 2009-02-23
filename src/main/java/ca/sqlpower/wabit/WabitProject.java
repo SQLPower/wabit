@@ -73,6 +73,12 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
      * needed for the DS Collection.
      */
     private final List<UndoableEditListener> dsCollectionUndoListeners = new ArrayList<UndoableEditListener>();
+    
+    /**
+     * This is the current editor panel's model that is being being edited.
+     * This allows the project to know what panel to load when it is loaded. 
+     */
+    private Object editorPanelModel;
 
     public WabitProject() {
     	listeners = new ArrayList<DatabaseListChangeListener>();
@@ -189,18 +195,26 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 
 	public void addDataSource(SPDataSource dbcs) {
 		String newName = dbcs.getDisplayName();
-		for (WabitDataSource o : dataSources) {
-			if (o instanceof JDBCDataSource) {
-				SPDataSource oneDbcs = ((JDBCDataSource) o).getSPDataSource();
-				if (newName.equalsIgnoreCase(oneDbcs.getDisplayName())) {
-					throw new IllegalArgumentException(
-							"There is already a datasource with the name " + newName);
-				}
-			}
+		if (dsAlreadyAdded(dbcs)) {
+			throw new IllegalArgumentException(
+					"There is already a datasource with the name " + newName);
 		}
 		logger.debug("adding SPDataSource");
 		addDataSource(new JDBCDataSource(dbcs));
 		
+	}
+	
+	public boolean dsAlreadyAdded(SPDataSource dbcs) {
+		String newName = dbcs.getDisplayName();
+		for (WabitDataSource o : dataSources) {
+			if (o instanceof JDBCDataSource) {
+				SPDataSource oneDbcs = ((JDBCDataSource) o).getSPDataSource();
+				if (newName.equalsIgnoreCase(oneDbcs.getDisplayName())) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public void removeDataSource(SPDataSource dbcs) {
@@ -317,5 +331,13 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 
 	public void removeUndoableEditListener(UndoableEditListener l) {
 		dsCollectionUndoListeners.remove(l);
+	}
+
+	public void setEditorPanelModel(Object editorPanelModel) {
+		this.editorPanelModel = editorPanelModel;
+	}
+
+	public Object getEditorPanelModel() {
+		return editorPanelModel;
 	}
 }

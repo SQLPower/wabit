@@ -29,8 +29,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.IOException;
-import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,21 +36,16 @@ import java.util.List;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-import javax.swing.text.html.HTMLEditorKit;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
-import ca.sqlpower.util.BrowserUtil;
 import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
@@ -144,7 +137,6 @@ public class ProjectPanel implements WabitPanel {
 	 */
 	private final JPanel panel;
 	private final WabitSwingSession session;
-	private DatabaseConnectionManager dbConnectionManager;
 	
 	public ProjectPanel(WabitSwingSession session) {
 		this.session = session;
@@ -157,57 +149,51 @@ public class ProjectPanel implements WabitPanel {
 		CellConstraints cc = new CellConstraints();
 		JPanel logoPanel = LogoLayout.generateLogoPanel();
 		builder.add(logoPanel, cc.xyw(1, 1, 3));
-        HTMLEditorKit htmlKit = new HTMLEditorKit();
-        final JEditorPane htmlComponent = new JEditorPane();
-        htmlComponent.setEditorKit(htmlKit);
-        htmlComponent.setText(
-				"<html><br><br>" +
-				"<p>Creating a Report in Wabit involves three steps:" +
-				"<ol>" +
-				" <li> Add a Data Source to your Project" +
-				" <li> Formulate a Query with the help of the Query Builder" +
-				" <li> Create a Page Layout for your Query" +
-				"</ol>" +
-				"<p>Your Page Layout can be printed directly or saved to a PDF file." +
-				"<p>To add a Data Source to your project, choose one from the list below and press the <i>Start</i> button." +
-				"<br>" +
-				"<p>Please visit our <a href=\"" + SPSUtils.FORUM_URL + "\">support forum</a>   if you have any questions, comments, suggestions, or if you just need a friend.");
-        builder.add(htmlComponent, cc.xy(2, 2));
-		htmlComponent.setEditable(false);
-		htmlComponent.setBackground(null);
-		
-        /** Jump to the URL (in the user's configured browser)
-         * when a link is clicked.
-         */
-        htmlComponent.addHyperlinkListener(new HyperlinkListener() {
-            public void hyperlinkUpdate(HyperlinkEvent evt) {
-                if (evt.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    URL url = evt.getURL();
-                    try {
-                        BrowserUtil.launch(url.toString());
-                    } catch (IOException e1) {
-                        throw new RuntimeException("Unexpected error in launch", e1); //$NON-NLS-1$
-                    }
-                }
-            }
-        });
 
-        List<JComponent> componentList = new ArrayList<JComponent>();
+        final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session);
+        
+		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
+		JPanel builderPanel = builder.getPanel();
+		panel.add(builderPanel, BorderLayout.CENTER);
+		
+		logoPanel.getLayout().layoutContainer(logoPanel);
+	}
+
+	/**
+	 * This will create the DBConnectionManager for the ProjectPanel and other panels that need
+	 * to allow users to add a data source to the project. One other place this gets used is
+	 * the NewProjectScreen where the user adds the first data source to a project.
+	 * @param session
+	 * @return
+	 */
+	public static DatabaseConnectionManager createDBConnectionManager(final WabitSwingSession session) {
+		List<JComponent> componentList = new ArrayList<JComponent>();
         DefaultFormBuilder startPanel = new DefaultFormBuilder(new FormLayout("fill:pref", "pref, pref"));
         final JLabel startImageLabel = new JLabel(UP_START_ICON);
         startImageLabel.setFocusable(true);
         startPanel.add(startImageLabel);
+        JLabel startTextLabel = new JLabel("Start");
+        startTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        startPanel.nextLine();
+		startPanel.add(startTextLabel);
+        componentList.add(startPanel.getPanel());
+		final DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
+				new DefaultDataSourceDialogFactory(), 
+				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
+				new ArrayList<Action>(), componentList, session.getFrame(), false);
+		
         startImageLabel.addMouseListener(new MouseListener() {
         	boolean inside = false;
         	boolean pressed = false;
 			public void mouseReleased(MouseEvent e) {
 				pressed = false;
+				SPDataSource ds = dbConnectionManager.getSelectedConnection();
 				if (startImageLabel.isFocusOwner()) {
 					startImageLabel.setIcon(SELECT_START_ICON);
-					addDSToProject();
+					addDSToProject(ds, session);
 				} else if (inside) {
 					startImageLabel.setIcon(OVER_START_ICON);
-					addDSToProject();
+					addDSToProject(ds, session);
 				} else {
 					startImageLabel.setIcon(UP_START_ICON);
 				}
@@ -255,29 +241,14 @@ public class ProjectPanel implements WabitPanel {
 				//do nothing.
 			}
 		});
-        
-        JLabel startTextLabel = new JLabel("Start");
-        startTextLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        startPanel.nextLine();
-		startPanel.add(startTextLabel);
-        componentList.add(startPanel.getPanel());
-		dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
-				new DefaultDataSourceDialogFactory(), 
-				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
-				new ArrayList<Action>(), componentList, session.getFrame(), false);
-		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
-		JPanel builderPanel = builder.getPanel();
-		panel.add(builderPanel, BorderLayout.CENTER);
-		
-		logoPanel.getLayout().layoutContainer(logoPanel);
+		return dbConnectionManager;
 	}
 	
 	/**
 	 * This method is used in the DB connection manager to add the selected db
 	 * to the project.
 	 */
-	private void addDSToProject() {
-		SPDataSource ds = dbConnectionManager.getSelectedConnection();
+	public static void addDSToProject(SPDataSource ds, WabitSwingSession session) {
 		if (ds == null) {
 			return;
 		}
@@ -287,16 +258,7 @@ public class ProjectPanel implements WabitPanel {
 			SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
 			return;
 		}
-		boolean isDSAlreadyAdded = false;
-		for (WabitDataSource wds : session.getProject().getDataSources()) {
-			if (wds instanceof JDBCDataSource) {
-				JDBCDataSource jdbc = (JDBCDataSource) wds;
-				if (jdbc.getSPDataSource() == ds) {
-					isDSAlreadyAdded = true;
-				}
-			}
-		}
-		if (!isDSAlreadyAdded) {
+		if (!session.getProject().dsAlreadyAdded(ds)) {
 			session.getProject().addDataSource(ds);
 		}
 		Query query = new QueryCache();

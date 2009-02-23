@@ -40,9 +40,9 @@ public class StubWabitSession implements WabitSession {
 
 	}
 
-	public void close() {
+	public boolean close() {
 		// TODO Auto-generated method stub
-
+		return false;
 	}
 
 	public WabitSessionContext getContext() {

@@ -25,4 +25,7 @@ import ca.sqlpower.wabit.WabitSessionContext;
 public interface WabitSwingSessionContext extends WabitSessionContext {
 
 	RecentMenu getRecentMenu();
+	
+	WabitWelcomeScreen getWelcomeScreen();
+
 }

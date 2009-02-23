@@ -212,12 +212,15 @@ public class ProjectSAXHandler extends DefaultHandler {
         		UserPromptResponse responseType = prompter.promptUser();
         		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
-        			session.getProject().addDataSource(ds);
+        			if (!session.getProject().dsAlreadyAdded(ds)) {
+        				session.getProject().addDataSource(ds);
+        			}
         			oldToNewDSNames.put(dsName, ds.getName());
         		} else if (responseType == UserPromptResponse.NOT_OK) {
         			ds = null;
         		} else {
         			cancelled = true;
+        			context.deregisterChildSession(session);
         		}
         	} else {
         		session.getProject().addDataSource(ds);

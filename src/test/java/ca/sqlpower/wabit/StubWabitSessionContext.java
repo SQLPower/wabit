@@ -41,4 +41,14 @@ public class StubWabitSessionContext implements WabitSessionContext {
 		return new StubWabitSession(this);
 	}
 
+	public int getSessionCount() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void close() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -367,6 +367,13 @@
 			<systemPath>${basedir}/lib/rsyntaxtextarea.jar</systemPath>
 		</dependency>
 		<dependency>
+            <groupId>ca.sqlpower.wabit.osxadapter</groupId>
+            <artifactId>osx-adapter</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/osx_adapter.jar</systemPath>
+        </dependency>
+		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>forms</artifactId>
 			<version>1.2.1</version>

@@ -113,12 +113,14 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         
         if (dataSources == null) {
         	dataSources = new PlDotIni();
+        	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
             try {
                 logger.debug("Reading PL.INI defaults");
-                dataSources.read(getClass().getClassLoader().getResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
-                dataSources.read(WabitSessionContextImpl.class.getResourceAsStream("/ca/sqlpower/wabit/example_database.ini"));
+                dataSources.read(getClass().getClassLoader().getResourceAsStream(iniToLoad));
+                iniToLoad = "/ca/sqlpower/demodata/example_database.ini";
+                dataSources.read(WabitSessionContextImpl.class.getResourceAsStream(iniToLoad));
             } catch (IOException e) {
-                throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read system resource default_database_types.ini",e));
+                throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read system resource " + iniToLoad,e));
             }
             try {
                 if (dataSources != null) {
@@ -176,6 +178,19 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 
 	public String getPlDotIniPath() {
 		return plDotIniPath;
+	}
+	
+	public int getSessionCount() {
+		return childSessions.size();
+	}
+
+	public void close() {
+		for (WabitSession session : childSessions) {
+			if (!session.close()) {
+				return;
+			}
+		}
+		System.exit(0);
 	}
 	
 }

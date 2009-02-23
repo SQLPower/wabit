@@ -19,13 +19,19 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 
 /**
@@ -35,6 +41,8 @@ import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implements WabitSwingSessionContext {
 
 	private RecentMenu recentMenu;
+	
+	private WabitWelcomeScreen welcomeScreen;
 
 	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
 			throws IOException, SQLObjectException {
@@ -49,6 +57,9 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
 			}
 		};
+		
+		welcomeScreen = new WabitWelcomeScreen(this);
+		macOSXRegistration();
 	}
 	
 	@Override
@@ -60,5 +71,73 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 	public RecentMenu getRecentMenu() {
 		return recentMenu;
 	}
+
+	public WabitWelcomeScreen getWelcomeScreen() {
+		return welcomeScreen;
+	}
+	
+	@Override
+	public void deregisterChildSession(WabitSession child) {
+		super.deregisterChildSession(child);
+		if (getSessionCount() == 0) {
+			welcomeScreen.showFrame();
+		}
+	}
+	
+	/**
+     * Registers this application in Mac OS X if we're running on that platform.
+     *
+     * <p>This code came from Apple's "OS X Java Adapter" example.
+     */
+    private void macOSXRegistration() {
+
+        Action prefAction = new AbstractAction() {
+		
+			public void actionPerformed(ActionEvent e) {
+				// TODO Implement prefs in Mac
+			}
+		};
+		
+		Action aboutAction = new AboutAction(welcomeScreen.getFrame());
+		Action exitAction = new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				close();
+			}
+		};
+
+        // Whether or not this is OS X, the three actions we're referencing must have been initialized by now.
+        if (exitAction == null) throw new IllegalStateException("Exit action has not been initialized"); //$NON-NLS-1$
+        if (prefAction == null) throw new IllegalStateException("Prefs action has not been initialized"); //$NON-NLS-1$
+        if (aboutAction == null) throw new IllegalStateException("About action has not been initialized"); //$NON-NLS-1$
+
+        if (isMacOSX()) {
+            try {
+                Class osxAdapter = ClassLoader.getSystemClassLoader().loadClass("ca.sqlpower.architect.swingui.OSXAdapter"); //$NON-NLS-1$
+
+                // The main registration method.  Takes quitAction, prefsAction, aboutAction.
+                Class[] defArgs = { Action.class, Action.class, Action.class };
+                Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs); //$NON-NLS-1$
+                Object[] args = { exitAction, prefAction, aboutAction };
+                registerMethod.invoke(osxAdapter, args);
+
+                // The enable prefs method.  Takes a boolean.
+                defArgs = new Class[] { boolean.class };
+                Method prefsEnableMethod =  osxAdapter.getDeclaredMethod("enablePrefs", defArgs); //$NON-NLS-1$
+                args = new Object[] {Boolean.TRUE};
+                prefsEnableMethod.invoke(osxAdapter, args);
+            } catch (NoClassDefFoundError e) {
+                // This will be thrown first if the OSXAdapter is loaded on a system without the EAWT
+                // because OSXAdapter extends ApplicationAdapter in its def
+                System.err.println("This version of Mac OS X does not support the Apple EAWT.  Application Menu handling has been disabled (" + e + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            } catch (ClassNotFoundException e) {
+                // This shouldn't be reached; if there's a problem with the OSXAdapter we should get the
+                // above NoClassDefFoundError first.
+                System.err.println("This version of Mac OS X does not support the Apple EAWT.  Application Menu handling has been disabled (" + e + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            } catch (Exception e) {
+                System.err.println("Exception while loading the OSXAdapter:"); //$NON-NLS-1$
+                e.printStackTrace();
+            }
+        }
+    }
 
 }

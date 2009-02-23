@@ -50,5 +50,17 @@ public interface WabitSessionContext {
 	 */
 	WabitSession createSession();
 	
+	/**
+	 * Returns the number of active sessions in the context.
+	 */
+	int getSessionCount();
 
+	/**
+	 * This will attempt to close all of the currently opened sessions and stop
+	 * the app. Each session will close independently and if any one session
+	 * does not close successfully then the closing operation will stop. Once
+	 * all sessions have been properly closed the app will terminate. If not
+	 * all sessions are properly closed the app will not terminate.
+	 */
+	void close();
 }

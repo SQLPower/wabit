@@ -24,6 +24,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -87,17 +89,52 @@ public class LoadProjectsAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
-		List<WabitSession> sessions = projectLoader.loadProjects();
-		for (WabitSession session : sessions) {
+		try {
+			LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
+			List<WabitSession> sessions = projectLoader.loadProjects();
+			for (WabitSession session : sessions) {
+				try {
+					((WabitSwingSession)session).buildUI();
+					((WabitSwingSession)session).setCurrentFile(importFile);
+				} catch (SQLObjectException e1) {
+					throw new RuntimeException(e1);
+				}
+			}
+			context.getRecentMenu().putRecentFileName(importFile.getAbsolutePath());
+		} finally {
 			try {
-				((WabitSwingSession)session).buildUI();
-				((WabitSwingSession)session).setCurrentFile(importFile);
-			} catch (SQLObjectException e1) {
-				throw new RuntimeException(e1);
+				in.close();
+			} catch (IOException e) {
+				// squishing exception to not hide other exceptions.
 			}
 		}
-		context.getRecentMenu().putRecentFileName(importFile.getAbsolutePath());
+	}
+		
+	/**
+	 * This will load a Wabit project file in a new session in the given context through
+	 * an input stream. This is slightly different from loading from a file as no default
+	 * file to save to will be specified and nothing will be added to the recent files
+	 * menu.
+	 */
+	public static void loadFile(InputStream input, WabitSwingSessionContext context) {
+		BufferedInputStream in = new BufferedInputStream(input);
+		try {
+			LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
+			List<WabitSession> sessions = projectLoader.loadProjects();
+			for (WabitSession session : sessions) {
+				try {
+					((WabitSwingSession)session).buildUI();
+				} catch (SQLObjectException e1) {
+					throw new RuntimeException(e1);
+				}
+			}
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				// squishing exception to not hide other exceptions.
+			}
+		}
 	}
 
 }

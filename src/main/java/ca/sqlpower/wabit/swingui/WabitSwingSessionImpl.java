@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -40,10 +39,8 @@ import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -63,10 +60,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
-import ca.sqlpower.swingui.AboutPanel;
-import ca.sqlpower.swingui.CommonCloseAction;
-import ca.sqlpower.swingui.JDefaultButton;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -84,6 +77,7 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
@@ -114,12 +108,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * An icon for a new Wabit project.
 	 */
 	private static final Icon NEW_PROJECT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
-	
-	/**
-	 * An icon for the aboutAction in the Help menu.
-	 */
-	private static final Icon ABOUT__ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/wabit-16.png"));
-	
+
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private class WindowClosingListener extends WindowAdapter {
@@ -145,16 +134,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final JFrame frame;
 	private static JLabel statusLabel;
 	
-	private static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
+	public static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
 
-	
+	private static final int DEFAULT_DIVIDER_LOC = 50;
+
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
-	
-	/**
-     * Controls a few GUI tweaks that we do on OS X, such as moving menu items around.
-     */
-	public static final boolean MAC_OS_X =
-        System.getProperty("os.name").toLowerCase().startsWith("mac os x");
 	
 	/**
 	 * The list of all currently-registered background tasks.
@@ -171,11 +155,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private WabitPanel currentEditorPanel;
 
-	/**
-	 * This is the model of the current panel.
-	 */
-	private Object currentEditorPanelModel;
-	
 	/**
 	 * This DB connection manager will allow editing the db connections in the
 	 * pl.ini file. This DB connection manager can be used anywhere needed in 
@@ -197,6 +176,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final UserPrompterFactory upfMissingLoadedDB;
 	
 	/**
+	 * This action will close all of the open sessions and, if successful, close the app.
+	 */
+	private final Action exitAction = new AbstractAction("Exit") {
+		public void actionPerformed(ActionEvent e) {
+			getContext().close();
+		}
+	};
+
+	private final AboutAction aboutAction;
+	
+	/**
 	 * Creates a new session 
 	 * 
 	 * @param context
@@ -212,11 +202,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame.setIconImage(FRAME_ICON.getImage());
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowClosingListener(this));
+		aboutAction = new AboutAction(frame);
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
 		
 		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, context.getDataSources());
+		
+		wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		
 	}
+	
 	/**
 	 * sets the StatusMessage
 	 */
@@ -232,8 +227,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
-    	
-    	wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     	
 		projectTree = new JTree(new ProjectTreeModel(project));
 		projectTree.addMouseListener(new ProjectTreeListener(this));
@@ -270,21 +263,27 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.add(new AbstractAction("New", NEW_PROJECT_ICON) {
 		
 			public void actionPerformed(ActionEvent e) {
-				WabitSwingSession wss = new WabitSwingSessionImpl(getContext());
-				try {
-					wss.buildUI();
-				} catch (SQLObjectException e1) {
-					throw new SQLObjectRuntimeException(e1);
-				}		
+				NewProjectScreen newProject = new NewProjectScreen(getContext());
+				newProject.showFrame();
 			}
 		});
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
 		fileMenu.add(getContext().getRecentMenu());
+		fileMenu.add(new AbstractAction("Close Project") {
+			public void actionPerformed(ActionEvent e) {
+				close();
+			}
+		});
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
 		fileMenu.addSeparator();
 		fileMenu.add(new ImportProjectAction(this));
+		
+		if (!getContext().isMacOSX()) {
+			fileMenu.addSeparator();
+			fileMenu.add(exitAction);
+		}
 		
 		JMenu viewMenu = new JMenu("View");
 		viewMenu.setMnemonic('v');
@@ -302,51 +301,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu helpMenu = new JMenu("Help");
 		helpMenu.setMnemonic('h');
 		menuBar.add(helpMenu);
-		if (!MAC_OS_X) {
-            helpMenu.add(new AbstractAction("About Wabit...",ABOUT__ICON) {
-            	
-    			public void actionPerformed(ActionEvent evt) {
-    				// This is one of the few JDIalogs that can not get replaced
-    				// with a call to DataEntryPanelBuilder, because an About
-    				// box must have only ONE button...
-    				final JDialog d = new JDialog(getFrame(),
-    											  "About Wabit");
-    				JPanel cp = new JPanel(new BorderLayout(12,12));
-    				cp.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
-    				
-    				ImageIcon icon = SPSUtils.createIcon("wabit-128", "Wabit Logo");
-    				
-    				final AboutPanel aboutPanel = new AboutPanel(icon, "Wabit", "ca/sqlpower/wabit/wabit.properties", WabitVersion.VERSION.toString());
-    				cp.add(aboutPanel, BorderLayout.CENTER);
-    	
-    				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    	
-    				Action okAction = new AbstractAction() {
-    					public void actionPerformed(ActionEvent evt) {
-    							aboutPanel.applyChanges();
-    							d.setVisible(false);
-    					}
-    				};
-    				okAction.putValue(Action.NAME, "OK");
-    				JDefaultButton okButton = new JDefaultButton(okAction);
-    				buttonPanel.add(okButton);
-    	
-    				cp.add(buttonPanel, BorderLayout.SOUTH);
-    				SPSUtils.makeJDialogCancellable(
-    						d, new CommonCloseAction(d));
-    				d.getRootPane().setDefaultButton(okButton);
-    				d.setContentPane(cp);
-    				d.pack();
-    				d.setLocationRelativeTo(getFrame());
-    				d.setVisible(true);
-    			}
-    	    });
+		if (!getContext().isMacOSX()) {
+			helpMenu.add(aboutAction);
             helpMenu.addSeparator();
         }
 		helpMenu.add(SPSUtils.forumAction);
 	
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
+        
+        frame.setVisible(true);
         
         //prefs
         if (prefs.get("frameBounds", null) != null) {
@@ -365,7 +329,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         	frame.setLocation(200, 100);
         }
 
-        frame.setVisible(true);
 
         logger.debug("UI is built.");
     }
@@ -392,11 +355,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		lifecycleListeners.remove(l);
 	}
 	
-	public void close() {
+	public boolean close() {
+		Object tempEditorPanel = project.getEditorPanelModel();
 		if (!removeEditorPanel()) {
-    		return;
+    		return false;
     	}
-		setEditorPanel(project);
+		setEditorPanel(tempEditorPanel);
 		
     	try {
         	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
@@ -413,10 +377,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
                     new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             if (response == 0) {
-                sessionContext.deregisterChildSession(this);
-                frame.dispose();
+                closing = true;
             } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
-            	return;
+            	return false;
             } else {
             	if (SaveProjectAction.save(WabitSwingSessionImpl.this)) {
             		closing = true;
@@ -436,6 +399,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    	sessionContext.deregisterChildSession(this);
     		frame.dispose();
 		}
+		return closing;
 	}
 
     /**
@@ -452,7 +416,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 			public void run() {
 				try {
-					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(true);
+					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false);
 					
 					final File importFile;
 					if (args.length > 0) {
@@ -467,12 +431,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 						try {
 							LoadProjectsAction.loadFile(importFile, context);
 						} catch (Throwable e) {
-							wss = new WabitSwingSessionImpl(context);
-							wss.buildUI();
+							context.getWelcomeScreen().showFrame();
 						}
 					} else {
-						wss = new WabitSwingSessionImpl(context);
-						wss.buildUI();
+						new WabitWelcomeScreen(context).showFrame();
 					}
 				} catch (Exception ex) {
 					 ex.printStackTrace();
@@ -498,14 +460,24 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public void setEditorPanel(Object entryPanelModel) {
-		if (entryPanelModel == currentEditorPanelModel) {
+		if (entryPanelModel == project.getEditorPanelModel()) {
 			return;
 		}
 		if (!removeEditorPanel()) {
 			return;
 		}
-		int dividerLoc = wabitPane.getDividerLocation();
-		currentEditorPanelModel = entryPanelModel;
+		int dividerLoc;
+		if (wabitPane != null) {
+			dividerLoc = wabitPane.getDividerLocation();
+		} else {
+	    	if(prefs.get("MainDividerLocaton", null) != null) {
+	            String[] dividerLocations = prefs.get("MainDividerLocaton", null).split(",");
+	            dividerLoc = Integer.parseInt(dividerLocations[0]);
+	        } else {
+	        	dividerLoc = DEFAULT_DIVIDER_LOC;
+	        }
+		}
+		project.setEditorPanelModel(entryPanelModel);
 		if (entryPanelModel instanceof QueryCache) {
 			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
 		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
@@ -557,7 +529,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			wabitPane.remove(currentEditorPanel.getPanel());
 		}
 		currentEditorPanel = null;
-		currentEditorPanelModel = null;
+		project.setEditorPanelModel(null);
 		return true;
 	}
 	

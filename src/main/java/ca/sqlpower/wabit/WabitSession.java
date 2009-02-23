@@ -45,8 +45,11 @@ public interface WabitSession {
 	 * fires a sessionClosing lifecycle event, so any resources used up
 	 * by subsystems dependent on this session can be freed by the appropriate
 	 * parties.
+	 * 
+	 * @return True if the session was successfully closed. False if the
+	 * session did not close due to an error or user intervention.
 	 */
-	public void close();
+	public boolean close();
 
 	/**
 	 * Returns the project associated with this session.

@@ -55,12 +55,15 @@ public class LoadProjectXMLDAO {
 	 */
 	public List<WabitSession> loadProjects() {
 		SAXParser parser;
+		ProjectSAXHandler saxHandler = new ProjectSAXHandler(context);
 		try {
 			parser = SAXParserFactory.newInstance().newSAXParser();
-			ProjectSAXHandler saxHandler = new ProjectSAXHandler(context);
 			parser.parse(in, saxHandler);
 			return saxHandler.getSessions();
 		} catch (Exception e) {
+			for (WabitSession session : saxHandler.getSessions()) {
+				context.deregisterChildSession(session);
+			}
 			throw new RuntimeException(e);
 		}
 	}

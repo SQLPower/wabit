@@ -63,8 +63,9 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		//Do nothing
 	}
 
-	public void close() {
+	public boolean close() {
 		//Do nothing
+		return false;
 	}
 
 	public void removeSessionLifecycleListener(
