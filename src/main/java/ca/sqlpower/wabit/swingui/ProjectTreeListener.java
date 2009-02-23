@@ -36,6 +36,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
@@ -72,8 +73,8 @@ public class ProjectTreeListener extends MouseAdapter {
 		Object lastPathComponent = getLastPathComponent(e);
 		if (e.isPopupTrigger()) {
 			maybeShowPopup(e);
-		} else if (lastPathComponent != null) {
-			session.setEditorPanel(lastPathComponent);
+		} else if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
+			session.getProject().setEditorPanelModel((WabitObject) lastPathComponent);
 		}
 	}
 

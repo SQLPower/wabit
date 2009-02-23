@@ -78,7 +78,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
      * This is the current editor panel's model that is being being edited.
      * This allows the project to know what panel to load when it is loaded. 
      */
-    private Object editorPanelModel;
+    private WabitObject editorPanelModel;
 
     public WabitProject() {
     	listeners = new ArrayList<DatabaseListChangeListener>();
@@ -131,6 +131,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         queries.add(index, query);
         query.setParent(this);
         fireChildAdded(Query.class, query, index);
+        setEditorPanelModel(query);
     }
 
     public boolean removeQuery(Query query) {
@@ -149,6 +150,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         layouts.add(index, layout);
         layout.setParent(this);
         fireChildAdded(Layout.class, layout, index);
+        setEditorPanelModel(layout);
     }
     
     public boolean removeLayout(Layout layout) {
@@ -333,11 +335,13 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 		dsCollectionUndoListeners.remove(l);
 	}
 
-	public void setEditorPanelModel(Object editorPanelModel) {
+	public void setEditorPanelModel(WabitObject editorPanelModel) {
+		WabitObject oldEditorPanelModel = this.editorPanelModel;
 		this.editorPanelModel = editorPanelModel;
+		firePropertyChange("editorPanelModel", oldEditorPanelModel, editorPanelModel);
 	}
 
-	public Object getEditorPanelModel() {
+	public WabitObject getEditorPanelModel() {
 		return editorPanelModel;
 	}
 }

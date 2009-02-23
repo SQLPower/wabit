@@ -62,8 +62,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     }
     
     public void actionPerformed(ActionEvent e) {
-        Layout newLayout = createDefaultLayout(project, query);
-        session.setEditorPanel(newLayout);
+        createDefaultLayout(project, query);
     }
     
     /**

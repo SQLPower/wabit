@@ -173,6 +173,13 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * appear in this map.
 	 */
 	private final Map<String, String> oldToNewDSNames;
+
+	/**
+	 * This is the UUID for the editorPanelModel to be set in the loading project.
+	 * This cannot be set for the project until the end of the loading as the project's
+	 * children will not be loaded at the start tag.
+	 */
+	private String currentEditorPanelModel;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -199,6 +206,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         		
         		if (aname.equals("name")) {
         			session.getProject().setName(aval);
+        		} else if (aname.equals("editorPanelModel")) {
+        			currentEditorPanelModel = aval;
         		} else {
         			logger.warn("Unexpected attribute of <project>: " + aname + "=" + aval);
         		}
@@ -694,7 +703,14 @@ public class ProjectSAXHandler extends DefaultHandler {
     		throws SAXException {
     	if (cancelled) return;
     	
-    	if (name.equals("table")) {
+    	if (name.equals("project")) {
+    		for (WabitObject obj : session.getProject().getChildren()) {
+    			if (obj.getUUID().toString().equals(currentEditorPanelModel)) {
+    				session.getProject().setEditorPanelModel(obj);
+    				break;
+    			}
+    		}
+    	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID().toString(), query, container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());

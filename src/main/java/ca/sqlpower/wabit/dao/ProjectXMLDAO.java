@@ -142,6 +142,7 @@ public class ProjectXMLDAO {
 
 		xml.print(out, "<project");
 		printAttribute("name", project.getName());
+		printAttribute("editorPanelModel", project.getEditorPanelModel().getUUID().toString());
 		xml.println(out, ">");
 		xml.indent++;
 		

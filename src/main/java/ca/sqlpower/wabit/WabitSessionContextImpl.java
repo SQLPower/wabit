@@ -185,8 +185,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	}
 
 	public void close() {
-		for (WabitSession session : childSessions) {
-			if (!session.close()) {
+		for (int i = childSessions.size() - 1; i >= 0; i--) {
+			if (!childSessions.get(i).close()) {
 				return;
 			}
 		}

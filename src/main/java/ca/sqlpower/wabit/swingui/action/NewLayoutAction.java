@@ -42,6 +42,5 @@ public class NewLayoutAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         Layout layout = new Layout("New Layout");
 		session.getProject().addLayout(layout);
-		session.setEditorPanel(layout);
     }
 }

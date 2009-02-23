@@ -25,6 +25,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -55,6 +57,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -186,6 +189,27 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	private final AboutAction aboutAction;
 	
+	private final PropertyChangeListener editorModelListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals("editorPanelModel")) {
+				if (!setEditorPanel((WabitObject) evt.getNewValue())) {
+					project.setEditorPanelModel((WabitObject) evt.getOldValue());
+					return;
+				}
+				if (evt.getNewValue() != null) {
+					final TreePath createTreePathForObject = projectTreeModel.createTreePathForObject((WabitObject) evt.getNewValue());
+					logger.debug("Tree path being set to " + createTreePathForObject + " as editor panel being set to " + ((WabitObject) evt.getNewValue()).getName());
+					projectTree.setSelectionPath(createTreePathForObject);
+				}
+			}
+		}
+	};
+
+	/**
+	 * The model behind the project tree on the left side of Wabit.
+	 */
+	private ProjectTreeModel projectTreeModel;
+	
 	/**
 	 * Creates a new session 
 	 * 
@@ -193,6 +217,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	public WabitSwingSessionImpl(WabitSwingSessionContext context) {
 	    project = new WabitProject();
+	    project.addPropertyChangeListener(editorModelListener);
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
 		
@@ -209,6 +234,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, context.getDataSources());
 		
 		wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		projectTreeModel = new ProjectTreeModel(project);
+		projectTree = new JTree(projectTreeModel);
 		
 	}
 	
@@ -228,7 +255,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
     	
-		projectTree = new JTree(new ProjectTreeModel(project));
 		projectTree.addMouseListener(new ProjectTreeListener(this));
     	ProjectTreeCellRenderer renderer = new ProjectTreeCellRenderer();
 		projectTree.setCellRenderer(renderer);
@@ -236,7 +262,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	projectTree.setEditable(true);
 
         wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);
-		setEditorPanel(project);
+        if (project.getEditorPanelModel() == null) {
+        	project.setEditorPanelModel(project);
+        }
     	
 		//prefs
     	if(prefs.get("MainDividerLocaton", null) != null) {
@@ -356,11 +384,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public boolean close() {
-		Object tempEditorPanel = project.getEditorPanelModel();
 		if (!removeEditorPanel()) {
     		return false;
     	}
-		setEditorPanel(tempEditorPanel);
 		
     	try {
         	prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
@@ -379,6 +405,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             if (response == 0) {
                 closing = true;
             } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
+            	setEditorPanel(project.getEditorPanelModel());
             	return false;
             } else {
             	if (SaveProjectAction.save(WabitSwingSessionImpl.this)) {
@@ -459,15 +486,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return frame;
 	}
 	
-	public void setEditorPanel(Object entryPanelModel) {
-		if (entryPanelModel == project.getEditorPanelModel()) {
-			return;
-		}
+	public boolean setEditorPanel(WabitObject entryPanelModel) {
 		if (!removeEditorPanel()) {
-			return;
+			return false;
 		}
 		int dividerLoc;
-		if (wabitPane != null) {
+		if (currentEditorPanel != null) {
 			dividerLoc = wabitPane.getDividerLocation();
 		} else {
 	    	if(prefs.get("MainDividerLocaton", null) != null) {
@@ -477,7 +501,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	        	dividerLoc = DEFAULT_DIVIDER_LOC;
 	        }
 		}
-		project.setEditorPanelModel(entryPanelModel);
+		
+		if (currentEditorPanel != null) {
+			wabitPane.remove(currentEditorPanel.getPanel());
+		}
+		
 		if (entryPanelModel instanceof QueryCache) {
 			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
 		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
@@ -503,6 +531,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
 		wabitPane.setDividerLocation(dividerLoc);
+		return true;
 	}
 	
 	/**
@@ -526,10 +555,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				prefs.put(LAYOUT_DIVIDER_LOCATION, String.format("%d", ((ReportLayoutPanel) currentEditorPanel).getSplitPane().getDividerLocation()));
 			}
 			currentEditorPanel.discardChanges();
-			wabitPane.remove(currentEditorPanel.getPanel());
 		}
-		currentEditorPanel = null;
-		project.setEditorPanelModel(null);
 		return true;
 	}
 	

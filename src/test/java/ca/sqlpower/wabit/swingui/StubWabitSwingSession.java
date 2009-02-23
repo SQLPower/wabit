@@ -35,6 +35,7 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSessionContext;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -93,9 +94,9 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		return null;
 	}
 
-	public void setEditorPanel(Object entryPanelModel) {
+	public boolean setEditorPanel(WabitObject entryPanelModel) {
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
 	public void buildUI() throws SQLObjectException {

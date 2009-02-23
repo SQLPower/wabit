@@ -43,7 +43,6 @@ public class NewQueryAction extends AbstractAction {
         QueryCache query = new QueryCache();
         query.setName("New Query");
 		project.addQuery(query);
-		session.setEditorPanel(query);
 		TreePath path = session.getTree().getPathForRow(session.getTree().getRowCount()-1);
 		session.getTree().setSelectionPath(path);
 		

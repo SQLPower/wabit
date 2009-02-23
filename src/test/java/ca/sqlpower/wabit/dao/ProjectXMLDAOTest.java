@@ -129,6 +129,8 @@ public class ProjectXMLDAOTest extends TestCase {
 						} else {
 							newVal = new Point2D.Double(((Point2D) oldVal).getX(), ((Point2D) oldVal).getY());
 						}
+					} else if (property.getPropertyType() == WabitObject.class) {
+						newVal = new QueryCache();
 					} else {
 						throw new RuntimeException("This test case lacks a value for "
 								+ property.getName() + " (type "
@@ -260,7 +262,7 @@ public class ProjectXMLDAOTest extends TestCase {
         WabitSession loadedSession = loadDAO.loadProjects().get(0);
         
         assertNotNull(loadedSession.getProject());
-        assertPropertiesEqual(p, loadedSession.getProject(), "UUID", "children", "dataSources", "queries", "layouts");
+        assertPropertiesEqual(p, loadedSession.getProject(), "UUID", "children", "dataSources", "queries", "layouts", "editorPanelModel");
         
         assertEquals(p.getDataSources().size(), loadedSession.getProject().getDataSources().size());
         for (WabitDataSource ds : p.getDataSources()) {

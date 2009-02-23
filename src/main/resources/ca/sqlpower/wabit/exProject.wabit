@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <wabit export-format="1.0.0">
- <project name="New Project" >
+ <project name="New Project" editorPanelModel="767072b5-917d-4ae8-9751-ac21bea0ec5e" >
   <data-sources>
    <data-source name="SQL Power Demo Connection"   />
   </data-sources>
@@ -10,7 +10,7 @@
     <column id="4e38d3a8-3a15-4033-88aa-11bb0778064b" name="current_time" alias="" where-text=""    />
     <column id="29aab45c-648e-492a-902f-56539897ca4b" name="current_date" alias="" where-text=""    />
     <column id="a4dd8af9-1de5-4175-aef9-9e8396dd147a" name="user" alias="" where-text=""    />
-    <column id="c84f7829-e53b-477f-aad0-779492df0a4d" name="COUNT(*)" alias="" where-text=""    />
+    <column id="6f352b1d-dde2-49e8-ac0a-96b20aab7e42" name="COUNT(*)" alias="" where-text=""    />
    </constants>
    <table name="MOVIE" uuid="4755674d-885b-4451-b07a-8722abadea3b" schema="PUBLIC" alias="" xpos="226.0" ypos="30.0"   >
     <column id="3e8bed72-cb54-458e-bef0-89d787668905" name="MOVIE_ID" alias="" where-text=""    />
@@ -38,7 +38,7 @@
     <column id="caa01ef4-2e04-46b0-9972-cb51391a86a1" name="current_time" alias="" where-text=""    />
     <column id="3e6e319b-b24b-4702-bcb0-0fad37e4c2ec" name="current_date" alias="" where-text=""    />
     <column id="dc5fcbdb-40a4-4993-bafb-0b5c27b1ed92" name="user" alias="" where-text=""    />
-    <column id="dae1b33a-fded-42ac-8d54-5de2d83ab4cb" name="COUNT(*)" alias="" where-text=""    />
+    <column id="fd43aed8-4fa5-4642-a7c8-391b13bd2984" name="COUNT(*)" alias="" where-text=""    />
    </constants>
    <table name="MOVIE" uuid="812920d2-eaac-43b8-844a-4b263fc00fb3" schema="PUBLIC" alias="" xpos="255.0" ypos="93.0"   >
     <column id="defb6b58-aa19-4a33-a42d-a89159a6fb0b" name="MOVIE_ID" alias="" where-text=""    />
@@ -63,8 +63,8 @@
     <column id="4bb94b49-aa9f-4fd3-a7e3-a96f521481d2" name="FIRST_NAME" alias="" where-text=""    />
     <column id="89d46f43-7e9e-44b3-99e2-6ba448ea20c9" name="DOB" alias="" where-text=""    />
    </table>
-   <join left-item-id="defb6b58-aa19-4a33-a42d-a89159a6fb0b" left-is-outer="false" right-item-id="ef0514fc-d14d-47d8-9e97-918dd1f91e07" right-is-outer="false" comparator="="   />
    <join left-item-id="8e266e37-2614-4000-9802-467b99339084" left-is-outer="false" right-item-id="c3a2bfc0-01bd-4994-a68d-80cff57b5d37" right-is-outer="false" comparator="="   />
+   <join left-item-id="defb6b58-aa19-4a33-a42d-a89159a6fb0b" left-is-outer="false" right-item-id="ef0514fc-d14d-47d8-9e97-918dd1f91e07" right-is-outer="false" comparator="="   />
    <select>
     <column id="4bb94b49-aa9f-4fd3-a7e3-a96f521481d2"    />
     <column id="485c181c-8259-4301-9a09-8c17602fe9a2"    />
@@ -80,7 +80,7 @@
     <column id="26ee3d7b-c87f-45f6-854c-9303999bc4ac" name="current_time" alias="" where-text=""    />
     <column id="911e707b-307f-4069-af19-9328a8642450" name="current_date" alias="" where-text=""    />
     <column id="764e30e4-5c8b-4b12-bd58-ed4f0bf70ff1" name="user" alias="" where-text=""    />
-    <column id="8d36f1f3-92d9-4d83-9d08-3ca33ff828eb" name="COUNT(*)" alias="" where-text=""    />
+    <column id="ad4d64f9-7a30-40d8-9f08-ef488f92f36c" name="COUNT(*)" alias="" where-text=""    />
    </constants>
    <table name="MOVIE" uuid="9b8f72c1-1e1d-40bd-856b-dc842d8249b6" schema="PUBLIC" alias="" xpos="221.0" ypos="21.0"   >
     <column id="fa659a87-ff53-4bb2-9e91-a70fc51ef163" name="MOVIE_ID" alias="" where-text=""    />

@@ -28,6 +28,7 @@ import javax.swing.JTree;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 
 public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
@@ -38,8 +39,11 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	 * Sets the panel that allows editing of the current selection in the tree.
 	 * A new panel will be created based on the type of model passed into this method
 	 * if the user has no changes or wants to discard the current changes.
+	 * 
+	 * @return False if the previous editor was not correctly saved and the old
+	 * component needs to be displayed. True otherwise.
 	 */
-	void setEditorPanel(Object entryPanelModel);
+	boolean setEditorPanel(WabitObject entryPanelModel);
 	
 	/**
 	 *  Builds and displays the GUI.

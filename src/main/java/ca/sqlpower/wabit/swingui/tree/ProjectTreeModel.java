@@ -204,6 +204,17 @@ public class ProjectTreeModel implements TreeModel {
 	    }
     }
     
+    public TreePath createTreePathForObject(WabitObject obj) {
+    	WabitObject pathObject = obj;
+    	List<WabitObject> path = new ArrayList<WabitObject>();
+    	while (pathObject.getParent() != null) {
+    		path.add(0, pathObject);
+    		pathObject = pathObject.getParent();
+    	}
+    	path.add(0, pathObject);
+    	return new TreePath(path.toArray());
+    }
+    
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
