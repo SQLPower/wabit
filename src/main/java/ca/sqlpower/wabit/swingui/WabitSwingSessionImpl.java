@@ -81,6 +81,7 @@ import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
+import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
@@ -334,6 +335,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             helpMenu.addSeparator();
         }
 		helpMenu.add(SPSUtils.forumAction);
+		helpMenu.add(new HelpAction(frame));
 	
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);

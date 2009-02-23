@@ -37,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -156,12 +157,8 @@ public class WabitWelcomeScreen {
 		
 		DefaultFormBuilder bottomPanelBuilder = new DefaultFormBuilder(new FormLayout("pref, 4dlu, pref, 4dlu:grow, pref"));
 		bottomPanelBuilder.setDefaultDialogBorder();
-		JButton helpButton = new JButton(new AbstractAction("?") {
-			public void actionPerformed(ActionEvent e) {
-				// TODO Display the help menu.
-			}
-		});
-//		bottomPanelBuilder.append(helpButton);
+		JButton helpButton = new JButton(new HelpAction(frame));
+		bottomPanelBuilder.append(helpButton);
 		
 		JButton tutorialButton = new JButton(new AbstractAction("View Tutorials") {
 			public void actionPerformed(ActionEvent e) {
