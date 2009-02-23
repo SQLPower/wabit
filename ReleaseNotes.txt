@@ -1,17 +1,24 @@
 Wabit Release Notes
 
 Noteworthy Changes in 0.9.5
+  User Interface
+    * The starting of Wabit has changed to include a welcome screen and new project screen.
+    
   Query Interface
     * Quick changes to queries no longer show stale data from intermediate steps.
     * Enhanced exception messages when queries fail due to connection problems.
+    * The query text editor now remembers executed query history and can be navigated
+      instead of just navigating individual edits.
     
   Other
+    * Added a user guide and help menu options.
     * Connections that cannot connect to their data source can no longer be added to a project.
     * New prompt for replacing old or missing database connections when loading projects with
       failing connections.
     * Wabit now opens with the last project modified by the user.
     * Added the ability to make new projects without having to restart Wabit.
     * Added progress bars to printing and PDF creation.
+    * About and Quit now work properly on Mac.
 
 Noteworthy Changes in 0.9.4
   Query Interface
