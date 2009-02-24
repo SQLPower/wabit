@@ -36,7 +36,7 @@ public class HelpAction extends AbstractAction {
     private final JFrame parentFrame;
     
     public HelpAction(JFrame parentFrame) {
-        super("help");
+        super("Help");
         this.parentFrame = parentFrame;
     }
 
