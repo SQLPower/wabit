@@ -24,6 +24,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -84,15 +85,15 @@ public class ImportProjectAction extends AbstractAction {
 				sess.getProject().removeDataSource(dataSources.get(i));
 			}
 			
-			List<Query> queries = sess.getProject().getQueries();
+			List<Query> queries = new ArrayList<Query>(sess.getProject().getQueries());
 			for (int i = queries.size() - 1; i >= 0; i--) {
-				session.getProject().addQuery(queries.get(i));
 				sess.getProject().removeQuery(queries.get(i));
+				session.getProject().addQuery(queries.get(i));
 			}
-			List<Layout> layouts = sess.getProject().getLayouts();
+			List<Layout> layouts = new ArrayList<Layout>(sess.getProject().getLayouts());
 			for (int i = layouts.size() - 1; i >= 0; i--) {
-				session.getProject().addLayout(layouts.get(i));
 				sess.getProject().removeLayout(layouts.get(i));
+				session.getProject().addLayout(layouts.get(i));
 			}
 			
 			sess.getContext().deregisterChildSession(sess);
