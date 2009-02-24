@@ -14,7 +14,7 @@
 	<groupId>ca.sqlpower</groupId>
 	<artifactId>wabit</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.4</version>
+	<version>0.9.5</version>
 	<name>wabit</name>
 	<url>http://code.google.com/p/wabit</url>
 	<build>
@@ -99,7 +99,7 @@
 						<manifestEntries>
 							<Class-Path>jdbc/ lib/architect_dbtree_lib.jar
 								lib/architect_lib.jar lib/piccolo.jar lib/piccolox.jar
-								lib/rsyntaxtextarea.jar</Class-Path>
+								lib/rsyntaxtextarea.jar lib/wabithelp.jar</Class-Path>
 						</manifestEntries>
 					</archive>
 				</configuration>
