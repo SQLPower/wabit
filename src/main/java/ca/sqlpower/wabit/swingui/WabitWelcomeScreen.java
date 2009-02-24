@@ -166,6 +166,8 @@ public class WabitWelcomeScreen {
 			}
 		});
 //		bottomPanelBuilder.append(tutorialButton);
+		//Temporary spacer label until tutorials exist on the website.
+		bottomPanelBuilder.append(new JLabel());
 		
 		JButton quitButton = new JButton(new AbstractAction("Quit") {
 			public void actionPerformed(ActionEvent e) {
