@@ -265,6 +265,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);
         if (project.getEditorPanelModel() == null) {
         	project.setEditorPanelModel(project);
+        } else {
+        	setEditorPanel(project.getEditorPanelModel());
         }
     	
 		//prefs
