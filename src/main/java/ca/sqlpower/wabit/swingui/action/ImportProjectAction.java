@@ -77,12 +77,12 @@ public class ImportProjectAction extends AbstractAction {
 		LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(session.getContext(), in);
 		List<WabitSession> sessions = projectLoader.loadProjects();
 		for (WabitSession sess : sessions) {
-			List<WabitDataSource> dataSources = sess.getProject().getDataSources();
+			List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>(sess.getProject().getDataSources());
 			for (int i = dataSources.size() - 1; i >= 0; i--) {
+				sess.getProject().removeDataSource(dataSources.get(i));
 				if (!(session.getProject().getDataSources().contains(dataSources.get(i)))) {
 					session.getProject().addDataSource(dataSources.get(i));
 				}
-				sess.getProject().removeDataSource(dataSources.get(i));
 			}
 			
 			List<Query> queries = new ArrayList<Query>(sess.getProject().getQueries());
