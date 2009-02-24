@@ -253,11 +253,13 @@ public class QueryController {
 	private final ActionListener dataSourceListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			Object selectedItem = dataSourceComboBox.getSelectedItem();
-			if (!(selectedItem instanceof SPDataSource)) {
+			if (selectedItem != null && !(selectedItem instanceof SPDataSource)) {
 				throw new IllegalStateException("The data source combo box does not have data sources in it.");
 			}
 			queryCache.setDataSource((SPDataSource) selectedItem);
-			logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
+			if (logger.isDebugEnabled()) {
+				logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
+			}
 		}
 	};
 	
