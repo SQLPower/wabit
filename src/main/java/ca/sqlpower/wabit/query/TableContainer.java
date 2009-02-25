@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.query;
 
 import java.awt.geom.Point2D;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -147,7 +149,11 @@ public class TableContainer extends AbstractWabitObject implements Container {
 	
 	public String getName() {
 		loadTableByQualifiedName();
-		return table.getName();
+		if (table != null) {
+			return table.getName();
+		} else {
+			return super.getName();
+		}
 	}
 
 	public String getAlias() {
@@ -195,7 +201,9 @@ public class TableContainer extends AbstractWabitObject implements Container {
 	}
 
 	public void setPosition(Point2D position) {
+		Point2D oldPosition = this.position;
 		this.position = position;
+		firePropertyChange("position", oldPosition, position);
 	}
 
 	public boolean allowsChildren() {
@@ -229,6 +237,25 @@ public class TableContainer extends AbstractWabitObject implements Container {
 	void loadTableByQualifiedName() {
 		if (table == null) {
 			logger.debug("Cache has data source " + cache.getDataSource());
+			Connection con = null;
+			if (cache.getDataSource() == null) {
+				return;
+			}
+			try {
+				con = cache.getDataSource().createConnection();
+			} catch (SQLException e) {
+				//don't load the table if the connection is not available.
+				return;
+			} finally {
+				if (con != null) {
+					try {
+						con.close();
+					} catch (Exception e) {
+						//squish exception to show any other exception while testing the connection.
+					}
+				}
+			}
+			
 			SQLDatabase db = new SQLDatabase(cache.getDataSource());
 			try {
 				table = db.getTableByName(catalog, schema, super.getName());

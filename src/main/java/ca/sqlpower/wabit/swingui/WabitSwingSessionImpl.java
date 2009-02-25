@@ -267,7 +267,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         if (project.getEditorPanelModel() == null) {
         	project.setEditorPanelModel(project);
         } else {
-        	setEditorPanel(project.getEditorPanelModel());
+        	currentEditorPanel.getPanel().repaint();
         }
     	
 		//prefs
