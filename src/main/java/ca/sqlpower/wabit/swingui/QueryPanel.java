@@ -564,6 +564,8 @@ public class QueryPanel implements WabitPanel {
     	JPanel southPanel = southPanelBuilder.getPanel();
 		mainSplitPane.add(southPanel, JSplitPane.BOTTOM);
 		southPanel.setMinimumSize(new Dimension(0, ICON.getIconHeight() * 5));
+		
+		executeQueryInCache();
 	}
 	
 	/**
