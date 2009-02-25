@@ -71,6 +71,7 @@ import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitObject;
@@ -607,8 +608,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return currentFile;
 	}
 	
-	public UserPrompter createUserPrompter(String question, String okText, String newText, String notOkText, String cancelText, UserPromptType responseType, UserPromptResponse defaultResponseType, Object defaultResponse) {
-		return upfMissingLoadedDB.createUserPrompter(question, okText, newText, notOkText, cancelText, responseType, defaultResponseType, defaultResponse);
+	public UserPrompter createUserPrompter(String question, UserPromptType responseType, UserPromptOptions optionType, UserPromptResponse defaultResponseType, Object defaultResponse, String ...buttonNames) {
+		return upfMissingLoadedDB.createUserPrompter(question, responseType, optionType, defaultResponseType, defaultResponse, buttonNames);
 	}
 	
 }

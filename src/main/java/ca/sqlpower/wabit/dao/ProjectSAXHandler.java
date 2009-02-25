@@ -46,6 +46,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.Query;
@@ -217,7 +218,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	checkMandatory("name", dsName);
         	SPDataSource ds = context.getDataSources().getDataSource(dsName);
         	if (ds == null) {
-        		UserPrompter prompter = session.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", "OK", "Create New...", "Skip Data Source", "Cancel Load", UserPromptType.DATA_SOURCE, UserPromptResponse.NOT_OK, null);
+        		UserPrompter prompter = session.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", UserPromptType.DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, "OK", "Create New...", "Skip Data Source", "Cancel Load");
         		UserPromptResponse responseType = prompter.promptUser();
         		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();

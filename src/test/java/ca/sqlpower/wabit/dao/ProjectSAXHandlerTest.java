@@ -29,6 +29,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSession;
@@ -89,11 +90,11 @@ public class ProjectSAXHandlerTest extends TestCase {
         	@Override
         	public WabitSession createSession() {
         		return new StubWabitSession(this) {
-        			public UserPrompter createUserPrompter(String question, String okText, String newText, String notOkText, String cancelText, ca.sqlpower.util.UserPrompterFactory.UserPromptType responseType, UserPrompter.UserPromptResponse defaultResponseType, Object defaultResponse) {
+        			public UserPrompter createUserPrompter(String question, ca.sqlpower.util.UserPrompterFactory.UserPromptType responseType, UserPrompter.UserPromptOptions optionType, UserPrompter.UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames) {
         				if (responseType == UserPromptType.DATA_SOURCE) {
-        					return new DefaultUserPrompter(UserPromptResponse.NEW, replacementDS);
+        					return new DefaultUserPrompter(optionType, UserPromptResponse.NEW, replacementDS);
         				} else {
-        					return super.createUserPrompter(question, okText, newText, notOkText, cancelText, responseType, defaultResponseType, defaultResponse);
+        					return super.createUserPrompter(question, responseType, optionType, defaultResponseType, defaultResponse, buttonNames);
         				}
         			};
         		};

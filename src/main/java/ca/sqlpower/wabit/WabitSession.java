@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 
@@ -95,7 +96,7 @@ public interface WabitSession {
 	 *            The default response to be given if the default response is
 	 *            used.
 	 */
-	public UserPrompter createUserPrompter(String question, String okText, String newText, String notOkText, 
-			String cancelText, UserPromptType responseType, UserPromptResponse defaultResponseType, Object defaultResponse);
+	public UserPrompter createUserPrompter(String question, UserPromptType responseType, UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames);
 	
 }
