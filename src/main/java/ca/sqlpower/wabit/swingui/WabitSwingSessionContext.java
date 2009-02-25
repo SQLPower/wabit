@@ -28,4 +28,20 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
 	
 	WabitWelcomeScreen getWelcomeScreen();
 
+	/**
+	 * Sets the most recent file to be saved or loaded into the session. The
+	 * session tracks recent files for uses like a recent menu and to decide if
+	 * Wabit should start with loading a saved file.
+	 * 
+	 * @param fileName
+	 *            The absolute path to the file with the file name.
+	 */
+	void putRecentFileName(String fileName);
+	
+	/**
+	 * Returns true if Wabit should open on the welcome screen. Returns false
+	 * if the most recent project in the recent menu should be loaded and displayed.
+	 */
+	boolean startOnWelcomeScreen();
+
 }

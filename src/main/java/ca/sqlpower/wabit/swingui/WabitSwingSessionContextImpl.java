@@ -81,6 +81,7 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 		super.deregisterChildSession(child);
 		if (getSessionCount() == 0) {
 			welcomeScreen.showFrame();
+			prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
 		}
 	}
 	
@@ -139,5 +140,14 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
             }
         }
     }
+
+	public void putRecentFileName(String fileName) {
+		getRecentMenu().putRecentFileName(fileName);
+		prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
+	}
+
+	public boolean startOnWelcomeScreen() {
+		return prefs.getBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
+	}
 
 }

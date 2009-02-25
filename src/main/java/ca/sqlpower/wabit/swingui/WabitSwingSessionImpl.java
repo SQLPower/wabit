@@ -453,6 +453,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 					final File importFile;
 					if (args.length > 0) {
 						importFile = new File(args[0]);
+					} else if (context.startOnWelcomeScreen()) {
+						importFile = null;
 					} else {
 						importFile = context.getRecentMenu().getMostRecentFile();
 					}

@@ -100,7 +100,7 @@ public class LoadProjectsAction extends AbstractAction {
 					throw new RuntimeException(e1);
 				}
 			}
-			context.getRecentMenu().putRecentFileName(importFile.getAbsolutePath());
+			context.putRecentFileName(importFile.getAbsolutePath());
 		} finally {
 			try {
 				in.close();

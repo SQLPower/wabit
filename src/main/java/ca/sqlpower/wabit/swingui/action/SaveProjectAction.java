@@ -28,6 +28,7 @@ import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This will save the file to the place where the user last loaded or saved.
@@ -65,6 +66,7 @@ public class SaveProjectAction extends AbstractAction {
 				throw new RuntimeException(e1);
 			}
 			projectSaver.save();
+			((WabitSwingSessionContext) session.getContext()).putRecentFileName(session.getCurrentFile().getAbsolutePath());
 			return true;
 		} else {
 			return new SaveAsProjectAction(session).save();

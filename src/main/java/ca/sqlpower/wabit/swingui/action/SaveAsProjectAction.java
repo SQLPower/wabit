@@ -86,7 +86,7 @@ public class SaveAsProjectAction extends AbstractAction {
 		
 		this.session.setCurrentFile(selectedFile);
 		
-		((WabitSwingSessionContext) session.getContext()).getRecentMenu().putRecentFileName(selectedFile.getAbsolutePath());
+		((WabitSwingSessionContext) session.getContext()).putRecentFileName(selectedFile.getAbsolutePath());
 		
 		return true;
 	}

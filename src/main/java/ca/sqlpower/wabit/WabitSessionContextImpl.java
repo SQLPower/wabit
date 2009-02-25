@@ -49,6 +49,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	private static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
 	
+	/**
+	 * This is a preference that stores if the app should start up on the welcome screen
+	 * or it should start on the last loaded/saved project. 
+	 */
+	protected static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
+	
 	private DataSourceCollection dataSources;
 	private final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
@@ -71,7 +77,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     /**
      * This prefs node stores context specific prefs. At current this is the pl.ini location.
      */
-    private final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
+    protected final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
 	
 	/**
 	 * Creates a new Wabit session context.
@@ -189,6 +195,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			if (!childSessions.get(i).close()) {
 				return;
 			}
+			prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 		}
 		System.exit(0);
 	}
