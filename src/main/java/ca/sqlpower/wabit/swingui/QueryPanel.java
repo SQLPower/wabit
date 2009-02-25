@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
@@ -31,6 +32,9 @@ import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -257,6 +261,18 @@ public class QueryPanel implements WabitPanel {
 		}
 	};
 	
+	/**
+	 * This listens to mouse dragging of a column in a table. This handles 
+	 * auto-scrolling during the drag and drop operation, in the case that the
+	 * user wants to drag the column past the visible region on the screen.
+	 */
+	private final MouseMotionListener reorderSelectionByHeaderAutoScrollTable = new MouseMotionAdapter() {
+		public void mouseDragged(MouseEvent e) {
+			Rectangle rect = new Rectangle(e.getX(), e.getY(), 1, 1);
+			((JTableHeader) e.getSource()).getTable().scrollRectToVisible(rect);
+		}	
+	};
+	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
 		this.session = session;
@@ -360,6 +376,7 @@ public class QueryPanel implements WabitPanel {
 					while (enumeration.hasMoreElements()) {
 						enumeration.nextElement().removePropertyChangeListener(resizingColumnChangeListener);
 					}
+					e.getChangedTable().getTableHeader().removeMouseMotionListener(reorderSelectionByHeaderAutoScrollTable);
 				}
 			}
 		
@@ -391,7 +408,7 @@ public class QueryPanel implements WabitPanel {
 				while (enumeration.hasMoreElements()) {
 					enumeration.nextElement().addPropertyChangeListener(resizingColumnChangeListener);
 				}
-				
+				table.getTableHeader().addMouseMotionListener(reorderSelectionByHeaderAutoScrollTable);
 				queryController.listenToCellRenderer(renderer);
 				
 				columnNameLabel.setIcon(null);

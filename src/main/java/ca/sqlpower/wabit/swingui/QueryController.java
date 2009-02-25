@@ -190,18 +190,6 @@ public class QueryController {
 	private TableColumnModelEvent lastTableColumnMove = null;
 
 	/**
-	 * This listens to mouse dragging of a column in a table. This handles 
-	 * auto-scrolling during the drag and drop operation, in the case that the
-	 * user wants to drag the column past the visible region on the screen.
-	 */
-	private final MouseMotionListener reorderSelectionByHeaderAutoScrollTable = new MouseMotionAdapter() {
-		public void mouseDragged(MouseEvent e) {
-			Rectangle rect = new Rectangle(e.getX(), e.getY(), 1, 1);
-			((JTableHeader) e.getSource()).getTable().scrollRectToVisible(rect);
-		}	
-	};
-	
-	/**
 	 * This listens to the mouse releases on a table to know when to try and
 	 * handle a table column move. The table columns should only be moved after
 	 * the user is done dragging.
@@ -347,8 +335,6 @@ public class QueryController {
 		renderer.addTableListenerToSortDecorator(orderByListener);
 		renderer.getTable().getColumnModel().addColumnModelListener(reorderSelectionByHeaderListener);
 		renderer.getTable().getTableHeader().addMouseListener(reorderSelectionByHeaderMouseListener);
-		renderer.getTable().getTableHeader().addMouseMotionListener(reorderSelectionByHeaderAutoScrollTable);
-	
 	}
 	
 	public void unlistenToCellRenderer() {
@@ -357,7 +343,6 @@ public class QueryController {
 			cellRenderer.removeTableListenerToSortDecorator(orderByListener);
 			cellRenderer.getTable().getColumnModel().removeColumnModelListener(reorderSelectionByHeaderListener);
 			cellRenderer.getTable().getTableHeader().removeMouseListener(reorderSelectionByHeaderMouseListener);
-			cellRenderer.getTable().getTableHeader().removeMouseMotionListener(reorderSelectionByHeaderAutoScrollTable);
 		}
 	}
 	
