@@ -29,6 +29,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -252,11 +253,20 @@ public class ProjectPanel implements WabitPanel {
 		if (ds == null) {
 			return;
 		}
+		Connection con = null;
 		try {
-			ds.createConnection();
+			con = ds.createConnection();
 		} catch (SQLException e) {
 			SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
 			return;
+		} finally {
+			if (con != null) {
+				try {
+					con.close();
+				} catch (Exception e) {
+					//squish exception to show any other exception while testing the connection.
+				}
+			}
 		}
 		if (!session.getProject().dsAlreadyAdded(ds)) {
 			session.getProject().addDataSource(ds);
