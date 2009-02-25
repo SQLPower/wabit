@@ -483,6 +483,9 @@ public class QueryPanel implements WabitPanel {
     		queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
     		queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
     	}
+    	
+    	final JLabel whereText = new JLabel("Where:");
+    	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent()) {
@@ -505,12 +508,18 @@ public class QueryPanel implements WabitPanel {
 						
 						queryCache.removeUserModifications();
 					}
-					
+					queryPen.getGlobalWhereText().setVisible(true);
+					groupingCheckBox.setVisible(true);
+					whereText.setVisible(true);
+					executeQueryInCache();
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 					if (groupingCheckBox.isSelected()) {
 						executeQueryInCache();
 					}
+					queryPen.getGlobalWhereText().setVisible(false);
+					groupingCheckBox.setVisible(false);
+					whereText.setVisible(false);
 				}
 			}
 		});
@@ -527,7 +536,7 @@ public class QueryPanel implements WabitPanel {
     	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, max(pref;50dlu), 3dlu, pref, 3dlu, pref"
     			,"pref, pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
-    	southPanelBuilder.append("Where:", queryPen.getGlobalWhereText());
+    	southPanelBuilder.append(whereText, queryPen.getGlobalWhereText());
     	JPanel searchPanel = new JPanel(new BorderLayout());
     	searchPanel.add(new JLabel(ICON), BorderLayout.WEST);
     	searchField = new JTextField(queryUIComponents.getSearchDocument(), null, 0);
