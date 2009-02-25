@@ -22,10 +22,13 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
 import javax.swing.tree.TreePath;
@@ -34,10 +37,16 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
@@ -73,7 +82,8 @@ public class ProjectTreeListener extends MouseAdapter {
 		Object lastPathComponent = getLastPathComponent(e);
 		if (e.isPopupTrigger()) {
 			maybeShowPopup(e);
-		} else if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
+		}
+		if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
 			session.getProject().setEditorPanelModel((WabitObject) lastPathComponent);
 		}
 	}
@@ -102,15 +112,75 @@ public class ProjectTreeListener extends MouseAdapter {
 		public void actionPerformed(ActionEvent e) {
 			
 			if(item instanceof Query) {
-				session.getProject().removeQuery((Query)item);
+				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
+						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
+				if(response == 0) {
+					session.getProject().removeQuery((Query)item);
+					removeLayoutPartsDependentOnQuery((Query)item);
+				} else {
+					return;
+				}
 			} else if (item instanceof WabitDataSource) {
-				session.getProject().removeDataSource((WabitDataSource)item);
-			} else if (item instanceof Layout) {
+				int response = JOptionPane.showOptionDialog(session.getFrame(),
+							"Are you sure you want to delete this datasource? This will delete queries " +
+							"and parts of layouts dependent on the\n" + "datasource. Would you like to set the queries " +
+							"and parts of layouts dependent on this datasource to another datasource instead?", 
+							"Delete Datasource", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+		                    new Object[] {"Delete datasource and \nits queries", "Delete and set to a\n different datasource", "Cancel"}, null);
+		            if (response == 0) {
+		            	session.getProject().removeDataSource((WabitDataSource)item);
+		                //A temporary list is used instead of directly using session.getProject().getQueries()
+		            	//to prevent a ConcurrentModificationException
+		            	List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
+		            	for(Query query : queries) {
+		                	if(query.getWabitDataSource().equals(item)) {
+		                		removeLayoutPartsDependentOnQuery(query);
+		                		session.getProject().removeQuery(query);
+		                	}
+		                }
+		            } else if(response == 1) {
+		            	UserPrompter dbPrompter = session.createUserPrompter("", UserPromptType.DATA_SOURCE, UserPromptOptions.OK_NEW_CANCEL, UserPromptResponse.CANCEL, null, "OK", "Create New", "Cancel");
+		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
+		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
+		        			session.getProject().removeDataSource((WabitDataSource)item);
+		        			SPDataSource ds = (SPDataSource) dbPrompter.getUserSelectedResponse();
+		        			session.getProject().addDataSource(ds);
+		        			List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
+			            	for(Query query : queries) {
+			                	if(query.getWabitDataSource().equals(item)) {
+			                		removeLayoutPartsDependentOnQuery(query);
+			                		int queryIndex = session.getProject().getQueries().indexOf(query);
+									session.getProject().getQueries().get(queryIndex).setDataSource(ds);
+			                	}
+			                }
+		        		} else {
+		        			return;
+		        		}
+		        	} else if (response == JOptionPane.CLOSED_OPTION || response == 2) {
+		            	return;
+		            } 
+		    } else if (item instanceof Layout) {
 				session.getProject().removeLayout((Layout)item);
 			} else {
 				logger.debug("This shoudl not Happen");
 			}
 			
+		}
+
+		/**
+		 * Removes any content boxes dependent on the query passed to the method
+		 * @param query
+		 */
+		private void removeLayoutPartsDependentOnQuery(Query query) {
+			for(Layout layout :session.getProject().getLayouts()) {
+				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
+				for(ContentBox cb : cbList) {
+				    if(((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
+				    	int layoutIndex = session.getProject().getLayouts().indexOf(layout);
+						session.getProject().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
+					}
+				}
+			}
 		}
 	}
 
