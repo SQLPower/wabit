@@ -121,12 +121,11 @@ public class ProjectTreeListener extends MouseAdapter {
 					return;
 				}
 			} else if (item instanceof WabitDataSource) {
+				WabitDataSource wabitDS = (WabitDataSource) item;
 				int response = JOptionPane.showOptionDialog(session.getFrame(),
-							"Are you sure you want to delete this datasource? This will delete queries " +
-							"and parts of layouts dependent on the\n" + "datasource. Would you like to set the queries " +
-							"and parts of layouts dependent on this datasource to another datasource instead?", 
-							"Delete Datasource", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
-		                    new Object[] {"Delete datasource and \nits queries", "Delete and set to a\n different datasource", "Cancel"}, null);
+							"Are you sure you want to delete the data source " + wabitDS.getName() + ", its queries,\n and all report content boxes associated with the data source?", 
+							"Delete Data Source", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+		                    new Object[] {"Delete All", "Replace", "Cancel"}, null);
 		            if (response == 0) {
 		            	session.getProject().removeDataSource((WabitDataSource)item);
 		                //A temporary list is used instead of directly using session.getProject().getQueries()
@@ -139,7 +138,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		                	}
 		                }
 		            } else if(response == 1) {
-		            	UserPrompter dbPrompter = session.createUserPrompter("", UserPromptType.DATA_SOURCE, UserPromptOptions.OK_NEW_CANCEL, UserPromptResponse.CANCEL, null, "OK", "Create New", "Cancel");
+		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), UserPromptType.DATA_SOURCE, UserPromptOptions.OK_NEW_CANCEL, UserPromptResponse.CANCEL, null, "OK", "Create New", "Cancel");
 		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
 		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
 		        			session.getProject().removeDataSource((WabitDataSource)item);
