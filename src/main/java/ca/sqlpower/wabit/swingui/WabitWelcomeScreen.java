@@ -119,7 +119,7 @@ public class WabitWelcomeScreen {
 		
 		JButton openExistingButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser(context.getRecentMenu().getMostRecentFile());
+				JFileChooser fc = new JFileChooser(context.createRecentMenu().getMostRecentFile());
 				fc.setDialogTitle("Select the file to load from.");
 				fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 				frame.dispose();

@@ -300,7 +300,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 		});
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
-		fileMenu.add(getContext().getRecentMenu());
+		fileMenu.add(getContext().createRecentMenu());
 		fileMenu.add(new AbstractAction("Close Project") {
 			public void actionPerformed(ActionEvent e) {
 				close();
@@ -456,7 +456,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 					} else if (context.startOnWelcomeScreen()) {
 						importFile = null;
 					} else {
-						importFile = context.getRecentMenu().getMostRecentFile();
+						importFile = context.createRecentMenu().getMostRecentFile();
 					}
 					
 					WabitSwingSessionImpl wss;

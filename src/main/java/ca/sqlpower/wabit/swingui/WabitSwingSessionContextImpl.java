@@ -40,23 +40,12 @@ import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
  */
 public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implements WabitSwingSessionContext {
 
-	private RecentMenu recentMenu;
-	
 	private WabitWelcomeScreen welcomeScreen;
 
 	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
 			throws IOException, SQLObjectException {
 		super(terminateWhenLastSessionCloses);
 		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
-		
-		recentMenu = new RecentMenu(this.getClass()) {
-			
-			@Override
-			public void loadFile(String fileName) throws IOException {
-				File file = new File(fileName);
-				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
-			}
-		};
 		
 		welcomeScreen = new WabitWelcomeScreen(this);
 		macOSXRegistration();
@@ -68,8 +57,15 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 		return session;
 	}
 	
-	public RecentMenu getRecentMenu() {
-		return recentMenu;
+	public RecentMenu createRecentMenu() {
+		return new RecentMenu(this.getClass()) {
+			
+			@Override
+			public void loadFile(String fileName) throws IOException {
+				File file = new File(fileName);
+				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
+			}
+		};
 	}
 
 	public WabitWelcomeScreen getWelcomeScreen() {
@@ -142,7 +138,7 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
     }
 
 	public void putRecentFileName(String fileName) {
-		getRecentMenu().putRecentFileName(fileName);
+		createRecentMenu().putRecentFileName(fileName);
 		prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 	}
 
