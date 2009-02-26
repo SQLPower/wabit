@@ -238,6 +238,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		projectTreeModel = new ProjectTreeModel(project);
 		projectTree = new JTree(projectTreeModel);
+		projectTree.setToggleClickCount(0);
 		
 	}
 	
