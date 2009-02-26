@@ -409,7 +409,11 @@ public class QueryPanel implements WabitPanel {
 					enumeration.nextElement().addPropertyChangeListener(resizingColumnChangeListener);
 				}
 				table.getTableHeader().addMouseMotionListener(reorderSelectionByHeaderAutoScrollTable);
-				queryController.listenToCellRenderer(renderer);
+				
+				//TODO: Add the new renderer to result sets on both tabs when a parser exists to go between them easier.
+				if (queryPenAndTextTabPane.getSelectedComponent() != queryToolPanel) {
+					queryController.listenToCellRenderer(renderer);
+				}
 				
 				columnNameLabel.setIcon(null);
 				
@@ -528,16 +532,13 @@ public class QueryPanel implements WabitPanel {
 					queryPen.getGlobalWhereText().setVisible(true);
 					groupingCheckBox.setVisible(true);
 					whereText.setVisible(true);
-					executeQueryInCache();
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
-					if (groupingCheckBox.isSelected()) {
-						executeQueryInCache();
-					}
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);
 				}
+				executeQueryInCache();
 			}
 		});
     	
