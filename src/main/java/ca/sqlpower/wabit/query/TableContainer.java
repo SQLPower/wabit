@@ -262,6 +262,10 @@ public class TableContainer extends AbstractWabitObject implements Container {
 			} catch (SQLObjectException e) {
 				throw new RuntimeException(e);
 			}
+			if (table == null) {
+				//don't load the table if it does not exist
+				return;
+			}
 			loadColumnsFromTable(table);
 		}
 	}
