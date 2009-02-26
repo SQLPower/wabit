@@ -221,11 +221,15 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 				isSelected, hasFocus, row, column);
 		c.setBackground(HEADER_BACKGROUND);
 		if(c instanceof JLabel) {
-			((JLabel) c).setBorder(new EmptyBorder(0, 0, 0, 0));
+			final JLabel label = (JLabel) c;
+			label.setBorder(new EmptyBorder(0, 0, 0, 0));
 			removeAll();
 			int labelYPos;
+			if (label.getText().trim().equals("")) {
+				label.setText("Col " + (column + 1));
+			}
 			if(!groupingEnabled) {
-				add((JLabel)c, BorderLayout.NORTH);
+				add(label, BorderLayout.NORTH);
 				labelHeight = c.getPreferredSize().height;
 				labelYPos = 0;
 			} else {
@@ -234,7 +238,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 				comboBox.setFont(comboBox.getFont().deriveFont(tableHeader.getFont().getSize2D()));
 				add(comboBox, BorderLayout.NORTH);
 				add(new JTextField(textFields.get(modelIndex).getText()), BorderLayout.CENTER);
-				add((JLabel)c, BorderLayout.SOUTH);
+				add(label, BorderLayout.SOUTH);
 				labelYPos = c.getY();
 
 				// we need to consistently set the size of the TextField in case they resize while its focused
