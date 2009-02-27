@@ -174,7 +174,7 @@ public class ProjectTreeListener extends MouseAdapter {
 			for(Layout layout :session.getProject().getLayouts()) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
-				    if(((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
+				    if(cb.getContentRenderer() instanceof ResultSetRenderer &&((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
 				    	int layoutIndex = session.getProject().getLayouts().indexOf(layout);
 						session.getProject().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
 					}
