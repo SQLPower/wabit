@@ -498,7 +498,7 @@ public class QueryPanel implements WabitPanel {
     	queryPenPanel = new JPanel(new BorderLayout());
     	queryPenPanel.add(playPen, BorderLayout.CENTER);
     	queryPenPanel.add(queryExecuteBuilder.getPanel(), BorderLayout.SOUTH);
-    	queryPenAndTextTabPane.add(queryPenPanel,"PlayPen");
+    	queryPenAndTextTabPane.add(queryPenPanel,"QueryPen");
     	queryPenAndTextTabPane.add(queryToolPanel,SQL_TEXT_TAB_HEADING);
     	if (queryCache.isScriptModified()) {
     		queryPenAndTextTabPane.setSelectedComponent(queryToolPanel);
