@@ -70,6 +70,7 @@ public class ProjectXMLDAOTest extends TestCase {
 	private List<String> getPropertiesToIgnore() {
 		List<String> ignoreList = new ArrayList<String>();
 		ignoreList.add("parent");
+		ignoreList.add("session");
 		ignoreList.add("dataSourceTypes"); //Currently unsupported.
 		return ignoreList;
 	}
