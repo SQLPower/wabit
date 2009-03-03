@@ -309,7 +309,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             wabitPane.setDividerLocation(Integer.parseInt(dividerLocations[0]));
         }
         
-    	DefaultFormBuilder statusBarBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 4dlu, pref, 2dlu, pref, 4dlu, pref"));
+    	DefaultFormBuilder statusBarBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 4dlu, pref, 2dlu, max(50dlu; pref), 4dlu, pref"));
         statusBarBuilder.append(statusLabel);
 		
         statusBarBuilder.append("Row Limit", getRowLimitSpinner());
