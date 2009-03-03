@@ -1,5 +1,14 @@
 Wabit Release Notes
 
+Noteworthy Changes in 0.9.6
+  User Interface
+    * There is a row limit that affects all queries and reports to speed up loading pages in Wabit. This limit does not affect printing.
+    * Deleting a data source now can now delete or update queries and reports associated with the data source.
+    
+  Other
+    * Fixed an exception occurring when loading a project with a data source that no longer exists in the pl.ini or cannot be connected to.
+    * Updated the user guide.
+
 Noteworthy Changes in 0.9.5
   User Interface
     * The starting of Wabit has changed to include a welcome screen and new project screen.
