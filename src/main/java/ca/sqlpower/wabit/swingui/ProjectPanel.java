@@ -272,7 +272,7 @@ public class ProjectPanel implements WabitPanel {
 		Query query = new QueryCache(session);
 		query.setName("New " + ds.getName() + " query");
 		query.setDataSource(ds);
-		session.getProject().addQuery(query);
+		session.getProject().addQuery(query, session);
 	}
 	
 	public boolean applyChanges() {

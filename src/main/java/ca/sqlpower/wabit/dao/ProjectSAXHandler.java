@@ -239,7 +239,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	query = new QueryCache(uuid, session);
-        	session.getProject().addQuery(query);
+        	session.getProject().addQuery(query, session);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);

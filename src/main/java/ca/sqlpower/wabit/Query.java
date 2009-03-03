@@ -73,6 +73,12 @@ public interface Query extends WabitObject {
 	public WabitSession getSession();
 	
 	/**
+	 * Sets the session for this query if the query is being moved to a different
+	 * session or is being imported into a new session from an old session.
+	 */
+	public void setSession(WabitSession session);
+	
+	/**
 	 * Call this when the query is to be disposed of.
 	 */
 	public void cleanup();

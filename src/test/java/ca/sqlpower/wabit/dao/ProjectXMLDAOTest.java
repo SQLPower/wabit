@@ -228,8 +228,9 @@ public class ProjectXMLDAOTest extends TestCase {
 		setAllSetters(p, getPropertiesToIgnore());
 		p.addDataSource(db.getDataSource());
 
-		QueryCache query = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
-		p.addQuery(query);
+		final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
+		QueryCache query = new QueryCache(session);
+		p.addQuery(query, session);
 		setAllSetters(query, getPropertiesToIgnore());
 		
 		Container constantsContainer = query.getConstantsContainer();

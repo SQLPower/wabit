@@ -126,10 +126,11 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         return Collections.unmodifiableList(dataSources);
     }
     
-    public void addQuery(Query query) {
+    public void addQuery(Query query, WabitSession session) {
         int index = queries.size();
         queries.add(index, query);
         query.setParent(this);
+        query.setSession(session);
         fireChildAdded(Query.class, query, index);
         setEditorPanelModel(query);
     }
@@ -137,6 +138,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
     public boolean removeQuery(Query query) {
     	int index = queries.indexOf(query);
     	if (index != -1) {
+    		query.cleanup();
     		queries.remove(query);
     		fireChildRemoved(Query.class, query, index);
     		return true;

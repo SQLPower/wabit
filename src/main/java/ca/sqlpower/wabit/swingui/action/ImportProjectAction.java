@@ -88,7 +88,7 @@ public class ImportProjectAction extends AbstractAction {
 			List<Query> queries = new ArrayList<Query>(sess.getProject().getQueries());
 			for (int i = queries.size() - 1; i >= 0; i--) {
 				sess.getProject().removeQuery(queries.get(i));
-				session.getProject().addQuery(queries.get(i));
+				session.getProject().addQuery(queries.get(i), session);
 			}
 			List<Layout> layouts = new ArrayList<Layout>(sess.getProject().getLayouts());
 			for (int i = layouts.size() - 1; i >= 0; i--) {

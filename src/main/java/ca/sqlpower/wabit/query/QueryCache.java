@@ -350,7 +350,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	/**
 	 * The session this query cache is contained in.
 	 */
-	private final WabitSession session;
+	private WabitSession session;
 
 	/**
 	 * A change listener to flush the cached row sets on a row limit change.
@@ -453,6 +453,14 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	
 	public void cleanup() {
 		session.removePropertyChangeListener(rowLimitChangeListener);
+	}
+	
+	public void setSession(WabitSession session) {
+		if (this.session != null) {
+			session.removePropertyChangeListener(rowLimitChangeListener);
+		}
+		this.session = session;
+		session.addPropertyChangeListener(rowLimitChangeListener);
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {

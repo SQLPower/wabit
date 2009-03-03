@@ -75,4 +75,9 @@ public class StubQuery extends StubWabitObject implements Query {
 		
 	}
 
+	public void setSession(WabitSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

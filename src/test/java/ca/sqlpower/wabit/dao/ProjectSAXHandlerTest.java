@@ -67,8 +67,9 @@ public class ProjectSAXHandlerTest extends TestCase {
 		p.setName("Project");
 		p.addDataSource(newDS);
 
-		QueryCache query = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
-		p.addQuery(query);
+		final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
+		QueryCache query = new QueryCache(session);
+		p.addQuery(query, session);
 		query.setDataSource(newDS);
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
