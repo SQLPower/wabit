@@ -528,10 +528,10 @@ public class QueryPanel implements WabitPanel {
 						queryUIComponents.getQueryArea().setText("");
 						
 						queryCache.removeUserModifications();
+						queryPen.getGlobalWhereText().setVisible(true);
+						groupingCheckBox.setVisible(true);
+						whereText.setVisible(true);
 					}
-					queryPen.getGlobalWhereText().setVisible(true);
-					groupingCheckBox.setVisible(true);
-					whereText.setVisible(true);
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 					queryPen.getGlobalWhereText().setVisible(false);
