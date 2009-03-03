@@ -44,7 +44,7 @@
 			<para>
 				Wabit from SQL Power Group is a reporting tool 
 				designed for anyone who needs to make reports
-				simply and easily. Each major part of Wabit has
+				easily and quickly. Each major part of Wabit has
 				an easy drag and drop interface that allows
 				users to piece together many kinds of queries
 				and reports. These queries and reports can
@@ -97,23 +97,93 @@
 		
     </chapter>
     
+    <chapter id="welcome_screen">
+    
+        <title>The Welcome Screen</title>
+        
+        <mediaobject>
+        	<imageobject>
+        		<imagedata fileref="src/docbkx/images/welcome_screen.png"
+                        format="PNG" width="4in"/>
+        	</imageobject>
+        </mediaobject>
+        
+        <para>
+            The welcome screen is shown to the user either when opening Wabit for 
+            the first time or when Wabit is not opening up an existing project
+            or when the current Wabit project has been closed. From this screen, the user
+            can either choose to create a new project, load an existing one, or explore a
+            demo project provided with Wabit. The user can also access the user guide from this 
+            screen or simply quit the application.
+       </para>
+       
+       <para>
+       		To create a new project, click the create new project button 
+       		(<inlinemediaobject>
+       		<imageobject>
+       		<imagedata fileref="src/docbkx/images/new_project_button.png"
+                        format="PNG" width="0.25in"/>
+       		</imageobject>
+       		</inlinemediaobject>) which will take you to a list of your data sources.
+       		You can either choose an existing data source to use as a database connection
+       		or create a new one.For more information on creating a database 
+       		connection see <xref linkend="setup_database" />. After selecting your data source,
+       		click on the play button to create queries and reports(layouts) based on
+       		that database connection.
+       </para>
+       
+       <para>
+       		To load an existing project, click the open existing project button 
+       		(<inlinemediaobject>
+       		<imageobject>
+       		<imagedata fileref="src/docbkx/images/load_existing_button.png"
+                        format="PNG" width="0.25in"/>
+       		</imageobject>
+       		</inlinemediaobject>) which will then ask you to locate the project you want to load.
+       </para>
+       
+       <para>
+       		To load the demo project, click the open demo project button 
+       		(<inlinemediaobject>
+       		<imageobject>
+       		<imagedata fileref="src/docbkx/images/demo_project_button.png"
+                        format="PNG" width="0.25in"/>
+       		</imageobject>
+       		</inlinemediaobject>).The demo project is for new users to get a 
+       		feel of the application and its potential. It includes a dummy 
+       		database connection which contains a few tables for the user to play 
+       		around with. A few queries and reports have been designed to display
+       		the application's different features.
+       		 
+       </para>
+
+    </chapter>
+    
     <chapter id="project_page">
     
         <title>The Project Page</title>
         
+        <mediaobject>
+        	<imageobject>
+        		<imagedata fileref="src/docbkx/images/project_page.png"
+                        format="PNG" width="5in"/>
+        	</imageobject>
+        </mediaobject>
+        
         <para>
-            The project page is the starting point of Wabit.
+            The project page is where additional data sources can be added
+            and where queries from these data sources can be generated.
             All projects need at least one data source added 
             to the project to create queries on. To add a data
-            source to the current project select a data source
+            source to the current project, select a data source
             from the list and press the <guibutton>Start</guibutton>
             button. Currently only databases can be added as
             data sources to Wabit. For more information on creating
             a database connection see <xref linkend="setup_database" />.
-            Once a data source has been added to the project queries
+            Once a data source has been added to the project, queries
             can be made on the project from the query builder.
         </para>
-    
+
     </chapter>
     
     <chapter id="setup_database">
@@ -121,7 +191,7 @@
        <title>Setting up a Data Source</title>
        
        <para>
-           Before creating queries in Wabit a data source needs
+           Before creating queries in Wabit, a data source needs
            to be added to the project to tell the queries where
            the data is coming from. Wabit allows you to use any 
            JDBC- or ODBC-accessible database as a data source.
@@ -237,7 +307,7 @@
                                 <para>HSQLDB</para>
                             </entry>
                             <entry>
-                                <para>Works; used in samples.</para>
+                                <para>Works; used in the demo project.</para>
                             </entry>
                         </row>
 
@@ -281,10 +351,7 @@
                 MySQL, Oracle, DB2, etc.). These settings will be used
                 by Wabit when you set up a connection to a
                 specific database server.
-            </para>
-
-            <note>
-            <para>
+            </para><para>
                 Note: Remember, at this point you are configuring
                 general settings only and are not connecting to a
                 specific database. For more information on connecting to
@@ -292,7 +359,6 @@
                 <xref linkend="setup_database.connections" />
                 .
             </para>
-            </note>
 
             <itemizedlist>
 
@@ -335,7 +401,7 @@
 
                         <para>
                             Go to the project page by selecting the top project
-                            folder in the project tree on the left.
+                            folder or any data source shown in the project tree on the left.
                         </para>
 
                     </listitem>
@@ -350,7 +416,7 @@
 
                     <listitem>
                         <para>
-                            Click + below the list of database types.
+                            Click  +  below the list of database types.
                         </para>
                     </listitem>
 
@@ -427,6 +493,7 @@
                                                 JDBC driver JAR file
                                                 that will be used for
                                                 database connections.
+                                                
                                             </para>
                                         </entry>
 
@@ -503,9 +570,8 @@
                                                 </listitem>
 
                                                 <listitem>
-                                                    <para>
-                                                        Variables are
-                                                        used to for
+                                                    <para>Variables are
+                                                        used for
                                                         values that
                                                         change often,
                                                         such as the
@@ -539,8 +605,7 @@
                                                         connecting to is
                                                         configured to
                                                         use a different
-                                                        value.
-                                                    </para>
+                                                        value.</para>
 
                                                     <para>
                                                         Each variable
@@ -613,6 +678,16 @@
                         </informaltable>
 
                     </listitem>
+                    <listitem>
+                    	<para>
+                    Next, you must define the location of the JDBC
+                    driver for the database type. For more information,
+                    see
+                    <xref linkend="setup_database.database_types.jdbc_driver" />
+                    .
+                </para>
+                    	
+                    </listitem>
 
                     <listitem>
                         <para>Click OK.</para>
@@ -620,14 +695,7 @@
 
                 </orderedlist>
 
-                <para>
-                    Next, you must define the location of the JDBC
-                    driver for the database type. For more information,
-                    see
-                    <xref
-                        linkend="setup_database.database_types.jdbc_driver" />
-                    .
-                </para>
+                
 
             </section>
 
@@ -727,15 +795,21 @@
 
                     <listitem>
                         <para>
-                            If the User Preferences dialog box is not
-                            already open, select File » User
-                            Preferences.
+                            Go to the project page by selecting the top project
+                            folder or any data source shown in the project tree
+                            on the left.
+                        </para>
+                    </listitem>
+                    
+                    <listitem>
+                        <para>
+                            Click on the JDBC Drivers... button
                         </para>
                     </listitem>
 
                     <listitem>
                         <para>
-                            On the JDBC Drivers tab, select a database
+                            On the JDBC Drivers... window, select a database
                             type.
                         </para>
                     </listitem>
@@ -822,11 +896,6 @@
                                     format="PNG" width="4in" />
                             </imageobject>
                         </mediaobject>
-                    
-                        <para>
-                            On the General tab, enter the following
-                            information:
-                        </para>
 
                         <informaltable frame="all">
 
@@ -883,8 +952,10 @@
                                                 connect to. Note: This
                                                 list contains the
                                                 database types you
-                                                defined in your user
-                                                preferences. For more
+                                                defined in the JDBC Drivers... panel
+                                                which can be accessed from the project
+                                                page.
+                                                For more
                                                 information, see
                                                 <xref
                                                     linkend="setup_database.database_types" />
@@ -969,11 +1040,9 @@
                                                 </listitem>
 
                                                 <listitem>
-                                                    <para>
-                                                        The PostgreSQL
+                                                    <para>The HSQLDB
                                                         driver is being
-                                                        used.
-                                                    </para>
+                                                        used in the screenshot.</para>
                                                 </listitem>
 
                                             </itemizedlist>
@@ -1009,11 +1078,10 @@
                     </listitem>
 
                     <listitem>
-                        <para>
-                            Click OK. The new connection is added to the
+                        <para>Click OK. The new connection is added to the
                             list of available connections and is also added to
-                            the Database Connection Manager.
-                        </para>
+                            the Database Connection Manager which can be accessed
+                            by clicking anywhere on the project tree.</para>
                     </listitem>
 
                 </orderedlist>
@@ -1028,17 +1096,26 @@
     
         <title>The Query Builder</title>
         
+        <mediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/query_builder.png"
+                        format="PNG" width="4in" />
+                </imageobject>
+            </mediaobject>
         <para>
             The query builder allows users to design queries
             through a graphical or textual interface. The
             query builder has four main sections: the query
-            pen, the text editor, the database tree, and the
+            pen, the text editor, the database tree, and the log and
             results tab.
         </para>
         
+        
+        
         <section id="query_builder.gui_builder">
         
-            <title>The Query Builder</title>
+            <title>The Query Pen</title>
             
             <mediaobject>
                 <imageobject>
@@ -1049,13 +1126,97 @@
             </mediaobject>
             
             <para>
+            Click the following toolbar buttons to...
+            </para>
+            
+            <orderedlist>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/execute_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - execute the current query (Shortcut: The accelerator key + R).
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/query_to_wabitfile_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - export the current query to a whole new Wabit project. 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/query_to_sqlscript_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - write the current query to a SQL script file.
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/delete_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - delete all highlighted tables in the query pen (Shortcut: The delete key). 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/join_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - create a join from a column in a table to another column in another table (Shortcut: The accelerator key + J). 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/zoom_slider.png"
+                        format="PNG" width="1.05in" />
+                </imageobject>
+            </inlinemediaobject> - zoom in and out of the query (Shortcut: To zoom in, the accelerator key + the shift key + "+" and
+                                                                     to zoom out, the accelerator key + the shift key + "-"). 
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/report_from_query_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - generate a report of the current query. 
+            </para>
+            </listitem>
+            
+            </orderedlist>
+            
+            <para>
                 The query pen allows creating queries by dragging
                 and dropping tables from the database tree on the
                 right to the query pen. When a table is dropped into
                 the query pen it will be populated with all of its
                 columns and a join will be created for each existing
                 relationship between the dropped table and any table
-                currently in the query pen.  
+                currently in the query pen. To maximize or minimize 
+                the query pen size, use the shortcut: Ctrl + Spacebar
+                or go to the View menu and select "Maximize Editor" or 
+                use the vertical and horizontal split panes.  
             </para>
             
             <para>
@@ -1068,30 +1229,28 @@
                 <listitem>
                     The table can be given an alias by clicking on
                     the table name and changing it. To remove the table
-                    alias set the alias back to the table's original
+                    alias, set the alias back to the table's original
                     name or remove the alias text while editing it.
                 </listitem>
                 
-                <listitem>
-                    Columns in the table are added to the query if they
-                    have a check beside their name. Columns are easily
-                    added and removed by changing the check box. All the
-                    columns in a table can be turn on and off at the same
-                    time by checking and un-checking the check box in
-                    the table header.  
-                </listitem>
+                <listitem>Columns in the table are added to the query if they
+                    have a check mark besides their name. Columns are easily
+                    added or removed by selecting or deselecting their check box. All the
+                    columns in a table can be turn on or off at the same
+                    time by checking or un-checking the "select all/none" check box in
+                    the table header.</listitem>
                 
                 <listitem>
                     Columns can be aliased by clicking their name and
-                    changing it. To remove a column alias set the alias
+                    changing it. To remove a column alias, set the alias
                     back to the column's original name or remove the
                     alias text while editing it.
                 </listitem>
                 
                 <listitem>
                     A where clause can be given to a specific column by clicking
-                    in the <quote>Where</quote> field to the right of the column.
-                    For example if we want all movies with a rating above
+                    in the <quote>where</quote> field to the right of the column.
+                    For example, if we want all movies with a rating above
                     8.0 adding the text <quote>&gt; 8.0</quote> to the right
                     of the <quote>rating</quote> column.
                 </listitem>
@@ -1103,28 +1262,28 @@
                 pen by selecting the join button and clicking on two
                 columns in different tables. The type of join created
                 between the two columns defaults to an inner join equating
-                the columns. To change how the join relates the two columns
+                the columns. To change how the join relates the two columns,
                 right click on the middle node in the join to see all
                 available options to use to join the columns on. To
                 change the join from an inner join right click near the
                 join line on the side that is to be changed to get a 
-                menu. From this menu the join can be changed to an outer
-                join on that side. If a full outer join is desired both
+                menu. From this menu, the join can be changed to an outer
+                join on that side. If a full outer join is desired, both
                 sides of the join can be changed to outer join.
             </para>
             
             <para>
-                With the tables in the query pen is a constants table.
+                Along with the tables in the query pen is a constants table.
                 This table can have additional columns defined that
                 are constants, functions, or modified columns in the
                 existing tables. To add a constant to a query click
                 the <quote>Add...</quote> field at the bottom of the
                 table. This will allow the constant to be typed in.
-                When the constant is complete it will be added to the
-                constants table. To modify the constant at any time
-                just click on it. Constants can be added and removed
-                from a query, and given a where clause the same as columns
-                in a table. To add an alias to a column click in the
+                When the constant is complete, it will be added to the
+                constants table. To modify the constant at any time,
+                just click on it. Constants can be added or removed
+                from a query, and be given a where clause just like columns
+                in any other table. To add an alias to a column, click in the
                 alias field to the right of the column. If functions
                 are needed on the graphical query builder they can be
                 placed in the constants table even if they require columns.
@@ -1140,8 +1299,8 @@
             </para>
             
             <para>
-                Once a query is complete a report layout can be created
-                from a template using the query from the report button.
+                Once a query is complete, a report layout can be created
+                from a template using the report from query button.
                 Additionally, the query can be exported as text to a file
                 or the query and its associated data source can be exported
                 to a new Wabit file. Exporting a single query allows others
@@ -1157,7 +1316,7 @@
             <mediaobject>
                 <imageobject>
                     <imagedata
-                        fileref="src/docbkx/images/query_results.png"
+                        fileref="src/docbkx/images/query_results_with_grouping.png"
                         format="PNG" width="4in" />
                 </imageobject>
             </mediaobject>
@@ -1182,10 +1341,10 @@
             
             <para>
                 The grouping check box allows columns to be defined
-                as grouped or aggregated and allows having clauses
+                as grouped or aggregated and allows "Having" clauses
                 to be defined for each column. When the grouping
-                check box is checked int the graphical query side the
-                result table will have a group by selection and a having
+                check box is checked in the graphical query side the
+                result table will have a group by selection and a "Having"
                 field. All columns from the database are defined to be grouped by
                 while constants are counted by default.
             </para>
@@ -1196,15 +1355,17 @@
                 up for ascending sort and down for descending sort. Clicking
                 on the header of a column will change the sort order to ascending,
                 then descending, then back to the default removing the sort order.
-                To sort multiple columns at once shift can be held down and the columns
-                can be sorted starting at the first column to sort and finishing
-                at the last column to sort.
+                To cycle through the sorting states in the reverse order, hold down 
+                the shift key and click on the column header. To sort multiple 
+                columns at once, the ctrl key can be held down and the columns can
+                be sorted starting at the first column to sort and finishing at 
+                the last column to sort.
             </para>
             
             <para>
                 Column order in the query can be modified from the result set.
-                By dragging a column by its header to a new position in the result
-                set the order of the columns in the query will be rearranged.
+                You can drag a column by its header to a new position in the results
+                and thus rearrange the order of the columns in the query. 
             </para>
             
             <para>
@@ -1224,6 +1385,127 @@
         <section id="query_builder.text_editor">
         
             <title>The Query Text Editor</title>
+            
+            <mediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/text_editor.png"
+                        format="PNG" width="4in" />
+                </imageobject>
+            </mediaobject>
+            
+            <para>
+            Click the following toolbar buttons to...
+            </para>
+            
+            <orderedlist>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/prev_query_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - replace the current query with the query executed
+                                   last.
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/next_query_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - replace the current query with the query executed
+                                   after it.
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/execute_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - execute the current query (Shortcut: The accelerator key + the enter key for 
+                                   whatever text is highlighted).
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/stop_execution_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - stop executing the current query.
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/clear_sql_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - clear all text on the text editor side. 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/undo_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - undo the last change made with the text editor. 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/undo_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - redo the last change made with the text editor. 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/query_to_wabitfile_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - export the current query to a whole new Wabit project. 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/query_to_sqlscript_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - write the current query to a SQL script file.
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/report_from_query_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - generate a report of the current query. 
+            </para>
+            </listitem>
+            
+            </orderedlist>
             
             <para>
                 The text editor in the query builder will allow any free formed SQL
@@ -1253,6 +1535,124 @@
             </imageobject>
         </mediaobject>
         
+                    <para>
+            Click the following toolbar buttons to...
+            </para>
+            
+            <orderedlist>
+            
+            <listitem>
+             <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/page_setup_button.png"
+                        format="PNG" width="0.20in" valign ="bottom"/>
+                </imageobject>
+            </inlinemediaobject> - access the page setup.
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/print_button.png"
+                        format="PNG" width="0.20in" valign ="bottom"/>
+                </imageobject>
+            </inlinemediaobject> - print the report. 
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/export_pdf_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - generate a pdf file of the report.
+            </listitem>
+            
+            <listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/report_to_wabitfile_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - export the report the to a new Wabit project. 
+            </listitem>
+            
+    		<listitem>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/zoom_slider.png"
+                        format="PNG" width="1.05in" />
+                </imageobject>
+            </inlinemediaobject> - zoom in and out of the report.
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/content_box_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - add a text box to the report. 
+            </para>
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/image_box_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - add an image to the report. 
+            </para>
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/horizontal_guide_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - add a horizontal guide to the report. 
+            </para>
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/vertical_guide_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - add a vertical guide to the report. 
+            </para>
+            </listitem>
+            
+            <listitem>
+            <para>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata
+                        fileref="src/docbkx/images/zoom_to_fit_button.png"
+                        format="PNG" width="0.20in" />
+                </imageobject>
+            </inlinemediaobject> - auto-zoom till the page fits on the screen. 
+            </para>
+            </listitem>
+            
+            </orderedlist>
+        
         <para>
             The report layout allows users to create and alter the look of 
             a report. Reports can have any number of queries, guides, text
@@ -1265,8 +1665,8 @@
         <para>
             To create a new text container click the text content box button
             in the tool menu and then click where you want the text box on
-            the layout. Once the text box is created it can be dragged and
-            resized as desired. To change the text in the text box double 
+            the layout. Once the text box is created, it can be dragged and
+            resized as desired. To change the text in the text box, double 
             click it to bring up its editor. The text editor allows changing
             the text as well as changing the font, alignment and background colour.
             Variables can also be added to text boxes from the <quote>Variable</quote>
@@ -1377,9 +1777,9 @@
             Images can be added to a report by clicking the <guibutton>Image</guibutton>
             button in the tool bar and then clicking on the report
             where the image is to be placed. After creating an image
-            content box a file chooser will appear to allow defining
-            the image. To change the image at any time double click
-            on the content box. Once the image is selected the content
+            content box, a file chooser will appear to allow defining
+            the image. To change the image at any time, double click
+            on the content box. Once the image is selected, the content
             box can be moved around the report. 
         </para>
         
@@ -1387,23 +1787,23 @@
             Horizontal and vertical guides are useful in organizing
             a report. Each report starts with two horizontal and
             vertical guides to define the margins of the page. To
-            create a new guide click the horizontal or vertical
+            create a new guide, click the horizontal or vertical
             guide button and then click on the report for the guide's
-            initial position. Once placed the guide can be dragged
+            initial position. Once placed, the guide can be dragged
             left and right, if it is a vertical guide, or up and
             down, if it is a horizontal guide. When a guide meets a 
             content box of any kind, including a query, the content
             box will snap to the guide and move with it until the 
-            content box is moved off of the guide.
+            content box is moved off the guide.
         </para>
         
         <para>
-            While laying out the report additional queries may be
+            While laying out the report, additional queries may be
             desired to be shown on the same report. To add a query
-            defined in the project drag and drop the query from the
-            list of queries on the right. Once on the layout the query
+            defined in the project, drag and drop the query from the
+            list of queries on the right. Once on the layout, the query
             can be resized like any other content box. To modify
-            a query double click it to show its properties window.
+            a query, double click it to show its properties window.
             The query properties allows several changes.
         </para>
         
@@ -1543,36 +1943,49 @@
 	    <title>A Wabit Walkthrough</title>
 	    
 	    <para>
-	    This section of Wabit will walk the user through the creation of a simple
+	    This section of the Wabit User Guide will walk the user through the creation of a simple
 	    report.
 	    </para>
-	
-		<section id="walkthrough.connection">
+	    
+	    		<section id="walkthrough.welcomescreen">
 		
-		    <title>Creating a Connection</title>
+		    <title>Welcome Screen</title>
 		    
 		    <para>
-		    The first step in creating a report in Wabit is adding a connection to the 
-            data source where your data is saved. Connections are added to Wabit from 
-            the project page which can be reached by clicking the project folder at the 
-            top of the project tree on the left.
+		    This is the first screen you see when you start Wabit. 
+            Click on the "Create a New Project" button to proceed.
             </para>
             
             <mediaobject>
                 <imageobject>
-                    <imagedata fileref="src/docbkx/images/project_start.png"
-                        format="PNG" width="4in" />
+                    <imagedata fileref="src/docbkx/images/welcome_screen_with_mouse.png"
+                        format="PNG" width="3.5in" />
                 </imageobject>
             </mediaobject>
             
             <para>
-            On the project page you can see all of
-            the currently existing data source connections that have been previously
-            defined. To add a new data source click the "New" button which will bring up
-            the data source properties window. 
+            The next screen shows you all of the currently existing data source connections
+            that have been previously defined. The first step in creating a report in Wabit
+            is adding a connection to the data source where your data is saved. To add a new
+            data source click the "New" button which will bring up the data source 
+            properties window. Connections can also be added from the project page.
             </para>
             
             <mediaobject>
+                <imageobject>
+                    <imagedata fileref="src/docbkx/images/welcome_screen_new_project.png"
+                        format="PNG" width="3.5in" />
+                </imageobject>
+            </mediaobject>
+             
+		</section>
+	
+		
+		<section id="walkthrough.connection">
+		
+		    <title>Creating a Connection</title>
+		    
+		    <mediaobject>
                 <imageobject>
                     <imagedata fileref="src/docbkx/images/dbcs_properties.png"
                         format="PNG" width="4in" />
@@ -1583,10 +1996,10 @@
             Specifying the data
             source's type will partially populate the JDBC URL. If additional information
             is needed for the URL they will be able to be set from the connection options.
-			After the JDBC URL is specified the data source's user name and password need
+			After the JDBC URL is specified, the data source's user name and password need
 			to be set, and a name needs to be given to the connection. Once the data source
-			is specified the connection can be tested with the "Test Connection" button.
-			If there are any problems with the JDBC driver refer to the JDBC drivers section
+			is specified, the connection can be tested with the "Test Connection" button.
+			If there are any problems with the JDBC driver refer to 
 			<xref linkend="setup_database.database_types.jdbc_driver" />. After adding the data source select it from the list and press the
 			start button.
 		    </para>
@@ -1605,7 +2018,7 @@
 			
 			<mediaobject>
                 <imageobject>
-                    <imagedata fileref="src/docbkx/images/query_new.png"
+                    <imagedata fileref="src/docbkx/images/demo_project_qb.png"
                         format="PNG" width="4in" />
                 </imageobject>
             </mediaobject>
@@ -1620,15 +2033,20 @@
 		    Lets say we want to create a query to get the names of all the action movie actors.
 			Lets first rename the query to "Action movie actors" to remember what the query is
 			for. Renaming a query is done simply by double clicking the query in the project tree.
-			To start making the query tables will need to be brought in from the database. On the database
-			tree on the right of the tool expand the Demo project database and then expand the
+			</para>
+			<para>
+			To start making the query, tables will need to be brought in from the database. On the database
+			tree, on the right of the tool, expand the Demo project database and then expand the
 			Public catalog. Under the Public catalog is a list of all of the tables in the database.
 			The first table needed is the Actor table. The table can be added to the query by dragging
 			it from the tree to the query pen. The next table needed is the Movie table to know
-			which movies are action moves. The last table for the query is the Cast_and_crew table
+			which movies are action movies. The last table for the query is the Cast_and_crew table
 			which will join the Actor table to the Movie table. When the Cast_and_crew table is
-			dropped in the query pen it will automatically create a join for each relationship
-			in the database. Now that the query has several tables the results at the bottom of
+			dropped into the query pen, it will automatically create a join for each relationship
+			in the database. 
+			</para>
+			<para>
+			Now that the query has several tables, the results at the bottom of
 			the screen will have a table populated with some of the values from the database. The
 			results will be updated each time the query is modified. Next we need to remove columns
 			from the result that we don't need. Since we only want the names of the actors we
@@ -1636,8 +2054,10 @@
 			quickly by un-checking the top check box in each table. The actor_id and dob are also not
 			needed so they can be un-checked as well. To find the actors that played in action movies
 			a where clause will be needed on the genre of the movie. To add a where clause click
-			in the where column to the right of the genre field in the movie table. As only movies
+			on the where column to the right of the genre field in the movie table. As only movies
 			with the genre "Action" are desired the field will need to contain "= 'Action'".
+			</para>
+			<para>
 			Now in the results there should be a table with only two fields "last_name" and "first_name"
 			with only actor names that played in action movies. Before moving to the report layout
 			lets reorder the results, sort them, and modify their column names. To order the results
@@ -1646,14 +2066,17 @@
 			sort starting from the first column to be sorted by and ending at the last. For the example
 			we can sort the last name of the actors in ascending order by clicking on the header until
 			the sort arrow points up. To reorder the columns in the result simply drag the column to the
-			desired location in the result. Since the last name is the first column before the first name
+			desired location in the result. Since the column with the last names is before the one with the first names,
 			grab the last name column's header and drag it after the first name column in the result.
 			Finally, to rename columns any column name can be clicked on in the query pen and changed. For
 			the example we can change the last name from "last_name" to "surname" by clicking
 			the column in the Actor table and changing the text to "surname". Now the column's name
 			has changed. In the table in the query pen the column's original name is shown in brackets
-			to the right of the alias for the column. Now that the query is complete we can move to
-			laying out the report. To generate a report based on the query click the layout button
+			to the right of the alias for the column. 
+			</para>
+			<para>
+			Now that the query is complete, we can move to
+			laying out the report. To generate a report based on the query, click the layout button
 			to the right of the zoom slider at the top of the query pen.
 			</para>
 			
@@ -1664,23 +2087,22 @@
 			<title>Laying Out a Report</title>
 			
 			<para>
-			To add new report layouts to a project right click the project tree and select "New Layout".
+			To add new report layouts to a project, right click the project tree and select "New Layout".
 			Layouts created from queries come from a template that adds a header and footer to the results
 			of the query. While the report layout only shows one page, the layout of this page will be
-			repeated for each page required to print or export the entire query results. The following 
-			example is based off the layout generated from part 2.
+			repeated for each page required to print or export the entire query results.
 			</para>
 			
 			<para>
-			Now that the report layout has been created the layout can be modified before exporting or printing.
+			Now that the report layout has been created, the layout can be modified before exporting or printing.
 			The first thing to change from the default is the header. To modify the contents of any box in the 
-			layout simply double click the box to show its properties window. The properties of any text box
-			is a simple text editor with font and alignment choices. After giving the header of the report
-			a new value press OK and the header on the report will change. Next the query results can be 
+			layout, simply double click the box to show its properties window. The properties of any text box
+			involve a simple text editor with font and alignment choices. After giving the header of the report
+			a new value, press OK and the header on the report will change. Next the query results can be 
 			modified by double clicking it. The font for the results can be changed as well as the background
 			colour. The null string that can be specified will be what is displayed if any cell of the result
 			returns a null value. Borders can also be specified from a list of available options. Finally,
-			each column can be modified individually. For this report change the name of the first column to
+			each column can be modified individually. For this report, change the name of the first column to
 			"First Name" and increase the space given to the first name column to spread out the results.
 			To make the report look nicer add an image to it by pressing the image button in the tool bar and
 			then clicking on the report. An image will have to be selected before the image appears on the report.
