@@ -44,6 +44,7 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.wabit.JDBCDataSource;
+import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -130,7 +131,7 @@ public class ProjectXMLDAOTest extends TestCase {
 							newVal = new Point2D.Double(((Point2D) oldVal).getX(), ((Point2D) oldVal).getY());
 						}
 					} else if (property.getPropertyType() == WabitObject.class) {
-						newVal = new QueryCache();
+						newVal = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 					} else {
 						throw new RuntimeException("This test case lacks a value for "
 								+ property.getName() + " (type "
@@ -227,7 +228,7 @@ public class ProjectXMLDAOTest extends TestCase {
 		setAllSetters(p, getPropertiesToIgnore());
 		p.addDataSource(db.getDataSource());
 
-		QueryCache query = new QueryCache();
+		QueryCache query = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 		p.addQuery(query);
 		setAllSetters(query, getPropertiesToIgnore());
 		
@@ -273,7 +274,7 @@ public class ProjectXMLDAOTest extends TestCase {
         for (int i = 0; i < p.getQueries().size(); i++) {
         	QueryCache oldQuery = (QueryCache) p.getQueries().get(i);
 			QueryCache newQuery = (QueryCache) loadedSession.getProject().getQueries().get(i);
-			assertPropertiesEqual(oldQuery, newQuery);
+			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session"});
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());
 			for (int j = 0; j < oldQuery.getConstantsContainer().getItems().size(); j++) {
 				assertPropertiesEqual(oldQuery.getConstantsContainer().getItems().get(j), newQuery.getConstantsContainer().getItems().get(j), "item", "columnWidth");

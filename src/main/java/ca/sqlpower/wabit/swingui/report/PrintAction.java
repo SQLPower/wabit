@@ -21,18 +21,25 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.print.PrinterJob;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
 
 import ca.sqlpower.swingui.MonitorableWorker;
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class PrintAction extends AbstractAction {
 	
@@ -99,11 +106,11 @@ public class PrintAction extends AbstractAction {
     public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/printer.png"));
     private final Layout layout;
     private final Component dialogOwner;
-	private final SwingWorkerRegistry registry;
+	private final WabitSwingSession session;
 
-    public PrintAction(Layout layout, Component dialogOwner, SwingWorkerRegistry registry) {
+    public PrintAction(Layout layout, Component dialogOwner, WabitSwingSession session) {
         super("Print...", ICON);
-		this.registry = registry;
+		this.session = session;
         putValue(SHORT_DESCRIPTION, "Print Report");
         this.layout = layout;
         this.dialogOwner = dialogOwner;
@@ -118,9 +125,66 @@ public class PrintAction extends AbstractAction {
         job.setPageable(layout);
         boolean ok = job.printDialog();
         if (ok) {
+        	
+        	final JPanel glassPane = new JPanel();
+            session.getFrame().setGlassPane(glassPane);
+            glassPane.setVisible(true);
+            glassPane.setFocusable(true);
+            glassPane.setOpaque(false);
+            glassPane.addFocusListener(new FocusListener() {
+			
+				public void focusLost(FocusEvent e) {
+					if (glassPane.isVisible()) {
+						glassPane.requestFocus();
+					}
+				}
+				public void focusGained(FocusEvent e) {
+					//Do nothing on focus gained
+				}
+			});
+			
+            glassPane.addMouseListener(new MouseListener() {
+				public void mouseReleased(MouseEvent e) {
+					e.consume();
+				}
+				public void mousePressed(MouseEvent e) {
+					e.consume();			
+				}
+				public void mouseExited(MouseEvent e) {
+					e.consume();			
+				}
+				public void mouseEntered(MouseEvent e) {
+					e.consume();			
+				}
+				public void mouseClicked(MouseEvent e) {
+					e.consume();			
+				}
+			});
+            
+            glassPane.addMouseMotionListener(new MouseMotionListener() {
+				public void mouseMoved(MouseEvent e) {
+					e.consume();
+				}
+				public void mouseDragged(MouseEvent e) {
+					e.consume();
+				}
+			});
+            
 			ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Printing " + layout.getName(), "", 0, 1);
-        	PrintWorker worker = new PrintWorker(registry, job, layout);
-			ProgressWatcher.watchProgress(monitor, worker);
+        	final PrintWorker worker = new PrintWorker(session, job, layout);
+            monitor.setMillisToPopup(0);
+			ProgressWatcher watcher = new ProgressWatcher(monitor, worker) {
+				@Override
+				public void actionPerformed(ActionEvent evt) {
+					super.actionPerformed(evt);
+					if (worker.isFinished() || worker.isCancelled()) {
+						JPanel glassPane = new JPanel();
+						glassPane.setOpaque(false);
+						session.getFrame().setGlassPane(glassPane);
+					}
+				}
+			};
+			watcher.start();
 			new Thread(worker).start();
         } else {
         	layout.compareAndSetCurrentlyPrinting(true, false);

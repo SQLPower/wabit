@@ -87,12 +87,17 @@ public interface ReportContentRenderer extends WabitObject {
 	 * @param pageIndex
 	 *            The zero-based page number for which the corresponding report
 	 *            content will be rendered.
+	 * @param printing
+	 *            This tells the renderer if the report is being printed. If
+	 *            set to true the full report will be built, otherwise a cached
+                  result will be used. Set this to true if the report is being
+                  printed.
 	 * @return True if this renderer has more data to render, and would like to
 	 *         be called upon again. Returning true will typically cause the
 	 *         report to grow by another page. The final page of the report is
 	 *         the first one where all content renderers involved return false.
 	 */
-    boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex);
+    boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing);
 
     /**
      * Tells this content renderer that the next call to

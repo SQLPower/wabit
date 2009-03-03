@@ -163,7 +163,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 	 * the content box. Note that specifying a pageIndex has no effect, since
 	 * Labels are intended to be the same on every page.
 	 */
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
+    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
         logger.debug("Rendering label...");
         logger.debug("Text before: " + text);
         String[] textToRender = Variables.substitute(text, variableContext).split("\n");

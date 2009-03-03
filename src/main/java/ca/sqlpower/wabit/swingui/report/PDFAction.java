@@ -25,18 +25,24 @@ import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.ProgressWatcher;
-import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class PDFAction extends AbstractAction {
 
@@ -53,11 +59,11 @@ public class PDFAction extends AbstractAction {
     private final Layout layout;
     private final Component dialogOwner;
 
-	private final SwingWorkerRegistry registry;
+	private final WabitSwingSession session;
 
-    public PDFAction(SwingWorkerRegistry registry, Component dialogOwner, Layout layout) {
+    public PDFAction(WabitSwingSession session, Component dialogOwner, Layout layout) {
         super("Create PDF...", ICON);
-		this.registry = registry;
+		this.session = session;
         putValue(SHORT_DESCRIPTION, "Export report as PDF");
         this.dialogOwner = dialogOwner;
         this.layout = layout;
@@ -105,10 +111,65 @@ public class PDFAction extends AbstractAction {
                     }
                 }
             } while (promptAgain);
+
+            final JPanel glassPane = new JPanel();
+            session.getFrame().setGlassPane(glassPane);
+            glassPane.setVisible(true);
+            glassPane.setFocusable(true);
+            glassPane.setOpaque(false);
+            glassPane.addFocusListener(new FocusListener() {
+			
+				public void focusLost(FocusEvent e) {
+					if (glassPane.isVisible()) {
+						glassPane.requestFocus();
+					}
+				}
+				public void focusGained(FocusEvent e) {
+					//Do nothing on focus gained
+				}
+			});
+			
+            glassPane.addMouseListener(new MouseListener() {
+				public void mouseReleased(MouseEvent e) {
+					e.consume();
+				}
+				public void mousePressed(MouseEvent e) {
+					e.consume();			
+				}
+				public void mouseExited(MouseEvent e) {
+					e.consume();			
+				}
+				public void mouseEntered(MouseEvent e) {
+					e.consume();			
+				}
+				public void mouseClicked(MouseEvent e) {
+					e.consume();			
+				}
+			});
             
-            LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(registry, targetFile, layout, dialogOwner);
+            glassPane.addMouseMotionListener(new MouseMotionListener() {
+				public void mouseMoved(MouseEvent e) {
+					e.consume();
+				}
+				public void mouseDragged(MouseEvent e) {
+					e.consume();
+				}
+			});
+            final LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(session, targetFile, layout, dialogOwner);
             ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, pdfWorker.getJobSize());
-			ProgressWatcher.watchProgress(monitor, pdfWorker);
+            monitor.setMillisToPopup(0);
+			ProgressWatcher watcher = new ProgressWatcher(monitor, pdfWorker) {
+				@Override
+				public void actionPerformed(ActionEvent evt) {
+					super.actionPerformed(evt);
+					if (pdfWorker.isFinished() || pdfWorker.isCancelled()) {
+						JPanel glassPane = new JPanel();
+						glassPane.setOpaque(false);
+						session.getFrame().setGlassPane(glassPane);
+					}
+				}
+			};
+			watcher.start();
 			new Thread(pdfWorker).start();
 			
             

@@ -54,7 +54,6 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -272,7 +271,7 @@ public class QueryPanel implements WabitPanel {
 			((JTableHeader) e.getSource()).getTable().scrollRectToVisible(rect);
 		}	
 	};
-	
+
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
 		this.session = session;
@@ -281,6 +280,7 @@ public class QueryPanel implements WabitPanel {
 		queryPen = new QueryPen(session, this, queryCache);
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
 		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane);
+		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
 		queryPen.setZoom(queryCache.getZoomLevel());
@@ -551,29 +551,18 @@ public class QueryPanel implements WabitPanel {
     			executeQueryInCache();
     		}
     	});
-    	FormLayout layout = new FormLayout("pref, 3dlu, pref:grow, 3dlu, max(pref;50dlu), 3dlu, pref, 3dlu, pref"
-    			,"pref, pref, fill:min(pref;100dlu):grow");
+    	FormLayout layout = new FormLayout("pref, 5dlu, pref, 3dlu, pref:grow, 5dlu, max(pref;50dlu)"
+    			,"pref, fill:min(pref;100dlu):grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
+    	southPanelBuilder.append(groupingCheckBox);
     	southPanelBuilder.append(whereText, queryPen.getGlobalWhereText());
     	JPanel searchPanel = new JPanel(new BorderLayout());
     	searchPanel.add(new JLabel(ICON), BorderLayout.WEST);
     	searchField = new JTextField(queryUIComponents.getSearchDocument(), null, 0);
 		searchPanel.add(searchField, BorderLayout.CENTER);
     	southPanelBuilder.append(searchPanel);
-    	southPanelBuilder.append(new JLabel("Row Limit"));
-    	final JSpinner rowLimitSpinner = queryUIComponents.getRowLimitSpinner();
-    	rowLimitSpinner.setValue(new Integer(1000));
-    	rowLimitSpinner.addChangeListener(new ChangeListener(){
-
-			public void stateChanged(ChangeEvent e) {
-				executeQueryInCache();
-			}
-		});
-    	southPanelBuilder.append(rowLimitSpinner);
     	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(groupingCheckBox);
-    	southPanelBuilder.nextLine();
-    	southPanelBuilder.append(resultPane, 9);
+    	southPanelBuilder.append(resultPane, 7);
     	
     	JPanel rightTreePanel = new JPanel(new BorderLayout());
     	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
@@ -693,7 +682,7 @@ public class QueryPanel implements WabitPanel {
 	 */
 	public synchronized void executeQueryInCache() {
 		queuedQueryCache.add(new QueryCache(queryCache));
-		queryUIComponents.executeQuery(queryCache.generateQuery());
+		queryUIComponents.executeQuery(queryCache);
 		columnNameLabel.setIcon(THROBBER);
 		for (JTable table : queryUIComponents.getResultTables()) {
 			table.setBackground(REFRESH_GREY);

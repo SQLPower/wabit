@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
+
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -66,6 +68,26 @@ public class StubWabitSession implements WabitSession {
 			String... buttonNames) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public int getRowLimit() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setRowLimit(int newLimit) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

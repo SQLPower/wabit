@@ -47,9 +47,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
-import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.query.QueryCache;
 
@@ -271,7 +269,7 @@ public class ProjectPanel implements WabitPanel {
 		if (!session.getProject().dsAlreadyAdded(ds)) {
 			session.getProject().addDataSource(ds);
 		}
-		Query query = new QueryCache();
+		Query query = new QueryCache(session);
 		query.setName("New " + ds.getName() + " query");
 		query.setDataSource(ds);
 		session.getProject().addQuery(query);

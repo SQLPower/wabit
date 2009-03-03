@@ -42,21 +42,22 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.sqlobject.SQLTable;
+import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
 
 /**
  * This class will cache all of the parts of a select
  * statement and also listen to everything that could
  * change the select statement.
  */
-public class QueryCache extends AbstractWabitObject implements Query {
+public class QueryCache extends AbstractWabitObject implements Query, StatementExecutor {
 	
 	private static final Logger logger = Logger.getLogger(QueryCache.class);
 	
@@ -89,6 +90,12 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 * type.
 	 */
 	public static final String PROPERTY_QUERY_TEXT = "propertyQueryText";
+
+	/**
+	 * If the row limit changes causing the result set cache to become empty
+	 * a change event will fire with this property.
+	 */
+	protected static final String PROPERTY_ROW_LIMIT = "propertyRowLimit";
 	
 	/**
 	 * The arguments that can be added to a column in the 
@@ -340,16 +347,36 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	private String userModifiedQuery = null;
 	
-	public QueryCache() {
-		this((String)null);
+	/**
+	 * The session this query cache is contained in.
+	 */
+	private final WabitSession session;
+
+	/**
+	 * A change listener to flush the cached row sets on a row limit change.
+	 */
+	private final PropertyChangeListener rowLimitChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals("rowLimit")) {
+				resultSets.clear();
+				updateCounts.clear();
+				firePropertyChange(PROPERTY_ROW_LIMIT, evt.getOldValue(), evt.getNewValue());
+			}
+		}
+	};
+	
+	public QueryCache(WabitSession session) {
+		this((String)null, session);
 	}
 	
 	/**
 	 * The uuid defines the unique id of this query cache. If null
 	 * is passed in a new UUID will be generated.
 	 */
-	public QueryCache(String uuid) {
+	public QueryCache(String uuid, WabitSession session) {
 		super(uuid);
+		this.session = session;
+		session.addPropertyChangeListener(rowLimitChangeListener);
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		orderByList = new ArrayList<Item>();
 		selectedColumns = new ArrayList<Item>();
@@ -385,6 +412,7 @@ public class QueryCache extends AbstractWabitObject implements Query {
 		orderByList = new ArrayList<Item>();
 		orderByArgumentMap = new HashMap<Item, OrderByArgument>();
 		
+		session = copy.getSession();
 		setName(copy.getName());
 		setParent(copy.getParent());
 		if (copy instanceof QueryCache) {
@@ -405,10 +433,26 @@ public class QueryCache extends AbstractWabitObject implements Query {
 			setDataSource(query.getDataSource());
 			constantsContainer = query.getConstantsContainer();
 			userModifiedQuery = query.getUserModifiedQuery();
+			
+			for (CachedRowSet rs : query.getResultSets()) {
+				if (rs == null) {
+					resultSets.add(null);
+				} else {
+					try {
+						resultSets.add((CachedRowSet) rs.createShared());
+					} catch (SQLException e) {
+						throw new RuntimeException("This should not be able to happen", e);
+					}
+				}
+			}
 		} else {
 			userModifiedQuery = copy.generateQuery();
 			logger.warn("Unknown query type " + copy.getClass() + " to make a cached query of.");
 		}
+	}
+	
+	public void cleanup() {
+		session.removePropertyChangeListener(rowLimitChangeListener);
 	}
 	
 	public void setGroupingEnabled(boolean enabled) {
@@ -714,7 +758,28 @@ public class QueryCache extends AbstractWabitObject implements Query {
      * @throws SQLException
      *             If the query fails to execute for any reason.
      */
-	public ResultSet execute() throws QueryException {
+	public boolean executeStatement() throws SQLException {
+		return executeStatement(false);
+	}
+
+	/**
+	 * Executes the current SQL query, returning a cached copy of the result set
+	 * that is either a subset of the full results, limited by the session's row
+	 * limit, or the full result set. The returned copy of the result set is
+	 * guaranteed to be scrollable, and does not hold any remote database
+	 * resources.
+	 * 
+	 * @return an in-memory copy of the result set produced by this query
+	 *         cache's current query. You are not required to close the returned
+	 *         result set when you are finished with it, but you can if you
+	 *         like.
+	 * @throws SQLException
+	 *             If the query fails to execute for any reason.
+	 */
+	public boolean executeStatement(boolean fetchFullResults) throws SQLException {
+		resultPosition = 0;
+		resultSets.clear();
+		updateCounts.clear();
 		if (dataSource == null) {
 			throw new NullPointerException("Data source is null.");
 		}
@@ -725,12 +790,25 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	    try {
 	        con = dataSource.createConnection();
 	        stmt = con.createStatement();
-	        rs = stmt.executeQuery(sql);
-	        CachedRowSet result = new CachedRowSet();
-	        result.populate(rs);
-	        return result;
-	    } catch (SQLException ex) {
-	        throw new QueryException(sql, ex);
+	        if (!fetchFullResults) {
+	        	stmt.setMaxRows(session.getRowLimit());
+	        }
+	        boolean initialResult = stmt.execute(sql);
+            boolean sqlResult = initialResult;
+            boolean hasNext = true;
+            while (hasNext) {
+            	if (stmt.getResultSet() != null) {
+            		CachedRowSet crs = new CachedRowSet();
+            		crs.populate(stmt.getResultSet());
+            		resultSets.add(crs);
+            	} else {
+            		resultSets.add(null);
+            	}
+                updateCounts.add(stmt.getUpdateCount());
+                sqlResult = stmt.getMoreResults();
+                hasNext = !((sqlResult == false) && (stmt.getUpdateCount() == -1));
+            }
+            return initialResult;
 	    } finally {
             if (rs != null) {
                 try {
@@ -754,6 +832,62 @@ public class QueryCache extends AbstractWabitObject implements Query {
                 }
             }
 	    }
+	}
+    	
+	private final List<CachedRowSet> resultSets = new ArrayList<CachedRowSet>();
+	private final List<Integer> updateCounts = new ArrayList<Integer>();
+	private int resultPosition = 0;
+
+
+	public ResultSet getResultSet() {
+		if (resultPosition >= resultSets.size()) {
+			return null;
+		}
+		return resultSets.get(resultPosition);
+	}
+
+	//TODO:Rename this
+	public String getStatement() {
+		return generateQuery();
+	}
+
+	public int getUpdateCount() {
+		if (resultPosition >= updateCounts.size()) {
+			return -1;
+		}
+		return updateCounts.get(resultPosition);
+	}
+
+	public boolean getMoreResults() {
+		resultPosition++;
+		return resultPosition < resultSets.size();
+	}
+
+	/**
+	 * Returns the most up to date result set in the query cache. This may
+	 * execute the query on the database.
+	 * 
+	 * @param fullResultSet
+	 *            If true the full result set will be retrieved. If false then a
+	 *            limited result set will be retrieved based on the session's
+	 *            row limit.
+	 */
+	public ResultSet fetchResultSet() throws SQLException {
+		if (!resultSets.isEmpty()) {
+			for (CachedRowSet rs : resultSets) {
+				if (rs != null) {
+					return rs.createShared();
+				}
+			}
+			return null;
+		}
+		executeStatement();
+		for (CachedRowSet rs : resultSets) {
+			if (rs != null) {
+				return rs.createShared();
+			}
+		}
+		return null;
 	}
 	
 	public List<Item> getSelectedColumns() {
@@ -1148,6 +1282,17 @@ public class QueryCache extends AbstractWabitObject implements Query {
 	 */
 	protected String getUserModifiedQuery() {
 		return userModifiedQuery;
+	}
+	
+	/**
+	 * Used in the copy constructor to set the session.
+	 */
+	public WabitSession getSession() {
+		return session;
+	}
+	
+	protected List<CachedRowSet> getResultSets() {
+		return Collections.unmodifiableList(resultSets);
 	}
 	
 }

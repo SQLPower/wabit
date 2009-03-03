@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import ca.sqlpower.sql.SPDataSource;
 
@@ -52,6 +53,26 @@ public class StubQuery extends StubWabitObject implements Query {
 	public WabitDataSource getWabitDataSource() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public void cleanup() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public ResultSet fetchResultSet() throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public WabitSession getSession() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setRowLimit(int newLimit) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

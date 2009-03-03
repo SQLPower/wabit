@@ -68,6 +68,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
@@ -93,6 +94,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     private static final String defaultFormatString = "Default Format";
 
 	private static final int COLUMN_WIDTH_BUFFER = 5;
+
+	/**
+	 * Notes a change to the query has occurred that would require a refresh to the renderer
+	 */
+	protected static final String QUERY = "query";
     
     private static DataType getDataType(String className) {
     	try {
@@ -176,6 +182,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * If this is true then a new result set needs to be fetched from the database. 
      */
     private boolean refreshResultSet;
+    
+    /**
+     * This result set should only be used when printing. If printing is not being
+     * done then this result set should be null. This result set will contain the entire
+     * result of the query instead of just a result set limited by a row limit.
+     */
+    private ResultSet printingResultSet = null;
 
     /**
      * If the query fails to execute, the corresponding exception will be saved here and
@@ -209,6 +222,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         query.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				refreshResultSet = true;
+				logger.debug("Refreshing result set as query changed");
+				firePropertyChange(QUERY, cachedQuery, ResultSetRenderer.this.query);
 			}
 		});
         setUpFormats();
@@ -221,17 +236,57 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * set the result set to be a new result set.
      */
 	private void executeQuery() {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
+		}
         ResultSet executedRs = null;
         executeException = null;
         cachedQuery = new QueryCache(query);
 		try {
-            executedRs = cachedQuery.execute(); // TODO run in background
+            executedRs = cachedQuery.fetchResultSet(); // TODO run in background
             initColumns(executedRs);
         } catch (Exception ex) {
             executeException = ex;
         }
         setName("Result Set: " + cachedQuery.getName());
         rs = executedRs;
+        if (logger.isDebugEnabled()) {
+			logger.debug("Finished fetching results for query " + query.generateQuery());
+		}
+	}
+	
+    /**
+     * This will execute the query contained in this result set and
+     * set the result set to be a new result set.
+     */
+	private void executeQueryForPrinting() {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
+		}
+        ResultSet executedRs = null;
+        executeException = null;
+        QueryCache cachedQuery = new QueryCache(query);
+		try {
+			cachedQuery.executeStatement(true);
+			boolean hasNext = true;
+			while (hasNext) {
+            	if (cachedQuery.getResultSet() != null) {
+            		executedRs = cachedQuery.getResultSet();
+            		break;
+            	}
+                boolean sqlResult = cachedQuery.getMoreResults();
+                hasNext = !((sqlResult == false) && (cachedQuery.getUpdateCount() == -1));
+            }
+			if (executedRs == null) {
+				executeException = new SQLException("There are no results in the executed query.");
+			}
+        } catch (Exception ex) {
+            executeException = ex;
+        }
+        printingResultSet = executedRs;
+        if (logger.isDebugEnabled()) {
+			logger.debug("Finished fetching results for query " + query.generateQuery());
+		}
 	}
 	
 	/**
@@ -366,15 +421,17 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
     }
 
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
-    	if (refreshResultSet) {
+    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
+    	if (printing && printingResultSet == null) {
+    		executeQueryForPrinting();
+    	} else if (refreshResultSet) {
     		executeQuery();
     		refreshResultSet = false;
     	}
         if (executeException != null) {
             return renderFailure(g, contentBox, scaleFactor, pageIndex);
         } else {
-            return renderSuccess(g, contentBox, scaleFactor, pageIndex);
+            return renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
         }
     }
     
@@ -412,7 +469,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         return false;
     }
 
-    public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
+    public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
+    	ResultSet rs = this.rs;
+    	if (printing) {
+    		rs = printingResultSet;
+    	}
         try {
         	if (pageIndex >= pageRowNumberList.size() || pageRowNumberList.get(pageIndex) == null) {
         		while (pageRowNumberList.size() < pageIndex) {
@@ -603,6 +664,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             	g.drawLine(0, contentBox.getHeight() - 1, contentBox.getWidth() - 1, contentBox.getHeight() - 1);
             	g.drawLine(0, 0, contentBox.getWidth() - 1, 0);
             }
+        	if (rs.isAfterLast()) {
+        		printingResultSet = null;
+        	}
             return !rs.isAfterLast();
         } catch (Exception ex) {
             throw new RuntimeException(ex);

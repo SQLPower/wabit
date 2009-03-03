@@ -31,7 +31,7 @@ public class QueryCacheTest extends TestCase {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		queryCache = new QueryCache();
+		queryCache = new QueryCache(new StubWabitSwingSession());
 	}
 	
 	public void testSelectListener() throws Exception {

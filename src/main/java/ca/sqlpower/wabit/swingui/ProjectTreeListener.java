@@ -115,8 +115,10 @@ public class ProjectTreeListener extends MouseAdapter {
 				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
-					session.getProject().removeQuery((Query)item);
-					removeLayoutPartsDependentOnQuery((Query)item);
+					final Query query = (Query)item;
+					query.cleanup();
+					session.getProject().removeQuery(query);
+					removeLayoutPartsDependentOnQuery(query);
 				} else {
 					return;
 				}
@@ -133,6 +135,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		            	List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
 		            	for(Query query : queries) {
 		                	if(query.getWabitDataSource().equals(item)) {
+		                		query.cleanup();
 		                		removeLayoutPartsDependentOnQuery(query);
 		                		session.getProject().removeQuery(query);
 		                	}

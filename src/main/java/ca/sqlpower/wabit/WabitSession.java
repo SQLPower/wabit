@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
+
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -98,5 +100,15 @@ public interface WabitSession {
 	 */
 	public UserPrompter createUserPrompter(String question, UserPromptType responseType, UserPromptOptions optionType,
 			UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames);
+	
+	/**
+	 * Returns the number of rows that should be retrieved from the database for
+	 * any result set.
+	 */
+	int getRowLimit();
+	
+    void addPropertyChangeListener(PropertyChangeListener l);
+    
+    void removePropertyChangeListener(PropertyChangeListener l);
 	
 }

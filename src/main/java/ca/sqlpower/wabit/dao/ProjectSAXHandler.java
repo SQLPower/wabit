@@ -238,7 +238,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("query")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
-        	query = new QueryCache(uuid);
+        	query = new QueryCache(uuid, session);
         	session.getProject().addQuery(query);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);

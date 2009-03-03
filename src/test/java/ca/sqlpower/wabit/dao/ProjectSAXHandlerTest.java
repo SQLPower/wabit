@@ -23,13 +23,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 
+import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
-import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSession;
@@ -38,7 +38,6 @@ import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.query.QueryCache;
-import junit.framework.TestCase;
 
 public class ProjectSAXHandlerTest extends TestCase {
 
@@ -68,7 +67,7 @@ public class ProjectSAXHandlerTest extends TestCase {
 		p.setName("Project");
 		p.addDataSource(newDS);
 
-		QueryCache query = new QueryCache();
+		QueryCache query = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 		p.addQuery(query);
 		query.setDataSource(newDS);
 		

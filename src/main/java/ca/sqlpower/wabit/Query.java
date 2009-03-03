@@ -30,20 +30,24 @@ import ca.sqlpower.sql.SPDataSource;
  */
 public interface Query extends WabitObject {
 
-    /**
-     * Executes the current query represented by this query object, returning a
-     * cached copy of the result set. The returned copy of the result set is
-     * guaranteed to be scrollable, and does not hold any remote network or
-     * database resources.
-     * 
-     * @return an in-memory copy of the result set produced by this query
-     *         cache's current query. You are not required to close the returned
-     *         result set when you are finished with it, but you can if you
-     *         like.
-     * @throws SQLException
-     *             If the query fails to execute for any reason.
-     */
-    public ResultSet execute() throws QueryException;
+	/**
+	 * Executes the current query represented by this query object, returning a
+	 * cached copy of the result set. The returned copy of the result set is
+	 * guaranteed to be scrollable, and does not hold any remote network or
+	 * database resources.
+	 * 
+	 * @param fullResultSet
+	 *            If true the full result set will be retrieved. If false then a
+	 *            limited result set will be retrieved based on the session's
+	 *            row limit.
+	 * @return an in-memory copy of the result set produced by this query
+	 *         cache's current query. You are not required to close the returned
+	 *         result set when you are finished with it, but you can if you
+	 *         like.
+	 * @throws SQLException
+	 *             If the query fails to execute for any reason.
+	 */
+    public ResultSet fetchResultSet() throws SQLException;
     
     void setDataSource(SPDataSource ds);
 
@@ -61,5 +65,16 @@ public interface Query extends WabitObject {
 	 * by parts of the query tool.
 	 */
 	public boolean isScriptModified();
+	
+	/**
+	 * Returns the session this query is contained in. Used for copying
+	 * queries.
+	 */
+	public WabitSession getSession();
+	
+	/**
+	 * Call this when the query is to be disposed of.
+	 */
+	public void cleanup();
     
 }

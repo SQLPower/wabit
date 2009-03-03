@@ -27,6 +27,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -51,16 +52,22 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.MemoryMonitor;
@@ -211,6 +218,20 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * The model behind the project tree on the left side of Wabit.
 	 */
 	private ProjectTreeModel projectTreeModel;
+
+	/**
+	 * This is the limit of all result sets in Wabit. Changing this spinner
+	 * will cause cached result sets to be flushed.
+	 */
+	private final JSpinner rowLimitSpinner;
+	
+	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	
+	/**
+	 * This tracks the old row limit for firing an appropriate event when the row
+	 * limit spinner changes.
+	 */
+	private int oldRowLimitValue;
 	
 	/**
 	 * Creates a new session 
@@ -239,6 +260,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		projectTreeModel = new ProjectTreeModel(project);
 		projectTree = new JTree(projectTreeModel);
 		projectTree.setToggleClickCount(0);
+		
+        rowLimitSpinner = new JSpinner();
+        final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
+		getRowLimitSpinner().setEditor(rowLimitEditor);
+        getRowLimitSpinner().setValue(1000);
+        rowLimitSpinner.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				pcs.firePropertyChange("rowLimit", oldRowLimitValue, ((Integer) rowLimitSpinner.getValue()).intValue());
+				oldRowLimitValue = (Integer) rowLimitSpinner.getValue();
+			}
+		});
 		
 	}
 	
@@ -277,17 +309,19 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             wabitPane.setDividerLocation(Integer.parseInt(dividerLocations[0]));
         }
         
-        JPanel statusPane = new JPanel(new BorderLayout());
-        statusPane.add(statusLabel, BorderLayout.CENTER);
+    	DefaultFormBuilder statusBarBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 4dlu, pref, 2dlu, pref, 4dlu, pref"));
+        statusBarBuilder.append(statusLabel);
 		
+        statusBarBuilder.append("Row Limit", getRowLimitSpinner());
+        
 		MemoryMonitor memoryMonitor = new MemoryMonitor();
 		memoryMonitor.start();
 		JLabel memoryLabel = memoryMonitor.getLabel();
 		memoryLabel.setBorder(new EmptyBorder(0, 20, 0, 20));
-		statusPane.add(memoryLabel, BorderLayout.EAST);
+		statusBarBuilder.append(memoryLabel);
 		
 		cp.add(wabitPane, BorderLayout.CENTER);
-        cp.add(statusPane, BorderLayout.SOUTH);
+        cp.add(statusBarBuilder.getPanel(), BorderLayout.SOUTH);
         
         JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
@@ -613,6 +647,22 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	public UserPrompter createUserPrompter(String question, UserPromptType responseType, UserPromptOptions optionType, UserPromptResponse defaultResponseType, Object defaultResponse, String ...buttonNames) {
 		return upfMissingLoadedDB.createUserPrompter(question, responseType, optionType, defaultResponseType, defaultResponse, buttonNames);
+	}
+
+	public JSpinner getRowLimitSpinner() {
+		return rowLimitSpinner;
+	}
+
+	public int getRowLimit() {
+		return (Integer) rowLimitSpinner.getValue();
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		pcs.addPropertyChangeListener(l);
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		pcs.removePropertyChangeListener(l);
 	}
 	
 }

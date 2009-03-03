@@ -23,6 +23,7 @@ package ca.sqlpower.wabit.swingui;
 import java.io.File;
 
 import javax.swing.JFrame;
+import javax.swing.JSpinner;
 import javax.swing.JTree;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -64,5 +65,11 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 	 * Get the file that the session was most recently loaded from or saved to.
 	 */
 	File getCurrentFile();
+	
+	/**
+	 * Returns the row limit component that affects all cached result sets.
+	 * @return
+	 */
+	JSpinner getRowLimitSpinner();
 
 }

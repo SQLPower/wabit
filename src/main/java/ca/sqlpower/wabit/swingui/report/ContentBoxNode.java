@@ -143,7 +143,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
                     (int) getWidth(), (int) getHeight());
             contentGraphics.setFont(contentBox.getFont()); // XXX could use piccolo attribute to do this magically
             contentRenderer.resetToFirstPage();
-            contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale(), 0);
+            contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale(), 0, false);
             contentGraphics.dispose();
         } else {
             g2.setColor(Color.LIGHT_GRAY);

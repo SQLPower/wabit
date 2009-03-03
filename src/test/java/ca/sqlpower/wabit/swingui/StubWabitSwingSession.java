@@ -19,10 +19,12 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.beans.PropertyChangeListener;
 import java.io.File;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
+import javax.swing.JSpinner;
 import javax.swing.JTree;
 
 import org.apache.log4j.Logger;
@@ -130,5 +132,30 @@ public class StubWabitSwingSession implements WabitSwingSession {
 			String ... buttonNames) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public JSpinner getRowLimitSpinner() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public int getRowLimit() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setRowLimit(int newLimit) {
+		// TODO Auto-generated method stub
+		
 	}
 }

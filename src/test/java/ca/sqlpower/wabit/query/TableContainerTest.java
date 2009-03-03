@@ -30,6 +30,8 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLTable;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.StubWabitSession;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
 
 public class TableContainerTest extends AbstractWabitObjectTest {
@@ -53,7 +55,7 @@ public class TableContainerTest extends AbstractWabitObjectTest {
         con.close();
         
         SQLTable testTable = db.getTableByName("test_table");
-		queryCache = new QueryCache();
+		queryCache = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 		
 		tableContainer = new TableContainer(queryCache, testTable);
 	}
@@ -79,7 +81,7 @@ public class TableContainerTest extends AbstractWabitObjectTest {
 		
         SQLTable testTable = db.getTableByName("test_table");
         assertNotNull(testTable);
-		queryCache = new QueryCache();
+		queryCache = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 		
 		tableContainer = new TableContainer(UUID.randomUUID().toString(), queryCache, "test_table", "", "public", new ArrayList<SQLObjectItem>());
 		
