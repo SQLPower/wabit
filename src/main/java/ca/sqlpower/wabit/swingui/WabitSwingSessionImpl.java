@@ -143,7 +143,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private JTree projectTree;
 	private JSplitPane wabitPane;
-	private final JFrame frame;
+	private JFrame frame;
 	private static JLabel statusLabel;
 	
 	public static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
@@ -172,7 +172,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * pl.ini file. This DB connection manager can be used anywhere needed in 
 	 * wabit. 
 	 */
-	private final DatabaseConnectionManager dbConnectionManager;
+	private DatabaseConnectionManager dbConnectionManager;
 	
 	/**
 	 * This is the most recent file loaded in this session or the last file that the session
@@ -185,7 +185,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * A {@link UserPrompterFactory} that will create a dialog for users to choose an existing
 	 * DB or create a new one if they load a project with a DB not in their pl.ini.
 	 */
-	private final UserPrompterFactory upfMissingLoadedDB;
+	private UserPrompterFactory upfMissingLoadedDB;
 	
 	/**
 	 * This action will close all of the open sessions and, if successful, close the app.
@@ -196,7 +196,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 	};
 
-	private final AboutAction aboutAction;
+	private AboutAction aboutAction;
 	
 	private final PropertyChangeListener editorModelListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -246,16 +246,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		statusLabel= new JLabel();
 		
-		frame = new JFrame("Wabit " + WabitVersion.VERSION);
-		frame.setIconImage(FRAME_ICON.getImage());
-		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		frame.addWindowListener(new WindowClosingListener(this));
-		aboutAction = new AboutAction(frame);
-		
-		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
-		
-		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, context.getDataSources());
-		
 		wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		projectTreeModel = new ProjectTreeModel(project);
 		projectTree = new JTree(projectTreeModel);
@@ -286,6 +276,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * @throws SQLObjectException 
 	 */
     public void buildUI() throws SQLObjectException {
+    	
+    	frame = new JFrame("Wabit " + WabitVersion.VERSION);
+		frame.setIconImage(FRAME_ICON.getImage());
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowClosingListener(this));
+		aboutAction = new AboutAction(frame);
+		
+		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
+		
+		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, sessionContext.getDataSources());
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
@@ -483,7 +483,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 			public void run() {
 				try {
-					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false);
+					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false, false);
 					
 					final File importFile;
 					if (args.length > 0) {

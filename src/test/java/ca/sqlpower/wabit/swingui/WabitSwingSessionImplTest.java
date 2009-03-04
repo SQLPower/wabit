@@ -25,7 +25,7 @@ import ca.sqlpower.testutil.CountingPropertyChangeListener;
 public class WabitSwingSessionImplTest extends TestCase {
 	
 	public void testRowLimitChangeFiresEvent() throws Exception {
-		WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false);
+		WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false, true);
 		WabitSwingSession session = new WabitSwingSessionImpl(context);
 		CountingPropertyChangeListener countingListener = new CountingPropertyChangeListener();
 		session.addPropertyChangeListener(countingListener);

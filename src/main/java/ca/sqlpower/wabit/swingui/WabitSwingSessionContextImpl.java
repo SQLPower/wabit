@@ -42,13 +42,24 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 
 	private WabitWelcomeScreen welcomeScreen;
 
-	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses)
+	/**
+	 * @param terminateWhenLastSessionCloses
+	 *            Set to true if the context should stop the app when the last
+	 *            session is closed. If false the app will have to be closed in
+	 *            a way other than closing all of the sessions.
+	 * @param headless
+	 *            Set to true to not create any GUI objects when the context
+	 *            starts. This stops the welcome screen from being created.
+	 */
+	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean headless)
 			throws IOException, SQLObjectException {
 		super(terminateWhenLastSessionCloses);
 		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		
-		welcomeScreen = new WabitWelcomeScreen(this);
-		macOSXRegistration();
+		if (!headless) {
+			welcomeScreen = new WabitWelcomeScreen(this);
+			macOSXRegistration();
+		}
 	}
 	
 	@Override
