@@ -68,7 +68,6 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
@@ -307,6 +306,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateInstance());
     	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getTimeInstance());
     	
+    	numberFormats.add(new DecimalFormat("0"));
     	numberFormats.add(new DecimalFormat("#,##0.00"));
     	numberFormats.add(new DecimalFormat("#,##0.00%"));
     	numberFormats.add(new DecimalFormat("(#,000.00)"));
