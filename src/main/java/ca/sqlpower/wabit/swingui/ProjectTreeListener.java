@@ -133,7 +133,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		            	//to prevent a ConcurrentModificationException
 		            	List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
 		            	for(Query query : queries) {
-		                	if(query.getWabitDataSource().equals(item)) {
+		                	if(item.equals(query.getWabitDataSource())) {
 		                		removeLayoutPartsDependentOnQuery(query);
 		                		session.getProject().removeQuery(query);
 		                	}
@@ -147,7 +147,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		        			session.getProject().addDataSource(ds);
 		        			List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
 			            	for(Query query : queries) {
-			                	if(query.getWabitDataSource().equals(item)) {
+			                	if(item.equals(query.getWabitDataSource())) {
 			                		removeLayoutPartsDependentOnQuery(query);
 			                		int queryIndex = session.getProject().getQueries().indexOf(query);
 									session.getProject().getQueries().get(queryIndex).setDataSource(ds);
