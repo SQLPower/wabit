@@ -26,7 +26,7 @@ public class WabitSwingSessionImplTest extends TestCase {
 	
 	
 	//XXX Test disabled as it is crashing Hudson. Will look into this soon.
-//	public void testRowLimitChangeFiresEvent() throws Exception {
+	public void testRowLimitChangeFiresEvent() throws Exception {
 //		WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false, true);
 //		WabitSwingSession session = new WabitSwingSessionImpl(context);
 //		CountingPropertyChangeListener countingListener = new CountingPropertyChangeListener();
@@ -35,6 +35,6 @@ public class WabitSwingSessionImplTest extends TestCase {
 //		session.getRowLimitSpinner().setValue(((Integer) session.getRowLimitSpinner().getValue()) + 1);
 //		
 //		assertEquals(1, countingListener.getPropertyChangeCount());
-//	}
+	}
 
 }
