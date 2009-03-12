@@ -805,7 +805,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             boolean sqlResult = initialResult;
             boolean hasNext = true;
             while (hasNext) {
-            	if (stmt.getResultSet() != null) {
+            	if (sqlResult) {
             		CachedRowSet crs = new CachedRowSet();
             		crs.populate(stmt.getResultSet());
             		resultSets.add(crs);
@@ -868,7 +868,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
 	public boolean getMoreResults() {
 		resultPosition++;
-		return resultPosition < resultSets.size();
+		return resultPosition < resultSets.size() && resultSets.get(resultPosition) != null;
 	}
 
 	/**
