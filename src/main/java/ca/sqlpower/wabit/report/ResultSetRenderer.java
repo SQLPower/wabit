@@ -211,6 +211,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 * This will store the background colour for the result set renderer.
 	 */
 	private Color backgroundColour;
+
+	/**
+	 * This map stores the current subtotal for each column in this map.
+	 */
+	private final Map<ColumnInfo, BigDecimal> subtotalForCols = new HashMap<ColumnInfo, BigDecimal>();
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
@@ -536,7 +541,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
             
             List<String> lastRenderedRow = new ArrayList<String>();
-            Map<ColumnInfo, Double> subtotalForCols = new HashMap<ColumnInfo, Double>();
             int rowCount = 0;
             logger.debug("Content box has height " + contentBox.getHeight() + " and next height will be " + (y + fm.getHeight()));
             if (contentBox.getHeight() < (y + fm.getHeight())) {
@@ -545,6 +549,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             while (((y + fm.getHeight()) < contentBox.getHeight()) && rs.next()) {
             	rowCount++;
             	List<String> renderedRow = new ArrayList<String>();
+            	List<Object> rawRow = new ArrayList<Object>();
             	
                 x = 0;
                 if (borderType == BorderStyles.FULL || borderType == BorderStyles.INSIDE) {
@@ -562,6 +567,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                     	formattedValue = replaceNull(rs.getString(col));
                     }
                     renderedRow.add(formattedValue);
+                    rawRow.add(value);
                 }
                 
                 List<String> nextRenderedRow = new ArrayList<String>();
@@ -604,6 +610,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	ColumnInfo ci = columnInfo.get(i);
                 	if (ci.getWillBreak() && i < lastRenderedRow.size() && !lastRenderedRow.get(i).equals(renderedRow.get(i))) {
                 		y = renderSubtotals(g, fm, y, colCount, subtotalForCols);
+                		subtotalForCols.clear();
                 		if ((y + fm.getHeight() * 2) > contentBox.getHeight()) {
                 			spaceForNextLine = false;
                 			break;
@@ -611,7 +618,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 		y += fm.getHeight();
                 		logger.debug("Printing break line: y height = " + y + ", font height = " + fm.getHeight() + " content box height = " + contentBox.getHeight());
                 		g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
-                		subtotalForCols.clear();
                 		break;
                 	}
                 }
@@ -635,17 +641,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	g.drawString(formattedValue, x + offset, y); // TODO clip and/or line wrap and/or warn
                 	x += ci.getWidth();
                 	lastRenderedRow.add(formattedValue);
-                	if (ci.getDataType().equals(DataType.NUMERIC)) {
-                		try {
-                			if (subtotalForCols.get(ci) == null) {
-                				subtotalForCols.put(ci, Double.parseDouble(formattedValue));
-                			} else {
-                				subtotalForCols.put(ci, subtotalForCols.get(ci) + Double.parseDouble(formattedValue));
-                			}
-                		} catch (NumberFormatException e) {
-                			//If the formatted value is null then the parse of a double
-                			//will fail. We will not sum null values and treat them as 0.
+                	Object value = rawRow.get(col);
+                	if (value instanceof Number) {
+                		BigDecimal oldValue = subtotalForCols.get(ci);
+                		if (oldValue == null) {
+                			oldValue = BigDecimal.valueOf(0);
                 		}
+                		BigDecimal augend;
+                		if (value instanceof BigDecimal) {
+                			augend = (BigDecimal) value;
+                		} else {
+                			augend = new BigDecimal(value.toString());
+                		}
+                		subtotalForCols.put(ci, oldValue.add(augend));
                 	}
                 }
                 if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) {
@@ -657,6 +665,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             logger.debug("Printed " + rowCount + " rows in the current result set renderer.");
             if (rs.isAfterLast() && !subtotalForCols.isEmpty()) {
             	renderSubtotals(g, fm, y, colCount, subtotalForCols);
+            	subtotalForCols.clear();
             }
         	if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
         		g.drawLine(0, 0, 0, contentBox.getHeight() - 1);
@@ -683,7 +692,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * @return The new y position after the subtotal rows.
      */
 	private int renderSubtotals(Graphics2D g, FontMetrics fm, int y,
-			int colCount, Map<ColumnInfo, Double> subtotalForCols) {
+			int colCount, Map<ColumnInfo, BigDecimal> subtotalForCols) {
 		if (!subtotalForCols.isEmpty()) {
 			int localX = 0;
 
@@ -694,7 +703,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 					localX += 2;
 				}
 				ColumnInfo colInfo = columnInfo.get(subCol);
-				Double subtotal = subtotalForCols.get(colInfo);
+				BigDecimal subtotal = subtotalForCols.get(colInfo);
 				if (colInfo.getWillSubtotal() && subtotal != null) {
 					if (firstSubtotal) {
 						y += fm.getHeight();
