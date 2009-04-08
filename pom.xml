@@ -360,6 +360,13 @@
 			<systemPath>${basedir}/lib/architect_test_util_lib.jar</systemPath>
 		</dependency>
 		<dependency>
+            <groupId>org.jfree.chart</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.0.12-src</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/jfreechart-1.0.12-src.zip</systemPath>
+        </dependency>
+		<dependency>
 			<groupId>org.fife</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
 			<version>1.0</version>
