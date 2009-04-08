@@ -19,13 +19,25 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import javax.swing.JMenu;
+
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.wabit.WabitSessionContext;
 
 public interface WabitSwingSessionContext extends WabitSessionContext {
 
+    /**
+     * Creates a menu that keeps track of the last few opened and saved project
+     * files.
+     */
 	RecentMenu createRecentMenu();
-	
+
+    /**
+     * Creates a menu whose items change dynamically as enterprise servers
+     * appear and disappear on the network.
+     */
+    JMenu createServerMenu();
+
 	WabitWelcomeScreen getWelcomeScreen();
 
 	/**

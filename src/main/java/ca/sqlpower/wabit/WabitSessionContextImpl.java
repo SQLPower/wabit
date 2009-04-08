@@ -22,8 +22,12 @@ package ca.sqlpower.wabit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 
 import org.apache.log4j.Logger;
 
@@ -55,6 +59,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	protected static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
 	
+    protected final JmDNS jmdns;
+
 	private DataSourceCollection dataSources;
 	private final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
@@ -68,7 +74,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *  Stores true when the OS is MAC
 	 */
     private static final boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
-    
+
     /**
      * This is the path to the user's pl.ini file.
      */
@@ -91,6 +97,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses) throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
+		
+		jmdns = JmDNS.create();
 		
         setPlDotIniPath(prefs.get(PREFS_PL_INI_PATH, null));
         logger.debug("pl.ini is at " + getPlDotIniPath());
@@ -191,6 +199,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	}
 
 	public void close() {
+	    jmdns.close();
 		for (int i = childSessions.size() - 1; i >= 0; i--) {
 			if (!childSessions.get(i).close()) {
 				return;
@@ -200,4 +209,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		System.exit(0);
 	}
 	
+	public List<ServiceInfo> getEnterpriseServers() {
+	    return Arrays.asList(jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE));
+	}
 }

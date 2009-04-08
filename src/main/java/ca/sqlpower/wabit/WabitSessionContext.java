@@ -19,10 +19,21 @@
 
 package ca.sqlpower.wabit;
 
+import java.util.List;
+
+import javax.jmdns.ServiceInfo;
+
 import ca.sqlpower.sql.DataSourceCollection;
 
 public interface WabitSessionContext {
-	
+
+    /**
+     * The service type to look for when discovering enterprise servers on the
+     * local network. This is the fully-qualified name of the service, as in
+     * <code>_wabitenterprise._tcp.local.</code>.
+     */
+    public static final String WABIT_ENTERPRISE_SERVER_MDNS_TYPE = "_wabitenterprise._tcp.local.";
+    
 	DataSourceCollection getDataSources();
 	
 	/**
@@ -54,6 +65,14 @@ public interface WabitSessionContext {
 	 * Returns the number of active sessions in the context.
 	 */
 	int getSessionCount();
+
+	/**
+     * Returns the list of currently-known enterprise servers. This list will change over
+     * time, and may be empty for the first few seconds after startup.
+     * 
+     * @return contact information for the known enterprise servers
+     */
+    List<ServiceInfo> getEnterpriseServers();
 
 	/**
 	 * This will attempt to close all of the currently opened sessions and stop

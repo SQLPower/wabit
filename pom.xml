@@ -362,9 +362,16 @@
 		<dependency>
             <groupId>org.jfree.chart</groupId>
             <artifactId>jfreechart</artifactId>
-            <version>1.0.12-src</version>
+            <version>1.0.12</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/jfreechart-1.0.12-src.zip</systemPath>
+            <systemPath>${basedir}/lib/jfreechart-1.0.12.jar</systemPath>
+        </dependency>
+		<dependency>
+            <groupId>org.jcommon</groupId>
+            <artifactId>jcommon</artifactId>
+            <version>1.0.15</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/jcommon-1.0.15.jar</systemPath>
         </dependency>
 		<dependency>
 			<groupId>org.fife</groupId>
@@ -443,6 +450,13 @@
 		    <artifactId>jhall</artifactId>
 		    <version>2.0</version>
 		</dependency>
+        <dependency>
+            <groupId>javax.jmdns</groupId>
+            <artifactId>jmdns</artifactId>
+            <version>2.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/jmdns.jar</systemPath>
+        </dependency>
 	</dependencies>
 	<repositories>
 		<repository>
