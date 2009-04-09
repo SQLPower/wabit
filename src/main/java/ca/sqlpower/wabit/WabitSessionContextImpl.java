@@ -53,12 +53,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	private static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
 	
-	/**
-	 * This is a preference that stores if the app should start up on the welcome screen
-	 * or it should start on the last loaded/saved project. 
-	 */
-	protected static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
-	
     protected final JmDNS jmdns;
 
 	private DataSourceCollection dataSources;
@@ -204,7 +198,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			if (!childSessions.get(i).close()) {
 				return;
 			}
-			prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 		}
 		System.exit(0);
 	}
@@ -216,4 +209,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public List<ServiceInfo> getEnterpriseServers() {
 	    return Arrays.asList(jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE));
 	}
+
+    /**
+     * Returns the preferences node used by this session context. This should
+     * not normally be used by client code; it is primarily intended for use by
+     * alternative session and session context implementations.
+     */
+	public Preferences getPrefs() {
+        return prefs;
+    }
 }

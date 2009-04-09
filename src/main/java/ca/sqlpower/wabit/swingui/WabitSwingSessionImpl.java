@@ -84,6 +84,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.query.QueryCache;
@@ -484,7 +485,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 			public void run() {
 				try {
-					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(false, false);
+				    WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false);
+					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
 					
 					final File importFile;
 					if (args.length > 0) {

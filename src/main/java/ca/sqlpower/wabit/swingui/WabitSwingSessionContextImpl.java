@@ -24,17 +24,22 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.prefs.Preferences;
 
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 
@@ -42,9 +47,21 @@ import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
  * This is the swing version of the WabitSessionContext. Swing specific operations for
  * the context will be done in this implementation 
  */
-public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implements WabitSwingSessionContext {
+public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
+
+    /**
+     * The core session context that this swing session context delegates its
+     * "core" operations to.
+     */
+    private final WabitSessionContext delegateContext;
+    
+    /**
+     * This is a preference that stores if the app should start up on the welcome screen
+     * or it should start on the last loaded/saved project. 
+     */
+    private static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
     
 	private WabitWelcomeScreen welcomeScreen;
 
@@ -57,10 +74,10 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 	 *            Set to true to not create any GUI objects when the context
 	 *            starts. This stops the welcome screen from being created.
 	 */
-	public WabitSwingSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean headless)
+	public WabitSwingSessionContextImpl(WabitSessionContext delegateContext, boolean headless)
 			throws IOException, SQLObjectException {
-		super(terminateWhenLastSessionCloses);
-		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
+		this.delegateContext = delegateContext;
+        Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		
 		if (!headless) {
 			welcomeScreen = new WabitWelcomeScreen(this);
@@ -68,7 +85,6 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 		}
 	}
 	
-	@Override
 	public WabitSession createSession() {
 		WabitSwingSession session = new WabitSwingSessionImpl(this);
 		return session;
@@ -93,12 +109,11 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 		return welcomeScreen;
 	}
 	
-	@Override
 	public void deregisterChildSession(WabitSession child) {
-		super.deregisterChildSession(child);
+	    delegateContext.deregisterChildSession(child);
 		if (getSessionCount() == 0) {
 			welcomeScreen.showFrame();
-			prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
+			getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
 		}
 	}
 	
@@ -160,11 +175,45 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 
 	public void putRecentFileName(String fileName) {
 		createRecentMenu().putRecentFileName(fileName);
-		prefs.putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
+		getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 	}
 
 	public boolean startOnWelcomeScreen() {
-		return prefs.getBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
+		return getPrefs().getBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 	}
 
+    public void close() {
+        getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, getSessionCount() == 0);
+        delegateContext.close();
+    }
+
+    public DataSourceCollection getDataSources() {
+        return delegateContext.getDataSources();
+    }
+
+    public List<ServiceInfo> getEnterpriseServers() {
+        return delegateContext.getEnterpriseServers();
+    }
+
+    public JmDNS getJmDNS() {
+        return delegateContext.getJmDNS();
+    }
+
+    public int getSessionCount() {
+        return delegateContext.getSessionCount();
+    }
+
+    public boolean isMacOSX() {
+        return delegateContext.isMacOSX();
+    }
+
+    public void registerChildSession(WabitSession child) {
+        delegateContext.registerChildSession(child);
+    }
+
+    public Preferences getPrefs() {
+        return delegateContext.getPrefs();
+    }
+
+	
 }

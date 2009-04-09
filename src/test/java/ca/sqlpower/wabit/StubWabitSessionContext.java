@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit;
 
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -61,6 +62,10 @@ public class StubWabitSessionContext implements WabitSessionContext {
 	}
 	
     public List<ServiceInfo> getEnterpriseServers() {
+        return null;
+    }
+
+    public Preferences getPrefs() {
         return null;
     }
 

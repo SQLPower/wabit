@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit;
 
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -79,6 +80,13 @@ public interface WabitSessionContext {
      * @return contact information for the known enterprise servers
      */
     List<ServiceInfo> getEnterpriseServers();
+
+    /**
+     * Returns the preferences node used by this session context. This should
+     * not normally be used by client code; it is primarily intended for use by
+     * alternative session and session context implementations.
+     */
+    Preferences getPrefs();
 
 	/**
 	 * This will attempt to close all of the currently opened sessions and stop
