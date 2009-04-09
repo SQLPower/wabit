@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Font;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collections;
@@ -197,5 +198,9 @@ public class ContentBox extends AbstractWabitObject {
         this.font = font;
         firePropertyChange("font", oldFont, font);
     }
+
+	public Rectangle2D getBounds() {
+		return new Rectangle2D.Double(x, y, width, height);
+	}
 
 }

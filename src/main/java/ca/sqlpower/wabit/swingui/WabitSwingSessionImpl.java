@@ -262,6 +262,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				oldRowLimitValue = (Integer) rowLimitSpinner.getValue();
 			}
 		});
+        
+        //Temporary upfMissingLoadedDB factory that is not parented in case there is no frame at current.
+        //This should be replaced in the buildUI with a properly parented prompter factory.
+        upfMissingLoadedDB = new SwingUIUserPrompterFactory(null, sessionContext.getDataSources());
 		
 	}
 	

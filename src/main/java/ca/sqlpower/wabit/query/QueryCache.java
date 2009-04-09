@@ -1303,4 +1303,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		return Collections.unmodifiableList(resultSets);
 	}
 	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

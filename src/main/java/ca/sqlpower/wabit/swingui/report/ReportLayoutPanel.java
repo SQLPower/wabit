@@ -96,6 +96,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_fit16.png"));
     private static final Icon CREATE_IMAGE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/image_add.png"));
+    private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/chart_bar_add.png"));
     
     private final JSlider zoomSlider;
     
@@ -211,6 +212,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 	
+	//XXX This should be removed and references to it be replaced by addImageBoxAction
 	private final AbstractAction addImageAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_IMAGE);
@@ -245,6 +247,13 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			zoomSlider.setValue((int)((zoomSlider.getMaximum() - zoomSlider.getMinimum()) / 2 * zoom));
 			canvas.getCamera().setViewOffset(- (page.getLeftMarginOffset() * zoom - page.getLeftMarginOffset() * AUT0_FIT_SPACER), -(page.getUpperMarginOffset() * zoom - page.getUpperMarginOffset()*AUT0_FIT_SPACER));
 		}};
+		
+	private final Action addGraphBoxAction = new AbstractAction("", CREATE_GRAPH_ICON) {
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_GRAPH);
+			cursorManager.placeModeStarted();
+		}
+	};
 	
     public ReportLayoutPanel(WabitSwingSession session, Layout report) {
         this.session = session;
@@ -325,6 +334,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.addSeparator();
         toolbar.add(addContentBoxAction);
         toolbar.add(addImageBoxAction);
+        toolbar.add(addGraphBoxAction);
         toolbar.add(addHorizontalGuideAction);
         toolbar.add(addVerticalGuideAction);
         toolbar.add(zoomToFitAction);
