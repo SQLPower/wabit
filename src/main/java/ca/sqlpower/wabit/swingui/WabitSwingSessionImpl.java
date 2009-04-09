@@ -336,7 +336,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		});
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
         fileMenu.add(getContext().createRecentMenu());
-        fileMenu.add(getContext().createServerMenu());
+        fileMenu.add(getContext().createServerListMenu());
 		fileMenu.add(new AbstractAction("Close Project") {
 			public void actionPerformed(ActionEvent e) {
 				close();

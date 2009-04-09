@@ -209,6 +209,10 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		System.exit(0);
 	}
 	
+	public JmDNS getJmDNS() {
+	    return jmdns;
+	}
+	
 	public List<ServiceInfo> getEnterpriseServers() {
 	    return Arrays.asList(jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE));
 	}

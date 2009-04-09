@@ -36,7 +36,7 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
      * Creates a menu whose items change dynamically as enterprise servers
      * appear and disappear on the network.
      */
-    JMenu createServerMenu();
+    JMenu createServerListMenu();
 
 	WabitWelcomeScreen getWelcomeScreen();
 

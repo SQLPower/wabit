@@ -40,7 +40,6 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
-import ca.sqlpower.wabit.swingui.action.StartServerSessionAction;
 
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
@@ -89,39 +88,8 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 		};
 	}
 
-	public JMenu createServerMenu() {
-	    final JMenu menu = new JMenu("Enterprise Servers");
-	    
-	    final Runnable refillMenu = new Runnable() {
-            public void run() {
-                logger.debug("Refilling server menu. servers = " + getEnterpriseServers());
-                menu.removeAll();
-                for (ServiceInfo si : getEnterpriseServers())
-                    menu.add(new StartServerSessionAction(WabitSwingSessionContextImpl.this, si));
-            }
-        };
-	    
-	    ServiceListener l = new ServiceListener() {
-
-	        public void serviceAdded(ServiceEvent event) {
-	            rebuildMenu();
-	        }
-
-	        public void serviceRemoved(ServiceEvent event) {
-	            rebuildMenu();
-	        }
-
-	        public void serviceResolved(ServiceEvent event) {
-	            rebuildMenu();
-	        }
-
-	        private void rebuildMenu() {
-	            SwingUtilities.invokeLater(refillMenu);
-	        }
-	    };
-	    refillMenu.run();
-	    jmdns.addServiceListener(WABIT_ENTERPRISE_SERVER_MDNS_TYPE, l);
-	    return menu;
+	public JMenu createServerListMenu() {
+	    return new ServerListMenu(this);
 	}
 	
 	public WabitWelcomeScreen getWelcomeScreen() {

@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import java.util.List;
 
+import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -66,6 +67,11 @@ public interface WabitSessionContext {
 	 */
 	int getSessionCount();
 
+	/**
+	 * Returns this context's JmDNS client instance.
+	 */
+	JmDNS getJmDNS();
+	
 	/**
      * Returns the list of currently-known enterprise servers. This list will change over
      * time, and may be empty for the first few seconds after startup.

@@ -33,7 +33,9 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
 
 import ca.sqlpower.swingui.SPSUtils;
@@ -143,10 +145,24 @@ public class WabitWelcomeScreen {
 		builder.append(Messages.getString("WabitWelcomeScreen.openExisting"));
 		builder.nextLine();
 		
+		final JButton openOnServerButton = new JButton();
+		openOnServerButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                JPopupMenu popup = ServerListMenu.createPopupInstance(context);
+                popup.show(openOnServerButton, 0, 0);
+            }
+		});
+		openOnServerButton.setIcon(OPEN_EXISTING_ICON);
+        builder.append(new JLabel());
+        builder.append(openOnServerButton);
+        builder.append("Open On Server");
+        builder.nextLine();
+		
 		JButton openDemoButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
-				LoadProjectsAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream("/ca/sqlpower/wabit/exProject.wabit"), context);
+				LoadProjectsAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
+				        "/ca/sqlpower/wabit/exProject.wabit"), context);
 			}
 		});
 		

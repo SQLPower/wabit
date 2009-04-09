@@ -20,25 +20,48 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import ca.sqlpower.wabit.WabitSessionContext;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.log4j.Logger;
+
+import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class StartServerSessionAction extends AbstractAction {
 
-    private final WabitSessionContext sessionContext;
+    private static final Logger logger = Logger.getLogger(StartServerSessionAction.class);
+    private final WabitSwingSessionContext sessionContext;
     private final ServiceInfo serviceInfo;
+    private final String projectName;
 
-    public StartServerSessionAction(WabitSessionContext sessionContext, ServiceInfo si) {
-        super(si.getName() + " (" + si.getInetAddress().getHostName() + ":" + si.getPort() + ")");
+    public StartServerSessionAction(WabitSwingSessionContext sessionContext, ServiceInfo si, String projectName) {
+        super(projectName);
         this.sessionContext = sessionContext;
         this.serviceInfo = si;
+        this.projectName = projectName;
     }
 
     public void actionPerformed(ActionEvent e) {
-        JOptionPane.showMessageDialog(null, "This is where I would connect to " + serviceInfo);
+        try {
+            JOptionPane.showMessageDialog(null, "opening project " + projectName);
+//        LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(sessionContext, in);
+        } catch (Exception ex) {
+            SPSUtils.showExceptionDialogNoReport(
+                    "Failed to retrieve project list from server " + serviceInfo, ex);
+        }
     }
+    
 }

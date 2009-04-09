@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import java.util.List;
 
+import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -55,6 +56,10 @@ public class StubWabitSessionContext implements WabitSessionContext {
 		
 	}
 
+	public JmDNS getJmDNS() {
+	    return null;
+	}
+	
     public List<ServiceInfo> getEnterpriseServers() {
         return null;
     }
