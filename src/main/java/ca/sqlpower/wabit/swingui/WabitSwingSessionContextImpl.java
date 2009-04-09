@@ -19,18 +19,15 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
-import javax.jmdns.ServiceEvent;
-import javax.jmdns.ServiceInfo;
-import javax.jmdns.ServiceListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
-import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
@@ -88,8 +85,8 @@ public class WabitSwingSessionContextImpl extends WabitSessionContextImpl implem
 		};
 	}
 
-	public JMenu createServerListMenu() {
-	    return new ServerListMenu(this);
+	public JMenu createServerListMenu(Component dialogOwner) {
+	    return new ServerListMenu(this, dialogOwner);
 	}
 	
 	public WabitWelcomeScreen getWelcomeScreen() {

@@ -33,7 +33,6 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
@@ -148,7 +147,7 @@ public class WabitWelcomeScreen {
 		final JButton openOnServerButton = new JButton();
 		openOnServerButton.setAction(new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                JPopupMenu popup = ServerListMenu.createPopupInstance(context);
+                JPopupMenu popup = ServerListMenu.createPopupInstance(context, frame);
                 popup.show(openOnServerButton, 0, 0);
             }
 		});

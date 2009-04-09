@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.Component;
 import java.util.List;
 
 import javax.jmdns.ServiceEvent;
@@ -42,13 +43,15 @@ public class ServerListMenu extends JMenu {
 
     private final WabitSwingSessionContext context;
 
+    private final Component dialogOwner;
+
     /**
      * Creates a throwaway popup menu containing the current list of servers.
      * The resulting popup menu will not change over time like the regular
      * ServerListMenu does, so you should make a new popup instance every time
      * you need one.
      */
-    public static JPopupMenu createPopupInstance(WabitSwingSessionContext context) {
+    public static JPopupMenu createPopupInstance(WabitSwingSessionContext context, Component dialogOwner) {
         JPopupMenu popup = new JPopupMenu();
         List<ServiceInfo> servers = context.getEnterpriseServers();
         if (servers.isEmpty()) {
@@ -57,7 +60,7 @@ public class ServerListMenu extends JMenu {
             popup.add(mi);
         } else {
             for (ServiceInfo si : servers) {
-                popup.add(new ServerMenu(context, si));
+                popup.add(new ServerMenu(context, dialogOwner, si));
             }
         }
         return popup;
@@ -72,9 +75,10 @@ public class ServerListMenu extends JMenu {
      *            The context whose JmDNS instance to use. This is also the
      *            context that will own any sessions created on the server.
      */
-    public ServerListMenu(WabitSwingSessionContext context) {
+    public ServerListMenu(WabitSwingSessionContext context, Component dialogOwner) {
         super("Open On Server");
         this.context = context;
+        this.dialogOwner = dialogOwner;
         refillMenu.run();
         context.getJmDNS().addServiceListener(
                 WabitSessionContext.WABIT_ENTERPRISE_SERVER_MDNS_TYPE, serviceListener);
@@ -91,7 +95,7 @@ public class ServerListMenu extends JMenu {
                 add(mi);
             } else {
                 for (ServiceInfo si : servers) {
-                    add(new ServerMenu(context, si));
+                    add(new ServerMenu(context, dialogOwner, si));
                 }
             }
         }

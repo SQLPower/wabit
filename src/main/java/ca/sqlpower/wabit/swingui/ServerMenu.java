@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URI;
@@ -46,10 +47,12 @@ public class ServerMenu extends JMenu {
     private static final Logger logger = Logger.getLogger(ServerMenu.class);
     private final ServiceInfo serviceInfo;
     private final WabitSwingSessionContext sessionContext;
+    private final Component dialogOwner;
     
-    public ServerMenu(WabitSwingSessionContext sessionContext, ServiceInfo si) {
+    public ServerMenu(WabitSwingSessionContext sessionContext, Component dialogOwner, ServiceInfo si) {
         super(si.getName() + " (" + si.getInetAddress().getHostName() + ":" + si.getPort() + ")");
         this.sessionContext = sessionContext;
+        this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
         refreshProjects();
     }
@@ -64,7 +67,7 @@ public class ServerMenu extends JMenu {
         removeAll();
         try {
             for (String projectName : getProjectNames(serviceInfo)) {
-                add(new StartServerSessionAction(sessionContext, serviceInfo, projectName));
+                add(new StartServerSessionAction(sessionContext, dialogOwner, serviceInfo, projectName));
             }
         } catch (Exception ex) {
             JMenuItem mi = new JMenuItem("Error getting project names: " + ex);
@@ -87,7 +90,7 @@ public class ServerMenu extends JMenu {
             ResponseHandler<String> responseHandler = new BasicResponseHandler();
             String responseBody = httpclient.execute(httpget, responseHandler);
             logger.debug(responseBody);
-            List<String> projects = Arrays.asList(responseBody.split("\n"));
+            List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
             return projects;
         } finally {
             httpclient.getConnectionManager().shutdown();

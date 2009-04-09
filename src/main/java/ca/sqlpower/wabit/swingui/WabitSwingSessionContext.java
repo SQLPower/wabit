@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.Component;
+
 import javax.swing.JMenu;
 
 import ca.sqlpower.swingui.RecentMenu;
@@ -35,8 +37,12 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
     /**
      * Creates a menu whose items change dynamically as enterprise servers
      * appear and disappear on the network.
+     * 
+     * @param dialogOwner
+     *            The component that should own any dialogs that pop up as the
+     *            result of executing menu actions under the server list menu.
      */
-    JMenu createServerListMenu();
+    JMenu createServerListMenu(Component dialogOwner);
 
 	WabitWelcomeScreen getWelcomeScreen();
 
