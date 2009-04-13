@@ -55,6 +55,7 @@ import ca.sqlpower.wabit.query.SQLJoin;
 import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.GraphRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
@@ -307,6 +308,37 @@ public class ProjectXMLDAO {
 							}
 						}
 						out.println("</image-renderer>");
+						
+					} else if (box.getContentRenderer() instanceof GraphRenderer) {
+						GraphRenderer graphRenderer = (GraphRenderer) box.getContentRenderer();
+						xml.print(out, "<graph-renderer");
+						printAttribute("name", graphRenderer.getName());
+						printAttribute("y-axis-name", graphRenderer.getYaxisName());
+						printAttribute("graph-type", graphRenderer.getGraphType().name());
+						printAttribute("query", graphRenderer.getQuery().getUUID().toString());
+						xml.println(out, ">");
+						xml.indent++;
+						xml.println(out, "<col-names-in-order>");
+						xml.indent++;
+						for (String colName : graphRenderer.getColumnNamesInOrder()) {
+							xml.print(out, "<col-names");
+							printAttribute("name", colName);
+							xml.println(out, "/>");
+						}
+						xml.indent--;
+						xml.println(out, "</col-names-in-order>");
+						xml.println(out, "<col-names-to-data-types>");
+						xml.indent++;
+						for (Map.Entry<String, GraphRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
+							xml.print(out, "<name-to-data-type");
+							printAttribute("name", entry.getKey());
+							printAttribute("data-type", entry.getValue().name());
+							xml.println(out, "/>");
+						}
+						xml.indent--;
+						xml.println(out, "</col-name-to-data-type>");
+						xml.indent--;
+						xml.println(out, "</graph-renderer>");
 					} else {
 						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
 					}

@@ -29,6 +29,8 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -90,7 +92,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * This enum contains the values that each column can be defined as
 	 * for laying out a graph.
 	 */
-	private enum DataTypeSeries {
+	public enum DataTypeSeries {
 		NONE,
 		CATEGORY,
 		SERIES
@@ -99,7 +101,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	/**
 	 * The types of graph this renderer can create.
 	 */
-	private enum ExistingGraphTypes {
+	public enum ExistingGraphTypes {
 		BAR,
 		LINE,
 		SCATTER
@@ -276,8 +278,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				public void itemStateChanged(ItemEvent e) {
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						JComboBox sourceCombo = (JComboBox) e.getSource();
-						//TODO: Need to track column's x axis
-						logger.debug("Column data types are now " + columnsToDataTypes);
+						columnSeriesToColumnXAxis.put(columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX())), (String) e.getItem());
 						tableHeader.repaint();
 						updateChartPreview();
 					}
@@ -332,16 +333,18 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 						final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
 						
 						final JComboBox dataTypeComboBox;
+						int yPosition = 0;
 						if (e.getY() < new JComboBox().getPreferredSize().getHeight()) {
 							dataTypeComboBox = columnToDataTypeSeriesComboBox.get(column);
 						} else if (e.getY() < new JComboBox().getPreferredSize().getHeight() * 2) {
 							dataTypeComboBox = columnToXAxisComboBox.get(column);
+							yPosition = dataTypeComboBox.getHeight();
 						} else {
 							dataTypeComboBox = null;
 						}
 						if (dataTypeComboBox == null) return;
 						tableHeader.add(dataTypeComboBox);
-						dataTypeComboBox.setBounds(getXPositionOnColumn(tableHeader.getColumnModel(), column), 0, tableHeader.getColumnModel().getColumn(column).getWidth(), dataTypeComboBox.getHeight());
+						dataTypeComboBox.setBounds(getXPositionOnColumn(tableHeader.getColumnModel(), column), yPosition, tableHeader.getColumnModel().getColumn(column).getWidth(), dataTypeComboBox.getHeight());
 						dataTypeComboBox.setPopupVisible(true);
 						dataTypeComboBox.addPopupMenuListener(new PopupMenuListener() {
 						
@@ -390,6 +393,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				}
 				final JComboBox comboBoxForXValues = new JComboBox(columnNamesInOrder.toArray());
 				if (defaultDataTypeSeries == DataTypeSeries.SERIES) {
+					comboBoxForXValues.setSelectedItem(columnSeriesToColumnXAxis.get(columnNamesInOrder.get(column)));
 					newHeader.add(comboBoxForXValues, BorderLayout.CENTER);
 					columnToXAxisComboBox.put(new Integer(column), comboBoxForXValues);
 					comboBoxForXValues.addItemListener(xAxisValuesChangeListener);
@@ -479,6 +483,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		private final Map<String, DataTypeSeries> columnsToDataTypes = new HashMap<String, DataTypeSeries>();
 
 		/**
+		 * This map tracks the columns that are defined as series and the column
+		 * defined to be the values displayed on the x axis.
+		 */
+		private final Map<String, String> columnSeriesToColumnXAxis = new HashMap<String, String>();
+		
+		/**
 		 * This panel will display a JFreeChart that is a preview of what the
 		 * user has selected from the result table. This chart should look
 		 * identical to what would be shown on the report.
@@ -556,6 +566,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				for (String colName : currentColumnNamesInOrder) {
 					if (columnNamesInOrder.indexOf(colName) != currentColumnNamesInOrder.indexOf(colName)) {
 						resultTable.getColumnModel().moveColumn(columnNamesInOrder.indexOf(colName), currentColumnNamesInOrder.indexOf(colName));
+					}
+				}
+				
+				for (Map.Entry<String, String> entry : renderer.getColumnSeriesToColumnXAxis().entrySet()) {
+					if (columnNamesInOrder.contains(entry.getKey())) {
+						columnSeriesToColumnXAxis.put(entry.getKey(), entry.getValue());
 					}
 				}
 
@@ -661,6 +677,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			builder.append(chartScrollPane, 3);
 			builder.nextLine();
 			builder.append("Y Axis Label", yaxisNameField);
+			panel.setPreferredSize(new Dimension(400, 400));
 		}
 	
 		public boolean hasUnsavedChanges() {
@@ -686,6 +703,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			setGraphType((ExistingGraphTypes) graphTypeComboBox.getSelectedItem());
 			setColumnNamesInOrder(columnNamesInOrder);
 			setColumnsToDataTypes(columnsToDataTypes);
+			setColumnSeriesToColumnXAxis(columnSeriesToColumnXAxis);
 			setYaxisName(yaxisNameField.getText());
 			return true;
 		}
@@ -741,6 +759,24 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * decide how each column in the result set are used to display on the graph. 
 	 */
 	private final Map<String, DataTypeSeries> columnsToDataTypes = new HashMap<String, DataTypeSeries>();
+
+	/**
+	 * This map contains each column listed as a series and the column to be used as X axis values.
+	 * This mapping is used for line and line-like graphs.
+	 */
+	private final Map<String, String> columnSeriesToColumnXAxis = new HashMap<String, String>();
+	
+	/**
+	 * This change listener watches for changes to the query and refreshes the
+	 * graph when a change occurs.
+	 */
+	private final PropertyChangeListener queryListener = new PropertyChangeListener() {
+	
+		public void propertyChange(PropertyChangeEvent evt) {
+			//TODO: Need to refresh resultSet. Either call refreshResultSet or have another
+			//way of getting the new result set from the query based on SQL Stream.
+		}
+	};
 	
 	public GraphRenderer(ContentBox parent, WabitProject project) {
 		this.project = project;
@@ -825,6 +861,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			JFreeChart chart = ChartFactory.createBarChart(chartName, categoryColumnName, yaxisName, dataset, PlotOrientation.VERTICAL, true, true, false);
 			return chart;
 		case LINE :
+			return null;
+		case SCATTER :
 		default:
 			throw new IllegalStateException("Unknown graph type " + graphType);
 		}
@@ -860,7 +898,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
 	public void defineQuery(Query query) throws SQLException {
+		this.query.removePropertyChangeListener(queryListener);
+		query.addPropertyChangeListener(queryListener);
 		this.query = query;
+		refreshResultSet();
+	}
+	
+	private void refreshResultSet() throws SQLException {
 		if (query instanceof StatementExecutor) {
 			StatementExecutor executor = (StatementExecutor) query;
 			ResultSet rs = findFirstResultSet(executor);
@@ -920,6 +964,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
 	public String getYaxisName() {
 		return yaxisName;
+	}
+
+	public Map<String, String> getColumnSeriesToColumnXAxis() {
+		return columnSeriesToColumnXAxis;
+	}
+	
+	public void setColumnSeriesToColumnXAxis(Map<String, String> newMapping) {
+		columnSeriesToColumnXAxis.clear();
+		columnSeriesToColumnXAxis.putAll(newMapping);
 	}
 
 }

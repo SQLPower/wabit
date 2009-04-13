@@ -532,6 +532,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         		}
          	}
          	byteStream = new ByteArrayOutputStream();
+        } else if (name.equals("graph-renderer")) {
+        	//TODO: load the graph renderer
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
