@@ -64,6 +64,10 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DatasetUtilities;
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -654,6 +658,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			}
 			columnNamesInOrder.clear();
 			columnsToDataTypes.clear();
+			columnSeriesToColumnXAxis.clear();
 			try {
 				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
 					String columnName = rs.getMetaData().getColumnName(i);
@@ -843,7 +848,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			return null;
 		}
 		JFreeChart chart;
-		XYSeriesCollection xyCollection;
+		XYDataset xyCollection;
 		
 		switch (graphType) {
 		case BAR :
@@ -900,16 +905,22 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
 				return null;
 			}
-			xyCollection = createXYSeriesCollection(
+			xyCollection = createSeriesCollection(
 						columnSeriesToColumnXAxis, resultSet);
+			if (xyCollection == null) {
+				return null;
+			}
 			chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, true, true, false);
 			return chart;
 		case SCATTER :
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
 				return null;
 			}
-			xyCollection = createXYSeriesCollection(
+			xyCollection = createSeriesCollection(
 					columnSeriesToColumnXAxis, resultSet);
+			if (xyCollection == null) {
+				return null;
+			}
 			chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, true, true, false);
 			return chart;
 		default:
@@ -920,26 +931,61 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	/**
 	 * Helper method for creating line and scatter graphs in the
 	 * createJFreeChart method.
+	 * @return An XYDataset for use in a JFreeChart or null if an 
+	 * XYDataset cannot be created.
 	 */
-	private static XYSeriesCollection createXYSeriesCollection(
+	private static XYDataset createSeriesCollection(
 			Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet) {
-		XYSeriesCollection xyCollection = new XYSeriesCollection();
-		for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
-			XYSeries newSeries = new XYSeries(entry.getKey());
-			try {
-				resultSet.beforeFirst();
-				while (resultSet.next()) {
-					//XXX: need to switch from double to bigDecimal if it is needed.
-					newSeries.add(resultSet.getDouble(entry.getValue()), resultSet.getDouble(entry.getKey()));
+		boolean allNumeric = true;
+		boolean allDate = true;
+		try {
+			for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
+				if (resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue())) != Types.DATE) {
+					allDate = false;
+				} 
+				if (!Arrays.asList(NUMERIC_SQL_TYPES).contains(resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue())))) {
+					allNumeric = false;
 				}
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
 			}
-			xyCollection.addSeries(newSeries);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		}
-		return xyCollection;
+		if (allNumeric) {
+			XYSeriesCollection xyCollection = new XYSeriesCollection();
+			for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
+				XYSeries newSeries = new XYSeries(entry.getKey());
+				try {
+					resultSet.beforeFirst();
+					while (resultSet.next()) {
+						//XXX: need to switch from double to bigDecimal if it is needed.
+						newSeries.add(resultSet.getDouble(entry.getValue()), resultSet.getDouble(entry.getKey()));
+					}
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
+				xyCollection.addSeries(newSeries);
+			}
+			return xyCollection;
+		} else if (allDate) {
+			TimeSeriesCollection timeCollection = new TimeSeriesCollection();
+			for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
+				TimeSeries newSeries = new TimeSeries(entry.getKey(), FixedMillisecond.class);
+				try {
+					resultSet.beforeFirst();
+					while (resultSet.next()) {
+						newSeries.add(new FixedMillisecond(resultSet.getDate(entry.getValue())), resultSet.getDouble(entry.getKey()));
+					}
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
+				timeCollection.addSeries(newSeries);
+			}
+			return timeCollection;
+		} else {
+			return null;
+		}
 	}
-
+	
 	public void resetToFirstPage() {
 		//do nothing.
 	}
