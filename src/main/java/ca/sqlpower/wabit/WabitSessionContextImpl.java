@@ -98,8 +98,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         logger.debug("pl.ini is at " + getPlDotIniPath());
         
         setPlDotIniPath(ArchitectUtils.checkForValidPlDotIni(getPlDotIniPath(), "Wabit"));
-        
-		getDataSources();
 	}
 
 	/**
@@ -151,7 +149,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		childSessions.remove(child);
 		
 		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
-		if (childSessions.isEmpty()) {
+		if (childSessions.isEmpty() && dataSources != null && getPlDotIniPath() != null) {
 			logger.debug("Saving pl.ini");
 	        prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
 			try {
