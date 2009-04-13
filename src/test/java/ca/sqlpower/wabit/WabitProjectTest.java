@@ -35,7 +35,8 @@ public class WabitProjectTest extends AbstractWabitObjectTest {
     @Override
     public Set<String> getPropertiesToIgnoreForEvents() {
     	Set<String> ignore = new HashSet<String>();
-    	ignore.add("dataSourceTypes");
+        ignore.add("dataSourceTypes");
+        ignore.add("serverBaseURI");
     	return ignore;
     }
     

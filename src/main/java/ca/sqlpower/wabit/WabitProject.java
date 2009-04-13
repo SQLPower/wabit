@@ -316,10 +316,14 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 	}
 
     public URI getServerBaseURI() {
+        // IMPORTANT: if you implement this, re-enable the tests for this
+        // property in WabitProjectTest and ProjectCMLDAOTest!
         throw new UnsupportedOperationException("We currently do not support this");
     }
 
     public void setServerBaseURI(URI serverBaseURI) {
+        // IMPORTANT: if you implement this, re-enable the tests for this
+        // property in WabitProjectTest and ProjectCMLDAOTest!
         throw new UnsupportedOperationException("We currently do not support this");
     }
 

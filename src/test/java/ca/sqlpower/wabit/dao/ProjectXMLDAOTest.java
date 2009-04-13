@@ -71,7 +71,8 @@ public class ProjectXMLDAOTest extends TestCase {
 		List<String> ignoreList = new ArrayList<String>();
 		ignoreList.add("parent");
 		ignoreList.add("session");
-		ignoreList.add("dataSourceTypes"); //Currently unsupported.
+        ignoreList.add("dataSourceTypes"); //Currently unsupported.
+        ignoreList.add("serverBaseURI"); //Currently unsupported.
 		return ignoreList;
 	}
 	
