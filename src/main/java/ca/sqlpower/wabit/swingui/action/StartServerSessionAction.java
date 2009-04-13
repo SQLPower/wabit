@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 
 import javax.jmdns.ServiceInfo;
@@ -64,7 +63,6 @@ public class StartServerSessionAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        InputStream in = null;
         HttpClient httpclient = new DefaultHttpClient();
         try {
             String contextPath = serviceInfo.getPropertyString("path");
@@ -73,7 +71,6 @@ public class StartServerSessionAction extends AbstractAction {
             HttpGet httpget = new HttpGet(uri);
             logger.debug("executing request " + httpget.getURI());
 
-            // Create a response handler
             ResponseHandler<Void> responseHandler = new ResponseHandler<Void>() {
 
                 public Void handleResponse(HttpResponse response)

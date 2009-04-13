@@ -22,6 +22,8 @@ package ca.sqlpower.wabit;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -313,22 +315,41 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 		throw new UnsupportedOperationException("We currently do not support this");
 	}
 
+    public URI getServerBaseURI() {
+        throw new UnsupportedOperationException("We currently do not support this");
+    }
+
+    public void setServerBaseURI(URI serverBaseURI) {
+        throw new UnsupportedOperationException("We currently do not support this");
+    }
+
 	public void removeDatabaseListChangeListener(DatabaseListChangeListener l) {
     	synchronized(listeners) {
     		listeners.remove(l);
     	}
 	}
 
+	/**
+	 * DataSourceCollection interface method which is currently not supported.
+	 */
 	public void write() throws IOException {
 		throw new UnsupportedOperationException("We currently do not support this");
-		
 	}
 
+    /**
+     * DataSourceCollection interface method which is currently not supported.
+     */
 	public void write(File location) throws IOException {
 		throw new UnsupportedOperationException("We currently do not support this");
-		
 	}
 
+    /**
+     * DataSourceCollection interface method which is currently not supported.
+     */
+	public void write(OutputStream out) throws IOException {
+        throw new UnsupportedOperationException("We currently do not support this");
+	}
+	
 	public void addUndoableEditListener(UndoableEditListener l) {
 		dsCollectionUndoListeners.add(l);
 	}

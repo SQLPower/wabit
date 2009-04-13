@@ -180,11 +180,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		throw new UnsupportedOperationException("There is no session defined for the core objects.");
 	}
 
-	public void setPlDotIniPath(String plDotIniPath) {
+	private void setPlDotIniPath(String plDotIniPath) {
 		this.plDotIniPath = plDotIniPath;
 	}
 
-	public String getPlDotIniPath() {
+	private String getPlDotIniPath() {
 		return plDotIniPath;
 	}
 	
