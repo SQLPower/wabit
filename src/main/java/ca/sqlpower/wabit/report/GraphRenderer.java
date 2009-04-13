@@ -64,6 +64,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DatasetUtilities;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.DataEntryPanel;
@@ -444,6 +446,18 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		private final JTextField yaxisNameField = new JTextField();
 		
 		/**
+		 * A field to change the label on the x axis.
+		 */
+		private final JTextField xaxisNameField = new JTextField();
+		
+		/**
+		 * A label for the x axis field. This is defined
+		 * here to make the label not visible when the field
+		 * is not needed.
+		 */
+		private final JLabel xaxisNameLabel = new JLabel("X Axis");
+		
+		/**
 		 * The table that shows values returned from the queries. The headers
 		 * added to this table will allow users to define which column is the
 		 * category and which ones are series.
@@ -515,6 +529,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			}
 			nameField.setText(renderer.getName());
 			yaxisNameField.setText(renderer.getYaxisName());
+			xaxisNameField.setText(renderer.getXaxisName());
 			
 			resultTable.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
 				
@@ -602,11 +617,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						switch ((ExistingGraphTypes) graphTypeComboBox.getSelectedItem()) {
 						case BAR:
+							xaxisNameField.setVisible(false);
+							xaxisNameLabel.setVisible(false);
 							resultTable.getTableHeader().setDefaultRenderer(new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer));
 							break;
 						case LINE:
 						case SCATTER:
 							resultTable.getTableHeader().setDefaultRenderer(new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer));
+							xaxisNameField.setVisible(true);
+							xaxisNameLabel.setVisible(true);
 							break;
 						default:
 							throw new IllegalStateException("Unknown graph type " + graphTypeComboBox.getSelectedItem());
@@ -654,7 +673,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * property panel.
 		 */
 		private void updateChartPreview() {
-			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, rs, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText());
+			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
 			chartPanel.setChart(chart);
 		}
 
@@ -677,6 +696,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			builder.append(chartScrollPane, 3);
 			builder.nextLine();
 			builder.append("Y Axis Label", yaxisNameField);
+			builder.nextLine();
+			builder.append(xaxisNameLabel, xaxisNameField);
 			panel.setPreferredSize(new Dimension(400, 400));
 		}
 	
@@ -689,8 +710,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	
 		public void discardChanges() {
-			// TODO Auto-generated method stub
-	
+			//do nothing
 		}
 	
 		public boolean applyChanges() {
@@ -705,6 +725,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			setColumnsToDataTypes(columnsToDataTypes);
 			setColumnSeriesToColumnXAxis(columnSeriesToColumnXAxis);
 			setYaxisName(yaxisNameField.getText());
+			setXaxisName(xaxisNameField.getText());
 			return true;
 		}
 	};
@@ -734,6 +755,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * The Y axis label in the graph.
 	 */
 	private String yaxisName;
+	
+	/**
+	 * The X axis label in the graph.
+	 */
+	private String xaxisName;
 	
 	/**
 	 * This is the current style of graph the user has made.
@@ -800,7 +826,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing) {
-		JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, resultSet, graphType, getName(), yaxisName);
+		JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, resultSet, graphType, getName(), yaxisName, xaxisName);
 		if (chart == null) {
 			return false;
 		}
@@ -812,65 +838,106 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * Creates a JFreeChart based on the given column and series data.
 	 * Returns null if the data given cannot create a chart.
 	 */
-	private static JFreeChart createJFreeChart(List<String> columnNamesInOrder, Map<String, DataTypeSeries> columnsToDataTypes, ResultSet resultSet, ExistingGraphTypes graphType, String chartName, String yaxisName) {
-		if (!columnsToDataTypes.containsValue(DataTypeSeries.CATEGORY) || !columnsToDataTypes.containsValue(DataTypeSeries.SERIES) || graphType == null) {
+	private static JFreeChart createJFreeChart(List<String> columnNamesInOrder, Map<String, DataTypeSeries> columnsToDataTypes, Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet, ExistingGraphTypes graphType, String chartName, String yaxisName, String xaxisName) {
+		if (graphType == null) {
 			return null;
 		}
+		JFreeChart chart;
+		XYSeriesCollection xyCollection;
 		
-		String categoryColumnName = null;
-		for (Map.Entry<String, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
-			if (entry.getValue() == DataTypeSeries.CATEGORY) {
-				categoryColumnName = entry.getKey();
-				break;
-			}
-		}
-		if (categoryColumnName == null) {
-			return null;
-		}
-		List<String> category = new ArrayList<String>();
-		try {
-			resultSet.beforeFirst();
-			int columnIndex = resultSet.findColumn(categoryColumnName);
-			while (resultSet.next()) {
-				if (!category.contains(resultSet.getString(columnIndex))) {
-					category.add(resultSet.getString(columnIndex));
-				}
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-		
-		List<String> series = new ArrayList<String>();
-		for (String colName : columnNamesInOrder) {
-			if (columnsToDataTypes.get(colName) == DataTypeSeries.SERIES) {
-				series.add(colName);
-			}
-		}
-		
-		double[][] data = new double[series.size()][category.size()];
-		try {
-			resultSet.beforeFirst();
-			int j = 0;
-			while (resultSet.next()) {
-				for (String colName : series) {
-					data[series.indexOf(colName)][category.indexOf(resultSet.getString(categoryColumnName))] += resultSet.getDouble(colName); //XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
-				}
-				j++;
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
 		switch (graphType) {
 		case BAR :
+			if (!columnsToDataTypes.containsValue(DataTypeSeries.CATEGORY) || !columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
+				return null;
+			}
+			String categoryColumnName = null;
+			for (Map.Entry<String, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
+				if (entry.getValue() == DataTypeSeries.CATEGORY) {
+					categoryColumnName = entry.getKey();
+					break;
+				}
+			}
+			if (categoryColumnName == null) {
+				return null;
+			}
+			List<String> category = new ArrayList<String>();
+			try {
+				resultSet.beforeFirst();
+				int columnIndex = resultSet.findColumn(categoryColumnName);
+				while (resultSet.next()) {
+					if (!category.contains(resultSet.getString(columnIndex))) {
+						category.add(resultSet.getString(columnIndex));
+					}
+				}
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+			
+			List<String> series = new ArrayList<String>();
+			for (String colName : columnNamesInOrder) {
+				if (columnsToDataTypes.get(colName) == DataTypeSeries.SERIES) {
+					series.add(colName);
+				}
+			}
+			
+			double[][] data = new double[series.size()][category.size()];
+			try {
+				resultSet.beforeFirst();
+				int j = 0;
+				while (resultSet.next()) {
+					for (String colName : series) {
+						data[series.indexOf(colName)][category.indexOf(resultSet.getString(categoryColumnName))] += resultSet.getDouble(colName); //XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
+					}
+					j++;
+				}
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
 			CategoryDataset dataset = DatasetUtilities.createCategoryDataset(series.toArray(new String[]{}), category.toArray(new String[]{}), data);
-			JFreeChart chart = ChartFactory.createBarChart(chartName, categoryColumnName, yaxisName, dataset, PlotOrientation.VERTICAL, true, true, false);
+			chart = ChartFactory.createBarChart(chartName, categoryColumnName, yaxisName, dataset, PlotOrientation.VERTICAL, true, true, false);
 			return chart;
 		case LINE :
-			return null;
+			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
+				return null;
+			}
+			xyCollection = createXYSeriesCollection(
+						columnSeriesToColumnXAxis, resultSet);
+			chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, true, true, false);
+			return chart;
 		case SCATTER :
+			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
+				return null;
+			}
+			xyCollection = createXYSeriesCollection(
+					columnSeriesToColumnXAxis, resultSet);
+			chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, true, true, false);
+			return chart;
 		default:
 			throw new IllegalStateException("Unknown graph type " + graphType);
 		}
+	}
+
+	/**
+	 * Helper method for creating line and scatter graphs in the
+	 * createJFreeChart method.
+	 */
+	private static XYSeriesCollection createXYSeriesCollection(
+			Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet) {
+		XYSeriesCollection xyCollection = new XYSeriesCollection();
+		for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
+			XYSeries newSeries = new XYSeries(entry.getKey());
+			try {
+				resultSet.beforeFirst();
+				while (resultSet.next()) {
+					//XXX: need to switch from double to bigDecimal if it is needed.
+					newSeries.add(resultSet.getDouble(entry.getValue()), resultSet.getDouble(entry.getKey()));
+				}
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+			xyCollection.addSeries(newSeries);
+		}
+		return xyCollection;
 	}
 
 	public void resetToFirstPage() {
@@ -980,6 +1047,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public void setColumnSeriesToColumnXAxis(Map<String, String> newMapping) {
 		columnSeriesToColumnXAxis.clear();
 		columnSeriesToColumnXAxis.putAll(newMapping);
+	}
+
+	public void setXaxisName(String xaxisName) {
+		this.xaxisName = xaxisName;
+	}
+
+	public String getXaxisName() {
+		return xaxisName;
 	}
 
 }

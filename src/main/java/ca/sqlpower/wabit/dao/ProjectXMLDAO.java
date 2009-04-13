@@ -315,6 +315,7 @@ public class ProjectXMLDAO {
 						printAttribute("name", graphRenderer.getName());
 						printAttribute("uuid", graphRenderer.getUUID().toString());
 						printAttribute("y-axis-name", graphRenderer.getYaxisName());
+						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
 						printAttribute("graph-type", graphRenderer.getGraphType().name());
 						printAttribute("query-id", graphRenderer.getQuery().getUUID().toString());
 						xml.println(out, ">");
@@ -338,6 +339,16 @@ public class ProjectXMLDAO {
 						}
 						xml.indent--;
 						xml.println(out, "</graph-col-names-to-data-types>");
+						xml.println(out, "<graph-series-to-x-axis>");
+						xml.indent++;
+						for (Map.Entry<String, String> entry : graphRenderer.getColumnSeriesToColumnXAxis().entrySet()) {
+							xml.print(out, "<graph-series-col-to-x-axis-col");
+							printAttribute("series", entry.getKey());
+							printAttribute("x-axis", entry.getValue());
+							xml.println(out, "/>");
+						}
+						xml.indent--;
+						xml.println(out, "</graph-series-to-x-axis>");
 						xml.indent--;
 						xml.println(out, "</graph-renderer>");
 					} else {

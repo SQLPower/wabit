@@ -559,6 +559,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			graphRenderer.setName(aval);
         		} else if (aname.equals("y-axis-name")) {
         			graphRenderer.setYaxisName(aval);
+        		} else if (aname.equals("x-axis-name")) {
+        			graphRenderer.setXaxisName(aval);
         		} else if (aname.equals("graph-type")) {
         			graphRenderer.setGraphType(ExistingGraphTypes.valueOf(aval));
         		} else if (aname.equals("query-id")) {
@@ -590,6 +592,12 @@ public class ProjectSAXHandler extends DefaultHandler {
         	Map<String, DataTypeSeries> colToDataTypeMap = new HashMap<String, DataTypeSeries>(graphRenderer.getColumnsToDataTypes());
         	colToDataTypeMap.put(colName, dataTypeSeries);
         	graphRenderer.setColumnsToDataTypes(colToDataTypeMap);
+        } else if (name.equals("graph-series-col-to-x-axis-col")) {
+        	String seriesName = attributes.getValue("series");
+        	String xAxisName = attributes.getValue("x-axis");
+        	Map<String, String> seriesToXAxis = new HashMap<String, String>(graphRenderer.getColumnSeriesToColumnXAxis());
+        	seriesToXAxis.put(seriesName, xAxisName);
+        	graphRenderer.setColumnSeriesToColumnXAxis(seriesToXAxis);
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
