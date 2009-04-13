@@ -22,11 +22,15 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.log4j.Logger;
+
 public abstract class AbstractWabitObject implements WabitObject {
 
+    private static final Logger logger = Logger.getLogger(AbstractWabitObject.class);
     private final List<WabitChildListener> childListeners = new ArrayList<WabitChildListener>();
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private WabitObject parent;
@@ -124,6 +128,11 @@ public abstract class AbstractWabitObject implements WabitObject {
     }
 
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Firing property change \"" + propertyName + "\" to " +
+                    pcs.getPropertyChangeListeners().length +
+                    " listeners: " + Arrays.toString(pcs.getPropertyChangeListeners()));
+        }
         pcs.firePropertyChange(propertyName, oldValue, newValue);
     }
     
