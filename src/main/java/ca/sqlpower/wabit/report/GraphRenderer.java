@@ -778,6 +778,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	};
 	
+	public GraphRenderer(ContentBox parent, WabitProject project, String uuid) {
+		super(uuid);
+		this.project = project;
+	}
+	
 	public GraphRenderer(ContentBox parent, WabitProject project) {
 		this.project = project;
 		parent.setWidth(100);
@@ -898,7 +903,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
 	public void defineQuery(Query query) throws SQLException {
-		this.query.removePropertyChangeListener(queryListener);
+		if (this.query != null) {
+			this.query.removePropertyChangeListener(queryListener);
+		}
 		query.addPropertyChangeListener(queryListener);
 		this.query = query;
 		refreshResultSet();

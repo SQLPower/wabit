@@ -26,6 +26,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
+import ca.sqlpower.wabit.report.GraphRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
@@ -73,6 +75,8 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
+import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
+import ca.sqlpower.wabit.report.GraphRenderer.ExistingGraphTypes;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
@@ -181,6 +185,12 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * children will not be loaded at the start tag.
 	 */
 	private String currentEditorPanelModel;
+
+	/**
+	 * This is a temporary graph renderer used to load in the last graph renderer found
+	 * in the project being loaded.
+	 */
+	private GraphRenderer graphRenderer;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -533,7 +543,53 @@ public class ProjectSAXHandler extends DefaultHandler {
          	}
          	byteStream = new ByteArrayOutputStream();
         } else if (name.equals("graph-renderer")) {
-        	//TODO: load the graph renderer
+        	String uuid = attributes.getValue("uuid");
+        	if (uuid == null) {
+        		graphRenderer = new GraphRenderer(contentBox, session.getProject());
+        	} else {
+        		graphRenderer = new GraphRenderer(contentBox, session.getProject(), uuid);
+        	}
+        	contentBox.setContentRenderer(graphRenderer);
+        	for (int i = 0; i < attributes.getLength(); i++) {
+        		String aname = attributes.getQName(i);
+        		String aval = attributes.getValue(i);
+        		if (aname.equals("uuid")) {
+        			//already loaded
+        		} else if (aname.equals("name")) {
+        			graphRenderer.setName(aval);
+        		} else if (aname.equals("y-axis-name")) {
+        			graphRenderer.setYaxisName(aval);
+        		} else if (aname.equals("graph-type")) {
+        			graphRenderer.setGraphType(ExistingGraphTypes.valueOf(aval));
+        		} else if (aname.equals("query-id")) {
+        			Query query = null;
+                	for (Query q : session.getProject().getQueries()) {
+                		if (q.getUUID().equals(UUID.fromString(aval))) {
+                			query = q;
+                			break;
+                		}
+                	}
+                	try {
+						graphRenderer.defineQuery(query);
+					} catch (SQLException e) {
+						throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
+					}
+        		} else {
+        			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
+        		}
+         	}
+        } else if (name.equals("graph-col-names")) {
+        	String colName = attributes.getValue("name");
+        	List<String> colNames = new ArrayList<String>(graphRenderer.getColumnNamesInOrder());
+        	colNames.add(colName);
+        	graphRenderer.setColumnNamesInOrder(colNames);
+        } else if (name.equals("graph-name-to-data-type")) {
+        	String colName = attributes.getValue("name");
+        	String dataType = attributes.getValue("data-type");
+        	DataTypeSeries dataTypeSeries = DataTypeSeries.valueOf(dataType);
+        	Map<String, DataTypeSeries> colToDataTypeMap = new HashMap<String, DataTypeSeries>(graphRenderer.getColumnsToDataTypes());
+        	colToDataTypeMap.put(colName, dataTypeSeries);
+        	graphRenderer.setColumnsToDataTypes(colToDataTypeMap);
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);

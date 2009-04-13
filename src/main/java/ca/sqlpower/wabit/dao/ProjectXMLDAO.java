@@ -313,30 +313,31 @@ public class ProjectXMLDAO {
 						GraphRenderer graphRenderer = (GraphRenderer) box.getContentRenderer();
 						xml.print(out, "<graph-renderer");
 						printAttribute("name", graphRenderer.getName());
+						printAttribute("uuid", graphRenderer.getUUID().toString());
 						printAttribute("y-axis-name", graphRenderer.getYaxisName());
 						printAttribute("graph-type", graphRenderer.getGraphType().name());
-						printAttribute("query", graphRenderer.getQuery().getUUID().toString());
+						printAttribute("query-id", graphRenderer.getQuery().getUUID().toString());
 						xml.println(out, ">");
 						xml.indent++;
-						xml.println(out, "<col-names-in-order>");
+						xml.println(out, "<graph-col-names-in-order>");
 						xml.indent++;
 						for (String colName : graphRenderer.getColumnNamesInOrder()) {
-							xml.print(out, "<col-names");
+							xml.print(out, "<graph-col-names");
 							printAttribute("name", colName);
 							xml.println(out, "/>");
 						}
 						xml.indent--;
-						xml.println(out, "</col-names-in-order>");
-						xml.println(out, "<col-names-to-data-types>");
+						xml.println(out, "</graph-col-names-in-order>");
+						xml.println(out, "<graph-col-names-to-data-types>");
 						xml.indent++;
 						for (Map.Entry<String, GraphRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
-							xml.print(out, "<name-to-data-type");
+							xml.print(out, "<graph-name-to-data-type");
 							printAttribute("name", entry.getKey());
 							printAttribute("data-type", entry.getValue().name());
 							xml.println(out, "/>");
 						}
 						xml.indent--;
-						xml.println(out, "</col-name-to-data-type>");
+						xml.println(out, "</graph-col-names-to-data-types>");
 						xml.indent--;
 						xml.println(out, "</graph-renderer>");
 					} else {
