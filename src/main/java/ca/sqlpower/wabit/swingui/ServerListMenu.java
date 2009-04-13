@@ -60,7 +60,7 @@ public class ServerListMenu extends JMenu {
             popup.add(mi);
         } else {
             for (ServiceInfo si : servers) {
-                popup.add(new ServerMenu(context, dialogOwner, si));
+                popup.add(new ServerMenu(dialogOwner, si));
             }
         }
         return popup;
@@ -95,7 +95,7 @@ public class ServerListMenu extends JMenu {
                 add(mi);
             } else {
                 for (ServiceInfo si : servers) {
-                    add(new ServerMenu(context, dialogOwner, si));
+                    add(new ServerMenu(dialogOwner, si));
                 }
             }
         }

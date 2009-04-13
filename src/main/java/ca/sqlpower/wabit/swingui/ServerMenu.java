@@ -43,15 +43,13 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.swingui.action.StartServerSessionAction;
 
 public class ServerMenu extends JMenu {
-
+    
     private static final Logger logger = Logger.getLogger(ServerMenu.class);
     private final ServiceInfo serviceInfo;
-    private final WabitSwingSessionContext sessionContext;
     private final Component dialogOwner;
     
-    public ServerMenu(WabitSwingSessionContext sessionContext, Component dialogOwner, ServiceInfo si) {
+    public ServerMenu(Component dialogOwner, ServiceInfo si) {
         super(si.getName() + " (" + si.getInetAddress().getHostName() + ":" + si.getPort() + ")");
-        this.sessionContext = sessionContext;
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
         refreshProjects();
@@ -67,7 +65,7 @@ public class ServerMenu extends JMenu {
         removeAll();
         try {
             for (String projectName : getProjectNames(serviceInfo)) {
-                add(new StartServerSessionAction(sessionContext, dialogOwner, serviceInfo, projectName));
+                add(new StartServerSessionAction(dialogOwner, serviceInfo, projectName));
             }
         } catch (Exception ex) {
             JMenuItem mi = new JMenuItem("Error getting project names: " + ex);

@@ -39,32 +39,36 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 
 public class StartServerSessionAction extends AbstractAction {
 
     private static final Logger logger = Logger.getLogger(StartServerSessionAction.class);
-    private final WabitSwingSessionContext sessionContext;
     private final ServiceInfo serviceInfo;
     private final String projectName;
     private final Component dialogOwner;
 
     public StartServerSessionAction(
-            WabitSwingSessionContext sessionContext,
             Component dialogOwner,
             ServiceInfo si,
             String projectName) {
         super(projectName);
-        this.sessionContext = sessionContext;
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
+        if (si == null) {
+            throw new NullPointerException("Null service info");
+        }
         this.projectName = projectName;
     }
 
     public void actionPerformed(ActionEvent e) {
         HttpClient httpclient = new DefaultHttpClient();
         try {
+            final WabitSwingSessionContext sessionContext =
+                new WabitSwingSessionContextImpl(WabitServerSessionContext.getInstance(serviceInfo), false);
             String contextPath = serviceInfo.getPropertyString("path");
             URI uri = new URI("http", null, serviceInfo.getHostAddress(), serviceInfo.getPort(),
                     contextPath + "project/" + projectName, null, null);

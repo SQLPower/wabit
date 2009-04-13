@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.enterprise.client;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 import javax.jmdns.ServiceInfo;
 
@@ -32,10 +33,12 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 
 /**
@@ -45,13 +48,21 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
  */
 public class WabitServerSessionContext extends WabitSessionContextImpl {
 
+    private static final Logger logger = Logger
+            .getLogger(WabitServerSessionContext.class);
+    
     private HttpClient httpClient = new DefaultHttpClient();
     private final ServiceInfo serviceInfo;
-    
-    public WabitServerSessionContext(ServiceInfo serviceInfo, boolean terminateWhenLastSessionCloses)
+    public static final HashMap<ServiceInfo, WabitServerSessionContext> instances = new HashMap<ServiceInfo, WabitServerSessionContext>();
+
+    private WabitServerSessionContext(ServiceInfo serviceInfo, boolean terminateWhenLastSessionCloses)
             throws IOException, SQLObjectException {
         super(terminateWhenLastSessionCloses);
         this.serviceInfo = serviceInfo;
+        if (serviceInfo == null) {
+            logger.error("Null pointer Exception");
+            throw new NullPointerException("serviceInfo is for the WabitServer is null");
+        }
     }
 
     @Override
@@ -79,6 +90,11 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
                 }
                 PlDotIni plIni = new PlDotIni();
                 plIni.read(response.getEntity().getContent());
+                try {
+                    plIni.setServerBaseURI(getServerURI("/"));
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
                 return plIni;
             }
         };
@@ -96,8 +112,19 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     }
     
     private URI getServerURI(String contextRelativePath) throws URISyntaxException {
+        logger.debug("Getting server URI for: " + serviceInfo);
         String contextPath = serviceInfo.getPropertyString("path");
         return new URI("http", null, serviceInfo.getHostAddress(), serviceInfo.getPort(),
                 contextPath + contextRelativePath, null, null);
     }
+
+    public static WabitSessionContext getInstance(ServiceInfo serviceInfo2) throws IOException, SQLObjectException {
+        WabitServerSessionContext context =  instances.get(serviceInfo2);
+        if (context == null) {
+            context = new WabitServerSessionContext(serviceInfo2, false);
+            instances.put(serviceInfo2, context);
+        }
+        return context;
+    }
+    
 }
