@@ -88,18 +88,12 @@ public class ProjectXMLDAO {
 	private final WabitProject project;
 	
 	/**
-	 * This is the output stream contained by the print writer.
-	 */
-	private final OutputStream outputStream;
-	
-	/**
 	 * This will construct a XML DAO to save the entire project or parts of 
 	 * the project to be loaded in later.
 	 */
 	public ProjectXMLDAO(OutputStream out, WabitProject project) {
 		this.project = project;
 		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
-		outputStream = out;
 		xml = new XMLHelper();
 	}
 	
@@ -144,7 +138,7 @@ public class ProjectXMLDAO {
 		xml.print(out, "<project");
 		printAttribute("name", project.getName());
 		printAttribute("editorPanelModel", project.getEditorPanelModel().getUUID().toString());
-		xml.println(out, ">");
+		xml.niprintln(out, ">");
 		xml.indent++;
 		
 		saveDataSources(dataSources);
@@ -180,7 +174,7 @@ public class ProjectXMLDAO {
 			}
 			xml.print(out, "<data-source");
 			printAttribute("name", ds.getName());
-			xml.println(out, "/>");
+			xml.niprintln(out, "/>");
 		}
 		
 		xml.indent--;
@@ -196,7 +190,7 @@ public class ProjectXMLDAO {
 		xml.print(out, "<layout");
 		printAttribute("name", layout.getName());
 		printAttribute("zoom", layout.getZoomLevel());
-		xml.println(out, ">");
+		xml.niprintln(out, ">");
 		xml.indent++;
 		
 		Page page = layout.getPage();
@@ -204,7 +198,7 @@ public class ProjectXMLDAO {
 		printAttribute("name", page.getName());
 		printAttribute("height", page.getHeight());
 		printAttribute("width", page.getWidth());
-		xml.println(out, ">");
+		xml.niprintln(out, ">");
 		xml.indent++;
 		saveFont(page.getDefaultFont());
 		
@@ -217,7 +211,7 @@ public class ProjectXMLDAO {
 				printAttribute("height", box.getHeight());
 				printAttribute("xpos", box.getX());
 				printAttribute("ypos", box.getY());
-				xml.println(out, ">");
+				xml.niprintln(out, ">");
 				xml.indent++;
 				saveFont(box.getFont());
 				
@@ -232,7 +226,7 @@ public class ProjectXMLDAO {
 						if (label.getBackgroundColour() != null) {
 							printAttribute("bg-colour", label.getBackgroundColour().getRGB());
 						}
-						xml.println(out, ">");
+						xml.niprintln(out, ">");
 						saveFont(label.getFont());
 						xml.println(out, "</content-label>");
 					} else if (box.getContentRenderer() instanceof ResultSetRenderer) {
@@ -245,7 +239,7 @@ public class ProjectXMLDAO {
 						if (rsRenderer.getBackgroundColour() != null) {
 							printAttribute("bg-colour", rsRenderer.getBackgroundColour().getRGB());
 						}
-						xml.println(out, ">");
+						xml.niprintln(out, ">");
 						xml.indent++;
 						saveFont(rsRenderer.getHeaderFont(), "header-font");
 						saveFont(rsRenderer.getBodyFont(), "body-font");
@@ -262,18 +256,18 @@ public class ProjectXMLDAO {
 							printAttribute("data-type", ci.getDataType().name());
 							printAttribute("break-on-column", Boolean.toString(ci.getWillBreak()));
 							printAttribute("will-subtotal", Boolean.toString(ci.getWillSubtotal()));
-							xml.println(out, ">");
+							xml.niprintln(out, ">");
 							xml.indent++;
 							if (ci.getFormat() instanceof SimpleDateFormat) {
 								xml.print(out, "<date-format");
 								SimpleDateFormat dateFormat = (SimpleDateFormat) ci.getFormat();
 								printAttribute("format", dateFormat.toPattern());
-								xml.println(out, "/>");
+								xml.niprintln(out, "/>");
 							} else if (ci.getFormat() instanceof DecimalFormat) {
 								xml.print(out, "<decimal-format");
 								DecimalFormat decimalFormat = (DecimalFormat) ci.getFormat();
 								printAttribute("format", decimalFormat.toPattern());
-								xml.println(out, "/>");
+								xml.niprintln(out, "/>");
 							} else if (ci.getFormat() == null) {
 								// This is a default format
 							} else {
@@ -288,7 +282,7 @@ public class ProjectXMLDAO {
 						ImageRenderer imgRenderer = (ImageRenderer) box.getContentRenderer();
 						xml.print(out, "<image-renderer");
 						printAttribute("name", imgRenderer.getName());
-						xml.print(out, ">");
+						xml.niprint(out, ">");
 						BufferedImage image = imgRenderer.getImage();
 						if (image != null) {
 							try {
@@ -318,14 +312,14 @@ public class ProjectXMLDAO {
 						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
 						printAttribute("graph-type", graphRenderer.getGraphType().name());
 						printAttribute("query-id", graphRenderer.getQuery().getUUID().toString());
-						xml.println(out, ">");
+						xml.niprintln(out, ">");
 						xml.indent++;
 						xml.println(out, "<graph-col-names-in-order>");
 						xml.indent++;
 						for (String colName : graphRenderer.getColumnNamesInOrder()) {
 							xml.print(out, "<graph-col-names");
 							printAttribute("name", colName);
-							xml.println(out, "/>");
+							xml.niprintln(out, "/>");
 						}
 						xml.indent--;
 						xml.println(out, "</graph-col-names-in-order>");
@@ -335,7 +329,7 @@ public class ProjectXMLDAO {
 							xml.print(out, "<graph-name-to-data-type");
 							printAttribute("name", entry.getKey());
 							printAttribute("data-type", entry.getValue().name());
-							xml.println(out, "/>");
+							xml.niprintln(out, "/>");
 						}
 						xml.indent--;
 						xml.println(out, "</graph-col-names-to-data-types>");
@@ -345,7 +339,7 @@ public class ProjectXMLDAO {
 							xml.print(out, "<graph-series-col-to-x-axis-col");
 							printAttribute("series", entry.getKey());
 							printAttribute("x-axis", entry.getValue());
-							xml.println(out, "/>");
+							xml.niprintln(out, "/>");
 						}
 						xml.indent--;
 						xml.println(out, "</graph-series-to-x-axis>");
@@ -362,7 +356,7 @@ public class ProjectXMLDAO {
 				xml.print(out, "<guide");
 				printAttribute("axis", guide.getAxis().name());
 				printAttribute("offset", guide.getOffset());
-				xml.println(out, "/>");
+				xml.niprintln(out, "/>");
 			} else {
 				throw new ClassCastException("Cannot save page element of type " + object.getClass());
 			}
@@ -384,7 +378,7 @@ public class ProjectXMLDAO {
 		printAttribute("name", font.getFamily());
 		printAttribute("size", font.getSize());
 		printAttribute("style", font.getStyle());
-		xml.println(out, "/>");
+		xml.niprintln(out, "/>");
 	}
 	
 	/**
@@ -408,7 +402,7 @@ public class ProjectXMLDAO {
 		if (cache.getDatabase() != null && cache.getDatabase().getDataSource() != null) {
 			printAttribute("data-source", cache.getDatabase().getDataSource().getName());
 		}
-		xml.println(out, ">");
+		xml.niprintln(out, ">");
 		xml.indent++;
 
 		Map<Item, String> itemIdMap = new HashMap<Item, String>();
@@ -418,7 +412,7 @@ public class ProjectXMLDAO {
 		printAttribute("uuid", constants.getUUID().toString());
 		printAttribute("xpos", constants.getPosition().getX());
 		printAttribute("ypos", constants.getPosition().getY());
-		xml.println(out, ">");
+		xml.niprintln(out, ">");
 		xml.indent++;
 		for (Item item : constants.getItems()) {
 			xml.print(out, "<column");
@@ -427,7 +421,7 @@ public class ProjectXMLDAO {
 			printAttribute("name", item.getName());
 			printAttribute("alias", item.getAlias());
 			printAttribute("where-text", item.getWhere());
-			xml.println(out, "/>");
+			xml.niprintln(out, "/>");
 		}
 		xml.indent--;
 		xml.println(out, "</constants>");
@@ -446,7 +440,7 @@ public class ProjectXMLDAO {
 			printAttribute("alias", table.getAlias());
 			printAttribute("xpos", table.getPosition().getX());
 			printAttribute("ypos", table.getPosition().getY());
-			xml.println(out, ">");
+			xml.niprintln(out, ">");
 			xml.indent++;
 			for (Item item : table.getItems()) {
 				xml.print(out, "<column");
@@ -455,7 +449,7 @@ public class ProjectXMLDAO {
 				printAttribute("name", item.getName());
 				printAttribute("alias", item.getAlias());
 				printAttribute("where-text", item.getWhere());
-				xml.println(out, "/>");
+				xml.niprintln(out, "/>");
 			}
 			xml.indent--;
 			xml.println(out, "</table>");
@@ -468,7 +462,7 @@ public class ProjectXMLDAO {
 			printAttribute("right-item-id", itemIdMap.get(join.getRightColumn())); 
 			printAttribute("right-is-outer", Boolean.toString(join.isRightColumnOuterJoin()));
 			printAttribute("comparator", join.getComparator()); 
-			xml.println(out, "/>");
+			xml.niprintln(out, "/>");
 		}
 				
 		xml.println(out, "<select>");
@@ -476,28 +470,28 @@ public class ProjectXMLDAO {
 		for (Item col : cache.getSelectedColumns()) {
 			xml.print(out, "<column");
 			printAttribute("id", itemIdMap.get(col));
-			xml.println(out, "/>");
+			xml.niprintln(out, "/>");
 		}
 		xml.indent--;
 		xml.println(out, "</select>");
 		
 		xml.print(out, "<global-where");
 		printAttribute("text", cache.getGlobalWhereClause());
-		xml.println(out, "/>");
+		xml.niprintln(out, "/>");
 		
 		if (cache.isGroupingEnabled()) {
 			for (Map.Entry<Item, SQLGroupFunction> entry: cache.getGroupByAggregateMap().entrySet()) {
 				xml.print(out, "<group-by-aggregate");
 				printAttribute("column-id", itemIdMap.get(entry.getKey()));
 				printAttribute("aggregate", entry.getValue().name());
-				xml.println(out, "/>");
+				xml.niprintln(out, "/>");
 			}
 			
 			for (Map.Entry<Item, String> entry : cache.getHavingMap().entrySet()) {
 				xml.print(out, "<having");
 				printAttribute("column-id", itemIdMap.get(entry.getKey()));
 				printAttribute("text", entry.getValue());
-				xml.println(out, "/>");
+				xml.niprintln(out, "/>");
 			}
 			
 		}
@@ -506,13 +500,13 @@ public class ProjectXMLDAO {
 			xml.println(out, "<order-by");
 			printAttribute("column-id", itemIdMap.get(item));
 			printAttribute("direction", cache.getOrderByArgument(item).name());
-			xml.println(out, "/>");
+			xml.niprintln(out, "/>");
 		}
 		
 		if (cache.isScriptModified()) {
 			xml.print(out, "<query-string");
 			printAttribute("string", cache.generateQuery());
-			xml.println(out, "/>");		
+			xml.niprintln(out, "/>");		
 		}
 
 		xml.indent--;
