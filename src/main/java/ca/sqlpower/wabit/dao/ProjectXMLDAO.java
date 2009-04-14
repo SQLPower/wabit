@@ -405,8 +405,8 @@ public class ProjectXMLDAO {
 		printAttribute("name", cache.getName());
 		printAttribute("uuid", cache.getUUID().toString());
 		printAttribute("zoom", cache.getZoomLevel());
-		if (cache.getDataSource() != null) {
-			printAttribute("data-source", cache.getDataSource().getName());
+		if (cache.getDatabase() != null && cache.getDatabase().getDataSource() != null) {
+			printAttribute("data-source", cache.getDatabase().getDataSource().getName());
 		}
 		xml.println(out, ">");
 		xml.indent++;

@@ -34,9 +34,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -69,6 +72,8 @@ import org.apache.log4j.Logger;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
@@ -151,8 +156,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	private static final int DEFAULT_DIVIDER_LOC = 50;
 
+	/**
+	 * @see #isLoading()
+	 */
+	private boolean loading;
+
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
+    /**
+     * The database instances we've created due to calls to {@link #getSqlDatabase(SPDataSource)}.
+     */
+    private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
+    
 	/**
 	 * The list of all currently-registered background tasks.
 	 */
@@ -201,6 +216,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private final PropertyChangeListener editorModelListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
+		    if (isLoading()) return;
 			if (evt.getPropertyName().equals("editorPanelModel")) {
 				if (!setEditorPanel((WabitObject) evt.getNewValue())) {
 					project.setEditorPanelModel((WabitObject) evt.getOldValue());
@@ -304,7 +320,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);
         if (project.getEditorPanelModel() == null) {
         	project.setEditorPanelModel(project);
-        } else {
+        } else if (currentEditorPanel != null) {
+            // This code was here, but I'm not sure if this actually does anything,
+            // since the frame hasn't been realized yet...
         	currentEditorPanel.getPanel().repaint();
         }
     	
@@ -470,6 +488,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    	}
 	    	
 	    	sessionContext.deregisterChildSession(this);
+	    	
+	    	for (SQLDatabase db : databases.values()) {
+	    	    db.disconnect();
+	    	}
+	    	
     		frame.dispose();
 		}
 		return closing;
@@ -672,4 +695,25 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		pcs.removePropertyChangeListener(l);
 	}
 	
+	public boolean isLoading() {
+        return loading;
+    }
+	
+	public void setLoading(boolean loading) {
+        this.loading = loading;
+    }
+
+    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
+        return getSqlDatabase(dataSource).getConnection();
+    }
+
+    public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
+        SQLDatabase db = databases.get(dataSource);
+        if (db == null) {
+            dataSource = new SPDataSource(dataSource);  // defensive copy for cache key
+            db = new SQLDatabase(dataSource);
+            databases.put(dataSource, db);
+        }
+        return db;
+    }
 }

@@ -41,6 +41,9 @@ import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.sqlobject.SQLTable;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -335,10 +338,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	private String queryBeforeEdit;
 	
 	/**
-	 * This is the currently selected data source for the query. This is the 
-	 * datasource the queries will be executed on.
+	 * This database instance is obtained from the session when the 
+	 * data source is called.
 	 */
-	private SPDataSource dataSource;
+	private SQLDatabase database;
 	
 	/**
 	 * This is the text of the query if the user edited the text manually. This means
@@ -429,8 +432,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			globalWhereClause = query.getGlobalWhereClause();
 			groupingEnabled = query.isGroupingEnabled();
 
-
-			setDataSource(query.getDataSource());
+			
+			database = query.getDatabase();
 			constantsContainer = query.getConstantsContainer();
 			userModifiedQuery = query.getUserModifiedQuery();
 			
@@ -462,6 +465,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		this.session = session;
 		session.addPropertyChangeListener(rowLimitChangeListener);
 	}
+	
+	public SQLDatabase getDatabase() {
+        return database;
+    }
 	
 	public void setGroupingEnabled(boolean enabled) {
 		logger.debug("Setting grouping enabled to " + enabled);
@@ -504,7 +511,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	 * Generates the query based on the cache.
 	 */
 	public String generateQuery() {
-		logger.debug("Data source is " + dataSource + " while generating the query.");
+	    SPDataSource dataSource = null;
+	    if (database != null) {
+            dataSource = database.getDataSource();
+	    }
+        logger.debug("Data source is " + dataSource + " while generating the query.");
 		ConstantConverter converter = ConstantConverter.getConverter(dataSource);
 		if (userModifiedQuery != null) {
 			return userModifiedQuery;
@@ -788,7 +799,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		resultPosition = 0;
 		resultSets.clear();
 		updateCounts.clear();
-		if (dataSource == null) {
+		if (database == null || database.getDataSource() == null) {
 			throw new NullPointerException("Data source is null.");
 		}
 	    String sql = generateQuery();
@@ -796,7 +807,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	    Statement stmt = null;
 	    ResultSet rs = null;
 	    try {
-	        con = dataSource.createConnection();
+	        con = database.getConnection();
 	        stmt = con.createStatement();
 	        if (!fetchFullResults) {
 	        	stmt.setMaxRows(session.getRowLimit());
@@ -817,7 +828,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 hasNext = !((sqlResult == false) && (stmt.getUpdateCount() == -1));
             }
             return initialResult;
-	    } finally {
+	    } catch (SQLObjectException e) {
+	        throw new SQLObjectRuntimeException(e);
+        } finally {
             if (rs != null) {
                 try {
                     rs.close();
@@ -1223,19 +1236,15 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		return constantsContainer;
 	}
 	
-	public SPDataSource getDataSource() {
-		return dataSource;
-	}
-	
 	public WabitDataSource getWabitDataSource() {
-		if (dataSource == null) {
+		if (database == null || database.getDataSource() == null) {
 			return null;
 		}
-		return new JDBCDataSource(dataSource);
+		return new JDBCDataSource(database.getDataSource());
 	}
 	
 	public void setDataSource(SPDataSource dataSource) {
-		this.dataSource = dataSource;
+	    this.database = session.getSqlDatabase(dataSource);
 	}
 	
 	/**

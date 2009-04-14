@@ -107,6 +107,6 @@ public class ProjectSAXHandlerTest extends TestCase {
         assertEquals(1, loadedSession.getProject().getQueries().size());
         QueryCache loadedQuery = (QueryCache) loadedSession.getProject().getQueries().get(0);
         System.out.println(loadedQuery.getWabitDataSource().getName());
-        assertEquals(replacementDS, loadedQuery.getDataSource());
+        assertEquals(replacementDS, loadedQuery.getDatabase().getDataSource());
 	}
 }

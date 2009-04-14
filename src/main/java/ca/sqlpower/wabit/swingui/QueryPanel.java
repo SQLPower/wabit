@@ -182,7 +182,11 @@ public class QueryPanel implements WabitPanel {
 
 	private final WabitSwingSession session;
 	
+	/**
+	 * The tree on the right-hand side that you drag tables into the query pen from.
+	 */
 	private JTree dragTree;
+	
 	private JComboBox reportComboBox;
 
 	/**
@@ -314,6 +318,8 @@ public class QueryPanel implements WabitPanel {
 						rootNode.removeChild(i);
 					}
 					if(reportComboBox.getSelectedItem() != null) {
+					    // FIXME the session (or session context) should be maintaining a map of data
+					    // sources to SQLDatabase instances. Each SQLDatabase instance has its own connection pool! 
 						rootNode.addChild(new SQLDatabase(
 								(SPDataSource) reportComboBox.getSelectedItem()));
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
@@ -327,16 +333,16 @@ public class QueryPanel implements WabitPanel {
 
 			}
 		});
-		if (session.getProject().getDataSources().size() != 0 ) {
-			if(queryCache.getDataSource() == null) {
-				dragTree.setVisible(false);
-			} else {
-			reportComboBox.setSelectedItem(queryCache.getDataSource());
-			dragTree.setVisible(true);
-			}
-		} else {
-			dragTree.setVisible(false);
-		}
+		if (session.getProject().getDataSources().size() != 0) {
+            if (queryCache.getDatabase() == null) {
+                dragTree.setVisible(false);
+            } else {
+                reportComboBox.setSelectedItem(queryCache.getDatabase().getDataSource());
+                dragTree.setVisible(true);
+            }
+        } else {
+            dragTree.setVisible(false);
+        }
 		dragTree.setCellRenderer(new DBTreeCellRenderer());
 		DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(dragTree, DnDConstants.ACTION_COPY, new DragGestureListener() {

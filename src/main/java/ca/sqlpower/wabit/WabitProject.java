@@ -123,6 +123,8 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
     
     /**
      * Returns an unmodifiable view of the data sources in this project.
+     * <p>
+     * TODO change this to List&lt;WabitDataSource&gt; getDatabases()
      */
     public List<WabitDataSource> getDataSources() {
         return Collections.unmodifiableList(dataSources);

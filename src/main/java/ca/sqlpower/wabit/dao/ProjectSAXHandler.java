@@ -210,6 +210,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	//TODO: check version numbers and file formats.
         } else if (name.equals("project")) {
         	session = context.createSession();
+        	session.setLoading(true);
         	sessions.add(session);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -771,6 +772,7 @@ public class ProjectSAXHandler extends DefaultHandler {
     	if (cancelled) return;
     	
     	if (name.equals("project")) {
+    	    session.setLoading(false);
     		for (WabitObject obj : session.getProject().getChildren()) {
     			if (obj.getUUID().toString().equals(currentEditorPanelModel)) {
     				session.getProject().setEditorPanelModel(obj);

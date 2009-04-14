@@ -20,7 +20,10 @@
 package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
+import java.sql.Connection;
 
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -89,5 +92,23 @@ public class StubWabitSession implements WabitSession {
 		// TODO Auto-generated method stub
 		
 	}
+
+    public boolean isLoading() {
+        return false;
+    }
+
+    public void setLoading(boolean loading) {
+        // no op
+    }
+
+    public Connection borrowConnection(SPDataSource dataSource) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }
