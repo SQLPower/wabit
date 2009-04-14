@@ -259,7 +259,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         		} else if (aname.equals("name")) {
         			query.setName(aval);
         		} else if (aname.equals("data-source")) { 
-        			checkMandatory("data-source", aval);
         			SPDataSource ds = session.getProject().getDataSource(aval);
         			if (ds == null) {
         				String newDSName = oldToNewDSNames.get(aval);
