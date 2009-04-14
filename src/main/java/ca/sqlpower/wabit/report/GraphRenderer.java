@@ -344,7 +344,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 							dataTypeComboBox = columnToDataTypeSeriesComboBox.get(column);
 						} else if (e.getY() < new JComboBox().getPreferredSize().getHeight() * 2) {
 							dataTypeComboBox = columnToXAxisComboBox.get(column);
-							yPosition = dataTypeComboBox.getHeight();
+							if (dataTypeComboBox != null) {
+								yPosition = dataTypeComboBox.getHeight();
+							}
 						} else {
 							dataTypeComboBox = null;
 						}
@@ -397,7 +399,19 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				} else {
 					dataTypeComboBox.setSelectedItem(defaultDataTypeSeries);
 				}
-				final JComboBox comboBoxForXValues = new JComboBox(columnNamesInOrder.toArray());
+				List<String> numericAndDateCols = new ArrayList<String>();
+				for (String col : columnNamesInOrder) {
+					int columnType;
+					try {
+						columnType = rs.getMetaData().getColumnType(rs.findColumn(col));
+					} catch (SQLException e) {
+						throw new RuntimeException(e);
+					}
+					if (Arrays.asList(NUMERIC_SQL_TYPES).contains(columnType) || columnType == Types.DATE || columnType == Types.TIMESTAMP) {
+						numericAndDateCols.add(col);
+					}
+				}
+				final JComboBox comboBoxForXValues = new JComboBox(numericAndDateCols.toArray());
 				if (defaultDataTypeSeries == DataTypeSeries.SERIES) {
 					comboBoxForXValues.setSelectedItem(columnSeriesToColumnXAxis.get(columnNamesInOrder.get(column)));
 					newHeader.add(comboBoxForXValues, BorderLayout.CENTER);
@@ -940,10 +954,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		boolean allDate = true;
 		try {
 			for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
-				if (resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue())) != Types.DATE) {
+				int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue()));
+				if (columnType != Types.DATE && columnType != Types.TIMESTAMP) {
 					allDate = false;
 				} 
-				if (!Arrays.asList(NUMERIC_SQL_TYPES).contains(resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue())))) {
+				if (!Arrays.asList(NUMERIC_SQL_TYPES).contains(columnType)) {
 					allNumeric = false;
 				}
 			}
@@ -973,7 +988,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				try {
 					resultSet.beforeFirst();
 					while (resultSet.next()) {
-						newSeries.add(new FixedMillisecond(resultSet.getDate(entry.getValue())), resultSet.getDouble(entry.getKey()));
+						int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue()));
+						if (columnType == Types.DATE) {
+							newSeries.add(new FixedMillisecond(resultSet.getDate(entry.getValue())), resultSet.getDouble(entry.getKey()));
+						} else if (columnType == Types.TIMESTAMP){
+							newSeries.add(new FixedMillisecond(resultSet.getTimestamp(entry.getValue())), resultSet.getDouble(entry.getKey()));
+						}
 					}
 				} catch (SQLException e) {
 					throw new RuntimeException(e);
