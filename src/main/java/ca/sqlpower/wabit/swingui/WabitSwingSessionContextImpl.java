@@ -100,10 +100,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			}
 		};
 	}
-
-	public JMenu createServerListMenu(Component dialogOwner) {
-	    return new ServerListMenu(this, dialogOwner);
-	}
+//
+//	public JMenu createServerListMenu(Component dialogOwner) {
+//	    return new ServerListMenu(this, "Open On Server", dialogOwner);
+//	}
 	
 	public WabitWelcomeScreen getWelcomeScreen() {
 		return welcomeScreen;
@@ -213,6 +213,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     public Preferences getPrefs() {
         return delegateContext.getPrefs();
+    }
+
+    public JMenu createServerListMenu(Component dialogOwner, String name,
+            ServerListMenuItemFactory itemFactory) {
+        return new ServerListMenu(this, name, dialogOwner, itemFactory);
     }
 
 	

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -68,9 +70,6 @@ import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -98,12 +97,16 @@ import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
+import ca.sqlpower.wabit.swingui.action.NewProjectOnServerAction;
 import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
 
 
 /**
@@ -351,15 +354,23 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
 		fileMenu.add(new AbstractAction("New", NEW_PROJECT_ICON) {
-		
 			public void actionPerformed(ActionEvent e) {
 				NewProjectScreen newProject = new NewProjectScreen(getContext());
 				newProject.showFrame();
 			}
 		});
+        fileMenu.add(getContext().createServerListMenu(frame, "New Project On Server", new ServerListMenuItemFactory() {
+            public JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner) {
+                return new JMenuItem(new NewProjectOnServerAction(dialogOwner, serviceInfo));
+            }
+        }));
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
         fileMenu.add(getContext().createRecentMenu());
-        fileMenu.add(getContext().createServerListMenu(frame));
+        fileMenu.add(getContext().createServerListMenu(frame, "Open On Server", new ServerListMenuItemFactory() {
+            public JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner) {
+                return new OpenOnServerMenu(dialogOwner, serviceInfo);
+            }
+        }));
 		fileMenu.add(new AbstractAction("Close Project") {
 			public void actionPerformed(ActionEvent e) {
 				close();
@@ -368,6 +379,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
+//		fileMenu.add(new SaveOnServerAction(frame));
 		fileMenu.addSeparator();
 		fileMenu.add(new ImportProjectAction(this));
 		

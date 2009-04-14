@@ -40,16 +40,17 @@ import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.swingui.action.StartServerSessionAction;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.swingui.action.OpenProjectOnServerAction;
 
-public class ServerMenu extends JMenu {
+public class OpenOnServerMenu extends JMenu {
     
-    private static final Logger logger = Logger.getLogger(ServerMenu.class);
+    private static final Logger logger = Logger.getLogger(OpenOnServerMenu.class);
     private final ServiceInfo serviceInfo;
     private final Component dialogOwner;
     
-    public ServerMenu(Component dialogOwner, ServiceInfo si) {
-        super(si.getName() + " (" + si.getInetAddress().getHostName() + ":" + si.getPort() + ")");
+    public OpenOnServerMenu(Component dialogOwner, ServiceInfo si) {
+        super(WabitUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
         refreshProjects();
@@ -65,7 +66,7 @@ public class ServerMenu extends JMenu {
         removeAll();
         try {
             for (String projectName : getProjectNames(serviceInfo)) {
-                add(new StartServerSessionAction(dialogOwner, serviceInfo, projectName));
+                add(new OpenProjectOnServerAction(dialogOwner, serviceInfo, projectName));
             }
         } catch (Exception ex) {
             JMenuItem mi = new JMenuItem("Error getting project names: " + ex);

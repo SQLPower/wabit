@@ -44,14 +44,14 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 
-public class StartServerSessionAction extends AbstractAction {
+public class OpenProjectOnServerAction extends AbstractAction {
 
-    private static final Logger logger = Logger.getLogger(StartServerSessionAction.class);
+    private static final Logger logger = Logger.getLogger(OpenProjectOnServerAction.class);
     private final ServiceInfo serviceInfo;
     private final String projectName;
     private final Component dialogOwner;
 
-    public StartServerSessionAction(
+    public OpenProjectOnServerAction(
             Component dialogOwner,
             ServiceInfo si,
             String projectName) {

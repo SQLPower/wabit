@@ -42,7 +42,7 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
      *            The component that should own any dialogs that pop up as the
      *            result of executing menu actions under the server list menu.
      */
-    JMenu createServerListMenu(Component dialogOwner);
+    JMenu createServerListMenu(Component dialogOwner, String name, ServerListMenuItemFactory itemFactory);
 
 	WabitWelcomeScreen getWelcomeScreen();
 

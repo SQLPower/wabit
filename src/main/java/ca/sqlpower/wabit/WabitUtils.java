@@ -21,6 +21,8 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 
+import javax.jmdns.ServiceInfo;
+
 public class WabitUtils {
 
     /**
@@ -70,6 +72,20 @@ public class WabitUtils {
         for (WabitObject wob : root.getChildren()) {
             unlistenToHierarchy(wob, pcl, wcl);
         }
+    }
+
+    /**
+     * Returns the human-readable summary of the given service info object.
+     * Anywhere a server is referred to within the Wabit, this method should be
+     * used to convert the service info object into the string the user sees.
+     * 
+     * @param si
+     *            The service info to summarize.
+     * @return The Wabit's canonical human-readable representation of the given
+     *         service info.
+     */
+    public static String serviceInfoSummary(ServiceInfo si) {
+        return si.getName() + " (" + si.getInetAddress().getHostName() + ":" + si.getPort() + ")";
     }
 
 }

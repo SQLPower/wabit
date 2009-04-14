@@ -45,6 +45,8 @@ public class ServerListMenu extends JMenu {
 
     private final Component dialogOwner;
 
+    private final ServerListMenuItemFactory itemFactory;
+
     /**
      * Creates a throwaway popup menu containing the current list of servers.
      * The resulting popup menu will not change over time like the regular
@@ -60,7 +62,7 @@ public class ServerListMenu extends JMenu {
             popup.add(mi);
         } else {
             for (ServiceInfo si : servers) {
-                popup.add(new ServerMenu(dialogOwner, si));
+                popup.add(new OpenOnServerMenu(dialogOwner, si));
             }
         }
         return popup;
@@ -75,10 +77,12 @@ public class ServerListMenu extends JMenu {
      *            The context whose JmDNS instance to use. This is also the
      *            context that will own any sessions created on the server.
      */
-    public ServerListMenu(WabitSwingSessionContext context, Component dialogOwner) {
-        super("Open On Server");
+    public ServerListMenu(WabitSwingSessionContext context, String name,
+            Component dialogOwner, ServerListMenuItemFactory itemFactory) {
+        super(name);
         this.context = context;
         this.dialogOwner = dialogOwner;
+        this.itemFactory = itemFactory;
         refillMenu.run();
         context.getJmDNS().addServiceListener(
                 WabitSessionContext.WABIT_ENTERPRISE_SERVER_MDNS_TYPE, serviceListener);
@@ -95,7 +99,7 @@ public class ServerListMenu extends JMenu {
                 add(mi);
             } else {
                 for (ServiceInfo si : servers) {
-                    add(new ServerMenu(dialogOwner, si));
+                    add(itemFactory.createMenuEntry(si, dialogOwner));
                 }
             }
         }
