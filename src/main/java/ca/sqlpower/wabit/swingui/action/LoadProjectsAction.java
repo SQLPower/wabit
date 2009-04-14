@@ -57,7 +57,7 @@ public class LoadProjectsAction extends AbstractAction {
 	private final WabitSwingSession session;
 
 	public LoadProjectsAction(WabitSwingSession session, WabitSwingSessionContext context) {
-		super("Load...", new ImageIcon(LoadProjectsAction.class.getClassLoader().getResource("icons/wabit_load.png")));
+		super("Open...", new ImageIcon(LoadProjectsAction.class.getClassLoader().getResource("icons/wabit_load.png")));
 		this.session = session;
 		this.context = context;
 	}
