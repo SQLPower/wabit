@@ -234,6 +234,7 @@ public class ProjectXMLDAOTest extends TestCase {
 		QueryCache query = new QueryCache(session);
 		p.addQuery(query, session);
 		setAllSetters(query, getPropertiesToIgnore());
+		query.setDataSource(db.getDataSource());
 		
 		Container constantsContainer = query.getConstantsContainer();
 		StringItem constantItem = new StringItem("Constant");

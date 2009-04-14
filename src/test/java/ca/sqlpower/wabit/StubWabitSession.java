@@ -21,9 +21,12 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -34,6 +37,7 @@ public class StubWabitSession implements WabitSession {
 	
 	private final WabitSessionContext context;
 	private WabitProject project;
+	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
 	public StubWabitSession(WabitSessionContext context) {
 		this.context = context;
@@ -47,8 +51,10 @@ public class StubWabitSession implements WabitSession {
 	}
 
 	public boolean close() {
-		// TODO Auto-generated method stub
-		return false;
+	    for (SQLDatabase db : databases.values()) {
+	        db.disconnect();
+	    }
+	    return true;
 	}
 
 	public WabitSessionContext getContext() {
@@ -101,14 +107,18 @@ public class StubWabitSession implements WabitSession {
         // no op
     }
 
-    public Connection borrowConnection(SPDataSource dataSource) {
-        // TODO Auto-generated method stub
-        return null;
+    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
+        return getSqlDatabase(dataSource).getConnection();
     }
 
     public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
-        // TODO Auto-generated method stub
-        return null;
+        SQLDatabase db = databases.get(dataSource);
+        if (db == null) {
+            dataSource = new SPDataSource(dataSource);
+            db = new SQLDatabase(dataSource);
+            databases.put(dataSource, db);
+        }
+        return db;
     }
 
 }
