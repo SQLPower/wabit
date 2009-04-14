@@ -237,15 +237,17 @@ public class TableContainer extends AbstractWabitObject implements Container {
 			SQLDatabase db = cache.getDatabase();
             logger.debug("Cache has database " + db);
 			if (db == null) {
-			    
+			    logger.info("Skipping table " + super.getName() + " because its database connection is missing");
+			    return;
 			}
 			try {
 				table = db.getTableByName(catalog, schema, super.getName());
 			} catch (SQLObjectException e) {
+			    logger.info("Skipping table " + super.getName() + " due to failure in populate:", e);
 				return;
 			}
 			if (table == null) {
-				//don't load the table if it does not exist
+                logger.info("Skipping table " + super.getName() + " because it doesn't exist in the database");
 				return;
 			}
 			
