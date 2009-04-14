@@ -244,7 +244,8 @@ public class QueryController {
 			if (selectedItem != null && !(selectedItem instanceof SPDataSource)) {
 				throw new IllegalStateException("The data source combo box does not have data sources in it.");
 			}
-			queryCache.setDataSource((SPDataSource) selectedItem);
+			SPDataSource ds = (SPDataSource) selectedItem;
+			queryCache.setDataSource(ds);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
 			}

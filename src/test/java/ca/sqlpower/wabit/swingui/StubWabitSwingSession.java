@@ -21,6 +21,9 @@ package ca.sqlpower.wabit.swingui;
 
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.sql.Connection;
 
 import javax.swing.JFrame;
@@ -40,6 +43,7 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
@@ -52,17 +56,30 @@ import ca.sqlpower.wabit.WabitSessionContext;
 public class StubWabitSwingSession implements WabitSwingSession {
 	
 	WabitSessionContext context = new StubWabitSessionContext();
+	private WabitProject wabitProject;
+	private WabitSession delegateSession;
+	
+	private final List<SPSwingWorker> workers = new ArrayList<SPSwingWorker>();
+	
+	public StubWabitSwingSession() {
+		wabitProject = new WabitProject();
+		delegateSession = new StubWabitSession(context);
+	}
 
 	public WabitSessionContext getContext() {
 		return context;
 	}
 
 	public void registerSwingWorker(SPSwingWorker worker) {
-		//Do nothing
+		workers.add(worker);
 	}
 
 	public void removeSwingWorker(SPSwingWorker worker) {
-		//Do nothing
+		workers.remove(worker);
+	}
+	
+	public List<SPSwingWorker> getWorkers() {
+		return Collections.unmodifiableList(workers);
 	}
 
 	public void addSessionLifecycleListener(
@@ -86,8 +103,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	}
 	
 	public WabitProject getProject() {
-	    // TODO Auto-generated method stub
-	    return null;
+		return wabitProject;
 	}
 	
 	public JMenu createDataSourcesMenu() {
@@ -138,8 +154,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	}
 
 	public JSpinner getRowLimitSpinner() {
-		// TODO Auto-generated method stub
-		return null;
+		return new JSpinner();
 	}
 
 	public void addPropertyChangeListener(PropertyChangeListener l) {
@@ -148,8 +163,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	}
 
 	public int getRowLimit() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 100;
 	}
 
 	public void removePropertyChangeListener(PropertyChangeListener l) {
@@ -176,7 +190,6 @@ public class StubWabitSwingSession implements WabitSwingSession {
     }
 
     public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
-        // TODO Auto-generated method stub
-        return null;
+    	return delegateSession.getSqlDatabase(dataSource);
     }
 }

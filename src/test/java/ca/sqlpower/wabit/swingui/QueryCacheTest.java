@@ -19,13 +19,33 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.Statement;
+
 import junit.framework.TestCase;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.RowSetChangeEvent;
+import ca.sqlpower.sql.RowSetChangeListener;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.CountingPropertyChangeListener;
 import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.query.StringItem;
 
 public class QueryCacheTest extends TestCase {
+	
+	private class CountingRowSetChangeListener implements RowSetChangeListener {
+		private int rowCount = 0;
+		
+		public void rowAdded(RowSetChangeEvent e) {
+			rowCount++;
+		}
+		
+		public int getRowCount() {
+			return rowCount;
+		}
+	};
 	
 	private QueryCache queryCache;
 	
@@ -51,6 +71,37 @@ public class QueryCacheTest extends TestCase {
 		String newAlias = "Alias test.";
 		item.setAlias(newAlias);
 		assertEquals(1, listener.getPropertyChangeCount());
+	}
+	
+	/**
+	 * Checks that the query cache will throw a row set property change
+	 * when a new row is added.
+	 */
+	public void testQueryFiresRSChange() throws Exception {
+		PlDotIni plIni = new PlDotIni();
+		plIni.read(new File("src/test/java/pl.regression.ini"));
+		SPDataSource ds = plIni.getDataSource("regression_test");
+		Connection con = ds.createConnection();
+		Statement stmt = con.createStatement();
+		stmt.execute("create table rsTest (col1 varchar(50), col2 varchar(50))");
+		stmt.execute("insert into rsTest (col1, col2) values ('hello', 'line1')");
+		stmt.execute("insert into rsTest (col1, col2) values ('bye', 'line2')");
+		stmt.close();
+		con.close();
+		
+		CountingRowSetChangeListener listener = new CountingRowSetChangeListener();
+		queryCache.addRowSetChangeListener(listener);
+		queryCache.setDataSource(ds);
+		queryCache.setStreaming(true);
+		queryCache.defineUserModifiedQuery("select * from rsTest");
+		queryCache.executeStatement();
+		
+		for (Thread t : queryCache.getStreamingThreads()) {
+			t.join(10000);
+		}
+		
+		assertEquals(2, listener.getRowCount());
+		
 	}
 
 }

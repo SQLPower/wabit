@@ -38,6 +38,7 @@ import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,6 +65,7 @@ import javax.swing.ListModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
@@ -75,6 +77,9 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
+import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.sql.RowSetChangeEvent;
+import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -85,6 +90,8 @@ import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
+import ca.sqlpower.swingui.table.ResultSetTableModel;
+import ca.sqlpower.swingui.table.TableModelSearchDecorator;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.query.Item;
@@ -265,6 +272,18 @@ public class QueryPanel implements WabitPanel {
 	};
 	
 	/**
+	 * This change listener will be notified when the result set is modified
+	 * to update the results table with the new row.
+	 */
+	private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
+		public void rowAdded(RowSetChangeEvent e) {
+			for (JTable table : queryUIComponents.getResultTables()) {
+				table.repaint();
+			}
+		}
+	};
+	
+	/**
 	 * This listens to mouse dragging of a column in a table. This handles 
 	 * auto-scrolling during the drag and drop operation, in the case that the
 	 * user wants to drag the column past the visible region on the screen.
@@ -281,9 +300,10 @@ public class QueryPanel implements WabitPanel {
 		this.session = session;
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = cache;
+		queryCache.addRowSetChangeListener(rowSetChangeListener);
 		queryPen = new QueryPen(session, this, queryCache);
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
-		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane);
+		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
@@ -737,6 +757,7 @@ public class QueryPanel implements WabitPanel {
 	private void disconnect() {
 		queryController.disconnect();
 		queryCache.removePropertyChangeListener(queryCacheListener);
+		queryCache.removeRowSetChangeListener(rowSetChangeListener);
 		logger.debug("Removed the query panel change listener on the query cache");
 		queryUIComponents.closeConMap();
 		queryUIComponents.disconnectListeners();
@@ -759,6 +780,13 @@ public class QueryPanel implements WabitPanel {
 			mainSplitPane.setDividerLocation(mainSplitPane.getMaximumDividerLocation());
 			rightTopPane.setDividerLocation(rightTopPane.getMaximumDividerLocation());
 		}
+	}
+	
+	/**
+	 * Returns the queryUIComponents used in this query panel for testing purposes.
+	 */
+	SQLQueryUIComponents getQueryUIComponents() {
+		return queryUIComponents;
 	}
 
 }
