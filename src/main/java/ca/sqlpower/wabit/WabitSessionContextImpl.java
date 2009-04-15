@@ -149,11 +149,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		childSessions.remove(child);
 		
 		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
-		if (childSessions.isEmpty() && dataSources != null && getPlDotIniPath() != null) {
+		if (childSessions.isEmpty() && getDataSources() != null && getPlDotIniPath() != null) {
 			logger.debug("Saving pl.ini");
 	        prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
 			try {
-	            dataSources.write(new File(getPlDotIniPath()));
+	            getDataSources().write(new File(getPlDotIniPath()));
 	        } catch (IOException e) {
 	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
 	        }
@@ -178,7 +178,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		return new WabitSessionImpl(this);
 	}
 
-	private void setPlDotIniPath(String plDotIniPath) {
+	protected void setPlDotIniPath(String plDotIniPath) {
 		this.plDotIniPath = plDotIniPath;
 	}
 
