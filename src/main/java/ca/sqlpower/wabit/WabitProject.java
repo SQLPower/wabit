@@ -193,6 +193,22 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
     	return Collections.unmodifiableList(layouts);
     }
 
+    /**
+     * Returns the first Layout child having the given name, or null
+     * if no layouts have the requested name.
+     * 
+     * @param name The name to search. If null, null will be returned.
+     */
+    public Layout getLayoutByName(String name) {
+    	if (name == null) return null;
+    	for (Layout l : layouts) {
+    		if (name.equals(l.getName())) {
+    			return l;
+    		}
+    	}
+    	return null;
+    }
+    
 	public WabitObject getParent() {
 		return null;
 	}
