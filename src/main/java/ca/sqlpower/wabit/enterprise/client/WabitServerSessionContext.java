@@ -29,7 +29,6 @@ import java.util.List;
 
 import javax.jmdns.ServiceInfo;
 
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -96,10 +95,10 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
                     throw new IOException(
                             "Server error while reading data sources: " + response.getStatusLine());
                 }
-                PlDotIni plIni = new PlDotIni();
-                plIni.read(response.getEntity().getContent());
+                PlDotIni plIni;
                 try {
-                    plIni.setServerBaseURI(getServerURI("/"));
+					plIni = new PlDotIni(getServerURI("/"));
+	                plIni.read(response.getEntity().getContent());
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
