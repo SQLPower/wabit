@@ -56,6 +56,7 @@ import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.swingui.ExceptionHandler;
 
 /**
  * This class will cache all of the parts of a select
@@ -909,6 +910,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             				@Override
             				public void run() {
             					try {
+            						Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
 									crs.populate(streamingRS, rsChangeListener);
 								} catch (SQLException e) {
 									logger.error("Exception while streaming result set", e);
