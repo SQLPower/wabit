@@ -29,8 +29,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -71,9 +69,11 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.sql.RowSetChangeEvent;
+import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
+import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
@@ -270,7 +270,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				public void itemStateChanged(ItemEvent e) {
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						JComboBox sourceCombo = (JComboBox) e.getSource();
-						columnsToDataTypes.put(columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX())), (DataTypeSeries) e.getItem());
+						String colSeriesName = columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX()));
+						columnsToDataTypes.put(colSeriesName, (DataTypeSeries) e.getItem());
+						if (((DataTypeSeries) e.getItem()) == DataTypeSeries.NONE) {
+							columnSeriesToColumnXAxis.remove(colSeriesName);
+						}
 						logger.debug("Column data types are now " + columnsToDataTypes);
 						tableHeader.repaint();
 						updateChartPreview();
@@ -480,7 +484,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * added to this table will allow users to define which column is the
 		 * category and which ones are series.
 		 */
-		private JTable resultTable = new JTable();
+		private final JTable resultTable = new EditableJTable();
 		
 		/**
 		 * This is the most recent result set displayed by the resultTable.
@@ -533,6 +537,16 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 */
 		private final TableCellRenderer defaultTableCellRenderer;
 		
+		/**
+		 * This change listener will be added to the query that is selected in the combo box.
+		 * The change listener will update the graph that users can view as a preview.
+		 */
+		private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
+			public void rowAdded(RowSetChangeEvent e) {
+				updateChartPreview();
+			}
+		};
+		
 		public GraphRendererPropertyPanel(WabitProject project, GraphRenderer renderer) {
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
 			queryComboBox = new JComboBox(project.getQueries().toArray());
@@ -574,7 +588,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			});
 			
 			if (renderer.getQuery() != null) {
-				updateTableModel((StatementExecutor) renderer.getQuery());
+				if (renderer.getQuery() instanceof StatementExecutor) {
+					StatementExecutor executor = (StatementExecutor) renderer.getQuery();
+					executor.addRowSetChangeListener(rowSetChangeListener);
+				}
+				updateTableModel(renderer.getQuery());
 
 				//This corrects the ordering of columns in case the user modified the query and new
 				//columns exists or columns were removed.
@@ -620,13 +638,17 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				public void itemStateChanged(ItemEvent e) {
 					resultTableLabel.setVisible(false);
 					logger.debug("Selected item is " + e.getItem());
-					if (e.getStateChange() != ItemEvent.SELECTED) {
-						return;
-					}
-					resultTable.setVisible(false);
-					if (e.getItem() instanceof StatementExecutor) {
-						StatementExecutor executor = (StatementExecutor) e.getItem();
-						updateTableModel(executor);
+					if (e.getStateChange() == ItemEvent.DESELECTED) {
+						if (e.getItem() instanceof StatementExecutor) {
+							((StatementExecutor) e.getItem()).removeRowSetChangeListener(rowSetChangeListener);
+						}
+					} else {
+						resultTable.setVisible(false);
+						if (e.getItem() instanceof StatementExecutor) {
+							StatementExecutor executor = (StatementExecutor) e.getItem();
+							executor.addRowSetChangeListener(rowSetChangeListener);
+							updateTableModel((Query) e.getItem());
+						}
 					}
 				}
 			});
@@ -649,7 +671,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 							throw new IllegalStateException("Unknown graph type " + graphTypeComboBox.getSelectedItem());
 						}
 						if(queryComboBox.getSelectedItem() != null) {
-							updateTableModel((StatementExecutor) queryComboBox.getSelectedItem());
+							updateTableModel((Query) queryComboBox.getSelectedItem());
 						}
 					}
 				}
@@ -663,8 +685,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * allow users to select columns as categories or series for the 
 		 * graph. 
 		 */
-		private void updateTableModel(StatementExecutor executor) {
-			rs = findFirstResultSet(executor);
+		private void updateTableModel(Query q) {
+			try {
+				rs = q.fetchResultSet();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
 			if (rs == null) {
 				resultTableLabel.setText("The current query selected returns no result sets.");
 				resultTableLabel.setVisible(true);
@@ -762,15 +788,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	private final WabitProject project;
 	
 	/**
-	 * This is the current result set in the graph renderer.
-	 * The result set is stored here as a snapshot of what the
-	 * query returns. This could be removed later to continually
-	 * update the graph but may cause repaint issues if the connection
-	 * to the database the query executes off of is slow.
-	 */
-	private CachedRowSet resultSet;
-	
-	/**
 	 * The Y axis label in the graph.
 	 */
 	private String yaxisName;
@@ -815,11 +832,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * This change listener watches for changes to the query and refreshes the
 	 * graph when a change occurs.
 	 */
-	private final PropertyChangeListener queryListener = new PropertyChangeListener() {
-	
-		public void propertyChange(PropertyChangeEvent evt) {
-			//TODO: Need to refresh resultSet. Either call refreshResultSet or have another
-			//way of getting the new result set from the query based on SQL Stream.
+	private final RowSetChangeListener queryListener = new RowSetChangeListener() {
+		public void rowAdded(RowSetChangeEvent e) {
+			firePropertyChange("resultSetRowAdded", null, e.getRow());
 		}
 	};
 	
@@ -845,7 +860,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing) {
-		JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, resultSet, graphType, getName(), yaxisName, xaxisName);
+		JFreeChart chart = null;
+		try {
+			if (query != null) {
+				chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, query.fetchResultSet(), graphType, getName(), yaxisName, xaxisName);
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 		if (chart == null) {
 			return false;
 		}
@@ -905,6 +927,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				int j = 0;
 				while (resultSet.next()) {
 					for (String colName : series) {
+						if (logger.isDebugEnabled() && (series.indexOf(colName) == -1 || category.indexOf(resultSet.getString(categoryColumnName)) == -1)) {
+							logger.debug("Index of series " + colName + " is " + series.indexOf(colName) + ", index of category " + categoryColumnName + " is " + category.indexOf(resultSet.getString(categoryColumnName)));
+						}
 						data[series.indexOf(colName)][category.indexOf(resultSet.getString(categoryColumnName))] += resultSet.getDouble(colName); //XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
 					}
 					j++;
@@ -1036,47 +1061,17 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
 	public void defineQuery(Query query) throws SQLException {
-		if (this.query != null) {
-			this.query.removePropertyChangeListener(queryListener);
+		if (this.query instanceof StatementExecutor) {
+			if (this.query != null) {
+				((StatementExecutor) this.query).removeRowSetChangeListener(queryListener);
+			}
 		}
-		query.addPropertyChangeListener(queryListener);
-		this.query = query;
-		refreshResultSet();
-	}
-	
-	private void refreshResultSet() throws SQLException {
 		if (query instanceof StatementExecutor) {
-			StatementExecutor executor = (StatementExecutor) query;
-			ResultSet rs = findFirstResultSet(executor);
-			resultSet = new CachedRowSet();
-			resultSet.populate(rs);
-		} else {
-			resultSet = new CachedRowSet();
+			((StatementExecutor) query).addRowSetChangeListener(queryListener);
 		}
+		this.query = query;
 	}
 	
-	/**
-	 * This method will execute the statement and return the first result
-	 * set found. If no result set is found then null will be returned.
-	 */
-	private ResultSet findFirstResultSet(StatementExecutor executor) {
-		boolean isResultSet;
-		try {
-			isResultSet = executor.executeStatement();
-		} catch (SQLException e1) {
-			throw new RuntimeException(e1);
-		}
-		//TODO: only adding the first result set to the graph. Queries can have multiple result sets.
-		while (!isResultSet && executor.getUpdateCount() >= 0) {
-			isResultSet = executor.getMoreResults();
-		}
-		if (!isResultSet && executor.getUpdateCount() >= 0) {
-			return null;
-		}
-		ResultSet rs = executor.getResultSet();
-		return rs;
-	}
-
 	public List<String> getColumnNamesInOrder() {
 		return columnNamesInOrder;
 	}
