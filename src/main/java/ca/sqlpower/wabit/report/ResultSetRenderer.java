@@ -68,6 +68,10 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.sql.RowSetChangeEvent;
+import ca.sqlpower.sql.RowSetChangeListener;
+import ca.sqlpower.sql.SQL;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
@@ -99,13 +103,31 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 */
 	protected static final String QUERY = "query";
     
-    private static DataType getDataType(String className) {
-    	try {
-			return getDataType(Class.forName(className));
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException("Invalid class Name cannot find class",e);
-		}
+    private static DataType getDataType(ResultSetMetaData rsmd, int columnIndex) throws SQLException {
+    	String className = rsmd.getColumnClassName(columnIndex);
+    	if (className != null && className.length() > 0) {
+    		try {
+    			return getDataType(Class.forName(className));
+    		} catch (ClassNotFoundException e) {
+    			throw new RuntimeException("Invalid class name " + className + ", cannot find class",e);
+    		}
+    	} else {
+    		// some drivers cheat and don't fill in the class names, so this is the backup
+    		int jdbcType = rsmd.getColumnType(columnIndex);
+    		return getDataTypeForJdbcType(jdbcType);
+    	}
+    	
     }
+    
+    private static DataType getDataTypeForJdbcType(int jdbcType) {
+    	if (SQL.isNumeric(jdbcType)) {
+    		return DataType.NUMERIC;
+    	} else if (SQL.isDate(jdbcType)) {
+    		return DataType.DATE;
+    	}
+    	return DataType.TEXT;
+    }
+    
     private static DataType getDataType(Class<?> clazz) {
     	logger.debug("trying to compare class Name:"+ clazz.toString());
     	
@@ -216,6 +238,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 * This map stores the current subtotal for each column in this map.
 	 */
 	private final Map<ColumnInfo, BigDecimal> subtotalForCols = new HashMap<ColumnInfo, BigDecimal>();
+	
+	/**
+	 * This change listener is placed on {@link CachedRowSet}s to monitor streaming result sets
+	 * to know when a new row is added to the result set.
+	 */
+	private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
+		public void rowAdded(RowSetChangeEvent e) {
+			firePropertyChange("resultSetRowAdded", null, e.getRow());
+		}
+	};
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
@@ -255,7 +287,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             executeException = ex;
         }
         setName("Result Set: " + cachedQuery.getName());
+        if (rs != null && rs instanceof CachedRowSet) {
+        	((CachedRowSet) rs).removeRowSetChangeListener(rowSetChangeListener);
+        }
         rs = executedRs;
+        if (rs != null && rs instanceof CachedRowSet) {
+        	((CachedRowSet) rs).addRowSetChangeListener(rowSetChangeListener);
+        }
         if (logger.isDebugEnabled()) {
 			logger.debug("Finished fetching results for query " + query.generateQuery());
 		}
@@ -388,7 +426,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         			ci.setWidth(-1);
         		}
         	}
-            ci.setDataType(ResultSetRenderer.getDataType(rsmd.getColumnClassName(col)));
+            ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
             ci.setParent(ResultSetRenderer.this);
             newColumnInfo.add(ci);
         }

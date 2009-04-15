@@ -72,6 +72,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
+import ca.sqlpower.sql.SQL;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.swingui.table.CleanupTableCellRenderer;
@@ -92,9 +93,6 @@ import com.jgoodies.forms.layout.FormLayout;
 public class GraphRenderer extends AbstractWabitObject implements ReportContentRenderer {
 	
 	private static final Logger logger = Logger.getLogger(GraphRenderer.class);
-	
-	//XXX: Make this list somewhere else or see if this list exists.
-	private final static Integer[] NUMERIC_SQL_TYPES = new Integer[]{Types.BIGINT, Types.BINARY, Types.BIT, Types.DECIMAL, Types.DOUBLE, Types.FLOAT, Types.INTEGER, Types.NUMERIC, Types.SMALLINT, Types.TINYINT};
 	
 	/**
 	 * This enum contains the values that each column can be defined as
@@ -242,7 +240,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				final JPanel newHeader = new JPanel(new BorderLayout());
 				final JComboBox dataTypeComboBox = new JComboBox(DataTypeSeries.values());
 				try {
-					if (!Arrays.asList(NUMERIC_SQL_TYPES).contains(rs.getMetaData().getColumnType(column + 1))) {
+					if (!SQL.isNumeric(rs.getMetaData().getColumnType(column + 1))) {
 						dataTypeComboBox.removeItem(DataTypeSeries.SERIES);
 					}
 				} catch (SQLException e) {
@@ -409,7 +407,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				final JComboBox dataTypeComboBox = new JComboBox(DataTypeSeries.values());
 				dataTypeComboBox.removeItem(DataTypeSeries.CATEGORY);
 				try {
-					if (!Arrays.asList(NUMERIC_SQL_TYPES).contains(rs.getMetaData().getColumnType(column + 1))) {
+					if (!SQL.isNumeric(rs.getMetaData().getColumnType(column + 1))) {
 						JLabel emptyLabel = new JLabel();
 						emptyLabel.setPreferredSize(new Dimension(0, (int) dataTypeComboBox.getPreferredSize().getHeight() * 2));
 						newHeader.add(emptyLabel, BorderLayout.NORTH);
@@ -433,7 +431,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 					} catch (SQLException e) {
 						throw new RuntimeException(e);
 					}
-					if (Arrays.asList(NUMERIC_SQL_TYPES).contains(columnType) || columnType == Types.DATE || columnType == Types.TIMESTAMP) {
+					if (SQL.isNumeric(columnType) || SQL.isDate(columnType)) {
 						numericAndDateCols.add(col);
 					}
 				}
@@ -1038,7 +1036,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				if (columnType != Types.DATE && columnType != Types.TIMESTAMP) {
 					allDate = false;
 				} 
-				if (!Arrays.asList(NUMERIC_SQL_TYPES).contains(columnType)) {
+				if (!SQL.isNumeric(columnType)) {
 					allNumeric = false;
 				}
 			}
