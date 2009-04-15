@@ -21,11 +21,6 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
@@ -33,14 +28,10 @@ import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.action.OpenProjectOnServerAction;
 
 public class OpenOnServerMenu extends JMenu {
@@ -65,7 +56,8 @@ public class OpenOnServerMenu extends JMenu {
     private void refreshProjects() {
         removeAll();
         try {
-            for (String projectName : getProjectNames(serviceInfo)) {
+            WabitServerSessionContext ctx = WabitServerSessionContext.getInstance(serviceInfo);
+            for (String projectName : ctx.getProjectNames()) {
                 add(new OpenProjectOnServerAction(dialogOwner, serviceInfo, projectName));
             }
         } catch (Exception ex) {
@@ -75,25 +67,6 @@ public class OpenOnServerMenu extends JMenu {
         }
         addSeparator();
         add(refreshAction);
-    }
-
-    private static List<String> getProjectNames(ServiceInfo serviceInfo) throws IOException, URISyntaxException {
-        HttpClient httpclient = new DefaultHttpClient();
-        try {
-            String contextPath = serviceInfo.getPropertyString("path");
-            URI uri = new URI("http", null, serviceInfo.getHostAddress(), serviceInfo.getPort(), contextPath + "project", null, null);
-            HttpGet httpget = new HttpGet(uri);
-            logger.debug("executing request " + httpget.getURI());
-
-            // Create a response handler
-            ResponseHandler<String> responseHandler = new BasicResponseHandler();
-            String responseBody = httpclient.execute(httpget, responseHandler);
-            logger.debug(responseBody);
-            List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
-            return projects;
-        } finally {
-            httpclient.getConnectionManager().shutdown();
-        }
     }
 
 }

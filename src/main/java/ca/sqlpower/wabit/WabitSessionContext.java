@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.io.OutputStream;
 import java.util.List;
 import java.util.prefs.Preferences;
 

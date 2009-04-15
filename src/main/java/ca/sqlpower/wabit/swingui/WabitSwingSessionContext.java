@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
+import java.net.URI;
 
 import javax.swing.JMenu;
 

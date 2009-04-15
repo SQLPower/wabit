@@ -19,27 +19,35 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.jmdns.ServiceInfo;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 
 /**
  * A special kind of session context that binds itself to a remote Wabit
@@ -105,6 +113,21 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
         }
     }
     
+    /**
+     * List all the projects on this context's server.
+     * 
+     * @param serviceInfo
+     * @return
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    public List<String> getProjectNames() throws IOException, URISyntaxException {
+        String responseBody = executeServerRequest("project", new BasicResponseHandler());
+        logger.debug("Project list:\n" + responseBody);
+        List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
+        return projects;
+    }
+
     private <T> T executeServerRequest(String contextRelativePath, ResponseHandler<T> responseHandler)
     throws IOException, URISyntaxException {
         HttpUriRequest request = new HttpGet(getServerURI(contextRelativePath));
@@ -118,13 +141,40 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
                 contextPath + contextRelativePath, null, null);
     }
 
-    public static WabitSessionContext getInstance(ServiceInfo serviceInfo2) throws IOException, SQLObjectException {
-        WabitServerSessionContext context =  instances.get(serviceInfo2);
+    public static WabitServerSessionContext getInstance(ServiceInfo serviceInfo) throws IOException, SQLObjectException {
+        WabitServerSessionContext context =  instances.get(serviceInfo);
         if (context == null) {
-            context = new WabitServerSessionContext(serviceInfo2, false);
-            instances.put(serviceInfo2, context);
+            context = new WabitServerSessionContext(serviceInfo, false);
+            instances.put(serviceInfo, context);
         }
         return context;
+    }
+
+    /**
+     * Saves the given project on this session context's server. The name to
+     * save as is determined by the project's name.
+     * 
+     * @param project
+     *            The project to save. Its name determines the name of the
+     *            resource saved to the server. If there is already a project on
+     *            the server with the same name, it will be replaced.
+     * @throws IOException
+     *             If the upload fails
+     * @throws URISyntaxException
+     *             If the project name can't be properly encoded in a URI
+     */
+    public void saveProject(WabitProject project) throws IOException, URISyntaxException {
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ProjectXMLDAO dao = new ProjectXMLDAO(out, project);
+        dao.save();
+        out.close(); // has no effect, but feels sensible :)
+        
+        HttpPost request = new HttpPost(getServerURI("project/" + project.getName()));
+        logger.debug("Posting project to " + request);
+        request.setEntity(new ByteArrayEntity(out.toByteArray()));
+        httpClient.execute(request);
+        logger.debug("Post complete!");
     }
     
 }

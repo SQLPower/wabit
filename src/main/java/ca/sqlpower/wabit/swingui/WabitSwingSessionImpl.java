@@ -100,6 +100,7 @@ import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 import ca.sqlpower.wabit.swingui.action.NewProjectOnServerAction;
 import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
+import ca.sqlpower.wabit.swingui.action.SaveProjectOnServerAction;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
@@ -379,7 +380,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
-//		fileMenu.add(new SaveOnServerAction(frame));
+		fileMenu.add(getContext().createServerListMenu(frame, "Save On Server", new ServerListMenuItemFactory() {
+            public JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner) {
+                try {
+                    return new JMenuItem(new SaveProjectOnServerAction(serviceInfo, dialogOwner, project));
+                } catch (Exception e) {
+                    JMenuItem menuItem = new JMenuItem(e.toString());
+                    menuItem.setEnabled(false);
+                    // TODO it would be nice to have ASUtils.createExceptionMenuItem(Throwable)
+                    return menuItem;
+                }
+            }
+		}));
 		fileMenu.addSeparator();
 		fileMenu.add(new ImportProjectAction(this));
 		
