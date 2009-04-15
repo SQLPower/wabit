@@ -487,6 +487,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			database = query.getDatabase();
 			constantsContainer = query.getConstantsContainer();
 			userModifiedQuery = query.getUserModifiedQuery();
+			streaming = query.streaming;
 			
 			for (CachedRowSet rs : query.getResultSets()) {
 				if (rs == null) {
