@@ -31,6 +31,9 @@ import javax.swing.tree.DefaultTreeCellEditor;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Page;
 
 /**
  * This tree cell editor allows the user to set the name of objects in the tree.
@@ -105,7 +108,13 @@ public class ProjectTreeCellEditor extends DefaultTreeCellEditor {
 	public boolean stopCellEditing() {
 		boolean isStopping = super.stopCellEditing();
 		if (isStopping && currentlyEditingObject != null) {
-			currentlyEditingObject.setName(textField.getText());
+			if (currentlyEditingObject.getParent() instanceof Page) {
+				((Page) currentlyEditingObject.getParent()).setUniqueName(
+						(WabitObject) currentlyEditingObject, textField
+								.getText());
+			} else {
+				currentlyEditingObject.setName(textField.getText());
+			}
 			textField.removeFocusListener(focusListener);
 			textField.addKeyListener(keyListener);
 		}

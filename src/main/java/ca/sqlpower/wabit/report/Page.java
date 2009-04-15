@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Guide.Axis;
@@ -41,6 +43,8 @@ import ca.sqlpower.wabit.report.Guide.Axis;
  */
 public class Page extends AbstractWabitObject {
 
+	private static final Logger logger = Logger.getLogger(Page.class);
+	
     /**
      * This is the Graphics2D standard for pixels-to-inches conversions.
      */
@@ -268,6 +272,7 @@ public class Page extends AbstractWabitObject {
         }
         int index = contentBoxes.size() + childPositionOffset(ContentBox.class);
         addme.setParent(this);
+        setUniqueName(addme, addme.getName());
         contentBoxes.add(addme);
         fireChildAdded(ContentBox.class, addme, index);
     }
@@ -283,6 +288,43 @@ public class Page extends AbstractWabitObject {
         	fireChildRemoved(ContentBox.class, removeme, index);
     	}
     }
+    /**
+	 * If the name passed is already taken by children of this page (which at
+	 * present, are Guides and ContentBoxes)then this method will generate a unique
+	 * name for the WabitObject
+	 * @param addme
+	 * @param maybeUniqueName
+	 */
+	public void setUniqueName(WabitObject addme, String maybeUniqueName) {
+		int newSuffix = 0;
+		logger.debug("maybe Unique name: " + maybeUniqueName
+				+ " getChildByName: " + getChildByName(maybeUniqueName));
+		//If addme is already a child of the page and if its name is the same 
+		//as maybeUniqueName, then we do nothing
+		if (!(getChildren().contains(addme) && addme.getName().compareTo(
+				maybeUniqueName) == 0)) {
+			if (getChildByName(maybeUniqueName) != null) {
+				logger.debug("We are checking if the name " + maybeUniqueName
+						+ " has already been taken");
+				WabitObject done;
+				do {
+					newSuffix++;
+					done = getChildByName(maybeUniqueName + "_" + newSuffix); //$NON-NLS-1$
+				} while (done != null && done.getName().compareTo(addme.getName()) != 0);
+			}
+			addme.setName(maybeUniqueName
+					+ (newSuffix == 0 ? "" : "_" + newSuffix));
+		}
+	}
+	
+    public WabitObject getChildByName(String getMe) {
+		for (WabitObject child : getChildren()) {
+			if (child.getName().compareTo(getMe) == 0) {
+				return child;
+			}
+		}
+		return null;
+	}
     
     /**
      * Returns an unmodifiable view of this page's content boxes.
@@ -297,6 +339,7 @@ public class Page extends AbstractWabitObject {
         }
         int index = guides.size();
         addme.setParent(this);
+        setUniqueName(addme, addme.getName());
         guides.add(addme);
         fireChildAdded(Guide.class, addme, index);
     }

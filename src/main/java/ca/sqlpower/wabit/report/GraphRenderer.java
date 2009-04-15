@@ -799,7 +799,17 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	
 		public boolean applyChanges() {
-			setName(nameField.getText());
+			String oldFileName = null;
+			if (getName() != null) {
+				oldFileName = getName();
+			}
+			setName("Graph: " + nameField.getText().replaceAll("Graph: ", ""));
+			// If name for the content box has not been changed to something
+			// user-defined, we change it everytime a
+			// different name is set in the properties panel
+			if(parent.getName() != null && oldFileName!= null && (parent.getName().contains(oldFileName))) {
+				parent.getParent().setUniqueName(parent, parent.getName().replace(oldFileName, getName()));
+			}
 			try {
 				defineQuery((Query) queryComboBox.getSelectedItem());
 			} catch (SQLException e) {
@@ -846,6 +856,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * The query the graph is based off of.
 	 */
 	private Query query;
+	
+	private final ContentBox parent;
 
 	/**
 	 * This is the ordering of the columns in the result set the user specified
@@ -881,12 +893,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public GraphRenderer(ContentBox parent, WabitProject project, String uuid) {
 		super(uuid);
 		this.project = project;
+		this.parent = parent;
 	}
 	
 	public GraphRenderer(ContentBox parent, WabitProject project) {
 		this.project = project;
+		this.parent = parent;
 		parent.setWidth(100);
 		parent.setHeight(100);
+		setName("Empty graph");
 	}
 
 	public Color getBackgroundColour() {

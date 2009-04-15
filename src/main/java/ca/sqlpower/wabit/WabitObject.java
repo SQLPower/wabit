@@ -49,6 +49,11 @@ public interface WabitObject {
      */
     String getName();
     
+    /**
+     * Sets the name for this object 
+     */
+    void setName(String name);
+    
     UUID getUUID();
     
 }

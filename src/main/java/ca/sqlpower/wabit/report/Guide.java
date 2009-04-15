@@ -53,6 +53,7 @@ public class Guide extends AbstractWabitObject {
 
     public Guide(Axis axis, int offset) {
         this.axis = axis;
+		setName(axis + " guide");
         setOffset(offset);
     }
     
@@ -77,7 +78,6 @@ public class Guide extends AbstractWabitObject {
         this.offset = guideOffset;
         firePropertyChange("offset", oldOffset, guideOffset);
         dragSnappedEdges(oldOffset, guideOffset);
-        setName(axis + " guide @" + offset);
     }
 
     public Axis getAxis() {

@@ -31,6 +31,7 @@ import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 
@@ -63,7 +64,10 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
             } else if (wo instanceof ContentBox) {
                 ContentBox cb = (ContentBox) wo;
                 r.setIcon(BOX_ICON);
-                r.setText("Content ("+cb.getX()+","+cb.getY()+" "+cb.getWidth()+"x"+cb.getHeight()+")");
+                r.setText(cb.getName() + " ("+cb.getX()+","+cb.getY()+" "+cb.getWidth()+"x"+cb.getHeight()+")");
+            } else if (wo instanceof Guide) {
+            	Guide g = (Guide) wo;
+            	r.setText(g.getName() + " @" + g.getOffset());
             } else if (wo instanceof Query) {
             	r.setIcon(QUERY_ICON);
             }

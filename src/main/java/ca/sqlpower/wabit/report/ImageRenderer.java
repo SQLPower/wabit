@@ -64,6 +64,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 	}
 
 	public DataEntryPanel getPropertiesPanel() {
+		String oldFileName = null;
+		if (getName() != null) {
+			oldFileName = getName();
+		}
 		JFileChooser imageChooser = new JFileChooser();
 		int retVal = imageChooser.showOpenDialog(parentComponent);
 		if (retVal == JFileChooser.APPROVE_OPTION) {
@@ -74,12 +78,21 @@ public class ImageRenderer extends AbstractWabitObject implements
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
+			setName("Image: " + imageChooser.getSelectedFile().getName());
+			// If name for the content box has not been changed to something
+			// user-defined, we change it everytime a
+			// different image is selected
+			if (parent.getName() != null && oldFileName != null	&& (parent.getName().contains(oldFileName))) {
+				parent.getParent().setUniqueName(parent,
+						parent.getName().replace(oldFileName, getName()));
+			}
 			parent.setWidth(image.getWidth(parentComponent));
 			parent.setHeight(image.getHeight(parentComponent));
 		} else if (image == null) {
 			//Giving the content box some size to let the user click on it.
 			parent.setWidth(100);
 			parent.setHeight(100);
+			setName("Image: not defined");
 		}
 		return null;
 	}

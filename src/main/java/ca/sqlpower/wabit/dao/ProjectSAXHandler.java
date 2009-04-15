@@ -491,6 +491,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String boxName = attributes.getValue("name");
         	checkMandatory("name", boxName);
         	contentBox = new ContentBox();
+			contentBox.setName(boxName);
         	layout.getPage().addContentBox(contentBox);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -708,11 +709,15 @@ public class ProjectSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("guide")) {
+        	String guideName = attributes.getValue("name");
         	String axisName = attributes.getValue("axis");
         	String offsetAmount = attributes.getValue("offset");
         	checkMandatory("axis", axisName);
         	checkMandatory("offset", offsetAmount);
         	Guide guide = new Guide(Axis.valueOf(axisName), Integer.parseInt(offsetAmount));
+        	if(guideName != null) {
+        		guide.setName(guideName);
+        	}
         	layout.getPage().addGuide(guide);
         } else if (name.equals("font")) {
         	Font font = loadFont(attributes);

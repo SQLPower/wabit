@@ -46,6 +46,10 @@ public class StubWabitObject implements WabitObject {
     public String getName() {
         return null;
     }
+    
+	public void setName(String name) {
+		
+	}
 
     public WabitObject getParent() {
         return null;

@@ -354,6 +354,7 @@ public class ProjectXMLDAO {
 			} else if (object instanceof Guide) {
 				Guide guide = (Guide) object;
 				xml.print(out, "<guide");
+				printAttribute("name", guide.getName());
 				printAttribute("axis", guide.getAxis().name());
 				printAttribute("offset", guide.getOffset());
 				xml.niprintln(out, "/>");

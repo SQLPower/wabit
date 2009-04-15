@@ -219,6 +219,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
+    	setName("Result Set: " + query.getName());
     }
     
     public ResultSetRenderer(Query query, List<ColumnInfo> columnInfoList) {
@@ -233,6 +234,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         setUpFormats();
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         refreshResultSet = true;
+        setName("Result Set: " + query.getName());
 	}
     
     /**

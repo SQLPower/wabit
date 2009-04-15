@@ -108,11 +108,18 @@ public class ContentBox extends AbstractWabitObject {
         this.contentRenderer = contentRenderer;
         firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
         if (contentRenderer != null) {
-            setName("Content from " + contentRenderer.getName());
+            if(getName() == null || getName().contains("Empty content box")) {
+            	if (getParent() != null) {
+					getParent().setUniqueName(ContentBox.this,
+							"Content from " + contentRenderer.getName());
+				} else {
+					setName("Content from " + contentRenderer.getName());
+				}
+            }
             contentRenderer.setParent(this);
             WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, emptyChildListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
-        } else {
+        } else if (getName() == null){
             setName("Empty content box");
         }
     }
