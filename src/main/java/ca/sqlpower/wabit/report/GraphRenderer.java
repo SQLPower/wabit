@@ -28,6 +28,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -73,6 +74,7 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
+import ca.sqlpower.swingui.table.CleanupTableCellRenderer;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -127,7 +129,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * <p>
 		 * This is for category type graphs
 		 */
-		private class CategoryGraphRendererTableCellRenderer implements TableCellRenderer {
+		private class CategoryGraphRendererTableCellRenderer implements CleanupTableCellRenderer {
 			
 			/**
 			 * This listens to all of the combo boxes that define how the column relates
@@ -181,49 +183,56 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			 */
 			private final TableCellRenderer defaultTableCellRenderer;
 			
+			/**
+			 * This listens for mouse clicks on the table header to show the combo box's
+			 * pop-up menu. This is needed as the normal mouse listeners on the combo box
+			 * are removed on the table header.
+			 */
+			private final MouseListener comboBoxMouseListener = new MouseAdapter() {
+
+				private int mouseX;
+				private int mouseY;
+				
+				@Override
+				public void mousePressed(MouseEvent e) {
+					mouseX = e.getX();
+					mouseY = e.getY();
+				}
+				
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					if (e.getX() - mouseX > 3 || e.getX() - mouseX < -3 || e.getY() - mouseY > 3 || e.getY() - mouseY < -3) {
+						return;
+					}
+					final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
+					final JComboBox dataTypeComboBox = columnToComboBox.get(column);
+					tableHeader.add(dataTypeComboBox);
+					dataTypeComboBox.setBounds(getXPositionOnColumn(tableHeader.getColumnModel(), column), 0, tableHeader.getColumnModel().getColumn(column).getWidth(), dataTypeComboBox.getHeight());
+					dataTypeComboBox.setPopupVisible(true);
+					dataTypeComboBox.addPopupMenuListener(new PopupMenuListener() {
+					
+						public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+							//don't care
+						}
+					
+						public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+							tableHeader.remove(dataTypeComboBox);
+							dataTypeComboBox.removePopupMenuListener(this);
+						}
+					
+						public void popupMenuCanceled(PopupMenuEvent e) {
+							//don't care
+						}
+					});
+					logger.debug("table header has components " + Arrays.toString(tableHeader.getComponents()));
+				}
+			};
+			
 			public CategoryGraphRendererTableCellRenderer(final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
 				this.tableHeader = tableHeader;
 				this.defaultTableCellRenderer = defaultTableCellRenderer;
 				
-				tableHeader.addMouseListener(new MouseAdapter() {
-
-					private int mouseX;
-					private int mouseY;
-					
-					@Override
-					public void mousePressed(MouseEvent e) {
-						mouseX = e.getX();
-						mouseY = e.getY();
-					}
-					
-					@Override
-					public void mouseReleased(MouseEvent e) {
-						if (e.getX() - mouseX > 3 || e.getX() - mouseX < -3 || e.getY() - mouseY > 3 || e.getY() - mouseY < -3) {
-							return;
-						}
-						final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
-						final JComboBox dataTypeComboBox = columnToComboBox.get(column);
-						tableHeader.add(dataTypeComboBox);
-						dataTypeComboBox.setBounds(getXPositionOnColumn(tableHeader.getColumnModel(), column), 0, tableHeader.getColumnModel().getColumn(column).getWidth(), dataTypeComboBox.getHeight());
-						dataTypeComboBox.setPopupVisible(true);
-						dataTypeComboBox.addPopupMenuListener(new PopupMenuListener() {
-						
-							public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-								//don't care
-							}
-						
-							public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-								tableHeader.remove(dataTypeComboBox);
-								dataTypeComboBox.removePopupMenuListener(this);
-							}
-						
-							public void popupMenuCanceled(PopupMenuEvent e) {
-								//don't care
-							}
-						});
-						logger.debug("table header has components " + Arrays.toString(tableHeader.getComponents()));
-					}
-				});
+				tableHeader.addMouseListener(comboBoxMouseListener);
 			}
 
 			public Component getTableCellRendererComponent(JTable table,
@@ -252,6 +261,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				
 				return newHeader;
 			}
+
+			public void cleanup() {
+				tableHeader.removeMouseListener(comboBoxMouseListener);
+			}
 		
 		}
 
@@ -259,7 +272,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * This table cell renderer is used to make headers for the result set
 		 * table for line and scatter graphs.
 		 */
-		private class XYGraphRendererCellRenderer implements TableCellRenderer {
+		private class XYGraphRendererCellRenderer implements CleanupTableCellRenderer {
 			
 			/**
 			 * This listens to all of the combo boxes that define how the column relates
@@ -270,10 +283,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				public void itemStateChanged(ItemEvent e) {
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						JComboBox sourceCombo = (JComboBox) e.getSource();
-						String colSeriesName = columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX()));
+						final int columnIndexAtX = tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX());
+						String colSeriesName = columnNamesInOrder.get(columnIndexAtX);
 						columnsToDataTypes.put(colSeriesName, (DataTypeSeries) e.getItem());
 						if (((DataTypeSeries) e.getItem()) == DataTypeSeries.NONE) {
 							columnSeriesToColumnXAxis.remove(colSeriesName);
+							columnToXAxisComboBox.remove(columnIndexAtX);
 						}
 						logger.debug("Column data types are now " + columnsToDataTypes);
 						tableHeader.repaint();
@@ -320,62 +335,69 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			 */
 			private final TableCellRenderer defaultTableCellRenderer;
 			
+			/**
+			 * This listens to mouse clicks on the table header to show the correct
+			 * combo box's pop-up menu appear. This way the user can edit the combo
+			 * boxes since the normal mouse listeners on a table header are removed.
+			 */
+			private final MouseListener comboBoxMouseListener = new MouseAdapter() {
+
+				private int mouseX;
+				private int mouseY;
+				
+				@Override
+				public void mousePressed(MouseEvent e) {
+					mouseX = e.getX();
+					mouseY = e.getY();
+				}
+				
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					if (e.getX() - mouseX > 3 || e.getX() - mouseX < -3 || e.getY() - mouseY > 3 || e.getY() - mouseY < -3) {
+						return;
+					}
+					final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
+					
+					final JComboBox dataTypeComboBox;
+					int yPosition = 0;
+					if (e.getY() < new JComboBox().getPreferredSize().getHeight()) {
+						dataTypeComboBox = columnToDataTypeSeriesComboBox.get(column);
+					} else if (e.getY() < new JComboBox().getPreferredSize().getHeight() * 2) {
+						dataTypeComboBox = columnToXAxisComboBox.get(column);
+						if (dataTypeComboBox != null) {
+							yPosition = dataTypeComboBox.getHeight();
+						}
+					} else {
+						dataTypeComboBox = null;
+					}
+					if (dataTypeComboBox == null) return;
+					tableHeader.add(dataTypeComboBox);
+					dataTypeComboBox.setBounds(getXPositionOnColumn(tableHeader.getColumnModel(), column), yPosition, tableHeader.getColumnModel().getColumn(column).getWidth(), dataTypeComboBox.getHeight());
+					dataTypeComboBox.setPopupVisible(true);
+					dataTypeComboBox.addPopupMenuListener(new PopupMenuListener() {
+					
+						public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+							//don't care
+						}
+					
+						public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+							tableHeader.remove(dataTypeComboBox);
+							dataTypeComboBox.removePopupMenuListener(this);
+						}
+					
+						public void popupMenuCanceled(PopupMenuEvent e) {
+							//don't care
+						}
+					});
+					logger.debug("table header has components " + Arrays.toString(tableHeader.getComponents()));
+				}
+			};
+			
 			public XYGraphRendererCellRenderer(final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
 				this.tableHeader = tableHeader;
 				this.defaultTableCellRenderer = defaultTableCellRenderer;
 				
-				tableHeader.addMouseListener(new MouseAdapter() {
-
-					private int mouseX;
-					private int mouseY;
-					
-					@Override
-					public void mousePressed(MouseEvent e) {
-						mouseX = e.getX();
-						mouseY = e.getY();
-					}
-					
-					@Override
-					public void mouseReleased(MouseEvent e) {
-						if (e.getX() - mouseX > 3 || e.getX() - mouseX < -3 || e.getY() - mouseY > 3 || e.getY() - mouseY < -3) {
-							return;
-						}
-						final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
-						
-						final JComboBox dataTypeComboBox;
-						int yPosition = 0;
-						if (e.getY() < new JComboBox().getPreferredSize().getHeight()) {
-							dataTypeComboBox = columnToDataTypeSeriesComboBox.get(column);
-						} else if (e.getY() < new JComboBox().getPreferredSize().getHeight() * 2) {
-							dataTypeComboBox = columnToXAxisComboBox.get(column);
-							if (dataTypeComboBox != null) {
-								yPosition = dataTypeComboBox.getHeight();
-							}
-						} else {
-							dataTypeComboBox = null;
-						}
-						if (dataTypeComboBox == null) return;
-						tableHeader.add(dataTypeComboBox);
-						dataTypeComboBox.setBounds(getXPositionOnColumn(tableHeader.getColumnModel(), column), yPosition, tableHeader.getColumnModel().getColumn(column).getWidth(), dataTypeComboBox.getHeight());
-						dataTypeComboBox.setPopupVisible(true);
-						dataTypeComboBox.addPopupMenuListener(new PopupMenuListener() {
-						
-							public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-								//don't care
-							}
-						
-							public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-								tableHeader.remove(dataTypeComboBox);
-								dataTypeComboBox.removePopupMenuListener(this);
-							}
-						
-							public void popupMenuCanceled(PopupMenuEvent e) {
-								//don't care
-							}
-						});
-						logger.debug("table header has components " + Arrays.toString(tableHeader.getComponents()));
-					}
-				});
+				tableHeader.addMouseListener(comboBoxMouseListener);
 			}
 
 			public Component getTableCellRendererComponent(JTable table,
@@ -430,6 +452,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				newHeader.add(dataTypeComboBox, BorderLayout.NORTH);
 				
 				return newHeader;
+			}
+
+			public void cleanup() {
+				tableHeader.removeMouseListener(comboBoxMouseListener);
 			}
 			
 		}
@@ -547,6 +573,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			}
 		};
 		
+		/**
+		 * This {@link TableCellRenderer} is the current wrapper on the regular {@link TableCellRenderer}.
+		 * This wrapper will place appropriate combo boxes above the table headers to allow users
+		 * to specify if the columns are to be used as series, categories, or x-axis values in a graph.
+		 */
+		private CleanupTableCellRenderer currentHeaderTableCellRenderer;
+		
 		public GraphRendererPropertyPanel(WabitProject project, GraphRenderer renderer) {
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
 			queryComboBox = new JComboBox(project.getQueries().toArray());
@@ -555,9 +588,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			queryComboBox.setSelectedItem(renderer.getQuery());
 			graphTypeComboBox.setSelectedItem(renderer.getGraphType());
 			if (renderer.getGraphType() == ExistingGraphTypes.BAR) {
-				resultTable.getTableHeader().setDefaultRenderer(new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer));
+				currentHeaderTableCellRenderer = new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+				resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 			} else if (renderer.getGraphType() == ExistingGraphTypes.LINE || renderer.getGraphType() == ExistingGraphTypes.SCATTER) {
-				resultTable.getTableHeader().setDefaultRenderer(new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer));
+				currentHeaderTableCellRenderer = new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+				resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 			}
 			nameField.setText(renderer.getName());
 			yaxisNameField.setText(renderer.getYaxisName());
@@ -655,15 +690,20 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			graphTypeComboBox.addItemListener(new ItemListener() {
 				public void itemStateChanged(ItemEvent e) {
 					if (e.getStateChange() == ItemEvent.SELECTED) {
+						if (currentHeaderTableCellRenderer != null) {
+							currentHeaderTableCellRenderer.cleanup();
+						}
 						switch ((ExistingGraphTypes) graphTypeComboBox.getSelectedItem()) {
 						case BAR:
 							xaxisNameField.setVisible(false);
 							xaxisNameLabel.setVisible(false);
-							resultTable.getTableHeader().setDefaultRenderer(new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer));
+							currentHeaderTableCellRenderer = new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+							resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 							break;
 						case LINE:
 						case SCATTER:
-							resultTable.getTableHeader().setDefaultRenderer(new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer));
+							currentHeaderTableCellRenderer = new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+							resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 							xaxisNameField.setVisible(true);
 							xaxisNameLabel.setVisible(true);
 							break;
