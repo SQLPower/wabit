@@ -22,8 +22,6 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 
-import org.apache.http.ConnectionClosedException;
-
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
