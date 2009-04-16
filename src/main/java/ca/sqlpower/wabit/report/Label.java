@@ -167,7 +167,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
         logger.debug("Rendering label...");
         logger.debug("Text before: " + text);
-        String[] textToRender = Variables.substitute(text, variableContext).split("\n");
+        String[] textToRender = getVariableSubstitutedText();
         g.setFont(getFont());
         FontMetrics fm = g.getFontMetrics();
         int textHeight = fm.getHeight() * textToRender.length;
@@ -184,6 +184,13 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         }
         return false;
     }
+
+    /**
+     * Return the Label text with variables substituted.
+     */
+    String[] getVariableSubstitutedText() {
+		return Variables.substitute(text, variableContext).split("\n");
+	}
 
     public DataEntryPanel getPropertiesPanel() {
        
