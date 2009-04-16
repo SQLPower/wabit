@@ -97,4 +97,10 @@ public interface WabitSessionContext {
 	 * all sessions are properly closed the app will not terminate.
 	 */
 	void close();
+
+	/**
+	 * Returns the name for this session context. If this is server session,
+	 * then return the server's name, returns "Local" otherwise.
+	 */
+	String getName();
 }

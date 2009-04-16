@@ -301,8 +301,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * @throws SQLObjectException 
 	 */
     public void buildUI() throws SQLObjectException {
-    	
-    	frame = new JFrame("Wabit " + WabitVersion.VERSION);
+		frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + sessionContext.getName());
 		frame.setIconImage(FRAME_ICON.getImage());
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowClosingListener(this));

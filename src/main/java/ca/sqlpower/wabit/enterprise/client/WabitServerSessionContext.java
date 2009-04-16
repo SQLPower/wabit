@@ -176,4 +176,9 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
         logger.debug("Post complete!");
     }
     
+    @Override
+    public String getName() {
+    	return serviceInfo.getName();
+    }
+    
 }

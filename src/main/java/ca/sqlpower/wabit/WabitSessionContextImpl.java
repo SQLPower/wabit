@@ -216,4 +216,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public Preferences getPrefs() {
         return prefs;
     }
+
+	public String getName() {
+		return "Local";
+	}
 }

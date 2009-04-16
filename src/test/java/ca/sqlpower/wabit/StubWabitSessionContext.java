@@ -69,4 +69,8 @@ public class StubWabitSessionContext implements WabitSessionContext {
         return null;
     }
 
+	public String getName() {
+		return null;
+	}
+
 }

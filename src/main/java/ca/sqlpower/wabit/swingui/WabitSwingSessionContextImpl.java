@@ -220,5 +220,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return new ServerListMenu(this, name, dialogOwner, itemFactory);
     }
 
+	public String getName() {
+		return delegateContext.getName();
+	}
+
 	
 }
