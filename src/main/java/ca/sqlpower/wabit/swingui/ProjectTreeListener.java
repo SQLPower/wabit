@@ -85,6 +85,10 @@ public class ProjectTreeListener extends MouseAdapter {
 		}
 		if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
 			session.getProject().setEditorPanelModel((WabitObject) lastPathComponent);
+			if (e.getButton() == MouseEvent.BUTTON1  && e.getClickCount() == 2) {
+				JTree tree = (JTree)e.getSource();
+				tree.startEditingAtPath(tree.getSelectionPath());
+			}
 		}
 	}
 
@@ -188,10 +192,6 @@ public class ProjectTreeListener extends MouseAdapter {
 	 * This will Display a List of options once you right click on the ProjectTree.
 	 */
 	private void maybeShowPopup(MouseEvent e) {
-		JTree tree = (JTree) e.getSource();
-		if (e.getClickCount() == 2) {
-			tree.startEditingAtPath(tree.getSelectionPath());
-		}
 		if (!e.isPopupTrigger()) {
 			return;
 		}
@@ -216,6 +216,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		if (lastPathComponent != null) {
 			menu.addSeparator();
 			
+			JTree tree = (JTree) e.getSource();
 			//For some bizarre reason, you cannot select a node
 			//in the JTree on right-click. So the coordinates for e.getSource()
 			//are different from e.getPoint()
