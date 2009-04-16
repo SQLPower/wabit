@@ -802,7 +802,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			if (getName() != null) {
 				oldFileName = getName();
 			}
-			setName("Graph: " + nameField.getText().replaceAll("Graph: ", ""));
 			// If name for the content box has not been changed to something
 			// user-defined, we change it everytime a
 			// different name is set in the properties panel
@@ -977,6 +976,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	}
 
+	/**
+	 * This will find the column name that is labeled as the category column
+	 * in a bar chart. If there is no category column null will be returned.
+	 */
 	private static String findCategoryColumnName(
 			Map<String, DataTypeSeries> columnsToDataTypes) {
 		String categoryColumnName = null;
