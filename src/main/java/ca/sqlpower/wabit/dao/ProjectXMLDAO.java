@@ -233,6 +233,7 @@ public class ProjectXMLDAO {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
 						xml.print(out, "<content-result-set");
 						printAttribute("name", rsRenderer.getName());
+						printAttribute("uuid", rsRenderer.getUUID().toString());
 						printAttribute("query-id", rsRenderer.getQuery().getUUID().toString());
 						printAttribute("null-string", rsRenderer.getNullString());
 						printAttribute("border", rsRenderer.getBorderType().name());
