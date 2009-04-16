@@ -1117,4 +1117,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		firePropertyChange("borderType", this.borderType, borderType);
 		this.borderType = borderType;
 	}
+	
+	public List<ColumnInfo> getColumnInfoList() {
+		return columnInfo;
+	}
 }
