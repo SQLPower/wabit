@@ -28,6 +28,8 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -37,6 +39,8 @@ import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
 public class NewProjectScreen {
+	
+	private static Logger logger = Logger.getLogger(NewProjectScreen.class);
 	
 	private final WabitSwingSession session;
 	private final JFrame frame;
@@ -86,7 +90,7 @@ public class NewProjectScreen {
 		additionalDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		builder.append(additionalDSLabel);
 		builder.nextLine();
-		builder.append(ProjectPanel.createDBConnectionManager(session).getPanel());
+		builder.append(ProjectPanel.createDBConnectionManager(session, frame).getPanel());
 		
 		frame.setIconImage(WabitSwingSessionImpl.FRAME_ICON.getImage());
 		frame.add(builder.getPanel());

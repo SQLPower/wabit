@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.LayoutManager;
+import java.awt.Window;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
@@ -41,6 +42,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+
+import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
@@ -60,6 +63,8 @@ import com.jgoodies.forms.layout.FormLayout;
  * also allow the user to add and remove data sources.
  */
 public class ProjectPanel implements WabitPanel {
+	
+	private static Logger logger = Logger.getLogger(ProjectPanel.class);
 	
 	private static final ImageIcon SELECT_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_selected.png"));
 	private static final ImageIcon OVER_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
@@ -149,7 +154,7 @@ public class ProjectPanel implements WabitPanel {
 		JPanel logoPanel = LogoLayout.generateLogoPanel();
 		builder.add(logoPanel, cc.xyw(1, 1, 3));
 
-        final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session);
+        final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session, session.getFrame());
         
 		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
 		JPanel builderPanel = builder.getPanel();
@@ -165,7 +170,7 @@ public class ProjectPanel implements WabitPanel {
 	 * @param session
 	 * @return
 	 */
-	public static DatabaseConnectionManager createDBConnectionManager(final WabitSwingSession session) {
+	public static DatabaseConnectionManager createDBConnectionManager(final WabitSwingSession session, Window owner) {
 		List<JComponent> componentList = new ArrayList<JComponent>();
         DefaultFormBuilder startPanel = new DefaultFormBuilder(new FormLayout("fill:pref", "pref, pref"));
         final JLabel startImageLabel = new JLabel(UP_START_ICON);
@@ -179,7 +184,7 @@ public class ProjectPanel implements WabitPanel {
 		final DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
 				new DefaultDataSourceDialogFactory(), 
 				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
-				new ArrayList<Action>(), componentList, session.getFrame(), false);
+				new ArrayList<Action>(), componentList, owner, false);
 		
         startImageLabel.addMouseListener(new MouseListener() {
         	boolean inside = false;
