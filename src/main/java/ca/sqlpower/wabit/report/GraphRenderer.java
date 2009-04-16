@@ -62,6 +62,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
@@ -944,53 +945,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.CATEGORY) || !columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
 				return null;
 			}
-			String categoryColumnName = null;
-			for (Map.Entry<String, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
-				if (entry.getValue() == DataTypeSeries.CATEGORY) {
-					categoryColumnName = entry.getKey();
-					break;
-				}
-			}
-			if (categoryColumnName == null) {
-				return null;
-			}
-			List<String> category = new ArrayList<String>();
-			try {
-				resultSet.beforeFirst();
-				int columnIndex = resultSet.findColumn(categoryColumnName);
-				while (resultSet.next()) {
-					if (!category.contains(resultSet.getString(columnIndex))) {
-						category.add(resultSet.getString(columnIndex));
-					}
-				}
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
-			
-			List<String> series = new ArrayList<String>();
-			for (String colName : columnNamesInOrder) {
-				if (columnsToDataTypes.get(colName) == DataTypeSeries.SERIES) {
-					series.add(colName);
-				}
-			}
-			
-			double[][] data = new double[series.size()][category.size()];
-			try {
-				resultSet.beforeFirst();
-				int j = 0;
-				while (resultSet.next()) {
-					for (String colName : series) {
-						if (logger.isDebugEnabled() && (series.indexOf(colName) == -1 || category.indexOf(resultSet.getString(categoryColumnName)) == -1)) {
-							logger.debug("Index of series " + colName + " is " + series.indexOf(colName) + ", index of category " + categoryColumnName + " is " + category.indexOf(resultSet.getString(categoryColumnName)));
-						}
-						data[series.indexOf(colName)][category.indexOf(resultSet.getString(categoryColumnName))] += resultSet.getDouble(colName); //XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
-					}
-					j++;
-				}
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
-			CategoryDataset dataset = DatasetUtilities.createCategoryDataset(series.toArray(new String[]{}), category.toArray(new String[]{}), data);
+			String categoryColumnName = findCategoryColumnName(columnsToDataTypes);
+			CategoryDataset dataset = createCategoryDataset(columnNamesInOrder,
+						columnsToDataTypes, resultSet, categoryColumnName);
 			chart = ChartFactory.createBarChart(chartName, categoryColumnName, yaxisName, dataset, PlotOrientation.VERTICAL, true, true, false);
 			return chart;
 		case LINE :
@@ -1018,6 +975,65 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		default:
 			throw new IllegalStateException("Unknown graph type " + graphType);
 		}
+	}
+
+	private static String findCategoryColumnName(
+			Map<String, DataTypeSeries> columnsToDataTypes) {
+		String categoryColumnName = null;
+		for (Map.Entry<String, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
+			if (entry.getValue() == DataTypeSeries.CATEGORY) {
+				categoryColumnName = entry.getKey();
+				break;
+			}
+		}
+		if (categoryColumnName == null) {
+			return null;
+		}
+		return categoryColumnName;
+	}
+
+	private static CategoryDataset createCategoryDataset(
+			List<String> columnNamesInOrder,
+			Map<String, DataTypeSeries> columnsToDataTypes,
+			ResultSet resultSet, String categoryColumnName) {
+		List<String> category = new ArrayList<String>();
+		try {
+			resultSet.beforeFirst();
+			int columnIndex = resultSet.findColumn(categoryColumnName);
+			while (resultSet.next()) {
+				if (!category.contains(resultSet.getString(columnIndex))) {
+					category.add(resultSet.getString(columnIndex));
+				}
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		List<String> series = new ArrayList<String>();
+		for (String colName : columnNamesInOrder) {
+			if (columnsToDataTypes.get(colName) == DataTypeSeries.SERIES) {
+				series.add(colName);
+			}
+		}
+		
+		double[][] data = new double[series.size()][category.size()];
+		try {
+			resultSet.beforeFirst();
+			int j = 0;
+			while (resultSet.next()) {
+				for (String colName : series) {
+					if (logger.isDebugEnabled() && (series.indexOf(colName) == -1 || category.indexOf(resultSet.getString(categoryColumnName)) == -1)) {
+						logger.debug("Index of series " + colName + " is " + series.indexOf(colName) + ", index of category " + categoryColumnName + " is " + category.indexOf(resultSet.getString(categoryColumnName)));
+					}
+					data[series.indexOf(colName)][category.indexOf(resultSet.getString(categoryColumnName))] += resultSet.getDouble(colName); //XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
+				}
+				j++;
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		CategoryDataset dataset = DatasetUtilities.createCategoryDataset(series.toArray(new String[]{}), category.toArray(new String[]{}), data);
+		return dataset;
 	}
 
 	/**
@@ -1170,5 +1186,21 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public String getXaxisName() {
 		return xaxisName;
 	}
-
+	
+	public Dataset createDataset() {
+		try {
+			switch (graphType) {
+			case BAR:
+				return GraphRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, query.fetchResultSet(), GraphRenderer.findCategoryColumnName(columnsToDataTypes));
+			case LINE:
+			case SCATTER:
+				return GraphRenderer.createSeriesCollection(columnSeriesToColumnXAxis, query.fetchResultSet());
+			default :
+				throw new IllegalStateException("Unknown graph type " + graphType);
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 }
