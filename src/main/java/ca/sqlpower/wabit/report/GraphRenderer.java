@@ -65,8 +65,8 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.TimePeriodValues;
+import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -1079,9 +1079,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			}
 			return xyCollection;
 		} else if (allDate) {
-			TimeSeriesCollection timeCollection = new TimeSeriesCollection();
+			TimePeriodValuesCollection timeCollection = new TimePeriodValuesCollection();
 			for (Map.Entry<String, String> entry : columnSeriesToColumnXAxis.entrySet()) {
-				TimeSeries newSeries = new TimeSeries(entry.getKey(), FixedMillisecond.class);
+				TimePeriodValues newSeries = new TimePeriodValues(entry.getKey());
 				try {
 					resultSet.beforeFirst();
 					while (resultSet.next()) {
