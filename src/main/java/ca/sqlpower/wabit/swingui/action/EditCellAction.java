@@ -35,7 +35,7 @@ public class EditCellAction extends AbstractAction {
 	private final JTree tree;
 
 	public EditCellAction(JTree tree) {
-		super("Edit name");
+		super("Rename");
 		this.tree = tree;
 	}
 

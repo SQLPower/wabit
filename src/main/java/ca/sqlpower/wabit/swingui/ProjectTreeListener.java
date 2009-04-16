@@ -188,6 +188,10 @@ public class ProjectTreeListener extends MouseAdapter {
 	 * This will Display a List of options once you right click on the ProjectTree.
 	 */
 	private void maybeShowPopup(MouseEvent e) {
+		JTree tree = (JTree) e.getSource();
+		if (e.getClickCount() == 2) {
+			tree.startEditingAtPath(tree.getSelectionPath());
+		}
 		if (!e.isPopupTrigger()) {
 			return;
 		}
@@ -212,7 +216,6 @@ public class ProjectTreeListener extends MouseAdapter {
 		if (lastPathComponent != null) {
 			menu.addSeparator();
 			
-			JTree tree = (JTree) e.getSource();
 			//For some bizarre reason, you cannot select a node
 			//in the JTree on right-click. So the coordinates for e.getSource()
 			//are different from e.getPoint()
