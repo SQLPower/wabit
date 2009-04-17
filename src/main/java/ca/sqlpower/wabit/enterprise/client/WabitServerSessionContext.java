@@ -45,6 +45,7 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 
@@ -175,6 +176,21 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
         httpClient.execute(request);
         logger.debug("Post complete!");
     }
+    
+	/**
+	 * Removes the given Wabit session from the list of child sessions for this
+	 * context. This is normally done by the sessions themselves, so you
+	 * shouldn't need to call this method from your own code.
+	 */
+	public void deregisterChildSession(WabitSession child) {
+		childSessions.remove(child);
+		
+		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
+		
+		if (terminateWhenLastSessionCloses && childSessions.isEmpty()) {
+			System.exit(0);
+		}
+	}
     
     @Override
     public String getName() {

@@ -56,13 +56,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     protected final JmDNS jmdns;
 
 	private DataSourceCollection dataSources;
-	private final List<WabitSession> childSessions = new ArrayList<WabitSession>();
+	protected final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
 	/**
 	 * If this flag is true, this session context will halt the VM when its
 	 * last session closes.
 	 */
-	private boolean terminateWhenLastSessionCloses;
+	protected boolean terminateWhenLastSessionCloses;
 	
 	/**
 	 *  Stores true when the OS is MAC
@@ -153,7 +153,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			logger.debug("Saving pl.ini");
 	        prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
 			try {
-	            getDataSources().write(new File(getPlDotIniPath()));
+				getDataSources().write(new File(getPlDotIniPath()));
 	        } catch (IOException e) {
 	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
 	        }
