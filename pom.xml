@@ -97,9 +97,23 @@
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 						<manifestEntries>
-							<Class-Path>jdbc/ lib/architect_dbtree_lib.jar
-								lib/architect_lib.jar lib/piccolo.jar lib/piccolox.jar
-								lib/rsyntaxtextarea.jar lib/wabithelp.jar</Class-Path>
+							<Class-Path>
+							  jdbc/
+							  lib/piccolo.jar
+							  lib/piccolox.jar
+							  lib/architect_lib.jar  
+							  lib/architect_dbtree_lib.jar
+							  lib/jfreechart-1.0.12.jar
+							  lib/jcommon-1.0.15.jar
+							  lib/rsyntaxtextarea.jar
+							  lib/osx_adapter.jar
+							  lib/wabithelp.jar
+							  lib/jmdns.jar
+							  lib/httpclient-4.0-beta2.jar
+							  lib/apache-mime4j-0.5.jar
+							  lib/httpcore-4.0.jar
+							  lib/httpmime-4.0-beta2.jar
+							</Class-Path>
 						</manifestEntries>
 					</archive>
 				</configuration>
