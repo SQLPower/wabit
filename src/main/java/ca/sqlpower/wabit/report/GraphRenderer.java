@@ -798,16 +798,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	
 		public boolean applyChanges() {
-			String oldFileName = null;
-			if (getName() != null) {
-				oldFileName = getName();
-			}
-			// If name for the content box has not been changed to something
-			// user-defined, we change it everytime a
-			// different name is set in the properties panel
-			if(parent.getName() != null && oldFileName!= null && (parent.getName().contains(oldFileName))) {
-				parent.getParent().setUniqueName(parent, parent.getName().replace(oldFileName, getName()));
-			}
+			setName(nameField.getText());
 			try {
 				defineQuery((Query) queryComboBox.getSelectedItem());
 			} catch (SQLException e) {
