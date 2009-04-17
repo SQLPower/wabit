@@ -139,16 +139,17 @@ public class ProjectPanel implements WabitPanel {
 	/**
 	 * The main panel of this project.
 	 */
-	private final JPanel panel;
+	private final JScrollPane scrollPane;
 	private final WabitSwingSession session;
 	
 	public ProjectPanel(WabitSwingSession session) {
+		logger.debug("Creating new project panel for " + session);
 		this.session = session;
-		panel = new JPanel(new BorderLayout());
-		buildUI();
+		scrollPane = new JScrollPane(buildUI());
 	}
 	
-	private void buildUI() {
+	private JPanel buildUI() {
+		JPanel panel = new JPanel(new BorderLayout());
 		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, fill:pref, pref:grow", "pref, pref, pref"));
 		CellConstraints cc = new CellConstraints();
 		JPanel logoPanel = LogoLayout.generateLogoPanel();
@@ -161,6 +162,8 @@ public class ProjectPanel implements WabitPanel {
 		panel.add(builderPanel, BorderLayout.CENTER);
 		
 		logoPanel.getLayout().layoutContainer(logoPanel);
+		
+		return panel;
 	}
 
 	/**
@@ -289,7 +292,7 @@ public class ProjectPanel implements WabitPanel {
 	}
 
 	public JComponent getPanel() {
-		return new JScrollPane(panel);
+		return scrollPane;
 	}
 
 	public boolean hasUnsavedChanges() {

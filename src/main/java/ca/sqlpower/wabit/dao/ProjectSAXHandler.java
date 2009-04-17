@@ -777,12 +777,14 @@ public class ProjectSAXHandler extends DefaultHandler {
     	
     	if (name.equals("project")) {
     	    session.setLoading(false);
+    	    WabitObject initialView = session.getProject();
     		for (WabitObject obj : session.getProject().getChildren()) {
     			if (obj.getUUID().toString().equals(currentEditorPanelModel)) {
-    				session.getProject().setEditorPanelModel(obj);
+    				initialView = obj;
     				break;
     			}
     		}
+    		session.getProject().setEditorPanelModel(initialView);
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID().toString(), query, container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
