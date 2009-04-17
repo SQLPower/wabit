@@ -153,7 +153,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private JTree projectTree;
 	private JSplitPane wabitPane;
-	private JFrame frame;
+	private final JFrame frame;
 	private static JLabel statusLabel;
 	
 	public static final ImageIcon FRAME_ICON = new ImageIcon(WabitSwingSessionImpl.class.getResource("/icons/wabit-16.png"));
@@ -287,6 +287,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         //This should be replaced in the buildUI with a properly parented prompter factory.
         upfMissingLoadedDB = new SwingUIUserPrompterFactory(null, sessionContext.getDataSources());
 		
+        frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + sessionContext.getName());
 	}
 	
 	/**
@@ -301,7 +302,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * @throws SQLObjectException 
 	 */
     public void buildUI() throws SQLObjectException {
-		frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + sessionContext.getName());
 		frame.setIconImage(FRAME_ICON.getImage());
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowClosingListener(this));
@@ -731,6 +731,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
 
     public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
+    	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
             dataSource = new SPDataSource(dataSource);  // defensive copy for cache key
