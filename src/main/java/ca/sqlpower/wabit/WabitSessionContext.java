@@ -19,14 +19,13 @@
 
 package ca.sqlpower.wabit;
 
-import java.io.OutputStream;
 import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceInfo;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public interface WabitSessionContext {
 
@@ -73,15 +72,44 @@ public interface WabitSessionContext {
 	 * Returns this context's JmDNS client instance.
 	 */
 	JmDNS getJmDNS();
-	
-	/**
-     * Returns the list of currently-known enterprise servers. This list will change over
-     * time, and may be empty for the first few seconds after startup.
+
+    /**
+     * Returns the list of currently-known enterprise servers. This list will
+     * change over time, and may be empty for the first few seconds after
+     * startup.
      * 
+     * @param includeDiscoveredServers
+     *            if true, all known servers will be returned whether they were
+     *            configured explicitly or discovered dynamically. If false, only
+     *            the explicitly configured servers will be listed.
      * @return contact information for the known enterprise servers
      */
-    List<ServiceInfo> getEnterpriseServers();
+    List<WabitServerInfo> getEnterpriseServers(boolean includeDiscoveredServers);
 
+    /**
+     * Adds a new user-configured server specification to this context. The
+     * information will be added to the {@link #getEnterpriseServers(boolean)}
+     * list immediately, and also stored persistently so it will be included in
+     * the enterprise server list in future incarnations of WabitSessionContext.
+     * 
+     * @param serverInfo
+     *            The serverInfo object to add.
+     */
+    void addServer(WabitServerInfo serverInfo);
+
+    /**
+     * Removes a new user-configured server specification from this context. The
+     * information will be removed immediately in the current context, and also
+     * from persistent storage.
+     * 
+     * @param serverInfo
+     *            The serverInfo object to remove. If this does not specify a
+     *            manually-configured serverInfo (one that was returned by
+     *            {@link #getEnterpriseServers(boolean)} with an argument of
+     *            <code>true</code>), this method will have no effect.
+     */
+    void removeServer(WabitServerInfo si);
+    
     /**
      * Returns the preferences node used by this session context. This should
      * not normally be used by client code; it is primarily intended for use by

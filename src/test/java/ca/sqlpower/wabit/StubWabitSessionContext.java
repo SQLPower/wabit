@@ -23,13 +23,14 @@ import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceInfo;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class StubWabitSessionContext implements WabitSessionContext {
 
 	public void deregisterChildSession(WabitSession child) {
+	    // no op
 	}
 
 	public DataSourceCollection getDataSources() {
@@ -41,6 +42,7 @@ public class StubWabitSessionContext implements WabitSessionContext {
 	}
 
 	public void registerChildSession(WabitSession child) {
+	    // no op
 	}
 
 	public WabitSession createSession() {
@@ -60,10 +62,6 @@ public class StubWabitSessionContext implements WabitSessionContext {
 	public JmDNS getJmDNS() {
 	    return null;
 	}
-	
-    public List<ServiceInfo> getEnterpriseServers() {
-        return null;
-    }
 
     public Preferences getPrefs() {
         return null;
@@ -72,5 +70,21 @@ public class StubWabitSessionContext implements WabitSessionContext {
 	public String getName() {
 		return null;
 	}
+
+    public void addServer(WabitServerInfo serverInfo) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public List<WabitServerInfo> getEnterpriseServers(
+            boolean includeDiscoveredServers) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void removeServer(WabitServerInfo si) {
+        // TODO Auto-generated method stub
+        
+    }
 
 }

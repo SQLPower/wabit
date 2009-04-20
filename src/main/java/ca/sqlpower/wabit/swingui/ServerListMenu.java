@@ -19,20 +19,31 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.jmdns.ServiceEvent;
-import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import com.jgoodies.forms.factories.ButtonBarFactory;
+
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.swingui.enterprise.ServerInfoManager;
 
 /**
  * A JMenu which maintains its own set of entries based on services discovered by mDNS information.
@@ -48,24 +59,62 @@ public class ServerListMenu extends JMenu {
     private final ServerListMenuItemFactory itemFactory;
 
     /**
+     * The server manager action that is used in the dynamically changing popup
+     * menus. We avoid making many of these in an attempt to avoid a
+     * proliferation of ServerInfoManager instances.
+     */
+    private final AbstractAction serverManagerAction;
+
+    /**
      * Creates a throwaway popup menu containing the current list of servers.
      * The resulting popup menu will not change over time like the regular
      * ServerListMenu does, so you should make a new popup instance every time
      * you need one.
      */
-    public static JPopupMenu createPopupInstance(WabitSwingSessionContext context, Component dialogOwner) {
+    public static JPopupMenu createPopupInstance(final WabitSwingSessionContext context, final Component dialogOwner) {
         JPopupMenu popup = new JPopupMenu();
-        List<ServiceInfo> servers = context.getEnterpriseServers();
+        List<WabitServerInfo> servers = context.getEnterpriseServers(true);
+        AbstractAction configureServersAction = makeServerManagerAction(context, dialogOwner);
+        popup.add(configureServersAction);
         if (servers.isEmpty()) {
             JMenuItem mi = new JMenuItem("Searching for servers...");
             mi.setEnabled(false);
             popup.add(mi);
         } else {
-            for (ServiceInfo si : servers) {
+            for (WabitServerInfo si : servers) {
                 popup.add(new OpenOnServerMenu(dialogOwner, si));
             }
         }
         return popup;
+    }
+
+    private static AbstractAction makeServerManagerAction(
+            final WabitSwingSessionContext context, final Component dialogOwner) {
+
+        return new AbstractAction("Configure Server Connections...") {
+            public void actionPerformed(ActionEvent e) {
+                ServerInfoManager sim = new ServerInfoManager(context, dialogOwner);
+                final JDialog d = SPSUtils.makeOwnedDialog(dialogOwner, "Server Connections");
+                d.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                
+                JButton closeButton = new JButton("Close");
+                closeButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        d.dispose();
+                    }
+                });
+                
+                JPanel cp = new JPanel(new BorderLayout(0, 12));
+                cp.add(sim.getPanel(), BorderLayout.CENTER);
+                cp.add(ButtonBarFactory.buildCloseBar(closeButton), BorderLayout.SOUTH);
+                d.setContentPane(cp);
+                
+                SPSUtils.makeJDialogCancellable(d, null);
+                d.pack();
+                d.setLocationRelativeTo(dialogOwner);
+                d.setVisible(true);
+            }
+        };
     }
 
     /**
@@ -83,6 +132,7 @@ public class ServerListMenu extends JMenu {
         this.context = context;
         this.dialogOwner = dialogOwner;
         this.itemFactory = itemFactory;
+        this.serverManagerAction = makeServerManagerAction(context, dialogOwner);
         refillMenu.run();
         context.getJmDNS().addServiceListener(
                 WabitSessionContext.WABIT_ENTERPRISE_SERVER_MDNS_TYPE, serviceListener);
@@ -90,15 +140,16 @@ public class ServerListMenu extends JMenu {
     
     private final Runnable refillMenu = new Runnable() {
         public void run() {
-            List<ServiceInfo> servers = context.getEnterpriseServers();
+            List<WabitServerInfo> servers = context.getEnterpriseServers(true);
             logger.debug("Refilling server menu. servers = " + servers);
             removeAll();
+            add(serverManagerAction);
             if (servers.isEmpty()) {
                 JMenuItem mi = new JMenuItem("Searching for servers...");
                 mi.setEnabled(false);
                 add(mi);
             } else {
-                for (ServiceInfo si : servers) {
+                for (WabitServerInfo si : servers) {
                     add(itemFactory.createMenuEntry(si, dialogOwner));
                 }
             }

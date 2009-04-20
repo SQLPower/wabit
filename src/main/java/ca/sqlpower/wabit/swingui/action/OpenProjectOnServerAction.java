@@ -24,7 +24,6 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
@@ -38,7 +37,9 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
@@ -47,13 +48,13 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 public class OpenProjectOnServerAction extends AbstractAction {
 
     private static final Logger logger = Logger.getLogger(OpenProjectOnServerAction.class);
-    private final ServiceInfo serviceInfo;
+    private final WabitServerInfo serviceInfo;
     private final String projectName;
     private final Component dialogOwner;
 
     public OpenProjectOnServerAction(
             Component dialogOwner,
-            ServiceInfo si,
+            WabitServerInfo si,
             String projectName) {
         super(projectName);
         this.dialogOwner = dialogOwner;
@@ -69,8 +70,8 @@ public class OpenProjectOnServerAction extends AbstractAction {
         try {
             final WabitSwingSessionContext sessionContext =
                 new WabitSwingSessionContextImpl(WabitServerSessionContext.getInstance(serviceInfo), false);
-            String contextPath = serviceInfo.getPropertyString("path");
-            URI uri = new URI("http", null, serviceInfo.getHostAddress(), serviceInfo.getPort(),
+            String contextPath = serviceInfo.getPath();
+            URI uri = new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
                     contextPath + "project/" + projectName, null, null);
             HttpGet httpget = new HttpGet(uri);
             logger.debug("executing request " + httpget.getURI());
@@ -106,7 +107,7 @@ public class OpenProjectOnServerAction extends AbstractAction {
             
         } catch (Exception ex) {
             SPSUtils.showExceptionDialogNoReport(dialogOwner,
-                    "Failed to retrieve project list from server " + serviceInfo.getURL(), ex);
+                    "Failed to retrieve project list from server " + WabitUtils.serviceInfoSummary(serviceInfo), ex);
         } finally {
             httpclient.getConnectionManager().shutdown();
         }

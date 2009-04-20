@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.jmdns.ServiceInfo;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -60,10 +58,10 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
             .getLogger(WabitServerSessionContext.class);
     
     private HttpClient httpClient = new DefaultHttpClient();
-    private final ServiceInfo serviceInfo;
-    public static final HashMap<ServiceInfo, WabitServerSessionContext> instances = new HashMap<ServiceInfo, WabitServerSessionContext>();
+    private final WabitServerInfo serviceInfo;
+    public static final HashMap<WabitServerInfo, WabitServerSessionContext> instances = new HashMap<WabitServerInfo, WabitServerSessionContext>();
 
-    private WabitServerSessionContext(ServiceInfo serviceInfo, boolean terminateWhenLastSessionCloses)
+    private WabitServerSessionContext(WabitServerInfo serviceInfo, boolean terminateWhenLastSessionCloses)
             throws IOException, SQLObjectException {
         super(terminateWhenLastSessionCloses, true);
         this.serviceInfo = serviceInfo;
@@ -136,12 +134,12 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     
     private URI getServerURI(String contextRelativePath) throws URISyntaxException {
         logger.debug("Getting server URI for: " + serviceInfo);
-        String contextPath = serviceInfo.getPropertyString("path");
-        return new URI("http", null, serviceInfo.getHostAddress(), serviceInfo.getPort(),
+        String contextPath = serviceInfo.getPath();
+        return new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
                 contextPath + contextRelativePath, null, null);
     }
 
-    public static WabitServerSessionContext getInstance(ServiceInfo serviceInfo) throws IOException, SQLObjectException {
+    public static WabitServerSessionContext getInstance(WabitServerInfo serviceInfo) throws IOException, SQLObjectException {
         WabitServerSessionContext context =  instances.get(serviceInfo);
         if (context == null) {
             context = new WabitServerSessionContext(serviceInfo, false);

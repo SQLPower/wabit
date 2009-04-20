@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 
-import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
@@ -31,16 +30,17 @@ import javax.swing.JMenuItem;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.action.OpenProjectOnServerAction;
 
 public class OpenOnServerMenu extends JMenu {
     
     private static final Logger logger = Logger.getLogger(OpenOnServerMenu.class);
-    private final ServiceInfo serviceInfo;
+    private final WabitServerInfo serviceInfo;
     private final Component dialogOwner;
     
-    public OpenOnServerMenu(Component dialogOwner, ServiceInfo si) {
+    public OpenOnServerMenu(Component dialogOwner, WabitServerInfo si) {
         super(WabitUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
@@ -54,6 +54,7 @@ public class OpenOnServerMenu extends JMenu {
     };
     
     private void refreshProjects() {
+        logger.debug("Refreshing project list...");
         removeAll();
         try {
             WabitServerSessionContext ctx = WabitServerSessionContext.getInstance(serviceInfo);

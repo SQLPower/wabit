@@ -21,8 +21,9 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
 
-import javax.jmdns.ServiceInfo;
 import javax.swing.JMenuItem;
+
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * A factory interface used by the {@link ServerListMenu}.
@@ -33,12 +34,12 @@ public interface ServerListMenuItemFactory {
      * Creates a JMenuItem or JMenu which is the entry corresponding to the
      * given service info object.
      * 
-     * @param serviceInfo
+     * @param si
      *            The server this menu or menu item is for
      * @param dialogOwner
      *            The component that should own any dialogs generated when the
      *            menu item's action is invoked.
      * @return A new menu or menu item
      */
-    JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner);
+    JMenuItem createMenuEntry(WabitServerInfo si, Component dialogOwner);
 }

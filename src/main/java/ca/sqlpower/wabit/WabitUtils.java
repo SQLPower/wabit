@@ -21,7 +21,7 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 
-import javax.jmdns.ServiceInfo;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class WabitUtils {
 
@@ -84,8 +84,8 @@ public class WabitUtils {
      * @return The Wabit's canonical human-readable representation of the given
      *         service info.
      */
-    public static String serviceInfoSummary(ServiceInfo si) {
-        return si.getName() + " (" + si.getInetAddress().getHostName() + ":" + si.getPort() + ")";
+    public static String serviceInfoSummary(WabitServerInfo si) {
+        return si.getName() + " (" + si.getServerAddress() + ":" + si.getPort() + ")";
     }
 
 }

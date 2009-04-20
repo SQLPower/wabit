@@ -22,12 +22,12 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 
-import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.NewProjectScreen;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
@@ -35,9 +35,9 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 public class NewProjectOnServerAction extends AbstractAction {
 
     private final Component dialogOwner;
-    private final ServiceInfo si;
+    private final WabitServerInfo si;
 
-    public NewProjectOnServerAction(Component dialogOwner, ServiceInfo si) {
+    public NewProjectOnServerAction(Component dialogOwner, WabitServerInfo si) {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.dialogOwner = dialogOwner;
         this.si = si;

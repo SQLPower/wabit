@@ -25,7 +25,6 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -42,6 +41,7 @@ import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -52,12 +52,12 @@ import com.jgoodies.forms.layout.FormLayout;
  */
 public class SaveProjectOnServerAction extends AbstractAction {
 
-    private final ServiceInfo si;
+    private final WabitServerInfo si;
     private final WabitServerSessionContext context;
     private final Component dialogOwner;
     private final WabitProject project;
 
-    public SaveProjectOnServerAction(ServiceInfo si, Component dialogOwner, WabitProject project) throws IOException, SQLObjectException {
+    public SaveProjectOnServerAction(WabitServerInfo si, Component dialogOwner, WabitProject project) throws IOException, SQLObjectException {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.si = si;
         this.project = project;

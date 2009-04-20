@@ -22,9 +22,8 @@ package ca.sqlpower.wabit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
@@ -37,6 +36,7 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * A placeholder for all state and behaviour that is shared among
@@ -55,7 +55,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	private static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
 	
     protected final JmDNS jmdns;
-
+    private final List<WabitServerInfo> manuallyConfiguredServers = new ArrayList<WabitServerInfo>();
+    
 	private DataSourceCollection dataSources;
 	protected final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
@@ -106,6 +107,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         logger.debug("pl.ini is at " + getPlDotIniPath());
         
         setPlDotIniPath(ArchitectUtils.checkForValidPlDotIni(getPlDotIniPath(), "Wabit"));
+        
+        try {
+            manuallyConfiguredServers.addAll(readServersFromPrefs());
+        } catch (BackingStoreException ex) {
+            logger.error("Preferences unavailable! Not reading server infos from prefs.", ex);
+        }
 	}
 
 	/**
@@ -218,13 +225,59 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	    return jmdns;
 	}
 	
-	public List<ServiceInfo> getEnterpriseServers() {
-		if (jmdns != null) {
-			return Arrays.asList(jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE));
-		} else {
-			return Collections.emptyList();
-		}
+	public List<WabitServerInfo> getEnterpriseServers(boolean includeDiscovered) {
+	    List<WabitServerInfo> servers = new ArrayList<WabitServerInfo>(manuallyConfiguredServers);
+	    if (includeDiscovered && jmdns != null) {
+	        for (ServiceInfo si : jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE)) {
+	            servers.add(new WabitServerInfo(si));
+	        }
+	    }
+	    return servers;
 	}
+
+	public void addServer(WabitServerInfo serverInfo) {
+        manuallyConfiguredServers.add(serverInfo);
+        Preferences servers = getServersPrefNode();
+        Preferences thisServer = servers.node(serverInfo.getName());
+        thisServer.put("name", serverInfo.getName());
+        thisServer.put("serverAddress", serverInfo.getServerAddress());
+        thisServer.putInt("port", serverInfo.getPort());
+        thisServer.put("path", serverInfo.getPath());
+    }
+
+    public void removeServer(WabitServerInfo serverInfo) {
+        manuallyConfiguredServers.remove(serverInfo);
+        Preferences servers = getServersPrefNode();
+        try {
+            servers.node(serverInfo.getName()).removeNode();
+        } catch (BackingStoreException ex) {
+            throw new RuntimeException("Failed to remove server from list", ex);
+        }
+    }
+
+    private List<WabitServerInfo> readServersFromPrefs() throws BackingStoreException {
+        Preferences serversNode = getServersPrefNode();
+        List<WabitServerInfo> serverList = new ArrayList<WabitServerInfo>();
+        for (String nodeName : serversNode.childrenNames()) {
+            Preferences serverNode = serversNode.node(nodeName);
+            
+            serverList.add(new WabitServerInfo(
+                    serverNode.get("name", null),
+                    serverNode.get("serverAddress", null),
+                    serverNode.getInt("port", 0),
+                    serverNode.get("path", null)
+                    ));
+        }
+        return serverList;
+    }
+    
+    /**
+     * Returns the prefs node under which the manually-configured server infos
+     * are stored.
+     */
+    private Preferences getServersPrefNode() {
+        return prefs.node("servers");
+    }
 
     /**
      * Returns the preferences node used by this session context. This should

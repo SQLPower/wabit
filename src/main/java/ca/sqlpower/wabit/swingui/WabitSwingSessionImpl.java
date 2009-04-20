@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -91,6 +90,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
@@ -360,14 +360,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			}
 		});
         fileMenu.add(getContext().createServerListMenu(frame, "New Project On Server", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner) {
+            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 return new JMenuItem(new NewProjectOnServerAction(dialogOwner, serviceInfo));
             }
         }));
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
         fileMenu.add(getContext().createRecentMenu());
         fileMenu.add(getContext().createServerListMenu(frame, "Open On Server", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner) {
+            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 return new OpenOnServerMenu(dialogOwner, serviceInfo);
             }
         }));
@@ -380,7 +380,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
 		fileMenu.add(getContext().createServerListMenu(frame, "Save On Server", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(ServiceInfo serviceInfo, Component dialogOwner) {
+            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 try {
                     return new JMenuItem(new SaveProjectOnServerAction(serviceInfo, dialogOwner, project));
                 } catch (Exception e) {

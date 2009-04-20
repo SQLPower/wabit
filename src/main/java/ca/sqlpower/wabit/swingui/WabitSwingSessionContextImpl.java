@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceInfo;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
@@ -40,6 +39,7 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
 
@@ -191,8 +191,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return delegateContext.getDataSources();
     }
 
-    public List<ServiceInfo> getEnterpriseServers() {
-        return delegateContext.getEnterpriseServers();
+    public List<WabitServerInfo> getEnterpriseServers(boolean includeDiscoveredServers) {
+        return delegateContext.getEnterpriseServers(includeDiscoveredServers);
+    }
+
+    public void addServer(WabitServerInfo serverInfo) {
+        delegateContext.addServer(serverInfo);
+    }
+
+    public void removeServer(WabitServerInfo si) {
+        delegateContext.removeServer(si);
     }
 
     public JmDNS getJmDNS() {
