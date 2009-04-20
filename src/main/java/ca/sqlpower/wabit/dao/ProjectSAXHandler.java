@@ -77,6 +77,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
 import ca.sqlpower.wabit.report.GraphRenderer.ExistingGraphTypes;
+import ca.sqlpower.wabit.report.GraphRenderer.LegendPosition;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
@@ -564,6 +565,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			graphRenderer.setXaxisName(aval);
         		} else if (aname.equals("graph-type")) {
         			graphRenderer.setGraphType(ExistingGraphTypes.valueOf(aval));
+        		} else if (aname.equals("legend-position")) {
+        			graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
         		} else if (aname.equals("query-id")) {
         			Query query = null;
                 	for (Query q : session.getProject().getQueries()) {

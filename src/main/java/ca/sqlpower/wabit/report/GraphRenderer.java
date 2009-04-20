@@ -61,6 +61,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetUtilities;
@@ -70,6 +71,9 @@ import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
 
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
@@ -112,6 +116,17 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		BAR,
 		LINE,
 		SCATTER
+	}
+	
+	/**
+	 * The possible positions a legend can occupy on a chart
+	 */
+	public enum LegendPosition {
+		NONE,
+		TOP,
+		LEFT,
+		RIGHT,
+		BOTTOM
 	}
 	
 	/**
@@ -531,6 +546,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		private final JComboBox graphTypeComboBox;
 		
 		/**
+		 * This combo box contains all the possible positions the legend can occupy on
+		 * the chart		
+		 */
+		private final JComboBox legendPositionComboBox;
+		
+		/**
 		 * This tracks the ordering of the actual column names, not the display names.
 		 * This allows us to get back the original column name from the column index.
 		 * and to track the ordering of the columns for displaying the properties
@@ -583,6 +604,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
 			queryComboBox = new JComboBox(project.getQueries().toArray());
 			graphTypeComboBox = new JComboBox(ExistingGraphTypes.values());
+			legendPositionComboBox = new JComboBox(LegendPosition.values());
 			
 			queryComboBox.setSelectedItem(renderer.getQuery());
 			graphTypeComboBox.setSelectedItem(renderer.getGraphType());
@@ -592,6 +614,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			} else if (renderer.getGraphType() == ExistingGraphTypes.LINE || renderer.getGraphType() == ExistingGraphTypes.SCATTER) {
 				currentHeaderTableCellRenderer = new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
 				resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
+			}
+			if(renderer.getLegendPosition() != null) {
+			legendPositionComboBox.setSelectedItem(renderer.getLegendPosition());
+			} else {
+				legendPositionComboBox.setSelectedItem(LegendPosition.BOTTOM);
 			}
 			nameField.setText(renderer.getName());
 			yaxisNameField.setText(renderer.getYaxisName());
@@ -715,6 +742,16 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 					}
 				}
 			});
+			
+			legendPositionComboBox.addItemListener(new ItemListener() {
+				public void itemStateChanged(ItemEvent e) {
+					if (e.getStateChange() == ItemEvent.SELECTED) {
+						if(chartPanel != null) {
+							updateChartPreview();
+						}
+					}
+				}
+			});
 			buildUI();
 		}
 		
@@ -757,7 +794,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * property panel.
 		 */
 		private void updateChartPreview() {
-			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
+			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), (LegendPosition) legendPositionComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
 			chartPanel.setChart(chart);
 		}
 
@@ -778,10 +815,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			final JScrollPane chartScrollPane = new JScrollPane(chartPanel);
 			chartScrollPane.setPreferredSize(new Dimension(0, 0));
 			builder.append(chartScrollPane, 3);
+			builder.nextLine(2);
+			builder.append("Legend Postion", legendPositionComboBox);
 			builder.nextLine();
 			builder.append("Y Axis Label", yaxisNameField);
 			builder.nextLine();
 			builder.append(xaxisNameLabel, xaxisNameField);
+			builder.nextLine();
 			panel.setPreferredSize(new Dimension(400, 400));
 		}
 	
@@ -805,6 +845,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				throw new RuntimeException(e);
 			}
 			setGraphType((ExistingGraphTypes) graphTypeComboBox.getSelectedItem());
+			setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
 			setColumnNamesInOrder(columnNamesInOrder);
 			setColumnsToDataTypes(columnsToDataTypes);
 			setColumnSeriesToColumnXAxis(columnSeriesToColumnXAxis);
@@ -840,6 +881,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * This is the current style of graph the user has made.
 	 */
 	private ExistingGraphTypes graphType;
+	
+	private LegendPosition selectedLegendPosition;
 	
 	/**
 	 * The query the graph is based off of.
@@ -907,7 +950,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		JFreeChart chart = null;
 		try {
 			if (query != null) {
-				chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, query.fetchResultSet(), graphType, getName(), yaxisName, xaxisName);
+				chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, query.fetchResultSet(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			}
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -923,10 +966,26 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * Creates a JFreeChart based on the given column and series data.
 	 * Returns null if the data given cannot create a chart.
 	 */
-	private static JFreeChart createJFreeChart(List<String> columnNamesInOrder, Map<String, DataTypeSeries> columnsToDataTypes, Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet, ExistingGraphTypes graphType, String chartName, String yaxisName, String xaxisName) {
+	private static JFreeChart createJFreeChart(List<String> columnNamesInOrder, Map<String, DataTypeSeries> columnsToDataTypes, Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet, ExistingGraphTypes graphType, LegendPosition legendPosition, String chartName, String yaxisName, String xaxisName) {
 		if (graphType == null) {
 			return null;
 		}
+		RectangleEdge rEdge = RectangleEdge.BOTTOM;
+		boolean showLegend = true;
+		switch (legendPosition) {
+		case NONE: showLegend = false;
+					break;
+		case TOP: rEdge = RectangleEdge.TOP; 
+					break;
+		case LEFT: rEdge = RectangleEdge.LEFT; 
+					break;
+		case RIGHT: rEdge = RectangleEdge.RIGHT; 
+					break;
+		case BOTTOM: break;
+		default:
+			throw new IllegalStateException("Unknown legend position " + legendPosition);
+		}
+		
 		JFreeChart chart;
 		XYDataset xyCollection;
 		
@@ -938,7 +997,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			String categoryColumnName = findCategoryColumnName(columnsToDataTypes);
 			CategoryDataset dataset = createCategoryDataset(columnNamesInOrder,
 						columnsToDataTypes, resultSet, categoryColumnName);
-			chart = ChartFactory.createBarChart(chartName, categoryColumnName, yaxisName, dataset, PlotOrientation.VERTICAL, true, true, false);
+			chart = ChartFactory.createBarChart(chartName, categoryColumnName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+			if (legendPosition != LegendPosition.NONE) {
+				chart.getLegend().setPosition(rEdge);
+				chart.getTitle().setPadding(4,4,15,4);
+			}
 			return chart;
 		case LINE :
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
@@ -949,7 +1012,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			if (xyCollection == null) {
 				return null;
 			}
-			chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, true, true, false);
+			chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, showLegend, true, false);
+			if (legendPosition != LegendPosition.NONE) {
+				chart.getLegend().setPosition(rEdge);
+				chart.getTitle().setPadding(4,4,15,4);
+			}
 			return chart;
 		case SCATTER :
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
@@ -960,7 +1027,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			if (xyCollection == null) {
 				return null;
 			}
-			chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, true, true, false);
+			chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, showLegend, true, false);
+			if (legendPosition != LegendPosition.NONE) {
+				chart.getLegend().setPosition(rEdge);
+				chart.getTitle().setPadding(4,4,15,4);
+			}
 			return chart;
 		default:
 			throw new IllegalStateException("Unknown graph type " + graphType);
@@ -1117,6 +1188,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public void setGraphType(ExistingGraphTypes graphType) {
 		firePropertyChange("graphType", this.graphType, graphType);
 		this.graphType = graphType;
+	}
+	
+	public LegendPosition getLegendPosition() {
+		return selectedLegendPosition;
+	}
+	
+	public void setLegendPosition(LegendPosition selectedLegendPosition) {
+		firePropertyChange("legendPosition", this.selectedLegendPosition, selectedLegendPosition);
+		this.selectedLegendPosition = selectedLegendPosition;
 	}
 
 	public Query getQuery() {
