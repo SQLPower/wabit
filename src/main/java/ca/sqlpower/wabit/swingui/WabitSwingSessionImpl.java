@@ -535,7 +535,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 			public void run() {
 				try {
-				    WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false);
+				    WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
 					WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
 					
 					final File importFile;

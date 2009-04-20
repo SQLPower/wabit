@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -89,10 +90,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *             If the startup configuration files can't be read
 	 * @throws SQLObjectException If the pl.ini is invalid.
 	 */
-	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses) throws IOException, SQLObjectException {
+	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS) throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
-		
-		jmdns = JmDNS.create();
+		if (useJmDNS) {
+			jmdns = JmDNS.create();
+		} else {
+			jmdns = null;
+		}
 		
         setPlDotIniPath(prefs.get(PREFS_PL_INI_PATH, null));
         logger.debug("pl.ini is at " + getPlDotIniPath());
@@ -191,7 +195,9 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	}
 
 	public void close() {
-	    jmdns.close();
+		if (jmdns != null) {
+			jmdns.close();
+		}	
 		for (int i = childSessions.size() - 1; i >= 0; i--) {
 			if (!childSessions.get(i).close()) {
 				return;
@@ -200,12 +206,20 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		System.exit(0);
 	}
 	
+	/**
+	 * Returns the JmDNS instance in this session context. Note that if this
+	 * session context was initialzed not to use JmDNS, it will return null.
+	 */
 	public JmDNS getJmDNS() {
 	    return jmdns;
 	}
 	
 	public List<ServiceInfo> getEnterpriseServers() {
-	    return Arrays.asList(jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE));
+		if (jmdns != null) {
+			return Arrays.asList(jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE));
+		} else {
+			return Collections.emptyList();
+		}
 	}
 
     /**

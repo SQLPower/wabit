@@ -65,7 +65,7 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
 
     private WabitServerSessionContext(ServiceInfo serviceInfo, boolean terminateWhenLastSessionCloses)
             throws IOException, SQLObjectException {
-        super(terminateWhenLastSessionCloses);
+        super(terminateWhenLastSessionCloses, true);
         this.serviceInfo = serviceInfo;
         if (serviceInfo == null) {
             logger.error("Null pointer Exception");
