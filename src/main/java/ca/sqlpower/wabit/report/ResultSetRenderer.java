@@ -76,6 +76,7 @@ import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.FontSelector;
+import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
@@ -279,7 +280,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		}
         ResultSet executedRs = null;
         executeException = null;
+        if (cachedQuery != null && cachedQuery instanceof StatementExecutor) {
+        	((StatementExecutor) cachedQuery).removeRowSetChangeListener(rowSetChangeListener);
+        }
         cachedQuery = new QueryCache(query);
+        ((QueryCache) cachedQuery).addRowSetChangeListener(rowSetChangeListener);
 		try {
             executedRs = cachedQuery.fetchResultSet(); // TODO run in background
             initColumns(executedRs);
@@ -287,13 +292,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             executeException = ex;
         }
         setName("Result Set: " + cachedQuery.getName());
-        if (rs != null && rs instanceof CachedRowSet) {
-        	((CachedRowSet) rs).removeRowSetChangeListener(rowSetChangeListener);
-        }
         rs = executedRs;
-        if (rs != null && rs instanceof CachedRowSet) {
-        	((CachedRowSet) rs).addRowSetChangeListener(rowSetChangeListener);
-        }
         if (logger.isDebugEnabled()) {
 			logger.debug("Finished fetching results for query " + query.generateQuery());
 		}
@@ -462,7 +461,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             if (rs != null) rs.beforeFirst();
             pageRowNumberList.clear();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+        	executeException = e;
+        	logger.error(e);
         }
     }
 

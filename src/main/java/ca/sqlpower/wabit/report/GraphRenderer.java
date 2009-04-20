@@ -882,7 +882,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 */
 	private ExistingGraphTypes graphType;
 	
-	private LegendPosition selectedLegendPosition;
+	/**
+	 * The position of the legend in relation to the chart. This
+	 * is defaulted to below the chart.
+	 */
+	private LegendPosition selectedLegendPosition = LegendPosition.BOTTOM;
 	
 	/**
 	 * The query the graph is based off of.

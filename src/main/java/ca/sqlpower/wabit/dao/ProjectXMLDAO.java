@@ -402,6 +402,7 @@ public class ProjectXMLDAO {
 		printAttribute("name", cache.getName());
 		printAttribute("uuid", cache.getUUID().toString());
 		printAttribute("zoom", cache.getZoomLevel());
+		printAttribute("streaming-row-limit", cache.getStreamingRowLimit());
 		if (cache.getDatabase() != null && cache.getDatabase().getDataSource() != null) {
 			printAttribute("data-source", cache.getDatabase().getDataSource().getName());
 		}

@@ -82,5 +82,25 @@ public interface Query extends WabitObject {
 	 * Call this when the query is to be disposed of.
 	 */
 	public void cleanup();
+	
+	/**
+	 * Returns true if the data source this query is based on is a streaming query.
+	 * Returns false otherwise.
+	 */
+	public boolean isStreaming();
+	
+	/**
+	 * Sets the limit of rows a streaming query will retain as new results come
+	 * in. If the limit is reached the oldest rows will be removed for the new 
+	 * rows.
+	 */
+	public void setStreamingRowLimit(int streamingRowLimit);
+	
+	/**
+	 * Gets the limit of rows a streaming query will retain as new results come
+	 * in. If the limit is reached the oldest rows will be removed for the new 
+	 * rows.
+	 */
+	public int getStreamingRowLimit();
     
 }

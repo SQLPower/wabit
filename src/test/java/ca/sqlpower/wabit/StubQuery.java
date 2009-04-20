@@ -80,4 +80,19 @@ public class StubQuery extends StubWabitObject implements Query {
 		
 	}
 
+	public int getStreamingRowLimit() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public boolean isStreaming() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public void setStreamingRowLimit(int streamingRowLimit) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

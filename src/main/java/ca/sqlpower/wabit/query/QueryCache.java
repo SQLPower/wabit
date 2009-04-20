@@ -418,6 +418,14 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			}
 		}
 	};
+
+	/**
+	 * This is the streaming row limit for the query. No more than this many
+	 * rows will be shown in the streaming result set and if this limit is
+	 * reached and new rows are added then the oldest rows in the result set
+	 * will be removed.
+	 */
+	private int streamingRowLimit = 1000;
 	
 	public QueryCache(WabitSession session) {
 		this((String)null, session);
@@ -912,7 +920,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             				public void run() {
             					try {
             						Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
-									crs.populate(streamingRS, rsChangeListener);
+									crs.follow(streamingRS, rsChangeListener, getStreamingRowLimit());
 								} catch (SQLException e) {
 									logger.error("Exception while streaming result set", e);
 								}
@@ -1351,7 +1359,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	
 	public void setDataSource(SPDataSource dataSource) {
 	    this.database = session.getSqlDatabase(dataSource);
-	    setStreaming(dataSource.getParentType().getSupportsStreamQueries());
+	    if (dataSource != null) {
+	    	setStreaming(dataSource.getParentType().getSupportsStreamQueries());
+	    }
 	}
 	
 	/**
@@ -1442,5 +1452,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	
 	public List<Thread> getStreamingThreads() {
 		return Collections.unmodifiableList(streamingThreads);
+	}
+
+	public void setStreamingRowLimit(int streamingRowLimit) {
+		this.streamingRowLimit = streamingRowLimit;
+	}
+
+	public int getStreamingRowLimit() {
+		return streamingRowLimit;
 	}
 }

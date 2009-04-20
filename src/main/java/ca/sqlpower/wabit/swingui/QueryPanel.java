@@ -101,7 +101,9 @@ import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
 import ca.sqlpower.wabit.swingui.action.ForumAction;
+import ca.sqlpower.wabit.swingui.action.ShowQueryPropertiesAction;
 import ca.sqlpower.wabit.swingui.querypen.QueryPen;
+import ca.sqlpower.wabit.swingui.querypen.QueryPropertiesPanel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -501,6 +503,7 @@ public class QueryPanel implements WabitPanel {
 		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
 		queryToolBar.add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
+		queryToolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
 		
 		JToolBar wabitBar = new JToolBar();
 		wabitBar.setFloatable(false);

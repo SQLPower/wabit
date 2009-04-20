@@ -89,6 +89,7 @@ import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
 import ca.sqlpower.wabit.swingui.action.ForumAction;
+import ca.sqlpower.wabit.swingui.action.ShowQueryPropertiesAction;
 import ca.sqlpower.wabit.swingui.event.CreateJoinEventHandler;
 import ca.sqlpower.wabit.swingui.event.QueryPenSelectionEventHandler;
 import edu.umd.cs.piccolo.PLayer;
@@ -507,6 +508,7 @@ public class QueryPen implements MouseState, WabitNode {
     	queryPenBarChild.addSeparator();
         
     	queryPenBarChild.add(new CreateLayoutFromQueryAction(session, session.getProject(), model));
+    	queryPenBarChild.add(new ShowQueryPropertiesAction(model, session.getFrame()));
     	
         JToolBar queryPenWabitBar = new JToolBar(JToolBar.HORIZONTAL);
         queryPenWabitBar.setFloatable(false);

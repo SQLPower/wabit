@@ -275,6 +275,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			query.setDataSource(ds);
         		} else if (aname.equals("zoom")) {
         			query.setZoomLevel(Integer.parseInt(aval));
+        		} else if (aname.equals("streaming-row-limit")) {
+        			query.setStreamingRowLimit(Integer.parseInt(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
