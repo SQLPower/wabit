@@ -313,6 +313,9 @@ public class ProjectXMLDAO {
 						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
 						printAttribute("graph-type", graphRenderer.getGraphType().name());
 						printAttribute("legend-position", graphRenderer.getLegendPosition().name());
+						if (graphRenderer.getBackgroundColour() != null) {
+							printAttribute("bg-colour", graphRenderer.getBackgroundColour().getRGB());
+						}
 						printAttribute("query-id", graphRenderer.getQuery().getUUID().toString());
 						xml.niprintln(out, ">");
 						xml.indent++;

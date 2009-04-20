@@ -31,27 +31,33 @@ import ca.sqlpower.wabit.WabitObject;
 public interface ReportContentRenderer extends WabitObject {
 	
 	public enum BackgroundColours {
-		LIGHT_PINK(new Color(0xffcccc)),
-		ORANGE(new Color(0xffcc99)),
-		YELLOW(new Color(0xffffcc)),
-		GREEN(new Color(0xccffcc)), 
-		LIGHT_BLUE(new Color(0xccffff)), 
-		PURPLE(new Color(0xccccff)),
-		BLUE(new Color(0x99ccff)),
-		PINK(new Color(0xffccff)),
-		DARK_GREY(new Color(0xcccccc)),
-		GREY(new Color(0xdddddd)),
-		LIGHT_GREY(new Color(0xeeeeee)),
-		WHITE(new Color(0xffffff));
+		LIGHT_PINK(new Color(0xffcccc), "Light Pink"),
+		ORANGE(new Color(0xffcc99), "Orange"),
+		YELLOW(new Color(0xffffcc), "Yellow"),
+		GREEN(new Color(0xccffcc), "Green"), 
+		LIGHT_BLUE(new Color(0xccffff), "Light Blue"), 
+		PURPLE(new Color(0xccccff), "Purple"),
+		BLUE(new Color(0x99ccff), "Blue"),
+		PINK(new Color(0xffccff), "Pink"),
+		DARK_GREY(new Color(0xcccccc), "Dark Grey"),
+		GREY(new Color(0xdddddd), "Grey"),
+		LIGHT_GREY(new Color(0xeeeeee), "Light Grey"),
+		WHITE(new Color(0xffffff), "White");
 		
 		private final Color colour;
+		private final String colourName;
 
-		private BackgroundColours(Color colour) {
+		private BackgroundColours(Color colour, String colourName) {
 			this.colour = colour;
+			this.colourName = colourName;
 		}
 		
 		public Color getColour() {
 			return colour;
+		}
+		
+		public String getColourName() {
+			return colourName;
 		}
 	}
 
