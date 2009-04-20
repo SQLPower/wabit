@@ -86,9 +86,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 * @param terminateWhenLastSessionCloses
 	 *            If this flag is true, this session context will halt the VM
 	 *            when its last session closes.
+	 * @param useJmDNS
+	 *            If this flag is true, then this session will create a JmDNS
+	 *            instance for searching for Wabit servers.
 	 * @throws IOException
 	 *             If the startup configuration files can't be read
-	 * @throws SQLObjectException If the pl.ini is invalid.
+	 * @throws SQLObjectException
+	 *             If the pl.ini is invalid.
 	 */
 	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS) throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
