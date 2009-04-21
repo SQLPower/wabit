@@ -996,6 +996,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		parent.setHeight(100);
 		setName("Empty graph");
 	}
+	
+	public void cleanup() {
+		if (query instanceof StatementExecutor) {
+			((StatementExecutor) query).removeRowSetChangeListener(queryListener);
+		}
+	}
 
 	public Color getBackgroundColour() {
 		return backgroundColour;

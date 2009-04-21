@@ -58,6 +58,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 			getPropertiesPanel();
 		}
 	}
+	
+	public void cleanup() {
+		//do nothing
+	}
 
 	public Color getBackgroundColour() {
 		return null;

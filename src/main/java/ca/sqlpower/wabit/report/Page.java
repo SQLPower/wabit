@@ -281,6 +281,7 @@ public class Page extends AbstractWabitObject {
         if (removeme.getParent() != this) {
             throw new IllegalStateException("That's not my content box!");
         }
+        removeme.cleanup();
         int index = contentBoxes.indexOf(removeme);
         if (index != -1) {
         	contentBoxes.remove(removeme);

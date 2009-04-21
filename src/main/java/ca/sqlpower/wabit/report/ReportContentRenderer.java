@@ -127,4 +127,11 @@ public interface ReportContentRenderer extends WabitObject {
     DataEntryPanel getPropertiesPanel();
 
 	Color getBackgroundColour();
+
+	/**
+	 * This method disconnects this renderer from the rest of the application
+	 * and does additional cleanup as required. This is particularly useful when
+	 * removing a renderer.
+	 */
+	void cleanup();
 }

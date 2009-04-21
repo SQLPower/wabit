@@ -242,6 +242,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			firePropertyChange("resultSetRowAdded", null, e.getRow());
 		}
 	};
+	
+	/**
+	 * This listener will fire a change event when the query changes to signal that
+	 * the result set renderer needs to be repainted.
+	 */
+    private final PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
+		}
+	};
     
     public ResultSetRenderer(Query query) {
     	this(query, new ArrayList<ColumnInfo>());
@@ -250,19 +260,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     public ResultSetRenderer(Query query, List<ColumnInfo> columnInfoList) {
         this.query = query;
-        //XXX: need to remove this listener if the result set renderer is removed. Do this before or immediately after it gets committed if this works.
         if (query != null && query instanceof StatementExecutor) {
         	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
         }
-        query.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
-			}
-		});
+		query.addPropertyChangeListener(queryChangeListener);
         setUpFormats();
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         setName("Result Set: " + query.getName());
 	}
+    
+    public void cleanup() {
+    	if (query != null && query instanceof StatementExecutor) {
+        	((QueryCache) query).removeRowSetChangeListener(rowSetChangeListener);
+        }
+    	query.removePropertyChangeListener(queryChangeListener);
+    }
     
     /**
      * This will execute the query contained in this result set and
@@ -452,13 +464,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public void resetToFirstPage() {
-        try {
-            if (paintingRS != null) paintingRS.beforeFirst();
-            pageRowNumberList.clear();
-        } catch (SQLException e) {
-        	executeException = e;
-        	logger.error(e);
-        }
+    	paintingRS = null;
+    	pageRowNumberList.clear();
     }
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {

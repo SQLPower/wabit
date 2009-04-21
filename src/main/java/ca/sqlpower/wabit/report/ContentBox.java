@@ -101,7 +101,8 @@ public class ContentBox extends AbstractWabitObject {
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
-            WabitUtils.listenToHierarchy(oldContentRenderer, rendererChangeHandler, emptyChildListener);
+        	oldContentRenderer.cleanup();
+            WabitUtils.unlistenToHierarchy(oldContentRenderer, rendererChangeHandler, emptyChildListener);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
@@ -208,6 +209,10 @@ public class ContentBox extends AbstractWabitObject {
 
 	public Rectangle2D getBounds() {
 		return new Rectangle2D.Double(x, y, width, height);
+	}
+	
+	public void cleanup() {
+		contentRenderer.cleanup();
 	}
 
 }

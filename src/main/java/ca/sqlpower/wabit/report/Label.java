@@ -101,6 +101,10 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         setName("Label");
     }
     
+    public void cleanup() {
+    	//do nothing
+    }
+    
     public Label(VariableContext variableContext) {
         this(variableContext, null);
         setName("Label");
