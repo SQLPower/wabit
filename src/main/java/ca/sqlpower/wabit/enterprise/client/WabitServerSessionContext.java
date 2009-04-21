@@ -37,6 +37,9 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -57,13 +60,18 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     private static final Logger logger = Logger
             .getLogger(WabitServerSessionContext.class);
     
-    private HttpClient httpClient = new DefaultHttpClient();
+    private final HttpClient httpClient;
     private final WabitServerInfo serviceInfo;
     public static final HashMap<WabitServerInfo, WabitServerSessionContext> instances = new HashMap<WabitServerInfo, WabitServerSessionContext>();
 
     private WabitServerSessionContext(WabitServerInfo serviceInfo, boolean terminateWhenLastSessionCloses)
             throws IOException, SQLObjectException {
         super(terminateWhenLastSessionCloses, true);
+
+        HttpParams params = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(params, 2000);
+        httpClient = new DefaultHttpClient(params);
+
         this.serviceInfo = serviceInfo;
         if (serviceInfo == null) {
             logger.error("Null pointer Exception");

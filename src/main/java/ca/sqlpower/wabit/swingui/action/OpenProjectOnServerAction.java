@@ -33,6 +33,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
@@ -66,7 +69,13 @@ public class OpenProjectOnServerAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        HttpClient httpclient = new DefaultHttpClient();
+        // TODO the meat of this routine should be moved into WabitServerSessionContext
+        // in the form of an open() method. At the same time, we will
+        // move the meat of the file-based open project action into the local session context,
+        // and expose a uniform method signature in the (Swing?) session context interface.
+        HttpParams params = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(params, 2000);
+        HttpClient httpclient = new DefaultHttpClient(params);
         try {
             final WabitSwingSessionContext sessionContext =
                 new WabitSwingSessionContextImpl(WabitServerSessionContext.getInstance(serviceInfo), false);
