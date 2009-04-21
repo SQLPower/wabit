@@ -196,14 +196,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     /**
      * A cached copy of the result set that came from the Query object.
-     * TODO: dump this when the query changes, (delay re-executing it until it's needed again)  
+     * This will be null when the result set is not being painted. Just
+     * before the result set is to be rendered to the screen the 
+     * executeQuery method should be called to populate this result set
+     * and this value should be set back to null when rendering the result
+     * set is finished.
      */
-    private ResultSet rs;
-    
-    /**
-     * If this is true then a new result set needs to be fetched from the database. 
-     */
-    private boolean refreshResultSet;
+    private CachedRowSet paintingRS = null;
     
     /**
      * This result set should only be used when printing. If printing is not being
@@ -224,12 +223,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 */
     private List<Integer> pageRowNumberList = new ArrayList<Integer>();
 
-    /**
-     * This is a copy of the query at the time of execution of the query. This will
-     * let us get the items belonging to each query.
-     */
-	private Query cachedQuery;
-	
 	/**
 	 * This will store the background colour for the result set renderer.
 	 */
@@ -257,16 +250,17 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     public ResultSetRenderer(Query query, List<ColumnInfo> columnInfoList) {
         this.query = query;
+        //XXX: need to remove this listener if the result set renderer is removed. Do this before or immediately after it gets committed if this works.
+        if (query != null && query instanceof StatementExecutor) {
+        	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
+        }
         query.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				refreshResultSet = true;
-				logger.debug("Refreshing result set as query changed");
-				firePropertyChange(QUERY, cachedQuery, ResultSetRenderer.this.query);
+				firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
 			}
 		});
         setUpFormats();
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
-        refreshResultSet = true;
         setName("Result Set: " + query.getName());
 	}
     
@@ -280,19 +274,20 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		}
         ResultSet executedRs = null;
         executeException = null;
-        if (cachedQuery != null && cachedQuery instanceof StatementExecutor) {
-        	((StatementExecutor) cachedQuery).removeRowSetChangeListener(rowSetChangeListener);
-        }
-        cachedQuery = new QueryCache(query);
-        ((QueryCache) cachedQuery).addRowSetChangeListener(rowSetChangeListener);
 		try {
-            executedRs = cachedQuery.fetchResultSet(); // TODO run in background
+            executedRs = query.fetchResultSet();
             initColumns(executedRs);
+            if (executedRs instanceof CachedRowSet) {
+            	paintingRS = ((CachedRowSet) executedRs).createShared();
+            } else {
+            	paintingRS = new CachedRowSet();
+            	paintingRS.populate(executedRs);
+            }
         } catch (Exception ex) {
             executeException = ex;
         }
-        setName("Result Set: " + cachedQuery.getName());
-        rs = executedRs;
+        setName("Result Set: " + query.getName());
+        
         if (logger.isDebugEnabled()) {
 			logger.debug("Finished fetching results for query " + query.generateQuery());
 		}
@@ -406,7 +401,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
         	ColumnInfo ci;
-        	if (((QueryCache) cachedQuery).isScriptModified()) {
+        	if (((QueryCache) query).isScriptModified()) {
         		String columnKey = rsmd.getColumnLabel(col);
         		if (colAliasToInfoMap.get(columnKey) != null) {
         			ci = colAliasToInfoMap.get(columnKey);
@@ -415,7 +410,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         			ci.setWidth(-1);
         		}
         	} else {
-        		Item item = ((QueryCache) cachedQuery).getSelectedColumns().get(col - 1);
+        		Item item = ((QueryCache) query).getSelectedColumns().get(col - 1);
         		String columnKey = rsmd.getColumnLabel(col);
         		logger.debug("Matching key " + item.getName());
         		if (colKeyToInfoMap.get(item) != null) {
@@ -458,7 +453,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     public void resetToFirstPage() {
         try {
-            if (rs != null) rs.beforeFirst();
+            if (paintingRS != null) paintingRS.beforeFirst();
             pageRowNumberList.clear();
         } catch (SQLException e) {
         	executeException = e;
@@ -469,9 +464,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
     	if (printing && printingResultSet == null) {
     		executeQueryForPrinting();
-    	} else if (refreshResultSet) {
+    	} else if (!printing && paintingRS == null) {
     		executeQuery();
-    		refreshResultSet = false;
     	}
         if (executeException != null) {
             return renderFailure(g, contentBox, scaleFactor, pageIndex);
@@ -515,7 +509,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
-    	ResultSet rs = this.rs;
+    	ResultSet rs = this.paintingRS;
     	if (printing) {
     		rs = printingResultSet;
     	}
@@ -714,7 +708,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             	g.drawLine(0, 0, contentBox.getWidth() - 1, 0);
             }
         	if (rs.isAfterLast()) {
-        		printingResultSet = null;
+        		if (printing) {
+        			printingResultSet = null;
+        		} else {
+        			this.paintingRS = null;
+        		}
         	}
             return !rs.isAfterLast();
         } catch (Exception ex) {
