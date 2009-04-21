@@ -305,7 +305,7 @@ public class QueryPanel implements WabitPanel {
 		queryCache.addRowSetChangeListener(rowSetChangeListener);
 		queryPen = new QueryPen(session, this, queryCache);
 		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
-		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), mainSplitPane, queryCache);
+		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), session, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
@@ -342,8 +342,7 @@ public class QueryPanel implements WabitPanel {
 					if(reportComboBox.getSelectedItem() != null) {
 					    // FIXME the session (or session context) should be maintaining a map of data
 					    // sources to SQLDatabase instances. Each SQLDatabase instance has its own connection pool! 
-						rootNode.addChild(new SQLDatabase(
-								(SPDataSource) reportComboBox.getSelectedItem()));
+						rootNode.addChild(QueryPanel.this.session.getDatabase((SPDataSource) reportComboBox.getSelectedItem()));
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 						dragTree.setModel(tempTreeModel);
 						dragTree.setVisible(true);
@@ -359,7 +358,7 @@ public class QueryPanel implements WabitPanel {
             if (queryCache.getDatabase() == null) {
                 dragTree.setVisible(false);
             } else {
-                reportComboBox.setSelectedItem(queryCache.getDatabase().getDataSource());
+                reportComboBox.setSelectedItem((SPDataSource) queryCache.getDatabase().getDataSource());
                 dragTree.setVisible(true);
             }
         } else {

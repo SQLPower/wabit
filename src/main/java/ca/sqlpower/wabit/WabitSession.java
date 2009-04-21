@@ -24,6 +24,7 @@ import java.sql.Connection;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
@@ -35,7 +36,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
  * The basic interface for a Wabit session. This interface provides all the
  * UI-independent state and behaviour of a Wabit session. 
  */
-public interface WabitSession {
+public interface WabitSession extends SQLDatabaseMapping {
 
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l);
 
@@ -140,14 +141,14 @@ public interface WabitSession {
      * the database structure in all sessions to update. We have to consider any
      * possible negative or positive implications of this.
      */
-    public SQLDatabase getSqlDatabase(SPDataSource dataSource);
+    public SQLDatabase getDatabase(SPDataSource dataSource);
 
     /**
      * Borrows a connection to the given data source from this session's
      * connection pool. You must call {@link Connection#close()} on the returned
      * object as soon as you are finished with it.
      * <p>
-     * Design note: Equivalent to {@link #getSqlDatabase(SPDataSource)}
+     * Design note: Equivalent to {@link #getDatabase(SPDataSource)}
      * .getConnection(). Normally we discourage adding convenience methods to an
      * interface, and this is indeed a convenience method on an interface. The
      * reason for this method is to reinforce the idea that connections to data

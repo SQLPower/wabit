@@ -108,10 +108,11 @@ public class StubWabitSession implements WabitSession {
     }
 
     public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
-        return getSqlDatabase(dataSource).getConnection();
+        return getDatabase(dataSource).getConnection();
     }
 
-    public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
             dataSource = new SPDataSource(dataSource);

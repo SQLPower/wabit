@@ -29,6 +29,7 @@ import java.util.Map;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
@@ -53,7 +54,7 @@ public class WabitSessionImpl implements WabitSession {
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
 	
     /**
-     * The database instances we've created due to calls to {@link #getSqlDatabase(SPDataSource)}.
+     * The database instances we've created due to calls to {@link #getDatabase(SPDataSource)}.
      */
     private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
@@ -74,7 +75,7 @@ public class WabitSessionImpl implements WabitSession {
 
 	public Connection borrowConnection(SPDataSource dataSource)
 			throws SQLObjectException {
-		return getSqlDatabase(dataSource).getConnection();
+		return getDatabase(dataSource).getConnection();
 	}
 
 	public boolean close() {
@@ -113,7 +114,7 @@ public class WabitSessionImpl implements WabitSession {
 		return 0;
 	}
 
-	public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
+	public SQLDatabase getDatabase(SPDataSource dataSource) {
 		SQLDatabase db = databases.get(dataSource);
         if (db == null) {
             dataSource = new SPDataSource(dataSource);  // defensive copy for cache key

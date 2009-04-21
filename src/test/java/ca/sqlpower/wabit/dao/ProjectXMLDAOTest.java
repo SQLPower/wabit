@@ -134,6 +134,8 @@ public class ProjectXMLDAOTest extends TestCase {
 						}
 					} else if (property.getPropertyType() == WabitObject.class) {
 						newVal = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
+					} else if (property.getPropertyType() == SQLDatabase.class) {
+						newVal = new SQLDatabase();
 					} else {
 						throw new RuntimeException("This test case lacks a value for "
 								+ property.getName() + " (type "

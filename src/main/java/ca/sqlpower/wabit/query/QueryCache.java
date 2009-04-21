@@ -902,6 +902,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	    try {
 	        con = database.getConnection();
 	        stmt = con.createStatement();
+    		if (streaming) {
+    			streamingStatement = stmt;
+    			streamingConnection = con;
+    		}
 	        if (!fetchFullResults) {
 	        	stmt.setMaxRows(session.getRowLimit());
 	        }
@@ -912,8 +916,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             	if (sqlResult) {
             		final CachedRowSet crs = new CachedRowSet();
             		if (streaming) {
-            			streamingStatement = stmt;
-            			streamingConnection = con;
             			final ResultSet streamingRS = stmt.getResultSet();
             			Thread t = new Thread() {
             				@Override
@@ -1358,7 +1360,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	}
 	
 	public void setDataSource(SPDataSource dataSource) {
-	    this.database = session.getSqlDatabase(dataSource);
+	    this.database = session.getDatabase(dataSource);
 	    if (dataSource != null) {
 	    	setStreaming(dataSource.getParentType().getSupportsStreamQueries());
 	    }
@@ -1460,5 +1462,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
 	public int getStreamingRowLimit() {
 		return streamingRowLimit;
+	}
+
+	public void setDatabase(SQLDatabase db) {
+		database = db;
 	}
 }

@@ -189,7 +189,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
         return null;
     }
 
-    public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
-    	return delegateSession.getSqlDatabase(dataSource);
+    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    	return delegateSession.getDatabase(dataSource);
     }
 }

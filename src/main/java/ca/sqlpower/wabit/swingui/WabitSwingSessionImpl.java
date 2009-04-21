@@ -168,7 +168,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionImpl.class);
 	
     /**
-     * The database instances we've created due to calls to {@link #getSqlDatabase(SPDataSource)}.
+     * The database instances we've created due to calls to {@link #getDatabase(SPDataSource)}.
      */
     private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
     
@@ -727,10 +727,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
 
     public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
-        return getSqlDatabase(dataSource).getConnection();
+        return getDatabase(dataSource).getConnection();
     }
 
-    public SQLDatabase getSqlDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(SPDataSource dataSource) {
     	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
