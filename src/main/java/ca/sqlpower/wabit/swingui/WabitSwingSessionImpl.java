@@ -425,8 +425,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
         
-        frame.setVisible(true);
-        
         //prefs
         if (prefs.get("frameBounds", null) != null) {
             String[] frameBounds = prefs.get("frameBounds", null).split(",");
@@ -444,7 +442,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         	frame.setLocation(200, 100);
         }
 
-
+        frame.setVisible(true);
+        
         logger.debug("UI is built.");
     }
     
