@@ -385,20 +385,20 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	private final List<RowSetChangeListener> rowSetChangeListeners = new ArrayList<RowSetChangeListener>();
 	
 	/**
-	 * This is the statement currently streaming result sets into this query cache.
-	 * This lets the query cancel a streaming statement.
+	 * This is the statement currently entering result sets into this query cache.
+	 * This lets the query cancel a running statement.
 	 * <p>
 	 * This is only used if {@link QueryCache#streaming} is true.
 	 */
-	private Statement streamingStatement;
+	private Statement currentStatement;
 	
 	/**
-	 * This is the connection currently streaming result sets into this query cache.
-	 * This lets the query close a streaming connection
+	 * This is the connection currently entering result sets into this query cache.
+	 * This lets the query close a running connection
 	 * <p>
 	 * This is only used if {@link QueryCache#streaming} is true.
 	 */
-	private Connection streamingConnection; 
+	private Connection currentConnection; 
 	
 	/**
 	 * The threads in this list are used to stream queries from a connection into
@@ -516,17 +516,17 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	
 	public void cleanup() {
 		session.removePropertyChangeListener(rowLimitChangeListener);
-		if (streamingStatement != null) {
+		if (currentStatement != null) {
 			try {
-				streamingStatement.cancel();
-				streamingStatement.close();
+				currentStatement.cancel();
+				currentStatement.close();
 			} catch (SQLException e) {
 				logger.error("Error while closing old streaming statement", e);
 			}
 		}
-		if (streamingConnection != null) {
+		if (currentConnection != null) {
 			try {
-				streamingConnection.close();
+				currentConnection.close();
 			} catch (SQLException e) {
 				logger.error("Error while closing old streaming connection", e);
 			}
@@ -871,24 +871,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	 *             If the query fails to execute for any reason.
 	 */
 	public boolean executeStatement(boolean fetchFullResults) throws SQLException {
-		if (streamingStatement != null) {
-			streamingStatement.cancel();
-			try {
-				streamingStatement.close();
-			} catch (SQLException e) {
-				logger.error("Exception while closing old streaming statement", e);
-			}
-			streamingStatement = null;
-		}
-		if (streamingConnection != null) {
-			try {
-				streamingConnection.close();
-			} catch (SQLException e) {
-				logger.error("Exception while closing old streaming connection", e);
-			}
-			streamingConnection = null;
-		}
-		streamingThreads.clear();
+		stopRunning();
 		resultPosition = 0;
 		resultSets.clear();
 		updateCounts.clear();
@@ -896,27 +879,22 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			throw new NullPointerException("Data source is null.");
 		}
 	    String sql = generateQuery();
-	    Connection con = null;
-	    Statement stmt = null;
 	    ResultSet rs = null;
 	    try {
-	        con = database.getConnection();
-	        stmt = con.createStatement();
-    		if (streaming) {
-    			streamingStatement = stmt;
-    			streamingConnection = con;
-    		}
+	    	currentConnection = database.getConnection();
+	    	firePropertyChange("running", false, true);
+	    	currentStatement = currentConnection.createStatement();
 	        if (!fetchFullResults) {
-	        	stmt.setMaxRows(session.getRowLimit());
+	        	currentStatement.setMaxRows(session.getRowLimit());
 	        }
-	        boolean initialResult = stmt.execute(sql);
+	        boolean initialResult = currentStatement.execute(sql);
             boolean sqlResult = initialResult;
             boolean hasNext = true;
             while (hasNext) {
             	if (sqlResult) {
             		final CachedRowSet crs = new CachedRowSet();
             		if (streaming) {
-            			final ResultSet streamingRS = stmt.getResultSet();
+            			final ResultSet streamingRS = currentStatement.getResultSet();
             			Thread t = new Thread() {
             				@Override
             				public void run() {
@@ -931,15 +909,15 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             			t.start();
             			streamingThreads.add(t);
             		} else {
-            			crs.populate(stmt.getResultSet());
+            			crs.populate(currentStatement.getResultSet());
             		}
             		resultSets.add(crs);
             	} else {
             		resultSets.add(null);
             	}
-                updateCounts.add(stmt.getUpdateCount());
-                sqlResult = stmt.getMoreResults();
-                hasNext = !((sqlResult == false) && (stmt.getUpdateCount() == -1));
+                updateCounts.add(currentStatement.getUpdateCount());
+                sqlResult = currentStatement.getMoreResults();
+                hasNext = !((sqlResult == false) && (currentStatement.getUpdateCount() == -1));
             }
             return initialResult;
 	    } catch (SQLObjectException e) {
@@ -953,20 +931,23 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	    				logger.warn("Failed to close result set. Squishing this exception: ", ex);
 	    			}
 	    		}
-	    		if (stmt != null) {
+	    		if (currentStatement != null) {
 	    			try {
-	    				stmt.close();
+	    				currentStatement.close();
+	    				currentStatement = null;
 	    			} catch (Exception ex) {
 	    				logger.warn("Failed to close statement. Squishing this exception: ", ex);
 	    			}
 	    		}
-	    		if (con != null) {
+	    		if (currentConnection != null) {
 	    			try {
-	    				con.close();
+	    				currentConnection.close();
+	    				currentConnection = null;
 	    			} catch (Exception ex) {
 	    				logger.warn("Failed to close connection. Squishing this exception: ", ex);
 	    			}
 	    		}
+	    		firePropertyChange("running", true, false);
 	    	}
 	    }
 	}
@@ -1466,5 +1447,31 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
 	public void setDatabase(SQLDatabase db) {
 		database = db;
+	}
+
+	public boolean isRunning() {
+		return (currentStatement != null || currentConnection != null);
+	}
+
+	public void stopRunning() {
+		if (currentStatement != null) {
+			try {
+				currentStatement.cancel();
+				currentStatement.close();
+				currentStatement = null;
+			} catch (SQLException e) {
+				logger.error("Exception while closing old streaming statement", e);
+			}
+		}
+		if (currentConnection != null) {
+			try {
+				currentConnection.close();
+				currentConnection = null;
+			} catch (SQLException e) {
+				logger.error("Exception while closing old streaming connection", e);
+			}
+		}
+		streamingThreads.clear();
+		firePropertyChange("running", true, false);
 	}
 }

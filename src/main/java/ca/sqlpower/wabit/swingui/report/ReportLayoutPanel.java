@@ -43,6 +43,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,6 +70,7 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.Query;
@@ -370,7 +372,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 					int index, boolean isSelected, boolean cellHasFocus) {
 				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
 				((JLabel) c).setText(((Query) value).getName());
-				((JLabel) c).setIcon(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png")));
+				
+				final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
+				if (((Query) value).isRunning()) {
+					final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_execute.png"));
+					((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+				} else {
+					((JLabel) c).setIcon(queryIcon);
+				}
 				return c;
 			}
 		});

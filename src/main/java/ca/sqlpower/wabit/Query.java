@@ -90,6 +90,17 @@ public interface Query extends WabitObject {
 	public boolean isStreaming();
 	
 	/**
+	 * Returns true if the query is currently executing, false otherwise. 
+	 */
+	public boolean isRunning();
+	
+	/**
+	 * Attempts to stop the query by calling cancel on it. This will also close
+	 * any open streaming statements/connections.
+	 */
+	public void stopRunning();
+	
+	/**
 	 * Sets the limit of rows a streaming query will retain as new results come
 	 * in. If the limit is reached the oldest rows will be removed for the new 
 	 * rows.

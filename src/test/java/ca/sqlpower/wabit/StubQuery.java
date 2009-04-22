@@ -95,4 +95,14 @@ public class StubQuery extends StubWabitObject implements Query {
 		
 	}
 
+	public boolean isRunning() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public void stopRunning() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

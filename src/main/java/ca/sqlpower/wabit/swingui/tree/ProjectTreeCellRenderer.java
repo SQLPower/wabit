@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.tree;
 
 import java.awt.Component;
+import java.util.Arrays;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -27,6 +28,7 @@ import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
+import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -41,6 +43,7 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon LAYOUT_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/layout.png"));
     public static final Icon BOX_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/shape_square.png"));
     public static final Icon QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_query.png"));
+    public static final Icon RUNNING_QUERY_BADGE = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_execute.png"));
 
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
@@ -69,7 +72,11 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
             	Guide g = (Guide) wo;
             	r.setText(g.getName() + " @" + g.getOffset());
             } else if (wo instanceof Query) {
-            	r.setIcon(QUERY_ICON);
+            	if (((Query) wo).isRunning()) {
+            		r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, RUNNING_QUERY_BADGE})));
+            	} else {
+            		r.setIcon(QUERY_ICON);
+            	}
             }
 
         }

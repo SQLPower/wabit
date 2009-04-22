@@ -212,7 +212,7 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private final PropertyChangeListener queryCacheListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName() != QueryCache.PROPERTY_QUERY_TEXT) {
+			if (e.getPropertyName() != QueryCache.PROPERTY_QUERY_TEXT && e.getPropertyName() != "running") {
 				executeQueryInCache();
 			}
 		}
@@ -454,6 +454,11 @@ public class QueryPanel implements WabitPanel {
 		executeButton.setToolTipText(executeButton.getText());
 		executeButton.setText("");
 		queryToolBar.add(executeButton);
+		queryUIComponents.getStopButton().setAction(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				queryCache.stopRunning();
+			}
+		});
 		queryUIComponents.getStopButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/stop.png")));
 		queryUIComponents.getStopButton().setToolTipText(queryUIComponents.getStopButton().getText());
 		queryUIComponents.getStopButton().setText("");

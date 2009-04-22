@@ -212,7 +212,7 @@ public class ProjectTreeListener extends MouseAdapter {
 
 		menu.add(new NewLayoutAction(session));
 		
-		Object lastPathComponent = getLastPathComponent(e);
+		final Object lastPathComponent = getLastPathComponent(e);
 		if (lastPathComponent != null) {
 			menu.addSeparator();
 			
@@ -226,6 +226,15 @@ public class ProjectTreeListener extends MouseAdapter {
 		if (lastPathComponent instanceof Query || lastPathComponent instanceof WabitDataSource
 				|| lastPathComponent instanceof Layout) {
 			menu.add(new DeleteFromTreeAction(lastPathComponent));
+		}
+		
+		if (lastPathComponent instanceof Query) {
+			menu.addSeparator();
+			menu.add(new AbstractAction("Stop Running") {
+				public void actionPerformed(ActionEvent e) {
+					((Query) lastPathComponent).stopRunning();
+				}
+			});
 		}
 
 		menu.show(e.getComponent(), e.getX(), e.getY());
