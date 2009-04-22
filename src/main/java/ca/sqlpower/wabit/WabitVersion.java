@@ -34,7 +34,7 @@ public class WabitVersion {
         try {
             Properties wabitProps = new Properties();
             wabitProps.load(WabitVersion.class.getResourceAsStream("wabit.properties"));
-            versionStr = wabitProps.getProperty("version");
+            versionStr = wabitProps.getProperty("app.version");
             VERSION = new Version(versionStr);
         } catch (VersionFormatException ex) {
             throw new AssertionError("Version properties resource does not contain a valid version number!");

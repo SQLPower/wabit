@@ -37,7 +37,7 @@
                             <goal>generate-pdf</goal>
                             <goal>generate-manpages</goal>
                         </goals>
-                        <phase>compile</phase>
+                        <phase>site</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -159,13 +159,14 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
+								<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
 								<exec executable="python" dir="src/main/installer/izpack2exe">
 									<arg value="izpack2exe.py" />
 									<arg
 										value="--file=../../../../target/Wabit-Setup-Windows-${project.version}.jar" />
 									<arg value="--no-upx" />
 									<arg
-										value="--output=../../../../target/Wabit-Setup-Windows-${project.version}.exe" />
+										value="--output=../../../../target/Wabit-Setup-Windows-${app.version}.exe" />
 									<arg value="--with-7z=./7za" />
 								</exec>
 							</tasks>
@@ -189,9 +190,10 @@
 									<fileset dir="src/main/resources/jdbc" />
 								</copy>
 
+								<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
 
 								<!-- jarbundler is from sourceforge, defined near top of file -->
-								<jarbundler dir="target" name="Wabit" version="${project.version}"
+								<jarbundler dir="target" name="Wabit" version="${app.version}"
 									mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionImpl"
 									icon="src/main/resources/icons/wabit.icns"
 									jvmversion="1.5+" shortname="Wabit"
@@ -213,7 +215,7 @@
 
 								<exec executable="tar" dir="target">
 									<arg value="-cpzf" />
-									<arg value="Wabit-OSX-${project.version}.tar.gz"/>
+									<arg value="Wabit-OSX-${app.version}.tar.gz"/>
 									<arg value="../LICENSE"/>
 									<arg value="Wabit.app"/>
 								</exec>
@@ -310,10 +312,21 @@
 						<configuration>
 							<tasks>
 								<taskdef name="propertyfile" classname="org.apache.tools.ant.taskdefs.optional.PropertyFile"/>
+								<tstamp>
+           							<format property="date" pattern="yyyyMMddHHmmss"/>
+        						</tstamp>
+								<condition property ="version.suffix" value="-${date}">
+                               		<isset property="nightly"/>     
+                           		</condition>
+                           		<condition property ="version.suffix" value="">
+                               		<not><isset property="nightly"/></not>     
+                           		</condition>
+                           		<property name="app.version" value="${project.version}${version.suffix}"/>
+                           		
 								<propertyfile
 								    file="src/main/resources/ca/sqlpower/wabit/wabit.properties"
 								    comment="Wabit Version">
-								  <entry key="version" value="${project.version}"/>
+								  <entry key="app.version" value="${app.version}"/>
 								</propertyfile>
 							</tasks>
 						</configuration>
