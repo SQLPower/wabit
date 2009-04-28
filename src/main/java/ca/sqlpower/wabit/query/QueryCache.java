@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -262,6 +263,22 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			if (e.getPropertyName().equals(Item.PROPERTY_SELECTED)) {
 				selectionChanged((Item)e.getSource(), (Boolean)e.getNewValue());
 			}
+		}
+	};
+	
+	/**
+	 * This property change support object is used to forward timer events from the 
+	 * worker this class is running in to classes listening for the timer event.
+	 */
+	private final PropertyChangeSupport timerPCS = new PropertyChangeSupport(this);
+
+	/**
+	 * This listener is used to forward the timer events to the timerPCS object
+	 * for classes listening for timer events.
+	 */
+	private final PropertyChangeListener timerListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			timerPCS.firePropertyChange(evt);
 		}
 	};
 	
@@ -1473,5 +1490,17 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		}
 		streamingThreads.clear();
 		firePropertyChange("running", true, false);
+	}
+
+	public void addTimerListener(PropertyChangeListener l) {
+		timerPCS.addPropertyChangeListener(l);
+	}
+
+	public PropertyChangeListener getTimerListener() {
+		return timerListener;
+	}
+
+	public void removeTimerListener(PropertyChangeListener l) {
+		timerPCS.removePropertyChangeListener(l);
 	}
 }

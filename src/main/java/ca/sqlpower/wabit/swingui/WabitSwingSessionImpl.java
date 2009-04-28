@@ -65,10 +65,12 @@ import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TreeModelEvent;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
 
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -314,10 +316,34 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
     	
-		projectTree.addMouseListener(new ProjectTreeListener(this));
-    	ProjectTreeCellRenderer renderer = new ProjectTreeCellRenderer();
+		final ProjectTreeCellRenderer renderer = new ProjectTreeCellRenderer();
 		projectTree.setCellRenderer(renderer);
-    	projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
+		projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
+		projectTree.getModel().addTreeModelListener(new TreeModelAdapter() {
+			@Override
+			public void treeNodesInserted(final TreeModelEvent e) {
+				for (int i = 0; i < e.getChildren().length; i++) {
+					if (e.getChildren()[i] instanceof QueryCache) {
+						final QueryCache queryCache = (QueryCache) e.getChildren()[i];
+						queryCache.addTimerListener(new PropertyChangeListener() {
+							public void propertyChange(PropertyChangeEvent evt) {
+								renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
+								projectTree.repaint();
+							}
+						});
+						queryCache.addPropertyChangeListener(new PropertyChangeListener() {
+							public void propertyChange(PropertyChangeEvent evt) {
+								if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
+									renderer.removeTimer(queryCache);
+									projectTree.repaint();
+								}
+							}
+						});
+					}
+				}
+			}
+		});
+		projectTree.addMouseListener(new ProjectTreeListener(this));
     	projectTree.setEditable(true);
 
         wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);

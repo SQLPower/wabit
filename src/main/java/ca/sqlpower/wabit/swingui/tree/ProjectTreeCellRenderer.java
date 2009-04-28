@@ -21,11 +21,15 @@ package ca.sqlpower.wabit.swingui.tree;
 
 import java.awt.Component;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
+
+import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.swingui.ComposedIcon;
@@ -38,13 +42,22 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 
 public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
+	
+	private static final Logger logger = Logger.getLogger(ProjectTreeCellRenderer.class);
 
     public static final Icon PAGE_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/page_white.png"));
     public static final Icon LAYOUT_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/layout.png"));
     public static final Icon BOX_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/shape_square.png"));
     public static final Icon QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_query.png"));
-    public static final Icon RUNNING_QUERY_BADGE = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_execute.png"));
-
+    public static final Icon STREAMING_QUERY_BADGE = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/stream-badge.png"));
+    
+    /**
+     * This map contains {@link WabitObject}s that have an image or badge
+     * that is currently moving. The Integer value notes at what point in
+     * the sequence the image should be.
+     */
+    private final Map<WabitObject, Integer> objectToTimedImageMap = new HashMap<WabitObject, Integer>();
+    
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
             boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -73,7 +86,19 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
             	r.setText(g.getName() + " @" + g.getOffset());
             } else if (wo instanceof Query) {
             	if (((Query) wo).isRunning()) {
-            		r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, RUNNING_QUERY_BADGE})));
+            		if (((Query) wo).isStreaming()) {
+            			r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, STREAMING_QUERY_BADGE})));
+            		} else {
+            			if (objectToTimedImageMap.containsKey(wo)) {
+            				logger.debug("The image for " + wo + " should be at position " + objectToTimedImageMap.get(wo));
+            				int imageNumber = (objectToTimedImageMap.get(wo) % 12) + 1;
+            				final String imageURL = "icons/throbber-badge_" + imageNumber + ".png";
+            				logger.debug("Loading image: " + imageURL);
+							r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource(imageURL))})));
+            			} else { 
+            				r.setIcon(QUERY_ICON);
+            			}
+            		}
             	} else {
             		r.setIcon(QUERY_ICON);
             	}
@@ -82,5 +107,14 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
         }
         return r;
     }
-    
+
+
+	public void updateTimer(WabitObject object, Integer newValue) {
+		logger.debug("Received update event of " + newValue);
+		objectToTimedImageMap.put(object, newValue);
+	}
+	
+	public void removeTimer(WabitObject object) {
+		objectToTimedImageMap.remove(object);
+	}
 }

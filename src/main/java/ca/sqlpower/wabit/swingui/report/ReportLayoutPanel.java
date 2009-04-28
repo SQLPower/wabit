@@ -375,8 +375,13 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				
 				final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
 				if (((Query) value).isRunning()) {
-					final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_execute.png"));
-					((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+					if (((Query) value).isStreaming()) {
+						final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
+						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+            		} else {
+            			final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge.gif"));
+						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+            		}
 				} else {
 					((JLabel) c).setIcon(queryIcon);
 				}
