@@ -86,6 +86,7 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
@@ -319,23 +320,45 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		final ProjectTreeCellRenderer renderer = new ProjectTreeCellRenderer();
 		projectTree.setCellRenderer(renderer);
 		projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
+		
+		for (Query query : project.getQueries()) {
+			if (query instanceof QueryCache) {
+				final QueryCache queryCache = (QueryCache) query;
+				queryCache.addTimerListener(new PropertyChangeListener() {
+					public void propertyChange(PropertyChangeEvent evt) {
+						renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
+						projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+					}
+				});
+				queryCache.addPropertyChangeListener(new PropertyChangeListener() {
+					public void propertyChange(PropertyChangeEvent evt) {
+						if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
+							renderer.removeTimer(queryCache);
+							projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+						}
+					}
+				});
+			}
+		}
+		
 		projectTree.getModel().addTreeModelListener(new TreeModelAdapter() {
 			@Override
 			public void treeNodesInserted(final TreeModelEvent e) {
 				for (int i = 0; i < e.getChildren().length; i++) {
 					if (e.getChildren()[i] instanceof QueryCache) {
 						final QueryCache queryCache = (QueryCache) e.getChildren()[i];
+						final TreePath treePath = e.getTreePath();
 						queryCache.addTimerListener(new PropertyChangeListener() {
 							public void propertyChange(PropertyChangeEvent evt) {
 								renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-								projectTree.repaint();
+								projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
 							}
 						});
 						queryCache.addPropertyChangeListener(new PropertyChangeListener() {
 							public void propertyChange(PropertyChangeEvent evt) {
 								if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
 									renderer.removeTimer(queryCache);
-									projectTree.repaint();
+									projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
 								}
 							}
 						});

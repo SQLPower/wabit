@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.query;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -276,9 +278,14 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 	 * This listener is used to forward the timer events to the timerPCS object
 	 * for classes listening for timer events.
 	 */
-	private final PropertyChangeListener timerListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			timerPCS.firePropertyChange(evt);
+	private final ActionListener timerListener = new ActionListener() {
+		
+		private int timerTicks = 0;
+		
+		public void actionPerformed(ActionEvent e) {
+			int oldTimer = timerTicks;
+			timerTicks++;
+			timerPCS.firePropertyChange("timerTicks", oldTimer, timerTicks);
 		}
 	};
 	
@@ -1496,7 +1503,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		timerPCS.addPropertyChangeListener(l);
 	}
 
-	public PropertyChangeListener getTimerListener() {
+	public ActionListener getTimerListener() {
 		return timerListener;
 	}
 
