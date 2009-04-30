@@ -99,20 +99,29 @@
 						<manifestEntries>
 							<Class-Path>
 							  jdbc/
-							  lib/piccolo.jar
-							  lib/piccolox.jar
-							  lib/architect_lib.jar  
-							  lib/architect_dbtree_lib.jar
-							  lib/jfreechart-1.0.12.jar
-							  lib/jcommon-1.0.15.jar
-							  lib/rsyntaxtextarea.jar
-							  lib/osx_adapter.jar
-							  lib/wabithelp.jar
-							  lib/jmdns.jar
-							  lib/httpclient-4.0-beta2.jar
 							  lib/apache-mime4j-0.5.jar
+							  lib/architect_dbtree_lib.jar
+							  lib/architect_lib.jar
+							  lib/commons-math-1.0.jar
+							  lib/commons-vfs.jar
+							  lib/eigenbase-properties.jar
+							  lib/eigenbase-resgen.jar
+							  lib/eigenbase-xom.jar
+							  lib/httpclient-4.0-beta2.jar
 							  lib/httpcore-4.0.jar
 							  lib/httpmime-4.0-beta2.jar
+							  lib/javacup.jar
+							  lib/jcommon-1.0.15.jar
+							  lib/jfreechart-1.0.12.jar
+							  lib/jmdns.jar
+							  lib/mondrian.jar
+							  lib/olap4j.jar
+							  lib/osx_adapter.jar
+							  lib/piccolo.jar
+							  lib/piccolox.jar
+							  lib/rsyntaxtextarea.jar
+							  lib/simple-jndi-0.11.4.1.jar
+							  lib/wabithelp.jar
 							</Class-Path>
 						</manifestEntries>
 					</archive>
@@ -507,6 +516,21 @@
             <systemPath>${basedir}/lib/jmdns.jar</systemPath>
         </dependency>
         
+        <dependency>
+            <groupId>org.osjava</groupId>
+            <artifactId>simple-jndi</artifactId>
+            <version>0.11.4.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/simple-jndi-0.11.4.1.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+        	<groupId>com.miglayout</groupId>
+			<artifactId>miglayout</artifactId>
+			<version>3.7</version>
+			<classifier>swing</classifier>
+		</dependency>
+		        
         <!-- httpcomponents-client should be available in a maven repository, but we couldn't find it -->
         <dependency>
 		  	<groupId>org.apache.httpcomponents</groupId>
@@ -547,6 +571,72 @@
             <systemPath>${basedir}/lib/httpmime-4.0-beta2.jar</systemPath>
         </dependency>
         <!-- END of httpcomponents-httpclient explicit dependencies -->
+        <!-- Mondrian 3.1, olap4j, and dependencies -->
+        <dependency>
+		  	<groupId>mondrian</groupId>
+		  	<artifactId>mondrian</artifactId>
+		  	<version>3.1.0.12477-RC1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/mondrian.jar</systemPath>
+        </dependency>
+
+        <dependency>
+		  	<groupId>olap4j</groupId>
+		  	<artifactId>olap4j</artifactId>
+		  	<version>0.9.7-beta</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/olap4j.jar</systemPath>
+        </dependency>
+
+        <dependency>
+		  	<groupId>java_cup</groupId>
+		  	<artifactId>java_cup</artifactId>
+		  	<version>0.10k</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/javacup.jar</systemPath>
+        </dependency>
+
+        <dependency>
+		  	<groupId>org.apache.commons.math</groupId>
+		  	<artifactId>commons-math</artifactId>
+		  	<version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/commons-math-1.0.jar</systemPath>
+        </dependency>
+
+        <dependency>
+		  	<groupId>org.apache.commons.vfs</groupId>
+		  	<artifactId>commons-vfs</artifactId>
+		  	<version>0.8</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/commons-vfs.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+		  	<groupId>org.eigenbase.properties</groupId>
+		  	<artifactId>eigenbase-properties</artifactId>
+		  	<version>0.8</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/eigenbase-properties.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+		  	<groupId>org.eigenbase.resgen</groupId>
+		  	<artifactId>eigenbase-resgen</artifactId>
+		  	<version>0.8</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/eigenbase-resgen.jar</systemPath>
+        </dependency>
+        
+        <dependency>
+		  	<groupId>org.eigenbase.xom</groupId>
+		  	<artifactId>eigenbase-xom</artifactId>
+		  	<version>0.8</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/eigenbase-xom.jar</systemPath>
+        </dependency>
+        <!-- END Mondrian 3.1, olap4j, and dependencies -->
+        
 	</dependencies>
 	<repositories>
 		<repository>
