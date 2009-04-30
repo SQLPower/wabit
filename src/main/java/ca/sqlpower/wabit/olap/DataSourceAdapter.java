@@ -62,4 +62,15 @@ public class DataSourceAdapter implements DataSource {
         throw new UnsupportedOperationException("Login timeouts not implemented");
     }
 
+    public boolean isWrapperFor(Class<?> iface) {
+        return iface == SPDataSource.class;
+    }
+    
+    public <T> T unwrap(Class<T> iface) {
+        if (iface == SPDataSource.class) {
+            return iface.cast(wrapMe);
+        } else {
+            return null;
+        }
+    }
 }
