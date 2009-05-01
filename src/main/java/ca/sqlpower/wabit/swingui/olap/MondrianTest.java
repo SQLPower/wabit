@@ -22,13 +22,18 @@ package ca.sqlpower.wabit.swingui.olap;
 import java.io.File;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Collections;
+import java.util.prefs.Preferences;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
 
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
@@ -45,6 +50,7 @@ import ca.sqlpower.wabit.olap.Olap4jDataSource;
 public class MondrianTest {
 
     public static void main(String[] args) throws Exception {
+        Preferences prefs = Preferences.userNodeForPackage(MondrianTest.class);
         System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
         System.setProperty("org.osjava.sj.jndi.shared", "true");
         Context ctx = new InitialContext();
@@ -53,6 +59,9 @@ public class MondrianTest {
         plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
         
         Olap4jDataSource olapDataSource = new Olap4jDataSource();
+        olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
+        olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null)));
+
         Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, plIni);
         JFrame dummy = new JFrame();
         dummy.setVisible(true);
@@ -62,6 +71,8 @@ public class MondrianTest {
         if (olapDataSource.getType() == null) {
             return;
         }
+        prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
+        prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
         
         SPDataSource ds = olapDataSource.getDataSource();
         ctx.bind(ds.getName(), new DataSourceAdapter(ds));
@@ -74,6 +85,13 @@ public class MondrianTest {
                     + "Catalog='" + olapDataSource.getMondrianSchema().toString() + "';"
                     );
         OlapConnection olapConnection = ((OlapWrapper) connection).unwrap(OlapConnection.class);
+
+        JTree tree = new JTree(new Olap4jTreeModel(Collections.singletonList(olapConnection)));
+        tree.setCellRenderer(new Olap4JTreeCellRenderer());
+        tree.setRootVisible(false);
+        dummy.setContentPane(new JScrollPane(tree));
+        dummy.pack();
+
         OlapStatement statement = olapConnection.createStatement();
         CellSet cellSet =
             statement.executeOlapQuery(

@@ -73,10 +73,17 @@ public class Olap4jConnectionPanel implements DataEntryPanel {
         
         panel.add(new JLabel("Database Connection"), "gapbefore 25px");
         dataSourceBox = new JComboBox(new ConnectionComboBoxModel(dsCollection));
+        if (olapDataSource.getDataSource() != null) {
+            dataSourceBox.setSelectedItem(olapDataSource.getDataSource());
+        }
         panel.add(dataSourceBox, "grow,wrap");
         
         panel.add(new JLabel("Mondrian Schema"), "gapbefore 25px");
         schemaFileField = new JTextField();
+        URI initialSchemaURI = olapDataSource.getMondrianSchema();
+        if (initialSchemaURI != null && initialSchemaURI.getScheme().equals("file")) {
+            schemaFileField.setText(initialSchemaURI.getSchemeSpecificPart());
+        }
         panel.add(schemaFileField, "growx");
         JButton fileChooserButton = new JButton("...");
         panel.add(fileChooserButton, "wrap paragraph");
