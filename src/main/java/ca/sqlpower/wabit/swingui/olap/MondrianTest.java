@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -30,13 +33,20 @@ import java.util.prefs.Preferences;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTree;
 
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
 import org.olap4j.OlapWrapper;
 import org.olap4j.query.RectangularCellSetFormatter;
@@ -63,9 +73,9 @@ public class MondrianTest {
         olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null)));
 
         Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, plIni);
-        JFrame dummy = new JFrame();
-        dummy.setVisible(true);
-        JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(dep, dummy, "Proof of concept", "OK");
+        JFrame frame = new JFrame();
+        frame.setVisible(true);
+        JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(dep, frame, "Proof of concept", "OK");
         d.setModal(true);
         d.setVisible(true);
         if (olapDataSource.getType() == null) {
@@ -89,19 +99,48 @@ public class MondrianTest {
         JTree tree = new JTree(new Olap4jTreeModel(Collections.singletonList(olapConnection)));
         tree.setCellRenderer(new Olap4JTreeCellRenderer());
         tree.setRootVisible(false);
-        dummy.setContentPane(new JScrollPane(tree));
-        dummy.pack();
 
-        OlapStatement statement = olapConnection.createStatement();
-        CellSet cellSet =
-            statement.executeOlapQuery(
-                "SELECT {[Measures].[Unit Sales]} ON 0,\n"
-                    + "{[Product].Children} ON 1\n"
-                    + "FROM [Sales]");
+        final JTable table = new JTable();
+        final JTextArea mdxQuery = new JTextArea();
+        mdxQuery.setText(
+                "select {([Measures], [Product].[All Products])} ON COLUMNS," +
+                "\n{([Promotion Media].[All Media])} ON ROWS " +
+                "\nfrom [Sales] " +
+                "\nwhere [Time].[1997]");
+        final OlapStatement statement = olapConnection.createStatement();
+        JButton executeButton = new JButton("Execute");
+        executeButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                CellSet cellSet;
+                try {
+                    cellSet = statement.executeOlapQuery(mdxQuery.getText());
+                } catch (OlapException e1) {
+                    e1.printStackTrace();
+                    JOptionPane.showMessageDialog(table, "FAIL");
+                    return;
+                }
+                
+                RectangularCellSetFormatter f = new RectangularCellSetFormatter(true);
+                PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out));
+                f.format(cellSet, pw);
+                pw.flush();
+                
+                table.setModel(new CellSetTableModel(cellSet));
+            }
+        });
 
-        RectangularCellSetFormatter f = new RectangularCellSetFormatter(true);
-        PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out));
-        f.format(cellSet, pw);
-        pw.flush();
+        JPanel queryPanel = new JPanel(new BorderLayout());
+        queryPanel.add(new JScrollPane(mdxQuery), BorderLayout.CENTER);
+        queryPanel.add(executeButton, BorderLayout.SOUTH);
+
+        JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        queryAndResultsPanel.setTopComponent(queryPanel);
+        queryAndResultsPanel.setBottomComponent(new JScrollPane(table));
+        
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setLeftComponent(new JScrollPane(tree));
+        splitPane.setRightComponent(queryAndResultsPanel);
+        frame.setContentPane(splitPane);
+        frame.pack();
     }
 }
