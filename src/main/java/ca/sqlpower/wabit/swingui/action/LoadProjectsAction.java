@@ -89,34 +89,22 @@ public class LoadProjectsAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		try {
-			LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
-			List<WabitSession> sessions = projectLoader.loadProjects();
-			for (WabitSession session : sessions) {
-				try {
-					((WabitSwingSession)session).buildUI();
-					((WabitSwingSession)session).setCurrentFile(importFile);
-				} catch (SQLObjectException e1) {
-					throw new RuntimeException(e1);
-				}
-			}
-			context.putRecentFileName(importFile.getAbsolutePath());
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-				// squishing exception to not hide other exceptions.
-			}
+		List<WabitSession> sessions = loadFile(in, context);
+		for (WabitSession session : sessions) {
+			((WabitSwingSession)session).setCurrentFile(importFile);
 		}
+		context.putRecentFileName(importFile.getAbsolutePath());
 	}
-		
+
 	/**
-	 * This will load a Wabit project file in a new session in the given context through
-	 * an input stream. This is slightly different from loading from a file as no default
-	 * file to save to will be specified and nothing will be added to the recent files
-	 * menu.
+	 * This will load a Wabit project file in a new session in the given context
+	 * through an input stream. This is slightly different from loading from a
+	 * file as no default file to save to will be specified and nothing will be
+	 * added to the recent files menu.
+	 * 
+	 * @return The list of sessions loaded from the input stream.
 	 */
-	public static void loadFile(InputStream input, WabitSwingSessionContext context) {
+	public static List<WabitSession> loadFile(InputStream input, WabitSwingSessionContext context) {
 		BufferedInputStream in = new BufferedInputStream(input);
 		try {
 			LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
@@ -128,6 +116,7 @@ public class LoadProjectsAction extends AbstractAction {
 					throw new RuntimeException(e1);
 				}
 			}
+			return sessions;
 		} finally {
 			try {
 				in.close();
