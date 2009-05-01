@@ -569,8 +569,6 @@ public class ProjectSAXHandler extends DefaultHandler {
         			graphRenderer.setGraphType(ExistingGraphTypes.valueOf(aval));
         		} else if (aname.equals("legend-position")) {
         			graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
-        		} else if (aname.equals("bg-colour")) {
-        			graphRenderer.setBackgroundColour(new Color(Integer.parseInt(aval)));
         		} else if (aname.equals("query-id")) {
         			Query query = null;
                 	for (Query q : session.getProject().getQueries()) {

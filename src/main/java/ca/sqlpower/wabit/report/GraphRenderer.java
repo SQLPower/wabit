@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -29,12 +30,14 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +63,11 @@ import org.apache.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.general.DatasetUtilities;
@@ -76,11 +83,13 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.swingui.ColorCellRenderer;
+import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.swingui.table.CleanupTableCellRenderer;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
+import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitObject;
@@ -453,7 +462,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				if (defaultDataTypeSeries == DataTypeSeries.SERIES) {
 					comboBoxForXValues.setSelectedItem(columnSeriesToColumnXAxis.get(columnNamesInOrder.get(column)));
 					newHeader.add(comboBoxForXValues, BorderLayout.CENTER);
-					columnToXAxisComboBox.put(new Integer(column), comboBoxForXValues);
+					
+	    			columnToXAxisComboBox.put(new Integer(column), comboBoxForXValues);
+					
 					comboBoxForXValues.addItemListener(xAxisValuesChangeListener);
 				} else {
 					JLabel emptyLabel = new JLabel();
@@ -548,25 +559,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * the chart		
 		 */
 		private final JComboBox legendPositionComboBox;
-		
-        /**
-		 * This combo box contains all the colours the chart could have for its
-		 * background
-		 */
-		private final JComboBox colourComboBox;
-
-		/**
-		 * This label displays the name of the colour chosen in the
-		 * colourComboBox
-		 */
-		private final JLabel colourLabel;
-
-		/**
-		 * The panel holds the combo box with the list of possible background colour
-		 * choices for the chart and a label to display the name of the colour
-		 * selected
-		 */
-		private JPanel colourPanel;
 
 		
 		/**
@@ -623,11 +615,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			queryComboBox = new JComboBox(project.getQueries().toArray());
 			graphTypeComboBox = new JComboBox(ExistingGraphTypes.values());
 			legendPositionComboBox = new JComboBox(LegendPosition.values());
-	        colourComboBox = new JComboBox(); 
-	        colourComboBox.setRenderer(new ColorCellRenderer(85, 30));
-	        for (BackgroundColours bgColour : BackgroundColours.values()) {
-	        	colourComboBox.addItem(bgColour.getColour());
-	        }
 	        	        
 			queryComboBox.setSelectedItem(renderer.getQuery());
 			graphTypeComboBox.setSelectedItem(renderer.getGraphType());
@@ -643,22 +630,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			} else {
 				legendPositionComboBox.setSelectedItem(LegendPosition.BOTTOM);
 			}
-			if (renderer.getBackgroundColour() != null) {
-				colourComboBox.setSelectedItem(renderer.getBackgroundColour());
-			} else {
-				colourComboBox.setSelectedItem(Color.WHITE);
-			}
-			colourLabel = new JLabel(" ");
-	        for (BackgroundColours bgColour : BackgroundColours.values()) {
-	        	if(bgColour.getColour() == colourComboBox.getSelectedItem())
-	        	colourLabel.setText("     " + bgColour.getColourName());
-	        }
-	        	
-			colourLabel.setOpaque(true);
-	        colourPanel = new JPanel(new BorderLayout());
-	        colourPanel.add(colourComboBox, BorderLayout.WEST);
-	        colourPanel.add(colourLabel, BorderLayout.CENTER);
-	        
+
 			nameField.setText(renderer.getName());
 			yaxisNameField.setText(renderer.getYaxisName());
 			xaxisNameField.setText(renderer.getXaxisName());
@@ -791,21 +763,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 					}
 				}
 			});
-			
-	        colourComboBox.addItemListener(new ItemListener() {
-				public void itemStateChanged(ItemEvent e) {
-					if (e.getStateChange() == ItemEvent.SELECTED) {
-						if(chartPanel != null) {
-							JComboBox cb = (JComboBox) e.getSource();
-					        for (BackgroundColours bgColour : BackgroundColours.values()) {
-					        	if(bgColour.getColour() == cb.getSelectedItem())
-					        	colourLabel.setText("    " + bgColour.getColourName());
-					        }
-					        updateChartPreview();
-						}
-					}
-				}
-			});
 			buildUI();
 		}
 		
@@ -848,7 +805,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * property panel.
 		 */
 		private void updateChartPreview() {
-			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), (LegendPosition) legendPositionComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText(), (Color) colourComboBox.getSelectedItem());
+			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), (LegendPosition) legendPositionComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
 			chartPanel.setChart(chart);
 		}
 
@@ -872,7 +829,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			builder.nextLine(2);
 			builder.append("Legend Postion", legendPositionComboBox);
 			builder.nextLine();
-	        builder.append("Background", colourPanel);
 			builder.append("Y Axis Label", yaxisNameField);
 			builder.nextLine();
 			builder.append(xaxisNameLabel, xaxisNameField);
@@ -901,7 +857,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			}
 			setGraphType((ExistingGraphTypes) graphTypeComboBox.getSelectedItem());
 			setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
-			setBackgroundColour((Color) colourComboBox.getSelectedItem());
 			setColumnNamesInOrder(columnNamesInOrder);
 			setColumnsToDataTypes(columnsToDataTypes);
 			setColumnSeriesToColumnXAxis(columnSeriesToColumnXAxis);
@@ -912,11 +867,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	};
 	
 	/**
-	 * The background colour for this renderer and chart background. By default
-	 * it is set to white.
+	 * The background colour for this renderer and chart background. 
 	 */
-	private Color backgroundColour = Color.WHITE;
-	
+	private Color backgroundColour;
+		
 	/**
 	 * The project this renderer is in. This allows the
 	 * properties panel to tell what queries are accessible
@@ -1006,11 +960,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public Color getBackgroundColour() {
 		return backgroundColour;
 	}
-	
-	public void setBackgroundColour(Color backgroundColour) {
-		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
-		this.backgroundColour = backgroundColour;
-	}
 
 	public DataEntryPanel getPropertiesPanel() {
 		DataEntryPanel panel = new GraphRendererPropertyPanel(project, this);
@@ -1022,7 +971,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		JFreeChart chart = null;
 		try {
 			if (query != null) {
-				chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, query.fetchResultSet(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName, backgroundColour);
+				chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, query.fetchResultSet(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			}
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -1038,7 +987,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * Creates a JFreeChart based on the given column and series data.
 	 * Returns null if the data given cannot create a chart.
 	 */
-	private static JFreeChart createJFreeChart(List<String> columnNamesInOrder, Map<String, DataTypeSeries> columnsToDataTypes, Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet, ExistingGraphTypes graphType, LegendPosition legendPosition, String chartName, String yaxisName, String xaxisName, Color backgroundColour) {
+	private static JFreeChart createJFreeChart(List<String> columnNamesInOrder, Map<String, DataTypeSeries> columnsToDataTypes, Map<String, String> columnSeriesToColumnXAxis, ResultSet resultSet, ExistingGraphTypes graphType, LegendPosition legendPosition, String chartName, String yaxisName, String xaxisName) {
 		if (graphType == null) {
 			return null;
 		}
@@ -1060,6 +1009,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		
 		JFreeChart chart;
 		XYDataset xyCollection;
+		ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
+		BarRenderer.setDefaultBarPainter(new StandardBarPainter());
 		
 		switch (graphType) {
 		case BAR :
@@ -1074,9 +1025,16 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				chart.getLegend().setPosition(rEdge);
 				chart.getTitle().setPadding(4,4,15,4);
 			}
-			if (backgroundColour != null) {
-				chart.setBackgroundPaint(backgroundColour);
+			
+			BarRenderer barRenderer = (BarRenderer) chart.getCategoryPlot()
+					.getRenderer();
+			int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
+			for (int i = 0; i < seriesSize; i++) {
+				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
+				barRenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
 			}
+			barRenderer.setShadowVisible(false);
+			setTransparentChartBackground(chart);
 			return chart;
 		case LINE :
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
@@ -1092,9 +1050,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				chart.getLegend().setPosition(rEdge);
 				chart.getTitle().setPadding(4,4,15,4);
 			}
-			if (backgroundColour != null) {
-				chart.setBackgroundPaint(backgroundColour);
+			final XYItemRenderer xyirenderer = chart.getXYPlot().getRenderer();
+			int xyLineSeriesSize = chart.getXYPlot().getDataset().getSeriesCount();
+			for (int i = 0; i < xyLineSeriesSize; i++) {
+				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
+				xyirenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
 			}
+			setTransparentChartBackground(chart);
 			return chart;
 		case SCATTER :
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
@@ -1110,13 +1072,25 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				chart.getLegend().setPosition(rEdge);
 				chart.getTitle().setPadding(4,4,15,4);
 			}
-			if (backgroundColour != null) {
-				chart.setBackgroundPaint(backgroundColour);
+			final XYItemRenderer xyIrenderer = chart.getXYPlot().getRenderer();
+			BasicStroke circle = new BasicStroke();
+			int xyScatterSeriesSize = chart.getXYPlot().getDataset().getSeriesCount();
+			for (int i = 0; i < xyScatterSeriesSize; i++) {
+				xyIrenderer.setSeriesShape(i, circle.createStrokedShape(new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0)));
+				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
+				xyIrenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
 			}
-			return chart;
+			setTransparentChartBackground(chart);
+			return chart; 
 		default:
 			throw new IllegalStateException("Unknown graph type " + graphType);
 		}
+	}
+
+	private static void setTransparentChartBackground(JFreeChart chart) {
+		chart.setBackgroundPaint(new Color(255,255,255,0));
+		chart.getPlot().setBackgroundPaint(new Color(255,255,255,0));	
+		chart.getPlot().setBackgroundAlpha(0.0f);
 	}
 
 	/**
@@ -1356,6 +1330,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public List<String> getSeriesColours() {
+		List<String> colourList = new ArrayList<String>();
+		for(WebColour wb : ColourScheme.BREWER_SET19) {
+			colourList.add(wb.toString());
+		}
+		return colourList;
 	}
 	
 }
