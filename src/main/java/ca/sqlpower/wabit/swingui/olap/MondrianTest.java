@@ -103,10 +103,21 @@ public class MondrianTest {
         final JTable table = new JTable();
         final JTextArea mdxQuery = new JTextArea();
         mdxQuery.setText(
-                "select {([Measures], [Product].[All Products])} ON COLUMNS," +
-                "\n{([Promotion Media].[All Media])} ON ROWS " +
-                "\nfrom [Sales] " +
-                "\nwhere [Time].[1997]");
+               "with" +
+               "\n member Store.[USA Total] as '[Store].[USA]', solve_order = 1" +
+               "\n member Product.DrinkPct as '100 * (Product.Drink, Store.CurrentMember) / (Product.Drink, Store.USA)', solve_order = 2" +
+               "\nselect" +
+               "\n {[Store].[All Stores].[USA].[CA], [Store].[All Stores].[USA].[OR], [Store].[All Stores].[USA].[WA], Store.USA} ON COLUMNS," +
+               "\n {" +
+               "\n  hierarchize(union(union(" +
+               "\n   [Product].[All Products].[Drink].Children," +
+               "\n   [Product].[All Products].[Drink].[Alcoholic Beverages].Children)," +
+               "\n   [Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].Children" +
+               "\n ))," +
+               "\n [Product].[Drink], Product.DrinkPct" +
+               "\n } ON ROWS" +
+               "\nfrom [Sales]" +
+               "\nwhere [Time].[1997]");
         final OlapStatement statement = olapConnection.createStatement();
         JButton executeButton = new JButton("Execute");
         executeButton.addActionListener(new ActionListener() {
