@@ -31,7 +31,7 @@ import java.io.OutputStream;
 
 import javax.swing.JOptionPane;
 
-import ca.sqlpower.swingui.MonitorableWorker;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Layout;
@@ -47,7 +47,7 @@ import com.lowagie.text.pdf.PdfWriter;
 /**
  * This worker will write a layout as a PDF to a file.
  */
-public class LayoutToPDFWorker extends MonitorableWorker {
+public class LayoutToPDFWorker extends SPSwingWorker {
 	
     private boolean started;
     private boolean finished;

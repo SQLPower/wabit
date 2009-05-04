@@ -35,15 +35,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
 
-import ca.sqlpower.swingui.MonitorableWorker;
 import ca.sqlpower.swingui.ProgressWatcher;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class PrintAction extends AbstractAction {
 	
-	public class PrintWorker extends MonitorableWorker {
+	public class PrintWorker extends SPSwingWorker {
 		
 		private boolean started;
 		private boolean finished;
