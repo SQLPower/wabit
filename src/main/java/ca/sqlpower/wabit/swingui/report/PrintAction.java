@@ -45,47 +45,34 @@ public class PrintAction extends AbstractAction {
 	
 	public class PrintWorker extends SPSwingWorker {
 		
-		private boolean started;
-		private boolean finished;
 		private final PrinterJob job;
-		private final int jobSize;
 		private final Layout printingLayout;
 		private int progress;
 
 		public PrintWorker(SwingWorkerRegistry registry, PrinterJob job, Layout layout) {
 			super(registry);
 			printingLayout = layout;
-			this.jobSize = layout.getNumberOfPages();
-			started = false;
-			finished = false;
+			setJobSize(layout.getNumberOfPages());
+			setMessage(null);
 			progress = 0;
 			this.job = job;
 		}
 
 		@Override
 		public void doStuff() throws Exception {
-			started = true;
             job.print();
 		}
 		
 		@Override
 		public void cleanup() throws Exception {
-			finished = true;
 			printingLayout.compareAndSetCurrentlyPrinting(true, false);
 			if (getDoStuffException() != null) {
 				throw new RuntimeException(getDoStuffException());
 			}
 		}
 
-		public Integer getJobSize() {
-			return jobSize;
-		}
-
-		public String getMessage() {
-			return null;
-		}
-
-		public int getProgress() {
+		@Override
+		protected int getProgressImpl() {
 			Object progressObject = printingLayout.getVariableValue(Layout.PAGE_NUMBER, progress);
 			if (progressObject instanceof Integer) {
 				progress = ((Integer) progressObject).intValue();
@@ -93,14 +80,6 @@ public class PrintAction extends AbstractAction {
 			return progress;
 		}
 
-		public boolean hasStarted() {
-			return started;
-		}
-
-		public boolean isFinished() {
-			return finished;
-		}
-		
 	}
 
     public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/printer.png"));

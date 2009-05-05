@@ -49,35 +49,41 @@ import com.lowagie.text.pdf.PdfWriter;
  */
 public class LayoutToPDFWorker extends SPSwingWorker {
 	
-    private boolean started;
-    private boolean finished;
     private boolean cancelled;
     private int numPages;
     private int pageNum;
 	private final File file;
 	private final Layout layout;
 	private final Component dialogOwner;
+	
+	/**
+	 * Tracks if this PDF worker actually was able to start writing to PDF. The
+	 * PDF worker may not be able to write a layout to PDF if it is already currently
+	 * printing.
+	 */
+    private boolean startedWriting;
 
 	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner) {
 		super(registry);
 		this.file = file;
 		this.layout = layout;
 		this.dialogOwner = dialogOwner;
-		started = false;
 	}
 
 	@Override
 	public void doStuff() throws Exception {
 		if (layout.compareAndSetCurrentlyPrinting(false, true)) {
+		    startedWriting = true;
 			writePDF(file, layout);
 		} else {
+		    startedWriting = false;
 			JOptionPane.showMessageDialog(dialogOwner, "Could not export to PDF. The layout is currently being exported. Please try again later.", "In Use", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 	
 	@Override
 	public void cleanup() throws Exception {
-		if (started) {
+		if (startedWriting) {
 			layout.compareAndSetCurrentlyPrinting(true, false);
 		}
 		if (getDoStuffException() != null) {
@@ -87,74 +93,63 @@ public class LayoutToPDFWorker extends SPSwingWorker {
 	
 	public void writePDF(File file, Layout layout)
     throws DocumentException, FileNotFoundException, PrinterException {
-    	started = true;
-    	finished = false;
     	cancelled = false;
     	pageNum = 0;
-    	
-    	try {
-    		numPages = layout.getNumberOfPages();
-    		Page page = layout.getPage();
-    		OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-    		Rectangle pageSize;
-    		if (page.getOrientation() == PageOrientation.PORTRAIT) {
-    			pageSize = new Rectangle(page.getWidth(), page.getHeight());
-    		} else {
-    			pageSize = new Rectangle(page.getHeight(), page.getWidth());
-    		}
 
-    		Document pdfDoc = new Document(pageSize, 0f, 0f, 0f, 0f);
-
-    		PdfWriter pdfOut = PdfWriter.getInstance(pdfDoc, out);
-    		pdfDoc.open();
-    		pdfDoc.addCreator("Wabit " + WabitVersion.VERSION);
-    		PdfContentByte pdfContent = pdfOut.getDirectContent();
-    		Graphics2D pdfGraphics = null;
-    		try {
-    			while(pageNum < numPages) {
-    				pdfGraphics = pdfContent.createGraphics(pageSize.getWidth(), pageSize.getHeight());
-    				int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
-
-    				pdfGraphics.dispose();
-    				pdfGraphics = null;
-
-    				if (flag == Printable.NO_SUCH_PAGE) break;
-
-    				pdfDoc.newPage();
-
-    				pageNum++;
-    			}
-    		} finally {
-    			if (pdfGraphics != null) pdfGraphics.dispose();
-    			if (pdfDoc != null) pdfDoc.close();
-    		}
-    	} finally {
-    		finished = true;
+    	numPages = layout.getNumberOfPages();
+    	Page page = layout.getPage();
+    	OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+    	Rectangle pageSize;
+    	if (page.getOrientation() == PageOrientation.PORTRAIT) {
+    	    pageSize = new Rectangle(page.getWidth(), page.getHeight());
+    	} else {
+    	    pageSize = new Rectangle(page.getHeight(), page.getWidth());
     	}
-    }
+
+    	Document pdfDoc = new Document(pageSize, 0f, 0f, 0f, 0f);
+
+    	PdfWriter pdfOut = PdfWriter.getInstance(pdfDoc, out);
+    	pdfDoc.open();
+    	pdfDoc.addCreator("Wabit " + WabitVersion.VERSION);
+    	PdfContentByte pdfContent = pdfOut.getDirectContent();
+    	Graphics2D pdfGraphics = null;
+    	try {
+    	    while(pageNum < numPages) {
+    	        pdfGraphics = pdfContent.createGraphics(pageSize.getWidth(), pageSize.getHeight());
+    	        int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
+
+    	        pdfGraphics.dispose();
+    	        pdfGraphics = null;
+
+    	        if (flag == Printable.NO_SUCH_PAGE) break;
+
+    	        pdfDoc.newPage();
+
+    	        pageNum++;
+    	    }
+    	} finally {
+    	    if (pdfGraphics != null) pdfGraphics.dispose();
+    	    if (pdfDoc != null) pdfDoc.close();
+    	}
+	}
 	
-	public Integer getJobSize() {
+	@Override 
+	protected Integer getJobSizeImpl() {
 		return numPages;
 	}
 
-	public String getMessage() {
+	@Override
+	protected String getMessageImpl() {
 		return "Exporting page " + pageNum + ".";
 	}
 
-	public int getProgress() {
+	@Override
+	protected int getProgressImpl() {
 		return pageNum;
-	}
-
-	public boolean hasStarted() {
-		return started;
 	}
 
 	public boolean isCancelled() {
 		return cancelled;
-	}
-
-	public boolean isFinished() {
-		return finished;
 	}
 
 	public void setCancelled(boolean cancelled) {
