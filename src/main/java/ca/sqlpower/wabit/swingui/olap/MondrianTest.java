@@ -101,6 +101,7 @@ public class MondrianTest {
         tree.setRootVisible(false);
 
         final JTable table = new JTable();
+        final JScrollPane tableScrollPane = new JScrollPane(table);
         final JTextArea mdxQuery = new JTextArea();
         mdxQuery.setText(
                "with" +
@@ -108,14 +109,16 @@ public class MondrianTest {
                "\n member Product.DrinkPct as '100 * (Product.Drink, Store.CurrentMember) / (Product.Drink, Store.USA)', solve_order = 2" +
                "\nselect" +
                "\n {[Store].[All Stores].[USA].[CA], [Store].[All Stores].[USA].[OR], [Store].[All Stores].[USA].[WA], Store.USA} ON COLUMNS," +
-               "\n {" +
-               "\n  hierarchize(union(union(" +
-               "\n   [Product].[All Products].[Drink].Children," +
-               "\n   [Product].[All Products].[Drink].[Alcoholic Beverages].Children)," +
-               "\n   [Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].Children" +
-               "\n ))," +
-               "\n [Product].[Drink], Product.DrinkPct" +
-               "\n } ON ROWS" +
+               "\n crossjoin(" +
+               "\n  {[Gender].Children}," +
+               "\n  {" +
+               "\n   hierarchize(union(union(" +
+               "\n    [Product].[All Products].[Drink].Children," +
+               "\n    [Product].[All Products].[Drink].[Alcoholic Beverages].Children)," +
+               "\n    [Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].Children" +
+               "\n  ))," +
+               "\n  [Product].[Drink], Product.DrinkPct" +
+               "\n }) ON ROWS" +
                "\nfrom [Sales]" +
                "\nwhere [Time].[1997]");
         final OlapStatement statement = olapConnection.createStatement();
@@ -137,6 +140,8 @@ public class MondrianTest {
                 pw.flush();
                 
                 table.setModel(new CellSetTableModel(cellSet));
+                Olap4jTableHeaderComponent rowHeader = new Olap4jTableHeaderComponent(cellSet);
+                tableScrollPane.setRowHeaderView(rowHeader);
             }
         });
 
@@ -146,7 +151,7 @@ public class MondrianTest {
 
         JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         queryAndResultsPanel.setTopComponent(queryPanel);
-        queryAndResultsPanel.setBottomComponent(new JScrollPane(table));
+        queryAndResultsPanel.setBottomComponent(tableScrollPane);
         
         JSplitPane splitPane = new JSplitPane();
         splitPane.setLeftComponent(new JScrollPane(tree));
