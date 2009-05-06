@@ -34,6 +34,7 @@ import java.util.prefs.Preferences;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -140,7 +141,7 @@ public class MondrianTest {
                 pw.flush();
                 
                 table.setModel(new CellSetTableModel(cellSet));
-                Olap4jTableHeaderComponent rowHeader = new Olap4jTableHeaderComponent(cellSet);
+                JComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet);
                 tableScrollPane.setRowHeaderView(rowHeader);
             }
         });

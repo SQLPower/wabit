@@ -95,10 +95,12 @@ public class Olap4jTableHeaderComponent extends JComponent {
             return labels;
         }
 
-        public void updateMinDepth(int position) {
-            if (positionLabels.get(position).size() < minDepth) {
-                minDepth = positionLabels.get(position).size();
+        public void finalizePosition(int position) {
+            List<String> labels = positionLabels.get(position);
+            if (labels.size() < minDepth) {
+                minDepth = labels.size();
             }
+            
         }
     }
     
@@ -123,7 +125,7 @@ public class Olap4jTableHeaderComponent extends JComponent {
                     lg.addLabelAtPosition(p.getOrdinal(), ancestor.getName());
                     ancestor = ancestor.getParentMember();
                 } while (ancestor != null);
-                lg.updateMinDepth(p.getOrdinal());
+                lg.finalizePosition(p.getOrdinal());
                 memberOrdinal++;
             }
         }
