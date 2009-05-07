@@ -88,4 +88,16 @@ public class WabitUtils {
         return si.getName() + " (" + si.getServerAddress() + ":" + si.getPort() + ")";
     }
 
+    /**
+     * Checks if the two arguments o1 and o2 are equal to each other, either because
+     * both are null, or because o1.equals(o2).
+     * 
+     * @param o1 One object or null reference to compare
+     * @param o2 The other object or null reference to compare
+     */
+    public static boolean nullSafeEquals(Object o1, Object o2) {
+        if (o1 == null) return o2 == null;
+        return o1.equals(o2);
+    }
+
 }

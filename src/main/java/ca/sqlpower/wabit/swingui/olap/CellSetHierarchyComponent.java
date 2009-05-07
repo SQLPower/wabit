@@ -34,6 +34,8 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 
+import ca.sqlpower.wabit.WabitUtils;
+
 /**
  * A component that renders the current state of a single Olap4j hierarchy, as
  * described by the axis of a cell set. The table header component uses one of
@@ -134,8 +136,12 @@ public class CellSetHierarchyComponent extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         createLayout();
+        String previousLabel = null;
         for (LayoutItem li : layoutItems) {
-            g.drawString(li.text, (int) li.bounds.getX(), (int) li.bounds.getY());
+            if (!WabitUtils.nullSafeEquals(previousLabel, li.text)) {
+                g.drawString(li.text, (int) li.bounds.getX(), (int) li.bounds.getY());
+            }
+            previousLabel = li.text;
         }
     }
 }
