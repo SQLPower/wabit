@@ -19,10 +19,15 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,10 +71,54 @@ public class CellSetHierarchyComponent extends JPanel {
         private Member member;
     }
     
+    private class MouseHandler implements MouseListener, MouseMotionListener {
+
+        public void mouseMoved(MouseEvent e) {
+            setSelectedMember(getMemberAtPoint(e.getPoint()));
+        }
+
+        public void mouseClicked(MouseEvent e) {
+            // hey you: don't implement "click" behaviour here. Use mousePressed() or mouseReleased().
+        }
+
+        public void mouseEntered(MouseEvent e) {
+            // don't care
+        }
+
+        public void mouseExited(MouseEvent e) {
+            setSelectedMember(null);
+        }
+
+        public void mousePressed(MouseEvent e) {
+            // don't care
+        }
+
+        public void mouseReleased(MouseEvent e) {
+            // don't care
+        }
+
+        public void mouseDragged(MouseEvent e) {
+            // don't care
+        }
+    };
+    
+    private final MouseHandler mouseHandler = new MouseHandler();
+    
     private final CellSetAxis axis;
     private final Hierarchy hierarchy;
     private final int hierarchyOrdinal;
     private final List<LayoutItem> layoutItems = new ArrayList<LayoutItem>();
+
+    /**
+     * The current "selected" member.
+     */
+    private Member selectedMember;
+    
+    /**
+     * The height of each row, in pixels. This is the same as the font height at
+     * the time {@link #createLayout()} was invoked.
+     */
+    private int rowHeight;
     
     /**
      * Number of pixels to indent per level of member nesting.
@@ -81,6 +130,8 @@ public class CellSetHierarchyComponent extends JPanel {
         this.hierarchyOrdinal = hierarchyOrdinal;
         hierarchy = axis.getAxisMetaData().getHierarchies().get(hierarchyOrdinal);
         setOpaque(true);
+        addMouseListener(mouseHandler);
+        addMouseMotionListener(mouseHandler);
     }
 
     /**
@@ -96,7 +147,8 @@ public class CellSetHierarchyComponent extends JPanel {
         Graphics2D g2 = (Graphics2D) getGraphics();
         g2.setFont(getFont());
         FontMetrics fm = g2.getFontMetrics();
-        double y = fm.getAscent();
+        rowHeight = fm.getHeight();
+        int y = 0;
         
         for (Position position : axis) {
             Member member = position.getMembers().get(hierarchyOrdinal);
@@ -115,10 +167,17 @@ public class CellSetHierarchyComponent extends JPanel {
             li.text = member.getName();
             layoutItems.add(li);
             
-            y += fm.getHeight();
+            y += rowHeight;
         }
         
         g2.dispose();
+    }
+    
+    public Member getMemberAtPoint(Point p) {
+        int rowNum = p.y / rowHeight;
+        if (rowNum >= layoutItems.size()) return null;
+        if (rowNum < 0) return null;
+        return layoutItems.get(rowNum).member;
     }
     
     @Override
@@ -134,14 +193,33 @@ public class CellSetHierarchyComponent extends JPanel {
     
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        super.paintComponent(g2);
         createLayout();
+        
+        FontMetrics fm = g2.getFontMetrics();
+        int ascent = fm.getAscent();
+        
         String previousLabel = null;
         for (LayoutItem li : layoutItems) {
             if (!WabitUtils.nullSafeEquals(previousLabel, li.text)) {
-                g.drawString(li.text, (int) li.bounds.getX(), (int) li.bounds.getY());
+                if (li.member == selectedMember) {
+                    g2.setColor(Color.BLUE);
+                }
+                
+                g2.drawString(li.text, (int) li.bounds.getX(), ((int) li.bounds.getY()) + ascent);
+                
+                if (li.member == selectedMember) {
+                    g2.setColor(getForeground());
+                }
             }
             previousLabel = li.text;
+            
         }
+    }
+    
+    public void setSelectedMember(Member selectedMember) {
+        this.selectedMember = selectedMember;
+        repaint();
     }
 }
