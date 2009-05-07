@@ -23,24 +23,30 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.prefs.Preferences;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
@@ -60,49 +66,43 @@ import ca.sqlpower.wabit.olap.Olap4jDataSource;
 
 public class MondrianTest {
 
-    public static void main(String[] args) throws Exception {
-        Preferences prefs = Preferences.userNodeForPackage(MondrianTest.class);
-        System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
-        System.setProperty("org.osjava.sj.jndi.shared", "true");
-        Context ctx = new InitialContext();
-        
-        PlDotIni plIni = new PlDotIni();
-        plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
-        
-        Olap4jDataSource olapDataSource = new Olap4jDataSource();
-        olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
-        olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null)));
+    private final JFrame frame;
+    private final JTable mdxResultTable;
+    private final JScrollPane tableScrollPane;
+    private final OlapConnection olapConnection;
 
-        Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, plIni);
-        JFrame frame = new JFrame();
-        frame.setVisible(true);
-        JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(dep, frame, "Proof of concept", "OK");
-        d.setModal(true);
-        d.setVisible(true);
-        if (olapDataSource.getType() == null) {
-            return;
-        }
-        prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
-        prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
-        
-        SPDataSource ds = olapDataSource.getDataSource();
-        ctx.bind(ds.getName(), new DataSourceAdapter(ds));
-        
-        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
-        Connection connection =
-            DriverManager.getConnection(
-                "jdbc:mondrian:"
-                    + "DataSource='" + ds.getName() + "';"
-                    + "Catalog='" + olapDataSource.getMondrianSchema().toString() + "';"
-                    );
-        OlapConnection olapConnection = ((OlapWrapper) connection).unwrap(OlapConnection.class);
-
+    public MondrianTest(OlapConnection olapConnection) throws NamingException, IOException, URISyntaxException, ClassNotFoundException, SQLException {
+        this.olapConnection = olapConnection;
         JTree tree = new JTree(new Olap4jTreeModel(Collections.singletonList(olapConnection)));
         tree.setCellRenderer(new Olap4JTreeCellRenderer());
         tree.setRootVisible(false);
 
-        final JTable table = new JTable();
-        final JScrollPane tableScrollPane = new JScrollPane(table);
+        mdxResultTable = new JTable();
+        tableScrollPane = new JScrollPane(mdxResultTable);
+        
+        JTabbedPane queryPanels = new JTabbedPane();
+        queryPanels.add("MDX", createTextQueryPanel());
+        queryPanels.add("GUI", createGuiQueryPanel());
+        
+        JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        queryAndResultsPanel.setTopComponent(queryPanels);
+        queryAndResultsPanel.setBottomComponent(tableScrollPane);
+        
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setLeftComponent(new JScrollPane(tree));
+        splitPane.setRightComponent(queryAndResultsPanel);
+        
+        frame = new JFrame("MDX Explorererer");
+        frame.setContentPane(splitPane);
+        frame.pack();
+        frame.setVisible(true);
+    }
+    
+    private JComponent createGuiQueryPanel() {
+        return new JLabel("Not working");
+    }
+
+    private JComponent createTextQueryPanel() throws OlapException {
         final JTextArea mdxQuery = new JTextArea();
         mdxQuery.setText(
                "with" +
@@ -131,7 +131,7 @@ public class MondrianTest {
                     cellSet = statement.executeOlapQuery(mdxQuery.getText());
                 } catch (OlapException e1) {
                     e1.printStackTrace();
-                    JOptionPane.showMessageDialog(table, "FAIL");
+                    JOptionPane.showMessageDialog(mdxResultTable, "FAIL");
                     return;
                 }
                 
@@ -140,24 +140,61 @@ public class MondrianTest {
                 f.format(cellSet, pw);
                 pw.flush();
                 
-                table.setModel(new CellSetTableModel(cellSet));
+                mdxResultTable.setModel(new CellSetTableModel(cellSet));
                 JComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet);
                 tableScrollPane.setRowHeaderView(rowHeader);
             }
         });
-
+        
         JPanel queryPanel = new JPanel(new BorderLayout());
         queryPanel.add(new JScrollPane(mdxQuery), BorderLayout.CENTER);
         queryPanel.add(executeButton, BorderLayout.SOUTH);
 
-        JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        queryAndResultsPanel.setTopComponent(queryPanel);
-        queryAndResultsPanel.setBottomComponent(tableScrollPane);
+        return queryPanel;
+    }
+
+    public static void main(String[] args) throws Exception {
+        Preferences prefs = Preferences.userNodeForPackage(MondrianTest.class);
+        System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
+        System.setProperty("org.osjava.sj.jndi.shared", "true");
+        Context ctx = new InitialContext();
         
-        JSplitPane splitPane = new JSplitPane();
-        splitPane.setLeftComponent(new JScrollPane(tree));
-        splitPane.setRightComponent(queryAndResultsPanel);
-        frame.setContentPane(splitPane);
-        frame.pack();
+        PlDotIni plIni = new PlDotIni();
+        plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
+        
+        Olap4jDataSource olapDataSource = new Olap4jDataSource();
+        olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
+        olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null)));
+
+        Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, plIni);
+        JFrame dummyFrame = new JFrame();
+        dummyFrame.setSize(0, 0);
+        dummyFrame.setVisible(true);
+        JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(dep, dummyFrame, "Proof of concept", "OK");
+        d.setModal(true);
+        d.setLocationRelativeTo(null);
+        d.setVisible(true);
+        if (olapDataSource.getType() == null) {
+            return;
+        }
+        dummyFrame.dispose();
+        
+        prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
+        prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
+        
+        SPDataSource ds = olapDataSource.getDataSource();
+        ctx.bind(ds.getName(), new DataSourceAdapter(ds));
+        
+        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
+        Connection connection =
+            DriverManager.getConnection(
+                "jdbc:mondrian:"
+                    + "DataSource='" + ds.getName() + "';"
+                    + "Catalog='" + olapDataSource.getMondrianSchema().toString() + "';"
+                    );
+        OlapConnection olapConnection = ((OlapWrapper) connection).unwrap(OlapConnection.class);
+        
+        new MondrianTest(olapConnection);
+        
     }
 }
