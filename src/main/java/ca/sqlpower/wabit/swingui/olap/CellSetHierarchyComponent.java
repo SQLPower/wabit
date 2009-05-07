@@ -152,12 +152,7 @@ public class CellSetHierarchyComponent extends JPanel {
         
         for (Position position : axis) {
             Member member = position.getMembers().get(hierarchyOrdinal);
-            int memberDepth = 0;
-            Member ancestor = member;
-            do {
-                memberDepth++;
-                ancestor = ancestor.getParentMember();
-            } while (ancestor != null);
+            int memberDepth = member.getDepth();
             LayoutItem li = new LayoutItem();
             Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
             li.bounds = new Rectangle2D.Double(
