@@ -20,9 +20,7 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.Component;
-import java.net.URL;
 
-import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
@@ -43,23 +41,6 @@ public class Olap4JTreeCellRenderer extends DefaultTreeCellRenderer {
 
     private static final Logger logger = Logger.getLogger(Olap4JTreeCellRenderer.class);
 
-    private static final ImageIcon SCHEMA_ICON = makeIcon("schema");
-    private static final ImageIcon CUBE_ICON = makeIcon("cube");
-    private static final ImageIcon DIMENSION_ICON = makeIcon("dimension");
-    private static final ImageIcon LEVEL_ICON = makeIcon("level");
-    private static final ImageIcon HIERARCHY_ICON = makeIcon("hierarchy");
-    private static final ImageIcon NAMEDSET_ICON = makeIcon("namedSet");
-    private static final ImageIcon MEASURE_ICON = makeIcon("measure");
-    
-    private static final ImageIcon makeIcon(String resourceName) {
-        URL iconUrl = Olap4JTreeCellRenderer.class.getResource(
-                "/ca/sqlpower/swingui/olap/" + resourceName + ".png");
-        if (iconUrl == null) {
-            throw new RuntimeException("Missing icon for " + resourceName);
-        } else {
-            return new ImageIcon(iconUrl);
-        }
-    }
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
             boolean sel, boolean expanded, boolean leaf, int row,
@@ -73,29 +54,29 @@ public class Olap4JTreeCellRenderer extends DefaultTreeCellRenderer {
                 setText(((Catalog) value).getName());
             } else if (value instanceof Schema) {
                 setText(((Schema) value).getName());
-                setIcon(SCHEMA_ICON);
+                setIcon(OlapIcons.SCHEMA_ICON);
             } else if (value instanceof Cube) {
                 setText(((Cube) value).getName());
-                setIcon(CUBE_ICON);
+                setIcon(OlapIcons.CUBE_ICON);
             } else if (value instanceof Dimension) {
                 setText(((Dimension) value).getName());
-                setIcon(DIMENSION_ICON);
+                setIcon(OlapIcons.DIMENSION_ICON);
             } else if (value instanceof Measure) {
                 setText(((Measure) value).getName());
-                setIcon(MEASURE_ICON);
+                setIcon(OlapIcons.MEASURE_ICON);
             } else if (value instanceof Hierarchy) {
                 setText(((Hierarchy) value).getName());
-                setIcon(HIERARCHY_ICON);
+                setIcon(OlapIcons.HIERARCHY_ICON);
             } else if (value instanceof Level) {
                 setText(((Level) value).getName());
-                setIcon(LEVEL_ICON);
+                setIcon(OlapIcons.LEVEL_ICON);
             } else if (value instanceof Property) {
                 setText(((Property) value).getName());
             } else if (value instanceof Member) {
                 setText(((Member) value).getName());
             } else if (value instanceof NamedSet) {
                 setText(((NamedSet) value).getName());
-                setIcon(NAMEDSET_ICON);
+                setIcon(OlapIcons.NAMEDSET_ICON);
             } else {
                 logger.warn("Leaving default label for unknown tree node " + value);
             }
