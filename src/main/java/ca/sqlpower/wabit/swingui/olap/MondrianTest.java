@@ -41,7 +41,6 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -81,8 +80,8 @@ public class MondrianTest {
         tableScrollPane = new JScrollPane(mdxResultTable);
         
         JTabbedPane queryPanels = new JTabbedPane();
-        queryPanels.add("MDX", createTextQueryPanel());
         queryPanels.add("GUI", createGuiQueryPanel());
+        queryPanels.add("MDX", createTextQueryPanel());
         
         JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         queryAndResultsPanel.setTopComponent(queryPanels);
@@ -99,7 +98,7 @@ public class MondrianTest {
     }
     
     private JComponent createGuiQueryPanel() {
-        return new JLabel("Not working");
+        return new Olap4jGuiQueryPanel(frame, olapConnection).getPanel();
     }
 
     private JComponent createTextQueryPanel() throws OlapException {
@@ -169,6 +168,7 @@ public class MondrianTest {
         Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, plIni);
         JFrame dummyFrame = new JFrame();
         dummyFrame.setSize(0, 0);
+        dummyFrame.setLocation(-100, -100);
         dummyFrame.setVisible(true);
         JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(dep, dummyFrame, "Proof of concept", "OK");
         d.setModal(true);

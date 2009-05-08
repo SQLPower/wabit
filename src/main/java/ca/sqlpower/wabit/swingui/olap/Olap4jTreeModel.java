@@ -71,36 +71,68 @@ public class Olap4jTreeModel implements TreeModel {
     private class OlapTreeRoot {
         
         /** These are the children of the root object. */
-        private final List<OlapConnection> connections;
+        private final List<?> children;
 
         /**
-         * @param connections
+         * @param rootItems
          */
-        public OlapTreeRoot(List<OlapConnection> connections) {
+        public OlapTreeRoot(List<?> rootItems) {
             super();
-            this.connections = connections;
+            this.children = rootItems;
         }
         
-        public List<OlapConnection> getConnections() {
-            return connections;
+        public List<?> getChildren() {
+            return children;
         }
     }
     
     private final OlapTreeRoot root;
+    private final Class<?> forceLeafType;
+    private final Class<?> hideNodeType;
     
-    public Olap4jTreeModel(List<OlapConnection> connections) {
-        root = new OlapTreeRoot(connections);
+    /**
+     * Creates a full tree model of the given list of olap connections.
+     */
+    public Olap4jTreeModel(List<?> rootItems) {
+        this(rootItems, null, null);
+    }
+
+    /**
+     * Creates a tree model of the given list of olap connections which only
+     * goes as deep as items of the given leaf type.
+     * 
+     * @param rootItems
+     *            The olap4j metadata objects that should appear under the
+     *            (hidden) root node of the tree. The items in this list should
+     *            be of one of the types mentioned in the class-level comment.
+     * @param forceLeafType
+     *            The type that should be considered a leaf, whether or not the
+     *            underlying olap4j metadata object has children. If no
+     *            "forced leaf" node types are desired, pass in null for this
+     *            argument.
+     * @param hideNodeType
+     *            The type that should not be shown at all in this tree model.
+     *            If no types should be hidden, pass in null for this argument.
+     * @param class1
+     */
+    public Olap4jTreeModel(List<?> rootItems, Class<?> forceLeafType, Class<?> hideNodeType) {
+        root = new OlapTreeRoot(rootItems);
+        this.forceLeafType = forceLeafType;
+        this.hideNodeType = hideNodeType;
     }
 
 
     private List<? extends Object> getChildren(Object parent) {
+        List<?> children;
         try {
-            if (parent instanceof OlapTreeRoot) {
-                return ((OlapTreeRoot) parent).connections;
+            if (forceLeafType != null && forceLeafType.isInstance(parent)) {
+                children = Collections.emptyList();
+            } else if (parent instanceof OlapTreeRoot) {
+                children = ((OlapTreeRoot) parent).children;
             } else if (parent instanceof OlapConnection) {
-                return ((OlapConnection) parent).getCatalogs();
+                children = ((OlapConnection) parent).getCatalogs();
             } else if (parent instanceof Catalog) {
-                return ((Catalog) parent).getSchemas();
+                children = ((Catalog) parent).getSchemas();
             } else if (parent instanceof Schema) {
                 Schema s = (Schema) parent;
                 NamedList<Cube> cubes = s.getCubes();
@@ -119,7 +151,7 @@ public class Olap4jTreeModel implements TreeModel {
                         schemaKids.add(d);
                     }
                 }
-                return schemaKids;
+                children = schemaKids;
             } else if (parent instanceof Cube) {
                 Cube c = (Cube) parent;
                 List<Measure> measures = c.getMeasures();
@@ -130,28 +162,40 @@ public class Olap4jTreeModel implements TreeModel {
                 cubeKids.addAll(measures);
                 cubeKids.addAll(dimensions.subList(1, dimensions.size()));
                 cubeKids.addAll(sets);
-                return cubeKids;
+                children = cubeKids;
             } else if (parent instanceof Dimension) {
-                return ((Dimension) parent).getHierarchies();
+                children = ((Dimension) parent).getHierarchies();
             } else if (parent instanceof Measure) {
-                return Collections.emptyList();
+                children = Collections.emptyList();
             } else if (parent instanceof Hierarchy) {
-                return ((Hierarchy) parent).getLevels();
+                children = ((Hierarchy) parent).getLevels();
             } else if (parent instanceof Level) {
-                return ((Level) parent).getMembers();
+                children = ((Level) parent).getMembers();
                 // note Level also has Properties children, but they appear to be useless in the GUI
             } else if (parent instanceof Member) {
-                return ((Member) parent).getChildMembers();
+                children = ((Member) parent).getChildMembers();
             } else if (parent instanceof Property) {
-                return Collections.emptyList();
+                children = Collections.emptyList();
             } else if (parent instanceof NamedSet) {
-                return Collections.emptyList();
+                children = Collections.emptyList();
             } else {
                 throw new IllegalArgumentException("Unknown node type " + parent);
             }
         } catch (OlapException ex) {
             throw new RuntimeException(ex);
         }
+        
+        if (hideNodeType != null) {
+            List<Object> filteredChildren = new ArrayList<Object>(children.size());
+            for (Object child : children) {
+                if (!hideNodeType.isInstance(child)) {
+                    filteredChildren.add(child);
+                }
+            }
+            children = filteredChildren;
+        }
+        
+        return children;
     }
 
     public void addTreeModelListener(TreeModelListener l) {
