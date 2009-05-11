@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.Component;
 
+import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
@@ -47,43 +48,63 @@ public class Olap4JTreeCellRenderer extends DefaultTreeCellRenderer {
             boolean hasFocus) {
         super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
+        configureJLabel(this, value);
+        
+        return this;
+    }
+
+    /**
+     * Configures the given JLabel (which all of the Default*CellRenderer
+     * classes extend) with the correct text and icon for the given OLAP4J
+     * metadata object.
+     * 
+     * @param configureMe
+     *            The JLabel (probably a tree/list/table cell renderer, but can
+     *            be a plain JLabel) to configure.
+     * @param value
+     *            The OLAP4J object to represent. Should be one of the types
+     *            mentioned in
+     *            {@link Olap4jTreeModel#Olap4jTreeModel(java.util.List)}, but
+     *            other types cause this method to fail gracefully (it simply
+     *            doesn't modify the label if the value type is unsupported).
+     */
+    static void configureJLabel(JLabel configureMe, Object value) {
         try {
             if (value instanceof OlapConnection) {
-                setText(((OlapConnection) value).getMetaData().getURL()); // XXX not ideal
+                configureMe.setText(((OlapConnection) value).getMetaData().getURL()); // XXX not ideal
             } else if (value instanceof Catalog) {
-                setText(((Catalog) value).getName());
+                configureMe.setText(((Catalog) value).getName());
             } else if (value instanceof Schema) {
-                setText(((Schema) value).getName());
-                setIcon(OlapIcons.SCHEMA_ICON);
+                configureMe.setText(((Schema) value).getName());
+                configureMe.setIcon(OlapIcons.SCHEMA_ICON);
             } else if (value instanceof Cube) {
-                setText(((Cube) value).getName());
-                setIcon(OlapIcons.CUBE_ICON);
+                configureMe.setText(((Cube) value).getName());
+                configureMe.setIcon(OlapIcons.CUBE_ICON);
             } else if (value instanceof Dimension) {
-                setText(((Dimension) value).getName());
-                setIcon(OlapIcons.DIMENSION_ICON);
+                configureMe.setText(((Dimension) value).getName());
+                configureMe.setIcon(OlapIcons.DIMENSION_ICON);
             } else if (value instanceof Measure) {
-                setText(((Measure) value).getName());
-                setIcon(OlapIcons.MEASURE_ICON);
+                configureMe.setText(((Measure) value).getName());
+                configureMe.setIcon(OlapIcons.MEASURE_ICON);
             } else if (value instanceof Hierarchy) {
-                setText(((Hierarchy) value).getName());
-                setIcon(OlapIcons.HIERARCHY_ICON);
+                configureMe.setText(((Hierarchy) value).getName());
+                configureMe.setIcon(OlapIcons.HIERARCHY_ICON);
             } else if (value instanceof Level) {
-                setText(((Level) value).getName());
-                setIcon(OlapIcons.LEVEL_ICON);
+                configureMe.setText(((Level) value).getName());
+                configureMe.setIcon(OlapIcons.LEVEL_ICON);
             } else if (value instanceof Property) {
-                setText(((Property) value).getName());
+                configureMe.setText(((Property) value).getName());
             } else if (value instanceof Member) {
-                setText(((Member) value).getName());
+                configureMe.setText(((Member) value).getName());
             } else if (value instanceof NamedSet) {
-                setText(((NamedSet) value).getName());
-                setIcon(OlapIcons.NAMEDSET_ICON);
+                configureMe.setText(((NamedSet) value).getName());
+                configureMe.setIcon(OlapIcons.NAMEDSET_ICON);
             } else {
                 logger.warn("Leaving default label for unknown tree node " + value);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        
-        return this;
     }
+
 }
