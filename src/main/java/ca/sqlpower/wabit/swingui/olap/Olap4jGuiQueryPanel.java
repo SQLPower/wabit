@@ -26,6 +26,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.sql.SQLException;
 import java.util.Collections;
 
 import javax.swing.DefaultListModel;
@@ -39,6 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.JWindow;
+import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.TreeSelectionEvent;
@@ -50,9 +52,15 @@ import javax.swing.tree.TreePath;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
+import org.olap4j.Axis;
+import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
+import org.olap4j.query.Query;
+import org.olap4j.query.QueryAxis;
+import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
 
 public class Olap4jGuiQueryPanel {
 
@@ -137,6 +145,9 @@ public class Olap4jGuiQueryPanel {
                     Object transferData = t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR);
                     ((DefaultListModel) list.getModel()).add(index + 1, transferData);
                     logger.debug("  -- import complete");
+                    
+                    executeQuery();
+                    
                     return true;
                 } catch (Exception e) {
                     logger.info("Error processing drop", e);
@@ -148,15 +159,36 @@ public class Olap4jGuiQueryPanel {
             return false;
         }
     }
-    
+
+    /**
+     * The panel that provides the query builder's GUI. This panel is created
+     * and maintained by this class.
+     */
     private final JPanel panel;
+
+    /**
+     * The cell set viewer that is used to display the results of queries being
+     * executed. May also participate in query building (for example, the
+     * components that show the axes can be drop points for adding new
+     * dimensions to the query). Initialized in the constructor, and never null.
+     */
+    private final CellSetViewer cellSetViewer;
+
+    /**
+     * The current cube (this can be selected/changed via the GUI or the
+     * {@link #setCurrentCube(Cube)} method). Null by default.
+     */
     private Cube currentCube;
     
     private JList rowAxisList;
     private JList columnAxisList;
     private JTree cubeTree;
     
-    public Olap4jGuiQueryPanel(final JFrame owningFrame, final OlapConnection olapConnection) {
+    public Olap4jGuiQueryPanel(final JFrame owningFrame, CellSetViewer cellSetViewer, final OlapConnection olapConnection) {
+        this.cellSetViewer = cellSetViewer;
+        if (cellSetViewer == null) {
+            throw new NullPointerException("You must provide a non-null cell set viewer");
+        }
         cubeTree = new JTree();
         cubeTree.setRootVisible(false);
         cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
@@ -165,13 +197,17 @@ public class Olap4jGuiQueryPanel {
         
         OlapListTransferHandler axisListTransferHandler = new OlapListTransferHandler();
 
+        ListCellRenderer olapListCellRenderer = new Olap4jListCellRenderer();
+        
         rowAxisList = new JList(new DefaultListModel());
         rowAxisList.setTransferHandler(axisListTransferHandler);
+        rowAxisList.setCellRenderer(olapListCellRenderer);
         
         columnAxisList = new JList(new DefaultListModel());
         columnAxisList.setTransferHandler(axisListTransferHandler);
+        columnAxisList.setCellRenderer(olapListCellRenderer);
         
-        setCurrentCube(null); // init cubetree state
+        setCurrentCube(null); // inits cubetree state
         
         final JButton cubeChooserButton = new JButton("Choose Cube...");
         cubeChooserButton.addActionListener(new ActionListener() {
@@ -214,14 +250,14 @@ public class Olap4jGuiQueryPanel {
         panel = new JPanel(new MigLayout(
                 "fill",
                 "[fill,grow 1][fill,grow 1][fill,grow 1]",
-                "[][grow,fill,100]"));
+                "[][grow,fill,100][]"));
         panel.add(cubeChooserButton, "grow 0,left");
         panel.add(new JLabel("Rows Axis"));
         panel.add(new JLabel("Columns Axis"), "wrap");
         
         panel.add(new JScrollPane(cubeTree));
         panel.add(new JScrollPane(rowAxisList));
-        panel.add(new JScrollPane(columnAxisList));
+        panel.add(new JScrollPane(columnAxisList), "wrap");
     }
     
     public JPanel getPanel() {
@@ -237,4 +273,52 @@ public class Olap4jGuiQueryPanel {
             cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
         }
     }
+    
+    /**
+     * Executes the query, given the current settings in this GUI.
+     */
+    public void executeQuery() {
+        Query mdxQuery;
+        try {
+            mdxQuery = new Query("GUI Query", currentCube);
+
+            QueryAxis rows = mdxQuery.getAxes().get(Axis.ROWS);
+            QueryAxis columns = mdxQuery.getAxes().get(Axis.COLUMNS);
+
+            for (int i = 0; i < rowAxisList.getModel().getSize(); i++) {
+                Object listItem = rowAxisList.getModel().getElementAt(i);
+                if (listItem instanceof Dimension) {
+                    Dimension d = (Dimension) listItem;
+                    QueryDimension qd = new QueryDimension(mdxQuery, d);
+                    Selection selection = qd.createSelection(d.getDefaultHierarchy().getDefaultMember());
+                    qd.getSelections().add(selection);
+                    rows.getDimensions().add(qd);
+                }
+            }
+
+            for (int i = 0; i < columnAxisList.getModel().getSize(); i++) {
+                Object listItem = columnAxisList.getModel().getElementAt(i);
+                if (listItem instanceof Dimension) {
+                    Dimension d = (Dimension) listItem;
+                    QueryDimension qd = new QueryDimension(mdxQuery, d);
+                    Selection selection = qd.createSelection(d.getDefaultHierarchy().getDefaultMember());
+                    qd.getSelections().add(selection);
+                    columns.getDimensions().add(qd);
+                }
+            }
+
+            if (rows.getDimensions().isEmpty() || columns.getDimensions().isEmpty()) {
+                // TODO add error reporting to CellSetViewer
+                return;
+            }
+            
+            CellSet cellSet = mdxQuery.execute();
+            cellSetViewer.showCellSet(cellSet);
+        } catch (SQLException ex) {
+            logger.error("failed to build/execute MDX query", ex);
+            // TODO add error reporting to CellSetViewer
+        }
+    }
+    
+
 }

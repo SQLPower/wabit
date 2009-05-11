@@ -24,8 +24,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -46,7 +44,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 
@@ -55,7 +52,6 @@ import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
 import org.olap4j.OlapWrapper;
-import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
@@ -66,8 +62,7 @@ import ca.sqlpower.wabit.olap.Olap4jDataSource;
 public class MondrianTest {
 
     private final JFrame frame;
-    private final JTable mdxResultTable;
-    private final JScrollPane tableScrollPane;
+    private final CellSetViewer cellSetViewer;
     private final OlapConnection olapConnection;
 
     public MondrianTest(OlapConnection olapConnection) throws NamingException, IOException, URISyntaxException, ClassNotFoundException, SQLException {
@@ -76,8 +71,7 @@ public class MondrianTest {
         tree.setCellRenderer(new Olap4JTreeCellRenderer());
         tree.setRootVisible(false);
 
-        mdxResultTable = new JTable();
-        tableScrollPane = new JScrollPane(mdxResultTable);
+        cellSetViewer = new CellSetViewer();
         
         JTabbedPane queryPanels = new JTabbedPane();
         queryPanels.add("GUI", createGuiQueryPanel());
@@ -85,7 +79,7 @@ public class MondrianTest {
         
         JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         queryAndResultsPanel.setTopComponent(queryPanels);
-        queryAndResultsPanel.setBottomComponent(tableScrollPane);
+        queryAndResultsPanel.setBottomComponent(cellSetViewer.getViewComponent());
         
         JSplitPane splitPane = new JSplitPane();
         splitPane.setLeftComponent(new JScrollPane(tree));
@@ -98,7 +92,7 @@ public class MondrianTest {
     }
     
     private JComponent createGuiQueryPanel() {
-        return new Olap4jGuiQueryPanel(frame, olapConnection).getPanel();
+        return new Olap4jGuiQueryPanel(frame, cellSetViewer, olapConnection).getPanel();
     }
 
     private JComponent createTextQueryPanel() throws OlapException {
@@ -130,18 +124,11 @@ public class MondrianTest {
                     cellSet = statement.executeOlapQuery(mdxQuery.getText());
                 } catch (OlapException e1) {
                     e1.printStackTrace();
-                    JOptionPane.showMessageDialog(mdxResultTable, "FAIL");
+                    JOptionPane.showMessageDialog(frame, "FAIL\n" + e1.getMessage());
                     return;
                 }
-                
-                RectangularCellSetFormatter f = new RectangularCellSetFormatter(true);
-                PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out));
-                f.format(cellSet, pw);
-                pw.flush();
-                
-                mdxResultTable.setModel(new CellSetTableModel(cellSet));
-                JComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet);
-                tableScrollPane.setRowHeaderView(rowHeader);
+
+                cellSetViewer.showCellSet(cellSet);
             }
         });
         
