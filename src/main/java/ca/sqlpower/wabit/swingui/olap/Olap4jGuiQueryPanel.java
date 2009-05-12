@@ -307,8 +307,13 @@ public class Olap4jGuiQueryPanel {
                 }
             }
 
-            if (rows.getDimensions().isEmpty() || columns.getDimensions().isEmpty()) {
-                // TODO add error reporting to CellSetViewer
+            if (rows.getDimensions().isEmpty()) {
+                cellSetViewer.showMessage("Rows axis is empty--please drop something on it");
+                return;
+            }
+            
+            if (columns.getDimensions().isEmpty()) {
+                cellSetViewer.showMessage("Columns axis is empty--please drop something on it");
                 return;
             }
             
