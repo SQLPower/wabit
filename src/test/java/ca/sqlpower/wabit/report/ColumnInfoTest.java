@@ -19,9 +19,9 @@
 
 package ca.sqlpower.wabit.report;
 
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.query.StringItem;
 
 public class ColumnInfoTest extends AbstractWabitObjectTest {
 

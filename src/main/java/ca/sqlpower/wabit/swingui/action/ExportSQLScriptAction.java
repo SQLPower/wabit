@@ -32,9 +32,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
  * This action will export the given query as a SQL Script file when it is executed.

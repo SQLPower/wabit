@@ -281,7 +281,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         getRowLimitSpinner().setValue(1000);
         rowLimitSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				pcs.firePropertyChange("rowLimit", oldRowLimitValue, ((Integer) rowLimitSpinner.getValue()).intValue());
+				pcs.firePropertyChange(QueryCache.ROW_LIMIT, oldRowLimitValue, ((Integer) rowLimitSpinner.getValue()).intValue());
 				oldRowLimitValue = (Integer) rowLimitSpinner.getValue();
 			}
 		});
@@ -324,15 +324,19 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		for (Query query : project.getQueries()) {
 			if (query instanceof QueryCache) {
 				final QueryCache queryCache = (QueryCache) query;
+				//Repaints the tree when the worker thread's timer fires. This will allow the tree node
+				//to paint a throbber badge on the query node.
 				queryCache.addTimerListener(new PropertyChangeListener() {
 					public void propertyChange(PropertyChangeEvent evt) {
 						renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
 						projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
 					}
 				});
+				
+				//This removes the timer from the query if the query has stopped running.
 				queryCache.addPropertyChangeListener(new PropertyChangeListener() {
 					public void propertyChange(PropertyChangeEvent evt) {
-						if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
+						if (evt.getPropertyName().equals(QueryCache.RUNNING) && !((Boolean) evt.getNewValue())) {
 							renderer.removeTimer(queryCache);
 							projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
 						}
@@ -650,7 +654,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 		
 		if (entryPanelModel instanceof QueryCache) {
-			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
+			QueryPanel queryPanel = new QueryPanel(this, (QueryCache) entryPanelModel);
 		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
 	            String[] dividerLocations = prefs.get(QUERY_DIVIDER_LOCATON, null).split(",");
 	            queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));

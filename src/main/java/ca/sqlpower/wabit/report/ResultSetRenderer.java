@@ -68,6 +68,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.query.Item;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
@@ -81,7 +82,6 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.swingui.Icons;
 
@@ -422,7 +422,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         			ci.setWidth(-1);
         		}
         	} else {
-        		Item item = ((QueryCache) query).getSelectedColumns().get(col - 1);
+        		Item item = ((QueryCache) query).getQuery().getSelectedColumns().get(col - 1);
         		String columnKey = rsmd.getColumnLabel(col);
         		logger.debug("Matching key " + item.getName());
         		if (colKeyToInfoMap.get(item) != null) {

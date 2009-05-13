@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import ca.sqlpower.swingui.querypen.CleanupPNode;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -28,15 +29,8 @@ import ca.sqlpower.wabit.WabitObject;
  * it (so it can unlisten to the model and clean up any other stuff that needs
  * cleaning up).
  */
-public interface WabitNode {
+public interface WabitNode extends CleanupPNode {
     
-    /**
-     * Causes this object to unlisten to its model object and anything else
-     * that could impede garbage collection. Once you have cleaned up a
-     * WabitNode, you can't use it again.
-     */
-    void cleanup();
-
     /**
      * Returns the WabitObject that this WabitNode visually represents.
      */

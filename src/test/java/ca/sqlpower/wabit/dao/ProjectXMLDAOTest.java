@@ -39,6 +39,10 @@ import junit.framework.TestCase;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.StringItem;
+import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
@@ -50,10 +54,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.query.Container;
 import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.StringItem;
-import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.Layout;
 
 public class ProjectXMLDAOTest extends TestCase {
@@ -71,12 +72,13 @@ public class ProjectXMLDAOTest extends TestCase {
 		List<String> ignoreList = new ArrayList<String>();
 		ignoreList.add("parent");
 		ignoreList.add("session");
+		ignoreList.add("DBMapping"); //Similar to the session
         ignoreList.add("dataSourceTypes"); //Currently unsupported.
         ignoreList.add("serverBaseURI"); //Currently unsupported.
 		return ignoreList;
 	}
 	
-	private void setAllSetters(WabitObject object, List<String> propertiesThatAreNotPersisted) throws Exception {
+	private void setAllSetters(Object object, List<String> propertiesThatAreNotPersisted) throws Exception {
 		
 		List<PropertyDescriptor> settableProperties;
 		settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(object.getClass()));
@@ -235,19 +237,19 @@ public class ProjectXMLDAOTest extends TestCase {
 		final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
 		QueryCache query = new QueryCache(session);
 		p.addQuery(query, session);
-		setAllSetters(query, getPropertiesToIgnore());
+		setAllSetters(query.getQuery(), getPropertiesToIgnore());
 		query.setDataSource(db.getDataSource());
 		
-		Container constantsContainer = query.getConstantsContainer();
+		Container constantsContainer = query.getQuery().getConstantsContainer();
 		StringItem constantItem = new StringItem("Constant");
 		constantsContainer.addItem(constantItem);
-		query.addItem(constantItem);
+		query.getQuery().addItem(constantItem);
 		setAllSetters(constantItem, getPropertiesToIgnore());
 
 		//TODO: implement the rest of this test case for the commented out sections of 
 		//a query and layouts.
-		TableContainer container = new TableContainer(query, db.getTableByName("wabit_table1"));
-		query.addTable(container);
+		TableContainer container = new TableContainer(query.getQuery(), db.getTableByName("wabit_table1"));
+		query.getQuery().addTable(container);
 		setAllSetters(container, getPropertiesToIgnore());
 //		query.addJoin(join);
 		
@@ -278,8 +280,8 @@ public class ProjectXMLDAOTest extends TestCase {
         
         assertEquals(p.getQueries().size(), loadedSession.getProject().getQueries().size());
         for (int i = 0; i < p.getQueries().size(); i++) {
-        	QueryCache oldQuery = (QueryCache) p.getQueries().get(i);
-			QueryCache newQuery = (QueryCache) loadedSession.getProject().getQueries().get(i);
+        	QueryData oldQuery = (QueryData) ((QueryCache) p.getQueries().get(i)).getQuery();
+			QueryData newQuery = (QueryData) ((QueryCache) loadedSession.getProject().getQueries().get(i)).getQuery();
 			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session", "streaming", "streamingStatement", "streamingConnection", "timerListener"});
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());
 			for (int j = 0; j < oldQuery.getConstantsContainer().getItems().size(); j++) {

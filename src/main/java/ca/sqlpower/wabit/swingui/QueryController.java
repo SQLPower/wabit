@@ -19,14 +19,11 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -42,21 +39,20 @@ import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import javax.swing.text.JTextComponent;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.StringCountItem;
+import ca.sqlpower.query.QueryData.OrderByArgument;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.StringCountItem;
-import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
  * This is the controller between the QueryCache and the QueryPen.
@@ -67,7 +63,7 @@ public class QueryController {
 	
 	private static final Logger logger = Logger.getLogger(QueryController.class);
 	
-	private final QueryCache queryCache;
+	private final QueryData queryCache;
 
 	/**
 	 * This is the current cell renderer we are listening on for group by 
@@ -295,11 +291,11 @@ public class QueryController {
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
-	 * the state of the {@link QueryCache}. The dataSourceComboBox will also have
-	 * a listener added so the {@link QueryCache} can track which database to execute
+	 * the state of the {@link QueryData}. The dataSourceComboBox will also have
+	 * a listener added so the {@link QueryData} can track which database to execute
 	 * on.
 	 */
-	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {
+	public QueryController(QueryData cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {
 		queryCache = cache;
 		this.pen = pen;
 		this.dataSourceComboBox = dataSourceComboBox;

@@ -24,13 +24,13 @@ import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.ItemContainer;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.GenericNewValueMaker;
-import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.ItemContainer;
-import ca.sqlpower.wabit.query.StringItem;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;

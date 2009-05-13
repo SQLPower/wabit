@@ -19,9 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
-import java.awt.Color;
 import java.awt.Font;
-import java.awt.Paint;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -44,17 +42,18 @@ import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
-import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.TableContainer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.GraphRenderer;
@@ -147,7 +146,7 @@ public class ProjectXMLDAO {
 		
 		for (Query query : queries) {
 			if (query instanceof QueryCache) {
-				saveQueryCache((QueryCache)query);
+				saveQueryCache(((QueryCache) query).getQuery());
 			} else {
 				throw new IllegalStateException("Trying to store a query of type " + query.getClass() + " which is unhandled by saving.");
 			}
@@ -399,14 +398,15 @@ public class ProjectXMLDAO {
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	private void saveQueryCache(QueryCache cache) {
+	private void saveQueryCache(QueryData data) {
 		xml.print(out, "<query");
-		printAttribute("name", cache.getName());
-		printAttribute("uuid", cache.getUUID().toString());
-		printAttribute("zoom", cache.getZoomLevel());
-		printAttribute("streaming-row-limit", cache.getStreamingRowLimit());
-		if (cache.getDatabase() != null && cache.getDatabase().getDataSource() != null) {
-			printAttribute("data-source", cache.getDatabase().getDataSource().getName());
+		printAttribute("name", data.getName());
+		printAttribute("uuid", data.getUUID().toString());
+		printAttribute("zoom", data.getZoomLevel());
+		printAttribute("streaming-row-limit", data.getStreamingRowLimit());
+		printAttribute("row-limit", data.getRowLimit());
+		if (data.getDatabase() != null && data.getDatabase().getDataSource() != null) {
+			printAttribute("data-source", data.getDatabase().getDataSource().getName());
 		}
 		xml.niprintln(out, ">");
 		xml.indent++;
@@ -414,7 +414,7 @@ public class ProjectXMLDAO {
 		Map<Item, String> itemIdMap = new HashMap<Item, String>();
 
 		xml.print(out, "<constants");
-		Container constants = cache.getConstantsContainer();
+		Container constants = data.getConstantsContainer();
 		printAttribute("uuid", constants.getUUID().toString());
 		printAttribute("xpos", constants.getPosition().getX());
 		printAttribute("ypos", constants.getPosition().getY());
@@ -432,7 +432,7 @@ public class ProjectXMLDAO {
 		xml.indent--;
 		xml.println(out, "</constants>");
 		
-		for (Container table : cache.getFromTableList()) {
+		for (Container table : data.getFromTableList()) {
 			xml.print(out, "<table");
 			printAttribute("name", table.getName());
 			printAttribute("uuid", table.getUUID().toString());
@@ -461,7 +461,7 @@ public class ProjectXMLDAO {
 			xml.println(out, "</table>");
 		}	
 		
-		for (SQLJoin join : cache.getJoins()) {
+		for (SQLJoin join : data.getJoins()) {
 			xml.print(out, "<join");
 			printAttribute("left-item-id", itemIdMap.get(join.getLeftColumn()));
 			printAttribute("left-is-outer", Boolean.toString(join.isLeftColumnOuterJoin()));
@@ -473,7 +473,7 @@ public class ProjectXMLDAO {
 				
 		xml.println(out, "<select>");
 		xml.indent++;
-		for (Item col : cache.getSelectedColumns()) {
+		for (Item col : data.getSelectedColumns()) {
 			xml.print(out, "<column");
 			printAttribute("id", itemIdMap.get(col));
 			xml.niprintln(out, "/>");
@@ -482,18 +482,18 @@ public class ProjectXMLDAO {
 		xml.println(out, "</select>");
 		
 		xml.print(out, "<global-where");
-		printAttribute("text", cache.getGlobalWhereClause());
+		printAttribute("text", data.getGlobalWhereClause());
 		xml.niprintln(out, "/>");
 		
-		if (cache.isGroupingEnabled()) {
-			for (Map.Entry<Item, SQLGroupFunction> entry: cache.getGroupByAggregateMap().entrySet()) {
+		if (data.isGroupingEnabled()) {
+			for (Map.Entry<Item, SQLGroupFunction> entry: data.getGroupByAggregateMap().entrySet()) {
 				xml.print(out, "<group-by-aggregate");
 				printAttribute("column-id", itemIdMap.get(entry.getKey()));
 				printAttribute("aggregate", entry.getValue().name());
 				xml.niprintln(out, "/>");
 			}
 			
-			for (Map.Entry<Item, String> entry : cache.getHavingMap().entrySet()) {
+			for (Map.Entry<Item, String> entry : data.getHavingMap().entrySet()) {
 				xml.print(out, "<having");
 				printAttribute("column-id", itemIdMap.get(entry.getKey()));
 				printAttribute("text", entry.getValue());
@@ -502,16 +502,16 @@ public class ProjectXMLDAO {
 			
 		}
 		
-		for (Item item : cache.getOrderByList()) {
+		for (Item item : data.getOrderByList()) {
 			xml.println(out, "<order-by");
 			printAttribute("column-id", itemIdMap.get(item));
-			printAttribute("direction", cache.getOrderByArgument(item).name());
+			printAttribute("direction", data.getOrderByArgument(item).name());
 			xml.niprintln(out, "/>");
 		}
 		
-		if (cache.isScriptModified()) {
+		if (data.isScriptModified()) {
 			xml.print(out, "<query-string");
-			printAttribute("string", cache.generateQuery());
+			printAttribute("string", data.generateQuery());
 			xml.niprintln(out, "/>");		
 		}
 

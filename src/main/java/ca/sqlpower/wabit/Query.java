@@ -19,10 +19,13 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 
 /**
  * The interface for anything that can provide data in a report. The canonical
@@ -51,7 +54,17 @@ public interface Query extends WabitObject {
     
     void setDataSource(SPDataSource ds);
 
-	void setName(String string);
+    /**
+     * Returns the short name for this object.
+     */
+    String getName();
+    
+    /**
+     * Sets the name for this object 
+     */
+    void setName(String name);
+    
+    UUID getUUID();
 
 	String generateQuery();
 	
@@ -67,16 +80,16 @@ public interface Query extends WabitObject {
 	public boolean isScriptModified();
 	
 	/**
-	 * Returns the session this query is contained in. Used for copying
+	 * Returns the database mapping this query's data source is contained in. Used for copying
 	 * queries.
 	 */
-	public WabitSession getSession();
+	public SQLDatabaseMapping getDBMapping();
 	
 	/**
 	 * Sets the session for this query if the query is being moved to a different
 	 * session or is being imported into a new session from an old session.
 	 */
-	public void setSession(WabitSession session);
+	public void setDBMapping(SQLDatabaseMapping dbMapping);
 	
 	/**
 	 * Call this when the query is to be disposed of.
@@ -113,5 +126,15 @@ public interface Query extends WabitObject {
 	 * rows.
 	 */
 	public int getStreamingRowLimit();
+	
+	/**
+	 * This listener will be notified when a new row limit has been defined
+	 * for a query's result set.
+	 */
+	public PropertyChangeListener getRowLimitChangeListener();
+	
+	public void addPropertyChangeListener(PropertyChangeListener l);
+	
+	public void removePropertyChangeListener(PropertyChangeListener l);
     
 }

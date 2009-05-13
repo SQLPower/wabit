@@ -24,14 +24,14 @@ import java.sql.Connection;
 import java.sql.Statement;
 
 import junit.framework.TestCase;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.CountingPropertyChangeListener;
-import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.StringItem;
 
 public class QueryCacheTest extends TestCase {
 	
@@ -56,18 +56,18 @@ public class QueryCacheTest extends TestCase {
 	
 	public void testSelectListener() throws Exception {
 		Item item = new StringItem("ItemName");
-		queryCache.selectionChanged(item, true);
-		assertTrue(queryCache.getSelectedColumns().contains(item));
-		queryCache.selectionChanged(item, false);
-		assertTrue(!queryCache.getSelectedColumns().contains(item));
+		queryCache.getQuery().selectionChanged(item, true);
+		assertTrue(queryCache.getQuery().getSelectedColumns().contains(item));
+		queryCache.getQuery().selectionChanged(item, false);
+		assertTrue(!queryCache.getQuery().getSelectedColumns().contains(item));
 	}
 	
 	public void testAliasListener() throws Exception {
 		Item item = new StringItem("ItemName");
-		queryCache.addItem(item);
+		queryCache.getQuery().addItem(item);
 		item.setSelected(true);
 		CountingPropertyChangeListener listener = new CountingPropertyChangeListener();
-		queryCache.addPropertyChangeListener(listener);
+		queryCache.getQuery().addPropertyChangeListener(listener);
 		String newAlias = "Alias test.";
 		item.setAlias(newAlias);
 		assertEquals(1, listener.getPropertyChangeCount());
@@ -92,8 +92,8 @@ public class QueryCacheTest extends TestCase {
 		CountingRowSetChangeListener listener = new CountingRowSetChangeListener();
 		queryCache.addRowSetChangeListener(listener);
 		queryCache.setDataSource(ds);
-		queryCache.setStreaming(true);
-		queryCache.defineUserModifiedQuery("select * from rsTest");
+		queryCache.getQuery().setStreaming(true);
+		queryCache.getQuery().defineUserModifiedQuery("select * from rsTest");
 		queryCache.executeStatement();
 		
 		for (Thread t : queryCache.getStreamingThreads()) {

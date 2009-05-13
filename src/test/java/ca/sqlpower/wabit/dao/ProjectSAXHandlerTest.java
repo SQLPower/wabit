@@ -106,6 +106,6 @@ public class ProjectSAXHandlerTest extends TestCase {
         WabitSession loadedSession = loadDAO.loadProjects().get(0);
         assertEquals(1, loadedSession.getProject().getQueries().size());
         QueryCache loadedQuery = (QueryCache) loadedSession.getProject().getQueries().get(0);
-        assertEquals(replacementDS, loadedQuery.getDatabase().getDataSource());
+        assertEquals(replacementDS, loadedQuery.getQuery().getDatabase().getDataSource());
 	}
 }

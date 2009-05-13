@@ -30,6 +30,7 @@ import java.util.prefs.Preferences;
 import javax.jmdns.JmDNS;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 
 import org.apache.log4j.Logger;
@@ -37,6 +38,8 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
+import ca.sqlpower.swingui.action.ForumAction;
+import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
@@ -62,6 +65,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * or it should start on the last loaded/saved project. 
      */
     private static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
+    
+    public static final ForumAction FORUM_ACTION = new ForumAction(new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-24px.png")), "Go to Wabit support forum");
     
 	private WabitWelcomeScreen welcomeScreen;
 

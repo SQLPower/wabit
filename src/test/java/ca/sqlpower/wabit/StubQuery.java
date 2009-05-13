@@ -19,10 +19,12 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 
 public class StubQuery extends StubWabitObject implements Query {
 
@@ -104,5 +106,20 @@ public class StubQuery extends StubWabitObject implements Query {
 		// TODO Auto-generated method stub
 		
 	}
+
+    public SQLDatabaseMapping getDBMapping() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public PropertyChangeListener getRowLimitChangeListener() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void setDBMapping(SQLDatabaseMapping dbMapping) {
+        // TODO Auto-generated method stub
+        
+    }
 
 }

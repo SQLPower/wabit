@@ -134,16 +134,18 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         int index = queries.size();
         queries.add(index, query);
         query.setParent(this);
-        query.setSession(session);
+        query.setDBMapping(session);
+        session.addPropertyChangeListener(query.getRowLimitChangeListener());
         fireChildAdded(Query.class, query, index);
         setEditorPanelModel(query);
     }
 
-    public boolean removeQuery(Query query) {
+    public boolean removeQuery(Query query, WabitSession session) {
     	int index = queries.indexOf(query);
     	if (index != -1) {
     		query.cleanup();
     		queries.remove(query);
+    		session.removePropertyChangeListener(query.getRowLimitChangeListener());
     		fireChildRemoved(Query.class, query, index);
     		return true;
     	} else {

@@ -120,7 +120,7 @@ public class ProjectTreeListener extends MouseAdapter {
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
 					final Query query = (Query)item;
-					session.getProject().removeQuery(query);
+					session.getProject().removeQuery(query, session);
 					removeLayoutPartsDependentOnQuery(query);
 				} else {
 					return;
@@ -139,7 +139,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		            	for(Query query : queries) {
 		                	if(item.equals(query.getWabitDataSource())) {
 		                		removeLayoutPartsDependentOnQuery(query);
-		                		session.getProject().removeQuery(query);
+		                		session.getProject().removeQuery(query, session);
 		                	}
 		                }
 		            } else if(response == 1) {

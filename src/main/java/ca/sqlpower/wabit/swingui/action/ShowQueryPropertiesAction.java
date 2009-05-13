@@ -29,8 +29,8 @@ import javax.swing.JDialog;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
-import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.swingui.querypen.QueryPropertiesPanel;
+import ca.sqlpower.swingui.querypen.QueryPropertiesPanel;
+import ca.sqlpower.wabit.query.QueryCache;
 
 /**
  * This action will create and show the properties panel of a query object.
@@ -52,13 +52,13 @@ public class ShowQueryPropertiesAction extends AbstractAction {
 	/**
 	 * The query this listener will show a properties panel for.
 	 */
-	private final Query query;
+	private final QueryCache query;
 
-	public ShowQueryPropertiesAction(Query query, Window parent) {
+	public ShowQueryPropertiesAction(QueryCache query, Window parent) {
 		super("Query Properties...", QUERY_PROPERTIES_ICON);
 		this.query = query;
 		this.parent = parent;
-		dataEntryPanel = new QueryPropertiesPanel(query);
+		dataEntryPanel = new QueryPropertiesPanel(query.getQuery());
 	}
 
 	public void actionPerformed(ActionEvent e) {

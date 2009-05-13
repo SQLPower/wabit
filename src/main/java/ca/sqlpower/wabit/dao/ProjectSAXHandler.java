@@ -45,6 +45,15 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringCountItem;
+import ca.sqlpower.query.StringItem;
+import ca.sqlpower.query.TableContainer;
+import ca.sqlpower.query.QueryData.OrderByArgument;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -54,15 +63,7 @@ import ca.sqlpower.wabit.Query;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.Item;
 import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.SQLObjectItem;
-import ca.sqlpower.wabit.query.StringCountItem;
-import ca.sqlpower.wabit.query.StringItem;
-import ca.sqlpower.wabit.query.TableContainer;
-import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
@@ -111,7 +112,7 @@ public class ProjectSAXHandler extends DefaultHandler {
 	/**
 	 * This is the current query being loaded in from the file.
 	 */
-	private QueryCache query;
+	private QueryCache cache;
 	
 	/**
 	 * This maps all of the currently loaded Items with their UUIDs. This
@@ -250,15 +251,15 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("query")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
-        	query = new QueryCache(uuid, session);
-        	session.getProject().addQuery(query, session);
+        	cache = new QueryCache(uuid, session);
+        	session.getProject().addQuery(cache, session);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
         		if (aname.equals("uuid")) {
         			// already loaded
         		} else if (aname.equals("name")) {
-        			query.setName(aval);
+        			cache.setName(aval);
         		} else if (aname.equals("data-source")) { 
         			SPDataSource ds = session.getProject().getDataSource(aval);
         			if (ds == null) {
@@ -272,11 +273,13 @@ public class ProjectSAXHandler extends DefaultHandler {
         				}
         				logger.debug("Project has data sources " + session.getProject().getDataSources());
         			}
-        			query.setDataSource(ds);
+        			cache.setDataSource(ds);
         		} else if (aname.equals("zoom")) {
-        			query.setZoomLevel(Integer.parseInt(aval));
+        			cache.getQuery().setZoomLevel(Integer.parseInt(aval));
         		} else if (aname.equals("streaming-row-limit")) {
-        			query.setStreamingRowLimit(Integer.parseInt(aval));
+        			cache.setStreamingRowLimit(Integer.parseInt(aval));
+        		} else if (aname.equals("row-limit")) {
+        		    cache.getQuery().setRowLimit(Integer.parseInt(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
@@ -284,7 +287,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("constants")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
-        	Container constants = query.newConstantsContainer(uuid);
+        	Container constants = cache.getQuery().newConstantsContainer(uuid);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -306,7 +309,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	checkMandatory("name", tableName);
-        	TableContainer table = new TableContainer(uuid, query, tableName, schema, catalog, new ArrayList<SQLObjectItem>());
+        	TableContainer table = new TableContainer(uuid, cache.getQuery(), tableName, schema, catalog, new ArrayList<SQLObjectItem>());
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -330,7 +333,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         		String uuid = attributes.getValue("id");
         		checkMandatory("name", itemName);
         		checkMandatory("id", uuid);
-        		Item item = (itemName.equals(COUNT_STAR)) ? new StringCountItem(query) : new StringItem(itemName, uuid);
+        		Item item = (itemName.equals(COUNT_STAR)) ? new StringCountItem(cache.getQuery()) : new StringItem(itemName, uuid);
             	for (int i = 0; i < attributes.getLength(); i++) {
             		String aname = attributes.getQName(i);
             		String aval = attributes.getValue(i);
@@ -344,8 +347,8 @@ public class ProjectSAXHandler extends DefaultHandler {
             			logger.warn("Unexpected attribute of <constant-column>: " + aname + "=" + aval);
             		}
             	}
-            	query.getConstantsContainer().addItem(item);
-            	query.addItem(item);
+            	cache.getQuery().getConstantsContainer().addItem(item);
+            	cache.getQuery().addItem(item);
             	uuidToItemMap.put(uuid, item);
         	} else if (parentIs("table")) {
         		String itemName = attributes.getValue("name");
@@ -407,11 +410,11 @@ public class ProjectSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <join>: " + aname + "=" + aval);
         		}
         	}
-        	query.addJoin(join);
+        	cache.getQuery().addJoin(join);
         } else if (name.equals("select")) {
         	// Select portion loaded in the "column" part above.
         } else if (name.equals("global-where")) {
-        	query.setGlobalWhereClause(attributes.getValue("text"));
+        	cache.getQuery().setGlobalWhereClause(attributes.getValue("text"));
         } else if (name.equals("group-by-aggregate")) {
         	String uuid = attributes.getValue("column-id");
         	String aggregate = attributes.getValue("aggregate");
@@ -421,8 +424,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         	if (item == null) {
         		throw new IllegalStateException("Could not get a column for grouping. Trying to match UUID " + uuid);
         	}
-        	query.setGroupingEnabled(true);
-        	query.setGrouping(item, aggregate);
+        	cache.getQuery().setGroupingEnabled(true);
+        	cache.getQuery().setGrouping(item, aggregate);
         } else if (name.equals("having")) {
         	String uuid = attributes.getValue("column-id");
         	String text = attributes.getValue("text");
@@ -432,8 +435,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         	if (item == null) {
         		throw new IllegalStateException("Could not get a column to add a having filter. Trying to match UUID " + uuid);
         	}
-        	query.setGroupingEnabled(true);
-        	query.setHavingClause(item, text);
+        	cache.getQuery().setGroupingEnabled(true);
+        	cache.getQuery().setHavingClause(item, text);
         } else if (name.equals("order-by")) {
         	String uuid = attributes.getValue("column-id");
         	String direction = attributes.getValue("direction");
@@ -443,11 +446,11 @@ public class ProjectSAXHandler extends DefaultHandler {
         	if (item == null) {
         		throw new IllegalStateException("Could not get a column to add order by to the select statement. Trying to match UUID " + uuid);
         	}
-        	query.setSortOrder(item, OrderByArgument.valueOf(direction));
+        	cache.getQuery().setSortOrder(item, OrderByArgument.valueOf(direction));
         } else if (name.equals("query-string")) {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
-        	query.defineUserModifiedQuery(queryString);
+        	cache.getQuery().defineUserModifiedQuery(queryString);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
@@ -655,7 +658,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	//For backwards compatability with 0.9.1
         	String colInfoKey = attributes.getValue("column-info-key");
         	if (colInfoKey != null && colInfoItem == null) {
-        		QueryCache q = (QueryCache) rsRenderer.getQuery();
+        		QueryData q = (QueryData) rsRenderer.getQuery();
         		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
         			Item item = entry.getValue();
         			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {
@@ -791,10 +794,10 @@ public class ProjectSAXHandler extends DefaultHandler {
     		}
     		session.getProject().setEditorPanelModel(initialView);
     	} else if (name.equals("table")) {
-    		TableContainer table = new TableContainer(container.getUUID().toString(), query, container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
+    		TableContainer table = new TableContainer(container.getUUID().toString(), cache.getQuery(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
-    		query.addTable(table);
+    		cache.getQuery().addTable(table);
     	} else if (name.equals("content-result-set")) {
     		ResultSetRenderer newRSRenderer = new ResultSetRenderer(rsRenderer.getQuery(), columnInfoList);
     		newRSRenderer.setBodyFont(rsRenderer.getBodyFont());

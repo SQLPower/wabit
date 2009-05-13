@@ -82,8 +82,8 @@ import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
-import ca.sqlpower.wabit.swingui.action.ForumAction;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -343,7 +343,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
-        JButton forumButton = new JButton(new ForumAction());
+        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		wabitBar.add(forumButton);
         
