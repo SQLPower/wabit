@@ -28,6 +28,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.DefaultListModel;
 import javax.swing.Icon;
@@ -55,8 +63,11 @@ import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
+import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
@@ -140,10 +151,30 @@ public class Olap4jGuiQueryPanel {
             logger.debug("importData("+t+")");
             if (t.isDataFlavorSupported(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR)) {
                 try {
+                    
+                    Object transferData = t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR);
+                    Dimension d;
+                    Hierarchy h;
+                    if (transferData instanceof Dimension) {
+                        d = (Dimension) transferData;
+                        h = d.getDefaultHierarchy();
+                    } else if (transferData instanceof Hierarchy) {
+                        h = (Hierarchy) transferData;
+                        d = h.getDimension();
+                    } else {
+                        // TODO Member
+                        return false;
+                    }
+                    
                     JList list = (JList) comp;
                     int index = list.getSelectedIndex();
-                    Object transferData = t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR);
-                    ((DefaultListModel) list.getModel()).add(index + 1, transferData);
+                    if (list == rowAxisList) {
+                        addDimensionToRows(index + 1, d, h);
+                    } else if (list == columnAxisList) {
+                        addDimensionToColumns(index + 1, d, h);
+                    } else {
+                        throw new IllegalStateException("Got drop event on unknown list: " + list);
+                    }
                     logger.debug("  -- import complete");
                     
                     executeQuery();
@@ -160,6 +191,28 @@ public class Olap4jGuiQueryPanel {
         }
     }
 
+    private AxisListener axisEventHandler = new AxisListener() {
+
+        public void memberClicked(MemberClickEvent e) {
+            try {
+                toggleMember(e.getMember());
+            } catch (OlapException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+    };
+    
+    /**
+     * Tracks which hierarchy we're using for each dimension in the query.
+     */
+    private final Map<Dimension, Hierarchy> hierarchiesBeingUsed = new HashMap<Dimension, Hierarchy>();
+    
+    /**
+     * Tracks which members of each hierarchy in the query are in use.
+     */
+    private final Map<Hierarchy, Set<Member>> expandedMembers = new HashMap<Hierarchy, Set<Member>>();
+    
     /**
      * The panel that provides the query builder's GUI. This panel is created
      * and maintained by this class.
@@ -189,6 +242,9 @@ public class Olap4jGuiQueryPanel {
         if (cellSetViewer == null) {
             throw new NullPointerException("You must provide a non-null cell set viewer");
         }
+        
+        cellSetViewer.addAxisListener(axisEventHandler);
+        
         cubeTree = new JTree();
         cubeTree.setRootVisible(false);
         cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
@@ -290,8 +346,11 @@ public class Olap4jGuiQueryPanel {
                 if (listItem instanceof Dimension) {
                     Dimension d = (Dimension) listItem;
                     QueryDimension qd = new QueryDimension(mdxQuery, d);
-                    Selection selection = qd.createSelection(d.getDefaultHierarchy().getDefaultMember());
-                    qd.getSelections().add(selection);
+                    Hierarchy h = hierarchiesBeingUsed.get(d);
+                    for (Member m : expandedMembers.get(h)) {
+                        Selection selection = qd.createSelection(m);
+                        qd.getSelections().add(selection);
+                    }
                     rows.getDimensions().add(qd);
                 }
             }
@@ -301,8 +360,11 @@ public class Olap4jGuiQueryPanel {
                 if (listItem instanceof Dimension) {
                     Dimension d = (Dimension) listItem;
                     QueryDimension qd = new QueryDimension(mdxQuery, d);
-                    Selection selection = qd.createSelection(d.getDefaultHierarchy().getDefaultMember());
-                    qd.getSelections().add(selection);
+                    Hierarchy h = hierarchiesBeingUsed.get(d);
+                    for (Member m : expandedMembers.get(h)) {
+                        Selection selection = qd.createSelection(m);
+                        qd.getSelections().add(selection);
+                    }
                     columns.getDimensions().add(qd);
                 }
             }
@@ -324,6 +386,102 @@ public class Olap4jGuiQueryPanel {
             // TODO add error reporting to CellSetViewer
         }
     }
-    
 
+    /**
+     * If the member is currently "expanded" (its children are part of the MDX
+     * query), its children will be removed from the query. Otherwise (the
+     * member's children are not showing), the member's children will be added
+     * to the query. In either case, the query will be re-executed after the
+     * member selections have been adjusted.
+     * 
+     * @param member The member whose drilldown state to toggle. Must not be null.
+     * @throws OlapException if the list of child members can't be retrieved
+     */
+    private void toggleMember(Member member) throws OlapException {
+        Hierarchy h = member.getHierarchy();
+        Set<Member> memberSet = expandedMembers.get(h);
+        if (memberSet == null) {
+            memberSet = new TreeSet<Member>(memberHierarchyComparator);
+            expandedMembers.put(h, memberSet);
+        }
+        if (memberSet.containsAll(member.getChildMembers())) {
+            Iterator<Member> it = memberSet.iterator();
+            while (it.hasNext()) {
+                if (isDescendant(member, it.next())) {
+                    it.remove();
+                }
+            }
+        } else {
+            memberSet.add(member);
+            memberSet.addAll(member.getChildMembers());
+        }
+        executeQuery();
+    }
+
+    /**
+     * Tests whether or not the given parent member has the other member as one
+     * of its descendants--either a direct child, or a child of a child, and so
+     * on. Does not consider parent to be a descendant of itself, so in the case
+     * both arguments are equal, this method returns false.
+     * 
+     * @param parent
+     *            The parent member
+     * @param testForDescendituitivitiness
+     *            The member to check if it has parent as an ancestor
+     */
+    private boolean isDescendant(Member parent, Member testForDescendituitivitiness) {
+        if (testForDescendituitivitiness.equals(parent)) return false;
+        while (testForDescendituitivitiness != null) {
+            if (testForDescendituitivitiness.equals(parent)) return true;
+            testForDescendituitivitiness = testForDescendituitivitiness.getParentMember();
+        }
+        return false;
+    }
+    
+    private void addDimensionToRows(int ordinal, Dimension d, Hierarchy h) throws OlapException {
+        ((DefaultListModel) rowAxisList.getModel()).add(ordinal, d);
+        hierarchiesBeingUsed.put(d, h);
+        toggleMember(h.getDefaultMember());
+    }
+    
+    private void addDimensionToColumns(int ordinal, Dimension d, Hierarchy h) throws OlapException {
+        ((DefaultListModel) columnAxisList.getModel()).add(ordinal, d);
+        hierarchiesBeingUsed.put(d, h);
+        toggleMember(h.getDefaultMember());
+    }
+    
+    private static Comparator<Member> memberHierarchyComparator = new Comparator<Member>() {
+
+        public int compare(Member m1, Member m2) {
+            if (m1.equals(m2)) return 0;
+            
+            // Find common ancestor
+            List<Member> m1path = path(m1);
+            List<Member> m2path = path(m2);
+            
+            int i = 0;
+            while (i < m1path.size() && i < m2path.size()) {
+                if (! m1path.get(i).equals((m2path).get(i))) break;
+                i++;
+            }
+            
+            // Lowest common ancestor is m1path.get(i - 1), but we don't care
+            
+            if (m1path.size() == i) return -1;
+            if (m2path.size() == i) return 1;
+            logger.debug("m1path[i] ordinal=" + m1path.get(i).getOrdinal() + " name=" + m1path.get(i).getName());
+            logger.debug("m2path[i] ordinal=" + m2path.get(i).getOrdinal() + " name=" + m2path.get(i).getName());
+            return m1path.get(i).getName().compareToIgnoreCase(m2path.get(i).getName());
+        }
+        
+        private List<Member> path(Member m) {
+            List<Member> path = new LinkedList<Member>();
+            Member temp = m;
+            while (temp != null) {
+                path.add(0, temp);
+                temp = temp.getParentMember();
+            }
+            return path;
+        }
+    };
 }

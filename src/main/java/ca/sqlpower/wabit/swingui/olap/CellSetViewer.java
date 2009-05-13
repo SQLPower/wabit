@@ -23,6 +23,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -43,6 +45,16 @@ public class CellSetViewer {
     private final JTable table;
     private final JScrollPane scrollPane;
     private final JLabel messageLabel = new JLabel("", JLabel.CENTER);
+    private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
+
+    /**
+     * Rebroadcasts axis events to listeners of this viewer.
+     */
+    private final AxisListener axisEventHandler = new AxisListener() {
+        public void memberClicked(MemberClickEvent e) {
+            fireMemberClickedEvent(e);
+        }
+    };
     
     public CellSetViewer() {
         viewerComponent.setPreferredSize(new Dimension(640, 480));
@@ -59,8 +71,14 @@ public class CellSetViewer {
             f.format(cellSet, pw);
             pw.flush();
         }
+        
+        // note: we have attached our axis handler to the existing row header component,
+        // but it's going away now and its old reference to us should be of no consequence.
+        // So we are not going to go to the trouble of digging it out of the scrollpane here.
+        
         table.setModel(new CellSetTableModel(cellSet));
-        JComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet);
+        CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet);
+        rowHeader.addAxisListener(axisEventHandler);
         scrollPane.setRowHeaderView(rowHeader);
         
         if (scrollPane.getParent() == null) {
@@ -82,4 +100,33 @@ public class CellSetViewer {
     public JComponent getViewComponent() {
         return viewerComponent;
     }
+    
+    /**
+     * Fires a member clicked event to all axis listeners currently registered
+     * on this viewer.
+     */
+    private void fireMemberClickedEvent(MemberClickEvent e) {
+        for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(0).memberClicked(e);
+        }
+    }
+
+    /**
+     * Adds the given axis listener to this component. Note that source field on
+     * events received from this viewer will (unfortunately) be an internal
+     * component, and the actual object identity of the source may change from
+     * time to time.
+     * 
+     * @param l
+     *            The listener to add. Must not be null.
+     */
+    public void addAxisListener(AxisListener l) {
+        if (l == null) throw new NullPointerException("Null listener not allowed");
+        axisListeners.add(l);
+    }
+    
+    public void removeAxisLisener(AxisListener l) {
+        axisListeners.remove(l);
+    }
+
 }
