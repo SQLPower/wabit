@@ -153,25 +153,26 @@ public class Olap4jGuiQueryPanel {
                 try {
                     
                     Object transferData = t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR);
-                    Dimension d;
-                    Hierarchy h;
+                    Member m;
                     if (transferData instanceof Dimension) {
-                        d = (Dimension) transferData;
-                        h = d.getDefaultHierarchy();
+                        Dimension d = (Dimension) transferData;
+                        Hierarchy h = d.getDefaultHierarchy();
+                        m = h.getDefaultMember();
                     } else if (transferData instanceof Hierarchy) {
-                        h = (Hierarchy) transferData;
-                        d = h.getDimension();
+                        Hierarchy h = (Hierarchy) transferData;
+                        m = h.getDefaultMember();
+                    } else if (transferData instanceof Member) {
+                        m = (Member) transferData;
                     } else {
-                        // TODO Member
                         return false;
                     }
                     
                     JList list = (JList) comp;
                     int index = list.getSelectedIndex();
                     if (list == rowAxisList) {
-                        addDimensionToRows(index + 1, d, h);
+                        addToRows(index + 1, m);
                     } else if (list == columnAxisList) {
-                        addDimensionToColumns(index + 1, d, h);
+                        addToColumns(index + 1, m);
                     } else {
                         throw new IllegalStateException("Got drop event on unknown list: " + list);
                     }
@@ -438,16 +439,20 @@ public class Olap4jGuiQueryPanel {
         return false;
     }
     
-    private void addDimensionToRows(int ordinal, Dimension d, Hierarchy h) throws OlapException {
+    private void addToRows(int ordinal, Member m) throws OlapException {
+        Hierarchy h = m.getHierarchy();
+        Dimension d = h.getDimension();
         ((DefaultListModel) rowAxisList.getModel()).add(ordinal, d);
         hierarchiesBeingUsed.put(d, h);
-        toggleMember(h.getDefaultMember());
+        toggleMember(m);
     }
     
-    private void addDimensionToColumns(int ordinal, Dimension d, Hierarchy h) throws OlapException {
+    private void addToColumns(int ordinal, Member m) throws OlapException {
+        Hierarchy h = m.getHierarchy();
+        Dimension d = h.getDimension();
         ((DefaultListModel) columnAxisList.getModel()).add(ordinal, d);
         hierarchiesBeingUsed.put(d, h);
-        toggleMember(h.getDefaultMember());
+        toggleMember(m);
     }
     
     private static Comparator<Member> memberHierarchyComparator = new Comparator<Member>() {
