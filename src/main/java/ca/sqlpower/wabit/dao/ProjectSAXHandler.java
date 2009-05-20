@@ -47,13 +47,13 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringCountItem;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
-import ca.sqlpower.query.QueryData.OrderByArgument;
+import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -657,7 +657,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	//For backwards compatability with 0.9.1
         	String colInfoKey = attributes.getValue("column-info-key");
         	if (colInfoKey != null && colInfoItem == null) {
-        		QueryData q = rsRenderer.getQuery().getQuery();
+        		Query q = rsRenderer.getQuery().getQuery();
         		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
         			Item item = entry.getValue();
         			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {

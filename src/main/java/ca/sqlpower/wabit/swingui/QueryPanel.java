@@ -75,8 +75,8 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.QueryData;
-import ca.sqlpower.query.QueryData.OrderByArgument;
+import ca.sqlpower.query.Query;
+import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.sqlobject.SQLObject;
@@ -212,7 +212,7 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private final PropertyChangeListener queryCacheListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName() != QueryData.PROPERTY_QUERY_TEXT && e.getPropertyName() != "running") {
+			if (e.getPropertyName() != Query.PROPERTY_QUERY_TEXT && e.getPropertyName() != "running") {
 				executeQueryInCache();
 			}
 		}

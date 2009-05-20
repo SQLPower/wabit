@@ -44,7 +44,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.SQLGroupFunction;
@@ -397,7 +397,7 @@ public class ProjectXMLDAO {
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	private void saveQueryCache(QueryData data) {
+	private void saveQueryCache(Query data) {
 		xml.print(out, "<query");
 		printAttribute("name", data.getName());
 		printAttribute("uuid", data.getUUID().toString());

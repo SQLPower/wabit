@@ -35,7 +35,7 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.Query;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
@@ -48,7 +48,7 @@ import ca.sqlpower.wabit.swingui.ExceptionHandler;
 
 /**
  * This method will be able to execute and cache the results of a query. It also
- * delegates some of the methods to the {@link QueryData} contained in it.
+ * delegates some of the methods to the {@link Query} contained in it.
  */
 public class QueryCache extends AbstractWabitObject implements StatementExecutor {
     
@@ -61,14 +61,14 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     /**
      * A {@link PropertyChangeEvent} should fire a property change of this
-     * property when it wishes to notify the {@link QueryData} that the row
+     * property when it wishes to notify the {@link Query} that the row
      * limit has changed. The new value given in the property change should be
      * the new row limit in {@link Integer} form so the query cache knows how
      * large of a result to cache.
      */
     public static final String ROW_LIMIT = "rowLimit";
     
-    private final QueryData query;
+    private final Query query;
     
     /**
      * This property change support object is used to forward timer events from the 
@@ -88,7 +88,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * This is the statement currently entering result sets into this query cache.
      * This lets the query cancel a running statement.
      * <p>
-     * This is only used if {@link QueryData#streaming} is true.
+     * This is only used if {@link Query#streaming} is true.
      */
     private Statement currentStatement;
     
@@ -96,7 +96,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * This is the connection currently entering result sets into this query cache.
      * This lets the query close a running connection
      * <p>
-     * This is only used if {@link QueryData#streaming} is true.
+     * This is only used if {@link Query#streaming} is true.
      */
     private Connection currentConnection; 
     
@@ -156,7 +156,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     private final List<Thread> streamingThreads = new ArrayList<Thread>();
     
     public QueryCache(QueryCache q) {
-        this.query = new QueryData(q.query);
+        this.query = new Query(q.query);
         
         for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {
@@ -176,7 +176,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     }
     
     public QueryCache(String uuid, SQLDatabaseMapping dbMapping) {
-        query = new QueryData(uuid, dbMapping);
+        query = new Query(uuid, dbMapping);
     }
 
     public void addTimerListener(PropertyChangeListener l) {
@@ -476,7 +476,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         query.setStreamingRowLimit(streamingRowLimit);
     }
 
-    public QueryData getQuery() {
+    public Query getQuery() {
         return query;
     }
 

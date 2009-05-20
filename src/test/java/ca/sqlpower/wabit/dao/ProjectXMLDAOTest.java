@@ -40,7 +40,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 
 import ca.sqlpower.query.Container;
-import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.Query;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -280,8 +280,8 @@ public class ProjectXMLDAOTest extends TestCase {
         
         assertEquals(p.getQueries().size(), loadedSession.getProject().getQueries().size());
         for (int i = 0; i < p.getQueries().size(); i++) {
-        	QueryData oldQuery = (QueryData) ((QueryCache) p.getQueries().get(i)).getQuery();
-			QueryData newQuery = (QueryData) ((QueryCache) loadedSession.getProject().getQueries().get(i)).getQuery();
+        	Query oldQuery = (Query) ((QueryCache) p.getQueries().get(i)).getQuery();
+			Query newQuery = (Query) ((QueryCache) loadedSession.getProject().getQueries().get(i)).getQuery();
 			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session", "streaming", "streamingStatement", "streamingConnection", "timerListener"});
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());
 			for (int j = 0; j < oldQuery.getConstantsContainer().getItems().size(); j++) {

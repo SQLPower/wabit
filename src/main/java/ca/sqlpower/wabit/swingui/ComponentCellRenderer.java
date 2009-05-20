@@ -67,7 +67,7 @@ import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.query.QueryData;
+import ca.sqlpower.query.Query;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 
@@ -146,7 +146,7 @@ public class ComponentCellRenderer extends JPanel implements TableCellRenderer {
 		comboBoxes = new ArrayList<JComboBox>();
 		Vector<String> comboBoxItems = new Vector<String>();
 		Object[] tempGroupItems =SQLGroupFunction.values();
-		comboBoxItems.add(QueryData.GROUP_BY);
+		comboBoxItems.add(Query.GROUP_BY);
 
 		for(Object item : tempGroupItems) {
 			comboBoxItems.add(item.toString());
