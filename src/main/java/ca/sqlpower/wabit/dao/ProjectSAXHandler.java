@@ -59,11 +59,10 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
@@ -573,8 +572,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         		} else if (aname.equals("legend-position")) {
         			graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
         		} else if (aname.equals("query-id")) {
-        			Query query = null;
-                	for (Query q : session.getProject().getQueries()) {
+        		    QueryCache query = null;
+                	for (QueryCache q : session.getProject().getQueries()) {
                 		if (q.getUUID().equals(UUID.fromString(aval))) {
                 			query = q;
                 			break;
@@ -610,8 +609,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
-        	Query query = null;
-        	for (Query q : session.getProject().getQueries()) {
+        	QueryCache query = null;
+        	for (QueryCache q : session.getProject().getQueries()) {
         		if (q.getUUID().equals(UUID.fromString(queryID))) {
         			query = q;
         			break;
@@ -658,7 +657,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	//For backwards compatability with 0.9.1
         	String colInfoKey = attributes.getValue("column-info-key");
         	if (colInfoKey != null && colInfoItem == null) {
-        		QueryData q = (QueryData) rsRenderer.getQuery();
+        		QueryData q = rsRenderer.getQuery().getQuery();
         		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
         			Item item = entry.getValue();
         			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {

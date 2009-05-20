@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.query;
+package ca.sqlpower.wabit;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -44,19 +44,13 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
-import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.JDBCDataSource;
-import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.swingui.ExceptionHandler;
 
 /**
- * This method will be able to execute and cache the results of a query.
- * It also implements {@link Query} and delegates some of the methods to
- * the {@link QueryData} contained in it.
+ * This method will be able to execute and cache the results of a query. It also
+ * delegates some of the methods to the {@link QueryData} contained in it.
  */
-public class QueryCache extends AbstractWabitObject implements StatementExecutor, Query {
+public class QueryCache extends AbstractWabitObject implements StatementExecutor {
     
     /**
      * Used in property change events to note if the query has started or stopped executing.
@@ -161,14 +155,10 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      */
     private final List<Thread> streamingThreads = new ArrayList<Thread>();
     
-    public QueryCache(Query q) {
-        if (!(q instanceof QueryCache)) {
-            throw new UnsupportedOperationException("Trying to make a QueryCache copy from an unknown query type " + q.getClass());
-        }
-        QueryCache cache = (QueryCache) q;
-        this.query = new QueryData(cache.query);
+    public QueryCache(QueryCache q) {
+        this.query = new QueryData(q.query);
         
-        for (CachedRowSet rs : cache.getResultSets()) {
+        for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {
                 resultSets.add(null);
             } else {

@@ -49,11 +49,10 @@ import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
-import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.GraphRenderer;
@@ -103,12 +102,12 @@ public class ProjectXMLDAO {
 	 * The query can then be loaded as a stand-alone project or be imported
 	 * into another project.
 	 */
-	public void save(Query query) {
+	public void save(QueryCache query) {
 		save(Collections.singletonList(query.getWabitDataSource()), Collections.singletonList(query), new ArrayList<Layout>());
 	}
 	
 	public void save(Layout layout) {
-		Set<Query> queries = new HashSet<Query>();
+		Set<QueryCache> queries = new HashSet<QueryCache>();
 		for (Page page : layout.getChildren()) {
 			for (ContentBox contentBox : page.getContentBoxes()) {
 				ReportContentRenderer rcr = contentBox.getContentRenderer();
@@ -119,18 +118,18 @@ public class ProjectXMLDAO {
 		}
 		
 		Set<WabitDataSource> dataSources = new HashSet<WabitDataSource>();
-		for (Query query : queries) {
+		for (QueryCache query : queries) {
 			dataSources.add(query.getWabitDataSource());
 		}
 		
-		save(new ArrayList<WabitDataSource>(dataSources), new ArrayList<Query>(queries), Collections.singletonList(layout));
+		save(new ArrayList<WabitDataSource>(dataSources), new ArrayList<QueryCache>(queries), Collections.singletonList(layout));
 	}
 	
 	public void save() {
 		save(project.getDataSources(), project.getQueries(), project.getLayouts());
 	}
 	
-	private void save(List<WabitDataSource> dataSources, List<Query> queries, List<Layout> layouts) {
+	private void save(List<WabitDataSource> dataSources, List<QueryCache> queries, List<Layout> layouts) {
 		xml.println(out, "<?xml version='1.0' encoding='UTF-8'?>");
 		xml.println(out, "");
 		xml.println(out, "<wabit export-format=\"1.0.0\">");
@@ -144,7 +143,7 @@ public class ProjectXMLDAO {
 		
 		saveDataSources(dataSources);
 		
-		for (Query query : queries) {
+		for (QueryCache query : queries) {
 			if (query instanceof QueryCache) {
 				saveQueryCache(((QueryCache) query).getQuery());
 			} else {

@@ -31,7 +31,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
@@ -85,7 +85,7 @@ public class ImportProjectAction extends AbstractAction {
 				}
 			}
 			
-			List<Query> queries = new ArrayList<Query>(sess.getProject().getQueries());
+			List<QueryCache> queries = new ArrayList<QueryCache>(sess.getProject().getQueries());
 			for (int i = queries.size() - 1; i >= 0; i--) {
 				sess.getProject().removeQuery(queries.get(i), sess);
 				session.getProject().addQuery(queries.get(i), session);

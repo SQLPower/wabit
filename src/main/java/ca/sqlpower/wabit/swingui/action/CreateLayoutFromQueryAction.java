@@ -25,7 +25,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
@@ -49,11 +49,11 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     /**
      * The query we will fill the layout from when this action is invoked.
      */
-    private final Query query;
+    private final QueryCache query;
 
     private final WabitSwingSession session;
 
-    public CreateLayoutFromQueryAction(WabitSwingSession session, WabitProject wabitProject, Query query) {
+    public CreateLayoutFromQueryAction(WabitSwingSession session, WabitProject wabitProject, QueryCache query) {
         super("Create Layout...", ADD_LAYOUT_ICON);
         putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
         this.session = session;
@@ -73,7 +73,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
      * @param query The query to use for the body content.
      * @return The new layout that was added to the project.
      */
-    public static Layout createDefaultLayout(WabitProject project, Query query) {
+    public static Layout createDefaultLayout(WabitProject project, QueryCache query) {
         Layout l = new Layout(query.getName() + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();

@@ -31,7 +31,7 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.testutil.CountingPropertyChangeListener;
-import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.QueryCache;
 
 public class QueryCacheTest extends TestCase {
 	

@@ -33,7 +33,7 @@ import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.querypen.QueryPen;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
@@ -44,11 +44,11 @@ public class ExportSQLScriptAction extends AbstractAction {
 	
 	private static final String SQL_FILE_EXTENSION = ".sql";
 
-	private final Query query;
+	private final QueryCache query;
 	
 	private final WabitSwingSession session;
 
-	public ExportSQLScriptAction(WabitSwingSession session, Query query) {
+	public ExportSQLScriptAction(WabitSwingSession session, QueryCache query) {
 		super("", new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/wabit_exportSQL.png")));
 		this.session = session;
 		this.query = query;

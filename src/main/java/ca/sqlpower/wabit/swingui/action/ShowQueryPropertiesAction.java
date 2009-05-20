@@ -30,7 +30,7 @@ import javax.swing.JDialog;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.querypen.QueryPropertiesPanel;
-import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.QueryCache;
 
 /**
  * This action will create and show the properties panel of a query object.

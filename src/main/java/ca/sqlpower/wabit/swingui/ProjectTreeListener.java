@@ -41,7 +41,7 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -115,11 +115,11 @@ public class ProjectTreeListener extends MouseAdapter {
 
 		public void actionPerformed(ActionEvent e) {
 			
-			if(item instanceof Query) {
+			if(item instanceof QueryCache) {
 				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
-					final Query query = (Query)item;
+					final QueryCache query = (QueryCache)item;
 					session.getProject().removeQuery(query, session);
 					removeLayoutPartsDependentOnQuery(query);
 				} else {
@@ -135,8 +135,8 @@ public class ProjectTreeListener extends MouseAdapter {
 		            	session.getProject().removeDataSource((WabitDataSource)item);
 		                //A temporary list is used instead of directly using session.getProject().getQueries()
 		            	//to prevent a ConcurrentModificationException
-		            	List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
-		            	for(Query query : queries) {
+		            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
+		            	for(QueryCache query : queries) {
 		                	if(item.equals(query.getWabitDataSource())) {
 		                		removeLayoutPartsDependentOnQuery(query);
 		                		session.getProject().removeQuery(query, session);
@@ -149,8 +149,8 @@ public class ProjectTreeListener extends MouseAdapter {
 		        			session.getProject().removeDataSource((WabitDataSource)item);
 		        			SPDataSource ds = (SPDataSource) dbPrompter.getUserSelectedResponse();
 		        			session.getProject().addDataSource(ds);
-		        			List <Query> queries = new ArrayList<Query>(session.getProject().getQueries());
-			            	for(Query query : queries) {
+		        			List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
+			            	for(QueryCache query : queries) {
 			                	if(item.equals(query.getWabitDataSource())) {
 			                		removeLayoutPartsDependentOnQuery(query);
 			                		int queryIndex = session.getProject().getQueries().indexOf(query);
@@ -175,7 +175,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		 * Removes any content boxes dependent on the query passed to the method
 		 * @param query
 		 */
-		private void removeLayoutPartsDependentOnQuery(Query query) {
+		private void removeLayoutPartsDependentOnQuery(QueryCache query) {
 			for(Layout layout :session.getProject().getLayouts()) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
@@ -223,16 +223,16 @@ public class ProjectTreeListener extends MouseAdapter {
 			tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
 			menu.add(new EditCellAction(tree));
 		}
-		if (lastPathComponent instanceof Query || lastPathComponent instanceof WabitDataSource
+		if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof WabitDataSource
 				|| lastPathComponent instanceof Layout) {
 			menu.add(new DeleteFromTreeAction(lastPathComponent));
 		}
 		
-		if (lastPathComponent instanceof Query) {
+		if (lastPathComponent instanceof QueryCache) {
 			menu.addSeparator();
 			menu.add(new AbstractAction("Stop Running") {
 				public void actionPerformed(ActionEvent e) {
-					((Query) lastPathComponent).stopRunning();
+					((QueryCache) lastPathComponent).stopRunning();
 				}
 			});
 		}

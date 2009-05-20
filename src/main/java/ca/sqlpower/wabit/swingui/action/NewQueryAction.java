@@ -24,8 +24,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.tree.TreePath;
 
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitProject;
-import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class NewQueryAction extends AbstractAction {

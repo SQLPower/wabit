@@ -37,7 +37,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +81,6 @@ import org.jfree.ui.RectangleEdge;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
-import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
@@ -91,7 +89,7 @@ import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 
@@ -719,7 +717,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 						if (e.getItem() instanceof StatementExecutor) {
 							StatementExecutor executor = (StatementExecutor) e.getItem();
 							executor.addRowSetChangeListener(rowSetChangeListener);
-							updateTableModel((Query) e.getItem());
+							updateTableModel((QueryCache) e.getItem());
 						}
 					}
 				}
@@ -748,7 +746,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 							throw new IllegalStateException("Unknown graph type " + graphTypeComboBox.getSelectedItem());
 						}
 						if(queryComboBox.getSelectedItem() != null) {
-							updateTableModel((Query) queryComboBox.getSelectedItem());
+							updateTableModel((QueryCache) queryComboBox.getSelectedItem());
 						}
 					}
 				}
@@ -772,7 +770,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * allow users to select columns as categories or series for the 
 		 * graph. 
 		 */
-		private void updateTableModel(Query q) {
+		private void updateTableModel(QueryCache q) {
 			try {
 				rs = q.fetchResultSet();
 			} catch (SQLException e) {
@@ -851,7 +849,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		public boolean applyChanges() {
 			setName(nameField.getText());
 			try {
-				defineQuery((Query) queryComboBox.getSelectedItem());
+				defineQuery((QueryCache) queryComboBox.getSelectedItem());
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
@@ -902,7 +900,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	/**
 	 * The query the graph is based off of.
 	 */
-	private Query query;
+	private QueryCache query;
 	
 	private final ContentBox parent;
 
@@ -1254,11 +1252,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		this.selectedLegendPosition = selectedLegendPosition;
 	}
 
-	public Query getQuery() {
+	public QueryCache getQuery() {
 		return query;
 	}
 
-	public void defineQuery(Query query) throws SQLException {
+	public void defineQuery(QueryCache query) throws SQLException {
 		if (this.query instanceof StatementExecutor) {
 			if (this.query != null) {
 				((StatementExecutor) this.query).removeRowSetChangeListener(queryListener);

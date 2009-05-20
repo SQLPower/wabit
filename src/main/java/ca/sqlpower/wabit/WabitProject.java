@@ -56,7 +56,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
      * TODO an SQL query is too specific; we should have a generic result set provider
      * class that could be anything (XPath, SQL query, gdata query, JavaScript that builds a table of data, ...)
      */
-    private final List<Query> queries = new ArrayList<Query>();
+    private final List<QueryCache> queries = new ArrayList<QueryCache>();
     
 	/**
 	 * The list of Listeners to notify when a datasource is added or removed.
@@ -130,23 +130,23 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         return Collections.unmodifiableList(dataSources);
     }
     
-    public void addQuery(Query query, WabitSession session) {
+    public void addQuery(QueryCache query, WabitSession session) {
         int index = queries.size();
         queries.add(index, query);
         query.setParent(this);
         query.setDBMapping(session);
         session.addPropertyChangeListener(query.getRowLimitChangeListener());
-        fireChildAdded(Query.class, query, index);
+        fireChildAdded(QueryCache.class, query, index);
         setEditorPanelModel(query);
     }
 
-    public boolean removeQuery(Query query, WabitSession session) {
+    public boolean removeQuery(QueryCache query, WabitSession session) {
     	int index = queries.indexOf(query);
     	if (index != -1) {
     		query.cleanup();
     		queries.remove(query);
     		session.removePropertyChangeListener(query.getRowLimitChangeListener());
-    		fireChildRemoved(Query.class, query, index);
+    		fireChildRemoved(QueryCache.class, query, index);
     		return true;
     	} else {
     		return false;
@@ -179,7 +179,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         if (childType == WabitDataSource.class) return offset;
         offset += dataSources.size();
 
-        if (childType == Query.class) return offset;
+        if (childType == QueryCache.class) return offset;
         offset += queries.size();
         
         if (childType == Layout.class) return offset;
@@ -187,7 +187,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
     }
     
-    public List<Query> getQueries() {
+    public List<QueryCache> getQueries() {
     	return Collections.unmodifiableList(queries);
     }
     

@@ -33,7 +33,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.swingui.ComposedIcon;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -84,9 +84,9 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
             } else if (wo instanceof Guide) {
             	Guide g = (Guide) wo;
             	r.setText(g.getName() + " @" + g.getOffset());
-            } else if (wo instanceof Query) {
-            	if (((Query) wo).isRunning()) {
-            		if (((Query) wo).isStreaming()) {
+            } else if (wo instanceof QueryCache) {
+            	if (((QueryCache) wo).isRunning()) {
+            		if (((QueryCache) wo).isStreaming()) {
             			r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, STREAMING_QUERY_BADGE})));
             		} else {
             			if (objectToTimedImageMap.containsKey(wo)) {

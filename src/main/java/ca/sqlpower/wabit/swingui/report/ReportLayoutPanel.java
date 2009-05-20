@@ -73,7 +73,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
@@ -143,9 +143,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				return;
 			}			
 			
-			Query[] queries;
+			QueryCache[] queries;
 			try {
-				queries = (Query[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
+				queries = (QueryCache[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
 			} catch (UnsupportedFlavorException e) {
 				dtde.dropComplete(false);
 				dtde.rejectDrop();
@@ -156,7 +156,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				throw new RuntimeException(e);
 			}
 			
-			for (Query query : queries) {
+			for (QueryCache query : queries) {
 				ContentBox contentBox = new ContentBox();
 				ResultSetRenderer rsRenderer = new ResultSetRenderer(query);
 				contentBox.setContentRenderer(rsRenderer);
@@ -371,11 +371,11 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			public Component getListCellRendererComponent(JList list, Object value,
 					int index, boolean isSelected, boolean cellHasFocus) {
 				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
-				((JLabel) c).setText(((Query) value).getName());
+				((JLabel) c).setText(((QueryCache) value).getName());
 				
 				final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
-				if (((Query) value).isRunning()) {
-					if (((Query) value).isStreaming()) {
+				if (((QueryCache) value).isRunning()) {
+					if (((QueryCache) value).isStreaming()) {
 						final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
 						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
             		} else {
@@ -395,9 +395,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				if (queryList.getSelectedValues() == null || queryList.getSelectedValues().length <= 0) {
 					return;
 				}
-				List<Query> queries = new ArrayList<Query>();
+				List<QueryCache> queries = new ArrayList<QueryCache>();
 				for (Object q : queryList.getSelectedValues()) {
-					queries.add((Query) q);
+					queries.add((QueryCache) q);
 				}
 				Transferable dndTransferable = new ReportQueryTransferable(queries);
 				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {

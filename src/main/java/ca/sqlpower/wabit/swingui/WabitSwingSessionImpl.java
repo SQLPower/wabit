@@ -86,7 +86,7 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
@@ -94,7 +94,6 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
-import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -321,28 +320,25 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		projectTree.setCellRenderer(renderer);
 		projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
 		
-		for (Query query : project.getQueries()) {
-			if (query instanceof QueryCache) {
-				final QueryCache queryCache = (QueryCache) query;
-				//Repaints the tree when the worker thread's timer fires. This will allow the tree node
-				//to paint a throbber badge on the query node.
-				queryCache.addTimerListener(new PropertyChangeListener() {
-					public void propertyChange(PropertyChangeEvent evt) {
-						renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-						projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
-					}
-				});
-				
-				//This removes the timer from the query if the query has stopped running.
-				queryCache.addPropertyChangeListener(new PropertyChangeListener() {
-					public void propertyChange(PropertyChangeEvent evt) {
-						if (evt.getPropertyName().equals(QueryCache.RUNNING) && !((Boolean) evt.getNewValue())) {
-							renderer.removeTimer(queryCache);
-							projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
-						}
-					}
-				});
-			}
+		for (final QueryCache queryCache : project.getQueries()) {
+		    //Repaints the tree when the worker thread's timer fires. This will allow the tree node
+		    //to paint a throbber badge on the query node.
+		    queryCache.addTimerListener(new PropertyChangeListener() {
+		        public void propertyChange(PropertyChangeEvent evt) {
+		            renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
+		            projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+		        }
+		    });
+
+		    //This removes the timer from the query if the query has stopped running.
+		    queryCache.addPropertyChangeListener(new PropertyChangeListener() {
+		        public void propertyChange(PropertyChangeEvent evt) {
+		            if (evt.getPropertyName().equals(QueryCache.RUNNING) && !((Boolean) evt.getNewValue())) {
+		                renderer.removeTimer(queryCache);
+		                projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+		            }
+		        }
+		    });
 		}
 		
 		projectTree.getModel().addTreeModelListener(new TreeModelAdapter() {

@@ -79,10 +79,9 @@ import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.query.QueryCache;
 import ca.sqlpower.wabit.swingui.Icons;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -192,7 +191,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     /**
      * The query that provides the content data for this renderer.
      */
-    private final Query query;
+    private final QueryCache query;
     
     /**
      * A cached copy of the result set that came from the Query object.
@@ -253,12 +252,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		}
 	};
     
-    public ResultSetRenderer(Query query) {
+    public ResultSetRenderer(QueryCache query) {
     	this(query, new ArrayList<ColumnInfo>());
     	setName("Result Set: " + query.getName());
     }
     
-    public ResultSetRenderer(Query query, List<ColumnInfo> columnInfoList) {
+    public ResultSetRenderer(QueryCache query, List<ColumnInfo> columnInfoList) {
         this.query = query;
         if (query != null && query instanceof StatementExecutor) {
         	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
@@ -856,7 +855,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         return (ContentBox) super.getParent();
     }
     
-    public Query getQuery() {
+    public QueryCache getQuery() {
         return query;
     }
     

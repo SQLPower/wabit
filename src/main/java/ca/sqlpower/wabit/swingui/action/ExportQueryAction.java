@@ -29,7 +29,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
@@ -40,9 +40,9 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 public class ExportQueryAction extends AbstractAction {
 
 	private final WabitSwingSession session;
-	private final Query query;
+	private final QueryCache query;
 
-	public ExportQueryAction(WabitSwingSession session, Query query) {
+	public ExportQueryAction(WabitSwingSession session, QueryCache query) {
 		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabit-exportQuery.png")));
 		this.session = session;
 		this.query = query;
