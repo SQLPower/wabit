@@ -21,13 +21,18 @@ package ca.sqlpower.wabit.swingui.olap;
 
 import javax.swing.JComponent;
 
+import org.olap4j.Axis;
 import org.olap4j.metadata.Member;
 
 /**
- * Represents a click on a member of a hierarchy in the OLAP viewer.
+ * Represents a user input event on some axis in the OLAP viewer.
  */
 public class MemberClickEvent {
 
+    public static enum Type {
+        MEMBER_CLICKED, MEMBER_DROPPED
+    }
+    
     /**
      * The hierarchy component that the click happened on.
      */
@@ -39,20 +44,38 @@ public class MemberClickEvent {
     private final Member member;
 
     /**
+     * The type of axis event this instance represents.
+     */
+    private final Type type;
+
+    /**
+     * The axis this event pertains to. Normally ROWS, COLUMNS, or FILTER.
+     */
+    private final Axis axis;
+
+    /**
      * @param source
      *            The hierarchy component that the click happened on.
      *            <p>
      *            XXX breaks encapsulation--the ultimate consumer expects this
      *            event to come from the CellSetViewer; intermediate consumer
      *            expects it to come from the row header component. A compromise
-     *            would be to make the hierarchy component an inner class of
-     *            the header component class, and let the header component be
-     *            the source.
+     *            would be to make the hierarchy component an inner class of the
+     *            header component class, and let the header component be the
+     *            source.
+     * @param type
+     *            The type of axis event this instance represents.
+     * @param axis
+     *            The axis this event pertains to. Normally ROWS, COLUMNS, or
+     *            FILTER.
      * @param member
-     *            The member that was clicked.
+     *            The member that was clicked, dropped, or is otherwise the
+     *            subject of this event.
      */
-    public MemberClickEvent(JComponent source, Member member) {
+    public MemberClickEvent(JComponent source, Type type, Axis axis, Member member) {
         this.source = source;
+        this.type = type;
+        this.axis = axis;
         this.member = member;
     }
     
@@ -64,7 +87,22 @@ public class MemberClickEvent {
     }
 
     /**
-     * The Member that was clicked.
+     * The type of axis event this instance represents.
+     */
+    public Type getType() {
+        return type;
+    }
+    
+    /**
+     * The axis this event pertains to. Normally ROWS, COLUMNS, or FILTER.
+     */
+    public Axis getAxis() {
+        return axis;
+    }
+
+    /**
+     * The member that was clicked, dropped, or is otherwise the subject of this
+     * event.
      */
     public Member getMember() {
         return member;

@@ -33,6 +33,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
 import org.apache.log4j.Logger;
+import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.query.RectangularCellSetFormatter;
 
@@ -53,6 +54,10 @@ public class CellSetViewer {
     private final AxisListener axisEventHandler = new AxisListener() {
         public void memberClicked(MemberClickEvent e) {
             fireMemberClickedEvent(e);
+        }
+
+        public void memberDropped(MemberClickEvent e) {
+            fireMemberDroppedEvent(e);
         }
     };
     
@@ -77,7 +82,7 @@ public class CellSetViewer {
         // So we are not going to go to the trouble of digging it out of the scrollpane here.
         
         table.setModel(new CellSetTableModel(cellSet));
-        CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet);
+        CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet, Axis.ROWS);
         rowHeader.addAxisListener(axisEventHandler);
         scrollPane.setRowHeaderView(rowHeader);
         
@@ -108,6 +113,16 @@ public class CellSetViewer {
     private void fireMemberClickedEvent(MemberClickEvent e) {
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(0).memberClicked(e);
+        }
+    }
+
+    /**
+     * Fires a member clicked event to all axis listeners currently registered
+     * on this viewer.
+     */
+    private void fireMemberDroppedEvent(MemberClickEvent e) {
+        for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(0).memberDropped(e);
         }
     }
 

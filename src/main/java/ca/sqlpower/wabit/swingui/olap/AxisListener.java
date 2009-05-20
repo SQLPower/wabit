@@ -23,4 +23,6 @@ public interface AxisListener {
 
     void memberClicked(MemberClickEvent e);
     
+    void memberDropped(MemberClickEvent e);
+    
 }

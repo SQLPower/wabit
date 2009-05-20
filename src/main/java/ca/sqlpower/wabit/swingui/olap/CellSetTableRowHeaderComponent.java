@@ -25,6 +25,8 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -34,8 +36,12 @@ import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.TransferHandler;
 
+import org.apache.log4j.Logger;
+import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
@@ -48,21 +54,83 @@ import ca.sqlpower.wabit.WabitUtils;
 
 public class CellSetTableRowHeaderComponent extends JComponent {
 
-    private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
+    private static final Logger logger = Logger.getLogger(CellSetTableRowHeaderComponent.class);
+    
+    private class HeaderComponentTransferHandler extends TransferHandler {
 
-    public CellSetTableRowHeaderComponent(CellSet cellSet) {
+        @Override
+        public boolean canImport(JComponent comp, DataFlavor[] transferFlavors) {
+            logger.debug("canImport()");
+            for (DataFlavor dataFlavor : transferFlavors) {
+                if (dataFlavor == OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean importData(JComponent comp, Transferable t) {
+            logger.debug("importData("+t+")");
+            if (t.isDataFlavorSupported(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR)) {
+                try {
+                    
+                    Object transferData = t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR);
+                    Member m;
+                    if (transferData instanceof org.olap4j.metadata.Dimension) {
+                        org.olap4j.metadata.Dimension d = (org.olap4j.metadata.Dimension) transferData;
+                        Hierarchy h = d.getDefaultHierarchy();
+                        m = h.getDefaultMember();
+                    } else if (transferData instanceof Hierarchy) {
+                        Hierarchy h = (Hierarchy) transferData;
+                        m = h.getDefaultMember();
+                    } else if (transferData instanceof Member) {
+                        m = (Member) transferData;
+                    } else {
+                        return false;
+                    }
+
+                    // TODO figure out which index the drop happened at and include it in the event
+                    fireMemberDropped(m);
+                    logger.debug("  -- import complete");
+                    return true;
+
+                } catch (Exception e) {
+                    logger.info("Error processing drop", e);
+                    // note: exceptions thrown here get eaten by the DnD system
+                    return false;
+                }
+            }
+            logger.debug("  -- import failed");
+            return false;
+        }
+    }
+
+    private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
+    
+    /**
+     * Which axis this component represents. Should be either ROWS or COLUMNS.
+     */
+    private final Axis axis;
+
+    public CellSetTableRowHeaderComponent(CellSet cellSet, Axis axis) {
+        this.axis = axis;
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        CellSetAxis rowAxis = cellSet.getAxes().get(1);
+        CellSetAxis rowAxis = cellSet.getAxes().get(axis.axisOrdinal());
         CellSetAxisMetaData axisMetaData = rowAxis.getAxisMetaData();
         int hierarchyCount = axisMetaData.getHierarchies().size();
-        for (int i = 0; i < hierarchyCount; i++) {
-            HierarchyComponent hierarchyComponent =
-                new HierarchyComponent(rowAxis, i);
-            hierarchyComponent.setBackground(
-                    ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
-            add(hierarchyComponent);
+        if (hierarchyCount == 0) {
+            add(new JLabel("Drop dimensions, hierarchies, or members here"));
+        } else {
+            for (int i = 0; i < hierarchyCount; i++) {
+                HierarchyComponent hierarchyComponent =
+                    new HierarchyComponent(rowAxis, i);
+                hierarchyComponent.setBackground(
+                        ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
+                add(hierarchyComponent);
+            }
         }
-        
+        setTransferHandler(new HeaderComponentTransferHandler());
     }
 
     /**
@@ -70,7 +138,20 @@ public class CellSetTableRowHeaderComponent extends JComponent {
      * on this component.
      */
     private void fireMemberClicked(Member member) {
-        final MemberClickEvent e = new MemberClickEvent(this, member);
+        final MemberClickEvent e = new MemberClickEvent(
+                this, MemberClickEvent.Type.MEMBER_CLICKED, axis, member);
+        for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(0).memberClicked(e);
+        }
+    }
+    
+    /**
+     * Fires a member dropped event to all axis listeners currently registered
+     * on this component.
+     */
+    private void fireMemberDropped(Member member) {
+        final MemberClickEvent e = new MemberClickEvent(
+                this, MemberClickEvent.Type.MEMBER_DROPPED, axis, member);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(0).memberClicked(e);
         }

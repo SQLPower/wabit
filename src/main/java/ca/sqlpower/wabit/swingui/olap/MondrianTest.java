@@ -91,7 +91,7 @@ public class MondrianTest {
         frame.setVisible(true);
     }
     
-    private JComponent createGuiQueryPanel() {
+    private JComponent createGuiQueryPanel() throws SQLException {
         return new Olap4jGuiQueryPanel(frame, cellSetViewer, olapConnection).getPanel();
     }
 
