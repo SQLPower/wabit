@@ -94,17 +94,6 @@ public class QueryController {
 		}
 	};
 
-	private final PropertyChangeListener joinChangeListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(SQLJoin.PROPERTY_JOIN_ADDED)) {
-				queryCache.addJoin((SQLJoin)e.getNewValue());
-			} else if (e.getPropertyName().equals(SQLJoin.PROPERTY_JOIN_REMOVED)) {
-				SQLJoin joinLine = (SQLJoin) e.getOldValue();
-				queryCache.removeJoin(joinLine);
-			}
-		}
-	};
-	
 	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
@@ -302,7 +291,6 @@ public class QueryController {
 		queryText = textComponent;
 		this.zoomSlider = zoomSlider;
 		pen.addQueryListener(fromChangeListener);
-		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
@@ -316,7 +304,6 @@ public class QueryController {
 	 */
 	public void disconnect() {
 		pen.removeQueryListener(fromChangeListener);
-		pen.removeQueryListener(joinChangeListener);
 		pen.removeQueryListener(whereListener);
 		pen.removeQueryListener(tableItemListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);
