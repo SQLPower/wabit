@@ -48,6 +48,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringCountItem;
@@ -279,6 +280,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			cache.setStreamingRowLimit(Integer.parseInt(aval));
         		} else if (aname.equals("row-limit")) {
         		    cache.getQuery().setRowLimit(Integer.parseInt(aval));
+        		} else if (aname.equals("grouping-enabled")) {
+        		    cache.getQuery().setGroupingEnabled(Boolean.parseBoolean(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
@@ -342,6 +345,12 @@ public class ProjectSAXHandler extends DefaultHandler {
             			item.setAlias(aval);
             		} else if (aname.equals("where-text")) {
             			item.setWhere(aval);
+            		} else if (aname.equals("group-by")) {
+            		    item.setGroupBy(SQLGroupFunction.valueOf(aval));
+            		} else if (aname.equals("having")) {
+            		    item.setHaving(aval);
+            		} else if (aname.equals("order-by")) {
+            		    item.setOrderBy(OrderByArgument.valueOf(aval));
             		} else {
             			logger.warn("Unexpected attribute of <constant-column>: " + aname + "=" + aval);
             		}
@@ -364,6 +373,12 @@ public class ProjectSAXHandler extends DefaultHandler {
             			item.setAlias(aval);
             		} else if (aname.equals("where-text")) {
             			item.setWhere(aval);
+            		} else if (aname.equals("group-by")) {
+                        item.setGroupBy(SQLGroupFunction.valueOf(aval));
+                    } else if (aname.equals("having")) {
+                        item.setHaving(aval);
+                    } else if (aname.equals("order-by")) {
+                        item.setOrderBy(OrderByArgument.valueOf(aval));
             		} else {
             			logger.warn("Unexpected attribute of <constant-column>: " + aname + "=" + aval);
             		}
@@ -414,7 +429,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	// Select portion loaded in the "column" part above.
         } else if (name.equals("global-where")) {
         	cache.getQuery().setGlobalWhereClause(attributes.getValue("text"));
-        } else if (name.equals("group-by-aggregate")) {
+        } else if (name.equals("group-by-aggregate")) { // For backwards compatibility to Wabit 0.9.6 and older
         	String uuid = attributes.getValue("column-id");
         	String aggregate = attributes.getValue("aggregate");
         	checkMandatory("column-id", uuid);
@@ -424,8 +439,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("Could not get a column for grouping. Trying to match UUID " + uuid);
         	}
         	cache.getQuery().setGroupingEnabled(true);
-        	cache.getQuery().setGrouping(item, aggregate);
-        } else if (name.equals("having")) {
+        	item.setGroupBy(SQLGroupFunction.getGroupType(aggregate));
+        } else if (name.equals("having")) { // For backwards compatibility to Wabit 0.9.6 and older
         	String uuid = attributes.getValue("column-id");
         	String text = attributes.getValue("text");
         	checkMandatory("column-id", uuid);
@@ -435,17 +450,28 @@ public class ProjectSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("Could not get a column to add a having filter. Trying to match UUID " + uuid);
         	}
         	cache.getQuery().setGroupingEnabled(true);
-        	cache.getQuery().setHavingClause(item, text);
+        	item.setHaving(text);
         } else if (name.equals("order-by")) {
         	String uuid = attributes.getValue("column-id");
-        	String direction = attributes.getValue("direction");
         	checkMandatory("column-id", uuid);
-        	checkMandatory("direction", direction);
          	Item item = uuidToItemMap.get(uuid);
         	if (item == null) {
         		throw new IllegalStateException("Could not get a column to add order by to the select statement. Trying to match UUID " + uuid);
         	}
-        	cache.getQuery().setSortOrder(item, OrderByArgument.valueOf(direction));
+        	for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("column-id")) {
+                    //already loaded.
+                } if (aname.equals("direction")) {// For backwards compatibility to Wabit 0.9.6 and older
+                    item.setOrderBy(OrderByArgument.valueOf(aval));
+                } else {
+                    logger.warn("Unexpected attribute of <order-by>: " + aname + " = " + aval);
+                }
+        	}
+        	//Reinserting the items for cases where when the items were first created they defined a sort
+        	//order and were placed in the query in an incorrect order to sort the columns in.
+        	cache.getQuery().moveSortedItemToEnd(item);
         } else if (name.equals("query-string")) {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);

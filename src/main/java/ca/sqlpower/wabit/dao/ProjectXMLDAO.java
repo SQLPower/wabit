@@ -47,7 +47,6 @@ import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
-import ca.sqlpower.sql.SQLGroupFunction;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
@@ -404,6 +403,7 @@ public class ProjectXMLDAO {
 		printAttribute("zoom", data.getZoomLevel());
 		printAttribute("streaming-row-limit", data.getStreamingRowLimit());
 		printAttribute("row-limit", data.getRowLimit());
+		printAttribute("grouping-enabled", Boolean.toString(data.isGroupingEnabled()));
 		if (data.getDatabase() != null && data.getDatabase().getDataSource() != null) {
 			printAttribute("data-source", data.getDatabase().getDataSource().getName());
 		}
@@ -426,6 +426,9 @@ public class ProjectXMLDAO {
 			printAttribute("name", item.getName());
 			printAttribute("alias", item.getAlias());
 			printAttribute("where-text", item.getWhere());
+			printAttribute("group-by", item.getGroupBy().toString());
+			printAttribute("having", item.getHaving());
+			printAttribute("order-by", item.getOrderBy().toString());
 			xml.niprintln(out, "/>");
 		}
 		xml.indent--;
@@ -454,6 +457,9 @@ public class ProjectXMLDAO {
 				printAttribute("name", item.getName());
 				printAttribute("alias", item.getAlias());
 				printAttribute("where-text", item.getWhere());
+				printAttribute("group-by", item.getGroupBy().toString());
+	            printAttribute("having", item.getHaving());
+	            printAttribute("order-by", item.getOrderBy().toString());
 				xml.niprintln(out, "/>");
 			}
 			xml.indent--;
@@ -484,27 +490,9 @@ public class ProjectXMLDAO {
 		printAttribute("text", data.getGlobalWhereClause());
 		xml.niprintln(out, "/>");
 		
-		if (data.isGroupingEnabled()) {
-			for (Map.Entry<Item, SQLGroupFunction> entry: data.getGroupByAggregateMap().entrySet()) {
-				xml.print(out, "<group-by-aggregate");
-				printAttribute("column-id", itemIdMap.get(entry.getKey()));
-				printAttribute("aggregate", entry.getValue().name());
-				xml.niprintln(out, "/>");
-			}
-			
-			for (Map.Entry<Item, String> entry : data.getHavingMap().entrySet()) {
-				xml.print(out, "<having");
-				printAttribute("column-id", itemIdMap.get(entry.getKey()));
-				printAttribute("text", entry.getValue());
-				xml.niprintln(out, "/>");
-			}
-			
-		}
-		
 		for (Item item : data.getOrderByList()) {
 			xml.println(out, "<order-by");
 			printAttribute("column-id", itemIdMap.get(item));
-			printAttribute("direction", data.getOrderByArgument(item).name());
 			xml.niprintln(out, "/>");
 		}
 		

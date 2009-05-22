@@ -43,6 +43,7 @@ import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
+import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
@@ -138,6 +139,12 @@ public class ProjectXMLDAOTest extends TestCase {
 						newVal = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 					} else if (property.getPropertyType() == SQLDatabase.class) {
 						newVal = new SQLDatabase();
+					} else if (property.getPropertyType() == OrderByArgument.class) {
+					    if (oldVal == OrderByArgument.ASC) {
+					        newVal = OrderByArgument.DESC;
+					    } else {
+					        newVal = OrderByArgument.ASC;
+					    }
 					} else {
 						throw new RuntimeException("This test case lacks a value for "
 								+ property.getName() + " (type "

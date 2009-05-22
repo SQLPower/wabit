@@ -47,6 +47,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.StringCountItem;
 import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.SPDataSource;
@@ -113,8 +114,8 @@ public class QueryController {
 			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
 				int sortStatus = sortDecorator.getSortingStatus(i);
 				Item column = query.getSelectedColumns().get(i);
-				OrderByArgument orderByArgument = query.getOrderByArgumentMap().get(column);
-				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgument == null)
+				OrderByArgument orderByArgument = column.getOrderBy();
+				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgument == OrderByArgument.NONE)
 						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgument == OrderByArgument.ASC)
 						|| (sortStatus == TableModelSortDecorator.DESCENDING && orderByArgument == OrderByArgument.DESC)) {
 					if (sortStatus != TableModelSortDecorator.NOT_SORTED) {
@@ -124,13 +125,13 @@ public class QueryController {
 				}
 				
 				if (sortStatus == TableModelSortDecorator.NOT_SORTED) {
-					query.removeSort(column);
+				    column.setOrderBy(OrderByArgument.NONE);
 				} else if (sortStatus == TableModelSortDecorator.ASCENDING) {
 					logger.debug("Setting sort order of " + column.getName() + " to ascending.");
-					query.setSortOrder(column, OrderByArgument.ASC);
+					column.setOrderBy(OrderByArgument.ASC);
 				} else if (sortStatus == TableModelSortDecorator.DESCENDING) {
 					logger.debug("Setting sort order of " + column.getName() + " to descending.");
-					query.setSortOrder(column, OrderByArgument.DESC);
+					column.setOrderBy(OrderByArgument.DESC);
 				} else {
 					throw new IllegalStateException("The column " + column.getName() + " was sorted in an unknown way");
 				}
@@ -149,9 +150,9 @@ public class QueryController {
 				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
 				if(column instanceof StringCountItem) {
 					logger.debug("this column is a StringCountItem, we will only setGrouping to Count");
-					query.setGrouping(column, "COUNT");
+					column.setGroupBy(SQLGroupFunction.COUNT);
 				} else {
-					query.setGrouping(column, (String)e.getNewValue());
+					column.setGroupBy(SQLGroupFunction.getGroupType((String)e.getNewValue()));
 				}
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
@@ -160,7 +161,7 @@ public class QueryController {
 					return;
 				}
 				Item item = query.getSelectedColumns().get(indexOfTextField);
-				query.setHavingClause(item, newValue);
+				item.setHaving(newValue);
 			}
 
 		}

@@ -19,12 +19,15 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
 
 import junit.framework.TestCase;
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryChangeAdapter;
+import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.RowSetChangeEvent;
@@ -47,6 +50,20 @@ public class QueryCacheTest extends TestCase {
 		}
 	};
 	
+	private class CountingQueryChangeListener extends QueryChangeAdapter {
+	    
+	    private int changeCount = 0;
+	    
+	    @Override
+	    public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
+	        changeCount++;
+	    }
+	    
+	    public int getChangeCount() {
+            return changeCount;
+        }
+	}
+	
 	private QueryCache queryCache;
 	
 	protected void setUp() throws Exception {
@@ -54,23 +71,15 @@ public class QueryCacheTest extends TestCase {
 		queryCache = new QueryCache(new StubWabitSwingSession());
 	}
 	
-	public void testSelectListener() throws Exception {
-		Item item = new StringItem("ItemName");
-		queryCache.getQuery().selectionChanged(item, true);
-		assertTrue(queryCache.getQuery().getSelectedColumns().contains(item));
-		queryCache.getQuery().selectionChanged(item, false);
-		assertTrue(!queryCache.getQuery().getSelectedColumns().contains(item));
-	}
-	
 	public void testAliasListener() throws Exception {
 		Item item = new StringItem("ItemName");
 		queryCache.getQuery().addItem(item);
 		item.setSelected(true);
-		CountingPropertyChangeListener listener = new CountingPropertyChangeListener();
-		queryCache.getQuery().addPropertyChangeListener(listener);
+		CountingQueryChangeListener listener = new CountingQueryChangeListener();
+		queryCache.getQuery().addQueryChangeListener(listener);
 		String newAlias = "Alias test.";
 		item.setAlias(newAlias);
-		assertEquals(1, listener.getPropertyChangeCount());
+		assertEquals(1, listener.getChangeCount());
 	}
 	
 	/**
