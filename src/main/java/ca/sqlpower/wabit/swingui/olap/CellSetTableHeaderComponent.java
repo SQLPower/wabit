@@ -40,6 +40,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.TransferHandler;
+import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -53,9 +54,9 @@ import org.olap4j.metadata.Member;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
 
-public class CellSetTableRowHeaderComponent extends JComponent {
+public class CellSetTableHeaderComponent extends JComponent {
 
-    private static final Logger logger = Logger.getLogger(CellSetTableRowHeaderComponent.class);
+    private static final Logger logger = Logger.getLogger(CellSetTableHeaderComponent.class);
     
     private class HeaderComponentTransferHandler extends TransferHandler {
 
@@ -121,7 +122,7 @@ public class CellSetTableRowHeaderComponent extends JComponent {
      * 
      * @param axis The {@link Axis} this component is the header for
      */
-    public CellSetTableRowHeaderComponent(Axis axis) {
+    public CellSetTableHeaderComponent(Axis axis) {
     	this.axis = axis;
     	setLayout(new BorderLayout());
         JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
@@ -129,32 +130,47 @@ public class CellSetTableRowHeaderComponent extends JComponent {
         label.setOpaque(true);
 		add(label, BorderLayout.CENTER);
         setTransferHandler(new HeaderComponentTransferHandler());
-        
     }
-    
-    /**
-     * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
-     * and Axis.
-     * 
-     * @param cellSet The {@link CellSet} that this header component is for
-     * @param axis The {@link Axis} this component is the header for
-     */
-    public CellSetTableRowHeaderComponent(CellSet cellSet, Axis axis) {
+
+	/**
+	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
+	 * and Axis.
+	 * 
+	 * @param cellSet
+	 *            The {@link CellSet} that this header component is for
+	 * @param axis
+	 *            The {@link Axis} this component is the header for
+	 * @param columnModel
+	 *            The columnModel that will be used to determine column
+	 *            positions in the table. If the axis type is not
+	 *            {@link Axis#COLUMNS}, then this can be null.
+	 */
+    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel) {
     	this(axis);
-    	setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        CellSetAxis rowAxis = cellSet.getAxes().get(axis.axisOrdinal());
-        CellSetAxisMetaData axisMetaData = rowAxis.getAxisMetaData();
-        int hierarchyCount = axisMetaData.getHierarchies().size();
-        if (hierarchyCount > 0) {
-        	removeAll();
-        	for (int i = 0; i < hierarchyCount; i++) {
-                HierarchyComponent hierarchyComponent =
-                    new HierarchyComponent(rowAxis, i);
-                hierarchyComponent.setBackground(
-                        ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
-                add(hierarchyComponent);
-            }
-        }
+    	
+    	CellSetAxis cellSetAxis = cellSet.getAxes().get(axis.axisOrdinal());
+    	CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
+    	int hierarchyCount = axisMetaData.getHierarchies().size();
+
+    	if (axis == Axis.ROWS) {
+    		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    	} else if (axis == Axis.COLUMNS) {
+    		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    	} else {
+    		throw new IllegalArgumentException(
+    				"Only rows and columns axes are supported, but I got " + axis);
+    	}
+
+		if (hierarchyCount > 0) {
+			removeAll();
+			for (int i = 0; i < hierarchyCount; i++) {
+				HierarchyComponent hierarchyComponent =
+					new HierarchyComponent(cellSetAxis, i, columnModel);
+				hierarchyComponent.setBackground(
+						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
+				add(hierarchyComponent);
+			}
+		}
     }
 
     /**
@@ -277,13 +293,30 @@ public class CellSetTableRowHeaderComponent extends JComponent {
         private int rowHeight;
         
         /**
+         * The {@link TableColumnModel} that we'll use to determine the positions of
+         * the columns in the table.
+         */
+        private TableColumnModel columnModel;
+        
+        /**
          * Number of pixels to indent per level of member nesting.
          */
         private double indentAmount = 15;
-        
-        public HierarchyComponent(CellSetAxis axis, int hierarchyOrdinal) {
+
+		/**
+		 * @param axis
+		 *            The {@link CellSetAxis} that this HierachyComponent is in.
+		 * @param hierarchyOrdinal
+		 *            The ordinal for the Hierarchy this component is for
+		 * @param columnModel
+		 *            The columnModel that will be used to determine column
+		 *            positions in the table. If the axis type is not
+		 *            {@link Axis#COLUMNS}, then this can be null.
+		 */
+        public HierarchyComponent(CellSetAxis axis, int hierarchyOrdinal, TableColumnModel columnModel) {
             this.axis = axis;
             this.hierarchyOrdinal = hierarchyOrdinal;
+            this.columnModel = columnModel;
             hierarchy = axis.getAxisMetaData().getHierarchies().get(hierarchyOrdinal);
             setOpaque(true);
             addMouseListener(mouseHandler);
@@ -306,14 +339,22 @@ public class CellSetTableRowHeaderComponent extends JComponent {
             rowHeight = fm.getHeight();
             int y = 0;
             
+            int[] columnPositions = getColumnPositions();
+            	
             for (Position position : axis) {
                 Member member = position.getMembers().get(hierarchyOrdinal);
                 int memberDepth = member.getDepth();
                 LayoutItem li = new LayoutItem();
                 Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
-                li.bounds = new Rectangle2D.Double(
-                        memberDepth * indentAmount, y,
-                        stringBounds.getWidth(), stringBounds.getHeight());
+                if (axis.getAxisOrdinal() == Axis.ROWS) {
+	                li.bounds = new Rectangle2D.Double(
+	                        memberDepth * indentAmount, y,
+	                        stringBounds.getWidth(), stringBounds.getHeight());
+                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
+                	li.bounds = new Rectangle2D.Double(
+	                        columnPositions[position.getOrdinal()], memberDepth * rowHeight,
+	                        stringBounds.getWidth(), stringBounds.getHeight());
+                }
                 li.member = member;
                 li.text = member.getName();
                 layoutItems.add(li);
@@ -323,12 +364,32 @@ public class CellSetTableRowHeaderComponent extends JComponent {
             
             g2.dispose();
         }
+
+		private int[] getColumnPositions() {
+			int[] columnPositions = new int[columnModel.getColumnCount()];
+            int x = 0;
+            for (int i = 0; i < columnModel.getColumnCount(); i++) {
+            	columnPositions[i] = x;
+            	x += columnModel.getColumn(i).getWidth();
+            }
+			return columnPositions;
+		}
         
         public Member getMemberAtPoint(Point p) {
-            int rowNum = p.y / rowHeight;
-            if (rowNum >= layoutItems.size()) return null;
-            if (rowNum < 0) return null;
-            return layoutItems.get(rowNum).member;
+        	if (axis.getAxisOrdinal() == Axis.ROWS) {
+        		// This is a special-case optimization for members in the row axis
+        		int rowNum = p.y / rowHeight;
+	            if (rowNum >= layoutItems.size()) return null;
+	            if (rowNum < 0) return null;
+	            return layoutItems.get(rowNum).member;
+        	} else {
+        		for (LayoutItem item: layoutItems) {
+        			if (item.bounds.contains(p)) {
+        				return item.member;
+        			}
+        		}
+        		return null;
+        	}
         }
         
         @Override

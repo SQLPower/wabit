@@ -37,6 +37,8 @@ import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.query.RectangularCellSetFormatter;
 
+import ca.sqlpower.swingui.table.TableUtils;
+
 public class CellSetViewer {
 
     private static final Logger logger = Logger
@@ -65,6 +67,7 @@ public class CellSetViewer {
     public CellSetViewer() {
         viewerComponent.setPreferredSize(new Dimension(640, 480));
         table = new JTable();
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
         showMessage("No query defined");
         viewerComponent.add(scrollPane);
@@ -84,22 +87,25 @@ public class CellSetViewer {
         // So we are not going to go to the trouble of digging it out of the scrollpane here.
         
         table.setModel(new CellSetTableModel(cellSet));
-        CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet, Axis.ROWS);
+        
+        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table.getColumnModel());
         rowHeader.addAxisListener(axisEventHandler);
-        scrollPane.setRowHeaderView(rowHeader);
-        CellSetTableRowHeaderComponent columnHeader = new CellSetTableRowHeaderComponent(cellSet, Axis.COLUMNS);
+        
+        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table.getColumnModel());
         columnHeader.addAxisListener(axisEventHandler);
-        scrollPane.setColumnHeaderView(columnHeader);
-    	scrollPane.setViewportView(table);
+        
+        scrollPane.setViewportView(table);
+    	scrollPane.setRowHeaderView(rowHeader);
+    	scrollPane.setColumnHeaderView(columnHeader);
     }
 
     public void showMessage(String message) {
         messageLabel.setText(message);
         if (messageLabel.getParent() == null) {
-            CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(Axis.ROWS);
+            CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS);
             rowHeader.addAxisListener(axisEventHandler);
             scrollPane.setRowHeaderView(rowHeader);
-            CellSetTableRowHeaderComponent columnHeader = new CellSetTableRowHeaderComponent(Axis.COLUMNS);
+            CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS);
             columnHeader.addAxisListener(axisEventHandler);
             scrollPane.setColumnHeaderView(columnHeader);
         	scrollPane.setViewportView(messageLabel);
