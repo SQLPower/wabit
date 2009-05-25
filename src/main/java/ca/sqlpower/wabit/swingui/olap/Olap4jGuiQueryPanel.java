@@ -262,7 +262,8 @@ public class Olap4jGuiQueryPanel {
         try {
             QueryAxis rows = mdxQuery.getAxes().get(Axis.ROWS);
             QueryAxis columns = mdxQuery.getAxes().get(Axis.COLUMNS);
-
+            logger.debug("Contents of rowHierarchies: " + rowHierarchies);
+            logger.debug("Contents of columnHierarchies: " + columnHierarchies);
             setupAxis(rows, rowHierarchies);
             setupAxis(columns, columnHierarchies);
 
@@ -352,6 +353,7 @@ public class Olap4jGuiQueryPanel {
     private void addToRows(int ordinal, Member m) throws OlapException {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
+        logger.debug("Adding Hierarchy '" + h + "' to rows");
         rowHierarchies.add(h);
         hierarchiesBeingUsed.put(d, h);
         toggleMember(m);

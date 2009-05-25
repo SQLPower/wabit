@@ -57,6 +57,7 @@ public class CellSetViewer {
         }
 
         public void memberDropped(MemberClickEvent e) {
+        	logger.debug("AxisListener memberDropped");
             fireMemberDroppedEvent(e);
         }
     };
@@ -66,6 +67,7 @@ public class CellSetViewer {
         table = new JTable();
         scrollPane = new JScrollPane(table);
         showMessage("No query defined");
+        viewerComponent.add(scrollPane);
     }
 
     public void showCellSet(CellSet cellSet) {
@@ -85,20 +87,22 @@ public class CellSetViewer {
         CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(cellSet, Axis.ROWS);
         rowHeader.addAxisListener(axisEventHandler);
         scrollPane.setRowHeaderView(rowHeader);
-        
-        if (scrollPane.getParent() == null) {
-            viewerComponent.removeAll();
-            viewerComponent.add(scrollPane, BorderLayout.CENTER);
-            viewerComponent.revalidate();
-        }
+        CellSetTableRowHeaderComponent columnHeader = new CellSetTableRowHeaderComponent(cellSet, Axis.COLUMNS);
+        columnHeader.addAxisListener(axisEventHandler);
+        scrollPane.setColumnHeaderView(columnHeader);
+    	scrollPane.setViewportView(table);
     }
 
     public void showMessage(String message) {
         messageLabel.setText(message);
         if (messageLabel.getParent() == null) {
-            viewerComponent.removeAll();
-            viewerComponent.add(messageLabel, BorderLayout.CENTER);
-            viewerComponent.revalidate();
+            CellSetTableRowHeaderComponent rowHeader = new CellSetTableRowHeaderComponent(Axis.ROWS);
+            rowHeader.addAxisListener(axisEventHandler);
+            scrollPane.setRowHeaderView(rowHeader);
+            CellSetTableRowHeaderComponent columnHeader = new CellSetTableRowHeaderComponent(Axis.COLUMNS);
+            columnHeader.addAxisListener(axisEventHandler);
+            scrollPane.setColumnHeaderView(columnHeader);
+        	scrollPane.setViewportView(messageLabel);
         }
     }
     

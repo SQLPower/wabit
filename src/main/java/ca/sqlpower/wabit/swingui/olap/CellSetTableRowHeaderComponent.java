@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -113,16 +114,40 @@ public class CellSetTableRowHeaderComponent extends JComponent {
      */
     private final Axis axis;
 
+    /**
+     * Creates a 'empty' CellSetTableRowHeaderComponent without a given CellSet.
+     * This is mainly for providing an empty table row header for the user to
+     * drop Members, Hierarchies, or Dimensions into.
+     * 
+     * @param axis The {@link Axis} this component is the header for
+     */
+    public CellSetTableRowHeaderComponent(Axis axis) {
+    	this.axis = axis;
+    	setLayout(new BorderLayout());
+        JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
+        label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+        label.setOpaque(true);
+		add(label, BorderLayout.CENTER);
+        setTransferHandler(new HeaderComponentTransferHandler());
+        
+    }
+    
+    /**
+     * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
+     * and Axis.
+     * 
+     * @param cellSet The {@link CellSet} that this header component is for
+     * @param axis The {@link Axis} this component is the header for
+     */
     public CellSetTableRowHeaderComponent(CellSet cellSet, Axis axis) {
-        this.axis = axis;
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    	this(axis);
+    	setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         CellSetAxis rowAxis = cellSet.getAxes().get(axis.axisOrdinal());
         CellSetAxisMetaData axisMetaData = rowAxis.getAxisMetaData();
         int hierarchyCount = axisMetaData.getHierarchies().size();
-        if (hierarchyCount == 0) {
-            add(new JLabel("Drop dimensions, hierarchies, or members here"));
-        } else {
-            for (int i = 0; i < hierarchyCount; i++) {
+        if (hierarchyCount > 0) {
+        	removeAll();
+        	for (int i = 0; i < hierarchyCount; i++) {
                 HierarchyComponent hierarchyComponent =
                     new HierarchyComponent(rowAxis, i);
                 hierarchyComponent.setBackground(
@@ -130,7 +155,6 @@ public class CellSetTableRowHeaderComponent extends JComponent {
                 add(hierarchyComponent);
             }
         }
-        setTransferHandler(new HeaderComponentTransferHandler());
     }
 
     /**
@@ -141,7 +165,7 @@ public class CellSetTableRowHeaderComponent extends JComponent {
         final MemberClickEvent e = new MemberClickEvent(
                 this, MemberClickEvent.Type.MEMBER_CLICKED, axis, member);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(0).memberClicked(e);
+            axisListeners.get(i).memberClicked(e);
         }
     }
     
@@ -153,7 +177,7 @@ public class CellSetTableRowHeaderComponent extends JComponent {
         final MemberClickEvent e = new MemberClickEvent(
                 this, MemberClickEvent.Type.MEMBER_DROPPED, axis, member);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(0).memberClicked(e);
+            axisListeners.get(i).memberDropped(e);
         }
     }
     
