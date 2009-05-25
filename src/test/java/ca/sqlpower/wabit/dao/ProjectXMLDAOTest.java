@@ -41,6 +41,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.query.Query.OrderByArgument;
@@ -139,6 +140,12 @@ public class ProjectXMLDAOTest extends TestCase {
 						newVal = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
 					} else if (property.getPropertyType() == SQLDatabase.class) {
 						newVal = new SQLDatabase();
+					} else if (property.getPropertyType() == SQLGroupFunction.class) {
+					    if (oldVal == SQLGroupFunction.GROUP_BY) {
+					        newVal = SQLGroupFunction.COUNT;
+					    } else {
+					        newVal = SQLGroupFunction.GROUP_BY;
+					    }
 					} else if (property.getPropertyType() == OrderByArgument.class) {
 					    if (oldVal == OrderByArgument.ASC) {
 					        newVal = OrderByArgument.DESC;
