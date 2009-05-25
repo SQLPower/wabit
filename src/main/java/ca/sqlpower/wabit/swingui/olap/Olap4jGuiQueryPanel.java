@@ -223,7 +223,7 @@ public class Olap4jGuiQueryPanel {
         panel = new JPanel(new MigLayout(
                 "fill",
                 "[fill,grow 1]",
-                "[][grow,fill,100]"));
+                "[][grow,fill]"));
         panel.add(cubeChooserButton, "grow 0,left,wrap");
 
         panel.add(new JScrollPane(cubeTree), "wrap");
