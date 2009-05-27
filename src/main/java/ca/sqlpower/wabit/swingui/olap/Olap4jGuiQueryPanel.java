@@ -362,19 +362,39 @@ public class Olap4jGuiQueryPanel {
     private void addToRows(int ordinal, Member m) throws OlapException {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
-        logger.debug("Adding Hierarchy '" + h.getName() + "' to rows");
-        rowHierarchies.add(h);
+        if (hierarchiesBeingUsed.containsKey(d)) {
+            removeDimensionFromQuery(d);
+        }
         hierarchiesBeingUsed.put(d, h);
+        if (!rowHierarchies.contains(h)) {
+            logger.debug("Adding Hierarchy '" + h.getName() + "' to rows");
+            rowHierarchies.add(h);
+        }
         toggleMember(m);
     }
-    
+
     private void addToColumns(int ordinal, Member m) throws OlapException {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
-        logger.debug("Adding Hierarchy '" + h.getName() + "' to columns");
-        columnHierarchies.add(ordinal, h);
+        if (hierarchiesBeingUsed.containsKey(d)) {
+            removeDimensionFromQuery(d);
+        }
         hierarchiesBeingUsed.put(d, h);
+        if (!columnHierarchies.contains(h)) {
+            logger.debug("Adding Hierarchy '" + h.getName() + "' to columns");
+            columnHierarchies.add(ordinal, h);
+        }
         toggleMember(m);
+    }
+    
+    /**
+     * Removes the given dimension from all axes of this query.
+     * 
+     * @param d The dimension to remove from the query.
+     */
+    private void removeDimensionFromQuery(Dimension d) {
+        rowHierarchies.removeAll(d.getHierarchies());
+        columnHierarchies.removeAll(d.getHierarchies());
     }
     
     private static Comparator<Member> memberHierarchyComparator = new Comparator<Member>() {
