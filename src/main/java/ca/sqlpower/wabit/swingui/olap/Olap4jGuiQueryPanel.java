@@ -61,6 +61,7 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.NamedList;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
@@ -287,10 +288,13 @@ public class Olap4jGuiQueryPanel {
 
     private void setupAxis(QueryAxis axis, List<Hierarchy> hierarchies) {
         axis.getDimensions().clear(); // XXX not optimal--the rest of this class could manipulate the query directly
+        logger.debug("Setting up " + axis.getName() + " axis");
         for (Hierarchy h : hierarchies) {
             Dimension d = h.getDimension();
+            logger.debug("  Processing dimension " + d.getName());
             QueryDimension qd = new QueryDimension(mdxQuery, d);
             for (Member m : expandedMembers.get(h)) {
+                logger.debug("    Creating selection for member " + m.getName());
                 Selection selection = qd.createSelection(m);
                 qd.getSelections().add(selection);
             }
@@ -316,7 +320,10 @@ public class Olap4jGuiQueryPanel {
             memberSet = new TreeSet<Member>(memberHierarchyComparator);
             expandedMembers.put(h, memberSet);
         }
-        if (memberSet.containsAll(member.getChildMembers())) {
+        
+        NamedList<? extends Member> childMembers = member.getChildMembers();
+        if ( (!childMembers.isEmpty()) && memberSet.containsAll(childMembers)) {
+            logger.debug("toggleMember(): removing member " + member.getName() + " and its descendants");
             Iterator<Member> it = memberSet.iterator();
             while (it.hasNext()) {
                 if (isDescendant(member, it.next())) {
@@ -324,9 +331,11 @@ public class Olap4jGuiQueryPanel {
                 }
             }
         } else {
+            logger.debug("toggleMember(): adding member " + member.getName() + " and its children");
             memberSet.add(member);
-            memberSet.addAll(member.getChildMembers());
+            memberSet.addAll(childMembers);
         }
+        
         executeQuery();
     }
 
@@ -353,7 +362,7 @@ public class Olap4jGuiQueryPanel {
     private void addToRows(int ordinal, Member m) throws OlapException {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
-        logger.debug("Adding Hierarchy '" + h + "' to rows");
+        logger.debug("Adding Hierarchy '" + h.getName() + "' to rows");
         rowHierarchies.add(h);
         hierarchiesBeingUsed.put(d, h);
         toggleMember(m);
@@ -362,6 +371,7 @@ public class Olap4jGuiQueryPanel {
     private void addToColumns(int ordinal, Member m) throws OlapException {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
+        logger.debug("Adding Hierarchy '" + h.getName() + "' to columns");
         columnHierarchies.add(ordinal, h);
         hierarchiesBeingUsed.put(d, h);
         toggleMember(m);
