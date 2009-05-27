@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -32,6 +33,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +43,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.TransferHandler;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
@@ -303,6 +307,23 @@ public class CellSetTableHeaderComponent extends JComponent {
          */
         private double indentAmount = 15;
 
+        private List<Dimension> preferredSizes = new ArrayList<Dimension>();
+        
+        /**
+		 * Returns a {@link Dimension} that specifies the preferred size of the
+		 * Member at the provided position in this HierarchyComponent.
+		 * <p>
+		 * Note that modifying the Dimension object returned from this method
+		 * will change the sizes of the Hierarchy components. So be sure you
+		 * know what you're doing if you're modifying the Dimension.
+		 * 
+		 * @param position
+		 * @return
+		 */
+		public Dimension getPreferredSizeAtPosition(int position) {
+			return preferredSizes.get(position);
+		}
+		
 		/**
 		 * @param axis
 		 *            The {@link CellSetAxis} that this HierachyComponent is in.
@@ -330,9 +351,10 @@ public class CellSetTableHeaderComponent extends JComponent {
          * is no effect on subsequent calls (they just return immediately).
          */
         private void createLayout() {
-            
-            if (!layoutItems.isEmpty()) return;
-            
+            if (!layoutItems.isEmpty() && isValid()) return;
+            layoutItems.clear();
+            preferredSizes.clear();
+        	
             Graphics2D g2 = (Graphics2D) getGraphics();
             g2.setFont(getFont());
             FontMetrics fm = g2.getFontMetrics();
@@ -340,6 +362,9 @@ public class CellSetTableHeaderComponent extends JComponent {
             int y = 0;
             
             int[] columnPositions = getColumnPositions();
+            for (int i = 0; i < axis.getPositionCount(); i++) {
+            	preferredSizes.add(new Dimension(0, 0));
+            }
             	
             for (Position position : axis) {
                 Member member = position.getMembers().get(hierarchyOrdinal);
@@ -357,6 +382,9 @@ public class CellSetTableHeaderComponent extends JComponent {
                 }
                 li.member = member;
                 li.text = member.getName();
+                Dimension d = preferredSizes.get(position.getOrdinal());
+                d.height = (int) Math.max(d.height, li.bounds.getHeight());
+                d.width = (int) Math.max(d.width, li.bounds.getWidth());
                 layoutItems.add(li);
                 
                 y += rowHeight;
@@ -438,6 +466,20 @@ public class CellSetTableHeaderComponent extends JComponent {
             this.selectedMember = selectedMember;
             repaint();
         }
-
+    }
+    
+    public Dimension getMemberSize(int columnIndex) {
+    	Dimension d = new Dimension(0, 0);
+    	for (int i = 0; i < getComponentCount(); i++) {
+    		Component component = getComponent(i);
+    		if (component instanceof HierarchyComponent) {
+				HierarchyComponent hierarchyComponent = (HierarchyComponent) component;
+				hierarchyComponent.createLayout();
+				Dimension d2 = hierarchyComponent.getPreferredSizeAtPosition(columnIndex);
+				d.height = Math.max(d.height, d2.height);
+				d.width = Math.max(d.width, d2.width);
+			}
+    	}
+    	return d;
     }
 }

@@ -20,7 +20,10 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -91,12 +95,24 @@ public class CellSetViewer {
         CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table.getColumnModel());
         rowHeader.addAxisListener(axisEventHandler);
         
-        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table.getColumnModel());
+        final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table.getColumnModel());
         columnHeader.addAxisListener(axisEventHandler);
         
         scrollPane.setViewportView(table);
     	scrollPane.setRowHeaderView(rowHeader);
     	scrollPane.setColumnHeaderView(columnHeader);
+    	TableCellRenderer defaultRenderer = new TableCellRenderer() {
+    		public Component getTableCellRendererComponent(JTable table,
+    				Object value, boolean isSelected, boolean hasFocus,
+    				int row, int column) {
+    			Dimension d = columnHeader.getMemberSize(column);
+    			JLabel label = new JLabel();
+    			label.setPreferredSize(d);
+    			return label;
+    		}
+    	};
+    	table.getTableHeader().setDefaultRenderer(defaultRenderer);
+    	TableUtils.fitColumnWidths(table, 5);
     }
 
     public void showMessage(String message) {
