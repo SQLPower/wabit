@@ -50,6 +50,7 @@ import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.StringCountItem;
 import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
@@ -226,10 +227,10 @@ public class QueryController {
 	private final ActionListener dataSourceListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			Object selectedItem = dataSourceComboBox.getSelectedItem();
-			if (selectedItem != null && !(selectedItem instanceof SPDataSource)) {
+			if (selectedItem != null && !(selectedItem instanceof JDBCDataSource)) {
 				throw new IllegalStateException("The data source combo box does not have data sources in it.");
 			}
-			SPDataSource ds = (SPDataSource) selectedItem;
+			JDBCDataSource ds = (JDBCDataSource) selectedItem;
 			query.setDataSource(ds);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());

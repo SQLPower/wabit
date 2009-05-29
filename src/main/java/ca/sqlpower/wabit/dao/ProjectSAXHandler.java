@@ -55,6 +55,7 @@ import ca.sqlpower.query.StringCountItem;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -231,7 +232,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	checkMandatory("name", dsName);
         	SPDataSource ds = context.getDataSources().getDataSource(dsName);
         	if (ds == null) {
-        		UserPrompter prompter = session.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", UserPromptType.DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, "OK", "Create New...", "Skip Data Source", "Cancel Load");
+        		UserPrompter prompter = session.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", UserPromptType.JDBC_DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, "OK", "Create New...", "Skip Data Source", "Cancel Load");
         		UserPromptResponse responseType = prompter.promptUser();
         		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
@@ -261,11 +262,11 @@ public class ProjectSAXHandler extends DefaultHandler {
         		} else if (aname.equals("name")) {
         			cache.setName(aval);
         		} else if (aname.equals("data-source")) { 
-        			SPDataSource ds = session.getProject().getDataSource(aval);
+        			JDBCDataSource ds = session.getProject().getDataSource(aval, JDBCDataSource.class);
         			if (ds == null) {
         				String newDSName = oldToNewDSNames.get(aval);
         				if (newDSName != null) {
-        					ds = session.getProject().getDataSource(newDSName);
+        					ds = session.getProject().getDataSource(newDSName, JDBCDataSource.class);
         					if (ds == null) {
         						logger.debug("Data source " + aval + " is not in the project. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
         						throw new NullPointerException("Data source " + newDSName + " was not found in the project.");

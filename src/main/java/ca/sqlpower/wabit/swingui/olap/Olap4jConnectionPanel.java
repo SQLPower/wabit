@@ -38,7 +38,7 @@ import javax.swing.JTextField;
 
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.sql.DataSourceCollection;
-import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.swingui.ConnectionComboBoxModel;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.SPSUtils;
@@ -62,7 +62,7 @@ public class Olap4jConnectionPanel implements DataEntryPanel {
 
     private JTextField xmlaUriField;
 
-    public Olap4jConnectionPanel(Olap4jDataSource olapDataSource, DataSourceCollection dsCollection) {
+    public Olap4jConnectionPanel(Olap4jDataSource olapDataSource, DataSourceCollection<JDBCDataSource> dsCollection) {
         this.olapDataSource = olapDataSource;
         panel = new JPanel(new MigLayout("", "[][grow][]", ""));
 
@@ -128,7 +128,7 @@ public class Olap4jConnectionPanel implements DataEntryPanel {
                     " put in the code for storing it");
         }
         
-        olapDataSource.setDataSource((SPDataSource) dataSourceBox.getSelectedItem());
+        olapDataSource.setDataSource((JDBCDataSource) dataSourceBox.getSelectedItem());
         olapDataSource.setMondrianSchema(new File(schemaFileField.getText()).toURI());
         try {
             olapDataSource.setXmlaServer(new URI(xmlaUriField.getText()));

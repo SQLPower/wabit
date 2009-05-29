@@ -26,14 +26,15 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 
 public class DataSourceAdapter implements DataSource {
 
-    private final SPDataSource wrapMe;
+    private final JDBCDataSource wrapMe;
     private PrintWriter logWriter = new PrintWriter(new OutputStreamWriter(System.out));
 
-    public DataSourceAdapter(SPDataSource wrapMe) {
+    public DataSourceAdapter(JDBCDataSource wrapMe) {
         this.wrapMe = wrapMe;
         
     }

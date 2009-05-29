@@ -36,11 +36,11 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
+import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sql.SPDataSourceType;
 import ca.sqlpower.wabit.report.Layout;
 
-public class WabitProject extends AbstractWabitObject implements DataSourceCollection {
+public class WabitProject extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
 	
 	
 	private static final Logger logger = Logger.getLogger(WabitProject.class);
@@ -101,8 +101,8 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         dataSources.add(index, ds);
         ds.setParent(this);
         fireChildAdded(WabitDataSource.class, ds, index);
-        if(ds instanceof JDBCDataSource) {
-        	fireAddEvent(((JDBCDataSource)ds).getSPDataSource());
+        if(ds instanceof WabitDataSource) {
+        	fireAddEvent(((WabitDataSource)ds).getSPDataSource());
         }
     }
 
@@ -112,8 +112,8 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
     	if (index != -1) {
     		dataSources.remove(ds);
     		fireChildRemoved(WabitDataSource.class, ds, index);
-    		if(ds instanceof JDBCDataSource) {
-    			fireRemoveEvent(index, ((JDBCDataSource)ds).getSPDataSource());
+    		if(ds instanceof WabitDataSource) {
+    			fireRemoveEvent(index, ((WabitDataSource)ds).getSPDataSource());
     		}
     		return true;
     	} else {
@@ -226,15 +226,15 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 					"There is already a datasource with the name " + newName);
 		}
 		logger.debug("adding SPDataSource");
-		addDataSource(new JDBCDataSource(dbcs));
+		addDataSource(new WabitDataSource(dbcs));
 		
 	}
 	
 	public boolean dsAlreadyAdded(SPDataSource dbcs) {
 		String newName = dbcs.getDisplayName();
 		for (WabitDataSource o : dataSources) {
-			if (o instanceof JDBCDataSource) {
-				SPDataSource oneDbcs = ((JDBCDataSource) o).getSPDataSource();
+			if (o instanceof WabitDataSource) {
+				SPDataSource oneDbcs = ((WabitDataSource) o).getSPDataSource();
 				if (newName.equalsIgnoreCase(oneDbcs.getDisplayName())) {
 					return true;
 				}
@@ -245,10 +245,10 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 	
 	public void removeDataSource(SPDataSource dbcs) {
 		logger.debug("removing SPDataSource");
-		removeDataSource(new JDBCDataSource(dbcs));
+		removeDataSource(new WabitDataSource(dbcs));
 	}
 
-	public void addDataSourceType(SPDataSourceType dataSourceType) {
+	public void addDataSourceType(JDBCDataSourceType dataSourceType) {
 		throw new UnsupportedOperationException("We currently do not support this");
 		
 	}
@@ -282,33 +282,42 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 			}
 		}
     }
-
+    
     public List<SPDataSource> getConnections() {
-    	ArrayList<SPDataSource> list = new ArrayList<SPDataSource>();
-    	Iterator it = dataSources.iterator();
-    	while (it.hasNext()) {
-    		Object next = it.next();
-    		if (next instanceof JDBCDataSource) {
-    			list.add(((JDBCDataSource)next).getSPDataSource());
-    		}
-    	}
-    	Collections.sort(list, new SPDataSource.DefaultComparator());
-    	return list;
+        return getConnections(SPDataSource.class);
+    }
+    
+    public <C extends SPDataSource> List<C> getConnections(Class<C> classType) {
+        ArrayList<C> list = new ArrayList<C>();
+        Iterator<WabitDataSource> it = dataSources.iterator();
+        while (it.hasNext()) {
+            WabitDataSource next = it.next();
+            if (classType.isInstance(next.getSPDataSource())) {
+                list.add(classType.cast(((WabitDataSource)next).getSPDataSource()));
+            }
+        }
+        Collections.sort(list);
+        return list;
     }
 
 	public SPDataSource getDataSource(String name) {
-	     Iterator it = dataSources.iterator();
-	        while (it.hasNext()) {
-	            Object next = it.next();
-	            if (next instanceof JDBCDataSource) {
-	                SPDataSource ds = ((JDBCDataSource)next).getSPDataSource();
-	                if (ds.getName().equals(name)) return ds;
-	            }
-	        }
-		return null;
+	    return getDataSource(name, SPDataSource.class);
 	}
+	
+    public <C extends SPDataSource> C getDataSource(String name,
+            Class<C> classType) {
+        Iterator<WabitDataSource> it = dataSources.iterator();
+        while (it.hasNext()) {
+            WabitDataSource next = it.next();
+            if (classType.isInstance(next.getSPDataSource())) {
+                C ds = classType.cast(((WabitDataSource)next).getSPDataSource());
+                if (ds.getName().equals(name)) return ds;
+            }
+        }
+    return null;
+    }
 
-	public List<SPDataSourceType> getDataSourceTypes() {
+	public List<JDBCDataSourceType> getDataSourceTypes() {
 		throw new UnsupportedOperationException("We currently do not support this");
 	}
 
@@ -316,7 +325,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 		throw new UnsupportedOperationException("We currently do not support this");
 	}
 
-	public void mergeDataSourceType(SPDataSourceType dst) {
+	public void mergeDataSourceType(JDBCDataSourceType dst) {
 		throw new UnsupportedOperationException("We currently do not support this");
 		
 	}
@@ -331,7 +340,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 	}
 	
 
-	public boolean removeDataSourceType(SPDataSourceType dataSourceType) {
+	public boolean removeDataSourceType(JDBCDataSourceType dataSourceType) {
 		throw new UnsupportedOperationException("We currently do not support this");
 	}
 
@@ -391,4 +400,5 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 	public WabitObject getEditorPanelModel() {
 		return editorPanelModel;
 	}
+
 }

@@ -22,7 +22,9 @@ package ca.sqlpower.wabit.swingui;
 import javax.swing.JFrame;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.DataSourceUserPrompter;
 import ca.sqlpower.swingui.ModalDialogUserPrompter;
 import ca.sqlpower.util.UserPrompter;
@@ -33,9 +35,9 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 public class SwingUIUserPrompterFactory implements UserPrompterFactory {
     
     private JFrame owner;
-    private final DataSourceCollection dsCollection;
+    private final DataSourceCollection<SPDataSource> dsCollection;
 
-    public SwingUIUserPrompterFactory(JFrame owner, DataSourceCollection dsCollection) {
+    public SwingUIUserPrompterFactory(JFrame owner, DataSourceCollection<SPDataSource> dsCollection) {
         this.owner = owner;
         this.dsCollection = dsCollection;
     }
@@ -45,8 +47,8 @@ public class SwingUIUserPrompterFactory implements UserPrompterFactory {
         switch (responseType) {
             case BOOLEAN :
                 return new ModalDialogUserPrompter(optionType, defaultResponseType, owner, question, buttonNames);
-            case DATA_SOURCE:
-                return new DataSourceUserPrompter(optionType, defaultResponseType, (SPDataSource) defaultResponse, owner, question, dsCollection, buttonNames);
+            case JDBC_DATA_SOURCE:
+                return new DataSourceUserPrompter(optionType, defaultResponseType, (SPDataSource) defaultResponse, owner, question, new SpecificDataSourceCollection<JDBCDataSource>(dsCollection, JDBCDataSource.class), buttonNames);
             default :
                 throw new UnsupportedOperationException("User prompt type " + responseType + " is unknown.");
         }

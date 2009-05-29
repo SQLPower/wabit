@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
@@ -57,7 +58,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     protected final JmDNS jmdns;
     private final List<WabitServerInfo> manuallyConfiguredServers = new ArrayList<WabitServerInfo>();
     
-	private DataSourceCollection dataSources;
+	private DataSourceCollection<SPDataSource> dataSources;
 	protected final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
 	/**
@@ -128,12 +129,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * Tries to read the plDotIni if it hasn't been done already.  If it can't be read,
      * returns null and leaves the plDotIni property as null as well. See {@link #plDotIni}.
      */
-    public DataSourceCollection getDataSources() {
+    public DataSourceCollection<SPDataSource> getDataSources() {
         String path = getPlDotIniPath();
         if (path == null) return null;
         
         if (dataSources == null) {
-        	dataSources = new PlDotIni();
+        	dataSources = new PlDotIni<SPDataSource>(SPDataSource.class);
         	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
             try {
                 logger.debug("Reading PL.INI defaults");

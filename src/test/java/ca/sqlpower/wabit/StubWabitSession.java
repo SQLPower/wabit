@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -107,15 +108,15 @@ public class StubWabitSession implements WabitSession {
         // no op
     }
 
-    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException {
         return getDatabase(dataSource).getConnection();
     }
 
-    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
     	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
-            dataSource = new SPDataSource(dataSource);
+            dataSource = new JDBCDataSource(dataSource);
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
         }

@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.olap;
 
 import java.net.URI;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 
 /**
@@ -37,7 +38,7 @@ public class Olap4jDataSource {
         IN_PROCESS, XMLA;
     }
     
-    private SPDataSource dataSource;
+    private JDBCDataSource dataSource;
     private URI mondrianSchema;
     private URI xmlaServer;
     private Type type;
@@ -52,7 +53,7 @@ public class Olap4jDataSource {
     /**
      * Creates a data source initially configured for in-process Mondrian.
      */
-    public Olap4jDataSource(SPDataSource dataSource, URI mondrianSchema) {
+    public Olap4jDataSource(JDBCDataSource dataSource, URI mondrianSchema) {
         this.dataSource = dataSource;
         this.mondrianSchema = mondrianSchema;
         type = Type.IN_PROCESS;
@@ -66,10 +67,10 @@ public class Olap4jDataSource {
         type = Type.XMLA;
     }
     
-    public SPDataSource getDataSource() {
+    public JDBCDataSource getDataSource() {
         return dataSource;
     }
-    public void setDataSource(SPDataSource dataSource) {
+    public void setDataSource(JDBCDataSource dataSource) {
         this.dataSource = dataSource;
     }
     public URI getMondrianSchema() {

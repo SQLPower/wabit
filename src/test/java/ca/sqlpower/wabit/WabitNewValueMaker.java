@@ -28,6 +28,7 @@ import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -53,10 +54,10 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         if (valueType.equals(WabitObject.class)) {
             newValue = new StubWabitObject();
         } else if (valueType.equals(WabitDataSource.class)) {
-            newValue = new JDBCDataSource(new SPDataSource(new PlDotIni()));
+            newValue = new WabitDataSource(new JDBCDataSource(new PlDotIni<SPDataSource>(SPDataSource.class)));
         } else if (valueType.equals(QueryCache.class)) {
             newValue = new QueryCache(new SQLDatabaseMapping() {
-                public SQLDatabase getDatabase(SPDataSource ds) {
+                public SQLDatabase getDatabase(JDBCDataSource ds) {
                     return null;
                 }
             });

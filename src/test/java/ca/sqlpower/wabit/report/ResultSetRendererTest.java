@@ -19,7 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
-import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
@@ -34,7 +34,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         renderer = new ResultSetRenderer(new QueryCache(new SQLDatabaseMapping() {
-            public SQLDatabase getDatabase(SPDataSource ds) {
+            public SQLDatabase getDatabase(JDBCDataSource ds) {
                 return null;
             }
         }));

@@ -21,10 +21,10 @@ package ca.sqlpower.wabit.swingui;
 
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.sql.Connection;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -33,7 +33,7 @@ import javax.swing.JTree;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -184,12 +184,12 @@ public class StubWabitSwingSession implements WabitSwingSession {
         // no-op
     }
 
-    public Connection borrowConnection(SPDataSource dataSource) {
+    public Connection borrowConnection(JDBCDataSource dataSource) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
     	return delegateSession.getDatabase(dataSource);
     }
 }

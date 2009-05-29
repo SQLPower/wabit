@@ -24,7 +24,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -56,8 +55,10 @@ import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
 import org.olap4j.OlapWrapper;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.wabit.olap.DataSourceAdapter;
 import ca.sqlpower.wabit.olap.Olap4jDataSource;
@@ -154,14 +155,14 @@ public class MondrianTest {
         System.setProperty("org.osjava.sj.jndi.shared", "true");
         Context ctx = new InitialContext();
         
-        PlDotIni plIni = new PlDotIni();
+        PlDotIni<SPDataSource> plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
         plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
         
         Olap4jDataSource olapDataSource = new Olap4jDataSource();
         olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
-        olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null)));
+        olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null), JDBCDataSource.class));
 
-        Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, plIni);
+        Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, new SpecificDataSourceCollection<JDBCDataSource>(plIni, JDBCDataSource.class));
         JFrame dummyFrame = new JFrame();
         dummyFrame.setSize(0, 0);
         dummyFrame.setLocation(-100, -100);
@@ -178,7 +179,7 @@ public class MondrianTest {
         prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
         prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
         
-        SPDataSource ds = olapDataSource.getDataSource();
+        JDBCDataSource ds = olapDataSource.getDataSource();
         ctx.bind(ds.getName(), new DataSourceAdapter(ds));
         
         Class.forName("mondrian.olap4j.MondrianOlap4jDriver");

@@ -27,13 +27,12 @@ import java.sql.Statement;
 import junit.framework.TestCase;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryChangeAdapter;
-import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.testutil.CountingPropertyChangeListener;
 import ca.sqlpower.wabit.QueryCache;
 
 public class QueryCacheTest extends TestCase {
@@ -87,9 +86,9 @@ public class QueryCacheTest extends TestCase {
 	 * when a new row is added.
 	 */
 	public void testQueryFiresRSChange() throws Exception {
-		PlDotIni plIni = new PlDotIni();
+		PlDotIni<SPDataSource> plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
 		plIni.read(new File("src/test/java/pl.regression.ini"));
-		SPDataSource ds = plIni.getDataSource("regression_test");
+		JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
 		Connection con = ds.createConnection();
 		Statement stmt = con.createStatement();
 		stmt.execute("create table rsTest (col1 varchar(50), col2 varchar(50))");

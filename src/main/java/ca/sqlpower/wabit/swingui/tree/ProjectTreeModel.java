@@ -39,9 +39,9 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitUtils;
@@ -222,11 +222,11 @@ public class ProjectTreeModel implements TreeModel {
                     WabitProject p = new WabitProject();
                     
                     // Add data sources to project
-                    DataSourceCollection plini = new PlDotIni();
+                    DataSourceCollection<SPDataSource> plini = new PlDotIni<SPDataSource>(SPDataSource.class);
                     plini.read(new File(System.getProperty("user.home"), "pl.ini"));
                     List<SPDataSource> dataSources = plini.getConnections();
                     for (int i = 0; i < 10 && i < dataSources.size(); i++) {
-                        p.addDataSource(new JDBCDataSource(dataSources.get(i)));
+                        p.addDataSource(new WabitDataSource(dataSources.get(i)));
                     }
                     System.out.println("Added " + p.getDataSources().size() + " data sources to project");
                     

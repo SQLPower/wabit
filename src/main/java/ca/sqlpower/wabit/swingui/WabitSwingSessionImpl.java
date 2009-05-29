@@ -72,6 +72,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -774,15 +775,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         this.loading = loading;
     }
 
-    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException {
         return getDatabase(dataSource).getConnection();
     }
 
-    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
     	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
-            dataSource = new SPDataSource(dataSource);  // defensive copy for cache key
+            dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
         }

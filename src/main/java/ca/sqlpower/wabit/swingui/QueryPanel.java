@@ -80,7 +80,9 @@ import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRoot;
@@ -341,7 +343,7 @@ public class QueryPanel implements WabitPanel {
 		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("ca/sqlpower/swingui/querypen/wabit_execute.png")));
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
-		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), session, mainSplitPane, queryCache);
+		queryUIComponents = new SQLQueryUIComponents(session, new SpecificDataSourceCollection<JDBCDataSource>(session.getProject(), JDBCDataSource.class), session, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache.getQuery(), queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
@@ -378,7 +380,7 @@ public class QueryPanel implements WabitPanel {
 					if(reportComboBox.getSelectedItem() != null) {
 					    // FIXME the session (or session context) should be maintaining a map of data
 					    // sources to SQLDatabase instances. Each SQLDatabase instance has its own connection pool! 
-						rootNode.addChild(QueryPanel.this.session.getDatabase((SPDataSource) reportComboBox.getSelectedItem()));
+						rootNode.addChild(QueryPanel.this.session.getDatabase((JDBCDataSource) reportComboBox.getSelectedItem()));
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 						dragTree.setModel(tempTreeModel);
 						dragTree.setVisible(true);

@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
@@ -141,7 +142,7 @@ public interface WabitSession extends SQLDatabaseMapping {
      * the database structure in all sessions to update. We have to consider any
      * possible negative or positive implications of this.
      */
-    public SQLDatabase getDatabase(SPDataSource dataSource);
+    public SQLDatabase getDatabase(JDBCDataSource dataSource);
 
     /**
      * Borrows a connection to the given data source from this session's
@@ -164,5 +165,5 @@ public interface WabitSession extends SQLDatabaseMapping {
      *             unavailable, or an incorrect username or password, a missing
      *             JDBC driver, or many other things.
      */
-    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException;
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException;
 }

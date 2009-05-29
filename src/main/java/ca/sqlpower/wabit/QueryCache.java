@@ -37,9 +37,9 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.query.Query;
 import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
@@ -393,7 +393,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         if (query.getDatabase() == null || query.getDatabase().getDataSource() == null) {
             return null;
         }
-        return new JDBCDataSource(query.getDatabase().getDataSource());
+        return new WabitDataSource(query.getDatabase().getDataSource());
     }
 
     public ActionListener getTimerListener() {
@@ -432,7 +432,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return query.isScriptModified();
     }
 
-    public void setDataSource(SPDataSource ds) {
+    public void setDataSource(JDBCDataSource ds) {
         query.setDataSource(ds);
     }
 

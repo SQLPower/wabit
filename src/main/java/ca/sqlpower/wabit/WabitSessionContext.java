@@ -25,6 +25,7 @@ import java.util.prefs.Preferences;
 import javax.jmdns.JmDNS;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public interface WabitSessionContext {
@@ -36,7 +37,7 @@ public interface WabitSessionContext {
      */
     public static final String WABIT_ENTERPRISE_SERVER_MDNS_TYPE = "_wabitenterprise._tcp.local.";
     
-	DataSourceCollection getDataSources();
+	DataSourceCollection<SPDataSource> getDataSources();
 	
 	/**
 	 * Adds the given Wabit session to the list of child sessions for this

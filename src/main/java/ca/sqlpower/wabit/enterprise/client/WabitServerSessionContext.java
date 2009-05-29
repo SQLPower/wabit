@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
@@ -94,17 +95,17 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
      * an HTTP firewall or proxy, where the present method would fail.
      */
     @Override
-    public DataSourceCollection getDataSources() {
-        ResponseHandler<DataSourceCollection> plIniHandler = new ResponseHandler<DataSourceCollection>() {
-            public DataSourceCollection handleResponse(HttpResponse response)
+    public DataSourceCollection<SPDataSource> getDataSources() {
+        ResponseHandler<DataSourceCollection<SPDataSource>> plIniHandler = new ResponseHandler<DataSourceCollection<SPDataSource>>() {
+            public DataSourceCollection<SPDataSource> handleResponse(HttpResponse response)
                     throws ClientProtocolException, IOException {
                 if (response.getStatusLine().getStatusCode() != 200) {
                     throw new IOException(
                             "Server error while reading data sources: " + response.getStatusLine());
                 }
-                PlDotIni plIni;
+                PlDotIni<SPDataSource> plIni;
                 try {
-					plIni = new PlDotIni(getServerURI("/"));
+					plIni = new PlDotIni<SPDataSource>(getServerURI("/"), SPDataSource.class);
 	                plIni.read(response.getEntity().getContent());
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);

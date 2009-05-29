@@ -46,10 +46,10 @@ import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.wabit.JDBCDataSource;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
@@ -65,7 +65,7 @@ public class ProjectXMLDAOTest extends TestCase {
 	 * This is a fake database to be used in testing.
 	 */
 	private SQLDatabase db;
-	private PlDotIni plIni;
+	private PlDotIni<SPDataSource> plIni;
 	private StubWabitSessionContext context;
 	private Connection con;
 	private Statement stmt;
@@ -213,9 +213,9 @@ public class ProjectXMLDAOTest extends TestCase {
 	
 	@Override
 	protected void setUp() throws Exception {
-		plIni = new PlDotIni();
+		plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
         plIni.read(new File("src/test/java/pl.regression.ini"));
-        SPDataSource ds = plIni.getDataSource("regression_test");
+        JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
 
         db = new SQLDatabase(ds);
         
@@ -289,7 +289,7 @@ public class ProjectXMLDAOTest extends TestCase {
         
         assertEquals(p.getDataSources().size(), loadedSession.getProject().getDataSources().size());
         for (WabitDataSource ds : p.getDataSources()) {
-        	assertPropertiesEqual(db.getDataSource(), ((JDBCDataSource) ds).getSPDataSource());
+        	assertPropertiesEqual(db.getDataSource(), ((WabitDataSource) ds).getSPDataSource());
         }
         
         assertEquals(p.getQueries().size(), loadedSession.getProject().getQueries().size());

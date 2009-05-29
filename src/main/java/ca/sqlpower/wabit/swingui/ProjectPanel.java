@@ -45,6 +45,7 @@ import javax.swing.SwingConstants;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
@@ -196,14 +197,23 @@ public class ProjectPanel implements WabitPanel {
 				SPDataSource ds = dbConnectionManager.getSelectedConnection();
 				if (startImageLabel.isFocusOwner()) {
 					startImageLabel.setIcon(SELECT_START_ICON);
-					addDSToProject(ds, session);
+					addDataSource(session, ds);
 				} else if (inside) {
 					startImageLabel.setIcon(OVER_START_ICON);
-					addDSToProject(ds, session);
+					addDataSource(session, ds);
 				} else {
 					startImageLabel.setIcon(UP_START_ICON);
 				}
 			}
+
+            private void addDataSource(final WabitSwingSession session,
+                    SPDataSource ds) {
+                if (ds instanceof JDBCDataSource) {
+                    addJDBCDSToProject((JDBCDataSource) ds, session);
+                } else {
+                    throw new IllegalArgumentException("Unknown data source of type " + ds.getClass()+ " is being added to the project.");
+                }
+            }
 		
 			public void mousePressed(MouseEvent e) {
 				startImageLabel.requestFocusInWindow();
@@ -254,7 +264,7 @@ public class ProjectPanel implements WabitPanel {
 	 * This method is used in the DB connection manager to add the selected db
 	 * to the project.
 	 */
-	public static void addDSToProject(SPDataSource ds, WabitSwingSession session) {
+	public static void addJDBCDSToProject(JDBCDataSource ds, WabitSwingSession session) {
 		if (ds == null) {
 			return;
 		}

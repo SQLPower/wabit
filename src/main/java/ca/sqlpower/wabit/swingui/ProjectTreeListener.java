@@ -35,6 +35,7 @@ import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.UserPrompter;
@@ -143,11 +144,11 @@ public class ProjectTreeListener extends MouseAdapter {
 		                	}
 		                }
 		            } else if(response == 1) {
-		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), UserPromptType.DATA_SOURCE, UserPromptOptions.OK_NEW_CANCEL, UserPromptResponse.CANCEL, null, "OK", "Create New", "Cancel");
+		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), UserPromptType.JDBC_DATA_SOURCE, UserPromptOptions.OK_NEW_CANCEL, UserPromptResponse.CANCEL, null, "OK", "Create New", "Cancel");
 		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
 		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
 		        			session.getProject().removeDataSource((WabitDataSource)item);
-		        			SPDataSource ds = (SPDataSource) dbPrompter.getUserSelectedResponse();
+		        			JDBCDataSource ds = (JDBCDataSource) dbPrompter.getUserSelectedResponse();
 		        			session.getProject().addDataSource(ds);
 		        			List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
 			            	for(QueryCache query : queries) {

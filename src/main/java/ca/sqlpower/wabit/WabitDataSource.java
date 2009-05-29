@@ -19,10 +19,64 @@
 
 package ca.sqlpower.wabit;
 
-/**
- * SPDataSource is too specific; we should have a generic data source
- * class that could be anything (RSS, web scrape, SQL database, gdata, csv file, ...)
- */
-public interface WabitDataSource extends WabitObject {
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.List;
 
+import ca.sqlpower.sql.SPDataSource;
+
+/**
+ * An implementation of {@link WabitObject} that wraps a data sources.
+ * This data source can be any implementation of {@link SPDataSource}.
+ */
+public class WabitDataSource extends AbstractWabitObject {
+
+	/**
+	 * Underlying {@link SPDataSource} object that actually contains all the
+	 * database connection info.
+	 */
+	private SPDataSource dataSource;
+
+	public WabitDataSource(SPDataSource ds) {
+	    this.dataSource = ds;
+	    setName(ds.getName());
+	    ds.addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (evt.getPropertyName().equals("name")) {
+					setName(dataSource.getName());
+				}
+			}
+		});
+	    // TODO listen for changes in DS and rebroadcast the appropriate ones
+	}
+	
+	public boolean allowsChildren() {
+		return false;
+	}
+
+	public int childPositionOffset(Class<? extends WabitObject> childType) {
+		throw new UnsupportedOperationException("This object doesn't have children at all");
+	}
+
+	public List<WabitObject> getChildren() {
+		return Collections.emptyList();
+	}
+	
+	public SPDataSource getSPDataSource() {
+		return dataSource;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof WabitDataSource) {
+			return this.dataSource.equals(((WabitDataSource) obj).getSPDataSource());
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.dataSource.hashCode();
+	}
 }

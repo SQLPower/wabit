@@ -25,6 +25,7 @@ import java.io.File;
 
 import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -45,13 +46,13 @@ public class ProjectSAXHandlerTest extends TestCase {
 	 * This is a fake database to be used in testing.
 	 */
 	private SQLDatabase db;
-	private PlDotIni plIni;
+	private PlDotIni<SPDataSource> plIni;
 	
 	@Override
 	protected void setUp() throws Exception {
-		plIni = new PlDotIni();
+		plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
         plIni.read(new File("src/test/java/pl.regression.ini"));
-        SPDataSource ds = plIni.getDataSource("regression_test");
+        JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
 
         db = new SQLDatabase(ds);
 	}
@@ -61,7 +62,7 @@ public class ProjectSAXHandlerTest extends TestCase {
 	 * the list of data sources can be replaced by a new data source.
 	 */
 	public void testMissingDSIsReplaced() throws Exception {
-		SPDataSource newDS = new SPDataSource(db.getDataSource());
+		JDBCDataSource newDS = new JDBCDataSource(db.getDataSource());
 		newDS.setName("Missing DS is replaced");
 		WabitProject p = new WabitProject();
 		p.setName("Project");
@@ -79,7 +80,7 @@ public class ProjectSAXHandlerTest extends TestCase {
         
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         
-        final SPDataSource replacementDS = new SPDataSource(plIni); 
+        final JDBCDataSource replacementDS = new JDBCDataSource(plIni); 
         replacementDS.setName("Replacement DS");
         WabitSessionContext context = new StubWabitSessionContext() {
             @Override
@@ -91,7 +92,7 @@ public class ProjectSAXHandlerTest extends TestCase {
         	public WabitSession createSession() {
         		return new StubWabitSession(this) {
         			public UserPrompter createUserPrompter(String question, ca.sqlpower.util.UserPrompterFactory.UserPromptType responseType, UserPrompter.UserPromptOptions optionType, UserPrompter.UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames) {
-        				if (responseType == UserPromptType.DATA_SOURCE) {
+        				if (responseType == UserPromptType.JDBC_DATA_SOURCE) {
         					return new DefaultUserPrompter(optionType, UserPromptResponse.NEW, replacementDS);
         				} else {
         					return super.createUserPrompter(question, responseType, optionType, defaultResponseType, defaultResponse, buttonNames);
