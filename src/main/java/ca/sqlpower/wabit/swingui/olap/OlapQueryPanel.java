@@ -77,25 +77,28 @@ public class OlapQueryPanel implements WabitPanel {
     }
 
     private void buildUI() {
-        JTabbedPane queryPanels = new JTabbedPane();
+    	JComponent textQueryPanel;
         try {
             olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query);
-            queryPanels.add("GUI", olap4jGuiQueryPanel.getPanel());
-            queryPanels.add("MDX", createTextQueryPanel());
+            textQueryPanel = createTextQueryPanel();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        JTabbedPane queryPanels = new JTabbedPane();
+        JComponent viewComponent = cellSetViewer.getViewComponent();
+        queryPanels.add("GUI", viewComponent);
+        queryPanels.add("MDX", textQueryPanel);
         
-        queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(queryPanels, BorderLayout.CENTER);
-        topPanel.add(new JButton(new AbstractAction("Execute Query") {
+        queryAndResultsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(olap4jGuiQueryPanel.getPanel(), BorderLayout.CENTER);
+        rightPanel.add(new JButton(new AbstractAction("Execute Query") {
             public void actionPerformed(ActionEvent e) {
                 olap4jGuiQueryPanel.executeQuery();
             }
         }), BorderLayout.NORTH);
-        queryAndResultsPanel.setTopComponent(topPanel);
-        queryAndResultsPanel.setBottomComponent(cellSetViewer.getViewComponent());
+		queryAndResultsPanel.setLeftComponent(queryPanels);
+        queryAndResultsPanel.setRightComponent(rightPanel);
     }
     
     private JComponent createTextQueryPanel() throws OlapException {
