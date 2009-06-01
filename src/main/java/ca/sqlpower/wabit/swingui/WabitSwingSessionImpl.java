@@ -95,6 +95,7 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.dao.ProjectXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -104,6 +105,7 @@ import ca.sqlpower.wabit.swingui.action.NewProjectOnServerAction;
 import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
 import ca.sqlpower.wabit.swingui.action.SaveProjectOnServerAction;
+import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
@@ -658,6 +660,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	            queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
 		   	}
 		   	currentEditorPanel = queryPanel;
+		} else if (entryPanelModel instanceof OlapQuery) {
+		    OlapQueryPanel panel = new OlapQueryPanel(wabitPane, (OlapQuery) entryPanelModel);
+		    currentEditorPanel = panel;
 		} else if (entryPanelModel instanceof Layout) {
 			ReportLayoutPanel rlPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
 			if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {

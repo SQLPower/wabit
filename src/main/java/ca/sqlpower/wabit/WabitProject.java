@@ -38,6 +38,7 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 
 public class WabitProject extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
@@ -57,6 +58,11 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
      * class that could be anything (XPath, SQL query, gdata query, JavaScript that builds a table of data, ...)
      */
     private final List<QueryCache> queries = new ArrayList<QueryCache>();
+    
+    /**
+     * This is all of the queries in the project that connects to an OLAP database.
+     */
+    private final List<OlapQuery> olapQueries = new ArrayList<OlapQuery>();
     
 	/**
 	 * The list of Listeners to notify when a datasource is added or removed.
@@ -91,6 +97,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         List<WabitObject> allChildren = new ArrayList<WabitObject>();
         allChildren.addAll(dataSources);
         allChildren.addAll(queries);
+        allChildren.addAll(olapQueries);
         allChildren.addAll(layouts);
         return allChildren;
     }
@@ -181,6 +188,9 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 
         if (childType == QueryCache.class) return offset;
         offset += queries.size();
+        
+        if (childType == OlapQuery.class) return offset;
+        offset += olapQueries.size();
         
         if (childType == Layout.class) return offset;
         
@@ -400,5 +410,13 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 	public WabitObject getEditorPanelModel() {
 		return editorPanelModel;
 	}
+
+    public void addOlapQuery(OlapQuery newQuery) {
+        int index = olapQueries.size();
+        olapQueries.add(index, newQuery);
+        newQuery.setParent(this);
+        fireChildAdded(OlapQuery.class, newQuery, index);
+        setEditorPanelModel(newQuery);
+    }
 
 }

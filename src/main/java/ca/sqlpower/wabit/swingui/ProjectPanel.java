@@ -54,6 +54,7 @@ import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.olap.OlapQuery;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
@@ -303,28 +304,32 @@ public class ProjectPanel implements WabitPanel {
      * connection to the project.
      */
 	public static void addOlap4jToProject(Olap4jDataSource ds, WabitSwingSession session) {
-	       if (ds == null) {
-	            return;
-	        }
-	        Connection con = null;
-	        try {
-	            con = ds.getDataSource().createConnection();
-	        } catch (SQLException e) {
-	            SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
-	            return;
-	        } finally {
-	            if (con != null) {
-	                try {
-	                    con.close();
-	                } catch (Exception e) {
-	                    //squish exception to show any other exception while testing the connection.
-	                }
+	    if (ds == null) {
+	        return;
+	    }
+	    Connection con = null;
+	    try {
+	        con = ds.getDataSource().createConnection();
+	    } catch (SQLException e) {
+	        SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
+	        return;
+	    } finally {
+	        if (con != null) {
+	            try {
+	                con.close();
+	            } catch (Exception e) {
+	                //squish exception to show any other exception while testing the connection.
 	            }
 	        }
-	        if (!session.getProject().dsAlreadyAdded(ds)) {
-	            session.getProject().addDataSource(ds);
-	        }
-	        //TODO Add a query builder for OLAP connections and make it the focused component.
+	    }
+	    if (!session.getProject().dsAlreadyAdded(ds)) {
+	        session.getProject().addDataSource(ds);
+	    }
+	    OlapQuery newQuery = new OlapQuery();
+	    newQuery.setOlapDataSource(ds);
+	    newQuery.setName("New " + ds.getName() + " query");
+	    session.getProject().addOlapQuery(newQuery);
+	    //TODO Add a query builder for OLAP connections and make it the focused component.
 	}
 	
 	public boolean applyChanges() {

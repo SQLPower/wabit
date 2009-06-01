@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.Point;
+import java.awt.Window;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,7 +38,6 @@ import java.util.TreeSet;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
@@ -55,17 +55,17 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
-import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.NamedList;
-import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
+
+import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class Olap4jGuiQueryPanel {
 
@@ -137,19 +137,7 @@ public class Olap4jGuiQueryPanel {
      */
     private final CellSetViewer cellSetViewer;
 
-    /**
-     * The current cube (this can be selected/changed via the GUI or the
-     * {@link #setCurrentCube(Cube)} method). Null by default.
-     */
-    private Cube currentCube;
-    
     private JTree cubeTree;
-
-    /**
-     * The current query. Gets replaced whenever a new cube is selected via
-     * {@link #setCurrentCube(Cube)}.
-     */
-    private Query mdxQuery;
 
     /**
      * Current hierarchies being selected on the rows axis, in the order they are
@@ -163,7 +151,46 @@ public class Olap4jGuiQueryPanel {
      */
     private final List<Hierarchy> columnHierarchies = new ArrayList<Hierarchy>();
     
-    public Olap4jGuiQueryPanel(final JFrame owningFrame, CellSetViewer cellSetViewer, final OlapConnection olapConnection) throws SQLException {
+    /**
+     * This models the query and persists it when the view is removed.
+     */
+    private final OlapQuery olapQuery;
+    
+    public Olap4jGuiQueryPanel(final Window owningFrame, CellSetViewer cellSetViewer, OlapQuery query) throws SQLException {
+        olapQuery = query;
+        if (olapQuery.getMdxQuery() != null) {
+            for (QueryDimension queryDim : olapQuery.getMdxQuery().getAxes().get(Axis.ROWS).getDimensions()) {
+                for (Selection sel : queryDim.getSelections()) {
+                    final Member member = sel.getMember();
+                    if (!rowHierarchies.contains(member.getHierarchy())) {
+                        rowHierarchies.add(member.getHierarchy());
+                    }
+                    hierarchiesBeingUsed.put(member.getDimension(), member.getHierarchy());
+                    Set<Member> memberSet = expandedMembers.get(member.getHierarchy());
+                    if (memberSet == null) {
+                        memberSet = new TreeSet<Member>(memberHierarchyComparator);
+                        expandedMembers.put(member.getHierarchy(), memberSet);
+                    }
+                    memberSet.add(member);
+                }
+            }
+            for (QueryDimension queryDim : olapQuery.getMdxQuery().getAxes().get(Axis.COLUMNS).getDimensions()) {
+                for (Selection sel : queryDim.getSelections()) {
+                    final Member member = sel.getMember();
+                    if (!columnHierarchies.contains(member.getHierarchy())) {
+                        columnHierarchies.add(member.getHierarchy());
+                    }
+                    hierarchiesBeingUsed.put(member.getDimension(), member.getHierarchy());
+                    Set<Member> memberSet = expandedMembers.get(member.getHierarchy());
+                    if (memberSet == null) {
+                        memberSet = new TreeSet<Member>(memberHierarchyComparator);
+                        expandedMembers.put(member.getHierarchy(), memberSet);
+                    }
+                    memberSet.add(member);
+                }
+            }
+        }
+        
         this.cellSetViewer = cellSetViewer;
         if (cellSetViewer == null) {
             throw new NullPointerException("You must provide a non-null cell set viewer");
@@ -177,18 +204,23 @@ public class Olap4jGuiQueryPanel {
         cubeTree.setDragEnabled(true);
         cubeTree.setTransferHandler(new OlapTreeTransferHandler());
         
-        setCurrentCube(null); // inits cubetree state
+        setCurrentCube(olapQuery.getCurrentCube()); // inits cubetree state
         
         final JButton cubeChooserButton = new JButton("Choose Cube...");
         cubeChooserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 cubeChooserButton.setEnabled(false);
                 final JWindow w = new JWindow(owningFrame);
-                JTree tree = new JTree(
-                        new Olap4jTreeModel(
-                                Collections.singletonList(olapConnection),
-                                Cube.class,
-                                Dimension.class));
+                JTree tree;
+                try {
+                    tree = new JTree(
+                            new Olap4jTreeModel(
+                                    Collections.singletonList(olapQuery.createOlapConnection()),
+                                    Cube.class,
+                                    Dimension.class));
+                } catch (Exception e1) {
+                    throw new RuntimeException(e1);
+                }
                 tree.setCellRenderer(new Olap4JTreeCellRenderer());
                 int row = 0;
                 while (row < tree.getRowCount()) {
@@ -228,6 +260,7 @@ public class Olap4jGuiQueryPanel {
         panel.add(cubeChooserButton, "grow 0,left,wrap");
 
         panel.add(new JScrollPane(cubeTree), "wrap");
+        
     }
     
     public JPanel getPanel() {
@@ -235,19 +268,19 @@ public class Olap4jGuiQueryPanel {
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
-        this.currentCube = currentCube;
+        olapQuery.setCurrentCube(currentCube);
         if (currentCube != null) {
             cubeTree.setModel(new Olap4jTreeModel(Collections.singletonList(currentCube)));
             cubeTree.expandRow(0);
-            mdxQuery = new Query("GUI Query", currentCube);
         } else {
             cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
-            mdxQuery = null;
         }
         
-        expandedMembers.clear();
-        rowHierarchies.clear();
-        columnHierarchies.clear();
+        if (currentCube != olapQuery.getCurrentCube()) {
+            expandedMembers.clear();
+            rowHierarchies.clear();
+            columnHierarchies.clear();
+        }
     }
 
     /**
@@ -256,13 +289,13 @@ public class Olap4jGuiQueryPanel {
      * current cube).
      */
     public void executeQuery() {
-        if (mdxQuery == null) {
+        if (olapQuery.getMdxQuery() == null) {
             cellSetViewer.showMessage("No cube selected--please select one from the dropdown list");
             return;
         }
         try {
-            QueryAxis rows = mdxQuery.getAxes().get(Axis.ROWS);
-            QueryAxis columns = mdxQuery.getAxes().get(Axis.COLUMNS);
+            QueryAxis rows = olapQuery.getMdxQuery().getAxes().get(Axis.ROWS);
+            QueryAxis columns = olapQuery.getMdxQuery().getAxes().get(Axis.COLUMNS);
             logger.debug("Contents of rowHierarchies: " + rowHierarchies);
             logger.debug("Contents of columnHierarchies: " + columnHierarchies);
             setupAxis(rows, rowHierarchies);
@@ -278,7 +311,7 @@ public class Olap4jGuiQueryPanel {
                 return;
             }
             
-            CellSet cellSet = mdxQuery.execute();
+            CellSet cellSet = olapQuery.getMdxQuery().execute();
             cellSetViewer.showCellSet(cellSet);
         } catch (SQLException ex) {
             logger.error("failed to build/execute MDX query", ex);
@@ -292,7 +325,7 @@ public class Olap4jGuiQueryPanel {
         for (Hierarchy h : hierarchies) {
             Dimension d = h.getDimension();
             logger.debug("  Processing dimension " + d.getName());
-            QueryDimension qd = new QueryDimension(mdxQuery, d);
+            QueryDimension qd = new QueryDimension(olapQuery.getMdxQuery(), d);
             for (Member m : expandedMembers.get(h)) {
                 logger.debug("    Creating selection for member " + m.getName());
                 Selection selection = qd.createSelection(m);

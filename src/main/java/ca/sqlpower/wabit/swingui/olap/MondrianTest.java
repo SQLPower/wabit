@@ -28,14 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.prefs.Preferences;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -50,10 +46,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTree;
 
 import org.olap4j.CellSet;
-import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
-import org.olap4j.OlapWrapper;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -61,17 +55,17 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
-import ca.sqlpower.wabit.olap.DataSourceAdapter;
+import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class MondrianTest {
 
     private final JFrame frame;
     private final CellSetViewer cellSetViewer;
-    private final OlapConnection olapConnection;
+    private final OlapQuery olapQuery;
 
-    public MondrianTest(OlapConnection olapConnection) throws NamingException, IOException, URISyntaxException, ClassNotFoundException, SQLException {
-        this.olapConnection = olapConnection;
-        JTree tree = new JTree(new Olap4jTreeModel(Collections.singletonList(olapConnection)));
+    public MondrianTest(OlapQuery olapQuery) throws NamingException, IOException, URISyntaxException, ClassNotFoundException, SQLException {
+        this.olapQuery = olapQuery;
+        JTree tree = new JTree(new Olap4jTreeModel(Collections.singletonList(olapQuery.createOlapConnection())));
         tree.setCellRenderer(new Olap4JTreeCellRenderer());
         tree.setRootVisible(false);
 
@@ -102,10 +96,10 @@ public class MondrianTest {
     }
     
     private JComponent createGuiQueryPanel() throws SQLException {
-        return new Olap4jGuiQueryPanel(frame, cellSetViewer, olapConnection).getPanel();
+        return new Olap4jGuiQueryPanel(frame, cellSetViewer, olapQuery).getPanel();
     }
 
-    private JComponent createTextQueryPanel() throws OlapException {
+    private JComponent createTextQueryPanel() throws SQLException, ClassNotFoundException, NamingException {
         final JTextArea mdxQuery = new JTextArea();
         mdxQuery.setText(
                "with" +
@@ -125,7 +119,7 @@ public class MondrianTest {
                "\n }) ON ROWS" +
                "\nfrom [Sales]" +
                "\nwhere [Time].[1997]");
-        final OlapStatement statement = olapConnection.createStatement();
+        final OlapStatement statement = olapQuery.createOlapConnection().createStatement();
         JButton executeButton = new JButton("Execute");
         executeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -151,9 +145,6 @@ public class MondrianTest {
 
     public static void main(String[] args) throws Exception {
         Preferences prefs = Preferences.userNodeForPackage(MondrianTest.class);
-        System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
-        System.setProperty("org.osjava.sj.jndi.shared", "true");
-        Context ctx = new InitialContext();
         
         PlDotIni plIni = new PlDotIni();
         plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
@@ -179,19 +170,10 @@ public class MondrianTest {
         prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
         prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
         
-        JDBCDataSource ds = olapDataSource.getDataSource();
-        ctx.bind(ds.getName(), new DataSourceAdapter(ds));
+        OlapQuery olapQuery = new OlapQuery();
+        olapQuery.setOlapDataSource(olapDataSource);
         
-        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
-        Connection connection =
-            DriverManager.getConnection(
-                "jdbc:mondrian:"
-                    + "DataSource='" + ds.getName() + "';"
-                    + "Catalog='" + olapDataSource.getMondrianSchema().toString() + "';"
-                    );
-        OlapConnection olapConnection = ((OlapWrapper) connection).unwrap(OlapConnection.class);
-        
-        new MondrianTest(olapConnection);
+        new MondrianTest(olapQuery);
         
     }
 }
