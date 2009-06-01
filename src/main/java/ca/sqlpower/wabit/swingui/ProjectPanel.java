@@ -46,6 +46,7 @@ import javax.swing.SwingConstants;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
@@ -184,10 +185,13 @@ public class ProjectPanel implements WabitPanel {
         startPanel.nextLine();
 		startPanel.add(startTextLabel);
         componentList.add(startPanel.getPanel());
+        List<Class<? extends SPDataSource>> newDSTypes = new ArrayList<Class<? extends SPDataSource>>();
+        newDSTypes.add(JDBCDataSource.class);
+        newDSTypes.add(Olap4jDataSource.class);
 		final DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
 				new DefaultDataSourceDialogFactory(), 
 				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
-				new ArrayList<Action>(), componentList, owner, false);
+				new ArrayList<Action>(), componentList, owner, false, newDSTypes);
 		
         startImageLabel.addMouseListener(new MouseListener() {
         	boolean inside = false;
@@ -210,6 +214,8 @@ public class ProjectPanel implements WabitPanel {
                     SPDataSource ds) {
                 if (ds instanceof JDBCDataSource) {
                     addJDBCDSToProject((JDBCDataSource) ds, session);
+                } else if (ds instanceof Olap4jDataSource) {
+                    addOlap4jToProject((Olap4jDataSource) ds, session);
                 } else {
                     throw new IllegalArgumentException("Unknown data source of type " + ds.getClass()+ " is being added to the project.");
                 }
@@ -290,6 +296,35 @@ public class ProjectPanel implements WabitPanel {
 		query.setName("New " + ds.getName() + " query");
 		query.setDataSource(ds);
 		session.getProject().addQuery(query, session);
+	}
+
+    /**
+     * This method is used in the DB connection manager to add the selected olap
+     * connection to the project.
+     */
+	public static void addOlap4jToProject(Olap4jDataSource ds, WabitSwingSession session) {
+	       if (ds == null) {
+	            return;
+	        }
+	        Connection con = null;
+	        try {
+	            con = ds.getDataSource().createConnection();
+	        } catch (SQLException e) {
+	            SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
+	            return;
+	        } finally {
+	            if (con != null) {
+	                try {
+	                    con.close();
+	                } catch (Exception e) {
+	                    //squish exception to show any other exception while testing the connection.
+	                }
+	            }
+	        }
+	        if (!session.getProject().dsAlreadyAdded(ds)) {
+	            session.getProject().addDataSource(ds);
+	        }
+	        //TODO Add a query builder for OLAP connections and make it the focused component.
 	}
 	
 	public boolean applyChanges() {

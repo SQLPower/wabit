@@ -103,9 +103,9 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
                     throw new IOException(
                             "Server error while reading data sources: " + response.getStatusLine());
                 }
-                PlDotIni<SPDataSource> plIni;
+                PlDotIni plIni;
                 try {
-					plIni = new PlDotIni<SPDataSource>(getServerURI("/"), SPDataSource.class);
+					plIni = new PlDotIni(getServerURI("/"));
 	                plIni.read(response.getEntity().getContent());
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);

@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
@@ -46,11 +45,11 @@ public class ProjectSAXHandlerTest extends TestCase {
 	 * This is a fake database to be used in testing.
 	 */
 	private SQLDatabase db;
-	private PlDotIni<SPDataSource> plIni;
+	private PlDotIni plIni;
 	
 	@Override
 	protected void setUp() throws Exception {
-		plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
+		plIni = new PlDotIni();
         plIni.read(new File("src/test/java/pl.regression.ini"));
         JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
 

@@ -32,7 +32,6 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.QueryCache;
 
 public class QueryCacheTest extends TestCase {
@@ -86,7 +85,7 @@ public class QueryCacheTest extends TestCase {
 	 * when a new row is added.
 	 */
 	public void testQueryFiresRSChange() throws Exception {
-		PlDotIni<SPDataSource> plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
+		PlDotIni plIni = new PlDotIni();
 		plIni.read(new File("src/test/java/pl.regression.ini"));
 		JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
 		Connection con = ds.createConnection();

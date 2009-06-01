@@ -222,7 +222,7 @@ public class ProjectTreeModel implements TreeModel {
                     WabitProject p = new WabitProject();
                     
                     // Add data sources to project
-                    DataSourceCollection<SPDataSource> plini = new PlDotIni<SPDataSource>(SPDataSource.class);
+                    DataSourceCollection<SPDataSource> plini = new PlDotIni();
                     plini.read(new File(System.getProperty("user.home"), "pl.ini"));
                     List<SPDataSource> dataSources = plini.getConnections();
                     for (int i = 0; i < 10 && i < dataSources.size(); i++) {

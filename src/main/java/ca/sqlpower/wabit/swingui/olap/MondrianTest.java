@@ -56,12 +56,12 @@ import org.olap4j.OlapStatement;
 import org.olap4j.OlapWrapper;
 
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
+import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
 import ca.sqlpower.wabit.olap.DataSourceAdapter;
-import ca.sqlpower.wabit.olap.Olap4jDataSource;
 
 public class MondrianTest {
 
@@ -155,10 +155,10 @@ public class MondrianTest {
         System.setProperty("org.osjava.sj.jndi.shared", "true");
         Context ctx = new InitialContext();
         
-        PlDotIni<SPDataSource> plIni = new PlDotIni<SPDataSource>(SPDataSource.class);
+        PlDotIni plIni = new PlDotIni();
         plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
         
-        Olap4jDataSource olapDataSource = new Olap4jDataSource();
+        Olap4jDataSource olapDataSource = new Olap4jDataSource(plIni);
         olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
         olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null), JDBCDataSource.class));
 

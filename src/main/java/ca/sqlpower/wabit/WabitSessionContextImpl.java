@@ -134,7 +134,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         if (path == null) return null;
         
         if (dataSources == null) {
-        	dataSources = new PlDotIni<SPDataSource>(SPDataSource.class);
+        	dataSources = new PlDotIni();
         	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
             try {
                 logger.debug("Reading PL.INI defaults");
