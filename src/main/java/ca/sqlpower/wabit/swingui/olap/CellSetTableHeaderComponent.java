@@ -26,9 +26,11 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -36,12 +38,17 @@ import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.TransferHandler;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.TableColumnModel;
@@ -52,6 +59,7 @@ import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.Position;
+import org.olap4j.Axis.Standard;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 
@@ -119,23 +127,6 @@ public class CellSetTableHeaderComponent extends JComponent {
      */
     private final Axis axis;
 
-    /**
-     * Creates a 'empty' CellSetTableRowHeaderComponent without a given CellSet.
-     * This is mainly for providing an empty table row header for the user to
-     * drop Members, Hierarchies, or Dimensions into.
-     * 
-     * @param axis The {@link Axis} this component is the header for
-     */
-    public CellSetTableHeaderComponent(Axis axis) {
-    	this.axis = axis;
-    	setLayout(new BorderLayout());
-        JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
-        label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
-        label.setOpaque(true);
-		add(label, BorderLayout.CENTER);
-        setTransferHandler(new HeaderComponentTransferHandler());
-    }
-
 	/**
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
 	 * and Axis.
@@ -150,7 +141,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 *            {@link Axis#COLUMNS}, then this can be null.
 	 */
     public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel) {
-    	this(axis);
+    	this(axis, null);
     	
     	CellSetAxis cellSetAxis = cellSet.getAxes().get(axis.axisOrdinal());
     	CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
@@ -177,7 +168,60 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
     }
 
-    /**
+	/**
+	 * Creates a CellSetTableRowHeaderComponent without a given CellSet. This is
+	 * mainly for providing an table row header for the user to drop Members,
+	 * Hierarchies, or Dimensions into. If the user has already dropped in a
+	 * Member, Hierarchy, or Dimension into one header, but not the other (and
+	 * thus does not yet have a complete query), then the header with members in
+	 * it can display its existing hierarchies so that the user can tell what
+	 * they have added already.
+	 * 
+	 * @param axis
+	 *            The {@link Axis} this component is the header for
+	 * @param hierarchies
+	 *            A list of Hierarchies that the user has already dropped into
+	 *            the header. If the list is empty, then it will print a
+	 *            label asking the user to drop a Member, Hierarchy, or
+	 *            Dimension into it.
+	 */
+    public CellSetTableHeaderComponent(Axis axis, List<Hierarchy> hierarchies) {
+    	this.axis = axis;
+    	int hierarchiesSize = 0;
+    	
+    	if (hierarchies != null) {
+    		hierarchiesSize = hierarchies.size();
+    	}
+    	
+    	if (axis == Axis.ROWS) {
+    		setLayout(new GridLayout(1, Math.max(1, hierarchiesSize)));
+    	} else if (axis == Axis.COLUMNS) {
+    		setLayout(new GridLayout(Math.max(1, hierarchiesSize), 1));
+    	} else {
+    		throw new IllegalArgumentException(
+    				"Only rows and columns axes are supported, but I got " + axis);
+    	}
+
+    	if (hierarchiesSize == 0) {
+    		JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
+    		label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+    		label.setOpaque(true);
+    		add(label);
+    	} else {
+	    	for (int i = 0; i < hierarchiesSize; i++) {
+	    		Hierarchy h = hierarchies.get(i);
+	    		JLabel label = new JLabel(h.getName());
+	    		label.setVerticalAlignment(JLabel.TOP);
+	    		label.setBackground(ColourScheme.BACKGROUND_COLOURS[i]);
+	    		label.setOpaque(true);
+	    		add(label);
+	    	}
+    	}
+    	
+        setTransferHandler(new HeaderComponentTransferHandler());
+	}
+
+	/**
      * Fires a member clicked event to all axis listeners currently registered
      * on this component.
      */
@@ -264,6 +308,18 @@ public class CellSetTableHeaderComponent extends JComponent {
             }
 
             public void mousePressed(MouseEvent e) {
+            	if (e.getButton() == MouseEvent.BUTTON3) {
+            		JPopupMenu popUpMenu = new JPopupMenu();
+            		popUpMenu.add(new AbstractAction("Remove Dimension") {
+						public void actionPerformed(ActionEvent e) {
+							Object o = e.getSource();
+							if (e.getSource() instanceof HierarchyComponent) {
+								HierarchyComponent h = (HierarchyComponent) e.getSource();
+							}
+						}
+            		});
+            		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
+            	}
                 if (selectedMember != null) {
                     fireMemberClicked(selectedMember);
                 }

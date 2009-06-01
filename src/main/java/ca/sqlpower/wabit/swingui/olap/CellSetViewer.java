@@ -21,12 +21,12 @@ package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JComponent;
@@ -39,6 +39,7 @@ import javax.swing.table.TableCellRenderer;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
+import org.olap4j.metadata.Hierarchy;
 import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.swingui.table.TableUtils;
@@ -118,15 +119,26 @@ public class CellSetViewer {
     public void showMessage(String message) {
         messageLabel.setText(message);
         if (messageLabel.getParent() == null) {
-            CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS);
+            CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, null);
             rowHeader.addAxisListener(axisEventHandler);
             scrollPane.setRowHeaderView(rowHeader);
-            CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS);
+            CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, null);
             columnHeader.addAxisListener(axisEventHandler);
             scrollPane.setColumnHeaderView(columnHeader);
         	scrollPane.setViewportView(messageLabel);
         }
     }
+    
+	public void showMessage(String string, List<Hierarchy> rowHierarchies, List<Hierarchy> columnHierarchies) {
+        messageLabel.setText(string);
+        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, rowHierarchies);
+        rowHeader.addAxisListener(axisEventHandler);
+        scrollPane.setRowHeaderView(rowHeader);
+        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, columnHierarchies);
+        columnHeader.addAxisListener(axisEventHandler);
+        scrollPane.setColumnHeaderView(columnHeader);
+    	scrollPane.setViewportView(messageLabel);
+	}
     
     public JComponent getViewComponent() {
         return viewerComponent;

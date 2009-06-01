@@ -302,12 +302,12 @@ public class Olap4jGuiQueryPanel {
             setupAxis(columns, columnHierarchies);
 
             if (rows.getDimensions().isEmpty()) {
-                cellSetViewer.showMessage("Rows axis is empty--please drop something on it");
+                cellSetViewer.showMessage("Rows axis is empty--please drop something on it", rowHierarchies, columnHierarchies);
                 return;
             }
             
             if (columns.getDimensions().isEmpty()) {
-                cellSetViewer.showMessage("Columns axis is empty--please drop something on it");
+                cellSetViewer.showMessage("Columns axis is empty--please drop something on it", rowHierarchies, columnHierarchies);
                 return;
             }
             
