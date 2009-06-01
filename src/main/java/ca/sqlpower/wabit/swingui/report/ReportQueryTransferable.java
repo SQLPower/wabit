@@ -40,7 +40,7 @@ public class ReportQueryTransferable implements Transferable {
      */
     public static final DataFlavor LOCAL_QUERY_ARRAY_FLAVOUR =
         new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
-                "; class=\"[Lca.sqlpower.wabit.Query;\"", "Local Array of Queries");
+                "; class=\"[Lca.sqlpower.wabit.QueryCache;\"", "Local Array of Queries");
 
 	public ReportQueryTransferable(QueryCache[] queries) {
         if (queries == null) {
