@@ -35,6 +35,7 @@ import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
 
+import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -121,23 +122,37 @@ public class CellSetRenderer extends AbstractWabitObject implements
         g.setFont(getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
         double colHeaderSumHeight = 0;
+        int colourSchemeNum = 0;
+        Color oldForeground = g.getColor();
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
             hierarchyComponent.getPreferredSize();//XXX just laying out items
+            g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
+            //XXX come back and figure out why the y position needs to be increased by 2.
+            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight + 2), (int) contentBox.getWidth(), (int) hierarchyComponent.getPreferredSize().getHeight());
+            g.setColor(oldForeground);
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
                 g.drawString(layoutItem.getText(), (float) (layoutItem.getBounds().getX() + rowHeaderWidth), (float) (layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight));
             }
             colHeaderSumHeight += hierarchyComponent.getPreferredSize().getHeight();
+            colourSchemeNum++;
         }
+        g.setBackground(oldForeground);
         
         double columnHeaderHeight = columnHeaderComponent.getPreferredSize().getHeight();
         double rowHeaderSumWidth = 0;
+        colourSchemeNum = 0;
         for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
             hierarchyComponent.getPreferredSize();//XXX just laying out items
+            g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
+            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
+            g.setColor(oldForeground);
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
                 g.drawString(layoutItem.getText(), (float) (layoutItem.getBounds().getX() + rowHeaderSumWidth), (float) (layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight));
             }
             rowHeaderSumWidth += hierarchyComponent.getPreferredSize().getWidth();
+            colourSchemeNum++;
         }
+        g.setBackground(oldForeground);
         
         CellSetAxis columnsAxis = cellSet.getAxes().get(0);
         CellSetAxis rowsAxis = cellSet.getAxes().get(1);
