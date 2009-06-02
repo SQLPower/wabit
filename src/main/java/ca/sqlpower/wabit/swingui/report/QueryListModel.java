@@ -45,11 +45,15 @@ public class QueryListModel implements ListModel {
 	}
 
 	public Object getElementAt(int index) {
-		return project.getQueries().get(index);
+	    if (index < project.getQueries().size()) {
+	        return project.getQueries().get(index);
+	    } else {
+	        return project.getOlapQueries().get(index - project.getQueries().size());
+	    }
 	}
 
 	public int getSize() {
-		return project.getQueries().size();
+		return project.getQueries().size() + project.getOlapQueries().size();
 	}
 
 	public void removeListDataListener(ListDataListener l) {

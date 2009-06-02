@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -35,8 +36,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,13 +43,10 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.TransferHandler;
-import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
@@ -59,7 +55,6 @@ import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.Position;
-import org.olap4j.Axis.Standard;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 
@@ -127,6 +122,41 @@ public class CellSetTableHeaderComponent extends JComponent {
      */
     private final Axis axis;
 
+    /**
+     * This list of hierarchies is all of the hierarchy components in the header
+     * in the order they appear.
+     */
+    private final List<HierarchyComponent> hierarchies = new ArrayList<HierarchyComponent>();
+
+    /**
+     * This graphics object will be null if the default graphic is to be
+     * obtained. If a special graphics object is being used to render this
+     * component, as in printing, then this graphic object will be set to the
+     * desired graphics object instead.
+     */
+    private final Graphics graphic;
+
+    /**
+     * If this value is set this font should be used for sizing the headers
+     * instead of the default font given by the graphics object.
+     */
+    private final Font headerFont;
+
+    /**
+     * Creates a 'empty' CellSetTableRowHeaderComponent without a given CellSet.
+     * This is mainly for providing an empty table row header for the user to
+     * drop Members, Hierarchies, or Dimensions into.
+     * 
+     * @param axis The {@link Axis} this component is the header for
+     */
+    public CellSetTableHeaderComponent(Axis axis) {
+    	this.axis = axis;
+    	graphic = null;
+    	headerFont = null;
+    	setLabelAsEmpty();
+        setTransferHandler(new HeaderComponentTransferHandler());
+    }
+
 	/**
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
 	 * and Axis.
@@ -141,8 +171,31 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 *            {@link Axis#COLUMNS}, then this can be null.
 	 */
     public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel) {
-    	this(axis, null);
-    	
+        this(cellSet, axis, columnModel, null, null);
+    }
+
+    /**
+     * Creates a component for viewing the given CellSet and Axis.
+     * 
+     * @param cellSet
+     *            The {@link CellSet} that this header component is for
+     * @param axis
+     *            The {@link Axis} this component is the header for
+     * @param columnModel
+     *            The columnModel that will be used to determine column
+     *            positions in the table. If the axis type is not
+     *            {@link Axis#COLUMNS}, then this can be null.
+     * @param g
+     *            A graphics that is different from the default graphic used by
+     *            the JComponent. This allows using the component to use the
+     *            header in different graphics for things like printing.
+     */
+    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel, Graphics g, Font headerFont) {
+        this.axis = axis;
+        this.headerFont = headerFont;
+        setTransferHandler(new HeaderComponentTransferHandler());
+        graphic = g;
+        
     	CellSetAxis cellSetAxis = cellSet.getAxes().get(axis.axisOrdinal());
     	CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
     	int hierarchyCount = axisMetaData.getHierarchies().size();
@@ -157,15 +210,29 @@ public class CellSetTableHeaderComponent extends JComponent {
     	}
 
 		if (hierarchyCount > 0) {
-			removeAll();
 			for (int i = 0; i < hierarchyCount; i++) {
 				HierarchyComponent hierarchyComponent =
 					new HierarchyComponent(cellSetAxis, i, columnModel);
 				hierarchyComponent.setBackground(
 						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
+				hierarchies.add(hierarchyComponent);
 				add(hierarchyComponent);
 			}
+		} else {
+		    setLabelAsEmpty();
 		}
+    }
+    
+    /**
+     * This method will set the header component to have the default message if
+     * there are no hierarchies in this axis.
+     */
+    private void setLabelAsEmpty() {
+        setLayout(new BorderLayout());
+        JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
+        label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+        label.setOpaque(true);
+        add(label, BorderLayout.CENTER);
     }
 
 	/**
@@ -187,6 +254,8 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 */
     public CellSetTableHeaderComponent(Axis axis, List<Hierarchy> hierarchies) {
     	this.axis = axis;
+    	graphic = null;
+    	headerFont = null;
     	int hierarchiesSize = 0;
     	
     	if (hierarchies != null) {
@@ -203,10 +272,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     	}
 
     	if (hierarchiesSize == 0) {
-    		JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
-    		label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
-    		label.setOpaque(true);
-    		add(label);
+    	    setLabelAsEmpty();
     	} else {
 	    	for (int i = 0; i < hierarchiesSize; i++) {
 	    		Hierarchy h = hierarchies.get(i);
@@ -263,7 +329,7 @@ public class CellSetTableHeaderComponent extends JComponent {
      * Container for information relating to the layout of a hierarchy.
      * Instances of this class are created in createLayout().
      */
-    private static class LayoutItem {
+    public static class LayoutItem {
         
         /**
          * The bounds of the label, given this component's font.
@@ -279,6 +345,18 @@ public class CellSetTableHeaderComponent extends JComponent {
          * The Olap4j Member this label represents.
          */
         private Member member;
+        
+        public Rectangle2D getBounds() {
+            return bounds;
+        }
+        
+        public String getText() {
+            return text;
+        }
+        
+        public Member getMember() {
+            return member;
+        }
     }
 
     /**
@@ -287,7 +365,7 @@ public class CellSetTableHeaderComponent extends JComponent {
      * these for each hierarchy on the axis in order fully describe the positions of
      * that axis of the cell set.
      */
-    private class HierarchyComponent extends JPanel {
+    public class HierarchyComponent extends JPanel {
 
         private class MouseHandler implements MouseListener, MouseMotionListener {
 
@@ -407,7 +485,7 @@ public class CellSetTableHeaderComponent extends JComponent {
          * is no effect on subsequent calls (they just return immediately).
          */
         private void createLayout() {
-            if (!layoutItems.isEmpty() && isValid()) return;
+            if (!getLayoutItems().isEmpty() && isValid()) return;
             layoutItems.clear();
             preferredSizes.clear();
         	
@@ -448,6 +526,18 @@ public class CellSetTableHeaderComponent extends JComponent {
             
             g2.dispose();
         }
+        
+        @Override
+        public Graphics getGraphics() {
+            if (graphic != null) return graphic;
+            return super.getGraphics();
+        }
+        
+        @Override
+        public Font getFont() {
+            if (headerFont != null) return headerFont;
+            return super.getFont();
+        }
 
 		private int[] getColumnPositions() {
 			int[] columnPositions = new int[columnModel.getColumnCount()];
@@ -463,11 +553,11 @@ public class CellSetTableHeaderComponent extends JComponent {
         	if (axis.getAxisOrdinal() == Axis.ROWS) {
         		// This is a special-case optimization for members in the row axis
         		int rowNum = p.y / rowHeight;
-	            if (rowNum >= layoutItems.size()) return null;
+	            if (rowNum >= getLayoutItems().size()) return null;
 	            if (rowNum < 0) return null;
-	            return layoutItems.get(rowNum).member;
+	            return getLayoutItems().get(rowNum).member;
         	} else {
-        		for (LayoutItem item: layoutItems) {
+        		for (LayoutItem item: getLayoutItems()) {
         			if (item.bounds.contains(p)) {
         				return item.member;
         			}
@@ -480,7 +570,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         public Dimension getPreferredSize() {
             createLayout();
             Dimension ps = new Dimension();
-            for (LayoutItem li : layoutItems) {
+            for (LayoutItem li : getLayoutItems()) {
                 ps.width = (int) Math.max(li.bounds.getX() + li.bounds.getWidth(), ps.width);
                 ps.height = (int) Math.max(li.bounds.getY() + li.bounds.getHeight(), ps.height);
             }
@@ -497,7 +587,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             int ascent = fm.getAscent();
             
             String previousLabel = null;
-            for (LayoutItem li : layoutItems) {
+            for (LayoutItem li : getLayoutItems()) {
                 if (!WabitUtils.nullSafeEquals(previousLabel, li.text)) {
                     if (li.member == selectedMember) {
                         g2.setColor(Color.BLUE);
@@ -522,6 +612,14 @@ public class CellSetTableHeaderComponent extends JComponent {
             this.selectedMember = selectedMember;
             repaint();
         }
+
+        /**
+         * Returns an unmodifiable list of all of the {@link LayoutItem}s in
+         * this hierarchy component.
+         */
+        public List<LayoutItem> getLayoutItems() {
+            return Collections.unmodifiableList(layoutItems);
+        }
     }
     
     public Dimension getMemberSize(int columnIndex) {
@@ -538,4 +636,13 @@ public class CellSetTableHeaderComponent extends JComponent {
     	}
     	return d;
     }
+
+    /**
+     * Returns an unmodifiable list of all the hierarchy components in
+     * this header in the order they appear.
+     */
+    public List<HierarchyComponent> getHierarchies() {
+        return Collections.unmodifiableList(hierarchies);
+    }
+    
 }

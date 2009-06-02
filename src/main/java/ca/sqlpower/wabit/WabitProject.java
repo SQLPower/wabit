@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.event.ListDataListener;
 import javax.swing.event.UndoableEditListener;
 
 import org.apache.log4j.Logger;
@@ -417,6 +418,10 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         newQuery.setParent(this);
         fireChildAdded(OlapQuery.class, newQuery, index);
         setEditorPanelModel(newQuery);
+    }
+
+    public List<OlapQuery> getOlapQueries() {
+        return Collections.unmodifiableList(olapQueries);
     }
 
 }

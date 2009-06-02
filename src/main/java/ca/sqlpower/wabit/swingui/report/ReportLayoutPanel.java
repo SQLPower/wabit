@@ -74,6 +74,9 @@ import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
@@ -143,9 +146,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				return;
 			}			
 			
-			QueryCache[] queries;
+			WabitObject[] queries;
 			try {
-				queries = (QueryCache[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
+				queries = (WabitObject[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
 			} catch (UnsupportedFlavorException e) {
 				dtde.dropComplete(false);
 				dtde.rejectDrop();
@@ -156,16 +159,32 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				throw new RuntimeException(e);
 			}
 			
-			for (QueryCache query : queries) {
-				ContentBox contentBox = new ContentBox();
-				ResultSetRenderer rsRenderer = new ResultSetRenderer(query);
-				contentBox.setContentRenderer(rsRenderer);
-				ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
-						contentBox);
-				newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-						(report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
-						pageNode.getHeight() / 10);
-				pageNode.addChild(newCBNode);
+			for (WabitObject query : queries) {
+			    if (query instanceof QueryCache) {
+			        QueryCache queryCache = (QueryCache) query;
+			        ContentBox contentBox = new ContentBox();
+			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
+			        contentBox.setContentRenderer(rsRenderer);
+			        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+			                contentBox);
+			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
+			                pageNode.getHeight() / 10);
+			        pageNode.addChild(newCBNode);
+			    } else if (query instanceof OlapQuery) {
+			        OlapQuery olapQuery = (OlapQuery) query;
+			        ContentBox contentBox = new ContentBox();
+			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
+			        contentBox.setContentRenderer(renderer);
+			        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+                            contentBox);
+                    newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+                            (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
+                            pageNode.getHeight() / 10);
+                    pageNode.addChild(newCBNode);
+			    } else {
+			        throw new IllegalStateException("Unknown query dragged into the report layout. Object was " + query.getClass());
+			    }
 			}
 			
 			dtde.dropComplete(true);
@@ -371,19 +390,23 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			public Component getListCellRendererComponent(JList list, Object value,
 					int index, boolean isSelected, boolean cellHasFocus) {
 				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
-				((JLabel) c).setText(((QueryCache) value).getName());
+				((JLabel) c).setText(((WabitObject) value).getName());
 				
-				final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
-				if (((QueryCache) value).isRunning()) {
-					if (((QueryCache) value).isStreaming()) {
-						final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
-						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
-            		} else {
-            			final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge.gif"));
-						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
-            		}
-				} else {
-					((JLabel) c).setIcon(queryIcon);
+				if (value instanceof QueryCache) {
+				    final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
+				    if (((QueryCache) value).isRunning()) {
+				        if (((QueryCache) value).isStreaming()) {
+				            final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
+				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+				        } else {
+				            final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge.gif"));
+				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+				        }
+				    } else {
+				        ((JLabel) c).setIcon(queryIcon);
+				    }
+				} else if (value instanceof OlapQuery) {
+				    //TODO get icon from Giulio and place it here.
 				}
 				return c;
 			}
@@ -395,9 +418,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				if (queryList.getSelectedValues() == null || queryList.getSelectedValues().length <= 0) {
 					return;
 				}
-				List<QueryCache> queries = new ArrayList<QueryCache>();
+				List<WabitObject> queries = new ArrayList<WabitObject>();
 				for (Object q : queryList.getSelectedValues()) {
-					queries.add((QueryCache) q);
+					queries.add((WabitObject) q);
 				}
 				Transferable dndTransferable = new ReportQueryTransferable(queries);
 				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {
