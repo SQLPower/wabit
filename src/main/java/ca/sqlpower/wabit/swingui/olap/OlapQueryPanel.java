@@ -99,6 +99,7 @@ public class OlapQueryPanel implements WabitPanel {
         }), BorderLayout.NORTH);
 		queryAndResultsPanel.setLeftComponent(queryPanels);
         queryAndResultsPanel.setRightComponent(rightPanel);
+        queryAndResultsPanel.setDividerLocation(viewComponent.getPreferredSize().width);
     }
     
     private JComponent createTextQueryPanel() throws OlapException {
