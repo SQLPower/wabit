@@ -24,7 +24,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
@@ -52,11 +51,9 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -64,7 +61,6 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
@@ -75,8 +71,6 @@ import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.swingui.DataEntryPanelBuilder;
-import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
@@ -94,8 +88,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     private static final Logger logger = Logger.getLogger(ResultSetRenderer.class);
     
-    private static final String defaultFormatString = "Default Format";
-
 	private static final int COLUMN_WIDTH_BUFFER = 5;
 
 	/**
@@ -175,9 +167,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     private final List<ColumnInfo> columnInfo;
     
     /**
-     * Lists of Formatting Options for number and date
+     * Lists of Formatting Options for date
      */
-    private final List<DecimalFormat> numberFormats = new ArrayList<DecimalFormat>();
     private final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>();
     /**
      * The string that will be rendered for null values in the result set.
@@ -355,22 +346,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateTimeInstance());
     	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateInstance());
     	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getTimeInstance());
-    	
-    	numberFormats.add(new DecimalFormat("0"));
-    	numberFormats.add(new DecimalFormat("#,##0.00"));
-    	numberFormats.add(new DecimalFormat("#,##0.00%"));
-    	numberFormats.add(new DecimalFormat("(#,000.00)"));
-    	numberFormats.add(new DecimalFormat("(#,000)"));
-    	numberFormats.add(new DecimalFormat("##0.##E0"));
-    	numberFormats.add((DecimalFormat)NumberFormat.getCurrencyInstance());
-    	numberFormats.add((DecimalFormat)NumberFormat.getInstance());
-    	numberFormats.add((DecimalFormat)NumberFormat.getPercentInstance());
     }
     
     private Format getFormat(DataType dataType, String pattern){
     	logger.debug("dataType is"+ dataType+ " pattern is "+ pattern);
     	if(dataType == DataType.NUMERIC) {
-    		for(DecimalFormat decimalFormat : numberFormats) {
+    		for(DecimalFormat decimalFormat : ReportUtil.getNumberFormats()) {
     			if(decimalFormat.toPattern().equals(pattern)){
     				return decimalFormat;
     			}
@@ -869,12 +850,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         // TODO header font
         final JLabel headerFontExample = new JLabel("Header Font Example");
         headerFontExample.setFont(getHeaderFont());
-        fb.append("Header Font", headerFontExample, createFontButton(headerFontExample));
+        fb.append("Header Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
         
         // TODO body font
         final JLabel bodyFontExample = new JLabel("Body Font Example");
         bodyFontExample.setFont(getBodyFont());
-        fb.append("Body Font", bodyFontExample, createFontButton(bodyFontExample));
+        fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample));
         fb.nextLine();
 
         // TODO null string (per column?)
@@ -1047,7 +1028,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 logger.debug("formatCombobBox.getSelectedItem is"+ (String)formatComboBox.getSelectedItem());
                 
                 if (formatComboBox.getSelectedItem() != null &&
-                		((String)formatComboBox.getSelectedItem()).equals(defaultFormatString)) {
+                		((String)formatComboBox.getSelectedItem()).equals(ReportUtil.DEFAULT_FORMAT_STRING)) {
                 		ci.setFormat(null);
                 	}
                 else {
@@ -1078,9 +1059,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     private void setItemforFormatComboBox(JComboBox combobox, DataType dataType) {
     	combobox.removeAllItems();
-    	combobox.addItem(defaultFormatString);
+    	combobox.addItem(ReportUtil.DEFAULT_FORMAT_STRING);
     	if(dataType == DataType.NUMERIC) {
-    		for(NumberFormat item : numberFormats) {
+    		for(NumberFormat item : ReportUtil.getNumberFormats()) {
     			combobox.addItem(((DecimalFormat)item).toPattern());
     		}
     	} else if(dataType == DataType.DATE) {
@@ -1091,21 +1072,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	
     }
 
-    private JButton createFontButton(final JComponent fontTarget) {
-        JButton button = new JButton("Choose...");
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                FontSelector fs = new FontSelector(fontTarget.getFont());
-                Window dialogParent = SwingUtilities.getWindowAncestor(fontTarget);
-                JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(fs, dialogParent, "Choose a Font", "OK");
-                d.setModal(true);
-                d.setVisible(true);
-                fontTarget.setFont(fs.getSelectedFont());
-            }
-        });
-        return button;
-    }
-    
 	public void setBackgroundColour(Color backgroundColour) {
 		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
 		this.backgroundColour = backgroundColour;
