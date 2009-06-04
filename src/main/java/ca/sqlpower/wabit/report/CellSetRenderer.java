@@ -26,6 +26,9 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -79,6 +82,8 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 public class CellSetRenderer extends AbstractWabitObject implements
         ReportContentRenderer {
     
+    private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
+    
     /**
      * This is the OLAP query being displayed by this cell set renderer.
      */
@@ -86,7 +91,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     /**
      * This is the current cell set being displayed.
-     * TODO be able to replace this when the olapQuery changes.
      */
     private CellSet cellSet;
     
@@ -133,27 +137,74 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private Member selectedMember;
 
-    private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
+    /**
+     * This tracks when the cell set's query has changed and needs to be refreshed.
+     */
+    private boolean refreshCellSet = false;
+    
+    /**
+     * This listener will listen for changes to the query and set the refresh
+     * variable to decide when to refresh.
+     */
+    private final PropertyChangeListener queryListener = new PropertyChangeListener() {
+    
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("mdxQuery")) {
+                refreshCellSet = true;
+            }
+        }
+    };
     
     public CellSetRenderer(OlapQuery olapQuery) {
         this.olapQuery = olapQuery;
-        //TODO create a cached OLAP query to store this value.
+        olapQuery.addPropertyChangeListener(queryListener);
         try {
-            setCellSet(olapQuery.getMdxQuery().execute());
-        } catch (OlapException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            modifiedMDXQuery = OlapUtils.copyMDXQuery(olapQuery.getMdxQuery());
+            modifiedMDXQuery = olapQuery.getMdxQueryCopy();
+            setCellSet(modifiedMDXQuery.execute());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         
     }
+    
+    /**
+     * Call this method when the {@link Query} in the {@link OlapQuery} model changes.
+     * This will update the current modifiedMDXQuery and re-execute it to generate
+     * a new cell set.
+     */
+    private void updateMDXQuery() {
+        Query newModifiedMDXQuery;
+        try {
+            newModifiedMDXQuery = olapQuery.getMdxQueryCopy();
+        } catch (SQLException e1) {
+            throw new RuntimeException(e1);
+        }
+        
+        //XXX if we don't want to remember the expansion order for each report layout remove this loop.
+        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
+            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
+                for (QueryDimension oldDimension : modifiedMDXQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
+                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
+                        dimension.getSelections().clear();
+                        for (Selection selection : oldDimension.getSelections()) {
+                            dimension.getSelections().add(selection);
+                        }
+                    }
+                }
+            }
+        }
+        
+        modifiedMDXQuery = newModifiedMDXQuery;
+        
+        try {
+            setCellSet(modifiedMDXQuery.execute());
+        } catch (OlapException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void cleanup() {
-        // TODO Auto-generated method stub
-
+        olapQuery.removePropertyChangeListener(queryListener);
     }
 
     public Color getBackgroundColour() {
@@ -247,6 +298,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
             double scaleFactor, int pageIndex, boolean printing) {
+        if (refreshCellSet) {
+            updateMDXQuery();
+            refreshCellSet = false;
+        }
+        
         if (getBodyFont() == null) {
             setBodyFont(g.getFont());
         }

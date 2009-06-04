@@ -59,6 +59,7 @@ import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.NamedList;
+import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
@@ -158,8 +159,8 @@ public class Olap4jGuiQueryPanel {
     
     public Olap4jGuiQueryPanel(final Window owningFrame, CellSetViewer cellSetViewer, OlapQuery query) throws SQLException {
         olapQuery = query;
-        if (olapQuery.getMdxQuery() != null) {
-            for (QueryDimension queryDim : olapQuery.getMdxQuery().getAxes().get(Axis.ROWS).getDimensions()) {
+        if (olapQuery.getMdxQueryCopy() != null) {
+            for (QueryDimension queryDim : olapQuery.getMdxQueryCopy().getAxes().get(Axis.ROWS).getDimensions()) {
                 for (Selection sel : queryDim.getSelections()) {
                     final Member member = sel.getMember();
                     if (!rowHierarchies.contains(member.getHierarchy())) {
@@ -174,7 +175,7 @@ public class Olap4jGuiQueryPanel {
                     memberSet.add(member);
                 }
             }
-            for (QueryDimension queryDim : olapQuery.getMdxQuery().getAxes().get(Axis.COLUMNS).getDimensions()) {
+            for (QueryDimension queryDim : olapQuery.getMdxQueryCopy().getAxes().get(Axis.COLUMNS).getDimensions()) {
                 for (Selection sel : queryDim.getSelections()) {
                     final Member member = sel.getMember();
                     if (!columnHierarchies.contains(member.getHierarchy())) {
@@ -289,13 +290,20 @@ public class Olap4jGuiQueryPanel {
      * current cube).
      */
     public void executeQuery() {
-        if (olapQuery.getMdxQuery() == null) {
+        Query mdxQuery;
+        try {
+            mdxQuery = olapQuery.getMdxQueryCopy();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        
+        if (mdxQuery == null) {
             cellSetViewer.showMessage("No cube selected--please select one from the dropdown list");
             return;
         }
         try {
-            QueryAxis rows = olapQuery.getMdxQuery().getAxes().get(Axis.ROWS);
-            QueryAxis columns = olapQuery.getMdxQuery().getAxes().get(Axis.COLUMNS);
+            QueryAxis rows = mdxQuery.getAxes().get(Axis.ROWS);
+            QueryAxis columns = mdxQuery.getAxes().get(Axis.COLUMNS);
             logger.debug("Contents of rowHierarchies: " + rowHierarchies);
             logger.debug("Contents of columnHierarchies: " + columnHierarchies);
             setupAxis(rows, rowHierarchies);
@@ -311,7 +319,8 @@ public class Olap4jGuiQueryPanel {
                 return;
             }
             
-            CellSet cellSet = olapQuery.getMdxQuery().execute();
+            olapQuery.setMdxQuery(mdxQuery);
+            CellSet cellSet = mdxQuery.execute();
             cellSetViewer.showCellSet(cellSet);
         } catch (SQLException ex) {
             logger.error("failed to build/execute MDX query", ex);
@@ -322,10 +331,17 @@ public class Olap4jGuiQueryPanel {
     private void setupAxis(QueryAxis axis, List<Hierarchy> hierarchies) {
         axis.getDimensions().clear(); // XXX not optimal--the rest of this class could manipulate the query directly
         logger.debug("Setting up " + axis.getName() + " axis");
+        Query mdxQueryCopy;
+        try {
+            mdxQueryCopy = olapQuery.getMdxQueryCopy();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        
         for (Hierarchy h : hierarchies) {
             Dimension d = h.getDimension();
             logger.debug("  Processing dimension " + d.getName());
-            QueryDimension qd = new QueryDimension(olapQuery.getMdxQuery(), d);
+            QueryDimension qd = new QueryDimension(mdxQueryCopy, d);
             for (Member m : expandedMembers.get(h)) {
                 logger.debug("    Creating selection for member " + m.getName());
                 Selection selection = qd.createSelection(m);

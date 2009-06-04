@@ -102,8 +102,17 @@ public class OlapQuery extends AbstractWabitObject {
         firePropertyChange("mdxQuery", oldMDXQuery, mdxQuery);
     }
 
-    public Query getMdxQuery() {
-        return mdxQuery;
+    /**
+     * This returns a deep copy of the {@link Query} contained in this class.
+     * This makes the {@link Query} in this class unmodifiable directly and 
+     * forces users to set the query in this class after they make changes to 
+     * the query if changes are necessary. The reason for forcing users of this
+     * class to set the query after modifications is there is no way to add
+     * listeners for changes to the {@link Query}. By setting a new query other
+     * classes can be notified of changes.
+     */
+    public Query getMdxQueryCopy() throws SQLException {
+        return OlapUtils.copyMDXQuery(mdxQuery);
     }
 
     public OlapConnection createOlapConnection() throws SQLException, ClassNotFoundException, NamingException {

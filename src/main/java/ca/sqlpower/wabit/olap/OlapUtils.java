@@ -76,6 +76,7 @@ public class OlapUtils {
      * @throws SQLException
      */
     public static Query copyMDXQuery(Query query) throws SQLException {
+        if (query == null) return null;
         Query modifiedMDXQuery = new Query("Copy of " + query.getName(), query.getCube());
         for (Map.Entry<Axis, QueryAxis> axisEntry : query.getAxes().entrySet()) {
             QueryAxis copiedAxis = new QueryAxis(modifiedMDXQuery, axisEntry.getValue().getLocation());
