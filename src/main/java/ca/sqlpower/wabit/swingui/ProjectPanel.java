@@ -59,6 +59,7 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
+import javax.swing.JOptionPane;
 
 /**
  * This panel will display information about the project. It will
@@ -202,10 +203,26 @@ public class ProjectPanel implements WabitPanel {
 				SPDataSource ds = dbConnectionManager.getSelectedConnection();
 				if (startImageLabel.isFocusOwner()) {
 					startImageLabel.setIcon(SELECT_START_ICON);
-					addDataSource(session, ds);
+                                        if (ds == null) {
+                                            JOptionPane.showMessageDialog(
+                                                    session.getFrame(),
+                                                    "Please select a data source before pressing 'Start'",
+                                                    "Please select a data source",
+                                                    JOptionPane.WARNING_MESSAGE);
+                                        } else {
+                                            addDataSource(session, ds);
+                                        }
 				} else if (inside) {
 					startImageLabel.setIcon(OVER_START_ICON);
-					addDataSource(session, ds);
+                                        if (ds == null) {
+                                            JOptionPane.showMessageDialog(
+                                                    session.getFrame(),
+                                                    "Please select a data source before pressing 'Start'",
+                                                    "Please select a data source",
+                                                    JOptionPane.WARNING_MESSAGE);
+                                        } else {
+                                            addDataSource(session, ds);
+                                        }
 				} else {
 					startImageLabel.setIcon(UP_START_ICON);
 				}
