@@ -23,10 +23,17 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -45,17 +52,26 @@ import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
+import org.olap4j.metadata.Member;
+import org.olap4j.query.Query;
+import org.olap4j.query.QueryAxis;
+import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
 
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.OlapUtils;
 import ca.sqlpower.wabit.swingui.Icons;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.LayoutItem;
+import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PInputEvent;
 
 /**
  * Renders a CellSet from a MDX query on a report layout.
@@ -80,6 +96,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private Font headerFont;
     
     /**
+     * This query is a modified version of the one in the olapQuery object.
+     * This is used to track members that have been expanded or collapsed
+     * independently of the original olapQuery's MDX query.
+     */
+    private Query modifiedMDXQuery;
+    
+    /**
      * The font of the text in the cell set.
      */
     private Font bodyFont;
@@ -97,16 +120,35 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private DecimalFormat bodyFormat;
 
+    /**
+     * This map stores the header position of each member the last time the
+     * header was rendered not in printing mode. This is used to tell if the
+     * mouse has moved over a header to highlight it and allow drilling down.
+     * This map stores both row and column headers.
+     */
+    private final Map<Member, Rectangle> memberHeaderMap = new HashMap<Member, Rectangle>();
+    
+    /**
+     * This member is the member the user is over with their mouse
+     */
+    private Member selectedMember;
+
     private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
     
     public CellSetRenderer(OlapQuery olapQuery) {
         this.olapQuery = olapQuery;
         //TODO create a cached OLAP query to store this value.
         try {
-            cellSet = olapQuery.getMdxQuery().execute();
+            setCellSet(olapQuery.getMdxQuery().execute());
         } catch (OlapException e) {
             throw new RuntimeException(e);
         }
+        try {
+            modifiedMDXQuery = OlapUtils.copyMDXQuery(olapQuery.getMdxQuery());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        
     }
 
     public void cleanup() {
@@ -214,7 +256,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         g.setFont(getHeaderFont());
         int headerFontHeight = g.getFontMetrics().getHeight();
-        CellSetAxis cellSetAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
+        CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
         CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
         int hierarchyCount = axisMetaData.getHierarchies().size();
         int totalHeaderHeight = headerFontHeight * hierarchyCount;
@@ -229,13 +271,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         int firstRecord = numRows * pageIndex;
         
-        CellSetTableModel tableModel = new CellSetTableModel(cellSet);
+        CellSetTableModel tableModel = new CellSetTableModel(getCellSet());
         final JTable tableAsModel = new JTable(tableModel);
         //TODO update the JTable we're using as a model to have the proper font and column sizes.
         
-        CellSetTableHeaderComponent columnHeaderComponent = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
+        CellSetTableHeaderComponent columnHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.COLUMNS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
         
-        CellSetTableHeaderComponent rowHeaderComponent = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
+        CellSetTableHeaderComponent rowHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.ROWS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
         
         g.setFont(getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
@@ -249,7 +291,17 @@ public class CellSetRenderer extends AbstractWabitObject implements
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight + 2), (int) contentBox.getWidth(), (int) hierarchyComponent.getPreferredSize().getHeight());
             g.setColor(oldForeground);
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
-                g.drawString(layoutItem.getText(), (float) (layoutItem.getBounds().getX() + rowHeaderWidth), (float) (layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight));
+                final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
+                final double y = layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight;
+                if (!printing) {
+                    memberHeaderMap.put(layoutItem.getMember(), new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                }
+                Color oldColour = g.getColor();
+                if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
+                    g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
+                }
+                g.drawString(layoutItem.getText(), (float) x, (float) y);
+                g.setColor(oldColour);
             }
             colHeaderSumHeight += hierarchyComponent.getPreferredSize().getHeight();
             colourSchemeNum++;
@@ -265,15 +317,25 @@ public class CellSetRenderer extends AbstractWabitObject implements
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
             g.setColor(oldForeground);
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
-                g.drawString(layoutItem.getText(), (float) (layoutItem.getBounds().getX() + rowHeaderSumWidth), (float) (layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight));
+                final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
+                final double y = layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight;
+                if (!printing) {
+                    memberHeaderMap.put(layoutItem.getMember(), new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                }
+                Color oldColour = g.getColor();
+                if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
+                    g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
+                }
+                g.drawString(layoutItem.getText(), (float) x, (float) y);
+                g.setColor(oldColour);
             }
             rowHeaderSumWidth += hierarchyComponent.getPreferredSize().getWidth();
             colourSchemeNum++;
         }
         g.setBackground(oldForeground);
         
-        CellSetAxis columnsAxis = cellSet.getAxes().get(0);
-        CellSetAxis rowsAxis = cellSet.getAxes().get(1);
+        CellSetAxis columnsAxis = getCellSet().getAxes().get(0);
+        CellSetAxis rowsAxis = getCellSet().getAxes().get(1);
         
         g.setFont(getBodyFont());
         for (int row = 0; row < rowsAxis.getPositionCount(); row++) {
@@ -282,14 +344,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 String formattedValue;
                 if (bodyFormat != null) {
                     try {
-                        formattedValue = bodyFormat.format(cellSet.getCell(
+                        formattedValue = bodyFormat.format(getCellSet().getCell(
                                 columnsAxis.getPositions().get(col),
                                 rowsAxis.getPositions().get(row)).getDoubleValue());
                     } catch (OlapException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    formattedValue = cellSet.getCell(
+                    formattedValue = getCellSet().getCell(
                             columnsAxis.getPositions().get(col),
                             rowsAxis.getPositions().get(row)).getFormattedValue();
                 }
@@ -364,6 +426,100 @@ public class CellSetRenderer extends AbstractWabitObject implements
         DecimalFormat oldFormat = this.bodyFormat;
         this.bodyFormat = bodyFormat;
         firePropertyChange("bodyFormat", oldFormat, bodyFormat);
+    }
+
+    public void processEvent(PInputEvent event, int type) {
+        if (type == MouseEvent.MOUSE_MOVED) {
+            final PNode pickedNode = event.getPickedNode();
+            Point2D p = event.getPositionRelativeTo(pickedNode);
+            p = new Point2D.Double(p.getX() - pickedNode.getX(), p.getY() - pickedNode.getY());
+            for (Map.Entry<Member, Rectangle> entry : memberHeaderMap.entrySet()) {
+                if (entry.getValue().contains(p)) {
+                    setSelectedMember(entry.getKey());
+                    return;
+                }
+            }
+            setSelectedMember(null);
+        } else if (type == MouseEvent.MOUSE_RELEASED) {
+            if (selectedMember == null) return;
+            
+            boolean isLeaf = true;
+            QueryDimension containingDimension = null;
+            selectedMember.getHierarchy();
+            final QueryAxis colQueryAxis = modifiedMDXQuery.getAxes().get(Axis.COLUMNS);
+            if (!colQueryAxis.getDimensions().contains(selectedMember.getDimension())) {
+                for (QueryDimension dim : colQueryAxis.getDimensions()) {
+                    for (Selection sel : dim.getSelections()) {
+                        if (OlapUtils.isDescendant(selectedMember, sel.getMember())) {
+                            isLeaf = false;
+                        }
+                        if (sel.getMember().equals(selectedMember)) {
+                            containingDimension = dim;
+                        }
+                    }
+                }
+            }
+            final QueryAxis rowQueryAxis = modifiedMDXQuery.getAxes().get(Axis.ROWS);
+            if (!rowQueryAxis.getDimensions().contains(selectedMember.getDimension())) {
+                for (QueryDimension dim : rowQueryAxis.getDimensions()) {
+                    for (Selection sel : dim.getSelections()) {
+                        if (OlapUtils.isDescendant(selectedMember, sel.getMember())) {
+                            isLeaf = false;
+                        }
+                        if (sel.getMember().equals(selectedMember)) {
+                            containingDimension = dim;
+                        }
+                    }
+                }
+            }
+            try {
+                if (isLeaf) {
+                    for (Member child : selectedMember.getChildMembers()) {
+                        Selection newSelection = containingDimension.createSelection(child);
+                        containingDimension.getSelections().add(newSelection);
+                    }
+                    Collections.sort(containingDimension.getSelections(), new Comparator<Selection>() {
+                        private final MemberHierarchyComparator memberComparator = new MemberHierarchyComparator();
+                        
+                        public int compare(Selection o1, Selection o2) {
+                            return memberComparator.compare(o1.getMember(), o2.getMember());
+                        }
+                    });
+                } else {
+                    List<Selection> selectionsToRemove = new ArrayList<Selection>();
+                    for (Selection sel : containingDimension.getSelections()) {
+                        if (OlapUtils.isDescendant(selectedMember, sel.getMember())) {
+                            selectionsToRemove.add(sel);
+                        }
+                    }
+                    containingDimension.getSelections().removeAll(selectionsToRemove);
+                }
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
+            
+            try {
+                setCellSet(modifiedMDXQuery.execute());
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    
+    public void setSelectedMember(Member selectedMember) {
+        Member oldSelection = this.selectedMember; 
+        this.selectedMember = selectedMember;
+        firePropertyChange("selectedMember", oldSelection, selectedMember);
+    }
+
+    public void setCellSet(CellSet cellSet) {
+        CellSet oldSet = this.cellSet;
+        this.cellSet = cellSet;
+        firePropertyChange("cellSet", oldSet, cellSet);
+    }
+
+    public CellSet getCellSet() {
+        return cellSet;
     }
 
 }

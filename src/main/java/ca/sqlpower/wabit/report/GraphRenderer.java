@@ -96,6 +96,8 @@ import ca.sqlpower.wabit.WabitProject;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import edu.umd.cs.piccolo.event.PInputEvent;
+
 /**
  * This class will render a graph from a query's result set in a graph format
  * defined by the user.
@@ -1337,5 +1339,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 		return colourList;
 	}
+
+    public void processEvent(PInputEvent event, int type) {
+        //do nothing at current, but maybe do cool stuff later
+    }
 	
 }

@@ -81,6 +81,8 @@ import ca.sqlpower.wabit.swingui.Icons;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import edu.umd.cs.piccolo.event.PInputEvent;
+
 /**
  * Renders a JDBC result set using configurable absolute column widths.
  */
@@ -1091,4 +1093,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	public List<ColumnInfo> getColumnInfoList() {
 		return columnInfo;
 	}
+
+    public void processEvent(PInputEvent event, int type) {
+        //TODO allow other cool things to happen with this event
+    }
 }

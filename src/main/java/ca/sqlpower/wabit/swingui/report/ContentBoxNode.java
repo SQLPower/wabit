@@ -56,6 +56,13 @@ public class ContentBoxNode extends PNode implements ReportNode {
     private Color textColour = Color.BLACK;
 
     private PInputEventListener mouseInputHandler = new PBasicInputEventHandler() {
+        
+        @Override
+        public void processEvent(PInputEvent event, int type) {
+            super.processEvent(event, type);
+            contentBox.getContentRenderer().processEvent(event, type);
+        }
+        
         @Override
         public void mouseClicked(PInputEvent event) {
             super.mouseClicked(event);

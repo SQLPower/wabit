@@ -58,6 +58,8 @@ import ca.sqlpower.wabit.swingui.InsertVariableButton;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import edu.umd.cs.piccolo.event.PInputEvent;
+
 /**
  * A simple report content item that prints out some text with optional variable
  * substitution. Variables are described in the documentation for the
@@ -348,4 +350,8 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
 		this.backgroundColour = backgroundColour;
 	}
+
+    public void processEvent(PInputEvent event, int type) {
+        //do nothing
+    }
 }

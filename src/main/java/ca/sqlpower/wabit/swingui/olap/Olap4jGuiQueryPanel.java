@@ -27,10 +27,8 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +63,9 @@ import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 
+import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.OlapUtils;
 
 public class Olap4jGuiQueryPanel {
 
@@ -168,7 +168,7 @@ public class Olap4jGuiQueryPanel {
                     hierarchiesBeingUsed.put(member.getDimension(), member.getHierarchy());
                     Set<Member> memberSet = expandedMembers.get(member.getHierarchy());
                     if (memberSet == null) {
-                        memberSet = new TreeSet<Member>(memberHierarchyComparator);
+                        memberSet = new TreeSet<Member>(new MemberHierarchyComparator());
                         expandedMembers.put(member.getHierarchy(), memberSet);
                     }
                     memberSet.add(member);
@@ -183,7 +183,7 @@ public class Olap4jGuiQueryPanel {
                     hierarchiesBeingUsed.put(member.getDimension(), member.getHierarchy());
                     Set<Member> memberSet = expandedMembers.get(member.getHierarchy());
                     if (memberSet == null) {
-                        memberSet = new TreeSet<Member>(memberHierarchyComparator);
+                        memberSet = new TreeSet<Member>(new MemberHierarchyComparator());
                         expandedMembers.put(member.getHierarchy(), memberSet);
                     }
                     memberSet.add(member);
@@ -350,7 +350,7 @@ public class Olap4jGuiQueryPanel {
         Hierarchy h = member.getHierarchy();
         Set<Member> memberSet = expandedMembers.get(h);
         if (memberSet == null) {
-            memberSet = new TreeSet<Member>(memberHierarchyComparator);
+            memberSet = new TreeSet<Member>(new MemberHierarchyComparator());
             expandedMembers.put(h, memberSet);
         }
         
@@ -359,7 +359,7 @@ public class Olap4jGuiQueryPanel {
             logger.debug("toggleMember(): removing member " + member.getName() + " and its descendants");
             Iterator<Member> it = memberSet.iterator();
             while (it.hasNext()) {
-                if (isDescendant(member, it.next())) {
+                if (OlapUtils.isDescendant(member, it.next())) {
                     it.remove();
                 }
             }
@@ -372,26 +372,6 @@ public class Olap4jGuiQueryPanel {
         executeQuery();
     }
 
-    /**
-     * Tests whether or not the given parent member has the other member as one
-     * of its descendants--either a direct child, or a child of a child, and so
-     * on. Does not consider parent to be a descendant of itself, so in the case
-     * both arguments are equal, this method returns false.
-     * 
-     * @param parent
-     *            The parent member
-     * @param testForDescendituitivitiness
-     *            The member to check if it has parent as an ancestor
-     */
-    private boolean isDescendant(Member parent, Member testForDescendituitivitiness) {
-        if (testForDescendituitivitiness.equals(parent)) return false;
-        while (testForDescendituitivitiness != null) {
-            if (testForDescendituitivitiness.equals(parent)) return true;
-            testForDescendituitivitiness = testForDescendituitivitiness.getParentMember();
-        }
-        return false;
-    }
-    
     private void addToRows(int ordinal, Member m) throws OlapException {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
@@ -429,39 +409,5 @@ public class Olap4jGuiQueryPanel {
         rowHierarchies.removeAll(d.getHierarchies());
         columnHierarchies.removeAll(d.getHierarchies());
     }
-    
-    private static Comparator<Member> memberHierarchyComparator = new Comparator<Member>() {
 
-        public int compare(Member m1, Member m2) {
-            if (m1.equals(m2)) return 0;
-            
-            // Find common ancestor
-            List<Member> m1path = path(m1);
-            List<Member> m2path = path(m2);
-            
-            int i = 0;
-            while (i < m1path.size() && i < m2path.size()) {
-                if (! m1path.get(i).equals((m2path).get(i))) break;
-                i++;
-            }
-            
-            // Lowest common ancestor is m1path.get(i - 1), but we don't care
-            
-            if (m1path.size() == i) return -1;
-            if (m2path.size() == i) return 1;
-            logger.debug("m1path[i] ordinal=" + m1path.get(i).getOrdinal() + " name=" + m1path.get(i).getName());
-            logger.debug("m2path[i] ordinal=" + m2path.get(i).getOrdinal() + " name=" + m2path.get(i).getName());
-            return m1path.get(i).getName().compareToIgnoreCase(m2path.get(i).getName());
-        }
-        
-        private List<Member> path(Member m) {
-            List<Member> path = new LinkedList<Member>();
-            Member temp = m;
-            while (temp != null) {
-                path.add(0, temp);
-                temp = temp.getParentMember();
-            }
-            return path;
-        }
-    };
 }

@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import edu.umd.cs.piccolo.event.PInputEvent;
 
 /**
  * This class will let users import an image into their layout.
@@ -134,5 +135,9 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public void setImage(BufferedImage image) {
 		this.image = image;
 	}
+
+    public void processEvent(PInputEvent event, int type) {
+        //do nothing
+    }
 
 }
