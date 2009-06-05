@@ -35,8 +35,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -130,7 +132,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * mouse has moved over a header to highlight it and allow drilling down.
      * This map stores both row and column headers.
      */
-    private final Map<Member, Rectangle> memberHeaderMap = new HashMap<Member, Rectangle>();
+    private final Map<Member, Set<Rectangle>> memberHeaderMap = new HashMap<Member, Set<Rectangle>>();
     
     /**
      * This member is the member the user is over with their mouse
@@ -335,6 +337,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         CellSetTableModel tableModel = new CellSetTableModel(getCellSet());
         final JTable tableAsModel = new JTable(tableModel);
         //TODO update the JTable we're using as a model to have the proper font and column sizes.
+
+        if (!printing) {
+            memberHeaderMap.clear();
+        }
         
         CellSetTableHeaderComponent columnHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.COLUMNS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
         
@@ -358,7 +364,12 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
                 final double y = layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight;
                 if (!printing) {
-                    memberHeaderMap.put(layoutItem.getMember(), new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                    Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
+                    if (memberRanges == null) {
+                        memberRanges = new HashSet<Rectangle>();
+                        memberHeaderMap.put(layoutItem.getMember(), memberRanges);
+                    }
+                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
                 }
                 Color oldColour = g.getColor();
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
@@ -387,7 +398,12 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
                 final double y = layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight;
                 if (!printing) {
-                    memberHeaderMap.put(layoutItem.getMember(), new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                    Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
+                    if (memberRanges == null) {
+                        memberRanges = new HashSet<Rectangle>();
+                        memberHeaderMap.put(layoutItem.getMember(), memberRanges);
+                    }
+                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
                 }
                 Color oldColour = g.getColor();
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
@@ -500,10 +516,12 @@ public class CellSetRenderer extends AbstractWabitObject implements
             final PNode pickedNode = event.getPickedNode();
             Point2D p = event.getPositionRelativeTo(pickedNode);
             p = new Point2D.Double(p.getX() - pickedNode.getX(), p.getY() - pickedNode.getY());
-            for (Map.Entry<Member, Rectangle> entry : memberHeaderMap.entrySet()) {
-                if (entry.getValue().contains(p)) {
-                    setSelectedMember(entry.getKey());
-                    return;
+            for (Map.Entry<Member, Set<Rectangle>> entry : memberHeaderMap.entrySet()) {
+                for (Rectangle rect : entry.getValue()) {
+                    if (rect.contains(p)) {
+                        setSelectedMember(entry.getKey());
+                        return;
+                    }
                 }
             }
             setSelectedMember(null);
