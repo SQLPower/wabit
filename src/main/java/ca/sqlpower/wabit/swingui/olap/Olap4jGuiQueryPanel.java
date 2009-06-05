@@ -112,6 +112,10 @@ public class Olap4jGuiQueryPanel {
                 throw new RuntimeException(ex);
             }
         }
+
+		public void memberRemoved(MemberClickEvent e) {
+			removeHierarchy(e.getMember().getHierarchy(), e.getAxis());
+		}
     };
     
     /**
@@ -264,7 +268,22 @@ public class Olap4jGuiQueryPanel {
         
     }
     
-    public JPanel getPanel() {
+    private void removeHierarchy(Hierarchy hierarchy, Axis axis) {
+    	expandedMembers.remove(hierarchy);
+    	hierarchiesBeingUsed.remove(hierarchy);
+    	if (axis == Axis.ROWS) {
+    		logger.debug("Removing Hierarchy " + hierarchy.getName() + " from Rows");
+    		rowHierarchies.remove(hierarchy);
+    		logger.debug("Content of rowHierarchies after: " + rowHierarchies);
+    	} else if (axis == Axis.COLUMNS) {
+    		logger.debug("Removing Hierarchy " + hierarchy.getName() + " from Columns");
+    		columnHierarchies.remove(hierarchy);
+    		logger.debug("Content of columnHierarchies after: " + columnHierarchies);
+    	}
+    	executeQuery();
+    }
+
+	public JPanel getPanel() {
         return panel;
     }
     
@@ -308,7 +327,13 @@ public class Olap4jGuiQueryPanel {
             logger.debug("Contents of columnHierarchies: " + columnHierarchies);
             setupAxis(rows, rowHierarchies);
             setupAxis(columns, columnHierarchies);
-
+            olapQuery.setMdxQuery(mdxQuery);
+            
+            if (rows.getDimensions().isEmpty() && columns.getDimensions().isEmpty()) {
+            	cellSetViewer.showMessage("No query defined");
+            	return;
+            }
+            
             if (rows.getDimensions().isEmpty()) {
                 cellSetViewer.showMessage("Rows axis is empty--please drop something on it", rowHierarchies, columnHierarchies);
                 return;
@@ -319,7 +344,6 @@ public class Olap4jGuiQueryPanel {
                 return;
             }
             
-            olapQuery.setMdxQuery(mdxQuery);
             CellSet cellSet = mdxQuery.execute();
             cellSetViewer.showCellSet(cellSet);
         } catch (SQLException ex) {

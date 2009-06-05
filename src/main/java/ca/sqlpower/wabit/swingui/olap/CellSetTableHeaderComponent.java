@@ -54,6 +54,7 @@ import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
+import org.olap4j.OlapException;
 import org.olap4j.Position;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
@@ -311,6 +312,15 @@ public class CellSetTableHeaderComponent extends JComponent {
         }
     }
     
+    
+    private void fireMemberRemoved(Member member) {
+        final MemberClickEvent e = new MemberClickEvent(
+                this, MemberClickEvent.Type.MEMBER_REMOVED, axis, member);
+        for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(i).memberRemoved(e);
+        }
+    }
+    
     /**
      * Adds the given axis listener to this component.
      * 
@@ -388,12 +398,17 @@ public class CellSetTableHeaderComponent extends JComponent {
             public void mousePressed(MouseEvent e) {
             	if (e.getButton() == MouseEvent.BUTTON3) {
             		JPopupMenu popUpMenu = new JPopupMenu();
-            		popUpMenu.add(new AbstractAction("Remove Dimension") {
+            		popUpMenu.add(new AbstractAction("Remove Hierarchy '" + hierarchy.getName() + "'") {
 						public void actionPerformed(ActionEvent e) {
-							Object o = e.getSource();
-							if (e.getSource() instanceof HierarchyComponent) {
-								HierarchyComponent h = (HierarchyComponent) e.getSource();
+							Member member = null;
+							try {
+								member = hierarchy.getDefaultMember();
+							} catch (OlapException ex) {
+								throw new RuntimeException("OlapException while trying to retrieve " +
+										"default member of Hierarchy '" + hierarchy.getName() + "'", ex);
 							}
+							
+							fireMemberRemoved(member);
 						}
             		});
             		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());

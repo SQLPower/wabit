@@ -67,6 +67,10 @@ public class CellSetViewer {
         	logger.debug("AxisListener memberDropped");
             fireMemberDroppedEvent(e);
         }
+
+		public void memberRemoved(MemberClickEvent e) {
+			fireMemberRemovedEvent(e);
+		}
     };
     
     public CellSetViewer() {
@@ -164,6 +168,16 @@ public class CellSetViewer {
         }
     }
 
+    /**
+     * Fires a member removed event to all axis listeners currently registered
+     * on this viewer.
+     */
+    private void fireMemberRemovedEvent(MemberClickEvent e) {
+    	for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(0).memberRemoved(e);
+        }
+	}
+    
     /**
      * Adds the given axis listener to this component. Note that source field on
      * events received from this viewer will (unfortunately) be an internal
