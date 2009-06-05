@@ -336,7 +336,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         CellSetTableModel tableModel = new CellSetTableModel(getCellSet());
         final JTable tableAsModel = new JTable(tableModel);
-        //TODO update the JTable we're using as a model to have the proper font and column sizes.
 
         if (!printing) {
             memberHeaderMap.clear();
@@ -396,7 +395,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
                 lastMemberDisplayed = layoutItem.getMember();
                 final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
-                final double y = layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight;
+                double y = layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight;
+                if (firstRecord * maxRowHeight > y - headerFontHeight || (firstRecord + numRows) * maxRowHeight < y - headerFontHeight) continue;
+                y = y - (firstRecord * maxRowHeight);
                 if (!printing) {
                     Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
                     if (memberRanges == null) {
@@ -421,7 +422,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         CellSetAxis rowsAxis = getCellSet().getAxes().get(1);
         
         g.setFont(getBodyFont());
-        for (int row = 0; row < rowsAxis.getPositionCount(); row++) {
+        for (int row = firstRecord; row < rowsAxis.getPositionCount(); row++) {
+            if (row == numRows + firstRecord) {
+                return true;
+            }
             int colPosition = 0;
             for (int col = 0; col < columnsAxis.getPositionCount(); col++) {
                 String formattedValue;
@@ -455,7 +459,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
                         throw new IllegalStateException("Unknown alignment of type " + bodyAlignment);
                 }
                 
-                g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (columnHeaderHeight + (row * maxRowHeight) + headerFontHeight));
+                g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (columnHeaderHeight + ((row - firstRecord) * maxRowHeight) + headerFontHeight));
                 colPosition += columnWidth;
             }
         }
