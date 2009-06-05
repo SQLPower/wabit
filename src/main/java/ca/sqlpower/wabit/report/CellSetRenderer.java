@@ -351,7 +351,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
             //XXX come back and figure out why the y position needs to be increased by 2.
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight + 2), (int) contentBox.getWidth(), (int) hierarchyComponent.getPreferredSize().getHeight());
             g.setColor(oldForeground);
+            Member lastMemberDisplayed = null;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
+                if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
+                lastMemberDisplayed = layoutItem.getMember();
                 final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
                 final double y = layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight;
                 if (!printing) {
@@ -377,7 +380,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
             g.setColor(oldForeground);
+            Member lastMemberDisplayed = null;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
+                if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
+                lastMemberDisplayed = layoutItem.getMember();
                 final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
                 final double y = layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight;
                 if (!printing) {
