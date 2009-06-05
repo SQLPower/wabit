@@ -325,8 +325,8 @@ public class Olap4jGuiQueryPanel {
             QueryAxis columns = mdxQuery.getAxes().get(Axis.COLUMNS);
             logger.debug("Contents of rowHierarchies: " + rowHierarchies);
             logger.debug("Contents of columnHierarchies: " + columnHierarchies);
-            setupAxis(rows, rowHierarchies);
-            setupAxis(columns, columnHierarchies);
+            setupAxis(mdxQuery, rows, rowHierarchies);
+            setupAxis(mdxQuery, columns, columnHierarchies);
             olapQuery.setMdxQuery(mdxQuery);
             
             if (rows.getDimensions().isEmpty() && columns.getDimensions().isEmpty()) {
@@ -352,20 +352,14 @@ public class Olap4jGuiQueryPanel {
         }
     }
 
-    private void setupAxis(QueryAxis axis, List<Hierarchy> hierarchies) {
+    private void setupAxis(Query mdxQuery, QueryAxis axis, List<Hierarchy> hierarchies) {
         axis.getDimensions().clear(); // XXX not optimal--the rest of this class could manipulate the query directly
         logger.debug("Setting up " + axis.getName() + " axis");
-        Query mdxQueryCopy;
-        try {
-            mdxQueryCopy = olapQuery.getMdxQueryCopy();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
         
         for (Hierarchy h : hierarchies) {
             Dimension d = h.getDimension();
             logger.debug("  Processing dimension " + d.getName());
-            QueryDimension qd = new QueryDimension(mdxQueryCopy, d);
+            QueryDimension qd = new QueryDimension(mdxQuery, d);
             for (Member m : expandedMembers.get(h)) {
                 logger.debug("    Creating selection for member " + m.getName());
                 Selection selection = qd.createSelection(m);
