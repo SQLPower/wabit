@@ -80,10 +80,10 @@ public class OlapUtils {
         Query modifiedMDXQuery = new Query(query.getName(), query.getCube());
         for (Map.Entry<Axis, QueryAxis> axisEntry : query.getAxes().entrySet()) {
             QueryAxis copiedAxis = new QueryAxis(modifiedMDXQuery, axisEntry.getValue().getLocation());
-            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-                QueryDimension copiedDimension = new QueryDimension(modifiedMDXQuery, dimension.getDimension());
-                for (Selection selection : dimension.getSelections()) {
-                    Selection copiedSelection = dimension.createSelection(selection.getMember(), selection.getOperator());
+            for (QueryDimension oldDimension : axisEntry.getValue().getDimensions()) {
+                QueryDimension copiedDimension = new QueryDimension(modifiedMDXQuery, oldDimension.getDimension());
+                for (Selection selection : oldDimension.getSelections()) {
+                    Selection copiedSelection = copiedDimension.createSelection(selection.getMember(), selection.getOperator());
                     copiedDimension.getSelections().add(copiedSelection);
                 }
                 copiedAxis.getDimensions().add(copiedDimension);

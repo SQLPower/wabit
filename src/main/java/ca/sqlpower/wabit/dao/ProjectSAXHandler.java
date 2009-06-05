@@ -80,6 +80,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
@@ -230,6 +231,12 @@ public class ProjectSAXHandler extends DefaultHandler {
      * be null if no query dimension is currently being loaded.
      */
     private QueryDimension queryDimension;
+
+    /**
+     * This is an Olap4j {@link org.olap4j.query.Query} which is currently being
+     * loaded. This may be null.
+     */
+    private CellSetRenderer cellSetRenderer;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -582,28 +589,8 @@ public class ProjectSAXHandler extends DefaultHandler {
             queryDimension = new QueryDimension(olapQuery.getMDXQuery(), dimension);
             queryAxis.getDimensions().add(queryDimension);
         } else if (name.equals("olap4j-selection")) {
-            String dimensionName = attributes.getValue("dimension-name");
-            String hierarchyName = attributes.getValue("hierarchy-name");
-            String levelName = attributes.getValue("member-level");
-            String memberName = attributes.getValue("member-name");
             String operation = attributes.getValue("operator");
-            Dimension dimension = olapQuery.getCurrentCube().getDimensions().get(dimensionName);
-            Member actualMember = null;
-            final Hierarchy hierarchy = dimension.getHierarchies().get(hierarchyName);
-            final Level level = hierarchy.getLevels().get(levelName);
-            try {
-                for (Member member : level.getMembers()) {
-                    if (member.getName().equals(memberName)) {
-                        actualMember = member;
-                        break;
-                    }
-                }
-            } catch (OlapException e) {
-                throw new RuntimeException(e);
-            }
-            if (actualMember == null) {
-                throw new NullPointerException("Cannot find member " + memberName + " in hierarchy " + hierarchyName + " in dimension " + dimensionName);
-            }
+            Member actualMember = findMember(attributes, olapQuery.getCurrentCube());
             Selection selection = queryDimension.createSelection(actualMember, Operator.valueOf(operation));
             queryDimension.getSelections().add(selection);
         } else if (name.equals("layout")) {
@@ -871,6 +858,59 @@ public class ProjectSAXHandler extends DefaultHandler {
         	} else {
         		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
+        } else if (name.equals("cell-set-renderer")) {
+            String uuid = attributes.getValue("uuid");
+            String queryUUID = attributes.getValue("olap-query-uuid");
+            OlapQuery newQuery = null;
+            for (OlapQuery query : session.getProject().getOlapQueries()) {
+                if (query.getUUID().toString().equals(queryUUID)) {
+                    newQuery = query;
+                    break;
+                }
+            }
+            if (newQuery == null) {
+                throw new NullPointerException("Cannot load project due to missing olap query in report.");
+            }
+            cellSetRenderer = new CellSetRenderer(newQuery, uuid);
+            contentBox.setContentRenderer(cellSetRenderer);
+            for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("uuid") || aname.equals("olap-query-uuid")) {
+                    //already loaded
+                } else if (aname.equals("name")) {
+                    cellSetRenderer.setName(aval);
+                } else if (aname.equals("body-alignment")) {
+                    cellSetRenderer.setBodyAlignment(HorizontalAlignment.valueOf(aval));
+                } else if (aname.equals("body-format-pattern")) {
+                    cellSetRenderer.setBodyFormat(new DecimalFormat(aval));
+                } else {
+                    logger.warn("Unexpected attribute of <cell-set-renderer>: " + aname + "=" + aval);
+                }
+            }
+            for (QueryAxis axis : cellSetRenderer.getModifiedMDXQuery().getAxes().values()) {
+                for (QueryDimension dimension : axis.getDimensions()) {
+                    dimension.getSelections().clear();
+                }
+            }
+        } else if (name.equals("olap-header-font")) {
+            cellSetRenderer.setHeaderFont(loadFont(attributes));
+        } else if (name.equals("olap-body-font")) {
+            cellSetRenderer.setBodyFont(loadFont(attributes));
+        } else if (name.equals("olap4j-report-selection")) {
+            Member member = findMember(attributes, cellSetRenderer.getModifiedMDXQuery().getCube());
+            String operation = attributes.getValue("operator");
+            String dimensionName = attributes.getValue("dimension-name");
+            QueryDimension queryDimension = null;
+            for (QueryAxis axis : cellSetRenderer.getModifiedMDXQuery().getAxes().values()) {
+                for (QueryDimension dimension : axis.getDimensions()) {
+                    if (dimension.getDimension().getName().equals(dimensionName)) {
+                        queryDimension = dimension;
+                    }
+                }
+            }
+            Selection selection = queryDimension.createSelection(member, Operator.valueOf(operation));
+            queryDimension.getSelections().add(selection);
         } else if (name.equals("guide")) {
         	String guideName = attributes.getValue("name");
         	String axisName = attributes.getValue("axis");
@@ -893,6 +933,34 @@ public class ProjectSAXHandler extends DefaultHandler {
         	}
         }
 		
+	}
+	
+	/**
+	 * This method finds a member from a cube based on given attributes.
+	 */
+	public Member findMember(Attributes attributes, Cube cube) {
+	    String dimensionName = attributes.getValue("dimension-name");
+        String hierarchyName = attributes.getValue("hierarchy-name");
+        String levelName = attributes.getValue("member-level");
+        String memberName = attributes.getValue("member-name");
+        Dimension dimension = cube.getDimensions().get(dimensionName);
+        Member actualMember = null;
+        final Hierarchy hierarchy = dimension.getHierarchies().get(hierarchyName);
+        final Level level = hierarchy.getLevels().get(levelName);
+        try {
+            for (Member member : level.getMembers()) {
+                if (member.getName().equals(memberName)) {
+                    actualMember = member;
+                    break;
+                }
+            }
+        } catch (OlapException e) {
+            throw new RuntimeException(e);
+        }
+        if (actualMember == null) {
+            throw new NullPointerException("Cannot find member " + memberName + " in hierarchy " + hierarchyName + " in dimension " + dimensionName);
+        }
+        return actualMember;
 	}
 
 	/**
@@ -972,6 +1040,12 @@ public class ProjectSAXHandler extends DefaultHandler {
 				throw new RuntimeException(e);
 			}
 			imageRenderer = null;
+    	} else if (name.equals("cell-set-renderer")) {
+    	    try {
+                cellSetRenderer.setCellSet(cellSetRenderer.getModifiedMDXQuery().execute());
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
     	}
     	xmlContext.pop();
     }

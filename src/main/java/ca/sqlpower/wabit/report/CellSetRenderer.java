@@ -150,12 +150,17 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
         public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("mdxQuery")) {
-                refreshCellSet = true;
+                updateMDXQuery();
             }
         }
     };
     
     public CellSetRenderer(OlapQuery olapQuery) {
+        this(olapQuery, null);
+    }
+    
+    public CellSetRenderer(OlapQuery olapQuery, String uuid) {
+        super(uuid);
         this.olapQuery = olapQuery;
         olapQuery.addPropertyChangeListener(queryListener);
         try {
@@ -196,11 +201,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         modifiedMDXQuery = newModifiedMDXQuery;
         
-        try {
-            setCellSet(modifiedMDXQuery.execute());
-        } catch (OlapException e) {
-            throw new RuntimeException(e);
-        }
+        refreshCellSet = true;
     }
 
     public void cleanup() {
@@ -299,7 +300,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
             double scaleFactor, int pageIndex, boolean printing) {
         if (refreshCellSet) {
-            updateMDXQuery();
+            try {
+                setCellSet(modifiedMDXQuery.execute());
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
             refreshCellSet = false;
         }
         
@@ -576,6 +581,22 @@ public class CellSetRenderer extends AbstractWabitObject implements
 
     public CellSet getCellSet() {
         return cellSet;
+    }
+
+    public OlapQuery getOlapQuery() {
+        return olapQuery;
+    }
+    
+    public HorizontalAlignment getBodyAlignment() {
+        return bodyAlignment;
+    }
+    
+    public DecimalFormat getBodyFormat() {
+        return bodyFormat;
+    }
+    
+    public Query getModifiedMDXQuery() {
+        return modifiedMDXQuery;
     }
 
 }

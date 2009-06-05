@@ -57,6 +57,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.GraphRenderer;
@@ -351,6 +352,32 @@ public class ProjectXMLDAO {
 						xml.println(out, "</graph-series-to-x-axis>");
 						xml.indent--;
 						xml.println(out, "</graph-renderer>");
+					} else if (box.getContentRenderer() instanceof CellSetRenderer) {
+					    CellSetRenderer renderer = (CellSetRenderer) box.getContentRenderer();
+					    xml.print(out, "<cell-set-renderer");
+					    printAttribute("name", renderer.getName());
+					    printAttribute("uuid", renderer.getUUID().toString());
+					    printAttribute("olap-query-uuid", renderer.getOlapQuery().getUUID().toString());
+					    printAttribute("body-alignment", renderer.getBodyAlignment().toString());
+					    if (renderer.getBodyFormat() != null) {
+					        printAttribute("body-format-pattern", renderer.getBodyFormat().toPattern());
+					    }
+					    xml.println(out, ">");
+					    xml.indent++;
+					    
+					    saveFont(renderer.getHeaderFont(), "olap-header-font");
+					    saveFont(renderer.getBodyFont(), "olap-body-font");
+					    for (QueryAxis axis : renderer.getModifiedMDXQuery().getAxes().values()) {
+					        for (QueryDimension dimension : axis.getDimensions()) {
+					            for (Selection selection : dimension.getSelections()) {
+					                saveOlap4jSelection("olap4j-report", selection);
+					            }
+					        }
+					    }
+					    
+					    xml.indent--;
+					    xml.println(out, "</cell-set-renderer>");
+					    
 					} else {
 						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
 					}
@@ -398,32 +425,7 @@ public class ProjectXMLDAO {
 	    xml.println(out, ">");
 	    xml.indent++;
 	    
-	    for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
-	        if (axisEntry.getKey() == null) continue; //TODO why does this have a null entry?
-	        xml.print(out, "<olap4j-axis");
-	        printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
-	        xml.println(out, ">");
-	        xml.indent++;
-	        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-	            xml.print(out, "<olap4j-dimension");
-	            printAttribute("dimension-name", dimension.getDimension().getUniqueName());
-	            xml.println(out, ">");
-	            xml.indent++;
-	            for (Selection selection : dimension.getSelections()) {
-	                xml.print(out, "<olap4j-selection");
-	                printAttribute("member-name", selection.getMember().getName());
-	                printAttribute("hierarchy-name", selection.getMember().getHierarchy().getName());
-	                printAttribute("dimension-name", selection.getMember().getHierarchy().getDimension().getName());
-	                printAttribute("member-level", selection.getMember().getLevel().getName());
-	                printAttribute("operator", selection.getOperator().toString());
-	                xml.println(out, "/>");
-	            }
-	            xml.indent--;
-	            xml.println(out, "</olap4j-dimension>");
-	        }
-	        xml.indent--;
-	        xml.println(out, "</olap4j-axis>");
-	    }
+	    saveOlap4jQuery(mdxQuery, "olap4j");
 	    
 	    xml.indent--;
 	    xml.println(out, "</olap4j-query>");
@@ -432,6 +434,53 @@ public class ProjectXMLDAO {
 	    xml.println(out, "</olap-query>");
 	    
 	}
+
+    /**
+     * Given an Olap4j {@link org.olap4j.query.Query} and a string to start the
+     * XML tags with this method will save the {@link org.olap4j.query.Query} to
+     * the print writer in this file.
+     * 
+     * @param mdxQuery
+     *            The query to save.
+     * @param name
+     *            A unique name to append to the start of XML tags
+     */
+    private void saveOlap4jQuery(org.olap4j.query.Query mdxQuery, String name) {
+        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
+	        if (axisEntry.getKey() == null) continue; //TODO why does this have a null entry?
+	        xml.print(out, "<" + name + "-axis");
+	        printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
+	        xml.println(out, ">");
+	        xml.indent++;
+	        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
+	            xml.print(out, "<" + name + "-dimension");
+	            printAttribute("dimension-name", dimension.getDimension().getName());
+	            xml.println(out, ">");
+	            xml.indent++;
+	            for (Selection selection : dimension.getSelections()) {
+	                saveOlap4jSelection(name, selection);
+	            }
+	            xml.indent--;
+	            xml.println(out, "</" + name + "-dimension>");
+	        }
+	        xml.indent--;
+	        xml.println(out, "</" + name + "-axis>");
+	    }
+    }
+
+    /**
+     * Saves a selection and everything needed to find the member that is in the
+     * selection.
+     */
+    private void saveOlap4jSelection(String name, Selection selection) {
+        xml.print(out, "<" + name + "-selection");
+        printAttribute("member-name", selection.getMember().getName());
+        printAttribute("hierarchy-name", selection.getMember().getHierarchy().getName());
+        printAttribute("dimension-name", selection.getMember().getHierarchy().getDimension().getName());
+        printAttribute("member-level", selection.getMember().getLevel().getName());
+        printAttribute("operator", selection.getOperator().toString());
+        xml.println(out, "/>");
+    }
 	
 	/**
 	 * This will save a font to the print writer. The font tag must be contained within tags of 

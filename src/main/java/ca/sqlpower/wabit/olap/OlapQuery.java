@@ -191,7 +191,8 @@ public class OlapQuery extends AbstractWabitObject {
      * classes can be notified of changes.
      */
     public Query getMdxQueryCopy() throws SQLException {
-        return OlapUtils.copyMDXQuery(mdxQuery);
+        Query copyQuery = OlapUtils.copyMDXQuery(mdxQuery);
+        return copyQuery;
     }
 
     /**
