@@ -144,6 +144,12 @@ public class CellSetTableHeaderComponent extends JComponent {
     private final Font headerFont;
 
     /**
+     * If this value is set this font should be used in sizing the headers
+     * with the size of the header font given by the graphics object.
+     */
+    private final Font bodyFont;
+
+    /**
      * Creates a 'empty' CellSetTableRowHeaderComponent without a given CellSet.
      * This is mainly for providing an empty table row header for the user to
      * drop Members, Hierarchies, or Dimensions into.
@@ -154,6 +160,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     	this.axis = axis;
     	graphic = null;
     	headerFont = null;
+    	bodyFont = null;
     	setLabelAsEmpty();
         setTransferHandler(new HeaderComponentTransferHandler());
     }
@@ -172,7 +179,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 *            {@link Axis#COLUMNS}, then this can be null.
 	 */
     public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel) {
-        this(cellSet, axis, columnModel, null, null);
+        this(cellSet, axis, columnModel, null, null, null);
     }
 
     /**
@@ -191,9 +198,10 @@ public class CellSetTableHeaderComponent extends JComponent {
      *            the JComponent. This allows using the component to use the
      *            header in different graphics for things like printing.
      */
-    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel, Graphics g, Font headerFont) {
+    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel, Graphics g, Font headerFont, Font bodyFont) {
         this.axis = axis;
         this.headerFont = headerFont;
+        this.bodyFont = bodyFont;
         setTransferHandler(new HeaderComponentTransferHandler());
         graphic = g;
         
@@ -257,6 +265,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     	this.axis = axis;
     	graphic = null;
     	headerFont = null;
+    	bodyFont = null;
     	int hierarchiesSize = 0;
     	
     	if (hierarchies != null) {
@@ -443,7 +452,7 @@ public class CellSetTableHeaderComponent extends JComponent {
          * The height of each row, in pixels. This is the same as the font height at
          * the time {@link #createLayout()} was invoked.
          */
-        private int rowHeight;
+        private int rowsRowHeight;
         
         /**
          * The {@link TableColumnModel} that we'll use to determine the positions of
@@ -499,15 +508,18 @@ public class CellSetTableHeaderComponent extends JComponent {
          * {@link #getPreferredSize()}. After the first call to this method, there
          * is no effect on subsequent calls (they just return immediately).
          */
-        private void createLayout() {
+        public void createLayout() {
             if (!getLayoutItems().isEmpty() && isValid()) return;
             layoutItems.clear();
             preferredSizes.clear();
-        	
+
             Graphics2D g2 = (Graphics2D) getGraphics();
+            g2.setFont(getBodyFont());
+            FontMetrics bodyFM = g2.getFontMetrics();
             g2.setFont(getFont());
             FontMetrics fm = g2.getFontMetrics();
-            rowHeight = fm.getHeight();
+            rowsRowHeight = Math.max(fm.getHeight(), bodyFM.getHeight());
+            int colsRowHeight = fm.getHeight();
             int y = 0;
             
             int[] columnPositions = getColumnPositions();
@@ -524,10 +536,12 @@ public class CellSetTableHeaderComponent extends JComponent {
 	                li.bounds = new Rectangle2D.Double(
 	                        memberDepth * indentAmount, y,
 	                        stringBounds.getWidth(), stringBounds.getHeight());
+	                y += rowsRowHeight;
                 } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
                 	li.bounds = new Rectangle2D.Double(
-	                        columnPositions[position.getOrdinal()], memberDepth * rowHeight,
+	                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
 	                        stringBounds.getWidth(), stringBounds.getHeight());
+                	y += colsRowHeight;
                 }
                 li.member = member;
                 li.text = member.getName();
@@ -536,7 +550,6 @@ public class CellSetTableHeaderComponent extends JComponent {
                 d.width = (int) Math.max(d.width, li.bounds.getWidth());
                 layoutItems.add(li);
                 
-                y += rowHeight;
             }
             
             g2.dispose();
@@ -553,6 +566,11 @@ public class CellSetTableHeaderComponent extends JComponent {
             if (headerFont != null) return headerFont;
             return super.getFont();
         }
+        
+        public Font getBodyFont() {
+            if (bodyFont != null) return bodyFont;
+            return getFont();
+        }
 
 		private int[] getColumnPositions() {
 			int[] columnPositions = new int[columnModel.getColumnCount()];
@@ -567,7 +585,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         public Member getMemberAtPoint(Point p) {
         	if (axis.getAxisOrdinal() == Axis.ROWS) {
         		// This is a special-case optimization for members in the row axis
-        		int rowNum = p.y / rowHeight;
+        		int rowNum = p.y / rowsRowHeight;
 	            if (rowNum >= getLayoutItems().size()) return null;
 	            if (rowNum < 0) return null;
 	            return getLayoutItems().get(rowNum).member;

@@ -341,9 +341,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
             memberHeaderMap.clear();
         }
         
-        CellSetTableHeaderComponent columnHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.COLUMNS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
+        CellSetTableHeaderComponent columnHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.COLUMNS, tableAsModel.getColumnModel(), g.create(), getHeaderFont(), getBodyFont());
         
-        CellSetTableHeaderComponent rowHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.ROWS, tableAsModel.getColumnModel(), g.create(), getHeaderFont());
+        CellSetTableHeaderComponent rowHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.ROWS, tableAsModel.getColumnModel(), g.create(), getHeaderFont(), getBodyFont());
         
         g.setFont(getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
@@ -351,7 +351,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         int colourSchemeNum = 0;
         Color oldForeground = g.getColor();
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
-            hierarchyComponent.getPreferredSize();//XXX just laying out items
+            hierarchyComponent.createLayout();
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
             //XXX come back and figure out why the y position needs to be increased by 2.
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight + 2), (int) contentBox.getWidth(), (int) hierarchyComponent.getPreferredSize().getHeight());
@@ -386,7 +386,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         double rowHeaderSumWidth = 0;
         colourSchemeNum = 0;
         for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
-            hierarchyComponent.getPreferredSize();//XXX just laying out items
+            hierarchyComponent.createLayout();
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
             g.setColor(oldForeground);
