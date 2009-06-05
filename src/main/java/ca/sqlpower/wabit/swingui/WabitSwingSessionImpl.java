@@ -680,6 +680,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
 		wabitPane.setDividerLocation(dividerLoc);
+		// The execute query currently needs to be done after the panel is added
+		// to the split pane, because it requires a Graphics2D object to get a
+		// FontMetrics to use to calculate optimal column widths in the
+		// CellSetViewer. If done before, the Graphics2D object is null.
+		if (currentEditorPanel instanceof OlapQueryPanel) {
+			((OlapQueryPanel) currentEditorPanel).executeQuery();
+		}
 		return true;
 	}
 	
