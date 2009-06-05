@@ -196,4 +196,11 @@ public class OlapQueryPanel implements WabitPanel {
         return false;
     }
 
+    /**
+	 * Executes the containing OlapQuery and updates the results in the
+	 * CellSetViewer.
+	 */
+    public void executeQuery() {
+    	olap4jGuiQueryPanel.executeQuery();
+    }
 }
