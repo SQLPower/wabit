@@ -41,6 +41,10 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
+import org.olap4j.Axis;
+import org.olap4j.query.QueryAxis;
+import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -52,6 +56,7 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.GraphRenderer;
@@ -143,11 +148,11 @@ public class ProjectXMLDAO {
 		saveDataSources(dataSources);
 		
 		for (QueryCache query : queries) {
-			if (query instanceof QueryCache) {
-				saveQueryCache(((QueryCache) query).getQuery());
-			} else {
-				throw new IllegalStateException("Trying to store a query of type " + query.getClass() + " which is unhandled by saving.");
-			}
+		    saveQueryCache(query.getQuery());
+		}
+		
+		for (OlapQuery query : project.getOlapQueries()) {
+		    saveOlapQuery(query);
 		}
 		
 		for (Layout layout : layouts) {
@@ -369,6 +374,63 @@ public class ProjectXMLDAO {
 		
 		xml.indent--;
 		xml.println(out, "</layout>");
+	}
+	
+	private void saveOlapQuery(OlapQuery query) {
+	    xml.print(out, "<olap-query");
+	    printAttribute("name", query.getName());
+	    printAttribute("uuid", query.getUUID().toString());
+	    if (query.getOlapDataSource() != null) {
+	        printAttribute("data-source", query.getOlapDataSource().getName());
+	    }
+	    xml.println(out, ">");
+	    xml.indent++;
+	    
+	    xml.print(out, "<olap-cube");
+	    printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
+	    printAttribute("schema", query.getCurrentCube().getSchema().getName());
+	    printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
+	    xml.println(out, "/>");
+	    
+	    org.olap4j.query.Query mdxQuery = query.getMDXQuery();
+	    xml.print(out, "<olap4j-query");
+	    printAttribute("name", mdxQuery.getName());
+	    xml.println(out, ">");
+	    xml.indent++;
+	    
+	    for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
+	        if (axisEntry.getKey() == null) continue; //TODO why does this have a null entry?
+	        xml.print(out, "<olap4j-axis");
+	        printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
+	        xml.println(out, ">");
+	        xml.indent++;
+	        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
+	            xml.print(out, "<olap4j-dimension");
+	            printAttribute("dimension-name", dimension.getDimension().getUniqueName());
+	            xml.println(out, ">");
+	            xml.indent++;
+	            for (Selection selection : dimension.getSelections()) {
+	                xml.print(out, "<olap4j-selection");
+	                printAttribute("member-name", selection.getMember().getName());
+	                printAttribute("hierarchy-name", selection.getMember().getHierarchy().getName());
+	                printAttribute("dimension-name", selection.getMember().getHierarchy().getDimension().getName());
+	                printAttribute("member-level", selection.getMember().getLevel().getName());
+	                printAttribute("operator", selection.getOperator().toString());
+	                xml.println(out, "/>");
+	            }
+	            xml.indent--;
+	            xml.println(out, "</olap4j-dimension>");
+	        }
+	        xml.indent--;
+	        xml.println(out, "</olap4j-axis>");
+	    }
+	    
+	    xml.indent--;
+	    xml.println(out, "</olap4j-query>");
+	    
+	    xml.indent--;
+	    xml.println(out, "</olap-query>");
+	    
 	}
 	
 	/**

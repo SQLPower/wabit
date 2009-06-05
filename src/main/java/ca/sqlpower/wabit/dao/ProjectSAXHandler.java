@@ -41,6 +41,19 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
+import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
+import org.olap4j.metadata.Catalog;
+import org.olap4j.metadata.Cube;
+import org.olap4j.metadata.Dimension;
+import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Level;
+import org.olap4j.metadata.Member;
+import org.olap4j.metadata.Schema;
+import org.olap4j.query.QueryAxis;
+import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
+import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -56,6 +69,7 @@ import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -65,6 +79,7 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
@@ -194,6 +209,27 @@ public class ProjectSAXHandler extends DefaultHandler {
 	 * in the project being loaded.
 	 */
 	private GraphRenderer graphRenderer;
+
+	/**
+	 * This is an {@link OlapQuery} that is currently being loaded from the file. This
+	 * may be null if no OlapQuery is currently being loaded.
+	 */
+    private OlapQuery olapQuery;
+
+    /**
+     * This is a {@link QueryAxis} that is currently being loaded into a
+     * {@link org.olap4j.query.Query} object in an {@link OlapQuery}. This may
+     * be null if no query axis is currently being loaded.
+     */
+    private QueryAxis queryAxis;
+
+    /**
+     * This is a {@link QueryDimension} that is currently being loaded into a
+     * {@link QueryAxis} that is currently being loaded into a
+     * {@link org.olap4j.query.Query} object in an {@link OlapQuery}. This may
+     * be null if no query dimension is currently being loaded.
+     */
+    private QueryDimension queryDimension;
 	
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -477,6 +513,99 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
         	cache.getQuery().defineUserModifiedQuery(queryString);
+        } else if (name.equals("olap-query")) {
+            String uuid = attributes.getValue("uuid");
+            checkMandatory("uuid", uuid);
+            olapQuery = new OlapQuery(uuid);
+            session.getProject().addOlapQuery(olapQuery);
+            for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("uuid")) {
+                    //already loaded
+                } else if (aname.equals("name")) {
+                    olapQuery.setName(aval);
+                } else if (aname.equals("data-source")) {
+                    Olap4jDataSource ds = session.getProject().getDataSource(aval, Olap4jDataSource.class);
+                    if (ds == null) {
+                        String newDSName = oldToNewDSNames.get(aval);
+                        if (newDSName != null) {
+                            ds = session.getProject().getDataSource(newDSName, Olap4jDataSource.class);
+                            if (ds == null) {
+                                logger.debug("Data source " + aval + " is not in the project. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
+                                throw new NullPointerException("Data source " + newDSName + " was not found in the project.");
+                            }
+                        }
+                        logger.debug("Project has data sources " + session.getProject().getDataSources());
+                    }
+                    olapQuery.setOlapDataSource(ds);
+                } else {
+                    logger.warn("Unexpected attribute of <olap-query>: " + aname + " = " + aval);
+                }
+            }
+        } else if (name.equals("olap-cube")) {
+            String catalogName = attributes.getValue("catalog");
+            String schemaName = attributes.getValue("schema");
+            String cubeName = attributes.getValue("cube-name");
+            
+            //XXX If we can't connect to an OLAP data source because the user isn't connected
+            //XXX to a network or can't connect to the specific data source then we will not
+            //XXX be able to load their file. This is a rather silly problem.
+            if (olapQuery.getOlapDataSource() == null) {
+                throw new NullPointerException("Missing database for cube " + cubeName + " for use in " + olapQuery.getName() + ".");
+            }
+            try {
+                OlapConnection createOlapConnection = olapQuery.createOlapConnection();
+                Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
+                Schema schema = catalog.getSchemas().get(schemaName);
+                Cube cube = schema.getCubes().get(cubeName);
+                olapQuery.setCurrentCube(cube);
+            } catch (Exception e) {
+                throw new RuntimeException("Cannot connect to " + olapQuery.getOlapDataSource(), e);
+            }
+        } else if (name.equals("olap4j-query")) {
+            String queryName = attributes.getValue("name");
+            try {
+                org.olap4j.query.Query olap4jQuery = new org.olap4j.query.Query(queryName, olapQuery.getCurrentCube());
+                olapQuery.setMdxQuery(olap4jQuery);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (name.equals("olap4j-axis")) {
+            String ordinalNumber = attributes.getValue("ordinal");
+            org.olap4j.Axis axis = org.olap4j.Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
+            queryAxis = new QueryAxis(olapQuery.getMDXQuery(), axis);
+            olapQuery.getMDXQuery().getAxes().put(axis, queryAxis);
+        } else if (name.equals("olap4j-dimension")) {
+            String dimensionName = attributes.getValue("dimension-name");
+            Dimension dimension = olapQuery.getCurrentCube().getDimensions().get(dimensionName);
+            queryDimension = new QueryDimension(olapQuery.getMDXQuery(), dimension);
+            queryAxis.getDimensions().add(queryDimension);
+        } else if (name.equals("olap4j-selection")) {
+            String dimensionName = attributes.getValue("dimension-name");
+            String hierarchyName = attributes.getValue("hierarchy-name");
+            String levelName = attributes.getValue("member-level");
+            String memberName = attributes.getValue("member-name");
+            String operation = attributes.getValue("operator");
+            Dimension dimension = olapQuery.getCurrentCube().getDimensions().get(dimensionName);
+            Member actualMember = null;
+            final Hierarchy hierarchy = dimension.getHierarchies().get(hierarchyName);
+            final Level level = hierarchy.getLevels().get(levelName);
+            try {
+                for (Member member : level.getMembers()) {
+                    if (member.getName().equals(memberName)) {
+                        actualMember = member;
+                        break;
+                    }
+                }
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
+            if (actualMember == null) {
+                throw new NullPointerException("Cannot find member " + memberName + " in hierarchy " + hierarchyName + " in dimension " + dimensionName);
+            }
+            Selection selection = queryDimension.createSelection(actualMember, Operator.valueOf(operation));
+            queryDimension.getSelections().add(selection);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);

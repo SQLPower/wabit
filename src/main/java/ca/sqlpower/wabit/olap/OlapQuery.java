@@ -45,6 +45,80 @@ import ca.sqlpower.wabit.WabitObject;
  * in an OLAP query.
  */
 public class OlapQuery extends AbstractWabitObject {
+
+//    /**
+//     * If there is no connection to the database this class will be used to
+//     * assure that the user does not lose any of their work. It will store all
+//     * the data that is normally stored when a project is saved. This is all
+//     * because we cannot create an {@link Cube} and {@link Query} when there is
+//     * no {@link Olap4jDataSource} to connect to.
+//     */
+//    public class SavedQueryData { 
+//        
+//        public class SavedMemberData {
+//            private String name;
+//            private String operation;
+//
+//            public String getName() {
+//                return name;
+//            }
+//            public void setName(String name) {
+//                this.name = name;
+//            }
+//            public String getOperation() {
+//                return operation;
+//            }
+//            public void setOperation(String operation) {
+//                this.operation = operation;
+//            }
+//        }
+//        
+//        private String catalogName;
+//        private String schemaName;
+//        private String cubeName;
+//        
+//        private Map<String, Map<String, TreeSet<SavedMemberData>>> axisData;
+//        
+//        
+//        public Map<String, Map<String, SavedMemberData>> getAxisData() {
+//            return axisData;
+//        }
+//
+//        public void setAxisData(Map<String, Map<String, SavedMemberData>> axisData) {
+//            this.axisData = axisData;
+//        }
+//
+//        public void setCatalogName(String catalogName) {
+//            this.catalogName = catalogName;
+//        }
+//        
+//        public String getCatalogName() {
+//            return catalogName;
+//        }
+//
+//        public void setSchemaName(String schemaName) {
+//            this.schemaName = schemaName;
+//        }
+//
+//        public String getSchemaName() {
+//            return schemaName;
+//        }
+//
+//        public void setCubeName(String cubeName) {
+//            this.cubeName = cubeName;
+//        }
+//
+//        public String getCubeName() {
+//            return cubeName;
+//        }
+//        
+//    }
+//    
+//    /**
+//     * This allows us to persist all the data a user might have
+//     * for an {@link Query} in case a user does not have a database connection
+//     */
+//    private SavedQueryData savedQueryData;
     
     /**
      * The current query. Gets replaced whenever a new cube is selected via
@@ -66,6 +140,11 @@ public class OlapQuery extends AbstractWabitObject {
     private final Context ctx;
     
     public OlapQuery() {
+        this(null);
+    }
+    
+    public OlapQuery(String uuid) {
+        super(uuid);
         System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
         System.setProperty("org.osjava.sj.jndi.shared", "true");
         try {
@@ -115,6 +194,16 @@ public class OlapQuery extends AbstractWabitObject {
         return OlapUtils.copyMDXQuery(mdxQuery);
     }
 
+    /**
+     * This getter should only be used in saving and loading. Modifying the
+     * query returned here will not fire property change events which will cause
+     * parts of Wabit to not be notified of changes to the query and not update
+     * accordingly.
+     */
+    public Query getMDXQuery() {
+        return mdxQuery;
+    }
+
     public OlapConnection createOlapConnection() throws SQLException, ClassNotFoundException, NamingException {
         if (getOlapDataSource() == null 
                 || getOlapDataSource().getDataSource() == null
@@ -157,5 +246,5 @@ public class OlapQuery extends AbstractWabitObject {
     public List<? extends WabitObject> getChildren() {
         return new ArrayList<WabitObject>();
     }
-
+    
 }
