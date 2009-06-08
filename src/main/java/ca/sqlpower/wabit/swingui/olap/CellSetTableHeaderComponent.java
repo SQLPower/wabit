@@ -221,7 +221,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 		if (hierarchyCount > 0) {
 			for (int i = 0; i < hierarchyCount; i++) {
 				HierarchyComponent hierarchyComponent =
-					new HierarchyComponent(cellSetAxis, i, columnModel);
+					new HierarchyComponent(cellSetAxis, cellSetAxis.getAxisMetaData().getHierarchies().get(i), i, columnModel);
 				hierarchyComponent.setBackground(
 						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
 				hierarchies.add(hierarchyComponent);
@@ -285,12 +285,11 @@ public class CellSetTableHeaderComponent extends JComponent {
     	    setLabelAsEmpty();
     	} else {
 	    	for (int i = 0; i < hierarchiesSize; i++) {
-	    		Hierarchy h = hierarchies.get(i);
-	    		JLabel label = new JLabel(h.getName());
-	    		label.setVerticalAlignment(JLabel.TOP);
-	    		label.setBackground(ColourScheme.BACKGROUND_COLOURS[i]);
-	    		label.setOpaque(true);
-	    		add(label);
+	    		Hierarchy hierarchy = hierarchies.get(i);
+	    		HierarchyComponent hierarchyComponent = new HierarchyComponent(hierarchy, i);
+				hierarchyComponent.setBackground(
+						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
+	    		add(hierarchyComponent);
 	    	}
     	}
     	
@@ -492,14 +491,24 @@ public class CellSetTableHeaderComponent extends JComponent {
 		 *            positions in the table. If the axis type is not
 		 *            {@link Axis#COLUMNS}, then this can be null.
 		 */
-        public HierarchyComponent(CellSetAxis axis, int hierarchyOrdinal, TableColumnModel columnModel) {
+        public HierarchyComponent(CellSetAxis axis, Hierarchy hierarchy, final int hierarchyOrdinal, TableColumnModel columnModel) {
             this.axis = axis;
             this.hierarchyOrdinal = hierarchyOrdinal;
             this.columnModel = columnModel;
-            hierarchy = axis.getAxisMetaData().getHierarchies().get(hierarchyOrdinal);
+            this.hierarchy = hierarchy;
             setOpaque(true);
             addMouseListener(mouseHandler);
             addMouseMotionListener(mouseHandler);
+        }
+        
+        /**
+         * A HierarchyComponent that only contains the hierarchy name and is
+         * not drilldownable.
+         * @param hierarchy
+         * @param hierarchyOrdinal
+         */
+        public HierarchyComponent(Hierarchy hierarchy, int hierarchyOrdinal) {
+        	this(null, hierarchy, hierarchyOrdinal, null);
         }
 
         /**
@@ -521,37 +530,51 @@ public class CellSetTableHeaderComponent extends JComponent {
             rowsRowHeight = Math.max(fm.getHeight(), bodyFM.getHeight());
             int colsRowHeight = fm.getHeight();
             int y = 0;
+
+            if (axis == null) {
+            	LayoutItem li = new LayoutItem();
+            	Rectangle2D stringBounds = fm.getStringBounds(hierarchy.getName(), g2);
+            	li.bounds = new Rectangle2D.Double(0, 0, stringBounds.getWidth(), stringBounds.getHeight());
+            	try {
+            		li.member = hierarchy.getDefaultMember();
+            	} catch (OlapException ex) {
+            		throw new RuntimeException(ex);
+            	}
+            	li.text = hierarchy.getName();
+            	preferredSizes.add(new Dimension((int)li.bounds.getWidth(), (int)li.bounds.getHeight()));
+            	layoutItems.add(li);
+            } else {
             
-            int[] columnPositions = getColumnPositions();
-            for (int i = 0; i < axis.getPositionCount(); i++) {
-            	preferredSizes.add(new Dimension(0, 0));
-            }
+	            int[] columnPositions = getColumnPositions();
+	            for (int i = 0; i < axis.getPositionCount(); i++) {
+	            	preferredSizes.add(new Dimension(0, 0));
+	            }
             	
-            for (Position position : axis) {
-                Member member = position.getMembers().get(hierarchyOrdinal);
-                int memberDepth = member.getDepth();
-                LayoutItem li = new LayoutItem();
-                Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
-                if (axis.getAxisOrdinal() == Axis.ROWS) {
-	                li.bounds = new Rectangle2D.Double(
-	                        memberDepth * indentAmount, y,
-	                        stringBounds.getWidth(), stringBounds.getHeight());
-	                y += rowsRowHeight;
-                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
-                	li.bounds = new Rectangle2D.Double(
-	                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
-	                        stringBounds.getWidth(), stringBounds.getHeight());
-                	y += colsRowHeight;
-                }
-                li.member = member;
-                li.text = member.getName();
-                Dimension d = preferredSizes.get(position.getOrdinal());
-                d.height = (int) Math.max(d.height, li.bounds.getHeight());
-                d.width = (int) Math.max(d.width, li.bounds.getWidth());
-                layoutItems.add(li);
-                
+	            for (Position position : axis) {
+	                Member member = position.getMembers().get(hierarchyOrdinal);
+	                int memberDepth = member.getDepth();
+	                LayoutItem li = new LayoutItem();
+	                Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
+	                if (axis.getAxisOrdinal() == Axis.ROWS) {
+		                li.bounds = new Rectangle2D.Double(
+		                        memberDepth * indentAmount, y,
+		                        stringBounds.getWidth(), stringBounds.getHeight());
+		                y += rowsRowHeight;
+	                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
+	                	li.bounds = new Rectangle2D.Double(
+		                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
+		                        stringBounds.getWidth(), stringBounds.getHeight());
+	                	y += colsRowHeight;
+	                }
+	                li.member = member;
+	                li.text = member.getName();
+	                Dimension d = preferredSizes.get(position.getOrdinal());
+	                d.height = (int) Math.max(d.height, li.bounds.getHeight());
+	                d.width = (int) Math.max(d.width, li.bounds.getWidth());
+	                layoutItems.add(li);
+	                
+	            }
             }
-            
             g2.dispose();
         }
         
@@ -573,6 +596,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         }
 
 		private int[] getColumnPositions() {
+			if (columnModel == null) return new int[0];
 			int[] columnPositions = new int[columnModel.getColumnCount()];
             int x = 0;
             for (int i = 0; i < columnModel.getColumnCount(); i++) {
@@ -583,6 +607,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
         
         public Member getMemberAtPoint(Point p) {
+        	if (axis == null) return null;
         	if (axis.getAxisOrdinal() == Axis.ROWS) {
         		// This is a special-case optimization for members in the row axis
         		int rowNum = p.y / rowsRowHeight;

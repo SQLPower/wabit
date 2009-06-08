@@ -122,15 +122,13 @@ public class CellSetViewer {
 
     public void showMessage(String message) {
         messageLabel.setText(message);
-        if (messageLabel.getParent() == null) {
-            CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, null);
-            rowHeader.addAxisListener(axisEventHandler);
-            scrollPane.setRowHeaderView(rowHeader);
-            CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, null);
-            columnHeader.addAxisListener(axisEventHandler);
-            scrollPane.setColumnHeaderView(columnHeader);
-        	scrollPane.setViewportView(messageLabel);
-        }
+        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, null);
+        rowHeader.addAxisListener(axisEventHandler);
+        scrollPane.setRowHeaderView(rowHeader);
+        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, null);
+        columnHeader.addAxisListener(axisEventHandler);
+        scrollPane.setColumnHeaderView(columnHeader);
+    	scrollPane.setViewportView(messageLabel);
     }
     
 	public void showMessage(String string, List<Hierarchy> rowHierarchies, List<Hierarchy> columnHierarchies) {
