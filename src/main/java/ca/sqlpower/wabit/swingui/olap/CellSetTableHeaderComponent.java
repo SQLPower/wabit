@@ -420,8 +420,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 						}
             		});
             		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
-            	}
-                if (selectedMember != null) {
+            	} else if (selectedMember != null) {
                     fireMemberClicked(selectedMember);
                 }
             }
