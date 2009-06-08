@@ -21,12 +21,10 @@ package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JComponent;
@@ -121,24 +119,19 @@ public class CellSetViewer {
     }
 
     public void showMessage(String message) {
-        messageLabel.setText(message);
-        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, null);
-        rowHeader.addAxisListener(axisEventHandler);
-        scrollPane.setRowHeaderView(rowHeader);
-        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, null);
-        columnHeader.addAxisListener(axisEventHandler);
-        scrollPane.setColumnHeaderView(columnHeader);
-    	scrollPane.setViewportView(messageLabel);
+    	showMessage(message, null, null);
     }
     
-	public void showMessage(String string, List<Hierarchy> rowHierarchies, List<Hierarchy> columnHierarchies) {
-        messageLabel.setText(string);
+	public void showMessage(String message, List<Hierarchy> rowHierarchies, List<Hierarchy> columnHierarchies) {
+        messageLabel.setText(message);
         CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, rowHierarchies);
         rowHeader.addAxisListener(axisEventHandler);
         scrollPane.setRowHeaderView(rowHeader);
+        logger.debug("rowHeader preferred size = " + rowHeader.getPreferredSize().height + ", " + rowHeader.getPreferredSize().width);
         CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, columnHierarchies);
         columnHeader.addAxisListener(axisEventHandler);
         scrollPane.setColumnHeaderView(columnHeader);
+        logger.debug("columnHeader preferred size = " + columnHeader.getPreferredSize().height + ", " + columnHeader.getPreferredSize().width);
     	scrollPane.setViewportView(messageLabel);
 	}
     
