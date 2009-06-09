@@ -266,7 +266,7 @@ public class Olap4jGuiQueryPanel {
     
     private void removeHierarchy(Hierarchy hierarchy, Axis axis) {
     	expandedMembers.remove(hierarchy);
-    	hierarchiesBeingUsed.remove(hierarchy);
+    	hierarchiesBeingUsed.remove(hierarchy.getDimension());
     	if (axis == Axis.ROWS) {
     		logger.debug("Removing Hierarchy " + hierarchy.getName() + " from Rows");
     		rowHierarchies.remove(hierarchy);
@@ -403,6 +403,9 @@ public class Olap4jGuiQueryPanel {
     }
 
     private void addToAxis(int ordinal, Member m, Axis a) throws OlapException {
+    	if (ordinal < 0) {
+    		throw new IllegalArgumentException("Ordinal " + ordinal + " is less than 0!");
+    	}
     	List<Hierarchy> axisHierarchies;
     	if (a == Axis.ROWS) {
     		axisHierarchies = rowHierarchies;
@@ -417,7 +420,9 @@ public class Olap4jGuiQueryPanel {
         Dimension d = h.getDimension();
         if (hierarchiesBeingUsed.containsKey(d)) {
         	Hierarchy hierarchyToRemove = hierarchiesBeingUsed.get(d);
-        	if (axisHierarchies.indexOf(hierarchyToRemove) < ordinal) {
+        	int indexInAxis = axisHierarchies.indexOf(hierarchyToRemove);
+			if (indexInAxis >= 0 && indexInAxis < ordinal) {
+				// adjust for inserting new member after something that has been removed 
         		ordinal--;
         	}
             removeDimensionFromQuery(d);
