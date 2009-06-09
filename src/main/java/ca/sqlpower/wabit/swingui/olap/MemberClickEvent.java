@@ -54,6 +54,13 @@ public class MemberClickEvent {
     private final Axis axis;
 
     /**
+     * The ordinal at which the event applies. For inserts, this is the desired
+     * insertion ordinal; for removals, it is the ordinal the member was just
+     * removed from; for changes, it is the current ordinal of the existing member.
+     */
+	private final int ordinal;
+
+    /**
      * @param source
      *            The hierarchy component that the click happened on.
      *            <p>
@@ -72,11 +79,12 @@ public class MemberClickEvent {
      *            The member that was clicked, dropped, or is otherwise the
      *            subject of this event.
      */
-    public MemberClickEvent(JComponent source, Type type, Axis axis, Member member) {
+    public MemberClickEvent(JComponent source, Type type, Axis axis, Member member, int ordinal) {
         this.source = source;
         this.type = type;
         this.axis = axis;
         this.member = member;
+		this.ordinal = ordinal;
     }
     
     /**
@@ -107,4 +115,13 @@ public class MemberClickEvent {
     public Member getMember() {
         return member;
     }
+    
+    /**
+     * The ordinal at which the event applies. For inserts, this is the desired
+     * insertion ordinal; for removals, it is the ordinal the member was just
+     * removed from; for changes, it is the current ordinal of the existing member.
+     */
+    public int getOrdinal() {
+		return ordinal;
+	}
 }

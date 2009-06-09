@@ -104,9 +104,9 @@ public class Olap4jGuiQueryPanel {
         public void memberDropped(MemberClickEvent e) {
             try {
                 if (e.getAxis() == Axis.ROWS) {
-                    addToRows(0, e.getMember());  // FIXME need correct ordinal in event
+                    addToRows(e.getOrdinal(), e.getMember());  // FIXME need correct ordinal in event
                 } else if (e.getAxis() == Axis.COLUMNS) {
-                    addToColumns(0, e.getMember());  // FIXME need correct ordinal in event
+                    addToColumns(e.getOrdinal(), e.getMember());  // FIXME need correct ordinal in event
                 }
             } catch (OlapException ex) {
                 throw new RuntimeException(ex);
@@ -415,7 +415,7 @@ public class Olap4jGuiQueryPanel {
         hierarchiesBeingUsed.put(d, h);
         if (!rowHierarchies.contains(h)) {
             logger.debug("Adding Hierarchy '" + h.getName() + "' to rows");
-            rowHierarchies.add(h);
+            rowHierarchies.add(ordinal, h);
         }
         toggleMember(m);
     }

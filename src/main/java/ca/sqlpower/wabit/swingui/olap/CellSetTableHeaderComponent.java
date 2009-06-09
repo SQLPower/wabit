@@ -31,22 +31,30 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.TransferHandler;
+import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
 import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
@@ -64,11 +72,96 @@ import ca.sqlpower.wabit.WabitUtils;
 
 public class CellSetTableHeaderComponent extends JComponent {
 
+	/**
+	 * This is the border we give to all hierarchy components we create. The
+	 * drag and drop feedback mechanism will temporarily alter the borders of
+	 * components when they're being dragged over, but it will set the borders
+	 * back to this one when the DnD operation has completed.
+	 */
+	private final Border DEFAULT_HIERARCHYCOMP_BORDER =
+		BorderFactory.createEmptyBorder(1, 1, 1, 1);
+	
     private static final Logger logger = Logger.getLogger(CellSetTableHeaderComponent.class);
     
-    private class HeaderComponentTransferHandler extends TransferHandler {
+    private final class CellSetTableHeaderDropTargetListener implements
+			DropTargetListener {
 
-        @Override
+		private JComponent borderedComponent;
+		
+		public void dragEnter(DropTargetDragEvent dtde) {
+			// We don't care
+		}
+
+		public void dragExit(DropTargetEvent dte) {
+			if (borderedComponent != null) {
+				borderedComponent.setBorder(DEFAULT_HIERARCHYCOMP_BORDER);
+				borderedComponent = null;
+			}
+		}
+
+		public void dragOver(DropTargetDragEvent dtde) {
+			if (borderedComponent != null) {
+				borderedComponent.setBorder(DEFAULT_HIERARCHYCOMP_BORDER);
+				borderedComponent = null;
+			}
+			Point point = dtde.getLocation();
+			int insertIndex = calcDropInsertIndex(point);
+			Border compoundBorder;
+			if (insertIndex < getComponentCount()) {
+				// draw line to left/top of component
+				borderedComponent = (JComponent) getComponent(insertIndex);
+				if (axis == Axis.ROWS) {
+					Border leftLineBorder = BorderFactory.createMatteBorder(0, 5, 0, 0, Color.BLACK);
+					Border clearFillerBorder = BorderFactory.createEmptyBorder(1, 0, 1, 1);
+					compoundBorder = BorderFactory.createCompoundBorder(leftLineBorder, clearFillerBorder);
+				} else if (axis == Axis.COLUMNS) {
+					Border topLineBorder = BorderFactory.createMatteBorder(5, 0, 0, 0, Color.BLACK);
+					Border clearFillerBorder = BorderFactory.createEmptyBorder(0, 1, 1, 1);
+					compoundBorder = BorderFactory.createCompoundBorder(topLineBorder, clearFillerBorder);
+				} else {
+					throw new IllegalStateException("Can only deal with COLUMNS and ROWS axes, but got a " + axis);
+				}
+			} else {
+				// draw line to right/bottom of last component
+				borderedComponent = (JComponent) getComponent(getComponentCount() - 1);
+				if (axis == Axis.ROWS) {
+					Border rightLineBorder = BorderFactory.createMatteBorder(0, 0, 0, 5, Color.BLACK);
+					Border clearFillerBorder = BorderFactory.createEmptyBorder(1, 1, 1, 0);
+					compoundBorder = BorderFactory.createCompoundBorder(rightLineBorder, clearFillerBorder);
+				} else if (axis == Axis.COLUMNS) {
+					Border bottomLineBorder = BorderFactory.createMatteBorder(0, 0, 5, 0, Color.BLACK);
+					Border clearFillerBorder = BorderFactory.createEmptyBorder(1, 1, 0, 1);
+					compoundBorder = BorderFactory.createCompoundBorder(bottomLineBorder, clearFillerBorder);
+				} else {
+					throw new IllegalStateException("Can only deal with COLUMNS and ROWS axes, but got a " + axis);
+				}
+			}
+			borderedComponent.setBorder(compoundBorder);
+			if (borderedComponent == null) {
+				borderedComponent = CellSetTableHeaderComponent.this;
+			}
+			if (canImport(CellSetTableHeaderComponent.this, dtde.getCurrentDataFlavors())) {
+				dtde.acceptDrag(dtde.getDropAction());
+			} else {
+				dtde.rejectDrag();
+			}
+		}
+
+		public void drop(DropTargetDropEvent dtde) {
+			if (canImport(CellSetTableHeaderComponent.this, dtde.getCurrentDataFlavors())) {
+				dtde.acceptDrop(dtde.getDropAction());
+				boolean success = importData(
+						CellSetTableHeaderComponent.this,
+						dtde.getTransferable(),
+						dtde.getLocation());
+				dtde.dropComplete(success);
+			}
+		}
+
+		public void dropActionChanged(DropTargetDragEvent dtde) {
+			// we don't care?
+		}
+		
         public boolean canImport(JComponent comp, DataFlavor[] transferFlavors) {
             logger.debug("canImport()");
             for (DataFlavor dataFlavor : transferFlavors) {
@@ -79,8 +172,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             return false;
         }
 
-        @Override
-        public boolean importData(JComponent comp, Transferable t) {
+        public boolean importData(JComponent comp, Transferable t, Point p) {
             logger.debug("importData("+t+")");
             if (t.isDataFlavorSupported(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR)) {
                 try {
@@ -100,8 +192,7 @@ public class CellSetTableHeaderComponent extends JComponent {
                         return false;
                     }
 
-                    // TODO figure out which index the drop happened at and include it in the event
-                    fireMemberDropped(m);
+                    fireMemberDropped(m, calcDropInsertIndex(p));
                     logger.debug("  -- import complete");
                     return true;
 
@@ -114,7 +205,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             logger.debug("  -- import failed");
             return false;
         }
-    }
+	}
 
     private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
     
@@ -150,21 +241,11 @@ public class CellSetTableHeaderComponent extends JComponent {
     private final Font bodyFont;
 
     /**
-     * Creates a 'empty' CellSetTableRowHeaderComponent without a given CellSet.
-     * This is mainly for providing an empty table row header for the user to
-     * drop Members, Hierarchies, or Dimensions into.
-     * 
-     * @param axis The {@link Axis} this component is the header for
-     */
-    public CellSetTableHeaderComponent(Axis axis) {
-    	this.axis = axis;
-    	graphic = null;
-    	headerFont = null;
-    	bodyFont = null;
-    	setLabelAsEmpty();
-        setTransferHandler(new HeaderComponentTransferHandler());
-    }
-
+	 * The {@link DropTargetListener} used to handle drag-n-drop functionality
+	 * in the OLAP editor
+	 */
+    private final CellSetTableHeaderDropTargetListener dropTargetListener = new CellSetTableHeaderDropTargetListener();
+    
 	/**
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
 	 * and Axis.
@@ -202,7 +283,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         this.axis = axis;
         this.headerFont = headerFont;
         this.bodyFont = bodyFont;
-        setTransferHandler(new HeaderComponentTransferHandler());
+        setDropTarget(new DropTarget(this, dropTargetListener));
         graphic = g;
         
     	CellSetAxis cellSetAxis = cellSet.getAxes().get(axis.axisOrdinal());
@@ -293,7 +374,34 @@ public class CellSetTableHeaderComponent extends JComponent {
 	    	}
     	}
     	
-        setTransferHandler(new HeaderComponentTransferHandler());
+        setDropTarget(new DropTarget(this, dropTargetListener));
+	}
+
+	private int calcDropInsertIndex(Point p) {
+		if (!(getComponentAt(p) instanceof HierarchyComponent)) return 0;
+		HierarchyComponent hc = (HierarchyComponent) getComponentAt(p);
+		int indexOfHC = Arrays.asList(getComponents()).indexOf(hc);
+		if (indexOfHC == -1) {
+			return 0;
+		} else {
+			Point hcRelativePos = SwingUtilities.convertPoint(
+					CellSetTableHeaderComponent.this, new Point(p), hc);
+			boolean beforeMiddle;
+			if (axis == Axis.ROWS) {
+				beforeMiddle = hcRelativePos.x < (hc.getWidth() / 2);
+			} else if (axis == Axis.COLUMNS) {
+				beforeMiddle = hcRelativePos.y < (hc.getHeight() / 2);
+			} else {
+				throw new IllegalStateException(
+						"I only know how to deal with ROWS and COLUMNS," +
+						" but this component is for " + axis);
+			}
+			if (beforeMiddle) {
+				return indexOfHC;
+			} else {
+				return indexOfHC + 1;
+			}
+		}
 	}
 
 	/**
@@ -302,7 +410,7 @@ public class CellSetTableHeaderComponent extends JComponent {
      */
     private void fireMemberClicked(Member member) {
         final MemberClickEvent e = new MemberClickEvent(
-                this, MemberClickEvent.Type.MEMBER_CLICKED, axis, member);
+                this, MemberClickEvent.Type.MEMBER_CLICKED, axis, member, 0);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(i).memberClicked(e);
         }
@@ -311,10 +419,11 @@ public class CellSetTableHeaderComponent extends JComponent {
     /**
      * Fires a member dropped event to all axis listeners currently registered
      * on this component.
+     * @param p 
      */
-    private void fireMemberDropped(Member member) {
+    private void fireMemberDropped(Member member, int insertIndex) {
         final MemberClickEvent e = new MemberClickEvent(
-                this, MemberClickEvent.Type.MEMBER_DROPPED, axis, member);
+                this, MemberClickEvent.Type.MEMBER_DROPPED, axis, member, insertIndex);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(i).memberDropped(e);
         }
@@ -323,7 +432,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     
     private void fireMemberRemoved(Member member) {
         final MemberClickEvent e = new MemberClickEvent(
-                this, MemberClickEvent.Type.MEMBER_REMOVED, axis, member);
+                this, MemberClickEvent.Type.MEMBER_REMOVED, axis, member, 0);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(i).memberRemoved(e);
         }
