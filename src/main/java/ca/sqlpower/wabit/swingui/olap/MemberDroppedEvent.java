@@ -39,6 +39,9 @@ public class MemberDroppedEvent extends MemberEvent {
 	public MemberDroppedEvent(JComponent source, Type type, Axis axis,
 			int ordinal, Member member) {
 		super(source, type, axis, member);
+		if (ordinal < 0) {
+			throw new IllegalArgumentException("Ordinal value must NOT be less than 0!");
+		}
 		this.ordinal = ordinal;
 	}
     
