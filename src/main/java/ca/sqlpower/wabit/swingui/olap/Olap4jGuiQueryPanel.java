@@ -93,7 +93,7 @@ public class Olap4jGuiQueryPanel {
 
     private AxisListener axisEventHandler = new AxisListener() {
 
-        public void memberClicked(MemberClickEvent e) {
+        public void memberClicked(MemberEvent e) {
             try {
                 toggleMember(e.getMember());
             } catch (OlapException ex) {
@@ -101,7 +101,7 @@ public class Olap4jGuiQueryPanel {
             }
         }
 
-        public void memberDropped(MemberClickEvent e) {
+        public void memberDropped(MemberDroppedEvent e) {
             try {
                 if (e.getAxis() == Axis.ROWS) {
                     addToRows(e.getOrdinal(), e.getMember());  // FIXME need correct ordinal in event
@@ -113,7 +113,7 @@ public class Olap4jGuiQueryPanel {
             }
         }
 
-		public void memberRemoved(MemberClickEvent e) {
+		public void memberRemoved(MemberEvent e) {
 			removeHierarchy(e.getMember().getHierarchy(), e.getAxis());
 		}
     };

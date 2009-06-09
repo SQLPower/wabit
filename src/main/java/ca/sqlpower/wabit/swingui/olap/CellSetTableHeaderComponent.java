@@ -192,7 +192,7 @@ public class CellSetTableHeaderComponent extends JComponent {
                         return false;
                     }
 
-                    fireMemberDropped(m, calcDropInsertIndex(p));
+                    fireMemberDropped(calcDropInsertIndex(p), m);
                     logger.debug("  -- import complete");
                     return true;
 
@@ -409,8 +409,8 @@ public class CellSetTableHeaderComponent extends JComponent {
      * on this component.
      */
     private void fireMemberClicked(Member member) {
-        final MemberClickEvent e = new MemberClickEvent(
-                this, MemberClickEvent.Type.MEMBER_CLICKED, axis, member, 0);
+        final MemberEvent e = new MemberEvent(
+                this, MemberEvent.Type.MEMBER_CLICKED, axis, member);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(i).memberClicked(e);
         }
@@ -421,9 +421,9 @@ public class CellSetTableHeaderComponent extends JComponent {
      * on this component.
      * @param p 
      */
-    private void fireMemberDropped(Member member, int insertIndex) {
-        final MemberClickEvent e = new MemberClickEvent(
-                this, MemberClickEvent.Type.MEMBER_DROPPED, axis, member, insertIndex);
+    private void fireMemberDropped(int insertIndex, Member member) {
+        final MemberDroppedEvent e = new MemberDroppedEvent(
+                this, MemberEvent.Type.MEMBER_DROPPED, axis, insertIndex, member);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(i).memberDropped(e);
         }
@@ -431,8 +431,8 @@ public class CellSetTableHeaderComponent extends JComponent {
     
     
     private void fireMemberRemoved(Member member) {
-        final MemberClickEvent e = new MemberClickEvent(
-                this, MemberClickEvent.Type.MEMBER_REMOVED, axis, member, 0);
+        final MemberEvent e = new MemberEvent(
+                this, MemberEvent.Type.MEMBER_REMOVED, axis, member);
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(i).memberRemoved(e);
         }

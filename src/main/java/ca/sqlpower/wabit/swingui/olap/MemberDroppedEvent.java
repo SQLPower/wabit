@@ -19,11 +19,34 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
-public interface AxisListener {
+import javax.swing.JComponent;
 
-    void memberClicked(MemberEvent e);
+import org.olap4j.Axis;
+import org.olap4j.metadata.Member;
+
+/**
+ * A subclass of {@link MemberEvent} for dealing with dropping Members into a
+ * list of Members at a specific ordinal. 
+ */
+public class MemberDroppedEvent extends MemberEvent {
+	
+	/**
+	 * The ordinal at which the event applies. For inserts, this is the desired
+	 * insertion ordinal.
+	 */
+	private final int ordinal;
+	
+	public MemberDroppedEvent(JComponent source, Type type, Axis axis,
+			int ordinal, Member member) {
+		super(source, type, axis, member);
+		this.ordinal = ordinal;
+	}
     
-    void memberDropped(MemberDroppedEvent e);
-    
-    void memberRemoved(MemberEvent e);
+    /**
+     * The ordinal at which the event applies. For inserts, this is the desired
+     * insertion ordinal.
+     */
+    public int getOrdinal() {
+		return ordinal;
+	}
 }

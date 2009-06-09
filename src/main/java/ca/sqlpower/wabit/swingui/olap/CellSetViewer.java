@@ -57,16 +57,16 @@ public class CellSetViewer {
      * Rebroadcasts axis events to listeners of this viewer.
      */
     private final AxisListener axisEventHandler = new AxisListener() {
-        public void memberClicked(MemberClickEvent e) {
+        public void memberClicked(MemberEvent e) {
             fireMemberClickedEvent(e);
         }
 
-        public void memberDropped(MemberClickEvent e) {
+        public void memberDropped(MemberDroppedEvent e) {
         	logger.debug("AxisListener memberDropped");
             fireMemberDroppedEvent(e);
         }
 
-		public void memberRemoved(MemberClickEvent e) {
+		public void memberRemoved(MemberEvent e) {
 			fireMemberRemovedEvent(e);
 		}
     };
@@ -143,7 +143,7 @@ public class CellSetViewer {
      * Fires a member clicked event to all axis listeners currently registered
      * on this viewer.
      */
-    private void fireMemberClickedEvent(MemberClickEvent e) {
+    private void fireMemberClickedEvent(MemberEvent e) {
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(0).memberClicked(e);
         }
@@ -153,7 +153,7 @@ public class CellSetViewer {
      * Fires a member clicked event to all axis listeners currently registered
      * on this viewer.
      */
-    private void fireMemberDroppedEvent(MemberClickEvent e) {
+    private void fireMemberDroppedEvent(MemberDroppedEvent e) {
         for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(0).memberDropped(e);
         }
@@ -163,7 +163,7 @@ public class CellSetViewer {
      * Fires a member removed event to all axis listeners currently registered
      * on this viewer.
      */
-    private void fireMemberRemovedEvent(MemberClickEvent e) {
+    private void fireMemberRemovedEvent(MemberEvent e) {
     	for (int i = axisListeners.size() - 1; i >= 0; i--) {
             axisListeners.get(0).memberRemoved(e);
         }
