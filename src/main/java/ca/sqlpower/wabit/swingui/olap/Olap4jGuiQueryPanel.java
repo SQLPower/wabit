@@ -103,11 +103,7 @@ public class Olap4jGuiQueryPanel {
 
         public void memberDropped(MemberDroppedEvent e) {
             try {
-                if (e.getAxis() == Axis.ROWS) {
-                    addToRows(e.getOrdinal(), e.getMember());  // FIXME need correct ordinal in event
-                } else if (e.getAxis() == Axis.COLUMNS) {
-                    addToColumns(e.getOrdinal(), e.getMember());  // FIXME need correct ordinal in event
-                }
+            	addToAxis(e.getOrdinal(), e.getMember(), e.getAxis());
             } catch (OlapException ex) {
                 throw new RuntimeException(ex);
             }
@@ -406,40 +402,34 @@ public class Olap4jGuiQueryPanel {
         executeQuery();
     }
 
-    private void addToRows(int ordinal, Member m) throws OlapException {
+    private void addToAxis(int ordinal, Member m, Axis a) throws OlapException {
+    	List<Hierarchy> axisHierarchies;
+    	if (a == Axis.ROWS) {
+    		axisHierarchies = rowHierarchies;
+    	} else if (a == Axis.COLUMNS) {
+    		axisHierarchies = columnHierarchies;
+    	} else {
+    		throw new IllegalArgumentException(
+    				"I only know how to add to the ROWS or COLUMNS axis," +
+    				" but you asked for " + a);
+    	}
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
         if (hierarchiesBeingUsed.containsKey(d)) {
-        	if (rowHierarchies.indexOf(h) < ordinal) {
+        	Hierarchy hierarchyToRemove = hierarchiesBeingUsed.get(d);
+        	if (axisHierarchies.indexOf(hierarchyToRemove) < ordinal) {
         		ordinal--;
         	}
             removeDimensionFromQuery(d);
         }
         hierarchiesBeingUsed.put(d, h);
-        if (!rowHierarchies.contains(h)) {
-            logger.debug("Adding Hierarchy '" + h.getName() + "' to rows with ordinal " + ordinal);
-            rowHierarchies.add(ordinal, h);
+        if (!axisHierarchies.contains(h)) {
+            logger.debug("Adding Hierarchy '" + h.getName() + "' to " + a + " with ordinal " + ordinal);
+            axisHierarchies.add(ordinal, h);
         }
         toggleMember(m);
     }
 
-    private void addToColumns(int ordinal, Member m) throws OlapException {
-        Hierarchy h = m.getHierarchy();
-        Dimension d = h.getDimension();
-        if (hierarchiesBeingUsed.containsKey(d)) {
-        	if (columnHierarchies.indexOf(h) < ordinal) {
-        		ordinal--;
-        	}
-            removeDimensionFromQuery(d);
-        }
-        hierarchiesBeingUsed.put(d, h);
-        if (!columnHierarchies.contains(h)) {
-            logger.debug("Adding Hierarchy '" + h.getName() + "' to columns with ordinal " + ordinal);
-            columnHierarchies.add(ordinal, h);
-        }
-        toggleMember(m);
-    }
-    
     /**
      * Removes the given dimension from all axes of this query.
      * 
