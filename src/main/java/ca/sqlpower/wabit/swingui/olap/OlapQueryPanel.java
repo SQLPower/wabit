@@ -24,7 +24,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
-import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
@@ -90,15 +89,8 @@ public class OlapQueryPanel implements WabitPanel {
         queryPanels.add("MDX", textQueryPanel);
         
         queryAndResultsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(olap4jGuiQueryPanel.getPanel(), BorderLayout.CENTER);
-        rightPanel.add(new JButton(new AbstractAction("Execute Query") {
-            public void actionPerformed(ActionEvent e) {
-                olap4jGuiQueryPanel.executeQuery();
-            }
-        }), BorderLayout.NORTH);
 		queryAndResultsPanel.setLeftComponent(queryPanels);
-        queryAndResultsPanel.setRightComponent(rightPanel);
+        queryAndResultsPanel.setRightComponent(olap4jGuiQueryPanel.getPanel());
         queryAndResultsPanel.setDividerLocation(viewComponent.getPreferredSize().width);
     }
     
