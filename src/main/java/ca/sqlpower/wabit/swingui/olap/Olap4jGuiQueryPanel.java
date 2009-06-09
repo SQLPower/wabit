@@ -410,11 +410,14 @@ public class Olap4jGuiQueryPanel {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
         if (hierarchiesBeingUsed.containsKey(d)) {
+        	if (rowHierarchies.indexOf(h) < ordinal) {
+        		ordinal--;
+        	}
             removeDimensionFromQuery(d);
         }
         hierarchiesBeingUsed.put(d, h);
         if (!rowHierarchies.contains(h)) {
-            logger.debug("Adding Hierarchy '" + h.getName() + "' to rows");
+            logger.debug("Adding Hierarchy '" + h.getName() + "' to rows with ordinal " + ordinal);
             rowHierarchies.add(ordinal, h);
         }
         toggleMember(m);
@@ -424,11 +427,14 @@ public class Olap4jGuiQueryPanel {
         Hierarchy h = m.getHierarchy();
         Dimension d = h.getDimension();
         if (hierarchiesBeingUsed.containsKey(d)) {
+        	if (columnHierarchies.indexOf(h) < ordinal) {
+        		ordinal--;
+        	}
             removeDimensionFromQuery(d);
         }
         hierarchiesBeingUsed.put(d, h);
         if (!columnHierarchies.contains(h)) {
-            logger.debug("Adding Hierarchy '" + h.getName() + "' to columns");
+            logger.debug("Adding Hierarchy '" + h.getName() + "' to columns with ordinal " + ordinal);
             columnHierarchies.add(ordinal, h);
         }
         toggleMember(m);
