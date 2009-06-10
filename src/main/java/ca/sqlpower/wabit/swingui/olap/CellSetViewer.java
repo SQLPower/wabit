@@ -124,15 +124,19 @@ public class CellSetViewer {
     
 	public void showMessage(String message, List<Hierarchy> rowHierarchies, List<Hierarchy> columnHierarchies) {
         messageLabel.setText(message);
+        
+        // This line needs to be called before setting the column header. If it
+		// is called afterwards, it removes the column header that was just
+		// added, resulting in a missing column header.
+        scrollPane.setViewportView(messageLabel);
+        
         CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, rowHierarchies);
         rowHeader.addAxisListener(axisEventHandler);
         scrollPane.setRowHeaderView(rowHeader);
-        logger.debug("rowHeader preferred size = " + rowHeader.getPreferredSize().height + ", " + rowHeader.getPreferredSize().width);
+        
         CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, columnHierarchies);
         columnHeader.addAxisListener(axisEventHandler);
         scrollPane.setColumnHeaderView(columnHeader);
-        logger.debug("columnHeader preferred size = " + columnHeader.getPreferredSize().height + ", " + columnHeader.getPreferredSize().width);
-    	scrollPane.setViewportView(messageLabel);
 	}
     
     public JComponent getViewComponent() {
