@@ -425,6 +425,7 @@ public class Olap4jGuiQueryPanel {
 				// adjust for inserting new member after something that has been removed 
         		ordinal--;
         	}
+			expandedMembers.remove(h);
             removeDimensionFromQuery(d);
         }
         hierarchiesBeingUsed.put(d, h);
