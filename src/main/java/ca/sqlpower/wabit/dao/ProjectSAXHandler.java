@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
@@ -902,10 +903,12 @@ public class ProjectSAXHandler extends DefaultHandler {
             String operation = attributes.getValue("operator");
             String dimensionName = attributes.getValue("dimension-name");
             QueryDimension queryDimension = null;
-            for (QueryAxis axis : cellSetRenderer.getModifiedMDXQuery().getAxes().values()) {
-                for (QueryDimension dimension : axis.getDimensions()) {
+            for (Entry<org.olap4j.Axis, QueryAxis> axis : cellSetRenderer.getModifiedMDXQuery().getAxes().entrySet()) {
+                if (axis.getKey() == null) continue;
+                for (QueryDimension dimension : axis.getValue().getDimensions()) {
                     if (dimension.getDimension().getName().equals(dimensionName)) {
                         queryDimension = dimension;
+                        break;
                     }
                 }
             }
