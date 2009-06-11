@@ -90,14 +90,14 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * stuff into.
 	 */
 	private static final Border ROUNDED_DASHED_BORDER = new AbstractBorder() {
-		private final BasicStroke DASHED_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+		private final BasicStroke DASHED_STROKE = new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
 	            BasicStroke.JOIN_BEVEL, 1.0f, new float[] { 7.0f, 7.0f }, 0.0f);
 		
 		@Override
 		public void paintBorder(Component c, Graphics g, int x, int y,
 				int width, int height) {
 			Color oldColour = g.getColor();
-			g.setColor(Color.BLACK);
+			g.setColor(Color.GRAY);
 			if (g instanceof Graphics2D) {
 				((Graphics2D) g).setStroke(DASHED_STROKE);
 			}
@@ -134,6 +134,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 				borderedComponent.setBorder(defaultBorder);
 				borderedComponent = null;
 			}
+			
 			Point point = dtde.getLocation();
 			int insertIndex = calcDropInsertIndex(point);
 			Border compoundBorder;
@@ -703,9 +704,20 @@ public class CellSetTableHeaderComponent extends JComponent {
 	            	preferredSizes.add(new Dimension(0, 0));
 	            }
             	
+	            int shallowestDepth = 0;
+	            
+	            if (axis.getPositionCount() > 0) {
+					// Get the depth of the shallowest member (lowest depth) so
+					// that it can be positioned at the left/top most position
+					// (depending on the axis) (ex. if you drag in a member
+					// beneath the default member)
+	            	Member shallowestMember = axis.getPositions().get(0).getMembers().get(hierarchyOrdinal);
+					shallowestDepth = shallowestMember.getDepth();
+	            }
+	            
 	            for (Position position : axis) {
 	                Member member = position.getMembers().get(hierarchyOrdinal);
-	                int memberDepth = member.getDepth();
+	                int memberDepth = member.getDepth() - shallowestDepth;
 	                LayoutItem li = new LayoutItem();
 	                Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
 	                if (axis.getAxisOrdinal() == Axis.ROWS) {
