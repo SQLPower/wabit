@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -28,6 +29,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -54,6 +56,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.table.TableColumnModel;
 
@@ -78,8 +81,35 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * components when they're being dragged over, but it will set the borders
 	 * back to this one when the DnD operation has completed.
 	 */
-	private final Border DEFAULT_HIERARCHYCOMP_BORDER =
+	private static final Border DEFAULT_HIERARCHYCOMP_BORDER =
 		BorderFactory.createEmptyBorder(1, 1, 1, 1);
+	
+	/**
+	 * A rounded, dashed border to use for empty axes. We've seen precedent for
+	 * using a rounded, dashed box to indicate areas where you can drag and drop
+	 * stuff into.
+	 */
+	private static final Border ROUNDED_DASHED_BORDER = new AbstractBorder() {
+		private final BasicStroke DASHED_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+	            BasicStroke.JOIN_BEVEL, 1.0f, new float[] { 7.0f, 7.0f }, 0.0f);
+		
+		@Override
+		public void paintBorder(Component c, Graphics g, int x, int y,
+				int width, int height) {
+			Color oldColour = g.getColor();
+			g.setColor(Color.BLACK);
+			if (g instanceof Graphics2D) {
+				((Graphics2D) g).setStroke(DASHED_STROKE);
+			}
+			g.drawRoundRect(x, y, width-1, height-1, 20, 20);
+			g.setColor(oldColour);
+		}
+		
+		@Override
+		public Insets getBorderInsets(Component c) {
+			return new Insets(0, 0, 0, 0);
+		}
+	};
 	
     private static final Logger logger = Logger.getLogger(CellSetTableHeaderComponent.class);
     
@@ -94,14 +124,14 @@ public class CellSetTableHeaderComponent extends JComponent {
 
 		public void dragExit(DropTargetEvent dte) {
 			if (borderedComponent != null) {
-				borderedComponent.setBorder(DEFAULT_HIERARCHYCOMP_BORDER);
+				borderedComponent.setBorder(defaultBorder);
 				borderedComponent = null;
 			}
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
 			if (borderedComponent != null) {
-				borderedComponent.setBorder(DEFAULT_HIERARCHYCOMP_BORDER);
+				borderedComponent.setBorder(defaultBorder);
 				borderedComponent = null;
 			}
 			Point point = dtde.getLocation();
@@ -136,10 +166,10 @@ public class CellSetTableHeaderComponent extends JComponent {
 					throw new IllegalStateException("Can only deal with COLUMNS and ROWS axes, but got a " + axis);
 				}
 			}
-			borderedComponent.setBorder(compoundBorder);
 			if (borderedComponent == null) {
 				borderedComponent = CellSetTableHeaderComponent.this;
 			}
+			borderedComponent.setBorder(compoundBorder);
 			if (canImport(CellSetTableHeaderComponent.this, dtde.getCurrentDataFlavors())) {
 				dtde.acceptDrag(dtde.getDropAction());
 			} else {
@@ -245,6 +275,11 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * in the OLAP editor
 	 */
     private final CellSetTableHeaderDropTargetListener dropTargetListener = new CellSetTableHeaderDropTargetListener();
+
+    /**
+     * The default {@link Border} for this {@link CellSetTableHeaderComponent}.
+     */
+	private final Border defaultBorder;
     
 	/**
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
@@ -308,9 +343,14 @@ public class CellSetTableHeaderComponent extends JComponent {
 				hierarchies.add(hierarchyComponent);
 				add(hierarchyComponent);
 			}
+			defaultBorder = DEFAULT_HIERARCHYCOMP_BORDER;
 		} else {
+			// Currently defaultBorder needs to be set before calling
+			// setLabelAsEmpty() because it uses defaultborder
+			defaultBorder = ROUNDED_DASHED_BORDER;
 		    setLabelAsEmpty();
 		}
+		setBorder(defaultBorder);
     }
     
     /**
@@ -322,6 +362,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
         label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
         label.setOpaque(true);
+        label.setBorder(defaultBorder);
         add(label, BorderLayout.CENTER);
     }
 
@@ -363,6 +404,9 @@ public class CellSetTableHeaderComponent extends JComponent {
     	}
 
     	if (hierarchiesSize == 0) {
+    		// Currently defaultBorder needs to be set before calling
+			// setLabelAsEmpty() because it uses defaultborder
+    		defaultBorder = ROUNDED_DASHED_BORDER;
     	    setLabelAsEmpty();
     	} else {
 	    	for (int i = 0; i < hierarchiesSize; i++) {
@@ -372,9 +416,10 @@ public class CellSetTableHeaderComponent extends JComponent {
 						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
 	    		add(hierarchyComponent);
 	    	}
+	    	defaultBorder = DEFAULT_HIERARCHYCOMP_BORDER;
     	}
-    	
         setDropTarget(new DropTarget(this, dropTargetListener));
+        setBorder(defaultBorder);
 	}
 
 	private int calcDropInsertIndex(Point p) {
@@ -810,5 +855,4 @@ public class CellSetTableHeaderComponent extends JComponent {
     public List<HierarchyComponent> getHierarchies() {
         return Collections.unmodifiableList(hierarchies);
     }
-    
 }
