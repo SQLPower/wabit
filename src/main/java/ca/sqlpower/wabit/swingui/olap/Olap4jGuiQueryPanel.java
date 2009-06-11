@@ -57,6 +57,7 @@ import org.olap4j.OlapException;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.NamedList;
 import org.olap4j.query.Query;
@@ -425,7 +426,9 @@ public class Olap4jGuiQueryPanel {
 				// adjust for inserting new member after something that has been removed 
         		ordinal--;
         	}
-			expandedMembers.remove(h);
+			if (!(m instanceof Measure)) {
+				expandedMembers.remove(h);
+			}
             removeDimensionFromQuery(d);
         }
         hierarchiesBeingUsed.put(d, h);
