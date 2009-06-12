@@ -559,6 +559,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             }
 
             public void mousePressed(MouseEvent e) {
+            	final Member clickedOnMember = selectedMember;
             	if (e.getButton() == MouseEvent.BUTTON3) {
             		JPopupMenu popUpMenu = new JPopupMenu();
             		popUpMenu.add(new AbstractAction("Remove Hierarchy '" + hierarchy.getName() + "'") {
@@ -570,10 +571,18 @@ public class CellSetTableHeaderComponent extends JComponent {
 								throw new RuntimeException("OlapException while trying to retrieve " +
 										"default member of Hierarchy '" + hierarchy.getName() + "'", ex);
 							}
-							
 							fireMemberRemoved(member);
 						}
             		});
+            		if (clickedOnMember != null) {
+	            		popUpMenu.add(new AbstractAction("Drill Replace on Member '" + clickedOnMember.getName() + "'") {
+							public void actionPerformed(ActionEvent e) {
+								if (clickedOnMember != null) {
+									fireMemberDropped(hierarchyOrdinal, clickedOnMember);
+								}
+							}
+	            		});
+            		}
             		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
             	} else if (selectedMember != null) {
                     fireMemberClicked(selectedMember);
@@ -832,6 +841,7 @@ public class CellSetTableHeaderComponent extends JComponent {
          * The name "selected" isn't quite right for this property.
          */
         public void setSelectedMember(Member selectedMember) {
+        	logger.debug("selectedMember set to " + selectedMember);
             this.selectedMember = selectedMember;
             repaint();
         }
