@@ -20,9 +20,14 @@
 package ca.sqlpower.wabit.olap;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 import org.olap4j.Axis;
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
@@ -91,5 +96,68 @@ public class OlapUtils {
             modifiedMDXQuery.getAxes().put(axisEntry.getKey(), copiedAxis);
         }
         return modifiedMDXQuery;
+    }
+
+    /**
+     * This method will modify the {@link Query} object passed in to expand or
+     * collapse the member passed in. To decide if the member should be expanded
+     * or collapsed the displayed members will be checked to see if the member's
+     * children are shown.
+     */
+    public static void expandOrCollapseMDX(Member member, Query queryToModify) {
+        boolean isLeaf = true;
+        QueryDimension containingDimension = null;
+        member.getHierarchy();
+        final QueryAxis colQueryAxis = queryToModify.getAxes().get(Axis.COLUMNS);
+        if (!colQueryAxis.getDimensions().contains(member.getDimension())) {
+            for (QueryDimension dim : colQueryAxis.getDimensions()) {
+                for (Selection sel : dim.getSelections()) {
+                    if (isDescendant(member, sel.getMember())) {
+                        isLeaf = false;
+                    }
+                    if (sel.getMember().equals(member)) {
+                        containingDimension = dim;
+                    }
+                }
+            }
+        }
+        final QueryAxis rowQueryAxis = queryToModify.getAxes().get(Axis.ROWS);
+        if (!rowQueryAxis.getDimensions().contains(member.getDimension())) {
+            for (QueryDimension dim : rowQueryAxis.getDimensions()) {
+                for (Selection sel : dim.getSelections()) {
+                    if (isDescendant(member, sel.getMember())) {
+                        isLeaf = false;
+                    }
+                    if (sel.getMember().equals(member)) {
+                        containingDimension = dim;
+                    }
+                }
+            }
+        }
+        try {
+            if (isLeaf) {
+                for (Member child : member.getChildMembers()) {
+                    Selection newSelection = containingDimension.createSelection(child);
+                    containingDimension.getSelections().add(newSelection);
+                }
+                Collections.sort(containingDimension.getSelections(), new Comparator<Selection>() {
+                    private final MemberHierarchyComparator memberComparator = new MemberHierarchyComparator();
+                    
+                    public int compare(Selection o1, Selection o2) {
+                        return memberComparator.compare(o1.getMember(), o2.getMember());
+                    }
+                });
+            } else {
+                List<Selection> selectionsToRemove = new ArrayList<Selection>();
+                for (Selection sel : containingDimension.getSelections()) {
+                    if (isDescendant(member, sel.getMember())) {
+                        selectionsToRemove.add(sel);
+                    }
+                }
+                containingDimension.getSelections().removeAll(selectionsToRemove);
+            }
+        } catch (OlapException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

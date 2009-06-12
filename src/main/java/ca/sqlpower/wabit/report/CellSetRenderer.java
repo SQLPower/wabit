@@ -32,8 +32,6 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -67,7 +65,6 @@ import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapUtils;
 import ca.sqlpower.wabit.swingui.Icons;
@@ -163,6 +160,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     public CellSetRenderer(OlapQuery olapQuery, String uuid) {
         super(uuid);
+        logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
         olapQuery.addPropertyChangeListener(queryListener);
         try {
@@ -532,60 +530,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         } else if (type == MouseEvent.MOUSE_RELEASED) {
             if (selectedMember == null) return;
             
-            boolean isLeaf = true;
-            QueryDimension containingDimension = null;
-            selectedMember.getHierarchy();
-            final QueryAxis colQueryAxis = modifiedMDXQuery.getAxes().get(Axis.COLUMNS);
-            if (!colQueryAxis.getDimensions().contains(selectedMember.getDimension())) {
-                for (QueryDimension dim : colQueryAxis.getDimensions()) {
-                    for (Selection sel : dim.getSelections()) {
-                        if (OlapUtils.isDescendant(selectedMember, sel.getMember())) {
-                            isLeaf = false;
-                        }
-                        if (sel.getMember().equals(selectedMember)) {
-                            containingDimension = dim;
-                        }
-                    }
-                }
-            }
-            final QueryAxis rowQueryAxis = modifiedMDXQuery.getAxes().get(Axis.ROWS);
-            if (!rowQueryAxis.getDimensions().contains(selectedMember.getDimension())) {
-                for (QueryDimension dim : rowQueryAxis.getDimensions()) {
-                    for (Selection sel : dim.getSelections()) {
-                        if (OlapUtils.isDescendant(selectedMember, sel.getMember())) {
-                            isLeaf = false;
-                        }
-                        if (sel.getMember().equals(selectedMember)) {
-                            containingDimension = dim;
-                        }
-                    }
-                }
-            }
-            try {
-                if (isLeaf) {
-                    for (Member child : selectedMember.getChildMembers()) {
-                        Selection newSelection = containingDimension.createSelection(child);
-                        containingDimension.getSelections().add(newSelection);
-                    }
-                    Collections.sort(containingDimension.getSelections(), new Comparator<Selection>() {
-                        private final MemberHierarchyComparator memberComparator = new MemberHierarchyComparator();
-                        
-                        public int compare(Selection o1, Selection o2) {
-                            return memberComparator.compare(o1.getMember(), o2.getMember());
-                        }
-                    });
-                } else {
-                    List<Selection> selectionsToRemove = new ArrayList<Selection>();
-                    for (Selection sel : containingDimension.getSelections()) {
-                        if (OlapUtils.isDescendant(selectedMember, sel.getMember())) {
-                            selectionsToRemove.add(sel);
-                        }
-                    }
-                    containingDimension.getSelections().removeAll(selectionsToRemove);
-                }
-            } catch (OlapException e) {
-                throw new RuntimeException(e);
-            }
+            OlapUtils.expandOrCollapseMDX(selectedMember, modifiedMDXQuery);
             
             try {
                 setCellSet(modifiedMDXQuery.execute());
@@ -594,7 +539,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
             }
         }
     }
-    
+
     public void setSelectedMember(Member selectedMember) {
         Member oldSelection = this.selectedMember; 
         this.selectedMember = selectedMember;
@@ -602,6 +547,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public void setCellSet(CellSet cellSet) {
+        logger.debug("Row axis position count: " + cellSet.getAxes().get(Axis.ROWS.axisOrdinal()).getPositionCount());
+        logger.debug("Column axis position count: " + cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal()).getPositionCount());
         CellSet oldSet = this.cellSet;
         this.cellSet = cellSet;
         firePropertyChange("cellSet", oldSet, cellSet);
