@@ -543,7 +543,21 @@ public class CellSetTableHeaderComponent extends JComponent {
 
         private class MouseHandler implements MouseListener, MouseMotionListener {
 
-            public void mouseMoved(MouseEvent e) {
+            private final class DrillOnMemberAction extends
+					AbstractAction {
+            	private Member member;
+            	
+				private DrillOnMemberAction(String label, Member member) {
+					super(label);
+					this.member = member;
+				}
+
+				public void actionPerformed(ActionEvent e) {
+					fireMemberDropped(hierarchyOrdinal, member);
+				}
+			}
+
+			public void mouseMoved(MouseEvent e) {
                 setSelectedMember(getMemberAtPoint(e.getPoint()));
             }
 
@@ -577,18 +591,22 @@ public class CellSetTableHeaderComponent extends JComponent {
             		});
             		if (clickedOnMember != null && 
             				!(clickedOnMember instanceof Measure)) {
-	            		popUpMenu.add(new AbstractAction("Drill Replace on Member '" + clickedOnMember.getName() + "'") {
-							public void actionPerformed(ActionEvent e) {
-								fireMemberDropped(hierarchyOrdinal, clickedOnMember);
-							}
-	            		});
-	            		
+	            		popUpMenu.add(new DrillOnMemberAction(
+	            				"Drill Replace on Member '" + clickedOnMember.getName() + "'",
+								clickedOnMember));
 	            		if (clickedOnMember.getParentMember() != null) {
-		            		popUpMenu.add(new AbstractAction("Drill Up on Member '" + clickedOnMember.getName() + "'") {
-								public void actionPerformed(ActionEvent e) {
-									fireMemberDropped(hierarchyOrdinal, clickedOnMember.getParentMember());
-								}
-		            		});
+		            		popUpMenu.add(new DrillOnMemberAction(
+		            				"Drill Up on Member '" + clickedOnMember.getName() + "'",
+									clickedOnMember.getParentMember()));
+		            		try {
+								popUpMenu.add(new DrillOnMemberAction(
+										"Drill Up to Root Member",
+										hierarchy.getRootMembers().get(0)));
+							} catch (OlapException ex) {
+								throw new RuntimeException(
+										"OLAP error occured while trying to get Root Member of hierarchy " 
+										+ hierarchy.getName(), ex);
+							}
 	            		}
             		}
             		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
