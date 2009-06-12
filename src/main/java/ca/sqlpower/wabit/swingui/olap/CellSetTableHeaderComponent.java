@@ -68,6 +68,7 @@ import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
 import org.olap4j.Position;
 import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.swingui.ColourScheme;
@@ -574,14 +575,21 @@ public class CellSetTableHeaderComponent extends JComponent {
 							fireMemberRemoved(member);
 						}
             		});
-            		if (clickedOnMember != null) {
+            		if (clickedOnMember != null && 
+            				!(clickedOnMember instanceof Measure)) {
 	            		popUpMenu.add(new AbstractAction("Drill Replace on Member '" + clickedOnMember.getName() + "'") {
 							public void actionPerformed(ActionEvent e) {
-								if (clickedOnMember != null) {
-									fireMemberDropped(hierarchyOrdinal, clickedOnMember);
-								}
+								fireMemberDropped(hierarchyOrdinal, clickedOnMember);
 							}
 	            		});
+	            		
+	            		if (clickedOnMember.getParentMember() != null) {
+		            		popUpMenu.add(new AbstractAction("Drill Up on Member '" + clickedOnMember.getName() + "'") {
+								public void actionPerformed(ActionEvent e) {
+									fireMemberDropped(hierarchyOrdinal, clickedOnMember.getParentMember());
+								}
+		            		});
+	            		}
             		}
             		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
             	} else if (selectedMember != null) {
