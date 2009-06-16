@@ -403,7 +403,7 @@
 				        		<launch4j>
 									<config dontwrapjar="false" 
 											headertype="gui"
-											jar="target/Wabit-Setup-Windows-${app.version}.jar"
+											jar="target/Wabit-Setup-Windows-${project.version}.jar"
 											outfile="target/Wabit-Setup-Windows-${app.version}.exe"
 											errtitle="Java Runtime Required"
 											priority="normal"
