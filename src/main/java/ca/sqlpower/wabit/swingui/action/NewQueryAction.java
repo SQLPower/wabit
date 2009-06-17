@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JTree;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -32,16 +33,31 @@ public class NewQueryAction extends AbstractAction {
 	
     private final WabitProject project;
     private final WabitSwingSession session;
+    private final JDBCDataSource ds;
+    private final String newQueryName;
 
     public NewQueryAction(WabitSwingSession session) {
         super("New Query");
+        this.newQueryName = "New Query";
         this.project = session.getProject();
         this.session = session;
+        this.ds = null;
     }
 
+    public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
+    	super("New Query on '" + ds.getName() + "'");
+    	this.newQueryName = "New Query on '" + ds.getName() + "'";
+    	this.project = session.getProject();
+    	this.session = session;
+    	this.ds = ds;
+    }
+    
     public void actionPerformed(ActionEvent e) {
         QueryCache query = new QueryCache(session);
-        query.setName("New Query");
+        query.setName(newQueryName);
+        if (ds != null) {
+        	query.setDataSource(ds);
+        }
 		project.addQuery(query, session);
 		JTree tree = session.getTree();
 		int queryIndex = tree.getModel().getIndexOfChild(project, query);

@@ -210,10 +210,18 @@ public class ProjectTreeListener extends MouseAdapter {
 		menu.addSeparator();
 
 		menu.add(new NewQueryAction(session));
+		
+		final Object lastPathComponent = getLastPathComponent(e);
+
+		if (lastPathComponent instanceof WabitDataSource) {
+			SPDataSource ds = ((WabitDataSource) lastPathComponent).getSPDataSource();
+			if (ds instanceof JDBCDataSource) {
+				menu.add(new NewQueryAction(session, (JDBCDataSource) ds));
+			}
+		}
 
 		menu.add(new NewLayoutAction(session));
 		
-		final Object lastPathComponent = getLastPathComponent(e);
 		if (lastPathComponent != null) {
 			menu.addSeparator();
 			
