@@ -120,6 +120,8 @@ import com.jgoodies.forms.layout.FormLayout;
  * the conventional way to start the application running.
  */
 public class WabitSwingSessionImpl implements WabitSwingSession {
+    
+    private static final Icon DB_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
 	/**
 	 * A constant for storing the location of the query dividers in prefs.
@@ -313,6 +315,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		aboutAction = new AboutAction(frame);
 		
 		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
+		dbConnectionManager.setDbIcon(DB_ICON);
 		
 		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, sessionContext.getDataSources());
         

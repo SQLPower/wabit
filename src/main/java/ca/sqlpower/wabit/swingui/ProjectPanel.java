@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -55,6 +56,7 @@ import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
@@ -73,6 +75,7 @@ public class ProjectPanel implements WabitPanel {
 	private static final ImageIcon OVER_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
 	private static final ImageIcon DOWN_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_down.png"));
 	private static final ImageIcon UP_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
+	private static final Icon DB_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
     private static class LogoLayout implements LayoutManager {
 
@@ -194,6 +197,7 @@ public class ProjectPanel implements WabitPanel {
 				new DefaultDataSourceDialogFactory(), 
 				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
 				new ArrayList<Action>(), componentList, owner, false, newDSTypes);
+		dbConnectionManager.setDbIcon(DB_ICON);
 		
         startImageLabel.addMouseListener(new MouseListener() {
         	boolean inside = false;

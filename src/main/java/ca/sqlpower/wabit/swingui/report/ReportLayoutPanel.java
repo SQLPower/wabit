@@ -96,12 +96,13 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 public class ReportLayoutPanel implements WabitPanel, MouseState {
 
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
-    public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/text_add.png"));		
-    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
-    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
-    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_fit16.png"));
+    public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/text_add.png"));		
+    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
+    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
+    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_fit16.png"));
     private static final Icon CREATE_IMAGE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/image_add.png"));
     private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/chart_bar_add.png"));
+    private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
     
     private final JSlider zoomSlider;
     
@@ -406,7 +407,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				        ((JLabel) c).setIcon(queryIcon);
 				    }
 				} else if (value instanceof OlapQuery) {
-				    //TODO get icon from Giulio and place it here.
+				    ((JLabel) c).setIcon(OLAP_QUERY_ICON);
 				}
 				return c;
 			}

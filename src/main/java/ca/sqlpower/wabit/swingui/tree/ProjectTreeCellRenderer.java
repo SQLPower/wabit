@@ -32,10 +32,14 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
@@ -50,6 +54,9 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon BOX_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/shape_square.png"));
     public static final Icon QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_query.png"));
     public static final Icon STREAMING_QUERY_BADGE = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/stream-badge.png"));
+    public static final Icon OLAP_QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/query-olap.png"));
+    public static final Icon DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
+    public static final Icon OLAP_DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
     
     /**
      * This map contains {@link WabitObject}s that have an image or badge
@@ -70,7 +77,14 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
             r.setText(wo.getName());
 
             if (wo instanceof WabitDataSource) {
-                r.setIcon(DBTreeCellRenderer.DB_ICON);
+                SPDataSource ds = ((WabitDataSource) wo).getSPDataSource();
+                if (ds instanceof JDBCDataSource) {
+                    r.setIcon(DB_ICON);
+                } else if (ds instanceof Olap4jDataSource) {
+                    r.setIcon(OLAP_DB_ICON);
+                } else {
+                    r.setIcon(DBTreeCellRenderer.DB_ICON);
+                }
             } else if (wo instanceof Page) {
                 Page page = (Page) wo;
                 r.setIcon(PAGE_ICON);
@@ -102,6 +116,8 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
             	} else {
             		r.setIcon(QUERY_ICON);
             	}
+            } else if (wo instanceof OlapQuery) {
+                r.setIcon(OLAP_QUERY_ICON);
             }
 
         }
