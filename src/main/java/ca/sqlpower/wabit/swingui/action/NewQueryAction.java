@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JTree;
 
 import ca.sqlpower.sql.JDBCDataSource;
@@ -29,6 +30,10 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
+/**
+ * A Swing {@link Action} for creating new relational (SQL) queries in a Wabit
+ * project.
+ */
 public class NewQueryAction extends AbstractAction {
 	
     private final WabitProject project;
@@ -36,17 +41,34 @@ public class NewQueryAction extends AbstractAction {
     private final JDBCDataSource ds;
     private final String newQueryName;
 
+	/**
+	 * Creates a new query with no datasource. Typically, the user would then
+	 * set the datasource of this Query afterwards.
+	 * 
+	 * @param session
+	 *            The {@link WabitSwingSession} containing the project that the
+	 *            new query will be added to.
+	 */
     public NewQueryAction(WabitSwingSession session) {
-        super("New Query");
-        this.newQueryName = "New Query";
+        super("New Relational Query");
+        this.newQueryName = "New Relational Query";
         this.project = session.getProject();
         this.session = session;
         this.ds = null;
     }
 
+	/**
+	 * Creates a new query and sets its datasource to the given datasource.
+	 * 
+	 * @param session
+	 *            The {@link WabitSwingSession} containing the project that the
+	 *            new query will be added to.
+	 * @param ds
+	 *            The datasource that the new query will use to start with
+	 */
     public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
-    	super("New Query on '" + ds.getName() + "'");
-    	this.newQueryName = "New Query on '" + ds.getName() + "'";
+    	super("New Relational Query on '" + ds.getName() + "'");
+    	this.newQueryName = "New Relational Query on '" + ds.getName() + "'";
     	this.project = session.getProject();
     	this.session = session;
     	this.ds = ds;
