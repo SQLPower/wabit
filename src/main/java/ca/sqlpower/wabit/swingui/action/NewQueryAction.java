@@ -22,7 +22,7 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.tree.TreePath;
+import javax.swing.JTree;
 
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitProject;
@@ -43,9 +43,8 @@ public class NewQueryAction extends AbstractAction {
         QueryCache query = new QueryCache(session);
         query.setName("New Query");
 		project.addQuery(query, session);
-		TreePath path = session.getTree().getPathForRow(session.getTree().getRowCount()-1);
-		session.getTree().setSelectionPath(path);
-		
+		JTree tree = session.getTree();
+		int queryIndex = tree.getModel().getIndexOfChild(project, query);
+		tree.setSelectionRow(queryIndex + 1);
     }
-
 }
