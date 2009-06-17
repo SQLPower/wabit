@@ -36,6 +36,7 @@ import javax.swing.tree.TreePath;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.UserPrompter;
@@ -51,6 +52,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
+import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 
 /**
@@ -218,8 +220,11 @@ public class ProjectTreeListener extends MouseAdapter {
 			if (ds instanceof JDBCDataSource) {
 				menu.add(new NewQueryAction(session, (JDBCDataSource) ds));
 			}
+			if (ds instanceof Olap4jDataSource) {
+				menu.add(new NewOLAPQueryAction(session, (Olap4jDataSource) ds));
+			}
 		}
-
+		
 		menu.add(new NewLayoutAction(session));
 		
 		if (lastPathComponent != null) {
