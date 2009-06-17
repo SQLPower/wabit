@@ -211,19 +211,20 @@ public class OlapQuery extends AbstractWabitObject {
                 || getOlapDataSource().getMondrianSchema() == null) return null;
         
         JDBCDataSource ds = olapDataSource.getDataSource();
-        ctx.bind(ds.getName(), new DataSourceAdapter(ds));
-        
-        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
-        Connection connection =
-            DriverManager.getConnection(
-                "jdbc:mondrian:"
-                    + "DataSource='" + ds.getName() + "';"
-                    + "Catalog='" + getOlapDataSource().getMondrianSchema().toString() + "';"
-                    );
-        
-        ctx.unbind(ds.getName());
-        
-        return ((OlapWrapper) connection).unwrap(OlapConnection.class);
+        try {
+	        ctx.bind(ds.getName(), new DataSourceAdapter(ds));
+	        
+	        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
+	        Connection connection =
+	            DriverManager.getConnection(
+	                "jdbc:mondrian:"
+	                    + "DataSource='" + ds.getName() + "';"
+	                    + "Catalog='" + getOlapDataSource().getMondrianSchema().toString() + "';"
+	                    );
+	        return ((OlapWrapper) connection).unwrap(OlapConnection.class);
+        } finally {
+        	ctx.unbind(ds.getName());
+        }
     }
 
     public void setOlapDataSource(Olap4jDataSource olapDataSource) {
