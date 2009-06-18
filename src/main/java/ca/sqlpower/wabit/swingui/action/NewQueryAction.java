@@ -68,7 +68,7 @@ public class NewQueryAction extends AbstractAction {
 	 */
     public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
     	super("New Relational Query on '" + ds.getName() + "'");
-    	this.newQueryName = "New Relational Query on '" + ds.getName() + "'";
+    	this.newQueryName = "New " + ds.getName() + " query";
     	this.project = session.getProject();
     	this.session = session;
     	this.ds = ds;
