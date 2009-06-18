@@ -394,7 +394,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				((JLabel) c).setText(((WabitObject) value).getName());
 				
 				if (value instanceof QueryCache) {
-				    final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
+				    final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
 				    if (((QueryCache) value).isRunning()) {
 				        if (((QueryCache) value).isStreaming()) {
 				            final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));

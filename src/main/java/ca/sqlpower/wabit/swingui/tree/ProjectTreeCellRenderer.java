@@ -52,7 +52,7 @@ public class ProjectTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon PAGE_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/page_white.png"));
     public static final Icon LAYOUT_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/layout.png"));
     public static final Icon BOX_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getResource("/icons/shape_square.png"));
-    public static final Icon QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/wabit_query.png"));
+    public static final Icon QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/query-db.png"));
     public static final Icon STREAMING_QUERY_BADGE = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/stream-badge.png"));
     public static final Icon OLAP_QUERY_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/query-olap.png"));
     public static final Icon DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
