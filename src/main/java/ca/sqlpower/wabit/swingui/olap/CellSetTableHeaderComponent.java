@@ -43,6 +43,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,6 +57,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
@@ -261,16 +264,11 @@ public class CellSetTableHeaderComponent extends JComponent {
     private final Graphics graphic;
 
     /**
-     * If this value is set this font should be used for sizing the headers
-     * instead of the default font given by the graphics object.
+     * This is the amount of vertical space that will be used up by each row label.
+     * Users of this component are responsible for synchronizing this value with
+     * whatever row height the body of the table has.
      */
-    private final Font headerFont;
-
-    /**
-     * If this value is set this font should be used in sizing the headers
-     * with the size of the header font given by the graphics object.
-     */
-    private final Font bodyFont;
+    private float rowHeight;
 
     /**
 	 * The {@link DropTargetListener} used to handle drag-n-drop functionality
@@ -282,7 +280,7 @@ public class CellSetTableHeaderComponent extends JComponent {
      * The default {@link Border} for this {@link CellSetTableHeaderComponent}.
      */
 	private final Border defaultBorder;
-    
+
 	/**
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
 	 * and Axis.
@@ -291,13 +289,13 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 *            The {@link CellSet} that this header component is for
 	 * @param axis
 	 *            The {@link Axis} this component is the header for
-	 * @param columnModel
-	 *            The columnModel that will be used to determine column
-	 *            positions in the table. If the axis type is not
-	 *            {@link Axis#COLUMNS}, then this can be null.
+	 * @param table
+	 *            The table this row header is for. We will attach a listener to
+	 *            this table so we can track its row height. The table's columnModel
+	 *            will be used to determine column positions in the table.
 	 */
-    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel) {
-        this(cellSet, axis, columnModel, null, null, null);
+    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, JTable table) {
+        this(cellSet, axis, table, null, null);
     }
 
     /**
@@ -307,19 +305,30 @@ public class CellSetTableHeaderComponent extends JComponent {
      *            The {@link CellSet} that this header component is for
      * @param axis
      *            The {@link Axis} this component is the header for
-     * @param columnModel
-     *            The columnModel that will be used to determine column
-     *            positions in the table. If the axis type is not
-     *            {@link Axis#COLUMNS}, then this can be null.
+	 * @param table
+	 *            The table this row header is for. We will attach a listener to
+	 *            this table so we can track its row height. The table's columnModel
+	 *            will be used to determine column positions in the table.
      * @param g
      *            A graphics that is different from the default graphic used by
      *            the JComponent. This allows using the component to use the
      *            header in different graphics for things like printing.
      */
-    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, TableColumnModel columnModel, Graphics g, Font headerFont, Font bodyFont) {
+    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, final JTable table, Graphics g, Font headerFont) {
         this.axis = axis;
-        this.headerFont = headerFont;
-        this.bodyFont = bodyFont;
+        setRowHeight(table.getRowHeight());
+        
+        PropertyChangeListener rowHeightSyncher = new PropertyChangeListener() {
+        	public void propertyChange(PropertyChangeEvent evt) {
+        		setRowHeight(table.getRowHeight());
+        	}
+        };
+        
+        table.addPropertyChangeListener("rowHeight", rowHeightSyncher);
+        
+        if (headerFont != null) {
+        	setFont(headerFont);
+        }
         setDropTarget(new DropTarget(this, dropTargetListener));
         graphic = g;
         
@@ -339,7 +348,9 @@ public class CellSetTableHeaderComponent extends JComponent {
 		if (hierarchyCount > 0) {
 			for (int i = 0; i < hierarchyCount; i++) {
 				HierarchyComponent hierarchyComponent =
-					new HierarchyComponent(cellSetAxis, cellSetAxis.getAxisMetaData().getHierarchies().get(i), i, columnModel);
+					new HierarchyComponent(
+							cellSetAxis, cellSetAxis.getAxisMetaData().getHierarchies().get(i),
+							i, table.getColumnModel());
 				hierarchyComponent.setBackground(
 						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
 				hierarchies.add(hierarchyComponent);
@@ -388,8 +399,6 @@ public class CellSetTableHeaderComponent extends JComponent {
     public CellSetTableHeaderComponent(Axis axis, List<Hierarchy> hierarchies) {
     	this.axis = axis;
     	graphic = null;
-    	headerFont = null;
-    	bodyFont = null;
     	int hierarchiesSize = 0;
     	
     	if (hierarchies != null) {
@@ -637,12 +646,6 @@ public class CellSetTableHeaderComponent extends JComponent {
         private Member selectedMember;
         
         /**
-         * The height of each row, in pixels. This is the same as the font height at
-         * the time {@link #createLayout()} was invoked.
-         */
-        private int rowsRowHeight;
-        
-        /**
          * The {@link TableColumnModel} that we'll use to determine the positions of
          * the columns in the table.
          */
@@ -712,11 +715,8 @@ public class CellSetTableHeaderComponent extends JComponent {
             preferredSizes.clear();
 
             Graphics2D g2 = (Graphics2D) getGraphics();
-            g2.setFont(getBodyFont());
-            FontMetrics bodyFM = g2.getFontMetrics();
             g2.setFont(getFont());
             FontMetrics fm = g2.getFontMetrics();
-            rowsRowHeight = Math.max(fm.getHeight(), bodyFM.getHeight());
             int colsRowHeight = fm.getHeight();
             int y = 0;
 
@@ -759,7 +759,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 		                li.bounds = new Rectangle2D.Double(
 		                        memberDepth * indentAmount, y,
 		                        stringBounds.getWidth(), stringBounds.getHeight());
-		                y += rowsRowHeight;
+		                y += rowHeight;
 	                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
 	                	li.bounds = new Rectangle2D.Double(
 		                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
@@ -784,17 +784,6 @@ public class CellSetTableHeaderComponent extends JComponent {
             return super.getGraphics();
         }
         
-        @Override
-        public Font getFont() {
-            if (headerFont != null) return headerFont;
-            return super.getFont();
-        }
-        
-        public Font getBodyFont() {
-            if (bodyFont != null) return bodyFont;
-            return getFont();
-        }
-
 		private int[] getColumnPositions() {
 			if (columnModel == null) return new int[0];
 			int[] columnPositions = new int[columnModel.getColumnCount()];
@@ -810,7 +799,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         	if (axis == null) return null;
         	if (axis.getAxisOrdinal() == Axis.ROWS) {
         		// This is a special-case optimization for members in the row axis
-        		int rowNum = p.y / rowsRowHeight;
+        		int rowNum = (int) (p.y / rowHeight);
 	            if (rowNum >= getLayoutItems().size()) return null;
 	            if (rowNum < 0) return null;
 	            return getLayoutItems().get(rowNum).member;
@@ -903,4 +892,13 @@ public class CellSetTableHeaderComponent extends JComponent {
     public List<HierarchyComponent> getHierarchies() {
         return Collections.unmodifiableList(hierarchies);
     }
+    
+    public float getRowHeight() {
+		return rowHeight;
+	}
+    
+    public void setRowHeight(float rowHeight) {
+		this.rowHeight = rowHeight;
+		revalidate();
+	}
 }

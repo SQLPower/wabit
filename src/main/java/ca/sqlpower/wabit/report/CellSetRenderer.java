@@ -334,14 +334,20 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         CellSetTableModel tableModel = new CellSetTableModel(getCellSet());
         final JTable tableAsModel = new JTable(tableModel);
-
+        tableAsModel.setRowHeight(maxRowHeight);
         if (!printing) {
             memberHeaderMap.clear();
         }
         
-        CellSetTableHeaderComponent columnHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.COLUMNS, tableAsModel.getColumnModel(), g.create(), getHeaderFont(), getBodyFont());
+        CellSetTableHeaderComponent columnHeaderComponent =
+        	new CellSetTableHeaderComponent(
+        			getCellSet(), Axis.COLUMNS, tableAsModel, g.create(),
+        			getHeaderFont());
         
-        CellSetTableHeaderComponent rowHeaderComponent = new CellSetTableHeaderComponent(getCellSet(), Axis.ROWS, tableAsModel.getColumnModel(), g.create(), getHeaderFont(), getBodyFont());
+        CellSetTableHeaderComponent rowHeaderComponent =
+        	new CellSetTableHeaderComponent(
+        			getCellSet(), Axis.ROWS, tableAsModel, g.create(),
+        			getHeaderFont());
         
         g.setFont(getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();

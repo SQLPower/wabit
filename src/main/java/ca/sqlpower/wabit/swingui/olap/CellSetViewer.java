@@ -95,10 +95,10 @@ public class CellSetViewer {
         
         table.setModel(new CellSetTableModel(cellSet));
         
-        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table.getColumnModel());
+        final CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table);
         rowHeader.addAxisListener(axisEventHandler);
         
-        final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table.getColumnModel());
+        final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table);
         columnHeader.addAxisListener(axisEventHandler);
         
         scrollPane.setViewportView(table);
