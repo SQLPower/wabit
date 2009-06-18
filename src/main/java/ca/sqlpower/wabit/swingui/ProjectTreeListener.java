@@ -50,6 +50,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
+import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
@@ -229,6 +230,9 @@ public class ProjectTreeListener extends MouseAdapter {
 		
 		if (lastPathComponent != null) {
 			menu.addSeparator();
+			if (lastPathComponent instanceof QueryCache) {
+			    menu.add(new CopyQueryAction(session, (QueryCache) lastPathComponent));
+			}
 			
 			JTree tree = (JTree) e.getSource();
 			//For some bizarre reason, you cannot select a node

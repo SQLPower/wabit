@@ -262,7 +262,7 @@ public class ProjectXMLDAOTest extends TestCase {
 
 		//TODO: implement the rest of this test case for the commented out sections of 
 		//a query and layouts.
-		TableContainer container = new TableContainer(query.getQuery(), db.getTableByName("wabit_table1"));
+		TableContainer container = new TableContainer(query.getQuery().getDatabase(), db.getTableByName("wabit_table1"));
 		query.getQuery().addTable(container);
 		setAllSetters(container, getPropertiesToIgnore());
 //		query.addJoin(join);

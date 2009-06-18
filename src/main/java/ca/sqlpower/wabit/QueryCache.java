@@ -155,8 +155,12 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      */
     private final List<Thread> streamingThreads = new ArrayList<Thread>();
     
+    /**
+     * This makes a copy of the given query cache. The query in the given query cache
+     * has its listeners connected to allow using this query cache in the project.
+     */
     public QueryCache(QueryCache q) {
-        this.query = new Query(q.query);
+        this.query = new Query(q.query, true);
         
         for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {

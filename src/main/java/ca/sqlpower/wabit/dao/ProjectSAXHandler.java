@@ -356,7 +356,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	checkMandatory("name", tableName);
-        	TableContainer table = new TableContainer(uuid, cache.getQuery(), tableName, schema, catalog, new ArrayList<SQLObjectItem>());
+        	TableContainer table = new TableContainer(uuid, cache.getQuery().getDatabase(), tableName, schema, catalog, new ArrayList<SQLObjectItem>());
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -1020,7 +1020,7 @@ public class ProjectSAXHandler extends DefaultHandler {
     		}
     		session.getProject().setEditorPanelModel(initialView);
     	} else if (name.equals("table")) {
-    		TableContainer table = new TableContainer(container.getUUID().toString(), cache.getQuery(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
+    		TableContainer table = new TableContainer(container.getUUID().toString(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
     		cache.getQuery().addTable(table);
