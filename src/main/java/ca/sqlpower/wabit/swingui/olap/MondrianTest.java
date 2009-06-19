@@ -26,6 +26,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -46,16 +48,20 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.event.UndoableEditListener;
 
 import org.olap4j.CellSet;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
 
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
-import ca.sqlpower.sql.StubDataSourceCollection;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -99,19 +105,7 @@ public class MondrianTest {
     }
     
     private JComponent createGuiQueryPanel(final Olap4jDataSource ds) throws SQLException {
-        return new Olap4jGuiQueryPanel(
-        		new StubDataSourceCollection<Olap4jDataSource>() {
-        			private List<Olap4jDataSource> list = new ArrayList<Olap4jDataSource>();
-        			{
-        				list.add(ds);
-        			}
-        			
-        			@Override
-        			public <C extends Olap4jDataSource> List<C> getConnections(
-        					Class<C> classType) {
-        				return (List<C>) list;
-        			}
-        		}, 
+        return new Olap4jGuiQueryPanel(new StubOlapDataSourceCollection(ds),
         		frame, cellSetViewer, olapQuery).getPanel();
     }
 
@@ -190,5 +184,123 @@ public class MondrianTest {
         olapQuery.setOlapDataSource(olapDataSource);
         
         new MondrianTest(olapQuery);
+    }
+    
+    private class StubOlapDataSourceCollection implements DataSourceCollection<Olap4jDataSource> {
+
+    	private Olap4jDataSource ds;
+    	List<Olap4jDataSource> dataSources = new ArrayList<Olap4jDataSource>();
+
+		public StubOlapDataSourceCollection(Olap4jDataSource ds) {
+    		this.ds = ds;
+    		dataSources.add(ds);
+    	}
+    	
+    	private final List<JDBCDataSourceType> dsTypes = new ArrayList<JDBCDataSourceType>();
+    	private final List<UndoableEditListener> undoableEdits = new ArrayList<UndoableEditListener>();
+    	private final List<DatabaseListChangeListener> dbListChangeListeners = new ArrayList<DatabaseListChangeListener>();
+        private URI serverBaseURI;
+
+    	public void addDataSource(Olap4jDataSource dbcs) {
+    		dataSources.add(dbcs);
+    	}
+
+    	public void addDataSourceType(JDBCDataSourceType dataSourceType) {
+    		dsTypes.add(dataSourceType);
+    	}
+
+    	public void addDatabaseListChangeListener(DatabaseListChangeListener l) {
+    		dbListChangeListeners.add(l);
+    	}
+
+    	public void addUndoableEditListener(UndoableEditListener l) {
+    		undoableEdits.add(l);
+    	}
+
+    	public List<Olap4jDataSource> getConnections() {
+    		return Collections.unmodifiableList(dataSources);
+    	}
+
+        public <Olap4jDataSource> Olap4jDataSource getDataSource(String name,
+                Class<Olap4jDataSource> classType) {
+            return (Olap4jDataSource) dataSources;
+        }
+
+    	public List<JDBCDataSourceType> getDataSourceTypes() {
+    		return Collections.unmodifiableList(dsTypes);
+    	}
+
+    	public void mergeDataSource(Olap4jDataSource dbcs) {
+    		dataSources.add(dbcs);
+    	}
+
+    	public void mergeDataSourceType(JDBCDataSourceType dst) {
+    		dsTypes.add(dst);
+    	}
+
+    	public void read(File location) throws IOException {
+    		throw new UnsupportedOperationException("Unsupported in the current stub implementation");
+    	}
+
+    	public void read(InputStream in) throws IOException {
+    		throw new UnsupportedOperationException("Unsupported in the current stub implementation");
+    	}
+
+    	public void removeDataSource(Olap4jDataSource dbcs) {
+    		dataSources.remove(dbcs);
+    	}
+
+    	public boolean removeDataSourceType(JDBCDataSourceType dataSourceType) {
+    		return dsTypes.remove(dataSourceType);
+    	}
+
+    	public void removeDatabaseListChangeListener(DatabaseListChangeListener l) {
+    		dbListChangeListeners.remove(l);
+    	}
+
+    	public void removeUndoableEditListener(UndoableEditListener l) {
+    		undoableEdits.remove(l);
+    	}
+
+    	public void write() throws IOException {
+    		throw new UnsupportedOperationException("Unsupported in the current stub implementation");
+    	}
+
+    	public void write(File location) throws IOException {
+    		throw new UnsupportedOperationException("Unsupported in the current stub implementation");
+    	}
+
+    	public void write(OutputStream out) throws IOException {
+            throw new UnsupportedOperationException("Unsupported in the current stub implementation");
+    	}
+
+        public URI getServerBaseURI() {
+            return serverBaseURI;
+        }
+
+        public void setServerBaseURI(URI serverBaseURI) {
+            this.serverBaseURI = serverBaseURI;
+        }
+
+        public <C extends Olap4jDataSource> List<C> getConnections(Class<C> classType) {
+            return (List<C>) dataSources;
+        }
+
+        public Olap4jDataSource getDataSource(String name) {
+            for (Olap4jDataSource ds : dataSources) {
+                if (ds.getName().equals(name)) {
+                    return ds;
+                }
+            }
+            return null;
+        }
+
+		public <C extends Olap4jDataSource> C getDataSource(String name,
+				Class<C> classType) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+    	
     }
 }
