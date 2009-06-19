@@ -32,6 +32,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
 import org.olap4j.CellSet;
@@ -90,8 +91,14 @@ public class OlapQueryPanel implements WabitPanel {
             throw new RuntimeException(e);
         }
         JTabbedPane queryPanels = new JTabbedPane();
+        olap4jGuiQueryPanel.setOlapPanelToolbar(createOlapPanelToolBar(olap4jGuiQueryPanel));
+        
+        JPanel guiPanel = new JPanel(new BorderLayout());
+        guiPanel.add(olap4jGuiQueryPanel.getOlapPanelToolbar(), BorderLayout.NORTH);
         JComponent viewComponent = cellSetViewer.getViewComponent();
-        queryPanels.add("GUI", viewComponent);
+		guiPanel.add(viewComponent, BorderLayout.CENTER);
+		
+        queryPanels.add("GUI", guiPanel);
         queryPanels.add("MDX", textQueryPanel);
         
         queryAndResultsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -169,6 +176,15 @@ public class OlapQueryPanel implements WabitPanel {
 
         return queryPanel;
     }
+    
+	private JToolBar createOlapPanelToolBar(Olap4jGuiQueryPanel queryPanel) {
+	    JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
+	    toolBar.setFloatable(false);
+	    
+	    toolBar.add(queryPanel.getResetQueryButton());
+	    toolBar.addSeparator();
+	    return toolBar;
+	}
 
     public void maximizeEditor() {
         // TODO Auto-generated method stub

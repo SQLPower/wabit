@@ -42,6 +42,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
@@ -73,6 +74,7 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapUtils;
@@ -139,7 +141,22 @@ public class Olap4jGuiQueryPanel {
      */
     private final JPanel panel;
 
+	/**
+	 * This {@link JToolBar} is at the top of the Olap4jGuiQueryPanel, it contains the
+	 * traditional buttons at the top and is similar to the queryPenBar in the
+	 * {@link QueryPen} for relational queries
+	 */
+    private JToolBar olapPanelToolbar;
+    
     /**
+     * This is the {@link JButton} which will reset the Olap4j {@link Query} in the table below.
+     * This will allow a user to start their query over without going through the painful and
+     * slow steps required to remove each hierarchy. Additionally if the user somehow gets their
+     * query into a broken state they can just easily restart.
+     */
+    private final JButton resetQueryButton;
+
+	/**
      * The cell set viewer that is used to display the results of queries being
      * executed. May also participate in query building (for example, the
      * components that show the axes can be drop points for adding new
@@ -318,6 +335,18 @@ public class Olap4jGuiQueryPanel {
                 	cubeChooserButton.setEnabled(true);
                 }
             }
+        });
+        resetQueryButton = new JButton("Reset Query");
+        resetQueryButton.setToolTipText("Reset Query");
+        resetQueryButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				olapQuery.resetMDXQuery();
+				hierarchiesBeingUsed.clear();
+				expandedMembers.clear();
+				rowHierarchies.clear();
+				columnHierarchies.clear();
+				executeQuery();
+			}
         });
         
         databaseComboBox = new JComboBox(dsCollection.getConnections(Olap4jDataSource.class).toArray());
@@ -532,4 +561,16 @@ public class Olap4jGuiQueryPanel {
         rowHierarchies.removeAll(d.getHierarchies());
         columnHierarchies.removeAll(d.getHierarchies());
     }
+    
+    public JToolBar getOlapPanelToolbar() {
+		return olapPanelToolbar;
+	}
+
+	public void setOlapPanelToolbar(JToolBar olapToolbar) {
+		this.olapPanelToolbar = olapToolbar;
+	}
+	
+	public JButton getResetQueryButton() {
+		return resetQueryButton;
+	}
 }

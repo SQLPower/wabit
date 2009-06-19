@@ -24,15 +24,20 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.olap4j.Axis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapWrapper;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Query;
+import org.olap4j.query.QueryAxis;
+import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -203,6 +208,19 @@ public class OlapQuery extends AbstractWabitObject {
      */
     public Query getMDXQuery() {
         return mdxQuery;
+    }
+
+	/**
+	 * This function is called by the 'Reset Query' button on the toolbar. It
+	 * will replace the current MDX Query with a blank one.
+	 */
+    public void resetMDXQuery() {
+        if (mdxQuery == null) return;
+        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
+            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
+                dimension.getSelections().clear();
+            }
+        }
     }
 
     public OlapConnection createOlapConnection() throws SQLException, ClassNotFoundException, NamingException {
