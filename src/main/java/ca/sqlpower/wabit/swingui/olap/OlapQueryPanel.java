@@ -39,8 +39,11 @@ import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
 
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.swingui.WabitPanel;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class OlapQueryPanel implements WabitPanel {
     
@@ -67,9 +70,12 @@ public class OlapQueryPanel implements WabitPanel {
 
     private Olap4jGuiQueryPanel olap4jGuiQueryPanel;
 
-    public OlapQueryPanel(JComponent parentComponent, OlapQuery query) {
+	private WabitSwingSession session;
+
+    public OlapQueryPanel(WabitSwingSession session, JComponent parentComponent, OlapQuery query) {
         this.parentComponent = parentComponent;
         this.query = query;
+        this.session = session;
         cellSetViewer = new CellSetViewer();
         
         buildUI();
@@ -78,7 +84,7 @@ public class OlapQueryPanel implements WabitPanel {
     private void buildUI() {
     	JComponent textQueryPanel;
         try {
-            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query);
+            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(new SpecificDataSourceCollection<Olap4jDataSource>(session.getProject(), Olap4jDataSource.class), SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query);
             textQueryPanel = createTextQueryPanel();
         } catch (SQLException e) {
             throw new RuntimeException(e);

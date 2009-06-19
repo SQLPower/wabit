@@ -24,6 +24,8 @@ import java.awt.Window;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +37,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
@@ -65,6 +69,10 @@ import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.DatabaseListChangeEvent;
+import ca.sqlpower.sql.DatabaseListChangeListener;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapUtils;
@@ -158,8 +166,54 @@ public class Olap4jGuiQueryPanel {
      */
     private final OlapQuery olapQuery;
     
-    public Olap4jGuiQueryPanel(final Window owningFrame, CellSetViewer cellSetViewer, OlapQuery query) throws SQLException {
-        olapQuery = query;
+	/**
+	 * A {@link JComboBox} containing a list of OLAP data sources to choose from
+	 * to use for the OLAP query
+	 */
+    private JComboBox databaseComboBox;
+    
+	/**
+	 * A {@link DataSourceCollection} of {@link Olap4jDataSource}es to choose
+	 * from for running the OLAP query
+	 */
+    private DataSourceCollection<Olap4jDataSource> dsCollection;
+    
+    /**
+     * This recreates the database combo box when the list of databases changes.
+     */
+    private DatabaseListChangeListener dbListChangeListener = new DatabaseListChangeListener() {
+
+        public void databaseAdded(DatabaseListChangeEvent e) {
+            if (!(e.getDataSource() instanceof Olap4jDataSource)) return;
+        	logger.debug("dataBase added");
+            databaseComboBox.addItem(e.getDataSource());
+            databaseComboBox.revalidate();
+        }
+
+        public void databaseRemoved(DatabaseListChangeEvent e) {
+            if (!(e.getDataSource() instanceof Olap4jDataSource)) return;
+        	logger.debug("dataBase removed");
+            if (databaseComboBox.getSelectedItem() != null && databaseComboBox.getSelectedItem().equals(e.getDataSource())) {
+                databaseComboBox.setSelectedItem(null);
+            }
+            
+            databaseComboBox.removeItem(e.getDataSource());
+            databaseComboBox.revalidate();
+        }
+        
+    };
+
+    /**
+     * Creates 
+     * @param dsCollection
+     * @param owningFrame
+     * @param cellSetViewer
+     * @param query
+     * @throws SQLException
+     */
+    public Olap4jGuiQueryPanel(DataSourceCollection<Olap4jDataSource> dsCollection, final Window owningFrame, CellSetViewer cellSetViewer, OlapQuery query) throws SQLException {
+        this.olapQuery = query;
+        this.dsCollection = dsCollection;
         if (olapQuery.getMdxQueryCopy() != null) {
             for (QueryDimension queryDim : olapQuery.getMdxQueryCopy().getAxes().get(Axis.ROWS).getDimensions()) {
                 for (Selection sel : queryDim.getSelections()) {
@@ -211,56 +265,86 @@ public class Olap4jGuiQueryPanel {
         final JButton cubeChooserButton = new JButton("Choose Cube...");
         cubeChooserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                cubeChooserButton.setEnabled(false);
-                final JWindow w = new JWindow(owningFrame);
-                JTree tree;
+            	if (databaseComboBox.getSelectedItem() == null) {
+            		JOptionPane.showMessageDialog(panel, 
+            				"Please choose a database from the above list first", 
+            				"Choose a database", 
+            				JOptionPane.WARNING_MESSAGE);
+            		return;
+            	}
                 try {
-                    tree = new JTree(
-                            new Olap4jTreeModel(
-                                    Collections.singletonList(olapQuery.createOlapConnection()),
-                                    Cube.class,
-                                    Dimension.class));
-                } catch (Exception e1) {
-                    throw new RuntimeException(e1);
+	            	cubeChooserButton.setEnabled(false);
+	                final JWindow w = new JWindow(owningFrame);
+	                JTree tree;
+	                try {
+	                    tree = new JTree(
+	                            new Olap4jTreeModel(
+	                                    Collections.singletonList(olapQuery.createOlapConnection()),
+	                                    Cube.class,
+	                                    Dimension.class));
+	                } catch (Exception e1) {
+	                    throw new RuntimeException(e1);
+	                }
+	                tree.setCellRenderer(new Olap4JTreeCellRenderer());
+	                int row = 0;
+	                while (row < tree.getRowCount()) {
+	                    tree.expandRow(row);
+	                    row++;
+	                }
+	                w.setContentPane(new JScrollPane(tree));
+	                w.pack();
+	                Point windowLocation = new Point(0, 0);
+	                SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
+	                w.setLocation(windowLocation);
+	                w.setVisible(true);
+	                
+	                tree.addTreeSelectionListener(new TreeSelectionListener() {
+	                    public void valueChanged(TreeSelectionEvent e) {
+	                        try {
+	                            TreePath path = e.getNewLeadSelectionPath();
+	                            Object node = path.getLastPathComponent();
+	                            if (node instanceof Cube) {
+	                                Cube cube = (Cube) node;
+	                                cubeChooserButton.setEnabled(true);
+	                                setCurrentCube(cube);
+	                                w.dispose();
+	                            }
+	                        } catch (SQLException ex) {
+	                            throw new RuntimeException(ex);
+	                        }
+	                    }
+	                });
+                } finally {
+                	cubeChooserButton.setEnabled(true);
                 }
-                tree.setCellRenderer(new Olap4JTreeCellRenderer());
-                int row = 0;
-                while (row < tree.getRowCount()) {
-                    tree.expandRow(row);
-                    row++;
-                }
-                w.setContentPane(new JScrollPane(tree));
-                w.pack();
-                Point windowLocation = new Point(0, 0);
-                SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
-                w.setLocation(windowLocation);
-                w.setVisible(true);
-                
-                tree.addTreeSelectionListener(new TreeSelectionListener() {
-                    public void valueChanged(TreeSelectionEvent e) {
-                        try {
-                            TreePath path = e.getNewLeadSelectionPath();
-                            Object node = path.getLastPathComponent();
-                            if (node instanceof Cube) {
-                                Cube cube = (Cube) node;
-                                cubeChooserButton.setEnabled(true);
-                                setCurrentCube(cube);
-                                w.dispose();
-                            }
-                        } catch (SQLException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                });
             }
         });
+        
+        databaseComboBox = new JComboBox(dsCollection.getConnections(Olap4jDataSource.class).toArray());
+        databaseComboBox.setSelectedItem(olapQuery.getOlapDataSource());
+        databaseComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				Object item = e.getItem();
+				if (item instanceof Olap4jDataSource) {
+					olapQuery.setOlapDataSource((Olap4jDataSource) item);
+					try {
+						setCurrentCube(null);
+					} catch (SQLException ex) {
+						throw new RuntimeException(
+								"SQL exception occured while trying to set the current cube to null",
+								ex);
+					}
+				}
+			}
+        });
+        this.dsCollection.addDatabaseListChangeListener(dbListChangeListener);
         
         panel = new JPanel(new MigLayout(
                 "fill",
                 "[fill,grow 1]",
-                "[][grow,fill]"));
+                "[][][grow,fill]"));
+        panel.add(databaseComboBox, "wrap");
         panel.add(cubeChooserButton, "grow 0,left,wrap");
-
         panel.add(new JScrollPane(cubeTree), "wrap");
         
     }
@@ -448,5 +532,4 @@ public class Olap4jGuiQueryPanel {
         rowHierarchies.removeAll(d.getHierarchies());
         columnHierarchies.removeAll(d.getHierarchies());
     }
-
 }

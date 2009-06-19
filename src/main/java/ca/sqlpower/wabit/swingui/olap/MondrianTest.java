@@ -72,7 +72,7 @@ public class MondrianTest {
         cellSetViewer = new CellSetViewer();
         
         JTabbedPane queryPanels = new JTabbedPane();
-        queryPanels.add("GUI", createGuiQueryPanel());
+        queryPanels.add("GUI", createGuiQueryPanel(olapQuery.getOlapDataSource()));
         queryPanels.add("MDX", createTextQueryPanel());
         
         JSplitPane queryAndResultsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -95,8 +95,8 @@ public class MondrianTest {
         });
     }
     
-    private JComponent createGuiQueryPanel() throws SQLException {
-        return new Olap4jGuiQueryPanel(frame, cellSetViewer, olapQuery).getPanel();
+    private JComponent createGuiQueryPanel(final Olap4jDataSource ds) throws SQLException {
+        return new Olap4jGuiQueryPanel(null, frame, cellSetViewer, olapQuery).getPanel();
     }
 
     private JComponent createTextQueryPanel() throws SQLException, ClassNotFoundException, NamingException {

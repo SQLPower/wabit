@@ -35,7 +35,15 @@ public class NewOLAPQueryAction extends AbstractAction {
 
 	private WabitSwingSession session;
 	private Olap4jDataSource ds;
-
+	private String newQueryName;
+	
+	public NewOLAPQueryAction(WabitSwingSession session) {
+		super("New OLAP Query");
+		this.session = session;
+		this.ds = null;
+		this.newQueryName = "New OLAP query";
+	}
+	
 	// TODO: Ideally, we would be able to choose the datasource from the OLAP
 	// query editor like with relational queries rather than having to specify
 	// it here, for flexibility and consistency.
@@ -43,12 +51,13 @@ public class NewOLAPQueryAction extends AbstractAction {
 		super("New OLAP Query on '" + ds.getName() + "'");
         this.session = session;
         this.ds = ds;
+        this.newQueryName = "New " + ds.getName() + " query";
 	}
 	
 	public void actionPerformed(ActionEvent e) {
 		OlapQuery newQuery = new OlapQuery();
 	    newQuery.setOlapDataSource(ds);
-	    newQuery.setName("New " + ds.getName() + " query");
+	    newQuery.setName(newQueryName);
 	    session.getProject().addOlapQuery(newQuery);
 		JTree tree = session.getTree();
 		int queryIndex = tree.getModel().getIndexOfChild(session.getProject(), newQuery);

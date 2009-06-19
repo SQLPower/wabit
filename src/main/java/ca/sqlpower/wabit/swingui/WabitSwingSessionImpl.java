@@ -664,7 +664,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		   	}
 		   	currentEditorPanel = queryPanel;
 		} else if (entryPanelModel instanceof OlapQuery) {
-		    OlapQueryPanel panel = new OlapQueryPanel(wabitPane, (OlapQuery) entryPanelModel);
+		    OlapQueryPanel panel = new OlapQueryPanel(this, wabitPane, (OlapQuery) entryPanelModel);
 		    currentEditorPanel = panel;
 		} else if (entryPanelModel instanceof Layout) {
 			ReportLayoutPanel rlPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);

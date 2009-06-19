@@ -214,6 +214,8 @@ public class ProjectTreeListener extends MouseAdapter {
 
 		menu.add(new NewQueryAction(session));
 		
+		menu.add(new NewOLAPQueryAction(session));
+		
 		final Object lastPathComponent = getLastPathComponent(e);
 
 		if (lastPathComponent instanceof WabitDataSource) {
