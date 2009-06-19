@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -27,7 +29,9 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -55,12 +59,30 @@ public class TableHeaderAlignmentTest {
 		{ "Cat", "Meow" },
 		{ "Duck", "Quack" },
 	};
+	private static int rowHeight = 0;
 	
 	public static void main(String[] args) {
 		final JTable table = new JTable(ROW_DATA, ROW_HEADER);
-		
-		JScrollPane sp = new JScrollPane(table);
-		sp.setRowHeaderView(new RowLabelComponent(table));
+		final JScrollPane sp = new JScrollPane(table);
+		final JList rowHeaderList = new JList(new String[]{
+				"COW",
+				"SHEEP",
+				"CAT",
+				"DUCK",
+				"COW",
+				"SHEEP",
+				"CAT",
+				"DUCK",
+				"COW",
+				"SHEEP",
+				"CAT",
+				"DUCK",
+				"COW",
+				"SHEEP",
+				"CAT",
+				"DUCK",
+		});
+		sp.setRowHeaderView(rowHeaderList);
 		
         table.addMouseListener(new MouseAdapter() {
         	@Override
@@ -70,6 +92,15 @@ public class TableHeaderAlignmentTest {
 				table.setRowHeight(table.getFontMetrics(table.getFont()).getHeight());
         	}
         });
+        table.addPropertyChangeListener("rowHeight", new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				rowHeaderList.setFixedCellHeight(table.getRowHeight());
+			}
+        });
+        
+		rowHeaderList.setFixedCellHeight(table.getRowHeight());
+
+        
         
 		JFrame f = new JFrame("Table alignments!");
 		f.setContentPane(sp);
@@ -77,6 +108,22 @@ public class TableHeaderAlignmentTest {
 		f.setLocationRelativeTo(null);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
+	}
+	
+	private static class RowListRenderer extends DefaultListCellRenderer {
+		private final JTable table;
+
+		public RowListRenderer(JTable table) {
+			this.table = table;
+		}
+		
+		
+		@Override
+		public Dimension getPreferredSize() {
+			Dimension preferredSize = super.getPreferredSize();
+			preferredSize.height =  table.getRowHeight();
+			return preferredSize;
+		}
 	}
 	
 	private static class RowLabelComponent extends JPanel {

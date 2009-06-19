@@ -450,18 +450,27 @@ public class QueryPanel implements WabitPanel {
 				logger.debug("Table added.");
 				queryController.unlistenToCellRenderer();
 				TableModelSortDecorator sortDecorator = null;
-				JTable table = e.getChangedTable();
+				final JTable table = e.getChangedTable();
 				if (table instanceof FancyExportableJTable) {
 					FancyExportableJTable fancyTable = (FancyExportableJTable)table;
 					sortDecorator = fancyTable.getTableModelSortDecorator();
 				}
 				ComponentCellRenderer renderer = new ComponentCellRenderer(table, sortDecorator);
 				table.getTableHeader().setDefaultRenderer(renderer);
-				
+
 				ListModel lm = new RowListModel(table);
-				JList rowHeader = new JList(lm);
+				final JList rowHeader = new JList(lm);
 				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width + 2);
+				
 				rowHeader.setCellRenderer(new RowHeaderRenderer(table));
+				
+				table.addPropertyChangeListener("rowHeight", new PropertyChangeListener() {
+					public void propertyChange(PropertyChangeEvent evt) {
+						rowHeader.setFixedCellHeight(table.getRowHeight());
+					}
+		        });
+		        
+				rowHeader.setFixedCellHeight(table.getRowHeight());
 				
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
