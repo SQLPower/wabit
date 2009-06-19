@@ -61,6 +61,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -584,7 +585,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     public static void  main(final String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	
+    	UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
     	SwingUtilities.invokeLater(new Runnable() {
 
 			public void run() {
