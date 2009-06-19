@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.naming.NamingException;
@@ -53,6 +55,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
+import ca.sqlpower.sql.StubDataSourceCollection;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -96,7 +99,20 @@ public class MondrianTest {
     }
     
     private JComponent createGuiQueryPanel(final Olap4jDataSource ds) throws SQLException {
-        return new Olap4jGuiQueryPanel(null, frame, cellSetViewer, olapQuery).getPanel();
+        return new Olap4jGuiQueryPanel(
+        		new StubDataSourceCollection<Olap4jDataSource>() {
+        			private List<Olap4jDataSource> list = new ArrayList<Olap4jDataSource>();
+        			{
+        				list.add(ds);
+        			}
+        			
+        			@Override
+        			public <C extends Olap4jDataSource> List<C> getConnections(
+        					Class<C> classType) {
+        				return (List<C>) list;
+        			}
+        		}, 
+        		frame, cellSetViewer, olapQuery).getPanel();
     }
 
     private JComponent createTextQueryPanel() throws SQLException, ClassNotFoundException, NamingException {
@@ -174,6 +190,5 @@ public class MondrianTest {
         olapQuery.setOlapDataSource(olapDataSource);
         
         new MondrianTest(olapQuery);
-        
     }
 }
