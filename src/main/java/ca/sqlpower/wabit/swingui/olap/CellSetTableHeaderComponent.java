@@ -58,10 +58,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.table.TableColumnModel;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -74,6 +77,7 @@ import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
+import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
 
@@ -371,12 +375,24 @@ public class CellSetTableHeaderComponent extends JComponent {
      * there are no hierarchies in this axis.
      */
     private void setLabelAsEmpty() {
-        setLayout(new BorderLayout());
-        JLabel label = new JLabel("Drop dimensions, hierarchies, or members here");
-        label.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
-        label.setOpaque(true);
-        label.setBorder(defaultBorder);
-        add(label, BorderLayout.CENTER);
+    	setLayout(new BorderLayout());
+    	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%", "align center", ""));
+    	panel.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+    	
+    	JLabel label = new JLabel("Drag Dimensions, Hierarchies,", SwingConstants.CENTER);
+    	panel.add(label);
+    	label = new JLabel("Measures, and Members here", SwingConstants.CENTER);
+    	panel.add(label);
+    	
+    	JPanel iconPanel = new JPanel();
+    	iconPanel.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+    	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.DIMENSION_ICON, Color.LIGHT_GRAY, 0.9f)));
+    	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.HIERARCHY_ICON, Color.LIGHT_GRAY, 0.9f)));
+    	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.MEASURE_ICON, Color.LIGHT_GRAY, 0.9f)));
+    	panel.add(iconPanel);
+    	
+    	panel.setBorder(defaultBorder);
+    	add(panel, BorderLayout.CENTER);
     }
 
 	/**
