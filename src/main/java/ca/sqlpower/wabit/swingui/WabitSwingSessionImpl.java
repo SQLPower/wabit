@@ -585,7 +585,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     public static void  main(final String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    	try {
+    		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    	} catch (Exception e) {
+    		logger.error("Unable to set native look and feel. Continuing with default.", e);
+    	}
 
     	SwingUtilities.invokeLater(new Runnable() {
 
