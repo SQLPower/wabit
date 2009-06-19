@@ -41,7 +41,6 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitVersion;
-import ca.sqlpower.wabit.report.Page.StandardPageSizes;
 
 /**
  * Represents a report layout in the Wabit.
@@ -71,7 +70,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
      * left and right masters, cover pages, and so on. For now, a Layout can only
      * have one arrangement of page content, and this is it.
      */
-    private Page page = new Page("Default Page", StandardPageSizes.US_LETTER);
+    private Page page;
     
     private int pageCount = Integer.MAX_VALUE;
     
@@ -94,6 +93,9 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
 
     public Layout(String name) {
         setName(name);
+        PageFormat pageFormat = new PageFormat();
+        pageFormat.setOrientation(PageFormat.LANDSCAPE);
+        page = new Page("Default Page", pageFormat);
         page.setParent(this);
         updateBuiltinVariables();
     }

@@ -81,6 +81,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
@@ -290,7 +291,10 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         pageNode = new PageNode(session, report.getPage());
         canvas.getLayer().addChild(pageNode);
+        
+        // XXX why is this being done? skipping it appears to have no effect
         pageNode.setBounds(0, 0, pageNode.getWidth(), pageNode.getHeight());
+        
         PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);

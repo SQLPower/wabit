@@ -100,11 +100,7 @@ public class LayoutToPDFWorker extends SPSwingWorker {
     	Page page = layout.getPage();
     	OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
     	Rectangle pageSize;
-    	if (page.getOrientation() == PageOrientation.PORTRAIT) {
-    	    pageSize = new Rectangle(page.getWidth(), page.getHeight());
-    	} else {
-    	    pageSize = new Rectangle(page.getHeight(), page.getWidth());
-    	}
+    	pageSize = new Rectangle(page.getWidth(), page.getHeight());
 
     	Document pdfDoc = new Document(pageSize, 0f, 0f, 0f, 0f);
 

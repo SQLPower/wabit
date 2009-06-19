@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Font;
-import java.awt.geom.AffineTransform;
 import java.awt.print.PageFormat;
 import java.awt.print.Paper;
 import java.util.ArrayList;
@@ -55,48 +54,6 @@ public class Page extends AbstractWabitObject {
      * Page that use a FontMetrics will by default inherit this one.
      */
     private Font defaultFont;
-
-    /**
-     * XXX this should not be an enum; page sizes should be user-definable and
-     * stored in a config file and/or the project file
-     */
-    public static enum StandardPageSizes {
-        /**
-         * Approximation of ISO A4 (210x297mm) in 1/72 of an inch.
-         */
-        A4(595, 841),
-        
-        /**
-         * Approximation of ISO A3 (297x420mm) in 1/72 of an inch.
-         */
-        A3(841, 1190),
-        
-        /**
-         * US Letter (8.5x11 inches).
-         */
-        US_LETTER((int) (8.5*DPI), 11*DPI),
-        
-        /**
-         * US Legal (8.5x14 inches).
-         */
-        US_LEGAL((int) (8.5*DPI), 14*DPI);
-        
-        private final int width;
-        private final int height;
-        
-        private StandardPageSizes(int width, int height) {
-            this.width = width;
-            this.height = height;
-        }
-        
-        public int getWidth() {
-            return width;
-        }
-        
-        public int getHeight() {
-            return height;
-        }
-    }
     
     /**
      * Indicates the transformation that should be applied when this page is rendered.
@@ -107,16 +64,14 @@ public class Page extends AbstractWabitObject {
      * it simply prescribes which direction should be "up" for rendered content.
      */
     public static enum PageOrientation {
-        PORTRAIT(PageFormat.PORTRAIT, AffineTransform.getRotateInstance(0.0)),
-        LANDSCAPE(PageFormat.LANDSCAPE, AffineTransform.getRotateInstance(-Math.PI / 2.0)),
-        REVERSE_LANDSCAPE(PageFormat.REVERSE_LANDSCAPE, AffineTransform.getRotateInstance(Math.PI / 2.0));
+        PORTRAIT(PageFormat.PORTRAIT),
+        LANDSCAPE(PageFormat.LANDSCAPE),
+        REVERSE_LANDSCAPE(PageFormat.REVERSE_LANDSCAPE);
         
         private final int printApiCode;
-        private final AffineTransform transform;
 
-        PageOrientation(int printApiCode, AffineTransform transform) {
+        PageOrientation(int printApiCode) {
             this.printApiCode = printApiCode;
-            this.transform = transform;
         }
 
         /**
@@ -135,10 +90,6 @@ public class Page extends AbstractWabitObject {
             }
             throw new IllegalArgumentException("Unknown Java Print orientation code: " + apiCode);
         }
-
-        public AffineTransform getTransform() {
-            return transform;
-        }
     }
     
     /**
@@ -154,7 +105,7 @@ public class Page extends AbstractWabitObject {
     /**
      * Indicates the orientation for this page's contents.
      */
-    private PageOrientation orientation = PageOrientation.PORTRAIT;
+    private PageOrientation orientation;
     
     /**
      * The content boxes that provide the page's content and define its layout.
@@ -169,24 +120,27 @@ public class Page extends AbstractWabitObject {
     private final List<Guide> guides = new ArrayList<Guide>();
 
     /**
-     * Creates a page with the given standard size and 1-inch margins on all sides.
+     * Creates a page with the given custom width and height, and 1-inch
+     * margins. The units for width and height are 1/72 of an inch, which
+     * correspond well with screen pixels in Java 2D (72 pixels = 1 inch).
      * 
-     * @param size The standard page size this page should have.
+     * @param width
+     *            The page width in units of 1/72 inch. The is the real apparent
+     *            width of the page. If you are creating a landscape page, this
+     *            value should be larger than the one you specify for height.
+     * @param height
+     *            The page height in units of 1/72 inch. The is the real
+     *            apparent height of the page. If you are creating a landscape
+     *            page, this value should be smaller than the one you specify
+     *            for width.
+     * @param orientation
+     *            The page orientation. This value has a fun interplay with width
+     *            and height, so be sure to specify this correctly based on the
+     *            type of page you are creating.
      */
-    public Page(String name, StandardPageSizes size) {
-        this(name, size.getWidth(), size.getHeight());
-    }
-
-    /**
-     * Creates a page with the given custom width and height, and 1-inch margins. The units
-     * for width and height are 1/72 of an inch, which correspond well with screen pixels
-     * in Java 2D (72 pixels = 1 inch).
-     *  
-     * @param width The page width in units of 1/72 inch.
-     * @param height The page height in units of 1/72 inch.
-     */
-    public Page(String name, int width, int height) {
+    public Page(String name, int width, int height, PageOrientation orientation) {
         setName(name);
+        this.orientation = orientation;
         this.width = width;
         this.height = height;
         
@@ -199,10 +153,36 @@ public class Page extends AbstractWabitObject {
         setDefaultFont(Font.decode("dialog 8"));
     }
 
+    /**
+     * Creates a new page whose dimensions and orientation are equivalent to the
+     * values in the pageFormat. The width of the page will be the apparent
+     * width of the visual page and the same will be true of the height.
+     * 
+     * @param name
+     *            The name for this WabitObject.
+     * @param pageFormat
+     *            The Java printing API page format from which to read the
+     *            dimensions and orientation. This object is not retained by
+     *            this class, so subsequent changes you make to the pageFormat
+     *            object will not affect this page.
+     */
+    public Page(String name, PageFormat pageFormat) {
+        this(name, (int) pageFormat.getWidth(), (int) pageFormat.getHeight(),
+                PageOrientation.forPrintApiCode(pageFormat.getOrientation()));
+    }
+
+    /**
+     * Returns the apparent width of the page. If this is a portrait page, this will
+     * usually be the smaller dimension.
+     */
     public int getWidth() {
         return width;
     }
 
+    /**
+     * Sets the apparent width of the page. If this is a portrait page, this should
+     * usually be the smaller dimension.
+     */
     public void setWidth(int width) {
         int oldWidth = this.width;
         this.width = width;
@@ -214,19 +194,27 @@ public class Page extends AbstractWabitObject {
         Guide rightMargin = getGuideWithLargestOffset(Axis.VERTICAL);
         if (rightMargin != null) {
             int oldMarginWidth = oldWidth - rightMargin.getOffset();
-            rightMargin.setOffset(newWidth - oldMarginWidth); // XXX respect orientation!
+            rightMargin.setOffset(newWidth - oldMarginWidth);
         }
     }
 
+    /**
+     * Returns the apparent height of the page. If this is a portrait page, this will
+     * usually be the larger dimension.
+     */
     public int getHeight() {
         return height;
     }
 
+    /**
+     * Sets the apparent height of the page. If this is a portrait page, this should
+     * usually be the larger dimension.
+     */
     public void setHeight(int height) {
         int oldHeight = this.height;
         this.height = height;
         firePropertyChange("height", oldHeight, height);
-        adjustMarginForPageHeight(oldHeight, height); // XXX respect orientation!
+        adjustMarginForPageHeight(oldHeight, height);
     }
 
     private void adjustMarginForPageHeight(int oldHeight, int newHeight) {
@@ -255,14 +243,18 @@ public class Page extends AbstractWabitObject {
         PageOrientation oldOrientation = this.orientation;
         this.orientation = orientation;
         firePropertyChange("orientation", oldOrientation, orientation);
-        if (oldOrientation != orientation) {
-            if (oldOrientation == PageOrientation.PORTRAIT) {
-                adjustMarginForPageHeight(getHeight(), getWidth());
-                adjustMarginForPageWidth(getWidth(), getHeight());
-            } else {
-                adjustMarginForPageHeight(getWidth(), getHeight());
-                adjustMarginForPageWidth(getHeight(), getWidth());
-            }
+        
+        // the following expression is meant to evaluate to false under the following conditions:
+        // 1. The page orientation hasn't actually changed
+        // 2. The page orientation has changed between LANDSCAPE and REVERSE_LANDSCAPE
+        if (   (oldOrientation == PageOrientation.PORTRAIT && orientation != PageOrientation.PORTRAIT)
+            || (oldOrientation != PageOrientation.PORTRAIT && orientation == PageOrientation.PORTRAIT)) {
+            
+            int oldWidth = getWidth();
+            int oldHeight = getHeight();
+
+            setWidth(oldHeight);
+            setHeight(oldWidth);
         }
     }
     
@@ -458,7 +450,12 @@ public class Page extends AbstractWabitObject {
         PageFormat pageFormat = new PageFormat();
         pageFormat.setOrientation(getOrientation().getPrintApiCode());
         Paper paper = new Paper();
-        paper.setSize(getWidth(), getHeight());
+        
+        if (getOrientation() == PageOrientation.PORTRAIT) {
+            paper.setSize(getWidth(), getHeight());
+        } else {
+            paper.setSize(getHeight(), getWidth());
+        }
 
         // the imageable area on the page format we return determines the clipping
         // region for the print API, so we always want to set it as big as possible
@@ -488,9 +485,18 @@ public class Page extends AbstractWabitObject {
     public void applyPageFormat(PageFormat pageFormat) {
         Paper paper = pageFormat.getPaper();
         
-        setWidth((int) paper.getWidth());
-        setHeight((int) paper.getHeight());
         setOrientation(PageOrientation.forPrintApiCode(pageFormat.getOrientation()));
-        // TODO update margins
+        
+        // important to set the page dimensions after orientation so
+        // setOrientation() doesn't swap them inappropriately
+        if (getOrientation() == PageOrientation.PORTRAIT) {
+            setWidth((int) paper.getWidth());
+            setHeight((int) paper.getHeight());
+        } else {
+            setWidth((int) paper.getHeight());
+            setHeight((int) paper.getWidth());
+        }
+        
+        // TODO update margins from page format?
     }
 }

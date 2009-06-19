@@ -42,6 +42,8 @@ public class PageNode extends PNode implements WabitNode {
 
     private final PropertyChangeListener pageChangeHandler = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent evt) {
+            logger.debug("Page " + evt.getSource() + ": " + evt.getPropertyName() +
+                    " changed " + evt.getOldValue() + " -> " + evt.getNewValue(), new Exception());
             updateBoundsFromPage();
         }
     };
@@ -66,11 +68,7 @@ public class PageNode extends PNode implements WabitNode {
     }
     
     private void updateBoundsFromPage() {
-        if (page.getOrientation() == PageOrientation.PORTRAIT) {
-            super.setBounds(0, 0, page.getWidth(), page.getHeight());
-        } else {
-            super.setBounds(0, 0, page.getHeight(), page.getWidth());
-        }
+        super.setBounds(0, 0, page.getWidth(), page.getHeight());
     }
     
     /**
