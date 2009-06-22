@@ -109,7 +109,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 			if (g instanceof Graphics2D) {
 				((Graphics2D) g).setStroke(DASHED_STROKE);
 			}
-			g.drawRoundRect(x, y, width-1, height-1, 20, 20);
+			g.drawRoundRect(x + 5 , y + 5 , width-11, height-11, 20, 20);
 			g.setColor(oldColour);
 		}
 		
@@ -376,7 +376,7 @@ public class CellSetTableHeaderComponent extends JComponent {
      */
     private void setLabelAsEmpty() {
     	setLayout(new BorderLayout());
-    	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%", "align center", ""));
+    	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%, ins 20", "align center", ""));
     	panel.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
     	
     	JLabel label = new JLabel("Drag Dimensions, Hierarchies,", SwingConstants.CENTER);
