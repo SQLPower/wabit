@@ -25,8 +25,10 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.QueryCache;
+import org.olap4j.OlapException;
+
 import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
@@ -35,7 +37,6 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
@@ -47,41 +48,56 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     private final WabitProject project;
 
     /**
-     * The query we will fill the layout from when this action is invoked.
+     * The {@link ReportContentRenderer} associated with the new default layout being used.
      */
-    private final QueryCache query;
-
-    private final WabitSwingSession session;
-
-    public CreateLayoutFromQueryAction(WabitSwingSession session, WabitProject wabitProject, QueryCache query) {
+    private ReportContentRenderer contentRenderer;
+    
+    /**
+     * The name of the new Layout, + " Layout" will be appended to the name.
+     */
+    private String layoutName;
+    
+    public CreateLayoutFromQueryAction(WabitProject wabitProject, ReportContentRenderer contentRenderer, String layoutName) {
         super("Create Layout...", ADD_LAYOUT_ICON);
         putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
-        this.session = session;
         this.project = wabitProject;
-        this.query = query;
+        this.contentRenderer = contentRenderer;
+        this.layoutName = layoutName;
     }
     
     public void actionPerformed(ActionEvent e) {
-        createDefaultLayout(project, query);
+        createDefaultLayout(project, contentRenderer, layoutName);
     }
-    
-    /**
-     * Creates a new layout with standard margins, headers, and footers. The body
-     * of the content is provided by the given query.
-     * 
-     * @param project The project that the new layout will be added to
-     * @param query The query to use for the body content.
-     * @return The new layout that was added to the project.
-     */
-    public static Layout createDefaultLayout(WabitProject project, QueryCache query) {
-        Layout l = new Layout(query.getName() + " Layout");
+
+	/**
+	 * Creates a new layout with standard margins, headers, and footers. The
+	 * body of the content is provided by the given
+	 * {@link ReportContentRenderer}
+	 * 
+	 * @param project
+	 *            The project that the new layout will be added to
+	 * @param contentRenderer
+	 *            This is the renderer which the new layout will use
+	 * @param layoutName
+	 *            This is the name of the new Layout, in the tree " Layout" will
+	 *            be appended to this name.
+	 * @return The new layout that was added to the project.
+	 */
+    public static Layout createDefaultLayout(WabitProject project, ReportContentRenderer contentRenderer, String layoutName) {
+        Layout l = new Layout(layoutName + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();
         final int pageBodyHeight = p.getLowerMarginOffset() - p.getUpperMarginOffset();
         
         ContentBox body = new ContentBox();
-        ReportContentRenderer bodyRenderer = new ResultSetRenderer(query);
-        body.setContentRenderer(bodyRenderer);
+        if (contentRenderer instanceof CellSetRenderer) {
+        	((CellSetRenderer) contentRenderer).updateMDXQuery();
+	        body.setContentRenderer(contentRenderer);
+        } else if (contentRenderer instanceof ResultSetRenderer) {
+        	body.setContentRenderer(contentRenderer);
+        } else {
+        	throw new UnsupportedOperationException("Creating the default layout is unsupported for the current ReportContentRenderer being passed. It's name is: " + contentRenderer.getName());
+        }
         p.addContentBox(body);
         body.setWidth(pageBodyWidth);
         body.setHeight(pageBodyHeight);
@@ -89,7 +105,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         body.setY(p.getUpperMarginOffset());
         
         ContentBox header = new ContentBox();
-        header.setContentRenderer(new Label(l, "Header!"));
+        header.setContentRenderer(new Label(l, layoutName));
         p.addContentBox(header);
         header.setWidth(pageBodyWidth / 2);
         header.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something

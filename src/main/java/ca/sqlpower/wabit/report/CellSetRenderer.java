@@ -164,8 +164,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         this.olapQuery = olapQuery;
         olapQuery.addPropertyChangeListener(queryListener);
         try {
-            modifiedMDXQuery = olapQuery.getMdxQueryCopy();
-            setCellSet(modifiedMDXQuery.execute());
+        	if (olapQuery.getMDXQuery() != null) {
+	            modifiedMDXQuery = olapQuery.getMdxQueryCopy();
+	            setCellSet(modifiedMDXQuery.execute());
+        	}
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -177,30 +179,37 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * This will update the current modifiedMDXQuery and re-execute it to generate
      * a new cell set.
      */
-    private void updateMDXQuery() {
+    public void updateMDXQuery() {
         Query newModifiedMDXQuery;
         try {
             newModifiedMDXQuery = olapQuery.getMdxQueryCopy();
         } catch (SQLException e1) {
             throw new RuntimeException(e1);
         }
-        
-        //XXX if we don't want to remember the expansion order for each report layout remove this loop.
-        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
-            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-                for (QueryDimension oldDimension : modifiedMDXQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
-                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
-                        dimension.getSelections().clear();
-                        for (Selection selection : oldDimension.getSelections()) {
-                            dimension.getSelections().add(selection);
-                        }
-                    }
-                }
-            }
+
+        if (modifiedMDXQuery == null) {
+        	try {
+				modifiedMDXQuery = olapQuery.getMdxQueryCopy();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+        } else {
+	        
+	        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
+	            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
+	                for (QueryDimension oldDimension : modifiedMDXQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
+	                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
+	                        dimension.getSelections().clear();
+	                        for (Selection selection : oldDimension.getSelections()) {
+	                            dimension.getSelections().add(selection);
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	        
+	        modifiedMDXQuery = newModifiedMDXQuery;
         }
-        
-        modifiedMDXQuery = newModifiedMDXQuery;
-        
         refreshCellSet = true;
     }
 
@@ -306,6 +315,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 throw new RuntimeException(e);
             }
             refreshCellSet = false;
+            return false;
         }
         
         if (getBodyFont() == null) {
@@ -317,7 +327,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         g.setFont(getHeaderFont());
         int headerFontHeight = g.getFontMetrics().getHeight();
-        CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
+		CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
         CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
         int hierarchyCount = axisMetaData.getHierarchies().size();
         int totalHeaderHeight = headerFontHeight * hierarchyCount;

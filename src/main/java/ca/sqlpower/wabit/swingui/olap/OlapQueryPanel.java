@@ -43,8 +43,10 @@ import org.olap4j.OlapStatement;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 
 public class OlapQueryPanel implements WabitPanel {
     
@@ -183,6 +185,8 @@ public class OlapQueryPanel implements WabitPanel {
 	    
 	    toolBar.add(queryPanel.getResetQueryButton());
 	    toolBar.addSeparator();
+	    
+	    toolBar.add(new CreateLayoutFromQueryAction(session.getProject(), new CellSetRenderer(query), query.getName()));
 	    return toolBar;
 	}
 
