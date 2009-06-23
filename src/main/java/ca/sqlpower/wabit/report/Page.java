@@ -150,7 +150,7 @@ public class Page extends AbstractWabitObject {
         addGuide(new Guide(Axis.HORIZONTAL, DPI));
         addGuide(new Guide(Axis.HORIZONTAL, height - DPI));
         
-        setDefaultFont(Font.decode("dialog 8"));
+        setDefaultFont(Font.decode("Arial-10"));
     }
 
     /**
