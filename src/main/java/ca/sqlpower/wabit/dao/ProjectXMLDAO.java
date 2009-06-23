@@ -52,10 +52,12 @@ import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.util.SQLPowerUtils;
+import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
@@ -76,6 +78,23 @@ public class ProjectXMLDAO {
 	
 	private static final Logger logger = Logger.getLogger(ProjectXMLDAO.class);
 
+	/**
+	 * The version number to put in exported files. This is not the Wabit version
+	 * number; it is the version of the file format itself. It is common for the
+	 * version number to change independent of Wabit releases, and this is especially
+	 * important for those using the continuous integration builds to do real work.
+	 * 
+     * <h2>VERSION CHANGE HISTORY</h2>
+     * 
+     * <dl>
+     *  <dt>1.0.0 <dd>initial version. lots of changes. (too many!)
+     *  <dt>1.0.1 <dd>adds page orientation attribute
+     * </dl> 
+	 */
+	//                                         UPDATE HISTORY!!!!!
+    static final Version FILE_VERSION = new Version(1, 0, 1); // please update version history (above) when you change this
+    //                                         UPDATE HISTORY!!??!
+    
 	/**
 	 * This output stream will be used to  write the project to a file.
 	 */
@@ -137,7 +156,7 @@ public class ProjectXMLDAO {
 	private void save(List<WabitDataSource> dataSources, List<QueryCache> queries, List<Layout> layouts) {
 		xml.println(out, "<?xml version='1.0' encoding='UTF-8'?>");
 		xml.println(out, "");
-		xml.println(out, "<wabit export-format=\"1.0.0\">");
+		xml.println(out, "<wabit export-format=\"" + FILE_VERSION + "\" wabit-app-version=\"" + WabitVersion.VERSION + "\">");
 		xml.indent++;
 
 		xml.print(out, "<project");
@@ -203,6 +222,7 @@ public class ProjectXMLDAO {
 		printAttribute("name", page.getName());
 		printAttribute("height", page.getHeight());
 		printAttribute("width", page.getWidth());
+		printAttribute("orientation", page.getOrientation().name());
 		xml.niprintln(out, ">");
 		xml.indent++;
 		saveFont(page.getDefaultFont());

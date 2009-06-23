@@ -37,14 +37,16 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
+import ca.sqlpower.util.DefaultUserPrompter;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
- * A placeholder for all state and behaviour that is shared among
- * Wabit sessions. Every session belongs to a session context, and
- * there is typically one session context in each JVM. However,
- * the limit of one session context is not enforced or required. It's
- * just typical.
+ * This is the canonical headless implementation of WabitSessionContext
+ * interface. Other session context implementations that cover more specialized
+ * use cases can either extend this one or delegate certain operations to it.
  */
 public class WabitSessionContextImpl implements WabitSessionContext {
 	
@@ -292,4 +294,15 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public String getName() {
 		return "Local";
 	}
+
+    /**
+     * Returns a user prompter that always gives the default response, since
+     * this is a headless session context and there is no user to ask.
+     */
+    public UserPrompter createUserPrompter(String question,
+            UserPromptType responseType, UserPromptOptions optionType,
+            UserPromptResponse defaultResponseType, Object defaultResponse,
+            String... buttonNames) {
+        return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
+    }
 }

@@ -32,7 +32,6 @@ import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -733,31 +732,34 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			return project.getChildren().size() > 0;
 		}
 		
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		new ProjectXMLDAO(out, project).save();
-		BufferedReader reader;
-		try {
-			reader = new BufferedReader(new FileReader(currentFile));
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+		// FIXME: this does not work, because some GUIDs change every time you load/save.
+		// It would be much better to track changes to the model using a listener.
 		
-		char[] buffer = new char[out.toString().toCharArray().length];
+		ByteArrayOutputStream currentProjectOutStream = new ByteArrayOutputStream();
+		new ProjectXMLDAO(currentProjectOutStream, project).save();
 		
+		BufferedReader existingProjectFile = null;
 		try {
-			reader.read(buffer, 0, out.toString().toCharArray().length);
+		    String currentProjectAsString = currentProjectOutStream.toString("utf-8");
+		    StringBuilder existingProjectBuffer = new StringBuilder(currentProjectAsString.length());
+		    existingProjectFile = new BufferedReader(new FileReader(currentFile));
+		    for (;;) {
+		        int nextChar = existingProjectFile.read();
+		        if (nextChar == -1) break;
+		        existingProjectBuffer.append((char) nextChar);
+		    }
+		    
+            return !existingProjectBuffer.toString().equals(currentProjectAsString);
+            
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+		    throw new RuntimeException(e);
+		} finally {
+		    try {
+		        if (existingProjectFile != null) existingProjectFile.close();
+		    } catch (IOException ex) {
+		        logger.warn("Couldn't close comparative input file. Squishing this exception:", ex);
+		    }
 		}
-		
-		for (int i = 0; i < out.toString().toCharArray().length && i < buffer.length; i++) {
-			if (out.toString().toCharArray()[i] != buffer[i]) {
-				logger.debug("Difference at position " + i + " character " + out.toString().toCharArray()[i] + " " + buffer[i]);
-				return true;
-			}
-		}
-		
-		return false;
 	}
 	
 	public void setCurrentFile(File savedOrLoadedFile) {

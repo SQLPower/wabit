@@ -73,6 +73,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
@@ -98,6 +99,7 @@ import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
 import ca.sqlpower.wabit.report.GraphRenderer.ExistingGraphTypes;
 import ca.sqlpower.wabit.report.GraphRenderer.LegendPosition;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
 import com.sun.mail.util.BASE64DecoderStream;
@@ -238,9 +240,19 @@ public class ProjectSAXHandler extends DefaultHandler {
      * loaded. This may be null.
      */
     private CellSetRenderer cellSetRenderer;
+
+    private final UserPrompterFactory promptFactory;
 	
+    /**
+     * Creates a new SAX handler which is capable of reading in a series of project
+     * descriptions from an XML stream. The list of projects encountered in the stream become
+     * available as a Wabit Session
+     * @param context
+     * @param promptFactory
+     */
 	public ProjectSAXHandler(WabitSessionContext context) {
 		this.context = context;
+        this.promptFactory = context;
 		sessions = new ArrayList<WabitSession>();
 		oldToNewDSNames = new HashMap<String, String>();
 		cancelled = false;
@@ -253,8 +265,24 @@ public class ProjectSAXHandler extends DefaultHandler {
 
 		xmlContext.push(name);
 
-        if (name.equals("wabit")) {
-        	//TODO: check version numbers and file formats.
+		if (name.equals("wabit")) {
+		    String versionString = attributes.getValue("export-format");
+		    if (versionString == null) {
+		        UserPrompter up = promptFactory.createUserPrompter(
+		                "This Wabit project file is very old. It may not read correctly, but I will try my best.",
+		                UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+		                null, "OK");
+		        up.promptUser();
+		    } else if (versionString.equals("1.0.0")) { // TODO update to new Version class when available
+                UserPrompter up = promptFactory.createUserPrompter(
+                        "The Wabit project you are opening is an old version that does not record\n" +
+                        "information about page orientation. All pages will default to portrait orientation.",
+                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+                        null, "OK");
+                up.promptUser();
+		    }
+		    // TODO warn if file is newer than expected
+
         } else if (name.equals("project")) {
         	session = context.createSession();
         	session.setLoading(true);
@@ -276,7 +304,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	checkMandatory("name", dsName);
         	SPDataSource ds = context.getDataSources().getDataSource(dsName);
         	if (ds == null) {
-        		UserPrompter prompter = session.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", UserPromptType.JDBC_DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, "OK", "Create New...", "Skip Data Source", "Cancel Load");
+        		UserPrompter prompter = promptFactory.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", UserPromptType.JDBC_DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, "OK", "Create New...", "Skip Data Source", "Cancel Load");
         		UserPromptResponse responseType = prompter.promptUser();
         		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
@@ -623,6 +651,17 @@ public class ProjectSAXHandler extends DefaultHandler {
         		}
         	}
 			page.setName(pageName);
+			
+			//This sets the orientation before setting the width and height to prevent
+			//a change in the orientation from switching the width and height. If the
+			//orientation changes between portrait and landscape the width and height
+			//values are swapped.
+			String orientation = attributes.getValue("orientation");
+			if (orientation != null) {
+			    // XXX the null check is for compatibility with export-format 1.0.0
+			    page.setOrientation(PageOrientation.valueOf(orientation));
+			}
+			
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -632,6 +671,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         			page.setHeight(Integer.parseInt(aval));
         		} else if (aname.equals("width")) {
         			page.setWidth(Integer.parseInt(aval));
+        		} else if (aname.equals("orientation")) {
+        		    //already loaded
         		} else {
         			logger.warn("Unexpected attribute of <layout-page>: " + aname + "=" + aval);
         		}
