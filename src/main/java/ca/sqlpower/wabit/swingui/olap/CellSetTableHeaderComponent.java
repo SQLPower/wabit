@@ -385,7 +385,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     	panel.add(label);
     	
     	JPanel iconPanel = new JPanel();
-    	iconPanel.setBackground(Color.WHITE);
+    	iconPanel.setOpaque(false);
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.DIMENSION_ICON, Color.LIGHT_GRAY, 0.9f)));
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.HIERARCHY_ICON, Color.LIGHT_GRAY, 0.9f)));
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.MEASURE_ICON, Color.LIGHT_GRAY, 0.9f)));
