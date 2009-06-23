@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -78,6 +80,7 @@ import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapUtils;
+import ca.sqlpower.wabit.swingui.QueryPanel;
 
 public class Olap4jGuiQueryPanel {
 
@@ -336,7 +339,8 @@ public class Olap4jGuiQueryPanel {
                 }
             }
         });
-        resetQueryButton = new JButton("Reset Query");
+        resetQueryButton = new JButton();
+        resetQueryButton.setIcon(new ImageIcon(Olap4jGuiQueryPanel.class.getClassLoader().getResource("icons/reset.png")));
         resetQueryButton.setToolTipText("Reset Query");
         resetQueryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
