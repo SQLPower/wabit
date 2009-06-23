@@ -105,7 +105,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 		public void paintBorder(Component c, Graphics g, int x, int y,
 				int width, int height) {
 			Color oldColour = g.getColor();
-			g.setColor(Color.GRAY);
+			g.setColor(new Color(221, 221, 221));
 			if (g instanceof Graphics2D) {
 				((Graphics2D) g).setStroke(DASHED_STROKE);
 			}
@@ -377,7 +377,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     private void setLabelAsEmpty() {
     	setLayout(new BorderLayout());
     	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%, ins 20", "align center", ""));
-    	panel.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+    	panel.setBackground(Color.WHITE);
     	
     	JLabel label = new JLabel("Drag Dimensions, Hierarchies,", SwingConstants.CENTER);
     	panel.add(label);
@@ -385,7 +385,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     	panel.add(label);
     	
     	JPanel iconPanel = new JPanel();
-    	iconPanel.setBackground(ColourScheme.BACKGROUND_COLOURS[0]);
+    	iconPanel.setBackground(Color.WHITE);
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.DIMENSION_ICON, Color.LIGHT_GRAY, 0.9f)));
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.HIERARCHY_ICON, Color.LIGHT_GRAY, 0.9f)));
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.MEASURE_ICON, Color.LIGHT_GRAY, 0.9f)));

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.io.OutputStreamWriter;
@@ -76,6 +77,7 @@ public class CellSetViewer {
         table = new JTable();
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(Color.WHITE);
         showMessage("No query defined");
         viewerComponent.add(scrollPane);
     }
