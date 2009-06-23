@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
-<wabit export-format="1.0.0">
- <project name="New Project" editorPanelModel="767072b5-917d-4ae8-9751-ac21bea0ec5e" >
+<wabit export-format="1.0.1">
+ <project name="Example Workspace" editorPanelModel="767072b5-917d-4ae8-9751-ac21bea0ec5e" >
   <data-sources>
    <data-source name="SQL Power Demo Connection"   />
   </data-sources>
@@ -104,7 +104,7 @@
  column-id="b7f3fcdd-27e1-4a22-b280-494e1f426096" direction="DESC"   />
   </query>
   <layout name="Highly Rated Directors and Actors" zoom="0"  >
-   <layout-page name="Default Page" height="792" width="612"   >
+   <layout-page name="Default Page" height="792" width="612" orientation="PORTRAIT"  >
     <font name="Dialog" size="8" style="0"    />
     <content-box name="Content from Label" width="332" height="88" xpos="72" ypos="288"    >
      <font name="Dialog" size="8" style="0"     />
@@ -162,7 +162,7 @@
    </layout-page>
   </layout>
   <layout name="Highly Rated Movies Layout" zoom="0"  >
-   <layout-page name="Default Page" height="792" width="612"   >
+   <layout-page name="Default Page" height="792" width="612" orientation="PORTRAIT"   >
     <font name="Dialog" size="8" style="0"    />
     <content-box name="Content from Result Set: Highly Rated Movies" width="468" height="648" xpos="72" ypos="72"    >
      <font name="Dialog" size="8" style="0"     />
