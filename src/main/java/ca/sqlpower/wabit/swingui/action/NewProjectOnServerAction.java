@@ -50,7 +50,7 @@ public class NewProjectOnServerAction extends AbstractAction {
                     new WabitSwingSessionContextImpl(serverCtx, false));
             newProject.showFrame();
         } catch (Exception ex) {
-            SPSUtils.showExceptionDialogNoReport(dialogOwner, "Couldn't create new project on server", ex);
+            SPSUtils.showExceptionDialogNoReport(dialogOwner, "Couldn't create new workspace on server", ex);
         }
     }
 }

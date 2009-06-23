@@ -408,25 +408,25 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
-		fileMenu.add(new AbstractAction("New", NEW_PROJECT_ICON) {
+		fileMenu.add(new AbstractAction("New Workspace...", NEW_PROJECT_ICON) {
 			public void actionPerformed(ActionEvent e) {
 				NewProjectScreen newProject = new NewProjectScreen(getContext());
 				newProject.showFrame();
 			}
 		});
-        fileMenu.add(getContext().createServerListMenu(frame, "New Project On Server", new ServerListMenuItemFactory() {
+        fileMenu.add(getContext().createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 return new JMenuItem(new NewProjectOnServerAction(dialogOwner, serviceInfo));
             }
         }));
 		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
         fileMenu.add(getContext().createRecentMenu());
-        fileMenu.add(getContext().createServerListMenu(frame, "Open On Server", new ServerListMenuItemFactory() {
+        fileMenu.add(getContext().createServerListMenu(frame, "Open Server Workspace", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 return new OpenOnServerMenu(dialogOwner, serviceInfo);
             }
         }));
-		fileMenu.add(new AbstractAction("Close Project") {
+		fileMenu.add(new AbstractAction("Close Workspace") {
 			public void actionPerformed(ActionEvent e) {
 				close();
 			}
@@ -434,7 +434,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveProjectAction(this));
 		fileMenu.add(new SaveAsProjectAction(this));
-		fileMenu.add(getContext().createServerListMenu(frame, "Save On Server", new ServerListMenuItemFactory() {
+		fileMenu.add(getContext().createServerListMenu(frame, "Save Workspace on Server", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 try {
                     return new JMenuItem(new SaveProjectOnServerAction(serviceInfo, dialogOwner, project));

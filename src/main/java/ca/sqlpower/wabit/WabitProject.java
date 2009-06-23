@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.event.ListDataListener;
 import javax.swing.event.UndoableEditListener;
 
 import org.apache.log4j.Logger;
@@ -91,7 +90,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
 
     public WabitProject() {
     	listeners = new ArrayList<DatabaseListChangeListener>();
-        setName("New Project");
+        setName("New Workspace");
     }
     
     public List<WabitObject> getChildren() {

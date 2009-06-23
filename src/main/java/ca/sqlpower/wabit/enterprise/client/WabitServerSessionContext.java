@@ -130,7 +130,7 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
      */
     public List<String> getProjectNames() throws IOException, URISyntaxException {
         String responseBody = executeServerRequest("project", new BasicResponseHandler());
-        logger.debug("Project list:\n" + responseBody);
+        logger.debug("Workspace list:\n" + responseBody);
         List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
         return projects;
     }

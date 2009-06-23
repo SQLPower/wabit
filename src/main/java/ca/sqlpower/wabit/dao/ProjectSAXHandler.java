@@ -344,7 +344,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         						throw new NullPointerException("Data source " + newDSName + " was not found in the project.");
         					}
         				}
-        				logger.debug("Project has data sources " + session.getProject().getDataSources());
+        				logger.debug("Workspace has data sources " + session.getProject().getDataSources());
         			}
         			cache.setDataSource(ds);
         		} else if (aname.equals("zoom")) {
@@ -572,7 +572,7 @@ public class ProjectSAXHandler extends DefaultHandler {
                                 throw new NullPointerException("Data source " + newDSName + " was not found in the project.");
                             }
                         }
-                        logger.debug("Project has data sources " + session.getProject().getDataSources());
+                        logger.debug("Workspace has data sources " + session.getProject().getDataSources());
                     }
                     olapQuery.setOlapDataSource(ds);
                 } else {

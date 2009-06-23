@@ -100,7 +100,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	}
 	
 	public RecentMenu createRecentMenu() {
-		return new RecentMenu(this.getClass()) {
+		RecentMenu menu = new RecentMenu(this.getClass()) {
 			
 			@Override
 			public void loadFile(String fileName) throws IOException {
@@ -108,6 +108,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
 			}
 		};
+		
+		menu.setText("Open Recent Workspace");
+		
+		return menu;
 	}
 //
 //	public JMenu createServerListMenu(Component dialogOwner) {

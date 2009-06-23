@@ -47,7 +47,7 @@ Good luck with the release!
  *Ensure the online help is present
  *(When documentation exists) Scan through the PDF documentation. Ensure the pictures are included properly
   (not stretched, properly cropped)
- *Try saving and loading a project file. Ensure project settings are persistent:
+ *Try saving and loading a Wabit file. Ensure workspace settings are persistent:
   data sources, queries and reports and so on
  *Make sure the app quits once all windows have been closed
  *For Windows only, test the uninstaller

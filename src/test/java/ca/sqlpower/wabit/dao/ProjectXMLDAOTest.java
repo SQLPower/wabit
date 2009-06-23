@@ -244,7 +244,7 @@ public class ProjectXMLDAOTest extends TestCase {
 	
 	public void testSaveAndLoad() throws Exception {
 		WabitProject p = new WabitProject();
-		p.setName("Project");
+		p.setName("Workspace");
 		setAllSetters(p, getPropertiesToIgnore());
 		p.addDataSource(db.getDataSource());
 

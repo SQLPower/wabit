@@ -149,7 +149,7 @@ public class ProjectPanel implements WabitPanel {
 	private final WabitSwingSession session;
 	
 	public ProjectPanel(WabitSwingSession session) {
-		logger.debug("Creating new project panel for " + session);
+		logger.debug("Creating new workspace panel for " + session);
 		this.session = session;
 		scrollPane = new JScrollPane(buildUI());
 	}
@@ -239,7 +239,7 @@ public class ProjectPanel implements WabitPanel {
                 } else if (ds instanceof Olap4jDataSource) {
                     addOlap4jToProject((Olap4jDataSource) ds, session);
                 } else {
-                    throw new IllegalArgumentException("Unknown data source of type " + ds.getClass()+ " is being added to the project.");
+                    throw new IllegalArgumentException("Unknown data source of type " + ds.getClass()+ " is being added to the workspace.");
                 }
             }
 		

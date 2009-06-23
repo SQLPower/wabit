@@ -45,7 +45,7 @@ public class SaveAsProjectAction extends AbstractAction {
 	private final WabitSwingSession session;
 
 	public SaveAsProjectAction(WabitSwingSession session) {
-		super("Save As...", new ImageIcon(SaveAsProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+		super("Save Workspace As...", new ImageIcon(SaveAsProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
 		this.session = session;
 	}
 

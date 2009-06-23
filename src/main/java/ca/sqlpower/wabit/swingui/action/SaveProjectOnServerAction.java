@@ -95,7 +95,7 @@ public class SaveProjectOnServerAction extends AbstractAction {
                     fileNameField.setText((String) existingFileList.getSelectedValue());
                 }
             });
-            builder.append("Existing projects on " + WabitUtils.serviceInfoSummary(si) + ":");
+            builder.append("Existing workspaces on " + WabitUtils.serviceInfoSummary(si) + ":");
             builder.nextLine();
             builder.append(new JScrollPane(existingFileList));
             builder.nextLine();

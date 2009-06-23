@@ -64,7 +64,7 @@ public class ProjectSAXHandlerTest extends TestCase {
 		JDBCDataSource newDS = new JDBCDataSource(db.getDataSource());
 		newDS.setName("Missing DS is replaced");
 		WabitProject p = new WabitProject();
-		p.setName("Project");
+		p.setName("Workspace");
 		p.addDataSource(newDS);
 
 		final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());

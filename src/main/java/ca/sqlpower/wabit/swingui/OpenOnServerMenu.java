@@ -54,7 +54,7 @@ public class OpenOnServerMenu extends JMenu {
     };
     
     private void refreshProjects() {
-        logger.debug("Refreshing project list...");
+        logger.debug("Refreshing workspace list...");
         removeAll();
         try {
             WabitServerSessionContext ctx = WabitServerSessionContext.getInstance(serviceInfo);
@@ -62,7 +62,7 @@ public class OpenOnServerMenu extends JMenu {
                 add(new OpenProjectOnServerAction(dialogOwner, serviceInfo, projectName));
             }
         } catch (Exception ex) {
-            JMenuItem mi = new JMenuItem("Error getting project names: " + ex);
+            JMenuItem mi = new JMenuItem("Error getting workspace names: " + ex);
             mi.setEnabled(false);
             add(mi);
         }

@@ -228,7 +228,6 @@ public class ProjectTreeModel implements TreeModel {
                     for (int i = 0; i < 10 && i < dataSources.size(); i++) {
                         p.addDataSource(new WabitDataSource(dataSources.get(i)));
                     }
-                    System.out.println("Added " + p.getDataSources().size() + " data sources to project");
                     
                     // TODO: Add queries to project
                     

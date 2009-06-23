@@ -82,7 +82,7 @@ public class NewProjectScreen {
 	
 	private void buildUI() {
 		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
-		final JLabel selectDSLabel = new JLabel("Select a data source for your new project.");
+		final JLabel selectDSLabel = new JLabel("Select a data source for your new workspace.");
 		selectDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		builder.append(selectDSLabel);
 		builder.nextLine();
