@@ -110,6 +110,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private Font bodyFont;
     
+    private String errorMessage = null;
+    
+    private Boolean queryValid = true;
+    
     /**
      * The alignment of the text in the body of this
      * cell set.
@@ -163,13 +167,22 @@ public class CellSetRenderer extends AbstractWabitObject implements
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
         olapQuery.addPropertyChangeListener(queryListener);
-        try {
-        	if (olapQuery.getMDXQuery() != null) {
-	            modifiedMDXQuery = olapQuery.getMdxQueryCopy();
-	            setCellSet(modifiedMDXQuery.execute());
-        	}
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (olapQuery.getMDXQuery() != null) {
+	        try {
+				modifiedMDXQuery = olapQuery.getMdxQueryCopy();
+			} catch (SQLException e) {
+				throw new RuntimeException();
+			}
+	        try {
+				setCellSet(modifiedMDXQuery.execute());
+			} catch (Exception e) {
+	            //XXX it seems that this error message doesn't say anything conclusive
+                //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
+                //there are no rows.
+				logger.warn(e.toString());
+				errorMessage = "Error when executing query.";
+				queryValid = false;
+			}
         }
         
     }
@@ -311,8 +324,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (refreshCellSet) {
             try {
                 setCellSet(modifiedMDXQuery.execute());
-            } catch (OlapException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+            	logger.warn(e.getMessage());
+                queryValid = false;
+                //XXX it seems that this error message doesn't say anything conclusive
+                //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
+                //there are no rows.
+                errorMessage = "Error when executing query.";
             }
             refreshCellSet = false;
             return false;
@@ -326,6 +344,12 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         
         g.setFont(getHeaderFont());
+        
+        if (!queryValid) {
+        	g.drawString(getErrorMessage(), 0, g.getFontMetrics().getHeight());
+        	return false;
+        }
+
         int headerFontHeight = g.getFontMetrics().getHeight();
 		CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
         CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
@@ -565,6 +589,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public void setCellSet(CellSet cellSet) {
         logger.debug("Row axis position count: " + cellSet.getAxes().get(Axis.ROWS.axisOrdinal()).getPositionCount());
         logger.debug("Column axis position count: " + cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal()).getPositionCount());
+        queryValid = true;
         CellSet oldSet = this.cellSet;
         this.cellSet = cellSet;
         firePropertyChange("cellSet", oldSet, cellSet);
@@ -589,5 +614,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public Query getModifiedMDXQuery() {
         return modifiedMDXQuery;
     }
+    
+    public Boolean getQueryValid() {
+		return queryValid;
+	}
+    
+    public String getErrorMessage() {
+		return errorMessage;
+	}
 
 }
