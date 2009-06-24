@@ -36,11 +36,11 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 
-public class ProjectSAXHandlerTest extends TestCase {
+public class WorkspaceSAXHandlerTest extends TestCase {
 
 	/**
 	 * This is a fake database to be used in testing.
@@ -64,7 +64,7 @@ public class ProjectSAXHandlerTest extends TestCase {
 	public void testMissingDSIsReplaced() throws Exception {
 		JDBCDataSource newDS = new JDBCDataSource(db.getDataSource());
 		newDS.setName("Missing DS is replaced");
-		WabitProject p = new WabitProject();
+		WabitWorkspace p = new WabitWorkspace();
 		p.setName("Workspace");
 		p.addDataSource(newDS);
 
@@ -74,7 +74,7 @@ public class ProjectSAXHandlerTest extends TestCase {
 		query.setDataSource(newDS);
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ProjectXMLDAO saveDAO = new ProjectXMLDAO(out, p);
+		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, p);
 		saveDAO.save();
 		System.out.println(out.toString("utf-8"));
         
@@ -109,11 +109,11 @@ public class ProjectSAXHandlerTest extends TestCase {
         	}
         };
         
-        LoadProjectXMLDAO loadDAO = new LoadProjectXMLDAO(context, in);
+        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in);
 	
-        WabitSession loadedSession = loadDAO.loadProjects().get(0);
-        assertEquals(1, loadedSession.getProject().getQueries().size());
-        QueryCache loadedQuery = (QueryCache) loadedSession.getProject().getQueries().get(0);
+        WabitSession loadedSession = loadDAO.openWorkspaces().get(0);
+        assertEquals(1, loadedSession.getWorkspace().getQueries().size());
+        QueryCache loadedQuery = (QueryCache) loadedSession.getWorkspace().getQueries().get(0);
         assertEquals(replacementDS, loadedQuery.getQuery().getDatabase().getDataSource());
 	}
 }

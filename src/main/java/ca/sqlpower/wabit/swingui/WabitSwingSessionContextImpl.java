@@ -48,7 +48,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
-import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
+import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
@@ -105,7 +105,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			@Override
 			public void loadFile(String fileName) throws IOException {
 				File file = new File(fileName);
-				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
+				OpenWorkspaceAction.loadFile(file, WabitSwingSessionContextImpl.this);
 			}
 		};
 		

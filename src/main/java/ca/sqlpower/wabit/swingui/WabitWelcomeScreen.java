@@ -39,7 +39,7 @@ import javax.swing.WindowConstants;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
-import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
+import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -109,7 +109,7 @@ public class WabitWelcomeScreen {
 			public void actionPerformed(ActionEvent e) {
 				terminate = false;
 				close();
-				new NewProjectScreen(context).showFrame();
+				new NewWorkspaceScreen(context).showFrame();
 			}
 		});
 		newProjectButton.setIcon(NEW_PROJECT_ICON);
@@ -134,7 +134,7 @@ public class WabitWelcomeScreen {
 				}
 				importFile = fc.getSelectedFile();
 
-				LoadProjectsAction.loadFile(importFile, context);
+				OpenWorkspaceAction.loadFile(importFile, context);
 				terminate = false;
 			}
 		});
@@ -160,7 +160,7 @@ public class WabitWelcomeScreen {
 		JButton openDemoButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
-				LoadProjectsAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
+				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
 				        "/ca/sqlpower/wabit/exProject.wabit"), context);
 			}
 		});

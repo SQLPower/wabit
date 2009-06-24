@@ -22,14 +22,14 @@ package ca.sqlpower.wabit;
 import java.util.HashSet;
 import java.util.Set;
 
-public class WabitProjectTest extends AbstractWabitObjectTest {
+public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
-    private WabitProject project;
+    private WabitWorkspace project;
     
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        project = new WabitProject();
+        project = new WabitWorkspace();
     }
     
     @Override

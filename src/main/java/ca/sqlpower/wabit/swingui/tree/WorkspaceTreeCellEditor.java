@@ -38,7 +38,7 @@ import ca.sqlpower.wabit.report.Page;
 /**
  * This tree cell editor allows the user to set the name of objects in the tree.
  */
-public class ProjectTreeCellEditor extends DefaultTreeCellEditor {
+public class WorkspaceTreeCellEditor extends DefaultTreeCellEditor {
 	
 	private final KeyListener keyListener = new KeyListener() {
 		public void keyTyped(KeyEvent e) {
@@ -72,7 +72,7 @@ public class ProjectTreeCellEditor extends DefaultTreeCellEditor {
 		}
 	};
 
-	public ProjectTreeCellEditor(JTree tree, DefaultTreeCellRenderer renderer) {
+	public WorkspaceTreeCellEditor(JTree tree, DefaultTreeCellRenderer renderer) {
 		super(tree, renderer);
 	}
 	

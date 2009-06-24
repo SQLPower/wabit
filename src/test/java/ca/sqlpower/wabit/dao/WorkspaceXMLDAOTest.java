@@ -55,11 +55,11 @@ import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.report.Layout;
 
-public class ProjectXMLDAOTest extends TestCase {
+public class WorkspaceXMLDAOTest extends TestCase {
 	
 	/**
 	 * This is a fake database to be used in testing.
@@ -243,7 +243,7 @@ public class ProjectXMLDAOTest extends TestCase {
 	}
 	
 	public void testSaveAndLoad() throws Exception {
-		WabitProject p = new WabitProject();
+		WabitWorkspace p = new WabitWorkspace();
 		p.setName("Workspace");
 		setAllSetters(p, getPropertiesToIgnore());
 		p.addDataSource(db.getDataSource());
@@ -275,27 +275,27 @@ public class ProjectXMLDAOTest extends TestCase {
 // ========================= Now the save and load =========================
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ProjectXMLDAO saveDAO = new ProjectXMLDAO(out, p);
+		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, p);
 		saveDAO.save();
         System.out.println(out.toString("utf-8"));
         
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        LoadProjectXMLDAO loadDAO = new LoadProjectXMLDAO(context, in);
+        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in);
         
-        WabitSession loadedSession = loadDAO.loadProjects().get(0);
+        WabitSession loadedSession = loadDAO.openWorkspaces().get(0);
         
-        assertNotNull(loadedSession.getProject());
-        assertPropertiesEqual(p, loadedSession.getProject(), "UUID", "children", "dataSources", "queries", "layouts", "editorPanelModel");
+        assertNotNull(loadedSession.getWorkspace());
+        assertPropertiesEqual(p, loadedSession.getWorkspace(), "UUID", "children", "dataSources", "queries", "layouts", "editorPanelModel");
         
-        assertEquals(p.getDataSources().size(), loadedSession.getProject().getDataSources().size());
+        assertEquals(p.getDataSources().size(), loadedSession.getWorkspace().getDataSources().size());
         for (WabitDataSource ds : p.getDataSources()) {
         	assertPropertiesEqual(db.getDataSource(), ((WabitDataSource) ds).getSPDataSource());
         }
         
-        assertEquals(p.getQueries().size(), loadedSession.getProject().getQueries().size());
+        assertEquals(p.getQueries().size(), loadedSession.getWorkspace().getQueries().size());
         for (int i = 0; i < p.getQueries().size(); i++) {
         	Query oldQuery = (Query) ((QueryCache) p.getQueries().get(i)).getQuery();
-			Query newQuery = (Query) ((QueryCache) loadedSession.getProject().getQueries().get(i)).getQuery();
+			Query newQuery = (Query) ((QueryCache) loadedSession.getWorkspace().getQueries().get(i)).getQuery();
 			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session", "streaming", "streamingStatement", "streamingConnection", "timerListener"});
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());
 			for (int j = 0; j < oldQuery.getConstantsContainer().getItems().size(); j++) {
@@ -318,7 +318,7 @@ public class ProjectXMLDAOTest extends TestCase {
 			}
         }
         
-        assertEquals(p.getLayouts().size(), loadedSession.getProject().getLayouts().size());
+        assertEquals(p.getLayouts().size(), loadedSession.getWorkspace().getLayouts().size());
         for (Layout l : p.getLayouts()) {
         	
         }

@@ -91,7 +91,7 @@ import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -610,7 +610,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 */
 		private CleanupTableCellRenderer currentHeaderTableCellRenderer;
 		
-		public GraphRendererPropertyPanel(WabitProject project, GraphRenderer renderer) {
+		public GraphRendererPropertyPanel(WabitWorkspace project, GraphRenderer renderer) {
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
 			queryComboBox = new JComboBox(project.getQueries().toArray());
 			graphTypeComboBox = new JComboBox(ExistingGraphTypes.values());
@@ -876,7 +876,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 * properties panel to tell what queries are accessible
 	 * to create a graph from.
 	 */
-	private final WabitProject project;
+	private final WabitWorkspace project;
 	
 	/**
 	 * The Y axis label in the graph.
@@ -937,13 +937,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	};
 	
-	public GraphRenderer(ContentBox parent, WabitProject project, String uuid) {
+	public GraphRenderer(ContentBox parent, WabitWorkspace project, String uuid) {
 		super(uuid);
 		this.project = project;
 		this.parent = parent;
 	}
 	
-	public GraphRenderer(ContentBox parent, WabitProject project) {
+	public GraphRenderer(ContentBox parent, WabitWorkspace project) {
 		this.project = project;
 		this.parent = parent;
 		parent.setWidth(100);

@@ -26,7 +26,7 @@ import java.io.FileOutputStream;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
@@ -35,12 +35,12 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
  * If the user has not yet saved or loaded it will prompt the user for a file location
  * and name.
  */
-public class SaveProjectAction extends AbstractAction {
+public class SaveWorkspaceAction extends AbstractAction {
 	
 	private final WabitSwingSession session;
 
-	public SaveProjectAction(WabitSwingSession session) {
-		super("Save Workspace", new ImageIcon(SaveProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+	public SaveWorkspaceAction(WabitSwingSession session) {
+		super("Save Workspace", new ImageIcon(SaveWorkspaceAction.class.getClassLoader().getResource("icons/wabit_save.png")));
 		this.session = session;
 		
 	}
@@ -59,9 +59,9 @@ public class SaveProjectAction extends AbstractAction {
 	 */
 	public static boolean save(WabitSwingSession session) {
 		if (session.getCurrentFile() != null) {
-			ProjectXMLDAO projectSaver;
+			WorkspaceXMLDAO projectSaver;
 			try {
-				projectSaver = new ProjectXMLDAO(new FileOutputStream(session.getCurrentFile()), session.getProject());
+				projectSaver = new WorkspaceXMLDAO(new FileOutputStream(session.getCurrentFile()), session.getWorkspace());
 			} catch (FileNotFoundException e1) {
 				throw new RuntimeException(e1);
 			}
@@ -69,7 +69,7 @@ public class SaveProjectAction extends AbstractAction {
 			((WabitSwingSessionContext) session.getContext()).putRecentFileName(session.getCurrentFile().getAbsolutePath());
 			return true;
 		} else {
-			return new SaveAsProjectAction(session).save();
+			return new SaveWorkspaceAsAction(session).save();
 		}
 	}
 

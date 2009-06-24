@@ -59,23 +59,23 @@ import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
 /**
  * This listener is the main listener on the project tree in Wabit.
  * It will listen and handle all tree events from creating new elements
  * to changing the view based on selected nodes.
  */
-public class ProjectTreeListener extends MouseAdapter {
+public class WorkspaceTreeListener extends MouseAdapter {
 	
-	private static final Logger logger = Logger.getLogger(ProjectTreeListener.class);
+	private static final Logger logger = Logger.getLogger(WorkspaceTreeListener.class);
 	
-    public static final Icon DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
-    public static final Icon OLAP_DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
+    public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
+    public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
 	
 	private final WabitSwingSession session;
 
-	public ProjectTreeListener(WabitSwingSession session) {
+	public WorkspaceTreeListener(WabitSwingSession session) {
 		this.session = session;
 	}
 
@@ -96,7 +96,7 @@ public class ProjectTreeListener extends MouseAdapter {
 			maybeShowPopup(e);
 		}
 		if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
-			session.getProject().setEditorPanelModel((WabitObject) lastPathComponent);
+			session.getWorkspace().setEditorPanelModel((WabitObject) lastPathComponent);
 			if (e.getButton() == MouseEvent.BUTTON1  && e.getClickCount() == 2) {
 				JTree tree = (JTree)e.getSource();
 				tree.startEditingAtPath(tree.getSelectionPath());
@@ -132,7 +132,7 @@ public class ProjectTreeListener extends MouseAdapter {
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
 					final QueryCache query = (QueryCache)item;
-					session.getProject().removeQuery(query, session);
+					session.getWorkspace().removeQuery(query, session);
 					removeLayoutPartsDependentOnQuery(query);
 				} else {
 					return;
@@ -144,26 +144,26 @@ public class ProjectTreeListener extends MouseAdapter {
 							"Delete Data Source", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
 		                    new Object[] {"Delete All", "Replace", "Cancel"}, null);
 		            if (response == 0) {
-		            	session.getProject().removeDataSource((WabitDataSource)item);
+		            	session.getWorkspace().removeDataSource((WabitDataSource)item);
 		            	if (wabitDS.getSPDataSource() instanceof JDBCDataSource) {
 			                //A temporary list is used instead of directly using session.getProject().getQueries()
 			            	//to prevent a ConcurrentModificationException
-			            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
+			            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getWorkspace().getQueries());
 			            	for(QueryCache query : queries) {
 			                	if(item.equals(query.getWabitDataSource())) {
 			                		removeLayoutPartsDependentOnQuery(query);
-			                		session.getProject().removeQuery(query, session);
+			                		session.getWorkspace().removeQuery(query, session);
 			                	}
 			                }
 		            	} else if (wabitDS.getSPDataSource() instanceof Olap4jDataSource) {
-			            	List <OlapQuery> olapQueries = new ArrayList<OlapQuery>(session.getProject().getOlapQueries());
+			            	List <OlapQuery> olapQueries = new ArrayList<OlapQuery>(session.getWorkspace().getOlapQueries());
 			            	logger.debug("Project has " + olapQueries.size() + " queries");
 			            	for(OlapQuery query : olapQueries) {
 			            		logger.debug("Currently on query '" + query.getName() + "'");
 			            		if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
 			            			logger.debug("Removing this query");
 			            			removeLayoutPartsDependentOnOlapQuery(query);
-			            			session.getProject().removeOlapQuery(query);
+			            			session.getWorkspace().removeOlapQuery(query);
 			            		}
 			            	}
 		            	}
@@ -176,25 +176,25 @@ public class ProjectTreeListener extends MouseAdapter {
 												            			null, "OK", "Create New", "Cancel");
 		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
 		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
-		        			session.getProject().removeDataSource((WabitDataSource)item);
+		        			session.getWorkspace().removeDataSource((WabitDataSource)item);
 		        			SPDataSource ds = (SPDataSource) dbPrompter.getUserSelectedResponse();
-		        			session.getProject().addDataSource(ds);
+		        			session.getWorkspace().addDataSource(ds);
 		        			if (ds instanceof JDBCDataSource) {
-		        				List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
+		        				List <QueryCache> queries = new ArrayList<QueryCache>(session.getWorkspace().getQueries());
 				            	for(QueryCache query : queries) {
 				                	if(item.equals(query.getWabitDataSource())) {
 				                		removeLayoutPartsDependentOnQuery(query);
-				                		int queryIndex = session.getProject().getQueries().indexOf(query);
-										session.getProject().getQueries().get(queryIndex).setDataSource((JDBCDataSource)ds);
+				                		int queryIndex = session.getWorkspace().getQueries().indexOf(query);
+										session.getWorkspace().getQueries().get(queryIndex).setDataSource((JDBCDataSource)ds);
 				                	}
 				                }
 		        			} else if (ds instanceof Olap4jDataSource) {
-		        				List <OlapQuery> queries = new ArrayList<OlapQuery>(session.getProject().getOlapQueries());
+		        				List <OlapQuery> queries = new ArrayList<OlapQuery>(session.getWorkspace().getOlapQueries());
 				            	for(OlapQuery query : queries) {
 				                	if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
 				                		removeLayoutPartsDependentOnOlapQuery(query);
-				                		int queryIndex = session.getProject().getOlapQueries().indexOf(query);
-										session.getProject().getOlapQueries().get(queryIndex).setOlapDataSource((Olap4jDataSource)ds);
+				                		int queryIndex = session.getWorkspace().getOlapQueries().indexOf(query);
+										session.getWorkspace().getOlapQueries().get(queryIndex).setOlapDataSource((Olap4jDataSource)ds);
 				                	}
 				                }
 		        			}
@@ -206,13 +206,13 @@ public class ProjectTreeListener extends MouseAdapter {
 		            	return;
 		            } 
 		    } else if (item instanceof Layout) {
-				session.getProject().removeLayout((Layout)item);
+				session.getWorkspace().removeLayout((Layout)item);
 		    } else if (item instanceof OlapQuery) {
 				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
 					final OlapQuery query = (OlapQuery)item;
-					session.getProject().removeOlapQuery(query);
+					session.getWorkspace().removeOlapQuery(query);
 					removeLayoutPartsDependentOnOlapQuery(query);
 				} else {
 					return;
@@ -228,12 +228,12 @@ public class ProjectTreeListener extends MouseAdapter {
 		 * @param query
 		 */
 		private void removeLayoutPartsDependentOnQuery(QueryCache query) {
-			for(Layout layout :session.getProject().getLayouts()) {
+			for(Layout layout :session.getWorkspace().getLayouts()) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
 				    if(cb.getContentRenderer() instanceof ResultSetRenderer &&((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
-				    	int layoutIndex = session.getProject().getLayouts().indexOf(layout);
-						session.getProject().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
+				    	int layoutIndex = session.getWorkspace().getLayouts().indexOf(layout);
+						session.getWorkspace().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
 					}
 				}
 			}
@@ -244,7 +244,7 @@ public class ProjectTreeListener extends MouseAdapter {
 		 * @param query
 		 */
 		private void removeLayoutPartsDependentOnOlapQuery(OlapQuery query) {
-			for(Layout layout :session.getProject().getLayouts()) {
+			for(Layout layout :session.getWorkspace().getLayouts()) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
 				    if(cb.getContentRenderer() instanceof CellSetRenderer &&((CellSetRenderer) cb.getContentRenderer()).getOlapQuery() == query) {
@@ -334,7 +334,7 @@ public class ProjectTreeListener extends MouseAdapter {
 //        dbcsMenu.addSeparator();
 
         for (SPDataSource dbcs : session.getContext().getDataSources().getConnections()) {
-        	JMenuItem newMenuItem = new JMenuItem(new AddDataSourceAction(session.getProject(), dbcs));
+        	JMenuItem newMenuItem = new JMenuItem(new AddDataSourceAction(session.getWorkspace(), dbcs));
         	if (dbcs instanceof Olap4jDataSource) {
         		newMenuItem.setIcon(OLAP_DB_ICON);
         	} else if (dbcs instanceof JDBCDataSource) {

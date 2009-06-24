@@ -63,7 +63,7 @@ public interface WabitSession extends SQLDatabaseMapping {
 	/**
 	 * Returns the project associated with this session.
 	 */
-	public WabitProject getProject();
+	public WabitWorkspace getWorkspace();
 
 	/**
 	 * This will create a UserPrompter to let users decide the given question.

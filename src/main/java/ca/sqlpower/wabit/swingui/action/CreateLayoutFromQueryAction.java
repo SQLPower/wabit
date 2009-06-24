@@ -27,7 +27,7 @@ import javax.swing.ImageIcon;
 
 import org.olap4j.OlapException;
 
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
@@ -45,7 +45,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     /**
      * The project we will add the new layout to when this action is invoked.
      */
-    private final WabitProject project;
+    private final WabitWorkspace project;
 
     /**
      * The {@link ReportContentRenderer} associated with the new default layout being used.
@@ -57,7 +57,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
      */
     private String layoutName;
     
-    public CreateLayoutFromQueryAction(WabitProject wabitProject, ReportContentRenderer contentRenderer, String layoutName) {
+    public CreateLayoutFromQueryAction(WabitWorkspace wabitProject, ReportContentRenderer contentRenderer, String layoutName) {
         super("Create Layout...", ADD_LAYOUT_ICON);
         putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
         this.project = wabitProject;
@@ -83,7 +83,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
 	 *            be appended to this name.
 	 * @return The new layout that was added to the project.
 	 */
-    public static Layout createDefaultLayout(WabitProject project, ReportContentRenderer contentRenderer, String layoutName) {
+    public static Layout createDefaultLayout(WabitWorkspace project, ReportContentRenderer contentRenderer, String layoutName) {
         Layout l = new Layout(layoutName + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();

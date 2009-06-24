@@ -75,7 +75,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			panel.getPageNode().addChild(newCBNode);
 		} else if (panel.getMouseState().equals(MouseStates.CREATE_GRAPH)) {
 			ContentBox contentBox = new ContentBox();
-			GraphRenderer graph = new GraphRenderer(contentBox, session.getProject());
+			GraphRenderer graph = new GraphRenderer(contentBox, session.getWorkspace());
 			contentBox.setContentRenderer(graph);
 			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
 			newCBNode.setX(event.getPosition().getX());

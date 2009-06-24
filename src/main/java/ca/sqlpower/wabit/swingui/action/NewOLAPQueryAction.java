@@ -58,9 +58,9 @@ public class NewOLAPQueryAction extends AbstractAction {
 		OlapQuery newQuery = new OlapQuery();
 	    newQuery.setOlapDataSource(ds);
 	    newQuery.setName(newQueryName);
-	    session.getProject().addOlapQuery(newQuery);
+	    session.getWorkspace().addOlapQuery(newQuery);
 		JTree tree = session.getTree();
-		int queryIndex = tree.getModel().getIndexOfChild(session.getProject(), newQuery);
+		int queryIndex = tree.getModel().getIndexOfChild(session.getWorkspace(), newQuery);
 		tree.setSelectionRow(queryIndex + 1);
 	}
 

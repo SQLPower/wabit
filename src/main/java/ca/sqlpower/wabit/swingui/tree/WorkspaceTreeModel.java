@@ -43,7 +43,7 @@ import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -55,15 +55,15 @@ import ca.sqlpower.wabit.report.Guide.Axis;
  * Provides a tree with the project at the root. The project contains data
  * sources, queries, and layouts in that order.
  */
-public class ProjectTreeModel implements TreeModel {
+public class WorkspaceTreeModel implements TreeModel {
 
-    private static final Logger logger = Logger.getLogger(ProjectTreeModel.class);
+    private static final Logger logger = Logger.getLogger(WorkspaceTreeModel.class);
     
-    private final WabitProject project;
+    private final WabitWorkspace project;
 
     private WabitTreeModelEventAdapter listener;
     
-    public ProjectTreeModel(WabitProject project) {
+    public WorkspaceTreeModel(WabitWorkspace project) {
         this.project = project;
         listener = new WabitTreeModelEventAdapter();
         WabitUtils.listenToHierarchy(project, listener, listener);
@@ -219,7 +219,7 @@ public class ProjectTreeModel implements TreeModel {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    WabitProject p = new WabitProject();
+                    WabitWorkspace p = new WabitWorkspace();
                     
                     // Add data sources to project
                     DataSourceCollection<SPDataSource> plini = new PlDotIni();
@@ -240,9 +240,9 @@ public class ProjectTreeModel implements TreeModel {
                     page.addContentBox(new ContentBox());
                     
                     // Show project tree in a frame
-                    ProjectTreeModel tm = new ProjectTreeModel(p);
+                    WorkspaceTreeModel tm = new WorkspaceTreeModel(p);
                     JTree tree = new JTree(tm);
-                    tree.setCellRenderer(new ProjectTreeCellRenderer());
+                    tree.setCellRenderer(new WorkspaceTreeCellRenderer());
                     JFrame f = new JFrame("Tree!");
                     f.setContentPane(new JScrollPane(tree));
                     f.pack();

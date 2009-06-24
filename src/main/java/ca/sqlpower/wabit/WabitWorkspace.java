@@ -41,10 +41,10 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 
-public class WabitProject extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
+public class WabitWorkspace extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
 	
 	
-	private static final Logger logger = Logger.getLogger(WabitProject.class);
+	private static final Logger logger = Logger.getLogger(WabitWorkspace.class);
 	
     /**
      * The data sources that feed the queries for this project.
@@ -88,7 +88,7 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
      */
     private WabitObject editorPanelModel;
 
-    public WabitProject() {
+    public WabitWorkspace() {
     	listeners = new ArrayList<DatabaseListChangeListener>();
         setName("New Workspace");
     }

@@ -24,7 +24,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 /**
  * An action that adds a certain data source to a certain project when it is
@@ -33,10 +33,10 @@ import ca.sqlpower.wabit.WabitProject;
  */
 public class AddDataSourceAction extends AbstractAction {
 
-    private final WabitProject project;
+    private final WabitWorkspace project;
     private final SPDataSource dataSource;
 
-    public AddDataSourceAction(WabitProject project, SPDataSource dataSource) {
+    public AddDataSourceAction(WabitWorkspace project, SPDataSource dataSource) {
         super(dataSource.getName());
         this.project = project;
         this.dataSource = dataSource;

@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
-import ca.sqlpower.wabit.swingui.action.OpenProjectOnServerAction;
+import ca.sqlpower.wabit.swingui.action.OpenServerWorkspaceAction;
 
 public class OpenOnServerMenu extends JMenu {
     
@@ -44,22 +44,26 @@ public class OpenOnServerMenu extends JMenu {
         super(WabitUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
-        refreshProjects();
+        refresh();
     }
     
     private Action refreshAction = new AbstractAction("Refresh this list") {
         public void actionPerformed(ActionEvent e) {
-            refreshProjects();
+            refresh();
         }
     };
     
-    private void refreshProjects() {
+    /**
+     * Reconstructs the menu items contained by this menu based on the current
+     * list of workspaces the session context knows about.
+     */
+    private void refresh() {
         logger.debug("Refreshing workspace list...");
         removeAll();
         try {
             WabitServerSessionContext ctx = WabitServerSessionContext.getInstance(serviceInfo);
-            for (String projectName : ctx.getProjectNames()) {
-                add(new OpenProjectOnServerAction(dialogOwner, serviceInfo, projectName));
+            for (String projectName : ctx.getWorkspaceNames()) {
+                add(new OpenServerWorkspaceAction(dialogOwner, serviceInfo, projectName));
             }
         } catch (Exception ex) {
             JMenuItem mi = new JMenuItem("Error getting workspace names: " + ex);

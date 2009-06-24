@@ -44,7 +44,7 @@ public class WabitSessionImpl implements WabitSession {
 
 	private WabitSessionContext sessionContext;
 	
-	private WabitProject project;
+	private WabitWorkspace project;
 	
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
@@ -60,7 +60,7 @@ public class WabitSessionImpl implements WabitSession {
 
     public WabitSessionImpl(WabitSessionContext context) {
     	this.sessionContext = context;
-    	project = new WabitProject();
+    	project = new WabitWorkspace();
 		sessionContext.registerChildSession(this);
     }
     
@@ -106,7 +106,7 @@ public class WabitSessionImpl implements WabitSession {
 		return sessionContext;
 	}
 
-	public WabitProject getProject() {
+	public WabitWorkspace getWorkspace() {
 		return project;
 	}
 

@@ -35,7 +35,7 @@ import javax.swing.JFileChooser;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
@@ -43,7 +43,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
  * This action will load in projects from a user selected file to a given
  * context.
  */
-public class LoadProjectsAction extends AbstractAction {
+public class OpenWorkspaceAction extends AbstractAction {
 
 	/**
 	 * This is the context within Wabit that will have the projects
@@ -56,8 +56,8 @@ public class LoadProjectsAction extends AbstractAction {
 	 */
 	private final WabitSwingSession session;
 
-	public LoadProjectsAction(WabitSwingSession session, WabitSwingSessionContext context) {
-		super("Open Workspace...", new ImageIcon(LoadProjectsAction.class.getClassLoader().getResource("icons/wabit_load.png")));
+	public OpenWorkspaceAction(WabitSwingSession session, WabitSwingSessionContext context) {
+		super("Open Workspace...", new ImageIcon(OpenWorkspaceAction.class.getClassLoader().getResource("icons/wabit_load.png")));
 		this.session = session;
 		this.context = context;
 	}
@@ -107,8 +107,8 @@ public class LoadProjectsAction extends AbstractAction {
 	public static List<WabitSession> loadFile(InputStream input, WabitSwingSessionContext context) {
 		BufferedInputStream in = new BufferedInputStream(input);
 		try {
-			LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(context, in);
-			List<WabitSession> sessions = projectLoader.loadProjects();
+			OpenWorkspaceXMLDAO projectLoader = new OpenWorkspaceXMLDAO(context, in);
+			List<WabitSession> sessions = projectLoader.openWorkspaces();
 			for (WabitSession session : sessions) {
 				try {
 					((WabitSwingSession)session).buildUI();

@@ -39,7 +39,7 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
@@ -50,14 +50,14 @@ import com.jgoodies.forms.layout.FormLayout;
 /**
  * Implements the "save as" feature for saving a project to a remote server.
  */
-public class SaveProjectOnServerAction extends AbstractAction {
+public class SaveServerWorkspaceAction extends AbstractAction {
 
     private final WabitServerInfo si;
     private final WabitServerSessionContext context;
     private final Component dialogOwner;
-    private final WabitProject project;
+    private final WabitWorkspace project;
 
-    public SaveProjectOnServerAction(WabitServerInfo si, Component dialogOwner, WabitProject project) throws IOException, SQLObjectException {
+    public SaveServerWorkspaceAction(WabitServerInfo si, Component dialogOwner, WabitWorkspace project) throws IOException, SQLObjectException {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.si = si;
         this.project = project;
@@ -89,7 +89,7 @@ public class SaveProjectOnServerAction extends AbstractAction {
         SaveOnServerPanel() throws IOException, URISyntaxException {
             DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
             fileNameField = new JTextField(project.getName());
-            existingFileList = new JList(context.getProjectNames().toArray(new String[0]));
+            existingFileList = new JList(context.getWorkspaceNames().toArray(new String[0]));
             existingFileList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
                 public void valueChanged(ListSelectionEvent e) {
                     fileNameField.setText((String) existingFileList.getSelectedValue());
@@ -110,7 +110,7 @@ public class SaveProjectOnServerAction extends AbstractAction {
             project.setName(fileNameField.getText());
             // TODO prompt about overwrite
             try {
-                context.saveProject(project);
+                context.saveWorkspace(project);
                 return true;
             } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(dialogOwner, "Save to server failed", ex);

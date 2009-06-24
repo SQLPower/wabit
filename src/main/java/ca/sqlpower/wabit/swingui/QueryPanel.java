@@ -344,7 +344,7 @@ public class QueryPanel implements WabitPanel {
 		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("ca/sqlpower/swingui/querypen/wabit_execute.png")));
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
-		queryUIComponents = new SQLQueryUIComponents(session, new SpecificDataSourceCollection<JDBCDataSource>(session.getProject(), JDBCDataSource.class), session, mainSplitPane, queryCache);
+		queryUIComponents = new SQLQueryUIComponents(session, new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), session, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache.getQuery(), queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
@@ -393,7 +393,7 @@ public class QueryPanel implements WabitPanel {
 
 			}
 		});
-		if (session.getProject().getDataSources().size() != 0) {
+		if (session.getWorkspace().getDataSources().size() != 0) {
             if (queryCache.getQuery().getDatabase() == null) {
                 dragTree.setVisible(false);
             } else {
@@ -554,7 +554,7 @@ public class QueryPanel implements WabitPanel {
 		exportSQL.setToolTipText("Export query to SQL script.");
 		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
-		queryToolBar.add(new CreateLayoutFromQueryAction(session.getProject(), new ResultSetRenderer(queryCache), queryCache.getName()));
+		queryToolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), new ResultSetRenderer(queryCache), queryCache.getName()));
 		queryToolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
 		
 		JToolBar wabitBar = new JToolBar();
@@ -686,7 +686,7 @@ public class QueryPanel implements WabitPanel {
 	    toolBar.add(pen.getZoomSliderContainer());
 	    toolBar.addSeparator();
 	        
-	    toolBar.add(new CreateLayoutFromQueryAction(session.getProject(), new ResultSetRenderer(queryCache), queryCache.getName()));
+	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), new ResultSetRenderer(queryCache), queryCache.getName()));
 	    toolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
 	    
 	    return toolBar;

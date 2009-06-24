@@ -105,11 +105,11 @@ import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import com.sun.mail.util.BASE64DecoderStream;
 
 /**
- * This will be used with a parser to load a saved project from a file.
+ * This will be used with a parser to load a saved workspace from a file.
  */
-public class ProjectSAXHandler extends DefaultHandler {
+public class WorkspaceSAXHandler extends DefaultHandler {
 	
-	private static final Logger logger = Logger.getLogger(ProjectSAXHandler.class);
+	private static final Logger logger = Logger.getLogger(WorkspaceSAXHandler.class);
 
 	private static final String COUNT_STAR = "COUNT(*)";
 	
@@ -124,7 +124,7 @@ public class ProjectSAXHandler extends DefaultHandler {
 	private final Stack<String> xmlContext = new Stack<String>();
 	
 	/**
-	 * This is the session that the project will be loaded into. This session
+	 * This is the session that the workspace will be loaded into. This session
 	 * is also the current one being loaded into by this SAX handler.
 	 */
 	private WabitSession session;
@@ -190,27 +190,27 @@ public class ProjectSAXHandler extends DefaultHandler {
 	private ByteArrayOutputStream byteStream;
 	
 	/**
-	 * Describes if the loading of the project has been cancelled.
+	 * Describes if the loading of the workspace has been cancelled.
 	 */
 	private boolean cancelled;
 	
 	/**
-	 * This map stores old DS names used in the loaded project to the new DS specified
+	 * This map stores old DS names used in the loaded workspace to the new DS specified
 	 * by the user. Only the data sources that have a new data source specified will
 	 * appear in this map.
 	 */
 	private final Map<String, String> oldToNewDSNames;
 
 	/**
-	 * This is the UUID for the editorPanelModel to be set in the loading project.
-	 * This cannot be set for the project until the end of the loading as the project's
+	 * This is the UUID for the editorPanelModel to be set in the loading workspace.
+	 * This cannot be set for the workspace until the end of the loading as the workspace's
 	 * children will not be loaded at the start tag.
 	 */
 	private String currentEditorPanelModel;
 
 	/**
 	 * This is a temporary graph renderer used to load in the last graph renderer found
-	 * in the project being loaded.
+	 * in the workspace being loaded.
 	 */
 	private GraphRenderer graphRenderer;
 
@@ -244,13 +244,13 @@ public class ProjectSAXHandler extends DefaultHandler {
     private final UserPrompterFactory promptFactory;
 	
     /**
-     * Creates a new SAX handler which is capable of reading in a series of project
-     * descriptions from an XML stream. The list of projects encountered in the stream become
+     * Creates a new SAX handler which is capable of reading in a series of workspace
+     * descriptions from an XML stream. The list of workspaces encountered in the stream become
      * available as a Wabit Session
      * @param context
      * @param promptFactory
      */
-	public ProjectSAXHandler(WabitSessionContext context) {
+	public WorkspaceSAXHandler(WabitSessionContext context) {
 		this.context = context;
         this.promptFactory = context;
 		sessions = new ArrayList<WabitSession>();
@@ -269,13 +269,13 @@ public class ProjectSAXHandler extends DefaultHandler {
 		    String versionString = attributes.getValue("export-format");
 		    if (versionString == null) {
 		        UserPrompter up = promptFactory.createUserPrompter(
-		                "This Wabit project file is very old. It may not read correctly, but I will try my best.",
+		                "This Wabit workspace file is very old. It may not read correctly, but I will try my best.",
 		                UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
 		                null, "OK");
 		        up.promptUser();
 		    } else if (versionString.equals("1.0.0")) { // TODO update to new Version class when available
                 UserPrompter up = promptFactory.createUserPrompter(
-                        "The Wabit project you are opening is an old version that does not record\n" +
+                        "The Wabit workspace you are opening is an old version that does not record\n" +
                         "information about page orientation. All pages will default to portrait orientation.",
                         UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
                         null, "OK");
@@ -292,7 +292,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         		String aval = attributes.getValue(i);
         		
         		if (aname.equals("name")) {
-        			session.getProject().setName(aval);
+        			session.getWorkspace().setName(aval);
         		} else if (aname.equals("editorPanelModel")) {
         			currentEditorPanelModel = aval;
         		} else {
@@ -308,8 +308,8 @@ public class ProjectSAXHandler extends DefaultHandler {
         		UserPromptResponse responseType = prompter.promptUser();
         		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
-        			if (!session.getProject().dsAlreadyAdded(ds)) {
-        				session.getProject().addDataSource(ds);
+        			if (!session.getWorkspace().dsAlreadyAdded(ds)) {
+        				session.getWorkspace().addDataSource(ds);
         			}
         			oldToNewDSNames.put(dsName, ds.getName());
         		} else if (responseType == UserPromptResponse.NOT_OK) {
@@ -319,13 +319,13 @@ public class ProjectSAXHandler extends DefaultHandler {
         			context.deregisterChildSession(session);
         		}
         	} else {
-        		session.getProject().addDataSource(ds);
+        		session.getWorkspace().addDataSource(ds);
         	}
         } else if (name.equals("query")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	cache = new QueryCache(uuid, session);
-        	session.getProject().addQuery(cache, session);
+        	session.getWorkspace().addQuery(cache, session);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -334,17 +334,17 @@ public class ProjectSAXHandler extends DefaultHandler {
         		} else if (aname.equals("name")) {
         			cache.setName(aval);
         		} else if (aname.equals("data-source")) { 
-        			JDBCDataSource ds = session.getProject().getDataSource(aval, JDBCDataSource.class);
+        			JDBCDataSource ds = session.getWorkspace().getDataSource(aval, JDBCDataSource.class);
         			if (ds == null) {
         				String newDSName = oldToNewDSNames.get(aval);
         				if (newDSName != null) {
-        					ds = session.getProject().getDataSource(newDSName, JDBCDataSource.class);
+        					ds = session.getWorkspace().getDataSource(newDSName, JDBCDataSource.class);
         					if (ds == null) {
-        						logger.debug("Data source " + aval + " is not in the project. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
-        						throw new NullPointerException("Data source " + newDSName + " was not found in the project.");
+        						logger.debug("Data source " + aval + " is not in the workspace. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
+        						throw new NullPointerException("Data source " + newDSName + " was not found in the workspace.");
         					}
         				}
-        				logger.debug("Workspace has data sources " + session.getProject().getDataSources());
+        				logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
         			}
         			cache.setDataSource(ds);
         		} else if (aname.equals("zoom")) {
@@ -553,7 +553,7 @@ public class ProjectSAXHandler extends DefaultHandler {
             String uuid = attributes.getValue("uuid");
             checkMandatory("uuid", uuid);
             olapQuery = new OlapQuery(uuid);
-            session.getProject().addOlapQuery(olapQuery);
+            session.getWorkspace().addOlapQuery(olapQuery);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
@@ -562,17 +562,17 @@ public class ProjectSAXHandler extends DefaultHandler {
                 } else if (aname.equals("name")) {
                     olapQuery.setName(aval);
                 } else if (aname.equals("data-source")) {
-                    Olap4jDataSource ds = session.getProject().getDataSource(aval, Olap4jDataSource.class);
+                    Olap4jDataSource ds = session.getWorkspace().getDataSource(aval, Olap4jDataSource.class);
                     if (ds == null) {
                         String newDSName = oldToNewDSNames.get(aval);
                         if (newDSName != null) {
-                            ds = session.getProject().getDataSource(newDSName, Olap4jDataSource.class);
+                            ds = session.getWorkspace().getDataSource(newDSName, Olap4jDataSource.class);
                             if (ds == null) {
-                                logger.debug("Data source " + aval + " is not in the project. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
-                                throw new NullPointerException("Data source " + newDSName + " was not found in the project.");
+                                logger.debug("Data source " + aval + " is not in the workspace. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
+                                throw new NullPointerException("Data source " + newDSName + " was not found in the workspace.");
                             }
                         }
-                        logger.debug("Workspace has data sources " + session.getProject().getDataSources());
+                        logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
                     }
                     olapQuery.setOlapDataSource(ds);
                 } else {
@@ -626,7 +626,7 @@ public class ProjectSAXHandler extends DefaultHandler {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
     		layout = new Layout(layoutName);
-    		session.getProject().addLayout(layout);
+    		session.getWorkspace().addLayout(layout);
           	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -736,9 +736,9 @@ public class ProjectSAXHandler extends DefaultHandler {
         } else if (name.equals("graph-renderer")) {
         	String uuid = attributes.getValue("uuid");
         	if (uuid == null) {
-        		graphRenderer = new GraphRenderer(contentBox, session.getProject());
+        		graphRenderer = new GraphRenderer(contentBox, session.getWorkspace());
         	} else {
-        		graphRenderer = new GraphRenderer(contentBox, session.getProject(), uuid);
+        		graphRenderer = new GraphRenderer(contentBox, session.getWorkspace(), uuid);
         	}
         	contentBox.setContentRenderer(graphRenderer);
         	for (int i = 0; i < attributes.getLength(); i++) {
@@ -758,7 +758,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         			graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
         		} else if (aname.equals("query-id")) {
         		    QueryCache query = null;
-                	for (QueryCache q : session.getProject().getQueries()) {
+                	for (QueryCache q : session.getWorkspace().getQueries()) {
                 		if (q.getUUID().equals(UUID.fromString(aval))) {
                 			query = q;
                 			break;
@@ -767,7 +767,7 @@ public class ProjectSAXHandler extends DefaultHandler {
                 	try {
 						graphRenderer.defineQuery(query);
 					} catch (SQLException e) {
-						throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
+						throw new RuntimeException("Error loading workspace while on graph renderer " + graphRenderer.getName(), e);
 					}
         		} else {
         			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
@@ -795,7 +795,7 @@ public class ProjectSAXHandler extends DefaultHandler {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
         	QueryCache query = null;
-        	for (QueryCache q : session.getProject().getQueries()) {
+        	for (QueryCache q : session.getWorkspace().getQueries()) {
         		if (q.getUUID().equals(UUID.fromString(queryID))) {
         			query = q;
         			break;
@@ -904,14 +904,14 @@ public class ProjectSAXHandler extends DefaultHandler {
             String uuid = attributes.getValue("uuid");
             String queryUUID = attributes.getValue("olap-query-uuid");
             OlapQuery newQuery = null;
-            for (OlapQuery query : session.getProject().getOlapQueries()) {
+            for (OlapQuery query : session.getWorkspace().getOlapQueries()) {
                 if (query.getUUID().toString().equals(queryUUID)) {
                     newQuery = query;
                     break;
                 }
             }
             if (newQuery == null) {
-                throw new NullPointerException("Cannot load project due to missing olap query in report.");
+                throw new NullPointerException("Cannot load workspace due to missing olap query in report.");
             }
             cellSetRenderer = new CellSetRenderer(newQuery, uuid);
             contentBox.setContentRenderer(cellSetRenderer);
@@ -1052,14 +1052,14 @@ public class ProjectSAXHandler extends DefaultHandler {
     	
     	if (name.equals("project")) {
     	    session.setLoading(false);
-    	    WabitObject initialView = session.getProject();
-    		for (WabitObject obj : session.getProject().getChildren()) {
+    	    WabitObject initialView = session.getWorkspace();
+    		for (WabitObject obj : session.getWorkspace().getChildren()) {
     			if (obj.getUUID().toString().equals(currentEditorPanelModel)) {
     				initialView = obj;
     				break;
     			}
     		}
-    		session.getProject().setEditorPanelModel(initialView);
+    		session.getWorkspace().setEditorPanelModel(initialView);
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID().toString(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());

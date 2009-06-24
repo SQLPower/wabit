@@ -89,7 +89,7 @@ public class OlapQueryPanel implements WabitPanel {
     private void buildUI() {
     	JComponent textQueryPanel;
         try {
-            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(new SpecificDataSourceCollection<Olap4jDataSource>(session.getProject(), Olap4jDataSource.class), SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query);
+            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(new SpecificDataSourceCollection<Olap4jDataSource>(session.getWorkspace(), Olap4jDataSource.class), SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query);
             textQueryPanel = createTextQueryPanel();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -200,7 +200,7 @@ public class OlapQueryPanel implements WabitPanel {
 	    toolBar.add(queryPanel.getResetQueryButton());
 	    toolBar.addSeparator();
 	    
-	    toolBar.add(new CreateLayoutFromQueryAction(session.getProject(), new CellSetRenderer(query), query.getName()));
+	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), new CellSetRenderer(query), query.getName()));
 	    
 	    return toolBar;
 	}

@@ -37,12 +37,12 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 public class StubWabitSession implements WabitSession {
 	
 	private final WabitSessionContext context;
-	private WabitProject project;
+	private WabitWorkspace project;
 	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
 	public StubWabitSession(WabitSessionContext context) {
 		this.context = context;
-		project = new WabitProject();
+		project = new WabitWorkspace();
 	}
 
 	public void addSessionLifecycleListener(
@@ -62,7 +62,7 @@ public class StubWabitSession implements WabitSession {
 		return context;
 	}
 
-	public WabitProject getProject() {
+	public WabitWorkspace getWorkspace() {
 		return project;
 	}
 

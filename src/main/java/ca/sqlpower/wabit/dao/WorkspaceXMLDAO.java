@@ -56,7 +56,7 @@ import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -74,9 +74,9 @@ import ca.sqlpower.xml.XMLHelper;
 
 import com.sun.mail.util.BASE64EncoderStream;
 
-public class ProjectXMLDAO {
+public class WorkspaceXMLDAO {
 	
-	private static final Logger logger = Logger.getLogger(ProjectXMLDAO.class);
+	private static final Logger logger = Logger.getLogger(WorkspaceXMLDAO.class);
 
 	/**
 	 * The version number to put in exported files. This is not the Wabit version
@@ -96,7 +96,7 @@ public class ProjectXMLDAO {
     //                                         UPDATE HISTORY!!??!
     
 	/**
-	 * This output stream will be used to  write the project to a file.
+	 * This output stream will be used to  write the workspace to a file.
 	 */
 	private final PrintWriter out;
 	
@@ -107,24 +107,24 @@ public class ProjectXMLDAO {
 	private final XMLHelper xml;
 
 	/**
-	 * The project this DAO will write to a file.
+	 * The workspace this DAO will write to a file.
 	 */
-	private final WabitProject project;
+	private final WabitWorkspace workspace;
 	
 	/**
-	 * This will construct a XML DAO to save the entire project or parts of 
-	 * the project to be loaded in later.
+	 * This will construct a XML DAO to save the entire workspace or parts of 
+	 * the workspace to be loaded in later.
 	 */
-	public ProjectXMLDAO(OutputStream out, WabitProject project) {
-		this.project = project;
+	public WorkspaceXMLDAO(OutputStream out, WabitWorkspace workspace) {
+		this.workspace = workspace;
 		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
 		xml = new XMLHelper();
 	}
 	
 	/**
-	 * This XML DAO will save a specific query in a project as XML.
-	 * The query can then be loaded as a stand-alone project or be imported
-	 * into another project.
+	 * This XML DAO will save a specific query in a workspace as XML.
+	 * The query can then be loaded as a stand-alone workspace or be imported
+	 * into another workspace.
 	 */
 	public void save(QueryCache query) {
 		save(Collections.singletonList(query.getWabitDataSource()), Collections.singletonList(query), new ArrayList<Layout>());
@@ -150,7 +150,7 @@ public class ProjectXMLDAO {
 	}
 	
 	public void save() {
-		save(project.getDataSources(), project.getQueries(), project.getLayouts());
+		save(workspace.getDataSources(), workspace.getQueries(), workspace.getLayouts());
 	}
 	
 	private void save(List<WabitDataSource> dataSources, List<QueryCache> queries, List<Layout> layouts) {
@@ -160,8 +160,8 @@ public class ProjectXMLDAO {
 		xml.indent++;
 
 		xml.print(out, "<project");
-		printAttribute("name", project.getName());
-		printAttribute("editorPanelModel", project.getEditorPanelModel().getUUID().toString());
+		printAttribute("name", workspace.getName());
+		printAttribute("editorPanelModel", workspace.getEditorPanelModel().getUUID().toString());
 		xml.niprintln(out, ">");
 		xml.indent++;
 		
@@ -171,7 +171,7 @@ public class ProjectXMLDAO {
 		    saveQueryCache(query.getQuery());
 		}
 		
-		for (OlapQuery query : project.getOlapQueries()) {
+		for (OlapQuery query : workspace.getOlapQueries()) {
 		    saveOlapQuery(query);
 		}
 		

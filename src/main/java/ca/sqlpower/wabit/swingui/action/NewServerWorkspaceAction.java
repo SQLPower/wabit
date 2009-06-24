@@ -29,15 +29,15 @@ import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
-import ca.sqlpower.wabit.swingui.NewProjectScreen;
+import ca.sqlpower.wabit.swingui.NewWorkspaceScreen;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 
-public class NewProjectOnServerAction extends AbstractAction {
+public class NewServerWorkspaceAction extends AbstractAction {
 
     private final Component dialogOwner;
     private final WabitServerInfo si;
 
-    public NewProjectOnServerAction(Component dialogOwner, WabitServerInfo si) {
+    public NewServerWorkspaceAction(Component dialogOwner, WabitServerInfo si) {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.dialogOwner = dialogOwner;
         this.si = si;
@@ -46,7 +46,7 @@ public class NewProjectOnServerAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         try {
             WabitSessionContext serverCtx = WabitServerSessionContext.getInstance(si);
-            NewProjectScreen newProject = new NewProjectScreen(
+            NewWorkspaceScreen newProject = new NewWorkspaceScreen(
                     new WabitSwingSessionContextImpl(serverCtx, false));
             newProject.showFrame();
         } catch (Exception ex) {

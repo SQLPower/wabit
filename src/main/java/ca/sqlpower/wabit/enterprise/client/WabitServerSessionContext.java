@@ -46,10 +46,10 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 
 /**
  * A special kind of session context that binds itself to a remote Wabit
@@ -128,7 +128,7 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
      * @throws IOException
      * @throws URISyntaxException
      */
-    public List<String> getProjectNames() throws IOException, URISyntaxException {
+    public List<String> getWorkspaceNames() throws IOException, URISyntaxException {
         String responseBody = executeServerRequest("project", new BasicResponseHandler());
         logger.debug("Workspace list:\n" + responseBody);
         List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
@@ -170,10 +170,10 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
      * @throws URISyntaxException
      *             If the project name can't be properly encoded in a URI
      */
-    public void saveProject(WabitProject project) throws IOException, URISyntaxException {
+    public void saveWorkspace(WabitWorkspace project) throws IOException, URISyntaxException {
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ProjectXMLDAO dao = new ProjectXMLDAO(out, project);
+        WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, project);
         dao.save();
         out.close(); // has no effect, but feels sensible :)
         

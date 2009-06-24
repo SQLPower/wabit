@@ -44,7 +44,7 @@ public class CopyQueryAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         QueryCache newQuery = new QueryCache(query);
         newQuery.setName(newQuery.getName() + " copy");
-        session.getProject().addQuery(newQuery, session);
+        session.getWorkspace().addQuery(newQuery, session);
     }
 
 }

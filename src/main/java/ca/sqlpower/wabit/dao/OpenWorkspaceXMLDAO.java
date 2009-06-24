@@ -29,33 +29,33 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 
 /**
- * This DAO will load projects to a context from a given input stream.
+ * This DAO will load workspaces to a context from a given input stream.
  */
-public class LoadProjectXMLDAO {
+public class OpenWorkspaceXMLDAO {
 
 	/**
-	 * This context will have new sessions added to it for each project
+	 * This context will have new sessions added to it for each workspace
 	 * loaded.
 	 */
 	private final WabitSessionContext context;
 	
 	/**
-	 * This is the input stream we are loading projects from.
+	 * This is the input stream we are loading workspaces from.
 	 */
 	private final InputStream in;
 	
-	public LoadProjectXMLDAO(WabitSessionContext context, InputStream in) {
+	public OpenWorkspaceXMLDAO(WabitSessionContext context, InputStream in) {
 		this.context = context;
 		this.in = in;
 	}
 
 	/**
-	 * Calling this method will load all of the projects from the input stream
+	 * Calling this method will load all of the workspaces from the input stream
 	 * into the context that was given to this class when its constructor was called.
 	 */
-	public List<WabitSession> loadProjects() {
+	public List<WabitSession> openWorkspaces() {
 		SAXParser parser;
-		ProjectSAXHandler saxHandler = new ProjectSAXHandler(context);
+		WorkspaceSAXHandler saxHandler = new WorkspaceSAXHandler(context);
 		try {
 			parser = SAXParserFactory.newInstance().newSAXParser();
 			parser.parse(in, saxHandler);

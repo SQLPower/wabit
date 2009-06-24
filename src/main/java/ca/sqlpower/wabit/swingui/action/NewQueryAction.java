@@ -27,7 +27,7 @@ import javax.swing.JTree;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
@@ -36,7 +36,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
  */
 public class NewQueryAction extends AbstractAction {
 	
-    private final WabitProject project;
+    private final WabitWorkspace project;
     private final WabitSwingSession session;
     private final JDBCDataSource ds;
     private final String newQueryName;
@@ -52,7 +52,7 @@ public class NewQueryAction extends AbstractAction {
     public NewQueryAction(WabitSwingSession session) {
         super("New Relational Query");
         this.newQueryName = "New Relational Query";
-        this.project = session.getProject();
+        this.project = session.getWorkspace();
         this.session = session;
         this.ds = null;
     }
@@ -69,7 +69,7 @@ public class NewQueryAction extends AbstractAction {
     public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
     	super("New Relational Query on '" + ds.getName() + "'");
     	this.newQueryName = "New " + ds.getName() + " query";
-    	this.project = session.getProject();
+    	this.project = session.getWorkspace();
     	this.session = session;
     	this.ds = ds;
     }

@@ -34,14 +34,14 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * This will import a project into an existing project.
  */
-public class ImportProjectAction extends AbstractAction {
+public class ImportWorkspaceAction extends AbstractAction {
 
 
 	/**
@@ -50,7 +50,7 @@ public class ImportProjectAction extends AbstractAction {
 	 */
 	private final WabitSwingSessionImpl session;
 
-	public ImportProjectAction(WabitSwingSessionImpl session) {
+	public ImportWorkspaceAction(WabitSwingSessionImpl session) {
 		super("Import...");
 		this.session = session;
 	}
@@ -74,26 +74,26 @@ public class ImportProjectAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(session.getContext(), in);
-		List<WabitSession> sessions = projectLoader.loadProjects();
+		OpenWorkspaceXMLDAO projectLoader = new OpenWorkspaceXMLDAO(session.getContext(), in);
+		List<WabitSession> sessions = projectLoader.openWorkspaces();
 		for (WabitSession sess : sessions) {
-			List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>(sess.getProject().getDataSources());
+			List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>(sess.getWorkspace().getDataSources());
 			for (int i = dataSources.size() - 1; i >= 0; i--) {
-				sess.getProject().removeDataSource(dataSources.get(i));
-				if (!(session.getProject().getDataSources().contains(dataSources.get(i)))) {
-					session.getProject().addDataSource(dataSources.get(i));
+				sess.getWorkspace().removeDataSource(dataSources.get(i));
+				if (!(session.getWorkspace().getDataSources().contains(dataSources.get(i)))) {
+					session.getWorkspace().addDataSource(dataSources.get(i));
 				}
 			}
 			
-			List<QueryCache> queries = new ArrayList<QueryCache>(sess.getProject().getQueries());
+			List<QueryCache> queries = new ArrayList<QueryCache>(sess.getWorkspace().getQueries());
 			for (int i = queries.size() - 1; i >= 0; i--) {
-				sess.getProject().removeQuery(queries.get(i), sess);
-				session.getProject().addQuery(queries.get(i), session);
+				sess.getWorkspace().removeQuery(queries.get(i), sess);
+				session.getWorkspace().addQuery(queries.get(i), session);
 			}
-			List<Layout> layouts = new ArrayList<Layout>(sess.getProject().getLayouts());
+			List<Layout> layouts = new ArrayList<Layout>(sess.getWorkspace().getLayouts());
 			for (int i = layouts.size() - 1; i >= 0; i--) {
-				sess.getProject().removeLayout(layouts.get(i));
-				session.getProject().addLayout(layouts.get(i));
+				sess.getWorkspace().removeLayout(layouts.get(i));
+				session.getWorkspace().addLayout(layouts.get(i));
 			}
 			
 			sess.getContext().deregisterChildSession(sess);

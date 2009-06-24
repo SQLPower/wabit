@@ -29,14 +29,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This will save a given project to a user specified file.
  */
-public class SaveAsProjectAction extends AbstractAction {
+public class SaveWorkspaceAsAction extends AbstractAction {
 
 	public static final String WABIT_FILE_EXTENSION = ".wabit";
 	/**
@@ -44,8 +44,8 @@ public class SaveAsProjectAction extends AbstractAction {
 	 */
 	private final WabitSwingSession session;
 
-	public SaveAsProjectAction(WabitSwingSession session) {
-		super("Save Workspace As...", new ImageIcon(SaveAsProjectAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+	public SaveWorkspaceAsAction(WabitSwingSession session) {
+		super("Save Workspace As...", new ImageIcon(SaveWorkspaceAsAction.class.getClassLoader().getResource("icons/wabit_save.png")));
 		this.session = session;
 	}
 
@@ -80,7 +80,7 @@ public class SaveAsProjectAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
+		WorkspaceXMLDAO projectSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
 		
 		projectSaver.save();
 		

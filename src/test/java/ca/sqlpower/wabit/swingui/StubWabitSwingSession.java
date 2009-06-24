@@ -46,7 +46,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 
@@ -56,13 +56,13 @@ import ca.sqlpower.wabit.WabitSessionContext;
 public class StubWabitSwingSession implements WabitSwingSession {
 	
 	WabitSessionContext context = new StubWabitSessionContext();
-	private WabitProject wabitProject;
+	private WabitWorkspace wabitProject;
 	private WabitSession delegateSession;
 	
 	private final List<SPSwingWorker> workers = new ArrayList<SPSwingWorker>();
 	
 	public StubWabitSwingSession() {
-		wabitProject = new WabitProject();
+		wabitProject = new WabitWorkspace();
 		delegateSession = new StubWabitSession(context);
 	}
 
@@ -102,7 +102,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		return null;
 	}
 	
-	public WabitProject getProject() {
+	public WabitWorkspace getWorkspace() {
 		return wabitProject;
 	}
 	

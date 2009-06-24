@@ -56,7 +56,6 @@ import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.CellConstraints;
@@ -67,15 +66,15 @@ import javax.swing.JOptionPane;
  * This panel will display information about the project. It will
  * also allow the user to add and remove data sources.
  */
-public class ProjectPanel implements WabitPanel {
+public class WorkspacePanel implements WabitPanel {
 	
-	private static Logger logger = Logger.getLogger(ProjectPanel.class);
+	private static Logger logger = Logger.getLogger(WorkspacePanel.class);
 	
-	private static final ImageIcon SELECT_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_selected.png"));
-	private static final ImageIcon OVER_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
-	private static final ImageIcon DOWN_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_down.png"));
-	private static final ImageIcon UP_START_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
-	private static final Icon DB_ICON = new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/dataSources-db.png"));
+	private static final ImageIcon SELECT_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_selected.png"));
+	private static final ImageIcon OVER_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
+	private static final ImageIcon DOWN_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_down.png"));
+	private static final ImageIcon UP_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
+	private static final Icon DB_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
     private static class LogoLayout implements LayoutManager {
 
@@ -85,10 +84,10 @@ public class ProjectPanel implements WabitPanel {
         public static JPanel generateLogoPanel() {
         	JPanel panel = new JPanel(new LogoLayout());
         	
-        	JLabel bgLabel = new JLabel(new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabit_header_app_bkgd.png")));
-        	JLabel welcomeLabel = new JLabel(new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabit_header_app_welcome.png")));
-        	JLabel wabitLabel = new JLabel(new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabit_header_app_wabit.png")));
-        	JLabel sqlpLabel = new JLabel(new ImageIcon(ProjectPanel.class.getClassLoader().getResource("icons/wabit_header_app_sqlp.png")));
+        	JLabel bgLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_bkgd.png")));
+        	JLabel welcomeLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_welcome.png")));
+        	JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_wabit.png")));
+        	JLabel sqlpLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_sqlp.png")));
         	JLabel versionLabel = new JLabel("" + WabitVersion.VERSION);
         	versionLabel.setForeground(new Color(0x999999));
         	
@@ -148,7 +147,7 @@ public class ProjectPanel implements WabitPanel {
 	private final JScrollPane scrollPane;
 	private final WabitSwingSession session;
 	
-	public ProjectPanel(WabitSwingSession session) {
+	public WorkspacePanel(WabitSwingSession session) {
 		logger.debug("Creating new workspace panel for " + session);
 		this.session = session;
 		scrollPane = new JScrollPane(buildUI());
@@ -235,9 +234,9 @@ public class ProjectPanel implements WabitPanel {
             private void addDataSource(final WabitSwingSession session,
                     SPDataSource ds) {
                 if (ds instanceof JDBCDataSource) {
-                    addJDBCDSToProject((JDBCDataSource) ds, session);
+                    addJDBCDataSource((JDBCDataSource) ds, session);
                 } else if (ds instanceof Olap4jDataSource) {
-                    addOlap4jToProject((Olap4jDataSource) ds, session);
+                    addOlap4jDataSource((Olap4jDataSource) ds, session);
                 } else {
                     throw new IllegalArgumentException("Unknown data source of type " + ds.getClass()+ " is being added to the workspace.");
                 }
@@ -292,7 +291,7 @@ public class ProjectPanel implements WabitPanel {
 	 * This method is used in the DB connection manager to add the selected db
 	 * to the project.
 	 */
-	public static void addJDBCDSToProject(JDBCDataSource ds, WabitSwingSession session) {
+	public static void addJDBCDataSource(JDBCDataSource ds, WabitSwingSession session) {
 		if (ds == null) {
 			return;
 		}
@@ -311,20 +310,20 @@ public class ProjectPanel implements WabitPanel {
 				}
 			}
 		}
-		if (!session.getProject().dsAlreadyAdded(ds)) {
-			session.getProject().addDataSource(ds);
+		if (!session.getWorkspace().dsAlreadyAdded(ds)) {
+			session.getWorkspace().addDataSource(ds);
 		}
 		QueryCache query = new QueryCache(session);
 		query.setName("New " + ds.getName() + " query");
 		query.setDataSource(ds);
-		session.getProject().addQuery(query, session);
+		session.getWorkspace().addQuery(query, session);
 	}
 
     /**
      * This method is used in the DB connection manager to add the selected olap
      * connection to the project.
      */
-	public static void addOlap4jToProject(Olap4jDataSource ds, WabitSwingSession session) {
+	public static void addOlap4jDataSource(Olap4jDataSource ds, WabitSwingSession session) {
 	    if (ds == null) {
 	        return;
 	    }
@@ -343,13 +342,13 @@ public class ProjectPanel implements WabitPanel {
 	            }
 	        }
 	    }
-	    if (!session.getProject().dsAlreadyAdded(ds)) {
-	        session.getProject().addDataSource(ds);
+	    if (!session.getWorkspace().dsAlreadyAdded(ds)) {
+	        session.getWorkspace().addDataSource(ds);
 	    }
 	    OlapQuery newQuery = new OlapQuery();
 	    newQuery.setOlapDataSource(ds);
 	    newQuery.setName("New " + ds.getName() + " query");
-	    session.getProject().addOlapQuery(newQuery);
+	    session.getWorkspace().addOlapQuery(newQuery);
 	    //TODO Add a query builder for OLAP connections and make it the focused component.
 	}
 	

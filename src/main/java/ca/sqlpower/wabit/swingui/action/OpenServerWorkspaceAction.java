@@ -41,21 +41,21 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.dao.LoadProjectXMLDAO;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 
-public class OpenProjectOnServerAction extends AbstractAction {
+public class OpenServerWorkspaceAction extends AbstractAction {
 
-    private static final Logger logger = Logger.getLogger(OpenProjectOnServerAction.class);
+    private static final Logger logger = Logger.getLogger(OpenServerWorkspaceAction.class);
     private final WabitServerInfo serviceInfo;
     private final String projectName;
     private final Component dialogOwner;
 
-    public OpenProjectOnServerAction(
+    public OpenServerWorkspaceAction(
             Component dialogOwner,
             WabitServerInfo si,
             String projectName) {
@@ -98,9 +98,9 @@ public class OpenProjectOnServerAction extends AbstractAction {
                         return null;
                     }
                     try {
-                        LoadProjectXMLDAO projectLoader = new LoadProjectXMLDAO(
+                        OpenWorkspaceXMLDAO projectLoader = new OpenWorkspaceXMLDAO(
                                 sessionContext, response.getEntity().getContent());
-                        for (WabitSession session : projectLoader.loadProjects()) {
+                        for (WabitSession session : projectLoader.openWorkspaces()) {
                             WabitSwingSession swingSession = (WabitSwingSession) session;
                             swingSession.buildUI();
                             // kinda have to set current "file" (but it's not exactly a file...)

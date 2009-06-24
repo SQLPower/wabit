@@ -388,7 +388,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         mainSplitPane.setResizeWeight(1);
         mainSplitPane.add(leftPanel, JSplitPane.LEFT);
         
-        final JList queryList = new JList(new QueryListModel(session.getProject()));
+        final JList queryList = new JList(new QueryListModel(session.getWorkspace()));
         queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         queryList.setCellRenderer(new DefaultListCellRenderer() {
         	@Override

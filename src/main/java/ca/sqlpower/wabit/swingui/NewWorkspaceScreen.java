@@ -38,18 +38,18 @@ import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
-public class NewProjectScreen {
+public class NewWorkspaceScreen {
 	
-	private static Logger logger = Logger.getLogger(NewProjectScreen.class);
+	private static Logger logger = Logger.getLogger(NewWorkspaceScreen.class);
 	
 	private final WabitSwingSession session;
 	private final JFrame frame;
 	private boolean databaseAdded = false;
 	
-	public NewProjectScreen(final WabitSwingSessionContext context) {
+	public NewWorkspaceScreen(final WabitSwingSessionContext context) {
 		session = new WabitSwingSessionImpl(context);
 		
-		session.getProject().addDatabaseListChangeListener(new DatabaseListChangeListener() {
+		session.getWorkspace().addDatabaseListChangeListener(new DatabaseListChangeListener() {
 			public void databaseRemoved(DatabaseListChangeEvent e) {
 				//Cannot remove databases from this panel.
 			}
@@ -90,7 +90,7 @@ public class NewProjectScreen {
 		additionalDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		builder.append(additionalDSLabel);
 		builder.nextLine();
-		builder.append(ProjectPanel.createDBConnectionManager(session, frame).getPanel());
+		builder.append(WorkspacePanel.createDBConnectionManager(session, frame).getPanel());
 		
 		frame.setIconImage(WabitSwingSessionImpl.FRAME_ICON.getImage());
 		frame.add(builder.getPanel());

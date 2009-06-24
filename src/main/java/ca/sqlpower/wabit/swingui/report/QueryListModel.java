@@ -25,7 +25,7 @@ import java.util.List;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataListener;
 
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 /**
  * This query list model will contain a list of all the queries in the project.
@@ -33,10 +33,10 @@ import ca.sqlpower.wabit.WabitProject;
  */
 public class QueryListModel implements ListModel {
 
-	private final WabitProject project;
+	private final WabitWorkspace project;
 	private final List<ListDataListener> listListeners = new ArrayList<ListDataListener>();
 
-	public QueryListModel(WabitProject project) {
+	public QueryListModel(WabitWorkspace project) {
 		this.project = project;
 	}
 
