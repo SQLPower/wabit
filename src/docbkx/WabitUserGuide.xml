@@ -110,18 +110,18 @@
         
         <para>
             The welcome screen is shown to the user either when opening Wabit for 
-            the first time or when Wabit is not opening up an existing project
-            or when the current Wabit project has been closed. From this screen, the user
-            can either choose to create a new project, load an existing one, or explore a
-            demo project provided with Wabit. The user can also access the user guide from this 
+            the first time or when Wabit is not opening up an existing workspace
+            or when the current Wabit workspace has been closed. From this screen, the user
+            can either choose to create a new workspace, load an existing one, or explore a
+            demo workspace provided with Wabit. The user can also access the user guide from this 
             screen or simply quit the application.
        </para>
        
        <para>
-       		To create a new project, click the create new project button 
+       		To create a new workspace, click the create new workspace button 
        		(<inlinemediaobject>
        		<imageobject>
-       		<imagedata fileref="src/docbkx/images/new_project_button.png"
+       		<imagedata fileref="src/docbkx/images/new_workspace_button.png"
                         format="PNG" width="0.25in"/>
        		</imageobject>
        		</inlinemediaobject>) which will take you to a list of your data sources.
@@ -133,23 +133,23 @@
        </para>
        
        <para>
-       		To load an existing project, click the open existing project button 
+       		To open an existing workspace, click the open existing workspace button 
        		(<inlinemediaobject>
        		<imageobject>
        		<imagedata fileref="src/docbkx/images/load_existing_button.png"
                         format="PNG" width="0.25in"/>
        		</imageobject>
-       		</inlinemediaobject>) which will then ask you to locate the project you want to load.
+       		</inlinemediaobject>) which will then ask you to locate the workspace you want to load.
        </para>
        
        <para>
-       		To load the demo project, click the open demo project button 
+       		To open the demo workspace, click the open demo workspace button 
        		(<inlinemediaobject>
        		<imageobject>
-       		<imagedata fileref="src/docbkx/images/demo_project_button.png"
+       		<imagedata fileref="src/docbkx/images/demo_workspace_button.png"
                         format="PNG" width="0.25in"/>
        		</imageobject>
-       		</inlinemediaobject>).The demo project is for new users to get a 
+       		</inlinemediaobject>). The demo workspace is for new users to get a 
        		feel of the application and its potential. It includes a dummy 
        		database connection which contains a few tables for the user to play 
        		around with. A few queries and reports have been designed to display
@@ -159,29 +159,29 @@
 
     </chapter>
     
-    <chapter id="project_page">
+    <chapter id="workspace_page">
     
-        <title>The Project Page</title>
+        <title>The Workspace Page</title>
         
         <mediaobject>
         	<imageobject>
-        		<imagedata fileref="src/docbkx/images/project_page.png"
+        		<imagedata fileref="src/docbkx/images/workspace_page.png"
                         format="PNG" width="5in"/>
         	</imageobject>
         </mediaobject>
         
         <para>
-            The project page is where additional data sources can be added
+            The workspace page is where additional data sources can be added
             and where queries from these data sources can be generated.
-            All projects need at least one data source added 
-            to the project to create queries on. To add a data
-            source to the current project, select a data source
+            A workspace needs to include at least one data source
+            before you can create queries in it. To add a data
+            source to the current workspace, select a data source
             from the list and press the <guibutton>Start</guibutton>
             button. Currently only databases can be added as
             data sources to Wabit. For more information on creating
             a database connection see <xref linkend="setup_database" />.
-            Once a data source has been added to the project, queries
-            can be made on the project from the query builder.
+            Once a data source has been added to the workspace, queries
+            can be made on the workspace from the query builder.
         </para>
 
     </chapter>
@@ -192,7 +192,7 @@
        
        <para>
            Before creating queries in Wabit, a data source needs
-           to be added to the project to tell the queries where
+           to be added to the workspace to tell the queries where
            the data is coming from. Wabit allows you to use any 
            JDBC- or ODBC-accessible database as a data source.
        </para>
@@ -307,7 +307,7 @@
                                 <para>HSQLDB</para>
                             </entry>
                             <entry>
-                                <para>Works; used in the demo project.</para>
+                                <para>Works; used in the demo workspace.</para>
                             </entry>
                         </row>
 
@@ -400,8 +400,8 @@
                     <listitem>
 
                         <para>
-                            Go to the project page by selecting the top project
-                            folder or any data source shown in the project tree on the left.
+                            Go to the workspace page by selecting the top workspace
+                            folder or any data source shown in the workspace tree on the left.
                         </para>
 
                     </listitem>
@@ -795,8 +795,8 @@
 
                     <listitem>
                         <para>
-                            Go to the project page by selecting the top project
-                            folder or any data source shown in the project tree
+                            Go to the workspace page by selecting the top workspace
+                            folder or any data source shown in the workspace tree
                             on the left.
                         </para>
                     </listitem>
@@ -848,10 +848,9 @@
             <para>
                 You must set up a connection to allow Wabit to
                 connect to a specific database. When you create a
-                connection, it is added to the list of
-                connections that can be added to the current
-                Wabit project. You can also use the connection
-                in all your projects.
+                connection, it is added to your personal list of
+                connections. Once defined, a particular connection
+		can easily be added to any number of workspaces.
             </para>
 
             <para>
@@ -873,8 +872,8 @@
                     <listitem>
 
                         <para>
-                            Go to the project page by selecting the top project
-                            folder in the project tree on the left.
+                            Go to the workspace page by selecting the top workspace
+                            folder in the workspace tree on the left.
                         </para>
 
                     </listitem>
@@ -953,7 +952,7 @@
                                                 list contains the
                                                 database types you
                                                 defined in the JDBC Drivers... panel
-                                                which can be accessed from the project
+                                                which can be accessed from the workspace
                                                 page.
                                                 For more
                                                 information, see
@@ -1081,7 +1080,7 @@
                         <para>Click OK. The new connection is added to the
                             list of available connections and is also added to
                             the Database Connection Manager which can be accessed
-                            by clicking anywhere on the project tree.</para>
+                            by right-clicking anywhere on the workspace tree.</para>
                     </listitem>
 
                 </orderedlist>
@@ -1148,7 +1147,7 @@
                         fileref="src/docbkx/images/query_to_wabitfile_button.png"
                         format="PNG" width="0.20in" />
                 </imageobject>
-            </inlinemediaobject> - export the current query to a whole new Wabit project. 
+            </inlinemediaobject> - export the current query to a whole new Wabit workspace. 
             </listitem>
             
             <listitem>
@@ -1304,7 +1303,7 @@
                 Additionally, the query can be exported as text to a file
                 or the query and its associated data source can be exported
                 to a new Wabit file. Exporting a single query allows others
-                to import that query into their project for other uses.
+                to import that query into their workspace for other uses.
             </para>
         
         </section>
@@ -1480,7 +1479,7 @@
                         fileref="src/docbkx/images/query_to_wabitfile_button.png"
                         format="PNG" width="0.20in" />
                 </imageobject>
-            </inlinemediaobject> - export the current query to a whole new Wabit project. 
+            </inlinemediaobject> - export the current query to a whole new Wabit workspace. 
             </listitem>
             
             <listitem>
@@ -1578,7 +1577,7 @@
                         fileref="src/docbkx/images/report_to_wabitfile_button.png"
                         format="PNG" width="0.20in" />
                 </imageobject>
-            </inlinemediaobject> - export the report the to a new Wabit project. 
+            </inlinemediaobject> - export the report the to a new Wabit workspace. 
             </listitem>
             
     		<listitem>
@@ -1800,7 +1799,7 @@
         <para>
             While laying out the report, additional queries may be
             desired to be shown on the same report. To add a query
-            defined in the project, drag and drop the query from the
+            defined in the workspace, drag and drop the query from the
             list of queries on the right. Once on the layout, the query
             can be resized like any other content box. To modify
             a query, double click it to show its properties window.
@@ -1953,7 +1952,7 @@
 		    
 		    <para>
 		    This is the first screen you see when you start Wabit. 
-            Click on the "Create a New Project" button to proceed.
+            Click on the "Create a New Workspace" button to proceed.
             </para>
             
             <mediaobject>
@@ -1968,12 +1967,12 @@
             that have been previously defined. The first step in creating a report in Wabit
             is adding a connection to the data source where your data is saved. To add a new
             data source click the "New" button which will bring up the data source 
-            properties window. Connections can also be added from the project page.
+            properties window. Connections can also be added from the workspace page.
             </para>
             
             <mediaobject>
                 <imageobject>
-                    <imagedata fileref="src/docbkx/images/welcome_screen_new_project.png"
+                    <imagedata fileref="src/docbkx/images/welcome_screen_new_workspace.png"
                         format="PNG" width="3.5in" />
                 </imageobject>
             </mediaobject>
@@ -2011,14 +2010,14 @@
 		    <title>Creating a Query</title>
 		    
 		    <para>
-		    After adding a data source to your project Wabit will create and display a
-            new empty query. Additional queries can be made by right clicking the project
+		    After adding a data source to your workspace, Wabit will create and display a
+            new empty query. Additional queries can be made by right clicking the workspace
 			tree and choosing "New Query".
 			</para>
 			
 			<mediaobject>
                 <imageobject>
-                    <imagedata fileref="src/docbkx/images/demo_project_qb.png"
+                    <imagedata fileref="src/docbkx/images/demo_workspace_qb.png"
                         format="PNG" width="4in" />
                 </imageobject>
             </mediaobject>
@@ -2032,11 +2031,11 @@
 		    <para>
 		    Lets say we want to create a query to get the names of all the action movie actors.
 			Lets first rename the query to "Action movie actors" to remember what the query is
-			for. Renaming a query is done simply by double clicking the query in the project tree.
+			for. Renaming a query is done simply by double clicking the query in the workspace tree.
 			</para>
 			<para>
 			To start making the query, tables will need to be brought in from the database. On the database
-			tree, on the right of the tool, expand the Demo project database and then expand the
+			tree, on the right of the tool, expand the SQL Power Demo Connection database and then expand the
 			Public catalog. Under the Public catalog is a list of all of the tables in the database.
 			The first table needed is the Actor table. The table can be added to the query by dragging
 			it from the tree to the query pen. The next table needed is the Movie table to know
@@ -2087,7 +2086,7 @@
 			<title>Laying Out a Report</title>
 			
 			<para>
-			To add new report layouts to a project, right click the project tree and select "New Layout".
+			To add new report layouts to a workspace, right click the workspace tree and select "New Layout".
 			Layouts created from queries come from a template that adds a header and footer to the results
 			of the query. While the report layout only shows one page, the layout of this page will be
 			repeated for each page required to print or export the entire query results.
