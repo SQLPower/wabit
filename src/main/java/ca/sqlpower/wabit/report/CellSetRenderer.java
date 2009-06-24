@@ -359,7 +359,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         g.setFont(getBodyFont());
         FontMetrics bodyFM = g.getFontMetrics();
+        
         int maxRowHeight = Math.max(headerFontHeight, bodyFM.getHeight());
+        
+        //If the max row height is zero there will be a divide by 0 error in the next line...
+        //therefore if the height is so small that its less than one pixel just display it as 1 pixel.
+        if (maxRowHeight == 0) {
+        	maxRowHeight = 1;
+        }
         
         int numRows = (contentBox.getHeight() - totalHeaderHeight) / maxRowHeight;
         
