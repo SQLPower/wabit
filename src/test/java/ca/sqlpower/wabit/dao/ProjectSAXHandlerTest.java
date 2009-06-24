@@ -30,6 +30,7 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
@@ -89,15 +90,22 @@ public class ProjectSAXHandlerTest extends TestCase {
         	
         	@Override
         	public WabitSession createSession() {
-        		return new StubWabitSession(this) {
-        			public UserPrompter createUserPrompter(String question, ca.sqlpower.util.UserPrompterFactory.UserPromptType responseType, UserPrompter.UserPromptOptions optionType, UserPrompter.UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames) {
-        				if (responseType == UserPromptType.JDBC_DATA_SOURCE) {
-        					return new DefaultUserPrompter(optionType, UserPromptResponse.NEW, replacementDS);
-        				} else {
-        					return super.createUserPrompter(question, responseType, optionType, defaultResponseType, defaultResponse, buttonNames);
-        				}
-        			};
-        		};
+        		return new StubWabitSession(this);
+        	}
+        	
+        	@Override
+        	public UserPrompter createUserPrompter(String question,
+        	        UserPromptType responseType, UserPromptOptions optionType,
+        	        UserPromptResponse defaultResponseType,
+        	        Object defaultResponse, String... buttonNames) {
+                if (responseType == UserPromptType.JDBC_DATA_SOURCE) {
+                    return new DefaultUserPrompter(
+                            optionType, UserPromptResponse.NEW, replacementDS);
+                } else {
+                    return super.createUserPrompter(
+                            question, responseType, optionType, defaultResponseType,
+                            defaultResponse, buttonNames);
+                }
         	}
         };
         
