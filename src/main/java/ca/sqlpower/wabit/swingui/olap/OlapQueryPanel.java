@@ -34,6 +34,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
@@ -46,6 +47,7 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 
 public class OlapQueryPanel implements WabitPanel {
@@ -96,7 +98,19 @@ public class OlapQueryPanel implements WabitPanel {
         olap4jGuiQueryPanel.setOlapPanelToolbar(createOlapPanelToolBar(olap4jGuiQueryPanel));
         
         JPanel guiPanel = new JPanel(new BorderLayout());
-        guiPanel.add(olap4jGuiQueryPanel.getOlapPanelToolbar(), BorderLayout.NORTH);
+        
+        JToolBar wabitBar = new JToolBar();
+		wabitBar.setFloatable(false);
+		JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		wabitBar.add(forumButton);
+        
+        JToolBar toolBar = new JToolBar();
+		toolBar.setLayout(new BorderLayout());
+		toolBar.add(olap4jGuiQueryPanel.getOlapPanelToolbar(), BorderLayout.CENTER);
+		toolBar.add(wabitBar, BorderLayout.EAST);
+        
+        guiPanel.add(toolBar, BorderLayout.NORTH);
         JComponent viewComponent = cellSetViewer.getViewComponent();
 		guiPanel.add(viewComponent, BorderLayout.CENTER);
 		
@@ -187,6 +201,7 @@ public class OlapQueryPanel implements WabitPanel {
 	    toolBar.addSeparator();
 	    
 	    toolBar.add(new CreateLayoutFromQueryAction(session.getProject(), new CellSetRenderer(query), query.getName()));
+	    
 	    return toolBar;
 	}
 
