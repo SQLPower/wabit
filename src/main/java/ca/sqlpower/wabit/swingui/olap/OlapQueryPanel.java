@@ -120,7 +120,7 @@ public class OlapQueryPanel implements WabitPanel {
         queryAndResultsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		queryAndResultsPanel.setLeftComponent(queryPanels);
         queryAndResultsPanel.setRightComponent(olap4jGuiQueryPanel.getPanel());
-        queryAndResultsPanel.setDividerLocation(viewComponent.getPreferredSize().width);
+        queryAndResultsPanel.setDividerLocation(queryAndResultsPanel.getWidth() - olap4jGuiQueryPanel.getPanel().getMinimumSize().width);
         queryAndResultsPanel.setResizeWeight(1);
     }
     
