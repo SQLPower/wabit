@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -55,6 +57,7 @@ import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
+import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
 
 /**
  * This listener is the main listener on the project tree in Wabit.
@@ -64,6 +67,9 @@ import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 public class ProjectTreeListener extends MouseAdapter {
 	
 	private static final Logger logger = Logger.getLogger(ProjectTreeListener.class);
+	
+    public static final Icon DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
+    public static final Icon OLAP_DB_ICON = new ImageIcon(ProjectTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
 	
 	private final WabitSwingSession session;
 
@@ -271,7 +277,13 @@ public class ProjectTreeListener extends MouseAdapter {
 //        dbcsMenu.addSeparator();
 
         for (SPDataSource dbcs : session.getContext().getDataSources().getConnections()) {
-            dbcsMenu.add(new JMenuItem(new AddDataSourceAction(session.getProject(), dbcs)));
+        	JMenuItem newMenuItem = new JMenuItem(new AddDataSourceAction(session.getProject(), dbcs));
+        	if (dbcs instanceof Olap4jDataSource) {
+        		newMenuItem.setIcon(OLAP_DB_ICON);
+        	} else if (dbcs instanceof JDBCDataSource) {
+        		newMenuItem.setIcon(DB_ICON);
+        	}
+        	dbcsMenu.add(newMenuItem);
         }
         SPSUtils.breakLongMenu(session.getFrame(), dbcsMenu);
         
