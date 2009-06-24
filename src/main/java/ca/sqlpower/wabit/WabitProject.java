@@ -419,6 +419,17 @@ public class WabitProject extends AbstractWabitObject implements DataSourceColle
         setEditorPanelModel(newQuery);
     }
 
+    public boolean removeOlapQuery(OlapQuery query) {
+    	int index = olapQueries.indexOf(query);
+    	if (index != -1) {
+    		olapQueries.remove(query);
+    		fireChildRemoved(OlapQuery.class, query, index);
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     public List<OlapQuery> getOlapQueries() {
         return Collections.unmodifiableList(olapQueries);
     }

@@ -207,18 +207,19 @@ public class CellSetRenderer extends AbstractWabitObject implements
 				throw new RuntimeException(e);
 			}
         } else {
-	        
-	        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
-	            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-	                for (QueryDimension oldDimension : modifiedMDXQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
-	                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
-	                        dimension.getSelections().clear();
-	                        for (Selection selection : oldDimension.getSelections()) {
-	                            dimension.getSelections().add(selection);
-	                        }
-	                    }
-	                }
-	            }
+	        if (newModifiedMDXQuery != null) {
+		        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
+		            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
+		                for (QueryDimension oldDimension : modifiedMDXQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
+		                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
+		                        dimension.getSelections().clear();
+		                        for (Selection selection : oldDimension.getSelections()) {
+		                            dimension.getSelections().add(selection);
+		                        }
+		                    }
+		                }
+		            }
+		        }
 	        }
 	        
 	        modifiedMDXQuery = newModifiedMDXQuery;

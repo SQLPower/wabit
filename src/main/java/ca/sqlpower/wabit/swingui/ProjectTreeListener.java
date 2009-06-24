@@ -48,6 +48,8 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
@@ -143,30 +145,60 @@ public class ProjectTreeListener extends MouseAdapter {
 		                    new Object[] {"Delete All", "Replace", "Cancel"}, null);
 		            if (response == 0) {
 		            	session.getProject().removeDataSource((WabitDataSource)item);
-		                //A temporary list is used instead of directly using session.getProject().getQueries()
-		            	//to prevent a ConcurrentModificationException
-		            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
-		            	for(QueryCache query : queries) {
-		                	if(item.equals(query.getWabitDataSource())) {
-		                		removeLayoutPartsDependentOnQuery(query);
-		                		session.getProject().removeQuery(query, session);
-		                	}
-		                }
-		            } else if(response == 1) {
-		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), UserPromptType.JDBC_DATA_SOURCE, UserPromptOptions.OK_NEW_CANCEL, UserPromptResponse.CANCEL, null, "OK", "Create New", "Cancel");
-		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
-		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
-		        			session.getProject().removeDataSource((WabitDataSource)item);
-		        			JDBCDataSource ds = (JDBCDataSource) dbPrompter.getUserSelectedResponse();
-		        			session.getProject().addDataSource(ds);
-		        			List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
+		            	if (wabitDS.getSPDataSource() instanceof JDBCDataSource) {
+			                //A temporary list is used instead of directly using session.getProject().getQueries()
+			            	//to prevent a ConcurrentModificationException
+			            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
 			            	for(QueryCache query : queries) {
 			                	if(item.equals(query.getWabitDataSource())) {
 			                		removeLayoutPartsDependentOnQuery(query);
-			                		int queryIndex = session.getProject().getQueries().indexOf(query);
-									session.getProject().getQueries().get(queryIndex).setDataSource(ds);
+			                		session.getProject().removeQuery(query, session);
 			                	}
 			                }
+		            	} else if (wabitDS.getSPDataSource() instanceof Olap4jDataSource) {
+			            	List <OlapQuery> olapQueries = new ArrayList<OlapQuery>(session.getProject().getOlapQueries());
+			            	logger.debug("Project has " + olapQueries.size() + " queries");
+			            	for(OlapQuery query : olapQueries) {
+			            		logger.debug("Currently on query '" + query.getName() + "'");
+			            		if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
+			            			logger.debug("Removing this query");
+			            			removeLayoutPartsDependentOnOlapQuery(query);
+			            			session.getProject().removeOlapQuery(query);
+			            		}
+			            	}
+		            	}
+		            } else if(response == 1) {
+		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), 
+		            													wabitDS.getSPDataSource() instanceof Olap4jDataSource ?
+		            														UserPromptType.OLAP_DATA_SOURCE : UserPromptType.JDBC_DATA_SOURCE, 
+												            			UserPromptOptions.OK_NEW_CANCEL, 
+												            			UserPromptResponse.CANCEL, 
+												            			null, "OK", "Create New", "Cancel");
+		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
+		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
+		        			session.getProject().removeDataSource((WabitDataSource)item);
+		        			SPDataSource ds = (SPDataSource) dbPrompter.getUserSelectedResponse();
+		        			session.getProject().addDataSource(ds);
+		        			if (ds instanceof JDBCDataSource) {
+		        				List <QueryCache> queries = new ArrayList<QueryCache>(session.getProject().getQueries());
+				            	for(QueryCache query : queries) {
+				                	if(item.equals(query.getWabitDataSource())) {
+				                		removeLayoutPartsDependentOnQuery(query);
+				                		int queryIndex = session.getProject().getQueries().indexOf(query);
+										session.getProject().getQueries().get(queryIndex).setDataSource((JDBCDataSource)ds);
+				                	}
+				                }
+		        			} else if (ds instanceof Olap4jDataSource) {
+		        				List <OlapQuery> queries = new ArrayList<OlapQuery>(session.getProject().getOlapQueries());
+				            	for(OlapQuery query : queries) {
+				                	if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
+				                		removeLayoutPartsDependentOnOlapQuery(query);
+				                		int queryIndex = session.getProject().getOlapQueries().indexOf(query);
+										session.getProject().getOlapQueries().get(queryIndex).setOlapDataSource((Olap4jDataSource)ds);
+				                	}
+				                }
+		        			}
+			            	
 		        		} else {
 		        			return;
 		        		}
@@ -175,6 +207,16 @@ public class ProjectTreeListener extends MouseAdapter {
 		            } 
 		    } else if (item instanceof Layout) {
 				session.getProject().removeLayout((Layout)item);
+		    } else if (item instanceof OlapQuery) {
+				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
+						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
+				if(response == 0) {
+					final OlapQuery query = (OlapQuery)item;
+					session.getProject().removeOlapQuery(query);
+					removeLayoutPartsDependentOnOlapQuery(query);
+				} else {
+					return;
+				}
 			} else {
 				logger.debug("This shoudl not Happen");
 			}
@@ -192,6 +234,21 @@ public class ProjectTreeListener extends MouseAdapter {
 				    if(cb.getContentRenderer() instanceof ResultSetRenderer &&((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
 				    	int layoutIndex = session.getProject().getLayouts().indexOf(layout);
 						session.getProject().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
+					}
+				}
+			}
+		}
+		
+		/**
+		 * Removes any content boxes dependent on the query passed to the method
+		 * @param query
+		 */
+		private void removeLayoutPartsDependentOnOlapQuery(OlapQuery query) {
+			for(Layout layout :session.getProject().getLayouts()) {
+				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
+				for(ContentBox cb : cbList) {
+				    if(cb.getContentRenderer() instanceof CellSetRenderer &&((CellSetRenderer) cb.getContentRenderer()).getOlapQuery() == query) {
+				    	layout.getPage().removeContentBox(cb);
 					}
 				}
 			}
@@ -250,7 +307,7 @@ public class ProjectTreeListener extends MouseAdapter {
 			menu.add(new EditCellAction(tree));
 		}
 		if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof WabitDataSource
-				|| lastPathComponent instanceof Layout) {
+				|| lastPathComponent instanceof Layout || lastPathComponent instanceof OlapQuery) {
 			menu.add(new DeleteFromTreeAction(lastPathComponent));
 		}
 		
