@@ -27,6 +27,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
+import org.olap4j.OlapDatabaseMetaData;
 import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
@@ -71,7 +72,10 @@ public class Olap4JTreeCellRenderer extends DefaultTreeCellRenderer {
     static void configureJLabel(JLabel configureMe, Object value) {
         try {
             if (value instanceof OlapConnection) {
-                configureMe.setText(((OlapConnection) value).getMetaData().getURL()); // XXX not ideal
+                OlapDatabaseMetaData meta = ((OlapConnection) value).getMetaData();
+                StringBuilder sb = new StringBuilder();
+                sb.append(meta.getDriverName()).append(" - ").append(meta.getDriverVersion());
+                configureMe.setText(sb.toString());
             } else if (value instanceof Catalog) {
                 configureMe.setText(((Catalog) value).getName());
             } else if (value instanceof Schema) {

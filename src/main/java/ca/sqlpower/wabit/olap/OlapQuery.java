@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -149,6 +150,7 @@ public class OlapQuery extends AbstractWabitObject {
     
     public OlapQuery(String uuid) {
         super(uuid);
+        // FIXME this should be configured in an external jndi.properties file.
         System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
         System.setProperty("org.osjava.sj.jndi.shared", "true");
         try {
@@ -222,25 +224,59 @@ public class OlapQuery extends AbstractWabitObject {
         }
     }
 
-    public OlapConnection createOlapConnection() throws SQLException, ClassNotFoundException, NamingException {
-        if (getOlapDataSource() == null 
-                || getOlapDataSource().getDataSource() == null
-                || getOlapDataSource().getMondrianSchema() == null) return null;
+    public OlapConnection createOlapConnection() throws SQLException, ClassNotFoundException, NamingException 
+    {
+        final String unique_name = UUID.randomUUID().toString();
+        
+        // FIXME This validation should not be performed here.
+        if (getOlapDataSource() == null) return null;
         
         JDBCDataSource ds = olapDataSource.getDataSource();
+        
         try {
-	        ctx.bind(ds.getName(), new DataSourceAdapter(ds));
-	        
-	        Class.forName("mondrian.olap4j.MondrianOlap4jDriver");
-	        Connection connection =
-	            DriverManager.getConnection(
-	                "jdbc:mondrian:"
-	                    + "DataSource='" + ds.getName() + "';"
-	                    + "Catalog='" + getOlapDataSource().getMondrianSchema().toString() + "';"
-	                    );
-	        return ((OlapWrapper) connection).unwrap(OlapConnection.class);
+            
+            ctx.bind(unique_name, new DataSourceAdapter(ds));
+            
+            if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.IN_PROCESS)) 
+            {
+                if (getOlapDataSource().getMondrianSchema() == null
+                        || getOlapDataSource().getDataSource() == null) {
+                    // FIXME This validation should not be performed here.
+                    return null;
+                }
+                
+                // Init the class loader. This might not be necessary with JDK 1.6, but just for kicks....
+                Class.forName(Olap4jDataSource.IN_PROCESS_DRIVER_CLASS_NAME);
+                
+                // Build a JDBC URL for Mondrian driver connection
+                StringBuilder url = new StringBuilder("jdbc:mondrian:");
+                url.append("DataSource='").append(ds.getName());
+                url.append("';Catalog=").append(getOlapDataSource().getMondrianSchema().toString());
+                
+                Connection connection = DriverManager.getConnection(url.toString());
+                return ((OlapWrapper) connection).unwrap(OlapConnection.class);
+            }
+            else if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.XMLA)) 
+            {
+                // Init the class loader
+                Class.forName(Olap4jDataSource.XMLA_DRIVER_CLASS_NAME);
+                
+                // Build the JDBC URL for an XMLA connection.
+                StringBuilder url = new StringBuilder("jdbc:xmla:");
+                url.append("Server=").append(getOlapDataSource().getXmlaServer()); // FIXME This requires validation. Should be performed with the other ones identified higher up in this function.
+                
+                // Establish the connection
+                Connection conn = DriverManager.getConnection(url.toString());
+                OlapConnection olapConn = ((OlapWrapper) conn).unwrap(OlapConnection.class);
+                
+                
+                
+                return olapConn; 
+            } else {
+                throw new RuntimeException("Someone forgot to add a connection type handler in the code.");
+            }
         } finally {
-        	ctx.unbind(ds.getName());
+            ctx.unbind(unique_name);
         }
     }
 

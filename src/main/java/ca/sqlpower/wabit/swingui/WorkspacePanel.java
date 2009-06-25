@@ -325,32 +325,39 @@ public class WorkspacePanel implements WabitPanel {
      */
 	public static void addOlap4jDataSource(Olap4jDataSource ds, WabitSwingSession session) {
 	    if (ds == null) {
-	        return;
-	    }
-	    Connection con = null;
-	    try {
-	        con = ds.getDataSource().createConnection();
-	    } catch (SQLException e) {
-	        SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
-	        return;
-	    } finally {
-	        if (con != null) {
-	            try {
-	                con.close();
-	            } catch (Exception e) {
-	                //squish exception to show any other exception while testing the connection.
-	            }
-	        }
-	    }
-	    if (!session.getWorkspace().dsAlreadyAdded(ds)) {
-	        session.getWorkspace().addDataSource(ds);
-	    }
-	    OlapQuery newQuery = new OlapQuery();
-	    newQuery.setOlapDataSource(ds);
-	    newQuery.setName("New " + ds.getName() + " query");
-	    session.getWorkspace().addOlapQuery(newQuery);
-	    //TODO Add a query builder for OLAP connections and make it the focused component.
-	}
+            return;
+        }
+        
+        // This part tests the underlying JDBC connection for the
+        // mondrian in-process driver. It does not apply to XMLA
+        if (ds.getType().equals(Olap4jDataSource.Type.IN_PROCESS)) {
+            Connection con = null;
+            try {
+                con = ds.getDataSource().createConnection();
+            } catch (SQLException e) {
+                SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
+                return;
+            } finally {
+                if (con != null) {
+                    try {
+                        con.close();
+                    } catch (Exception e) {
+                        //squish exception to show any other exception while testing the connection.
+                    }
+                }
+            }
+        }
+        
+        if (!session.getWorkspace().dsAlreadyAdded(ds)) {
+            session.getWorkspace().addDataSource(ds);
+        }
+        
+        OlapQuery newQuery = new OlapQuery();
+        newQuery.setOlapDataSource(ds);
+        newQuery.setName("New " + ds.getName() + " query");
+        session.getWorkspace().addOlapQuery(newQuery);
+        //TODO Add a query builder for OLAP connections and make it the focused component.
+    }
 	
 	public boolean applyChanges() {
 		return true;
