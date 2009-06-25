@@ -55,6 +55,7 @@ import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
+import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
@@ -72,6 +73,7 @@ import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.LayoutItem;
+import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
@@ -157,6 +159,12 @@ public class CellSetRenderer extends AbstractWabitObject implements
             }
         }
     };
+    
+    /**
+     * This is an Array of integers which iterates down through each column and finds the
+     * proper column width for each.
+     */
+    private int[] columnWidthList;
     
     public CellSetRenderer(OlapQuery olapQuery) {
         this(olapQuery, null);
@@ -381,6 +389,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
             memberHeaderMap.clear();
         }
         
+        
+        
         CellSetTableHeaderComponent columnHeaderComponent =
         	new CellSetTableHeaderComponent(
         			getCellSet(), Axis.COLUMNS, tableAsModel, g.create(),
@@ -391,11 +401,37 @@ public class CellSetRenderer extends AbstractWabitObject implements
         			getCellSet(), Axis.ROWS, tableAsModel, g.create(),
         			getHeaderFont());
         
-        g.setFont(getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
         double colHeaderSumHeight = 0;
         int colourSchemeNum = 0;
         Color oldForeground = g.getColor();
+        
+        
+        
+        //get all the headers widths
+        g.setFont(getHeaderFont());
+        columnWidthList = new int[tableAsModel.getColumnCount()];
+		CellSetAxis cellAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
+        for (Position position : cellAxis.getPositions()) {
+            int maxColWidth = 0;
+            for (int i = 0; i < position.getMembers().size(); i++) {
+                Member member = position.getMembers().get(i);
+                int colWidth = (int) getHeaderFont().getStringBounds(member.getName(), g.getFontRenderContext()).getWidth();
+                columnWidthList[i] = Math.max(maxColWidth, colWidth) + 10;
+            }
+        }
+        g.setFont(getBodyFont());
+        //get all the data's widths
+        for (int row = 0; row < tableAsModel.getRowCount(); row++) {
+        	int maxColWidth = 0;
+        	for (int col = 0; col < tableAsModel.getColumnCount(); col++) {
+        		String columnString = (String) tableAsModel.getValueAt(row, col);
+        		int colWidth = (int) getBodyFont().getStringBounds(columnString, g.getFontRenderContext()).getWidth();
+        		maxColWidth = Math.max(maxColWidth, colWidth);
+        		columnWidthList[col] = maxColWidth + 10;
+        	}
+        }
+        
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
@@ -403,10 +439,16 @@ public class CellSetRenderer extends AbstractWabitObject implements
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight + 2), (int) contentBox.getWidth(), (int) hierarchyComponent.getPreferredSize().getHeight());
             g.setColor(oldForeground);
             Member lastMemberDisplayed = null;
+            
+            double columnPosition = rowHeaderWidth;
+            int col = 0;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
                 if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
                 lastMemberDisplayed = layoutItem.getMember();
-                final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
+                double x = columnPosition;
+                columnPosition += columnWidthList[col];
+                
+                //final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
                 final double y = layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight;
                 if (!printing) {
                     Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
@@ -414,8 +456,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
                         memberRanges = new HashSet<Rectangle>();
                         memberHeaderMap.put(layoutItem.getMember(), memberRanges);
                     }
-                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) columnWidthList[col], (int) layoutItem.getBounds().getHeight()));
                 }
+                col++;
                 Color oldColour = g.getColor();
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
                     g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
@@ -426,6 +469,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
             colHeaderSumHeight += hierarchyComponent.getPreferredSize().getHeight();
             colourSchemeNum++;
         }
+        
         g.setBackground(oldForeground);
         
         double columnHeaderHeight = columnHeaderComponent.getPreferredSize().getHeight();
@@ -490,7 +534,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 }
                 
                 double alignmentShift = 0;
-                final int columnWidth = tableAsModel.getColumnModel().getColumn(col).getWidth();
+                int columnWidth = columnWidthList[col];
+                //final int columnWidth = tableAsModel.getColumnModel().getColumn(col).getWidth();
                 final double textWidthInContext = getBodyFont().getStringBounds(formattedValue, g.getFontRenderContext()).getWidth();
                 switch (bodyAlignment) {
                     case RIGHT:
@@ -511,6 +556,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         return false;
     }
+    
 
     public void resetToFirstPage() {
         // TODO Auto-generated method stub
