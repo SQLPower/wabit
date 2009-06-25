@@ -90,6 +90,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private final OlapQuery olapQuery;
     
+    private final static int PADDING = 10;
+    
     /**
      * This is the current cell set being displayed.
      */
@@ -414,23 +416,25 @@ public class CellSetRenderer extends AbstractWabitObject implements
 		CellSetAxis cellAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
         for (Position position : cellAxis.getPositions()) {
             int maxColWidth = 0;
+            
             for (int i = 0; i < position.getMembers().size(); i++) {
                 Member member = position.getMembers().get(i);
                 int colWidth = (int) getHeaderFont().getStringBounds(member.getName(), g.getFontRenderContext()).getWidth();
-                columnWidthList[i] = Math.max(maxColWidth, colWidth) + 10;
+                columnWidthList[i] = Math.max(maxColWidth, colWidth + PADDING);
             }
         }
-        g.setFont(getBodyFont());
+
         //get all the data's widths
         for (int row = 0; row < tableAsModel.getRowCount(); row++) {
         	int maxColWidth = 0;
         	for (int col = 0; col < tableAsModel.getColumnCount(); col++) {
         		String columnString = (String) tableAsModel.getValueAt(row, col);
         		int colWidth = (int) getBodyFont().getStringBounds(columnString, g.getFontRenderContext()).getWidth();
-        		maxColWidth = Math.max(maxColWidth, colWidth);
-        		columnWidthList[col] = maxColWidth + 10;
+        		maxColWidth = Math.max(maxColWidth, colWidth + PADDING);
+        		columnWidthList[col] = maxColWidth;
         	}
         }
+        
         
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
@@ -443,10 +447,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
             double columnPosition = rowHeaderWidth;
             int col = 0;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
+            	col++;
+            	double x = columnPosition;
+            	columnPosition += columnWidthList[col - 1];
                 if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
                 lastMemberDisplayed = layoutItem.getMember();
-                double x = columnPosition;
-                columnPosition += columnWidthList[col];
                 
                 //final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
                 final double y = layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight;
@@ -456,9 +461,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
                         memberRanges = new HashSet<Rectangle>();
                         memberHeaderMap.put(layoutItem.getMember(), memberRanges);
                     }
-                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) columnWidthList[col], (int) layoutItem.getBounds().getHeight()));
+                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) columnWidthList[col - 1], (int) layoutItem.getBounds().getHeight()));
                 }
-                col++;
                 Color oldColour = g.getColor();
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
                     g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
