@@ -37,7 +37,6 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
-import org.olap4j.query.Selection;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -54,7 +53,7 @@ public class OlapQuery extends AbstractWabitObject {
 //    /**
 //     * If there is no connection to the database this class will be used to
 //     * assure that the user does not lose any of their work. It will store all
-//     * the data that is normally stored when a project is saved. This is all
+//     * the data that is normally stored when a workspace is saved. This is all
 //     * because we cannot create an {@link Cube} and {@link Query} when there is
 //     * no {@link Olap4jDataSource} to connect to.
 //     */

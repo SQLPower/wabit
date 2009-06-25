@@ -39,13 +39,13 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
- * This will import a project into an existing project.
+ * This will import all the items from one workspace into an existing workspace.
  */
 public class ImportWorkspaceAction extends AbstractAction {
 
 
 	/**
-	 * This session contains the project we will be loading into.
+	 * This session contains the workspace we will be loading into.
 	 * This session will also be used to parent dialogs from this action to.
 	 */
 	private final WabitSwingSessionImpl session;
@@ -74,8 +74,8 @@ public class ImportWorkspaceAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		OpenWorkspaceXMLDAO projectLoader = new OpenWorkspaceXMLDAO(session.getContext(), in);
-		List<WabitSession> sessions = projectLoader.openWorkspaces();
+		OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(session.getContext(), in);
+		List<WabitSession> sessions = workspaceLoader.openWorkspaces();
 		for (WabitSession sess : sessions) {
 			List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>(sess.getWorkspace().getDataSources());
 			for (int i = dataSources.size() - 1; i >= 0; i--) {

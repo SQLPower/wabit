@@ -63,7 +63,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import javax.swing.JOptionPane;
 
 /**
- * This panel will display information about the project. It will
+ * This panel will display information about the workspace. It will
  * also allow the user to add and remove data sources.
  */
 public class WorkspacePanel implements WabitPanel {
@@ -142,7 +142,7 @@ public class WorkspacePanel implements WabitPanel {
     }
 
 	/**
-	 * The main panel of this project.
+	 * The main panel of this workspace.
 	 */
 	private final JScrollPane scrollPane;
 	private final WabitSwingSession session;
@@ -172,9 +172,9 @@ public class WorkspacePanel implements WabitPanel {
 	}
 
 	/**
-	 * This will create the DBConnectionManager for the ProjectPanel and other panels that need
-	 * to allow users to add a data source to the project. One other place this gets used is
-	 * the NewProjectScreen where the user adds the first data source to a project.
+	 * This will create the DBConnectionManager for the WorkspacePanel and other panels that need
+	 * to allow users to add a data source to the workspace. One other place this gets used is
+	 * the NewWorkspaceScreen where the user adds the first data source to a workspace.
 	 * @param session
 	 * @return
 	 */
@@ -289,7 +289,7 @@ public class WorkspacePanel implements WabitPanel {
 	
 	/**
 	 * This method is used in the DB connection manager to add the selected db
-	 * to the project.
+	 * to the workspace.
 	 */
 	public static void addJDBCDataSource(JDBCDataSource ds, WabitSwingSession session) {
 		if (ds == null) {
@@ -321,7 +321,7 @@ public class WorkspacePanel implements WabitPanel {
 
     /**
      * This method is used in the DB connection manager to add the selected olap
-     * connection to the project.
+     * connection to the workspace.
      */
 	public static void addOlap4jDataSource(Olap4jDataSource ds, WabitSwingSession session) {
 	    if (ds == null) {
@@ -369,7 +369,7 @@ public class WorkspacePanel implements WabitPanel {
 	}
 
 	public void maximizeEditor() {
-		//Do nothing, the project panel is always maximized.
+		//Do nothing, the workspace panel is always maximized.
 	}
 
 }

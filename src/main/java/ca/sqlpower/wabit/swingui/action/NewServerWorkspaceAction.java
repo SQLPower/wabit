@@ -46,9 +46,9 @@ public class NewServerWorkspaceAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         try {
             WabitSessionContext serverCtx = WabitServerSessionContext.getInstance(si);
-            NewWorkspaceScreen newProject = new NewWorkspaceScreen(
+            NewWorkspaceScreen newWorkspace = new NewWorkspaceScreen(
                     new WabitSwingSessionContextImpl(serverCtx, false));
-            newProject.showFrame();
+            newWorkspace.showFrame();
         } catch (Exception ex) {
             SPSUtils.showExceptionDialogNoReport(dialogOwner, "Couldn't create new workspace on server", ex);
         }

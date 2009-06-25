@@ -62,7 +62,7 @@ import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
 /**
- * This listener is the main listener on the project tree in Wabit.
+ * This listener is the main listener on the workspace tree in Wabit.
  * It will listen and handle all tree events from creating new elements
  * to changing the view based on selected nodes.
  */
@@ -146,7 +146,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		            if (response == 0) {
 		            	session.getWorkspace().removeDataSource((WabitDataSource)item);
 		            	if (wabitDS.getSPDataSource() instanceof JDBCDataSource) {
-			                //A temporary list is used instead of directly using session.getProject().getQueries()
+			                //A temporary list is used instead of directly using session.getWorkspace().getQueries()
 			            	//to prevent a ConcurrentModificationException
 			            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getWorkspace().getQueries());
 			            	for(QueryCache query : queries) {
@@ -157,7 +157,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			                }
 		            	} else if (wabitDS.getSPDataSource() instanceof Olap4jDataSource) {
 			            	List <OlapQuery> olapQueries = new ArrayList<OlapQuery>(session.getWorkspace().getOlapQueries());
-			            	logger.debug("Project has " + olapQueries.size() + " queries");
+			            	logger.debug("Workspace has " + olapQueries.size() + " queries");
 			            	for(OlapQuery query : olapQueries) {
 			            		logger.debug("Currently on query '" + query.getName() + "'");
 			            		if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
@@ -256,7 +256,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 	}
 
 	/**
-	 * This will Display a List of options once you right click on the ProjectTree.
+	 * This will Display a List of options once you right click on the WorkspaceTree.
 	 */
 	private void maybeShowPopup(MouseEvent e) {
 		if (!e.isPopupTrigger()) {
@@ -326,7 +326,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
     /**
      * Creates a JMenu with an item for each data source defined in the context's
      * data source collection. When one of these items is selected, it invokes an
-     * action that adds that data source to the project. 
+     * action that adds that data source to the workspace. 
      */
 	public JMenu createDataSourcesMenu() {
         JMenu dbcsMenu = new JMenu("Add Data Source"); //$NON-NLS-1$

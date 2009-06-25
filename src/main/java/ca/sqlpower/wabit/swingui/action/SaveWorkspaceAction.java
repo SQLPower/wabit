@@ -50,8 +50,8 @@ public class SaveWorkspaceAction extends AbstractAction {
 	}
 
 	/**
-	 * Saves the session's project to the file it was opened from or to a user
-	 * specified file if the project was new.
+	 * Saves the session's workspace to the file it was opened from or to a user
+	 * specified file if the workspace was new.
 	 * 
 	 * @param session
 	 *            The session to be saved
@@ -59,13 +59,13 @@ public class SaveWorkspaceAction extends AbstractAction {
 	 */
 	public static boolean save(WabitSwingSession session) {
 		if (session.getCurrentFile() != null) {
-			WorkspaceXMLDAO projectSaver;
+			WorkspaceXMLDAO workspaceSaver;
 			try {
-				projectSaver = new WorkspaceXMLDAO(new FileOutputStream(session.getCurrentFile()), session.getWorkspace());
+				workspaceSaver = new WorkspaceXMLDAO(new FileOutputStream(session.getCurrentFile()), session.getWorkspace());
 			} catch (FileNotFoundException e1) {
 				throw new RuntimeException(e1);
 			}
-			projectSaver.save();
+			workspaceSaver.save();
 			((WabitSwingSessionContext) session.getContext()).putRecentFileName(session.getCurrentFile().getAbsolutePath());
 			return true;
 		} else {

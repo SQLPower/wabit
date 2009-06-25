@@ -506,7 +506,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		private final JTextField nameField = new JTextField();
 		
 		/**
-		 * A combo box containing all the queries in the project. This
+		 * A combo box containing all the queries in the workspace. This
 		 * will let the user choose which query to graph.
 		 */
 		private final JComboBox queryComboBox;
@@ -610,9 +610,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 */
 		private CleanupTableCellRenderer currentHeaderTableCellRenderer;
 		
-		public GraphRendererPropertyPanel(WabitWorkspace project, GraphRenderer renderer) {
+		public GraphRendererPropertyPanel(WabitWorkspace workspace, GraphRenderer renderer) {
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
-			queryComboBox = new JComboBox(project.getQueries().toArray());
+			queryComboBox = new JComboBox(workspace.getQueries().toArray());
 			graphTypeComboBox = new JComboBox(ExistingGraphTypes.values());
 			legendPositionComboBox = new JComboBox(LegendPosition.values());
 	        	        
@@ -872,11 +872,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	private Color backgroundColour;
 		
 	/**
-	 * The project this renderer is in. This allows the
+	 * The workspace this renderer is in. This allows the
 	 * properties panel to tell what queries are accessible
 	 * to create a graph from.
 	 */
-	private final WabitWorkspace project;
+	private final WabitWorkspace workspace;
 	
 	/**
 	 * The Y axis label in the graph.
@@ -904,8 +904,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 */
 	private QueryCache query;
 	
-	private final ContentBox parent;
-
 	/**
 	 * This is the ordering of the columns in the result set the user specified
 	 * in the properties panel. This is preserved to have the properties panel
@@ -937,15 +935,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	};
 	
-	public GraphRenderer(ContentBox parent, WabitWorkspace project, String uuid) {
+	public GraphRenderer(ContentBox parent, WabitWorkspace workspace, String uuid) {
 		super(uuid);
-		this.project = project;
-		this.parent = parent;
+		this.workspace = workspace;
 	}
 	
-	public GraphRenderer(ContentBox parent, WabitWorkspace project) {
-		this.project = project;
-		this.parent = parent;
+	public GraphRenderer(ContentBox parent, WabitWorkspace workspace) {
+		this.workspace = workspace;
 		parent.setWidth(100);
 		parent.setHeight(100);
 		setName("Empty graph");
@@ -962,7 +958,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
 	public DataEntryPanel getPropertiesPanel() {
-		DataEntryPanel panel = new GraphRendererPropertyPanel(project, this);
+		DataEntryPanel panel = new GraphRendererPropertyPanel(workspace, this);
 		return panel;
 	}
 

@@ -35,7 +35,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * This action will export a given query to a file that
- * can be opened as a separate project.
+ * can be opened as a separate workspace.
  */
 public class ExportQueryAction extends AbstractAction {
 
@@ -72,9 +72,9 @@ public class ExportQueryAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		WorkspaceXMLDAO projectSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
 		
-		projectSaver.save(query);
+		workspaceSaver.save(query);
 
 	}
 

@@ -40,13 +40,13 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
- * This action will load in projects from a user selected file to a given
+ * This action will load in workspaces from a user selected file to a given
  * context.
  */
 public class OpenWorkspaceAction extends AbstractAction {
 
 	/**
-	 * This is the context within Wabit that will have the projects
+	 * This is the context within Wabit that will have the workspaces
 	 * loaded into.
 	 */
 	private final WabitSwingSessionContext context;
@@ -80,7 +80,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	}
 
 	/**
-	 * This will load a Wabit project file in a new session in the given context.
+	 * This will load a Wabit workspace file in a new session in the given context.
 	 */
 	public static void loadFile(File importFile, WabitSwingSessionContext context) {
 		BufferedInputStream in = null;
@@ -97,7 +97,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	}
 
 	/**
-	 * This will load a Wabit project file in a new session in the given context
+	 * This will load a Wabit workspace file in a new session in the given context
 	 * through an input stream. This is slightly different from loading from a
 	 * file as no default file to save to will be specified and nothing will be
 	 * added to the recent files menu.
@@ -107,8 +107,8 @@ public class OpenWorkspaceAction extends AbstractAction {
 	public static List<WabitSession> loadFile(InputStream input, WabitSwingSessionContext context) {
 		BufferedInputStream in = new BufferedInputStream(input);
 		try {
-			OpenWorkspaceXMLDAO projectLoader = new OpenWorkspaceXMLDAO(context, in);
-			List<WabitSession> sessions = projectLoader.openWorkspaces();
+			OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in);
+			List<WabitSession> sessions = workspaceLoader.openWorkspaces();
 			for (WabitSession session : sessions) {
 				try {
 					((WabitSwingSession)session).buildUI();

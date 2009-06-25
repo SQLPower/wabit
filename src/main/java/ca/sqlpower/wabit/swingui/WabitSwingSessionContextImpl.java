@@ -66,7 +66,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     
     /**
      * This is a preference that stores if the app should start up on the welcome screen
-     * or it should start on the last loaded/saved project. 
+     * or it should start on the last loaded/saved workspace. 
      */
     private static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
     

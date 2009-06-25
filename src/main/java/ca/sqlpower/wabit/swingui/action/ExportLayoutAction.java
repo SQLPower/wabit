@@ -69,9 +69,9 @@ public class ExportLayoutAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		WorkspaceXMLDAO projectSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
 		
-		projectSaver.save(layout);
+		workspaceSaver.save(layout);
 
 	}
 }

@@ -32,11 +32,11 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * A Swing {@link Action} for creating new relational (SQL) queries in a Wabit
- * project.
+ * workspace.
  */
 public class NewQueryAction extends AbstractAction {
 	
-    private final WabitWorkspace project;
+    private final WabitWorkspace workspace;
     private final WabitSwingSession session;
     private final JDBCDataSource ds;
     private final String newQueryName;
@@ -46,13 +46,13 @@ public class NewQueryAction extends AbstractAction {
 	 * set the datasource of this Query afterwards.
 	 * 
 	 * @param session
-	 *            The {@link WabitSwingSession} containing the project that the
+	 *            The {@link WabitSwingSession} containing the workspace that the
 	 *            new query will be added to.
 	 */
     public NewQueryAction(WabitSwingSession session) {
         super("New Relational Query");
         this.newQueryName = "New Relational Query";
-        this.project = session.getWorkspace();
+        this.workspace = session.getWorkspace();
         this.session = session;
         this.ds = null;
     }
@@ -61,7 +61,7 @@ public class NewQueryAction extends AbstractAction {
 	 * Creates a new query and sets its datasource to the given datasource.
 	 * 
 	 * @param session
-	 *            The {@link WabitSwingSession} containing the project that the
+	 *            The {@link WabitSwingSession} containing the workspace that the
 	 *            new query will be added to.
 	 * @param ds
 	 *            The datasource that the new query will use to start with
@@ -69,7 +69,7 @@ public class NewQueryAction extends AbstractAction {
     public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
     	super("New Relational Query on '" + ds.getName() + "'");
     	this.newQueryName = "New " + ds.getName() + " query";
-    	this.project = session.getWorkspace();
+    	this.workspace = session.getWorkspace();
     	this.session = session;
     	this.ds = ds;
     }
@@ -80,9 +80,9 @@ public class NewQueryAction extends AbstractAction {
         if (ds != null) {
         	query.setDataSource(ds);
         }
-		project.addQuery(query, session);
+		workspace.addQuery(query, session);
 		JTree tree = session.getTree();
-		int queryIndex = tree.getModel().getIndexOfChild(project, query);
+		int queryIndex = tree.getModel().getIndexOfChild(workspace, query);
 		tree.setSelectionRow(queryIndex + 1);
     }
 }

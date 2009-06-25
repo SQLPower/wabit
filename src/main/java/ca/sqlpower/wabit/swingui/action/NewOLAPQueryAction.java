@@ -29,7 +29,7 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
- * A Swing Action for creating a new OLAP Query in a project.
+ * A Swing Action for creating a new OLAP Query in a workspace.
  */
 public class NewOLAPQueryAction extends AbstractAction {
 

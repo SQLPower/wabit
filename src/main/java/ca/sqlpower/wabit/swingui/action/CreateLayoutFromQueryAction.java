@@ -25,8 +25,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import org.olap4j.OlapException;
-
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -43,9 +41,9 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     private static final Icon ADD_LAYOUT_ICON = new ImageIcon(CreateLayoutFromQueryAction.class.getResource("/icons/layout_add.png"));
 
     /**
-     * The project we will add the new layout to when this action is invoked.
+     * The workspace we will add the new layout to when this action is invoked.
      */
-    private final WabitWorkspace project;
+    private final WabitWorkspace workspace;
 
     /**
      * The {@link ReportContentRenderer} associated with the new default layout being used.
@@ -57,16 +55,16 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
      */
     private String layoutName;
     
-    public CreateLayoutFromQueryAction(WabitWorkspace wabitProject, ReportContentRenderer contentRenderer, String layoutName) {
+    public CreateLayoutFromQueryAction(WabitWorkspace wabitworkspace, ReportContentRenderer contentRenderer, String layoutName) {
         super("Create Layout...", ADD_LAYOUT_ICON);
         putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
-        this.project = wabitProject;
+        this.workspace = wabitworkspace;
         this.contentRenderer = contentRenderer;
         this.layoutName = layoutName;
     }
     
     public void actionPerformed(ActionEvent e) {
-        createDefaultLayout(project, contentRenderer, layoutName);
+        createDefaultLayout(workspace, contentRenderer, layoutName);
     }
 
 	/**
@@ -74,16 +72,16 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
 	 * body of the content is provided by the given
 	 * {@link ReportContentRenderer}
 	 * 
-	 * @param project
-	 *            The project that the new layout will be added to
+	 * @param workspace
+	 *            The workspace that the new layout will be added to
 	 * @param contentRenderer
 	 *            This is the renderer which the new layout will use
 	 * @param layoutName
 	 *            This is the name of the new Layout, in the tree " Layout" will
 	 *            be appended to this name.
-	 * @return The new layout that was added to the project.
+	 * @return The new layout that was added to the workspace.
 	 */
-    public static Layout createDefaultLayout(WabitWorkspace project, ReportContentRenderer contentRenderer, String layoutName) {
+    public static Layout createDefaultLayout(WabitWorkspace workspace, ReportContentRenderer contentRenderer, String layoutName) {
         Layout l = new Layout(layoutName + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();
@@ -148,7 +146,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         shameless.setY(footer.getY() + footer.getHeight());
         
 
-        project.addLayout(l);
+        workspace.addLayout(l);
         
         return l;
     }

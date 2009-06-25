@@ -40,7 +40,7 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  * it owns). The session context should be used as a user prompter factory for
  * alerts and questions that are not directly related to a live session, such as
  * questions and warnings that arise during application startup as well as when
- * in the process of opening a Wabit project file.
+ * in the process of opening a Wabit workspace file.
  */
 public interface WabitSessionContext extends UserPrompterFactory {
 

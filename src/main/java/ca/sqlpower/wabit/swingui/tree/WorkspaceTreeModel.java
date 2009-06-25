@@ -52,25 +52,25 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
- * Provides a tree with the project at the root. The project contains data
+ * Provides a tree with the workspace at the root. The workspace contains data
  * sources, queries, and layouts in that order.
  */
 public class WorkspaceTreeModel implements TreeModel {
 
     private static final Logger logger = Logger.getLogger(WorkspaceTreeModel.class);
     
-    private final WabitWorkspace project;
+    private final WabitWorkspace workspace;
 
     private WabitTreeModelEventAdapter listener;
     
-    public WorkspaceTreeModel(WabitWorkspace project) {
-        this.project = project;
+    public WorkspaceTreeModel(WabitWorkspace workspace) {
+        this.workspace = workspace;
         listener = new WabitTreeModelEventAdapter();
-        WabitUtils.listenToHierarchy(project, listener, listener);
+        WabitUtils.listenToHierarchy(workspace, listener, listener);
     }
     
     public Object getRoot() {
-        return project;
+        return workspace;
     }
 
     public Object getChild(Object parent, int index) {
@@ -146,7 +146,7 @@ public class WorkspaceTreeModel implements TreeModel {
     /**
 	 * A private event handler that listens for {@link PropertyChangeEvent} and
 	 * {@link WabitChildEvent} from the business model and 'translates' them
-	 * into {@link TreeModelEvent} for the ProjectTreeModel
+	 * into {@link TreeModelEvent} for the WorkspaceTreeModel.
 	 */
     private class WabitTreeModelEventAdapter implements PropertyChangeListener, WabitChildListener {
 
@@ -221,7 +221,7 @@ public class WorkspaceTreeModel implements TreeModel {
                 try {
                     WabitWorkspace p = new WabitWorkspace();
                     
-                    // Add data sources to project
+                    // Add data sources to workspace
                     DataSourceCollection<SPDataSource> plini = new PlDotIni();
                     plini.read(new File(System.getProperty("user.home"), "pl.ini"));
                     List<SPDataSource> dataSources = plini.getConnections();
@@ -229,9 +229,9 @@ public class WorkspaceTreeModel implements TreeModel {
                         p.addDataSource(new WabitDataSource(dataSources.get(i)));
                     }
                     
-                    // TODO: Add queries to project
+                    // TODO: Add queries to workspace
                     
-                    // Add layouts to project
+                    // Add layouts to workspace
                     Layout layout = new Layout("Example Layout");
                     p.addLayout(layout);
                     Page page = layout.getPage();
@@ -239,7 +239,7 @@ public class WorkspaceTreeModel implements TreeModel {
                     page.addGuide(new Guide(Axis.HORIZONTAL, 123));
                     page.addContentBox(new ContentBox());
                     
-                    // Show project tree in a frame
+                    // Show workspace tree in a frame
                     WorkspaceTreeModel tm = new WorkspaceTreeModel(p);
                     JTree tree = new JTree(tm);
                     tree.setCellRenderer(new WorkspaceTreeCellRenderer());

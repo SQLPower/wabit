@@ -121,7 +121,7 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     }
     
     /**
-     * List all the projects on this context's server.
+     * List all the workspaces on this context's server.
      * 
      * @param serviceInfo
      * @return
@@ -129,10 +129,10 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
      * @throws URISyntaxException
      */
     public List<String> getWorkspaceNames() throws IOException, URISyntaxException {
-        String responseBody = executeServerRequest("project", new BasicResponseHandler());
+        String responseBody = executeServerRequest("workspace", new BasicResponseHandler());
         logger.debug("Workspace list:\n" + responseBody);
-        List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
-        return projects;
+        List<String> workspaces = Arrays.asList(responseBody.split("\r?\n"));
+        return workspaces;
     }
 
     private <T> T executeServerRequest(String contextRelativePath, ResponseHandler<T> responseHandler)
@@ -158,27 +158,27 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     }
 
     /**
-     * Saves the given project on this session context's server. The name to
-     * save as is determined by the project's name.
+     * Saves the given workspace on this session context's server. The name to
+     * save as is determined by the workspace's name.
      * 
-     * @param project
-     *            The project to save. Its name determines the name of the
-     *            resource saved to the server. If there is already a project on
+     * @param workspace
+     *            The workspace to save. Its name determines the name of the
+     *            resource saved to the server. If there is already a workspace on
      *            the server with the same name, it will be replaced.
      * @throws IOException
      *             If the upload fails
      * @throws URISyntaxException
-     *             If the project name can't be properly encoded in a URI
+     *             If the workspace name can't be properly encoded in a URI
      */
-    public void saveWorkspace(WabitWorkspace project) throws IOException, URISyntaxException {
+    public void saveWorkspace(WabitWorkspace workspace) throws IOException, URISyntaxException {
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, project);
+        WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, workspace);
         dao.save();
         out.close(); // has no effect, but feels sensible :)
         
-        HttpPost request = new HttpPost(getServerURI("project/" + project.getName()));
-        logger.debug("Posting project to " + request);
+        HttpPost request = new HttpPost(getServerURI("workspace/" + workspace.getName()));
+        logger.debug("Posting workspace to " + request);
         request.setEntity(new ByteArrayEntity(out.toByteArray()));
         httpClient.execute(request);
         logger.debug("Post complete!");

@@ -46,22 +46,22 @@ import com.jgoodies.forms.layout.FormLayout;
 
 /**
  * This is the first screen new users of Wabit should see. This screen will also
- * be displayed if the user has closed all projects.
+ * be displayed if the user has closed all workspaces.
  */
 public class WabitWelcomeScreen {
 	
 	/**
-	 * The icon for the "New Project" button.
+	 * The icon for the "New Workspace" button.
 	 */
-	private static final ImageIcon NEW_PROJECT_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/page_white.png"));
+	private static final ImageIcon NEW_WORKSPACE_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/page_white.png"));
 	
 	/**
-	 * The icon for the "Open Existing Project" button.
+	 * The icon for the "Open Existing Workspace" button.
 	 */
 	private static final Icon OPEN_EXISTING_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit_load.png"));
 	
 	/**
-	 * The icon for the "Open Demonstration Project" button.
+	 * The icon for the "Open Demonstration Workspace" button.
 	 */
 	private static final Icon OPEN_DEMO_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
 	
@@ -105,17 +105,17 @@ public class WabitWelcomeScreen {
 		builder.append(new JLabel(WABIT_ICON), 5);
 		builder.nextLine();
 		
-		JButton newProjectButton = new JButton(new AbstractAction() {
+		JButton newWorkspaceButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				terminate = false;
 				close();
 				new NewWorkspaceScreen(context).showFrame();
 			}
 		});
-		newProjectButton.setIcon(NEW_PROJECT_ICON);
+		newWorkspaceButton.setIcon(NEW_WORKSPACE_ICON);
 		builder.append(new JLabel());
-		builder.append(newProjectButton);
-		builder.append(Messages.getString("WabitWelcomeScreen.newProject"));
+		builder.append(newWorkspaceButton);
+		builder.append(Messages.getString("WabitWelcomeScreen.newWorkspace"));
 		builder.nextLine();
 		
 		JButton openExistingButton = new JButton(new AbstractAction() {
@@ -161,7 +161,7 @@ public class WabitWelcomeScreen {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
 				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
-				        "/ca/sqlpower/wabit/exProject.wabit"), context);
+				        "/ca/sqlpower/wabit/example_workspace.wabit"), context);
 			}
 		});
 		

@@ -28,16 +28,16 @@ import javax.swing.event.ListDataListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 
 /**
- * This query list model will contain a list of all the queries in the project.
+ * This query list model will contain a list of all the queries in the workspace.
  * This is for dragging in queries to a layout.
  */
 public class QueryListModel implements ListModel {
 
-	private final WabitWorkspace project;
+	private final WabitWorkspace workspace;
 	private final List<ListDataListener> listListeners = new ArrayList<ListDataListener>();
 
-	public QueryListModel(WabitWorkspace project) {
-		this.project = project;
+	public QueryListModel(WabitWorkspace workspace) {
+		this.workspace = workspace;
 	}
 
 	public void addListDataListener(ListDataListener l) {
@@ -45,15 +45,15 @@ public class QueryListModel implements ListModel {
 	}
 
 	public Object getElementAt(int index) {
-	    if (index < project.getQueries().size()) {
-	        return project.getQueries().get(index);
+	    if (index < workspace.getQueries().size()) {
+	        return workspace.getQueries().get(index);
 	    } else {
-	        return project.getOlapQueries().get(index - project.getQueries().size());
+	        return workspace.getOlapQueries().get(index - workspace.getQueries().size());
 	    }
 	}
 
 	public int getSize() {
-		return project.getQueries().size() + project.getOlapQueries().size();
+		return workspace.getQueries().size() + workspace.getOlapQueries().size();
 	}
 
 	public void removeListDataListener(ListDataListener l) {

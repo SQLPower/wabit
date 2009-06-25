@@ -52,26 +52,26 @@ public class OpenServerWorkspaceAction extends AbstractAction {
 
     private static final Logger logger = Logger.getLogger(OpenServerWorkspaceAction.class);
     private final WabitServerInfo serviceInfo;
-    private final String projectName;
+    private final String workspaceName;
     private final Component dialogOwner;
 
     public OpenServerWorkspaceAction(
             Component dialogOwner,
             WabitServerInfo si,
-            String projectName) {
-        super(projectName);
+            String workspaceName) {
+        super(workspaceName);
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
         if (si == null) {
             throw new NullPointerException("Null service info");
         }
-        this.projectName = projectName;
+        this.workspaceName = workspaceName;
     }
 
     public void actionPerformed(ActionEvent e) {
         // TODO the meat of this routine should be moved into WabitServerSessionContext
         // in the form of an open() method. At the same time, we will
-        // move the meat of the file-based open project action into the local session context,
+        // move the meat of the file-based open workspace action into the local session context,
         // and expose a uniform method signature in the (Swing?) session context interface.
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(params, 2000);
@@ -81,7 +81,7 @@ public class OpenServerWorkspaceAction extends AbstractAction {
                 new WabitSwingSessionContextImpl(WabitServerSessionContext.getInstance(serviceInfo), false);
             String contextPath = serviceInfo.getPath();
             URI uri = new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
-                    contextPath + "project/" + projectName, null, null);
+                    contextPath + "workspace/" + workspaceName, null, null);
             HttpGet httpget = new HttpGet(uri);
             logger.debug("executing request " + httpget.getURI());
 
@@ -93,14 +93,14 @@ public class OpenServerWorkspaceAction extends AbstractAction {
                     if (response.getStatusLine().getStatusCode() != 200) {
                         JOptionPane.showMessageDialog(dialogOwner,
                                 "Server reported error:\n" + response.getStatusLine() +
-                                "\nWhile requesting project \""+projectName+"\"",
+                                "\nWhile requesting workspace \""+workspaceName+"\"",
                                 "Open On Server Failed", JOptionPane.ERROR_MESSAGE);
                         return null;
                     }
                     try {
-                        OpenWorkspaceXMLDAO projectLoader = new OpenWorkspaceXMLDAO(
+                        OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(
                                 sessionContext, response.getEntity().getContent());
-                        for (WabitSession session : projectLoader.openWorkspaces()) {
+                        for (WabitSession session : workspaceLoader.openWorkspaces()) {
                             WabitSwingSession swingSession = (WabitSwingSession) session;
                             swingSession.buildUI();
                             // kinda have to set current "file" (but it's not exactly a file...)
@@ -116,7 +116,7 @@ public class OpenServerWorkspaceAction extends AbstractAction {
             
         } catch (Exception ex) {
             SPSUtils.showExceptionDialogNoReport(dialogOwner,
-                    "Failed to retrieve project list from server " + WabitUtils.serviceInfoSummary(serviceInfo), ex);
+                    "Failed to retrieve workspace list from server " + WabitUtils.serviceInfoSummary(serviceInfo), ex);
         } finally {
             httpclient.getConnectionManager().shutdown();
         }

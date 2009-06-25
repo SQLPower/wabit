@@ -58,7 +58,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 	}
 	
 	/**
-	 * Tests loading a project with a data source that no longer exists in
+	 * Tests loading a workspace with a data source that no longer exists in
 	 * the list of data sources can be replaced by a new data source.
 	 */
 	public void testMissingDSIsReplaced() throws Exception {

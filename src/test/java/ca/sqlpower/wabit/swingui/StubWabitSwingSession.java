@@ -56,13 +56,13 @@ import ca.sqlpower.wabit.WabitSessionContext;
 public class StubWabitSwingSession implements WabitSwingSession {
 	
 	WabitSessionContext context = new StubWabitSessionContext();
-	private WabitWorkspace wabitProject;
+	private WabitWorkspace workspace;
 	private WabitSession delegateSession;
 	
 	private final List<SPSwingWorker> workers = new ArrayList<SPSwingWorker>();
 	
 	public StubWabitSwingSession() {
-		wabitProject = new WabitWorkspace();
+		workspace = new WabitWorkspace();
 		delegateSession = new StubWabitSession(context);
 	}
 
@@ -103,7 +103,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	}
 	
 	public WabitWorkspace getWorkspace() {
-		return wabitProject;
+		return workspace;
 	}
 	
 	public JMenu createDataSourcesMenu() {

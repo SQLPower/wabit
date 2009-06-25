@@ -61,7 +61,7 @@ public interface WabitSession extends SQLDatabaseMapping {
 	public boolean close();
 
 	/**
-	 * Returns the project associated with this session.
+	 * Returns the workspace associated with this session.
 	 */
 	public WabitWorkspace getWorkspace();
 
@@ -126,7 +126,7 @@ public interface WabitSession extends SQLDatabaseMapping {
 
     /**
      * The DAO can tell this session that it's currently being configured based
-     * on a project file being loaded. When this is the case, certain things
+     * on a workspace file being loaded. When this is the case, certain things
      * (such as GUI updates) will not be performed. If you're not a DAO, it's
      * not necessary or desirable for you to call this method!
      */

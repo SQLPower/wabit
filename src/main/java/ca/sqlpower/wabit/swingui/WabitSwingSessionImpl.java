@@ -134,9 +134,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
 	
 	/**
-	 * An icon for a new Wabit project.
+	 * An icon for a new Wabit workspace.
 	 */
-	private static final Icon NEW_PROJECT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
+	private static final Icon NEW_WORKSPACE_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
 
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
@@ -156,9 +156,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	private final WabitSwingSessionContext sessionContext;
 	
-	private final WabitWorkspace project;
+	private final WabitWorkspace workspace;
 	
-	private JTree projectTree;
+	private JTree workspaceTree;
 	private JSplitPane wabitPane;
 	private final JFrame frame;
 	private static JLabel statusLabel;
@@ -190,7 +190,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	/**
 	 * This is the current panel to the right of the JTree showing the parts of the 
-	 * project. This will allow editing the currently selected element in the JTree.
+	 * workspace. This will allow editing the currently selected element in the JTree.
 	 */
 	private WabitPanel currentEditorPanel;
 
@@ -203,14 +203,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	/**
 	 * This is the most recent file loaded in this session or the last file that the session
-	 * was saved to. This will be null if no file has been loaded or the project has not
+	 * was saved to. This will be null if no file has been loaded or the workspace has not
 	 * been saved yet.
 	 */
 	private File currentFile = null;
 	
 	/**
 	 * A {@link UserPrompterFactory} that will create a dialog for users to choose an existing
-	 * DB or create a new one if they load a project with a DB not in their pl.ini.
+	 * DB or create a new one if they load a workspace with a DB not in their pl.ini.
 	 */
 	private UserPrompterFactory upfMissingLoadedDB;
 	
@@ -230,22 +230,22 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		    if (isLoading()) return;
 			if (evt.getPropertyName().equals("editorPanelModel")) {
 				if (!setEditorPanel((WabitObject) evt.getNewValue())) {
-					project.setEditorPanelModel((WabitObject) evt.getOldValue());
+					workspace.setEditorPanelModel((WabitObject) evt.getOldValue());
 					return;
 				}
 				if (evt.getNewValue() != null) {
-					final TreePath createTreePathForObject = projectTreeModel.createTreePathForObject((WabitObject) evt.getNewValue());
+					final TreePath createTreePathForObject = workspaceTreeModel.createTreePathForObject((WabitObject) evt.getNewValue());
 					logger.debug("Tree path being set to " + createTreePathForObject + " as editor panel being set to " + ((WabitObject) evt.getNewValue()).getName());
-					projectTree.setSelectionPath(createTreePathForObject);
+					workspaceTree.setSelectionPath(createTreePathForObject);
 				}
 			}
 		}
 	};
 
 	/**
-	 * The model behind the project tree on the left side of Wabit.
+	 * The model behind the workspace tree on the left side of Wabit.
 	 */
-	private WorkspaceTreeModel projectTreeModel;
+	private WorkspaceTreeModel workspaceTreeModel;
 
 	/**
 	 * This is the limit of all result sets in Wabit. Changing this spinner
@@ -267,17 +267,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * @param context
 	 */
 	public WabitSwingSessionImpl(WabitSwingSessionContext context) {
-	    project = new WabitWorkspace();
-	    project.addPropertyChangeListener(editorModelListener);
+	    workspace = new WabitWorkspace();
+	    workspace.addPropertyChangeListener(editorModelListener);
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
 		
 		statusLabel= new JLabel();
 		
 		wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		projectTreeModel = new WorkspaceTreeModel(project);
-		projectTree = new JTree(projectTreeModel);
-		projectTree.setToggleClickCount(0);
+		workspaceTreeModel = new WorkspaceTreeModel(workspace);
+		workspaceTree = new JTree(workspaceTreeModel);
+		workspaceTree.setToggleClickCount(0);
 		
         rowLimitSpinner = new JSpinner();
         final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
@@ -323,16 +323,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JPanel cp = new JPanel(new BorderLayout());
     	
 		final WorkspaceTreeCellRenderer renderer = new WorkspaceTreeCellRenderer();
-		projectTree.setCellRenderer(renderer);
-		projectTree.setCellEditor(new WorkspaceTreeCellEditor(projectTree, renderer));
+		workspaceTree.setCellRenderer(renderer);
+		workspaceTree.setCellEditor(new WorkspaceTreeCellEditor(workspaceTree, renderer));
 		
-		for (final QueryCache queryCache : project.getQueries()) {
+		for (final QueryCache queryCache : workspace.getQueries()) {
 		    //Repaints the tree when the worker thread's timer fires. This will allow the tree node
 		    //to paint a throbber badge on the query node.
 		    queryCache.addTimerListener(new PropertyChangeListener() {
 		        public void propertyChange(PropertyChangeEvent evt) {
 		            renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-		            projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+		            workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
 		        }
 		    });
 
@@ -341,13 +341,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		        public void propertyChange(PropertyChangeEvent evt) {
 		            if (evt.getPropertyName().equals(QueryCache.RUNNING) && !((Boolean) evt.getNewValue())) {
 		                renderer.removeTimer(queryCache);
-		                projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+		                workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
 		            }
 		        }
 		    });
 		}
 		
-		projectTree.getModel().addTreeModelListener(new TreeModelAdapter() {
+		workspaceTree.getModel().addTreeModelListener(new TreeModelAdapter() {
 			@Override
 			public void treeNodesInserted(final TreeModelEvent e) {
 				for (int i = 0; i < e.getChildren().length; i++) {
@@ -357,14 +357,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 						queryCache.addTimerListener(new PropertyChangeListener() {
 							public void propertyChange(PropertyChangeEvent evt) {
 								renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-								projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+								workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
 							}
 						});
 						queryCache.addPropertyChangeListener(new PropertyChangeListener() {
 							public void propertyChange(PropertyChangeEvent evt) {
 								if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
 									renderer.removeTimer(queryCache);
-									projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+									workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
 								}
 							}
 						});
@@ -372,12 +372,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				}
 			}
 		});
-		projectTree.addMouseListener(new WorkspaceTreeListener(this));
-    	projectTree.setEditable(true);
+		workspaceTree.addMouseListener(new WorkspaceTreeListener(this));
+    	workspaceTree.setEditable(true);
 
-        wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);
-        if (project.getEditorPanelModel() == null) {
-        	project.setEditorPanelModel(project);
+        wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(workspaceTree)), JSplitPane.LEFT);
+        if (workspace.getEditorPanelModel() == null) {
+        	workspace.setEditorPanelModel(workspace);
         } else if (currentEditorPanel != null) {
             // This code was here, but I'm not sure if this actually does anything,
             // since the frame hasn't been realized yet...
@@ -408,10 +408,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
-		fileMenu.add(new AbstractAction("New Workspace...", NEW_PROJECT_ICON) {
+		fileMenu.add(new AbstractAction("New Workspace...", NEW_WORKSPACE_ICON) {
 			public void actionPerformed(ActionEvent e) {
-				NewWorkspaceScreen newProject = new NewWorkspaceScreen(getContext());
-				newProject.showFrame();
+				NewWorkspaceScreen newWorkspace = new NewWorkspaceScreen(getContext());
+				newWorkspace.showFrame();
 			}
 		});
         fileMenu.add(getContext().createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
@@ -437,7 +437,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.add(getContext().createServerListMenu(frame, "Save Workspace on Server", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 try {
-                    return new JMenuItem(new SaveServerWorkspaceAction(serviceInfo, dialogOwner, project));
+                    return new JMenuItem(new SaveServerWorkspaceAction(serviceInfo, dialogOwner, workspace));
                 } catch (Exception e) {
                     JMenuItem menuItem = new JMenuItem(e.toString());
                     menuItem.setEnabled(false);
@@ -503,7 +503,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
     
     public JTree getTree() {
-    	return projectTree;
+    	return workspaceTree;
     }
 
     /* docs inherited from interface */
@@ -546,7 +546,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             if (response == 0) {
                 closing = true;
             } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
-            	setEditorPanel(project.getEditorPanelModel());
+            	setEditorPanel(workspace.getEditorPanelModel());
             	return false;
             } else {
             	if (SaveWorkspaceAction.save(WabitSwingSessionImpl.this)) {
@@ -629,7 +629,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
 
     public WabitWorkspace getWorkspace() {
-        return project;
+        return workspace;
     }
     
 	public WabitSwingSessionContext getContext() {
@@ -729,33 +729,33 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private boolean hasUnsavedChanges() {
 		if (currentFile == null) {
-			return project.getChildren().size() > 0;
+			return workspace.getChildren().size() > 0;
 		}
 		
 		// FIXME: this does not work, because some GUIDs change every time you load/save.
 		// It would be much better to track changes to the model using a listener.
 		
-		ByteArrayOutputStream currentProjectOutStream = new ByteArrayOutputStream();
-		new WorkspaceXMLDAO(currentProjectOutStream, project).save();
+		ByteArrayOutputStream currentWorkspaceOutStream = new ByteArrayOutputStream();
+		new WorkspaceXMLDAO(currentWorkspaceOutStream, workspace).save();
 		
-		BufferedReader existingProjectFile = null;
+		BufferedReader existingWorkspaceFile = null;
 		try {
-		    String currentProjectAsString = currentProjectOutStream.toString("utf-8");
-		    StringBuilder existingProjectBuffer = new StringBuilder(currentProjectAsString.length());
-		    existingProjectFile = new BufferedReader(new FileReader(currentFile));
+		    String currentWorkspaceAsString = currentWorkspaceOutStream.toString("utf-8");
+		    StringBuilder existingWorkspaceBuffer = new StringBuilder(currentWorkspaceAsString.length());
+		    existingWorkspaceFile = new BufferedReader(new FileReader(currentFile));
 		    for (;;) {
-		        int nextChar = existingProjectFile.read();
+		        int nextChar = existingWorkspaceFile.read();
 		        if (nextChar == -1) break;
-		        existingProjectBuffer.append((char) nextChar);
+		        existingWorkspaceBuffer.append((char) nextChar);
 		    }
 		    
-            return !existingProjectBuffer.toString().equals(currentProjectAsString);
+            return !existingWorkspaceBuffer.toString().equals(currentWorkspaceAsString);
             
 		} catch (IOException e) {
 		    throw new RuntimeException(e);
 		} finally {
 		    try {
-		        if (existingProjectFile != null) existingProjectFile.close();
+		        if (existingWorkspaceFile != null) existingWorkspaceFile.close();
 		    } catch (IOException ex) {
 		        logger.warn("Couldn't close comparative input file. Squishing this exception:", ex);
 		    }

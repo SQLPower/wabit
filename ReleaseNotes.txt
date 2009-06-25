@@ -1,5 +1,13 @@
 Wabit Release Notes
 
+Noteworthy Changes in 0.9.7
+  User Interface
+    * The concept that was called "Project" up until 0.9.6 is now called
+      "Workspace." The semantics of a workspace are exactly the same as
+      the semantics of a project. In other words, "Fun new name, same
+      great taste!"
+
+
 Noteworthy Changes in 0.9.6
   User Interface
     * There is a row limit that affects all queries and reports to speed up loading pages in Wabit. This limit does not affect printing.
@@ -8,6 +16,7 @@ Noteworthy Changes in 0.9.6
   Other
     * Fixed an exception occurring when loading a project with a data source that no longer exists in the pl.ini or cannot be connected to.
     * Updated the user guide.
+
 
 Noteworthy Changes in 0.9.5
   User Interface
@@ -29,6 +38,7 @@ Noteworthy Changes in 0.9.5
     * Added progress bars to printing and PDF creation.
     * About and Quit now work properly on Mac.
 
+
 Noteworthy Changes in 0.9.4
   Query Interface
     * Queries now have a log tab to display number of lines changed on inserts and updates
@@ -39,6 +49,7 @@ Noteworthy Changes in 0.9.4
   Other
     * Editor windows can now be maximized from the menu.
     * Fixed memory leaks.
+
 
 Noteworthy Changes in 0.9.3
   User Interface

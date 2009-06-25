@@ -24,12 +24,12 @@ import java.util.Set;
 
 public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
-    private WabitWorkspace project;
+    private WabitWorkspace workspace;
     
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        project = new WabitWorkspace();
+        workspace = new WabitWorkspace();
     }
     
     @Override
@@ -42,7 +42,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     
     @Override
     public WabitObject getObjectUnderTest() {
-        return project;
+        return workspace;
     }
 
 }

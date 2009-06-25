@@ -28,7 +28,7 @@ import java.util.List;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
- * This transferable will allow dragging queries defined in a project to a layout.
+ * This transferable will allow dragging queries defined in a workspace to a layout.
  */
 public class ReportQueryTransferable implements Transferable {
 	

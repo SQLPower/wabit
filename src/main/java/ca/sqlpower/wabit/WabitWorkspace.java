@@ -47,12 +47,12 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	private static final Logger logger = Logger.getLogger(WabitWorkspace.class);
 	
     /**
-     * The data sources that feed the queries for this project.
+     * The data sources that feed the queries for this workspace.
      */
     private final List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>();
     
     /**
-     * The queries that fetch result sets for this project.
+     * The queries that fetch result sets for this workspace.
      * <p>
      * TODO an SQL query is too specific; we should have a generic result set provider
      * class that could be anything (XPath, SQL query, gdata query, JavaScript that builds a table of data, ...)
@@ -60,7 +60,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private final List<QueryCache> queries = new ArrayList<QueryCache>();
     
     /**
-     * This is all of the queries in the project that connects to an OLAP database.
+     * This is all of the queries in the workspace that connects to an OLAP database.
      */
     private final List<OlapQuery> olapQueries = new ArrayList<OlapQuery>();
     
@@ -70,21 +70,21 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	List<DatabaseListChangeListener> listeners;
     
     /**
-     * The report layouts in this project.
+     * The report layouts in this workspace.
      */
     private final List<Layout> layouts = new ArrayList<Layout>();
     
     /**
      * TODO: These listeners are never fired at current as they are only used for
      * DS Type undo events in the library currently. These listeners are unused
-     * until the project supports changing DS Types or other undoable edits are
+     * until the workspace supports changing DS Types or other undoable edits are
      * needed for the DS Collection.
      */
     private final List<UndoableEditListener> dsCollectionUndoListeners = new ArrayList<UndoableEditListener>();
     
     /**
      * This is the current editor panel's model that is being being edited.
-     * This allows the project to know what panel to load when it is loaded. 
+     * This allows the workspace to know what panel to load when it is loaded. 
      */
     private WabitObject editorPanelModel;
 
@@ -129,7 +129,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     /**
-     * Returns an unmodifiable view of the data sources in this project.
+     * Returns an unmodifiable view of the data sources in this workspace.
      * <p>
      * TODO change this to List&lt;WabitDataSource&gt; getDatabases()
      */
@@ -356,13 +356,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 
     public URI getServerBaseURI() {
         // IMPORTANT: if you implement this, re-enable the tests for this
-        // property in WabitProjectTest and ProjectCMLDAOTest!
+        // property in WabitWorkspaceTest and WorkspaceCMLDAOTest!
         throw new UnsupportedOperationException("We currently do not support this");
     }
 
     public void setServerBaseURI(URI serverBaseURI) {
         // IMPORTANT: if you implement this, re-enable the tests for this
-        // property in WabitProjectTest and ProjectCMLDAOTest!
+        // property in WabitWorkspaceTest and WorkspaceCMLDAOTest!
         throw new UnsupportedOperationException("We currently do not support this");
     }
 

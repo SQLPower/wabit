@@ -28,7 +28,7 @@ import ca.sqlpower.wabit.WabitSession;
 
 /**
  * This method will copy a given query and add it to the same
- * project the first copy was in.
+ * workspace the first copy was in.
  */
 public class CopyQueryAction extends AbstractAction {
 

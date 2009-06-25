@@ -48,19 +48,19 @@ import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
 /**
- * Implements the "save as" feature for saving a project to a remote server.
+ * Implements the "save as" feature for saving a workspace to a remote server.
  */
 public class SaveServerWorkspaceAction extends AbstractAction {
 
     private final WabitServerInfo si;
     private final WabitServerSessionContext context;
     private final Component dialogOwner;
-    private final WabitWorkspace project;
+    private final WabitWorkspace workspace;
 
-    public SaveServerWorkspaceAction(WabitServerInfo si, Component dialogOwner, WabitWorkspace project) throws IOException, SQLObjectException {
+    public SaveServerWorkspaceAction(WabitServerInfo si, Component dialogOwner, WabitWorkspace workspace) throws IOException, SQLObjectException {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.si = si;
-        this.project = project;
+        this.workspace = workspace;
         context = WabitServerSessionContext.getInstance(si);
         this.dialogOwner = dialogOwner;
     }
@@ -88,7 +88,7 @@ public class SaveServerWorkspaceAction extends AbstractAction {
 
         SaveOnServerPanel() throws IOException, URISyntaxException {
             DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
-            fileNameField = new JTextField(project.getName());
+            fileNameField = new JTextField(workspace.getName());
             existingFileList = new JList(context.getWorkspaceNames().toArray(new String[0]));
             existingFileList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
                 public void valueChanged(ListSelectionEvent e) {
@@ -107,10 +107,10 @@ public class SaveServerWorkspaceAction extends AbstractAction {
         }
         
         public boolean applyChanges() {
-            project.setName(fileNameField.getText());
+            workspace.setName(fileNameField.getText());
             // TODO prompt about overwrite
             try {
-                context.saveWorkspace(project);
+                context.saveWorkspace(workspace);
                 return true;
             } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(dialogOwner, "Save to server failed", ex);

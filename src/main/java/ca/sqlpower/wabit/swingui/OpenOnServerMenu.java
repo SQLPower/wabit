@@ -62,8 +62,8 @@ public class OpenOnServerMenu extends JMenu {
         removeAll();
         try {
             WabitServerSessionContext ctx = WabitServerSessionContext.getInstance(serviceInfo);
-            for (String projectName : ctx.getWorkspaceNames()) {
-                add(new OpenServerWorkspaceAction(dialogOwner, serviceInfo, projectName));
+            for (String workspaceName : ctx.getWorkspaceNames()) {
+                add(new OpenServerWorkspaceAction(dialogOwner, serviceInfo, workspaceName));
             }
         } catch (Exception ex) {
             JMenuItem mi = new JMenuItem("Error getting workspace names: " + ex);

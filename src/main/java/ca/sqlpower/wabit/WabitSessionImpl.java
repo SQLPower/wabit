@@ -44,7 +44,7 @@ public class WabitSessionImpl implements WabitSession {
 
 	private WabitSessionContext sessionContext;
 	
-	private WabitWorkspace project;
+	private WabitWorkspace workspace;
 	
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
@@ -60,7 +60,7 @@ public class WabitSessionImpl implements WabitSession {
 
     public WabitSessionImpl(WabitSessionContext context) {
     	this.sessionContext = context;
-    	project = new WabitWorkspace();
+    	workspace = new WabitWorkspace();
 		sessionContext.registerChildSession(this);
     }
     
@@ -107,7 +107,7 @@ public class WabitSessionImpl implements WabitSession {
 	}
 
 	public WabitWorkspace getWorkspace() {
-		return project;
+		return workspace;
 	}
 
 	public int getRowLimit() {

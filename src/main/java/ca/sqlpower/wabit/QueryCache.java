@@ -157,7 +157,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     /**
      * This makes a copy of the given query cache. The query in the given query cache
-     * has its listeners connected to allow using this query cache in the project.
+     * has its listeners connected to allow using this query cache in the workspace.
      */
     public QueryCache(QueryCache q) {
         this.query = new Query(q.query, true);

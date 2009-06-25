@@ -34,13 +34,13 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
- * This will save a given project to a user specified file.
+ * This will save a given workspace to a user specified file.
  */
 public class SaveWorkspaceAsAction extends AbstractAction {
 
 	public static final String WABIT_FILE_EXTENSION = ".wabit";
 	/**
-	 * The project in this session will be saved to a file.
+	 * The workspace in this session will be saved to a file.
 	 */
 	private final WabitSwingSession session;
 
@@ -54,7 +54,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 	}
 	
 	/**
-	 * Saves the project to a user specified file. Returns true if the file was
+	 * Saves the workspace to a user specified file. Returns true if the file was
 	 * saved. Returns false if the file was not saved or cancelled.
 	 */
 	public boolean save() {
@@ -80,9 +80,9 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		WorkspaceXMLDAO projectSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
 		
-		projectSaver.save();
+		workspaceSaver.save();
 		
 		this.session.setCurrentFile(selectedFile);
 		

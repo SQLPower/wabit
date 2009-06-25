@@ -27,7 +27,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
- * An action that adds a new empty layout to a particular project every time it
+ * An action that adds a new empty layout to a particular workspace every time it
  * is invoked.
  */
 public class NewLayoutAction extends AbstractAction {
