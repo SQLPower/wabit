@@ -412,30 +412,29 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         //get all the headers widths
         g.setFont(getHeaderFont());
-        columnWidthList = new int[tableAsModel.getColumnCount()];
 		CellSetAxis cellAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
+		columnWidthList = new int[tableAsModel.getColumnCount()];
+		int i = 0;
         for (Position position : cellAxis.getPositions()) {
-            int maxColWidth = 0;
-            
-            for (int i = 0; i < position.getMembers().size(); i++) {
-                Member member = position.getMembers().get(i);
-                int colWidth = (int) getHeaderFont().getStringBounds(member.getName(), g.getFontRenderContext()).getWidth();
-                columnWidthList[i] = Math.max(maxColWidth, colWidth + PADDING);
-            }
+            Member member = position.getMembers().get(position.getMembers().size() - 1);
+            String name = member.getName();
+            int colWidth = (int) getHeaderFont().getStringBounds(name, g.getFontRenderContext()).getWidth();
+            columnWidthList[i] = Math.max(columnWidthList[i], colWidth + PADDING);
+            i++;
         }
-
+        
         //get all the data's widths
+        g.setFont(getBodyFont());
         for (int row = 0; row < tableAsModel.getRowCount(); row++) {
-        	int maxColWidth = 0;
         	for (int col = 0; col < tableAsModel.getColumnCount(); col++) {
         		String columnString = (String) tableAsModel.getValueAt(row, col);
         		int colWidth = (int) getBodyFont().getStringBounds(columnString, g.getFontRenderContext()).getWidth();
-        		maxColWidth = Math.max(maxColWidth, colWidth + PADDING);
-        		columnWidthList[col] = maxColWidth;
+        		columnWidthList[col] = Math.max(columnWidthList[col], colWidth + PADDING);
         	}
         }
         
         
+        g.setFont(getHeaderFont());
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
