@@ -248,8 +248,7 @@ public class OlapQuery extends AbstractWabitObject {
             
             ctx.bind(unique_name, new DataSourceAdapter(ds));
             
-            if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.IN_PROCESS)) 
-            {
+            if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.IN_PROCESS)) {
                 if (getOlapDataSource().getMondrianSchema() == null
                         || getOlapDataSource().getDataSource() == null) {
                     // FIXME This validation should not be performed here.
@@ -266,9 +265,9 @@ public class OlapQuery extends AbstractWabitObject {
                 
                 Connection connection = DriverManager.getConnection(url.toString());
                 return ((OlapWrapper) connection).unwrap(OlapConnection.class);
-            }
-            else if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.XMLA)) 
-            {
+                
+            } else if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.XMLA)) {
+
                 // Init the class loader
                 Class.forName(Olap4jDataSource.XMLA_DRIVER_CLASS_NAME);
                 
@@ -280,9 +279,8 @@ public class OlapQuery extends AbstractWabitObject {
                 Connection conn = DriverManager.getConnection(url.toString());
                 OlapConnection olapConn = ((OlapWrapper) conn).unwrap(OlapConnection.class);
                 
+                return olapConn;
                 
-                
-                return olapConn; 
             } else {
                 throw new RuntimeException("Someone forgot to add a connection type handler in the code.");
             }
