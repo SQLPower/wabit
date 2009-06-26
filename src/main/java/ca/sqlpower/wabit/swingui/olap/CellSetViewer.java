@@ -23,6 +23,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import org.olap4j.metadata.Hierarchy;
 import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.swingui.table.TableUtils;
+import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 
 public class CellSetViewer {
 
@@ -53,6 +56,13 @@ public class CellSetViewer {
     private final JScrollPane scrollPane;
     private final JLabel messageLabel = new JLabel("", JLabel.CENTER);
     private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
+    private int minColumnWidth = 5;
+
+    /**
+     * This is the cell set most recently displayed in this viewer. This will be
+     * null until the first cell set is displayed.
+     */
+    private CellSet cellSet;
 
     /**
      * Rebroadcasts axis events to listeners of this viewer.
@@ -71,8 +81,24 @@ public class CellSetViewer {
 			fireMemberRemovedEvent(e);
 		}
     };
+
+    /**
+     * If false the listeners that allow expanding and collapsing members
+     * when clicking on the headers will be removed.
+     */
+    private final boolean allowMemberModification;
+
+    /**
+     * This is the row header placed on the current table.
+     */
+    private CellSetTableHeaderComponent rowHeader;
     
     public CellSetViewer() {
+        this(true);
+    }
+    
+    public CellSetViewer(boolean allowMemberModification) {
+        this.allowMemberModification = allowMemberModification;
         viewerComponent.setPreferredSize(new Dimension(640, 480));
         table = new JTable();
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -96,12 +122,32 @@ public class CellSetViewer {
         // So we are not going to go to the trouble of digging it out of the scrollpane here.
         
         table.setModel(new CellSetTableModel(cellSet));
+        setCellSet(cellSet);
         
-        final CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table);
+        rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table);
         rowHeader.addAxisListener(axisEventHandler);
         
         final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table);
         columnHeader.addAxisListener(axisEventHandler);
+        
+        if (!allowMemberModification) {
+            for (HierarchyComponent hierarchy : rowHeader.getHierarchies()) {
+                for (MouseListener l : hierarchy.getMouseListeners()) {
+                    hierarchy.removeMouseListener(l);
+                }
+                for (MouseMotionListener l : hierarchy.getMouseMotionListeners()) {
+                    hierarchy.removeMouseMotionListener(l);
+                }
+            }
+            for (HierarchyComponent hierarchy : columnHeader.getHierarchies()) {
+                for (MouseListener l : hierarchy.getMouseListeners()) {
+                    hierarchy.removeMouseListener(l);
+                }
+                for (MouseMotionListener l : hierarchy.getMouseMotionListeners()) {
+                    hierarchy.removeMouseMotionListener(l);
+                }
+            }
+        }
         
         scrollPane.setViewportView(table);
     	scrollPane.setRowHeaderView(rowHeader);
@@ -117,7 +163,7 @@ public class CellSetViewer {
     		}
     	};
     	table.getTableHeader().setDefaultRenderer(defaultRenderer);
-    	TableUtils.fitColumnWidths(table, 5);
+    	TableUtils.fitColumnWidths(table, minColumnWidth, -1, 5); //The max width is set to -1 to not use the max width when resizing columns.
     }
 
     public void showMessage(String message) {
@@ -191,6 +237,30 @@ public class CellSetViewer {
     
     public void removeAxisLisener(AxisListener l) {
         axisListeners.remove(l);
+    }
+    
+    public JTable getTable() {
+        return table;
+    }
+    
+    public CellSetTableHeaderComponent getRowHeader() {
+        return rowHeader;
+    }
+    
+    public JScrollPane getScrollPane() {
+        return scrollPane;
+    }
+    
+    public void setMinColumnWidth(int minimumColumnWidth) {
+        this.minColumnWidth = minimumColumnWidth;
+    }
+
+    public CellSet getCellSet() {
+        return cellSet;
+    }
+
+    public void setCellSet(CellSet cellSet) {
+        this.cellSet = cellSet;
     }
 
 }

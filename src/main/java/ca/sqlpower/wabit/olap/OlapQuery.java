@@ -126,6 +126,17 @@ public class OlapQuery extends AbstractWabitObject {
 //    private SavedQueryData savedQueryData;
     
     /**
+     * This will create a copy of the query.
+     */
+    public static OlapQuery createCopy(OlapQuery copy) throws SQLException {
+        OlapQuery newQuery = new OlapQuery();
+        newQuery.setCurrentCube(copy.getCurrentCube());
+        newQuery.setOlapDataSource(copy.getOlapDataSource());
+        newQuery.setMdxQuery(copy.getMdxQueryCopy());
+        return newQuery;
+    }
+    
+    /**
      * The current query. Gets replaced whenever a new cube is selected via
      * {@link #setCurrentCube(Cube)}.
      */
@@ -300,6 +311,15 @@ public class OlapQuery extends AbstractWabitObject {
 
     public List<? extends WabitObject> getChildren() {
         return new ArrayList<WabitObject>();
+    }
+    
+    @Override
+    /**
+     * Returns the name of the string. This way reasonable text appears when
+     * these queries are placed in a combo box.
+     */
+    public String toString() {
+        return getName();
     }
     
 }

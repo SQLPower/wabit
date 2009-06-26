@@ -70,6 +70,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.GraphRenderer.ColumnIdentifier;
 import ca.sqlpower.xml.XMLHelper;
 
 import com.sun.mail.util.BASE64EncoderStream;
@@ -89,10 +90,11 @@ public class WorkspaceXMLDAO {
      * <dl>
      *  <dt>1.0.0 <dd>initial version. lots of changes. (too many!)
      *  <dt>1.0.1 <dd>adds page orientation attribute
+     *  <dt>1.0.2 <dd>update to the chart column identifier, they are now objects instead of just column names
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 0, 1); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 0, 2); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
 	/**
@@ -342,34 +344,34 @@ public class WorkspaceXMLDAO {
 						xml.niprintln(out, ">");
 						xml.indent++;
 						xml.println(out, "<graph-col-names-in-order>");
-						xml.indent++;
-						for (String colName : graphRenderer.getColumnNamesInOrder()) {
-							xml.print(out, "<graph-col-names");
-							printAttribute("name", colName);
-							xml.niprintln(out, "/>");
-						}
-						xml.indent--;
-						xml.println(out, "</graph-col-names-in-order>");
-						xml.println(out, "<graph-col-names-to-data-types>");
-						xml.indent++;
-						for (Map.Entry<String, GraphRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
-							xml.print(out, "<graph-name-to-data-type");
-							printAttribute("name", entry.getKey());
-							printAttribute("data-type", entry.getValue().name());
-							xml.niprintln(out, "/>");
-						}
-						xml.indent--;
-						xml.println(out, "</graph-col-names-to-data-types>");
-						xml.println(out, "<graph-series-to-x-axis>");
-						xml.indent++;
-						for (Map.Entry<String, String> entry : graphRenderer.getColumnSeriesToColumnXAxis().entrySet()) {
-							xml.print(out, "<graph-series-col-to-x-axis-col");
-							printAttribute("series", entry.getKey());
-							printAttribute("x-axis", entry.getValue());
-							xml.niprintln(out, "/>");
-						}
-						xml.indent--;
-						xml.println(out, "</graph-series-to-x-axis>");
+                        xml.indent++;
+                        for (ColumnIdentifier colIdentifier : graphRenderer.getColumnNamesInOrder()) {
+                            xml.print(out, "<graph-col-names");
+                            saveColumnIdentifier(out, colIdentifier, "");
+                            xml.niprintln(out, "/>");
+                        }
+                        xml.indent--;
+                        xml.println(out, "</graph-col-names-in-order>");
+                        xml.println(out, "<graph-col-names-to-data-types>");
+                        xml.indent++;
+                        for (Map.Entry<ColumnIdentifier, GraphRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
+                            xml.print(out, "<graph-name-to-data-type");
+                            saveColumnIdentifier(out, entry.getKey(), "");
+                            printAttribute("data-type", entry.getValue().name());
+                            xml.niprintln(out, "/>");
+                        }
+                        xml.indent--;
+                        xml.println(out, "</graph-col-names-to-data-types>");
+                        xml.println(out, "<graph-series-to-x-axis>");
+                        xml.indent++;
+                        for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : graphRenderer.getColumnSeriesToColumnXAxis().entrySet()) {
+                            xml.print(out, "<graph-series-col-to-x-axis-col");
+                            saveColumnIdentifier(out, entry.getKey(), "series-");
+                            saveColumnIdentifier(out, entry.getValue(), "x-axis-");
+                            xml.niprintln(out, "/>");
+                        }
+                        xml.indent--;
+                        xml.println(out, "</graph-series-to-x-axis>");
 						xml.indent--;
 						xml.println(out, "</graph-renderer>");
 					} else if (box.getContentRenderer() instanceof CellSetRenderer) {
@@ -422,6 +424,26 @@ public class WorkspaceXMLDAO {
 		xml.indent--;
 		xml.println(out, "</layout>");
 	}
+	
+    /**
+     * This is a helper method for saving layouts with charts. This saves
+     * ColumnIdentifiers used in charts to define what column is used and how.
+     * This will only save the {@link ColumnIdentifier} as an attribute of the
+     * current xml element it is in, not as an entirely new element. A prefix to
+     * each of the values can be given to distinguish between column identifiers
+     * in cases where multiples are saved in one element.
+     */
+    private void saveColumnIdentifier(PrintWriter out, ColumnIdentifier identifier, String namePrefix) {
+        if (identifier.getColumnName() != null) {
+            printAttribute(namePrefix + "column-name", identifier.getColumnName());
+        } else if (identifier.getPosition() != null) {
+            printAttribute(namePrefix + "position-ordinal", identifier.getPosition().getOrdinal());
+        } else if (identifier.getAxis() != null) {
+            printAttribute(namePrefix + "axis-ordinal", identifier.getAxis().getAxisOrdinal().axisOrdinal());
+        } else {
+            throw new IllegalStateException("Column identifier " + identifier + " has no values defined to save.");
+        }
+    }
 	
 	private void saveOlapQuery(OlapQuery query) {
 	    xml.print(out, "<olap-query");
