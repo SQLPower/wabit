@@ -26,6 +26,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +46,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.JWindow;
@@ -61,6 +64,7 @@ import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.OlapException;
+import org.olap4j.mdx.ParseTreeWriter;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
@@ -185,6 +189,10 @@ public class Olap4jGuiQueryPanel {
      * This models the query and persists it when the view is removed.
      */
     private final OlapQuery olapQuery;
+    /**
+     * Keeps a link to the parent OlapQueryPanel
+     */
+    private final OlapQueryPanel olapQueryPanel;
     
 	/**
 	 * A {@link JComboBox} containing a list of OLAP data sources to choose from
@@ -197,6 +205,7 @@ public class Olap4jGuiQueryPanel {
 	 * from for running the OLAP query
 	 */
     private DataSourceCollection<Olap4jDataSource> dsCollection;
+    
     
     /**
      * This recreates the database combo box when the list of databases changes.
@@ -229,10 +238,12 @@ public class Olap4jGuiQueryPanel {
      * @param owningFrame
      * @param cellSetViewer
      * @param query
+     * @param textQueryPanel 
      * @throws SQLException
      */
-    public Olap4jGuiQueryPanel(DataSourceCollection<Olap4jDataSource> dsCollection, final Window owningFrame, CellSetViewer cellSetViewer, OlapQuery query) throws SQLException {
+    public Olap4jGuiQueryPanel(DataSourceCollection<Olap4jDataSource> dsCollection, final Window owningFrame, CellSetViewer cellSetViewer, OlapQuery query, OlapQueryPanel olapQueryPanel) throws SQLException {
         this.olapQuery = query;
+        this.olapQueryPanel = olapQueryPanel;
         this.dsCollection = dsCollection;
         if (olapQuery.getMdxQueryCopy() != null) {
             for (QueryDimension queryDim : olapQuery.getMdxQueryCopy().getAxes().get(Axis.ROWS).getDimensions()) {
@@ -460,6 +471,10 @@ public class Olap4jGuiQueryPanel {
             
             CellSet cellSet = mdxQuery.execute();
             cellSetViewer.showCellSet(cellSet);
+            StringWriter sw = new StringWriter();
+            ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
+            mdxQuery.getSelect().unparse(ptw);
+            this.olapQueryPanel.updateMdxText(sw.toString());
         } catch (SQLException ex) {
             logger.error("failed to build/execute MDX query", ex);
             cellSetViewer.showMessage("Query failed: " + ex.getMessage());

@@ -20,10 +20,16 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.sql.SQLException;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
@@ -33,9 +39,17 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.undo.UndoManager;
 
+import mondrian.olap.ParserSym;
+
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.RTextArea;
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
@@ -43,6 +57,7 @@ import org.olap4j.OlapStatement;
 
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
+import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.swingui.WabitPanel;
@@ -74,8 +89,20 @@ public class OlapQueryPanel implements WabitPanel {
     private JSplitPane queryAndResultsPanel = null;
 
     private Olap4jGuiQueryPanel olap4jGuiQueryPanel;
+    
+
+    private static final Object UNDO_MDX_EDIT = "Undo MDX Edit";
+
+    private static final Object REDO_MDX_EDIT = "Redo MDX Edit";
 
 	private WabitSwingSession session;
+	
+	/**
+	 * Keeps a link to the text control
+	 */
+	private RSyntaxTextArea mdxTextArea;
+
+    private UndoManager undoManager = null;
 
     public OlapQueryPanel(WabitSwingSession session, JComponent parentComponent, OlapQuery query) {
         this.parentComponent = parentComponent;
@@ -89,12 +116,12 @@ public class OlapQueryPanel implements WabitPanel {
     private void buildUI() {
     	JComponent textQueryPanel;
         try {
-            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(new SpecificDataSourceCollection<Olap4jDataSource>(session.getWorkspace(), Olap4jDataSource.class), SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query);
             textQueryPanel = createTextQueryPanel();
+            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(new SpecificDataSourceCollection<Olap4jDataSource>(session.getWorkspace(), Olap4jDataSource.class), SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query, this);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        JTabbedPane queryPanels = new JTabbedPane();
+        queryPanels = new JTabbedPane();
         olap4jGuiQueryPanel.setOlapPanelToolbar(createOlapPanelToolBar(olap4jGuiQueryPanel));
         
         JPanel guiPanel = new JPanel(new BorderLayout());
@@ -125,25 +152,30 @@ public class OlapQueryPanel implements WabitPanel {
     }
     
     private JComponent createTextQueryPanel() throws OlapException {
-        final JTextArea mdxQuery = new JTextArea();
-        mdxQuery.setText(
-               "with" +
-               "\n member Store.[USA Total] as '[Store].[USA]', solve_order = 1" +
-               "\n member Product.DrinkPct as '100 * (Product.Drink, Store.CurrentMember) / (Product.Drink, Store.USA)', solve_order = 2" +
-               "\nselect" +
-               "\n {[Store].[All Stores].[USA].[CA], [Store].[All Stores].[USA].[OR], [Store].[All Stores].[USA].[WA], Store.USA} ON COLUMNS," +
-               "\n crossjoin(" +
-               "\n  {[Gender].Children}," +
-               "\n  {" +
-               "\n   hierarchize(union(union(" +
-               "\n    [Product].[All Products].[Drink].Children," +
-               "\n    [Product].[All Products].[Drink].[Alcoholic Beverages].Children)," +
-               "\n    [Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].Children" +
-               "\n  ))," +
-               "\n  [Product].[Drink], Product.DrinkPct" +
-               "\n }) ON ROWS" +
-               "\nfrom [Sales]" +
-               "\nwhere [Time].[1997]");
+        
+        // Set basic properties for the mdx window
+        this.mdxTextArea = new RSyntaxTextArea();
+        this.mdxTextArea.setText("");
+        this.mdxTextArea.setLineWrap(true);
+        this.mdxTextArea.restoreDefaultSyntaxHighlightingColorScheme();
+        this.mdxTextArea.setSyntaxEditingStyle(RSyntaxTextArea.SQL_SYNTAX_STYLE);
+        
+        // Add support for undo
+        this.undoManager  = new UndoManager();
+        this.mdxTextArea.getDocument().addUndoableEditListener(new UndoableEditListener() {
+            public void undoableEditHappened(UndoableEditEvent e) {
+                undoManager.addEdit(e.getEdit());
+            }
+        });
+        this.mdxTextArea.getActionMap().put(UNDO_MDX_EDIT, undoMdxStatementAction);
+        this.mdxTextArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), UNDO_MDX_EDIT);
+        
+        this.mdxTextArea.getActionMap().put(REDO_MDX_EDIT, redoMdxStatementAction);
+        this.mdxTextArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + InputEvent.SHIFT_MASK), REDO_MDX_EDIT);
+        
+        
+        
+        
         JButton executeButton = new JButton("Execute");
         executeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -155,7 +187,7 @@ public class OlapQueryPanel implements WabitPanel {
                     if (connection != null) {
                         try {
                             statement = connection.createStatement();
-                            cellSet = statement.executeOlapQuery(mdxQuery.getText());
+                            cellSet = statement.executeOlapQuery(mdxTextArea.getText());
                         } catch (OlapException e1) {
                             e1.printStackTrace();
                             JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(parentComponent), "FAIL\n" + e1.getMessage());
@@ -171,6 +203,7 @@ public class OlapQueryPanel implements WabitPanel {
                         }
 
                         cellSetViewer.showCellSet(cellSet);
+                        queryPanels.setSelectedIndex(0);
                     }
                 } catch (Exception e1) {
                     throw new RuntimeException(e1);
@@ -187,7 +220,7 @@ public class OlapQueryPanel implements WabitPanel {
         });
         
         JPanel queryPanel = new JPanel(new BorderLayout());
-        queryPanel.add(new JScrollPane(mdxQuery), BorderLayout.CENTER);
+        queryPanel.add(new JScrollPane(mdxTextArea), BorderLayout.CENTER);
         queryPanel.add(executeButton, BorderLayout.SOUTH);
 
         return queryPanel;
@@ -214,6 +247,11 @@ public class OlapQueryPanel implements WabitPanel {
         //no-op
         return true;
     }
+    
+    public void updateMdxText(String mdx) {
+        this.mdxTextArea.setText(mdx);
+        this.mdxTextArea.repaint();
+    }
 
     public void discardChanges() {
         //do nothing
@@ -237,4 +275,26 @@ public class OlapQueryPanel implements WabitPanel {
     public void executeQuery() {
     	olap4jGuiQueryPanel.executeQuery();
     }
+    
+    private Action undoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.undo")){
+
+        public void actionPerformed(ActionEvent arg0) {
+            if (undoManager.canUndo()) {
+                undoManager.undo();
+            }
+            
+        }
+    };
+        
+    private Action redoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.redo")){
+
+        public void actionPerformed(ActionEvent arg0) {
+            if (undoManager.canRedo()) {
+                undoManager.redo();
+            }
+            
+        }
+    };
+
+    private JTabbedPane queryPanels;
 }
