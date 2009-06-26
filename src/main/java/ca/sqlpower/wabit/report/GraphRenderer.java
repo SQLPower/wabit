@@ -71,6 +71,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
@@ -143,6 +144,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 */
 	public enum ExistingGraphTypes {
 		BAR,
+		CATEGORY_LINE,
 		LINE,
 		SCATTER
 	}
@@ -944,7 +946,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	        	        
 			queryComboBox.setSelectedItem(renderer.getQuery());
 			graphTypeComboBox.setSelectedItem(renderer.getGraphType());
-			if (renderer.getGraphType() == ExistingGraphTypes.BAR) {
+			if (renderer.getGraphType() == ExistingGraphTypes.BAR || renderer.getGraphType() == ExistingGraphTypes.CATEGORY_LINE) {
 				currentHeaderTableCellRenderer = new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
 				resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 			} else if (renderer.getGraphType() == ExistingGraphTypes.LINE || renderer.getGraphType() == ExistingGraphTypes.SCATTER) {
@@ -1017,6 +1019,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 						}
 						switch ((ExistingGraphTypes) graphTypeComboBox.getSelectedItem()) {
 						case BAR:
+						case CATEGORY_LINE:
 							xaxisNameField.setVisible(false);
 							xaxisNameLabel.setVisible(false);
 							currentHeaderTableCellRenderer = new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
@@ -1178,7 +1181,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             chartEditorPanel.revalidate();
 
             final CellSetAxis columnAxis = cellSetViewer.getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
-            if (graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.BAR) {
+            if (graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.BAR 
+                    || graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.CATEGORY_LINE) {
                 JPanel comboBoxCellHeader = new JPanel(new OlapTableHeaderLayoutManager(cellSetViewer.getTable()));
                 for (int i = 0; i < cellSetViewer.getTable().getColumnModel().getColumnCount(); i++) {
                     final Position position = columnAxis.getPositions().get(i);
@@ -1663,6 +1667,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		
 		switch (graphType) {
 		case BAR :
+		case CATEGORY_LINE:
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.CATEGORY) || !columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
 				return null;
 			}
@@ -1681,20 +1686,28 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			for (ColumnIdentifier identifier : categoryColumns) {
 			    categoryColumnNames.add(identifier.getName());
 			}
-			chart = ChartFactory.createBarChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+			if (graphType == ExistingGraphTypes.BAR) {
+			    chart = ChartFactory.createBarChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+			} else if (graphType == ExistingGraphTypes.CATEGORY_LINE) {
+			    chart = ChartFactory.createLineChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+			} else {
+			    throw new IllegalArgumentException("Unknown graph type " + graphType + " for a category dataset.");
+			}
 			if (legendPosition != LegendPosition.NONE) {
 				chart.getLegend().setPosition(rEdge);
 				chart.getTitle().setPadding(4,4,15,4);
 			}
 			
-			BarRenderer barRenderer = (BarRenderer) chart.getCategoryPlot()
-					.getRenderer();
+			CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
 			int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
 			for (int i = 0; i < seriesSize; i++) {
 				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-				barRenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
+				renderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
 			}
-			barRenderer.setShadowVisible(false);
+			if (renderer instanceof BarRenderer) {
+			    BarRenderer barRenderer = (BarRenderer) renderer;
+			    barRenderer.setShadowVisible(false);
+			}
 			setTransparentChartBackground(chart);
 			return chart;
 		case LINE :
@@ -2147,6 +2160,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	        try {
 	            switch (graphType) {
 	            case BAR:
+	            case CATEGORY_LINE:
 	                return GraphRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((QueryCache) query).fetchResultSet(), GraphRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
 	            case LINE:
 	            case SCATTER:
@@ -2161,6 +2175,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	        try {
                 switch (graphType) {
                 case BAR:
+                case CATEGORY_LINE:
                     return GraphRenderer.createOlapCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((OlapQuery) query).getMdxQueryCopy().execute(), GraphRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
                 case LINE:
                 case SCATTER:
