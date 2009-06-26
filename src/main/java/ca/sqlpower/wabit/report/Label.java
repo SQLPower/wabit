@@ -354,4 +354,8 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public void processEvent(PInputEvent event, int type) {
         //do nothing
     }
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
 }

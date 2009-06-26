@@ -171,5 +171,9 @@ public class ColumnInfo extends AbstractWabitObject{
 	public String getColumnAlias() {
 		return columnAlias;
 	}
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
 }
 

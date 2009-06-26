@@ -140,4 +140,8 @@ public class ImageRenderer extends AbstractWabitObject implements
         //do nothing
     }
 
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
+
 }

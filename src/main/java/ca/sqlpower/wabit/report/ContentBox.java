@@ -23,6 +23,7 @@ import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -214,5 +215,9 @@ public class ContentBox extends AbstractWabitObject {
 	public void cleanup() {
 		contentRenderer.cleanup();
 	}
+
+    public List<WabitObject> getDependencies() {
+        return new ArrayList<WabitObject>(Collections.singleton(contentRenderer));
+    }
 
 }

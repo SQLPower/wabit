@@ -499,4 +499,11 @@ public class Page extends AbstractWabitObject {
         
         // TODO update margins from page format?
     }
+
+    public List<WabitObject> getDependencies() {
+        List<WabitObject> dependencies = new ArrayList<WabitObject>();
+        dependencies.addAll(contentBoxes);
+        dependencies.addAll(guides);
+        return dependencies;
+    }
 }

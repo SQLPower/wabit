@@ -434,4 +434,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         return Collections.unmodifiableList(olapQueries);
     }
 
+    public List<WabitObject> getDependencies() {
+        return new ArrayList<WabitObject>(getChildren());
+    }
+
 }

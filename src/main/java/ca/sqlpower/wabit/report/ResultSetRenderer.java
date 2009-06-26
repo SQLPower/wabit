@@ -1097,4 +1097,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     public void processEvent(PInputEvent event, int type) {
         //TODO allow other cool things to happen with this event
     }
+
+    public List<WabitObject> getDependencies() {
+        List<WabitObject> dependencies = new ArrayList<WabitObject>();
+        dependencies.add(query);
+        dependencies.addAll(columnInfo);
+        return dependencies;
+    }
 }

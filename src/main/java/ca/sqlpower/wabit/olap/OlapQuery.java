@@ -44,6 +44,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -352,6 +353,10 @@ public class OlapQuery extends AbstractWabitObject {
     @Override
     public String toString() {
         return getName();
+    }
+
+    public List<WabitObject> getDependencies() {
+        return new ArrayList<WabitObject>(Collections.singleton(new WabitDataSource(getOlapDataSource())));
     }
     
 }

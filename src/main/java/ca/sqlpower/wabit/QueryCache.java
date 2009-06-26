@@ -493,4 +493,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return getName();
     }
 
+    public List<WabitObject> getDependencies() {
+        return new ArrayList<WabitObject>(Collections.singleton(getWabitDataSource()));
+    }
+
 }

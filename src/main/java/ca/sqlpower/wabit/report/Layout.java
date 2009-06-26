@@ -27,6 +27,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -244,4 +245,8 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
 	public boolean isCurrentlyPrinting() {
 		return currentlyPrinting.get();
 	}
+
+    public List<WabitObject> getDependencies() {
+        return new ArrayList<WabitObject>(Collections.singleton(page));
+    }
 }

@@ -31,7 +31,9 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +48,8 @@ import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 
+import ca.sqlpower.graph.DepthFirstSearch;
+import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -56,8 +60,8 @@ import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
@@ -68,7 +72,6 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.GraphRenderer.ColumnIdentifier;
 import ca.sqlpower.xml.XMLHelper;
@@ -97,6 +100,109 @@ public class WorkspaceXMLDAO {
     static final Version FILE_VERSION = new Version(1, 0, 2); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
+    /**
+     * Each edge is made up of a parent {@link WabitObject} and a child {@link WabitObject}.
+     * The edge goes in the direction from the parent to the child.
+     */
+    private class ProjectGraphModelEdge {
+        
+        private final WabitObject parent;
+        private final WabitObject child;
+
+        public ProjectGraphModelEdge(WabitObject parent, WabitObject child) {
+            this.parent = parent;
+            this.child = child;
+        }
+        
+        public WabitObject getParent() {
+            return parent;
+        }
+        
+        public WabitObject getChild() {
+            return child;
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ProjectGraphModelEdge) {
+                ProjectGraphModelEdge wabitObject = (ProjectGraphModelEdge) obj;
+                return getParent().equals(wabitObject.getParent()) && getChild().equals(wabitObject.getChild());
+            } else {
+                return false;
+            }
+        }
+        
+        @Override
+        public int hashCode() {
+            int result = 17;
+            result = 37 * result + getParent().hashCode();
+            result = 37 * result + getChild().hashCode();
+            return result;
+        }
+    }
+    
+    /**
+     * This graph takes a {@link WabitObject} for its root and makes a graph model that represents
+     * all of the root's dependencies. The root is included in the dependencies.
+     */
+    private class ProjectGraphModel implements GraphModel<WabitObject, ProjectGraphModelEdge> {
+        
+        private final WabitObject root;
+
+        public ProjectGraphModel(WabitObject root) {
+            this.root = root;
+        }
+
+        public Collection<WabitObject> getAdjacentNodes(WabitObject node) {
+            return node.getDependencies();
+        }
+
+        public Collection<ProjectGraphModelEdge> getEdges() {
+            Set<ProjectGraphModelEdge> allEdges = new HashSet<ProjectGraphModelEdge>();
+            allEdges.addAll(getOutboundEdges(root));
+            Collection<ProjectGraphModelEdge> outboundEdges = getOutboundEdges(root);
+            while (!outboundEdges.isEmpty()) {
+                ProjectGraphModelEdge edge = outboundEdges.iterator().next();
+                outboundEdges.remove(edge);
+                if (allEdges.contains(edge)) continue;
+                allEdges.add(edge);
+                outboundEdges.addAll(getOutboundEdges(edge.getChild()));
+            }
+            return allEdges;
+        }
+
+        public Collection<ProjectGraphModelEdge> getInboundEdges(
+                WabitObject node) {
+            WabitObject parent = node.getParent();
+            if (parent == null) return Collections.emptyList();
+            return Collections.singletonList(new ProjectGraphModelEdge(parent, node));
+        }
+
+        public Collection<WabitObject> getNodes() {
+            Set<WabitObject> allNodes = new HashSet<WabitObject>();
+            allNodes.add(root);
+            Collection<WabitObject> adjacentNodes = getAdjacentNodes(root);
+            while (!adjacentNodes.isEmpty()) {
+                WabitObject node = adjacentNodes.iterator().next();
+                adjacentNodes.remove(node);
+                if (allNodes.contains(node)) continue;
+                allNodes.add(node);
+                adjacentNodes.addAll(getAdjacentNodes(node));
+            }
+            return allNodes;
+        }
+
+        public Collection<ProjectGraphModelEdge> getOutboundEdges(
+                WabitObject node) {
+            List<ProjectGraphModelEdge> dependencyEdges = new ArrayList<ProjectGraphModelEdge>();
+            for (WabitObject dependency : node.getDependencies()) {
+                dependencyEdges.add(new ProjectGraphModelEdge(node, dependency));
+            }
+            return dependencyEdges;
+        }
+        
+    }
+    
 	/**
 	 * This output stream will be used to  write the workspace to a file.
 	 */
@@ -112,6 +218,8 @@ public class WorkspaceXMLDAO {
 	 * The workspace this DAO will write to a file.
 	 */
 	private final WabitWorkspace workspace;
+
+    private final Comparator<WabitObject> wabitObjectComparator = new WabitObjectComparator();
 	
 	/**
 	 * This will construct a XML DAO to save the entire workspace or parts of 
@@ -123,39 +231,11 @@ public class WorkspaceXMLDAO {
 		xml = new XMLHelper();
 	}
 	
-	/**
-	 * This XML DAO will save a specific query in a workspace as XML.
-	 * The query can then be loaded as a stand-alone workspace or be imported
-	 * into another workspace.
-	 */
-	public void save(QueryCache query) {
-		save(Collections.singletonList(query.getWabitDataSource()), Collections.singletonList(query), new ArrayList<Layout>());
-	}
-	
-	public void save(Layout layout) {
-		Set<QueryCache> queries = new HashSet<QueryCache>();
-		for (Page page : layout.getChildren()) {
-			for (ContentBox contentBox : page.getContentBoxes()) {
-				ReportContentRenderer rcr = contentBox.getContentRenderer();
-				if (rcr instanceof ResultSetRenderer) {
-					queries.add(((ResultSetRenderer) rcr).getQuery());
-				}
-			}
-		}
-		
-		Set<WabitDataSource> dataSources = new HashSet<WabitDataSource>();
-		for (QueryCache query : queries) {
-			dataSources.add(query.getWabitDataSource());
-		}
-		
-		save(new ArrayList<WabitDataSource>(dataSources), new ArrayList<QueryCache>(queries), Collections.singletonList(layout));
-	}
-	
 	public void save() {
-		save(workspace.getDataSources(), workspace.getQueries(), workspace.getLayouts());
+		save(workspace);
 	}
 	
-	private void save(List<WabitDataSource> dataSources, List<QueryCache> queries, List<Layout> layouts) {
+	public void save(WabitObject objectToSave) {
 		xml.println(out, "<?xml version='1.0' encoding='UTF-8'?>");
 		xml.println(out, "");
 		xml.println(out, "<wabit export-format=\"" + FILE_VERSION + "\" wabit-app-version=\"" + WabitVersion.VERSION + "\">");
@@ -167,19 +247,31 @@ public class WorkspaceXMLDAO {
 		xml.niprintln(out, ">");
 		xml.indent++;
 		
+		DepthFirstSearch<WabitObject, ProjectGraphModelEdge> dfs = new DepthFirstSearch<WabitObject, ProjectGraphModelEdge>();
+		dfs.performSearch(new ProjectGraphModel(objectToSave));
+		List<WabitObject> dependenciesToSave = dfs.getFinishOrder();
+		Collections.sort(dependenciesToSave, wabitObjectComparator);
+
+		List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>();
+		for (WabitObject wabitObject : dependenciesToSave) {
+		    if (wabitObject instanceof WabitDataSource) {
+		        dataSources.add((WabitDataSource) wabitObject);
+		    }
+		}
+		
 		saveDataSources(dataSources);
 		
-		for (QueryCache query : queries) {
-		    saveQueryCache(query.getQuery());
-		}
-		
-		for (OlapQuery query : workspace.getOlapQueries()) {
-		    saveOlapQuery(query);
-		}
-		
-		for (Layout layout : layouts) {
-			saveLayout(layout);
-		}
+		for (WabitObject wabitObject : dependenciesToSave) {
+            if (wabitObject instanceof QueryCache) {
+                saveQueryCache(((QueryCache) wabitObject).getQuery());
+            } else if (wabitObject instanceof OlapQuery) {
+                saveOlapQuery((OlapQuery) wabitObject);
+            } else if (wabitObject instanceof Layout) {
+                saveLayout((Layout) wabitObject);
+            } else {
+                logger.info("Not saving wabit object " + wabitObject.getName() + " of type " + wabitObject.getClass() + " as it should be saved elsewhere.");
+            }
+        }
 		
 		xml.indent--;
 		xml.println(out, "</project>");

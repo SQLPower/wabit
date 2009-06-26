@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -2185,6 +2186,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
     public void processEvent(PInputEvent event, int type) {
         //do nothing at current, but maybe do cool stuff later
+    }
+
+    public List<WabitObject> getDependencies() {
+        return Collections.singletonList(query);
     }
 	
 }

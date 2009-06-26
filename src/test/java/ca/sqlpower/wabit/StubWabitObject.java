@@ -68,4 +68,8 @@ public class StubWabitObject implements WabitObject {
 		return null;
 	}
 
+    public List<WabitObject> getDependencies() {
+        return null;
+    }
+
 }

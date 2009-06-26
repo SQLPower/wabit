@@ -56,4 +56,10 @@ public interface WabitObject {
     
     UUID getUUID();
     
+    /**
+     * Returns a list of all {@link WabitObject}s that this Wabit object is dependent
+     * on. This is used in exporting to find what Wabit objects to save.
+     */
+    List<WabitObject> getDependencies();
+    
 }

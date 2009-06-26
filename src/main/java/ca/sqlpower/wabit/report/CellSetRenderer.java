@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,7 +74,6 @@ import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.LayoutItem;
-import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
@@ -679,5 +679,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public String getErrorMessage() {
 		return errorMessage;
 	}
+
+    public List<WabitObject> getDependencies() {
+        return new ArrayList<WabitObject>(Collections.singleton(getOlapQuery()));
+    }
 
 }

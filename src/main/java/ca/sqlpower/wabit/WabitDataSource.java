@@ -79,4 +79,8 @@ public class WabitDataSource extends AbstractWabitObject {
 	public int hashCode() {
 		return this.dataSource.hashCode();
 	}
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
 }

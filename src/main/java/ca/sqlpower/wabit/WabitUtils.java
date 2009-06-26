@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
@@ -98,6 +100,22 @@ public class WabitUtils {
     public static boolean nullSafeEquals(Object o1, Object o2) {
         if (o1 == null) return o2 == null;
         return o1.equals(o2);
+    }
+
+    /**
+     * This method returns a list of all of the ancestors of the given
+     * {@link WabitObject}. The order of the ancestors is such that the highest
+     * ancestor is at the start of the list and the parent of the object itself
+     * is at the end of the list.
+     */
+    public static List<WabitObject> getAncestorList(WabitObject o) {
+        List<WabitObject> ancestors = new ArrayList<WabitObject>();
+        WabitObject parent = o.getParent();
+        while (parent != null) {
+            ancestors.add(0, parent);
+            parent = parent.getParent();
+        }
+        return ancestors;
     }
 
 }

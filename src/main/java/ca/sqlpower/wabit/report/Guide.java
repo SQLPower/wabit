@@ -117,4 +117,8 @@ public class Guide extends AbstractWabitObject {
             }
         }
     }
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
 }
