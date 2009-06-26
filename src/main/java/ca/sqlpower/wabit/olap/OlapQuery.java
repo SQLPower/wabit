@@ -250,7 +250,7 @@ public class OlapQuery extends AbstractWabitObject {
                 
                 // Build a JDBC URL for Mondrian driver connection
                 StringBuilder url = new StringBuilder("jdbc:mondrian:");
-                url.append("DataSource='").append(ds.getName());
+                url.append("DataSource='").append(unique_name);
                 url.append("';Catalog=").append(getOlapDataSource().getMondrianSchema().toString());
                 
                 Connection connection = DriverManager.getConnection(url.toString());
