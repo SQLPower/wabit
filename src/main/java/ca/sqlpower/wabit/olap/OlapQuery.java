@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -149,16 +150,28 @@ public class OlapQuery extends AbstractWabitObject {
     private Cube currentCube;
 
     /**
-     * This is the {@link SPDataSource} used to connect to the OLAP data source.
+     * This is the data source that this query obtains its connections from. 
      */
     private Olap4jDataSource olapDataSource;
-    
+
+    /**
+     * This JNDI context is used as a temporary holding place during the process
+     * of creating Olap4j connections.
+     */
     private final Context ctx;
-    
+
+    /**
+     * Creates a new, empty query with no set persistent object ID.
+     */
     public OlapQuery() {
         this(null);
     }
-    
+
+    /**
+     * Creates a new, empty query that will use the given persistent object ID
+     * when it's saved. This constructor is only of particular use to the
+     * persistence layer.
+     */
     public OlapQuery(String uuid) {
         super(uuid);
         // FIXME this should be configured in an external jndi.properties file.
@@ -192,6 +205,12 @@ public class OlapQuery extends AbstractWabitObject {
         return currentCube;
     }
 
+    /**
+     * Replaces the current olap4j query with the given one, and fires a
+     * property change event.
+     * 
+     * @param mdxQuery The new query. 
+     */
     public void setMdxQuery(Query mdxQuery) {
         Query oldMDXQuery = this.mdxQuery;
         this.mdxQuery = mdxQuery;
@@ -233,11 +252,12 @@ public class OlapQuery extends AbstractWabitObject {
                 dimension.getSelections().clear();
             }
         }
+        // XXX I believe this should fire an event.
     }
 
-    public OlapConnection createOlapConnection() throws SQLException, ClassNotFoundException, NamingException 
-    {
-        final String unique_name = UUID.randomUUID().toString();
+    public OlapConnection createOlapConnection()
+    throws SQLException, ClassNotFoundException, NamingException {
+        final String uniqueName = UUID.randomUUID().toString();
         
         // FIXME This validation should not be performed here.
         if (getOlapDataSource() == null) return null;
@@ -246,7 +266,7 @@ public class OlapQuery extends AbstractWabitObject {
         
         try {
             
-            ctx.bind(unique_name, new DataSourceAdapter(ds));
+            ctx.bind(uniqueName, new DataSourceAdapter(ds));
             
             if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.IN_PROCESS)) {
                 if (getOlapDataSource().getMondrianSchema() == null
@@ -260,7 +280,7 @@ public class OlapQuery extends AbstractWabitObject {
                 
                 // Build a JDBC URL for Mondrian driver connection
                 StringBuilder url = new StringBuilder("jdbc:mondrian:");
-                url.append("DataSource='").append(unique_name);
+                url.append("DataSource='").append(uniqueName);
                 url.append("';Catalog=").append(getOlapDataSource().getMondrianSchema().toString());
                 
                 Connection connection = DriverManager.getConnection(url.toString());
@@ -285,20 +305,30 @@ public class OlapQuery extends AbstractWabitObject {
                 throw new RuntimeException("Someone forgot to add a connection type handler in the code.");
             }
         } finally {
-            ctx.unbind(unique_name);
+            ctx.unbind(uniqueName);
         }
     }
 
+    /**
+     * Sets the data source that this query obtains its connections from,
+     * and fires a property change event.
+     */
     public void setOlapDataSource(Olap4jDataSource olapDataSource) {
         Olap4jDataSource oldDS = this.olapDataSource;
         this.olapDataSource = olapDataSource;
         firePropertyChange("olapDataSource", oldDS, olapDataSource);
     }
 
+    /**
+     * Returns the data source that this query obtains its connections from.
+     */
     public Olap4jDataSource getOlapDataSource() {
         return olapDataSource;
     }
 
+    /**
+     * OlapQuery is a leaf node, so this method returns false.
+     */
     public boolean allowsChildren() {
         return false;
     }
@@ -307,15 +337,19 @@ public class OlapQuery extends AbstractWabitObject {
         return 0;
     }
 
+    /**
+     * OlapQuery is a leaf node, so this method returns an unmodifiable empty
+     * list.
+     */
     public List<? extends WabitObject> getChildren() {
-        return new ArrayList<WabitObject>();
+        return Collections.emptyList();
     }
     
-    @Override
     /**
      * Returns the name of the string. This way reasonable text appears when
      * these queries are placed in a combo box.
      */
+    @Override
     public String toString() {
         return getName();
     }
