@@ -547,22 +547,29 @@ public class WorkspaceXMLDAO {
 	    xml.println(out, ">");
 	    xml.indent++;
 	    
-	    xml.print(out, "<olap-cube");
-	    printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
-	    printAttribute("schema", query.getCurrentCube().getSchema().getName());
-	    printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
-	    xml.println(out, "/>");
+	    if (query.getCurrentCube()!=null &&
+	            query.getCurrentCube().getSchema()!=null &&
+	            query.getCurrentCube().getSchema().getCatalog()!=null) {
+    	    xml.print(out, "<olap-cube");
+    	    printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
+    	    printAttribute("schema", query.getCurrentCube().getSchema().getName());
+    	    printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
+    	    xml.println(out, "/>");
+	    }
 	    
 	    org.olap4j.query.Query mdxQuery = query.getMDXQuery();
-	    xml.print(out, "<olap4j-query");
-	    printAttribute("name", mdxQuery.getName());
-	    xml.println(out, ">");
-	    xml.indent++;
 	    
-	    saveOlap4jQuery(mdxQuery, "olap4j");
-	    
-	    xml.indent--;
-	    xml.println(out, "</olap4j-query>");
+	    if (mdxQuery!=null) {
+    	    xml.print(out, "<olap4j-query");
+    	    printAttribute("name", mdxQuery.getName());
+    	    xml.println(out, ">");
+    	    xml.indent++;
+    	    
+    	    saveOlap4jQuery(mdxQuery, "olap4j");
+    	    
+    	    xml.indent--;
+    	    xml.println(out, "</olap4j-query>");
+	    }
 	    
 	    xml.indent--;
 	    xml.println(out, "</olap-query>");
