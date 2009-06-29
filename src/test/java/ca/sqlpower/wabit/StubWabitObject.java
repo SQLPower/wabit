@@ -64,7 +64,7 @@ public class StubWabitObject implements WabitObject {
     public void setParent(WabitObject parent) {
     }
 
-	public UUID getUUID() {
+	public String getUUID() {
 		return null;
 	}
 

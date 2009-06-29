@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.UUID;
 import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
@@ -770,9 +769,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
                 } else if (aname.equals("query-id")) {
                     QueryCache query = null;
-                    final UUID queryUUID = UUID.fromString(aval);
                     for (QueryCache q : session.getWorkspace().getQueries()) {
-                        if (q.getUUID().equals(queryUUID)) {
+                        if (q.getUUID().equals(aval)) {
                             query = q;
                             break;
                         }
@@ -786,7 +784,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     }
                     OlapQuery olapQuery = null;
                     for (OlapQuery q : session.getWorkspace().getOlapQueries()) {
-                        if (q.getUUID().equals(queryUUID)) {
+                        if (q.getUUID().equals(aval)) {
                             olapQuery = q;
                             break;
                         }
@@ -874,7 +872,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	checkMandatory("query-id", queryID);
         	QueryCache query = null;
         	for (QueryCache q : session.getWorkspace().getQueries()) {
-        		if (q.getUUID().equals(UUID.fromString(queryID))) {
+        		if (q.getUUID().equals(queryID)) {
         			query = q;
         			break;
         		}
@@ -983,7 +981,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             String queryUUID = attributes.getValue("olap-query-uuid");
             OlapQuery newQuery = null;
             for (OlapQuery query : session.getWorkspace().getOlapQueries()) {
-                if (query.getUUID().toString().equals(queryUUID)) {
+                if (query.getUUID().equals(queryUUID)) {
                     newQuery = query;
                     break;
                 }
@@ -1161,14 +1159,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	    session.setLoading(false);
     	    WabitObject initialView = session.getWorkspace();
     		for (WabitObject obj : session.getWorkspace().getChildren()) {
-    			if (obj.getUUID().toString().equals(currentEditorPanelModel)) {
+    			if (obj.getUUID().equals(currentEditorPanelModel)) {
     				initialView = obj;
     				break;
     			}
     		}
     		session.getWorkspace().setEditorPanelModel(initialView);
     	} else if (name.equals("table")) {
-    		TableContainer table = new TableContainer(container.getUUID().toString(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
+    		TableContainer table = new TableContainer(container.getUUID(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
     		cache.getQuery().addTable(table);

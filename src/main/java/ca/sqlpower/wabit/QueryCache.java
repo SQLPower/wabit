@@ -460,7 +460,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return query.getName();
     }
 
-    public UUID getUUID() {
+    public String getUUID() {
         return query.getUUID();
     }
 

@@ -243,7 +243,7 @@ public class WorkspaceXMLDAO {
 
 		xml.print(out, "<project");
 		printAttribute("name", workspace.getName());
-		printAttribute("editorPanelModel", workspace.getEditorPanelModel().getUUID().toString());
+		printAttribute("editorPanelModel", workspace.getEditorPanelModel().getUUID());
 		xml.niprintln(out, ">");
 		xml.indent++;
 		
@@ -352,8 +352,8 @@ public class WorkspaceXMLDAO {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
 						xml.print(out, "<content-result-set");
 						printAttribute("name", rsRenderer.getName());
-						printAttribute("uuid", rsRenderer.getUUID().toString());
-						printAttribute("query-id", rsRenderer.getQuery().getUUID().toString());
+						printAttribute("uuid", rsRenderer.getUUID());
+						printAttribute("query-id", rsRenderer.getQuery().getUUID());
 						printAttribute("null-string", rsRenderer.getNullString());
 						printAttribute("border", rsRenderer.getBorderType().name());
 						if (rsRenderer.getBackgroundColour() != null) {
@@ -369,7 +369,7 @@ public class WorkspaceXMLDAO {
 							printAttribute("name", ci.getName());
 							printAttribute("width", ci.getWidth());
 							if (ci.getColumnInfoItem() != null) {
-								printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID().toString());
+								printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID());
 							}
 							printAttribute("column-alias", ci.getColumnAlias());
 							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
@@ -427,12 +427,12 @@ public class WorkspaceXMLDAO {
 						GraphRenderer graphRenderer = (GraphRenderer) box.getContentRenderer();
 						xml.print(out, "<graph-renderer");
 						printAttribute("name", graphRenderer.getName());
-						printAttribute("uuid", graphRenderer.getUUID().toString());
+						printAttribute("uuid", graphRenderer.getUUID());
 						printAttribute("y-axis-name", graphRenderer.getYaxisName());
 						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
 						printAttribute("graph-type", graphRenderer.getGraphType().name());
 						printAttribute("legend-position", graphRenderer.getLegendPosition().name());
-						printAttribute("query-id", graphRenderer.getQuery().getUUID().toString());
+						printAttribute("query-id", graphRenderer.getQuery().getUUID());
 						xml.niprintln(out, ">");
 						xml.indent++;
 						xml.println(out, "<graph-col-names-in-order>");
@@ -470,8 +470,8 @@ public class WorkspaceXMLDAO {
 					    CellSetRenderer renderer = (CellSetRenderer) box.getContentRenderer();
 					    xml.print(out, "<cell-set-renderer");
 					    printAttribute("name", renderer.getName());
-					    printAttribute("uuid", renderer.getUUID().toString());
-					    printAttribute("olap-query-uuid", renderer.getOlapQuery().getUUID().toString());
+					    printAttribute("uuid", renderer.getUUID());
+					    printAttribute("olap-query-uuid", renderer.getOlapQuery().getUUID());
 					    printAttribute("body-alignment", renderer.getBodyAlignment().toString());
 					    if (renderer.getBodyFormat() != null) {
 					        printAttribute("body-format-pattern", renderer.getBodyFormat().toPattern());
@@ -540,7 +540,7 @@ public class WorkspaceXMLDAO {
 	private void saveOlapQuery(OlapQuery query) {
 	    xml.print(out, "<olap-query");
 	    printAttribute("name", query.getName());
-	    printAttribute("uuid", query.getUUID().toString());
+	    printAttribute("uuid", query.getUUID());
 	    if (query.getOlapDataSource() != null) {
 	        printAttribute("data-source", query.getOlapDataSource().getName());
 	    }
@@ -651,7 +651,7 @@ public class WorkspaceXMLDAO {
 	private void saveQueryCache(Query data) {
 		xml.print(out, "<query");
 		printAttribute("name", data.getName());
-		printAttribute("uuid", data.getUUID().toString());
+		printAttribute("uuid", data.getUUID());
 		printAttribute("zoom", data.getZoomLevel());
 		printAttribute("streaming-row-limit", data.getStreamingRowLimit());
 		printAttribute("row-limit", data.getRowLimit());
@@ -666,15 +666,15 @@ public class WorkspaceXMLDAO {
 
 		xml.print(out, "<constants");
 		Container constants = data.getConstantsContainer();
-		printAttribute("uuid", constants.getUUID().toString());
+		printAttribute("uuid", constants.getUUID());
 		printAttribute("xpos", constants.getPosition().getX());
 		printAttribute("ypos", constants.getPosition().getY());
 		xml.niprintln(out, ">");
 		xml.indent++;
 		for (Item item : constants.getItems()) {
 			xml.print(out, "<column");
-			printAttribute("id", item.getUUID().toString());
-			itemIdMap.put(item, item.getUUID().toString());
+			printAttribute("id", item.getUUID());
+			itemIdMap.put(item, item.getUUID());
 			printAttribute("name", item.getName());
 			printAttribute("alias", item.getAlias());
 			printAttribute("where-text", item.getWhere());
@@ -689,7 +689,7 @@ public class WorkspaceXMLDAO {
 		for (Container table : data.getFromTableList()) {
 			xml.print(out, "<table");
 			printAttribute("name", table.getName());
-			printAttribute("uuid", table.getUUID().toString());
+			printAttribute("uuid", table.getUUID());
 			TableContainer tableContainer = (TableContainer)table;
 			if (!tableContainer.getSchema().equals("")) {
 				printAttribute("schema", tableContainer.getSchema());
@@ -704,8 +704,8 @@ public class WorkspaceXMLDAO {
 			xml.indent++;
 			for (Item item : table.getItems()) {
 				xml.print(out, "<column");
-				printAttribute("id", item.getUUID().toString());
-				itemIdMap.put(item, item.getUUID().toString());
+				printAttribute("id", item.getUUID());
+				itemIdMap.put(item, item.getUUID());
 				printAttribute("name", item.getName());
 				printAttribute("alias", item.getAlias());
 				printAttribute("where-text", item.getWhere());

@@ -54,7 +54,7 @@ public interface WabitObject {
      */
     void setName(String name);
     
-    UUID getUUID();
+    String getUUID();
     
     /**
      * Returns a list of all {@link WabitObject}s that this Wabit object is dependent
