@@ -53,6 +53,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -60,6 +61,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.table.TableColumnModel;
@@ -118,6 +120,16 @@ public class CellSetTableHeaderComponent extends JComponent {
 			return new Insets(0, 0, 0, 0);
 		}
 	};
+	
+	/**
+	 * The UIDefault value for the expanded JTree icon. Used to denote expanded Members
+	 */
+	private static final Icon EXPANDED_TREE_ICON = UIManager.getDefaults().getIcon("Tree.expandedIcon");
+	
+	/**
+	 * The UIDefault value for the collapsed JTree icon. Used to denote collapsed Members
+	 */
+	private static final Icon COLLAPSED_TREE_ICON = UIManager.getDefaults().getIcon("Tree.collapsedIcon");
 	
     private static final Logger logger = Logger.getLogger(CellSetTableHeaderComponent.class);
     
@@ -772,14 +784,28 @@ public class CellSetTableHeaderComponent extends JComponent {
 	                LayoutItem li = new LayoutItem();
 	                Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
 	                if (axis.getAxisOrdinal() == Axis.ROWS) {
-		                li.bounds = new Rectangle2D.Double(
-		                        memberDepth * indentAmount, y,
-		                        stringBounds.getWidth(), stringBounds.getHeight());
+	                	if (member.getChildMemberCount() > 0) {
+	                		li.bounds = new Rectangle2D.Double(
+			                        memberDepth * indentAmount, y,
+			                        stringBounds.getWidth() + EXPANDED_TREE_ICON.getIconWidth(),
+			                        Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight()));
+	                	} else {
+			                li.bounds = new Rectangle2D.Double(
+			                        memberDepth * indentAmount, y,
+			                        stringBounds.getWidth(), stringBounds.getHeight());
+	                	}
 		                y += rowHeight;
 	                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
-	                	li.bounds = new Rectangle2D.Double(
-		                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
-		                        stringBounds.getWidth(), stringBounds.getHeight());
+	                	if (member.getChildMemberCount() > 0) {
+	                		li.bounds = new Rectangle2D.Double(
+			                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
+			                        stringBounds.getWidth() + EXPANDED_TREE_ICON.getIconWidth(), 
+			                        Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight()));
+	                	} else {
+		                	li.bounds = new Rectangle2D.Double(
+			                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
+			                        stringBounds.getWidth(), stringBounds.getHeight());
+	                	}
 	                	y += colsRowHeight;
 	                }
 	                li.member = member;
@@ -850,20 +876,31 @@ public class CellSetTableHeaderComponent extends JComponent {
             int ascent = fm.getAscent();
             
             String previousLabel = null;
-            for (LayoutItem li : getLayoutItems()) {
-                if (!WabitUtils.nullSafeEquals(previousLabel, li.text)) {
-                    if (li.member == selectedMember) {
-                        g2.setColor(Color.BLUE);
-                    }
-                    
-                    g2.drawString(li.text, (int) li.bounds.getX(), ((int) li.bounds.getY()) + ascent);
-                    
-                    if (li.member == selectedMember) {
-                        g2.setColor(getForeground());
-                    }
-                }
-                previousLabel = li.text;
-                
+            
+            List<LayoutItem> layoutItems = getLayoutItems();
+            for (int i = 0 ; i < layoutItems.size() ; i++) {
+            	LayoutItem li = layoutItems.get(i);
+            	if (!WabitUtils.nullSafeEquals(previousLabel, li.text)) {
+            		if (li.member == selectedMember) {
+            			g2.setColor(Color.BLUE);
+            		}
+            		
+            		if (li.member.getChildMemberCount() > 0) {
+            			if (i + 1 < layoutItems.size() && layoutItems.get(i + 1).member.getParentMember().equals(li.member)) {
+            				EXPANDED_TREE_ICON.paintIcon(this, g2, (int) li.bounds.getX(), (int) li.bounds.getY());
+            			} else {
+            				COLLAPSED_TREE_ICON.paintIcon(this, g2, (int) li.bounds.getX(), (int) li.bounds.getY());
+            			}
+            			g2.drawString(li.text, (int) li.bounds.getX() + EXPANDED_TREE_ICON.getIconWidth(), ((int) li.bounds.getY()) + ascent);
+            		} else {
+            			g2.drawString(li.text, (int) li.bounds.getX(), ((int) li.bounds.getY()) + ascent);
+            		}
+            		
+            		if (li.member == selectedMember) {
+            			g2.setColor(getForeground());
+            		}
+            	}
+            	previousLabel = li.text;
             }
         }
 
