@@ -785,10 +785,12 @@ public class CellSetTableHeaderComponent extends JComponent {
 	                Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
 	                if (axis.getAxisOrdinal() == Axis.ROWS) {
 	                	if (member.getChildMemberCount() > 0) {
-	                		li.bounds = new Rectangle2D.Double(
+	                		double height = Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight());
+							double width = stringBounds.getWidth() + Math.max(height, EXPANDED_TREE_ICON.getIconWidth());
+							li.bounds = new Rectangle2D.Double(
 			                        memberDepth * indentAmount, y,
-			                        stringBounds.getWidth() + EXPANDED_TREE_ICON.getIconWidth(),
-			                        Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight()));
+			                        width,
+			                        height);
 	                	} else {
 			                li.bounds = new Rectangle2D.Double(
 			                        memberDepth * indentAmount, y,
@@ -797,10 +799,12 @@ public class CellSetTableHeaderComponent extends JComponent {
 		                y += rowHeight;
 	                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
 	                	if (member.getChildMemberCount() > 0) {
+	                		double height = Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight());
+							double width = stringBounds.getWidth() + Math.max(height, EXPANDED_TREE_ICON.getIconWidth());
 	                		li.bounds = new Rectangle2D.Double(
 			                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
-			                        stringBounds.getWidth() + EXPANDED_TREE_ICON.getIconWidth(), 
-			                        Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight()));
+			                        width, 
+			                        height);
 	                	} else {
 		                	li.bounds = new Rectangle2D.Double(
 			                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
@@ -884,14 +888,27 @@ public class CellSetTableHeaderComponent extends JComponent {
             		if (li.member == selectedMember) {
             			g2.setColor(Color.BLUE);
             		}
-            		
             		if (li.member.getChildMemberCount() > 0) {
-            			if (i + 1 < layoutItems.size() && layoutItems.get(i + 1).member.getParentMember().equals(li.member)) {
-            				EXPANDED_TREE_ICON.paintIcon(this, g2, (int) li.bounds.getX(), (int) li.bounds.getY());
+            			Icon icon;
+            			if (i + 1 < layoutItems.size() && layoutItems.get(i + 1).member.getParentMember() != null && layoutItems.get(i + 1).member.getParentMember().equals(li.member)) {
+            				icon = EXPANDED_TREE_ICON;
             			} else {
-            				COLLAPSED_TREE_ICON.paintIcon(this, g2, (int) li.bounds.getX(), (int) li.bounds.getY());
+            				icon = COLLAPSED_TREE_ICON;
             			}
-            			g2.drawString(li.text, (int) li.bounds.getX() + EXPANDED_TREE_ICON.getIconWidth(), ((int) li.bounds.getY()) + ascent);
+            			int x, y;
+            			if (icon.getIconHeight() < li.bounds.getHeight()) {
+            				y = (int) li.bounds.getCenterY() - icon.getIconHeight()/2;
+            			} else {
+            				y = (int) li.bounds.getY();
+            			}
+            			
+            			if (icon.getIconWidth() < li.bounds.getHeight()) {
+            				x = (int) (li.bounds.getX() + (li.bounds.getHeight() - icon.getIconHeight())/2);
+            			} else {
+            				x = (int) li.bounds.getX();
+            			}
+            			icon.paintIcon(this, g2, x, y);
+            			g2.drawString(li.text, (int) (li.bounds.getX() + Math.max(icon.getIconWidth(), li.getBounds().getHeight())), ((int) li.bounds.getY()) + ascent);
             		} else {
             			g2.drawString(li.text, (int) li.bounds.getX(), ((int) li.bounds.getY()) + ascent);
             		}
