@@ -888,7 +888,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             		if (li.member == selectedMember) {
             			g2.setColor(Color.BLUE);
             		}
-            		if (li.member.getChildMemberCount() > 0) {
+            		if (axis != null && li.member.getChildMemberCount() > 0) {
             			Icon icon;
             			if (i + 1 < layoutItems.size() && layoutItems.get(i + 1).member.getParentMember() != null && layoutItems.get(i + 1).member.getParentMember().equals(li.member)) {
             				icon = EXPANDED_TREE_ICON;
