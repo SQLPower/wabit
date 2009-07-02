@@ -57,6 +57,7 @@ import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
 import org.olap4j.Position;
+import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
@@ -362,15 +363,18 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
 
         int headerFontHeight = g.getFontMetrics().getHeight();
-		CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
+        
+        g.setFont(getBodyFont());
+        FontMetrics bodyFM = g.getFontMetrics();
+        int bodyFontHeight = bodyFM.getHeight();
+        
+        int maxRowHeight = Math.max(headerFontHeight, bodyFontHeight);
+        
+        CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
         CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
         int hierarchyCount = axisMetaData.getHierarchies().size();
         int totalHeaderHeight = headerFontHeight * hierarchyCount;
         
-        g.setFont(getBodyFont());
-        FontMetrics bodyFM = g.getFontMetrics();
-        
-        int maxRowHeight = Math.max(headerFontHeight, bodyFM.getHeight());
         
         //If the max row height is zero there will be a divide by 0 error in the next line...
         //therefore if the height is so small that its less than one pixel just display it as 1 pixel.
@@ -404,7 +408,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         			getHeaderFont());
         
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
-        double colHeaderSumHeight = 0;
         int colourSchemeNum = 0;
         Color oldForeground = g.getColor();
         
@@ -434,17 +437,24 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         
         
+        int colHeaderSumHeight = 0;
         g.setFont(getHeaderFont());
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
+            int maxDepth = 0;
+            for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
+            	maxDepth = Math.max(layoutItem.getMember().getDepth() + 1, maxDepth);
+            }
+            
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
-            //XXX come back and figure out why the y position needs to be increased by 2.
-            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight + 2), (int) contentBox.getWidth(), (int) hierarchyComponent.getPreferredSize().getHeight());
+            int hierarchyHeight = (int) maxDepth * (headerFontHeight);
+			g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) contentBox.getWidth(), hierarchyHeight);
             g.setColor(oldForeground);
             Member lastMemberDisplayed = null;
             
             double columnPosition = rowHeaderWidth;
             int col = 0;
+            int hierarchySize = 0;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
             	col++;
             	double x = columnPosition;
@@ -453,14 +463,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 lastMemberDisplayed = layoutItem.getMember();
                 
                 //final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
-                final double y = layoutItem.getBounds().getY() + colHeaderSumHeight + headerFontHeight;
+                final double y = (layoutItem.getMember().getDepth() * headerFontHeight) + colHeaderSumHeight + headerFontHeight;
                 if (!printing) {
                     Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
                     if (memberRanges == null) {
                         memberRanges = new HashSet<Rectangle>();
                         memberHeaderMap.put(layoutItem.getMember(), memberRanges);
                     }
-                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) columnWidthList[col - 1], (int) layoutItem.getBounds().getHeight()));
+                    memberRanges.add(new Rectangle((int) x, (int) y - maxRowHeight, (int) columnWidthList[col - 1], headerFontHeight));
                 }
                 Color oldColour = g.getColor();
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
@@ -468,28 +478,29 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 }
                 g.drawString(layoutItem.getText(), (float) x, (float) y);
                 g.setColor(oldColour);
+                hierarchySize = (int) Math.max((layoutItem.getMember().getDepth() * headerFontHeight) + headerFontHeight, hierarchySize);
             }
-            colHeaderSumHeight += hierarchyComponent.getPreferredSize().getHeight();
+            colHeaderSumHeight += hierarchySize;
             colourSchemeNum++;
         }
         
         g.setBackground(oldForeground);
         
-        double columnHeaderHeight = columnHeaderComponent.getPreferredSize().getHeight();
+        //XXX properly size up the rows with the font width, this will take an iteration through all the headers
         double rowHeaderSumWidth = 0;
         colourSchemeNum = 0;
         for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
-            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
+            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
             g.setColor(oldForeground);
             Member lastMemberDisplayed = null;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
                 if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
                 lastMemberDisplayed = layoutItem.getMember();
                 final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
-                double y = layoutItem.getBounds().getY() + columnHeaderHeight + headerFontHeight;
-                if (firstRecord * maxRowHeight > y - headerFontHeight || (firstRecord + numRows) * maxRowHeight < y - headerFontHeight) continue;
+                double y = layoutItem.getBounds().getY() + colHeaderSumHeight + maxRowHeight;
+                if (firstRecord * maxRowHeight > y - maxRowHeight || (firstRecord + numRows) * maxRowHeight < y - maxRowHeight) continue;
                 y = y - (firstRecord * maxRowHeight);
                 if (!printing) {
                     Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
@@ -497,7 +508,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
                         memberRanges = new HashSet<Rectangle>();
                         memberHeaderMap.put(layoutItem.getMember(), memberRanges);
                     }
-                    memberRanges.add(new Rectangle((int) x, (int) y - headerFontHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                    memberRanges.add(new Rectangle((int) x, (int) y - maxRowHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
                 }
                 Color oldColour = g.getColor();
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
@@ -553,7 +564,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
                         throw new IllegalStateException("Unknown alignment of type " + bodyAlignment);
                 }
                 
-                g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (columnHeaderHeight + ((row - firstRecord) * maxRowHeight) + headerFontHeight));
+                g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (colHeaderSumHeight + ((row - firstRecord) * maxRowHeight) + maxRowHeight));
                 colPosition += columnWidth;
             }
         }
