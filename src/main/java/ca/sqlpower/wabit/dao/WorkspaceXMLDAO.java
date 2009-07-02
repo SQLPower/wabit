@@ -654,6 +654,7 @@ public class WorkspaceXMLDAO {
      *            per xml tag.
      */
     private void saveOlapMember(Member member, String prefix) {
+        printAttribute(prefix + "dimension-name", member.getDimension().getName());
         printAttribute(prefix + "unique-member-name", member.getUniqueName());
     }
 	
