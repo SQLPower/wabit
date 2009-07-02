@@ -434,9 +434,15 @@ public class WorkspaceXMLDAO {
 						printAttribute("uuid", graphRenderer.getUUID());
 						printAttribute("y-axis-name", graphRenderer.getYaxisName());
 						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
-						printAttribute("graph-type", graphRenderer.getGraphType().name());
-						printAttribute("legend-position", graphRenderer.getLegendPosition().name());
-						printAttribute("query-id", graphRenderer.getQuery().getUUID());
+						if (graphRenderer.getGraphType() != null) {
+						    printAttribute("graph-type", graphRenderer.getGraphType().name());
+						}
+						if (graphRenderer.getLegendPosition() != null) {
+						    printAttribute("legend-position", graphRenderer.getLegendPosition().name());
+						}
+						if (graphRenderer.getQuery() != null) {
+						    printAttribute("query-id", graphRenderer.getQuery().getUUID());
+						}
 						xml.niprintln(out, ">");
 						xml.indent++;
 						xml.println(out, "<graph-col-names-in-order>");

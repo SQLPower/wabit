@@ -247,6 +247,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
 	}
 
     public List<WabitObject> getDependencies() {
+        if (page == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(page));
     }
 }

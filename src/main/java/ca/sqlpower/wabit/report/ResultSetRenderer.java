@@ -1100,7 +1100,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 
     public List<WabitObject> getDependencies() {
         List<WabitObject> dependencies = new ArrayList<WabitObject>();
-        dependencies.add(query);
+        if (query != null) {
+            dependencies.add(query);
+        }
         dependencies.addAll(columnInfo);
         return dependencies;
     }

@@ -217,6 +217,7 @@ public class ContentBox extends AbstractWabitObject {
 	}
 
     public List<WabitObject> getDependencies() {
+        if (contentRenderer == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(contentRenderer));
     }
 

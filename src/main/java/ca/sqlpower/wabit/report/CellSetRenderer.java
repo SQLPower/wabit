@@ -692,6 +692,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	}
 
     public List<WabitObject> getDependencies() {
+        if (getOlapQuery() == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(getOlapQuery()));
     }
 

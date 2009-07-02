@@ -2182,6 +2182,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
     }
 
     public List<WabitObject> getDependencies() {
+        if (query == null) return Collections.emptyList();
         return Collections.singletonList(query);
     }
 

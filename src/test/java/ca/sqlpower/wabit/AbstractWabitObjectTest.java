@@ -161,4 +161,14 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     public void testGetChildrenNotNull() throws Exception {
         assertNotNull(getObjectUnderTest().getChildren());
     }
+    
+    /**
+     * No WabitObject is allowed to return a null dependency. Objects with no dependencies
+     * should return an empty list.
+     * @throws Exception
+     */
+    public void testDependenciesNotNull() throws Exception {
+        assertNotNull(getObjectUnderTest().getDependencies());
+        assertFalse(getObjectUnderTest().getDependencies().contains(null));
+    }
 }
