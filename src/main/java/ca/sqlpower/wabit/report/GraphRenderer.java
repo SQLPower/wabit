@@ -35,6 +35,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -107,6 +109,10 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.chart.AxisColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetViewer;
 
@@ -158,118 +164,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		LEFT,
 		RIGHT,
 		BOTTOM
-	}
-
-    /**
-     * This class holds either a column name for relational queries or a
-     * {@link Position} for OLAP queries. This way we can use the same maps and
-     * lists for each query type. Only the column name or the position can be
-     * set at one time.
-     * <p>
-     * TODO If another type is being added to this class or if there is just
-     * free time lying around split this class into an interface and one
-     * implementation for each type of identifier for a column.
-     */
-	public class ColumnIdentifier {
-
-	    private final String columnName;
-
-	    private final Position position;
-	    
-	    private final CellSetAxis axis;
-	    
-	    public ColumnIdentifier(String columnName) {
-	        this.columnName = columnName;
-	        position = null;
-	        axis = null;
-	    }
-	    
-	    public ColumnIdentifier(Position position) {
-            this.position = position;
-            columnName = null;
-            axis = null;
-	    }
-	    
-	    public ColumnIdentifier(CellSetAxis axis) {
-            this.axis = axis;
-	        columnName = null;
-	        position = null;
-	    }
-
-        public String getColumnName() {
-            return columnName;
-        }
-
-        public Position getPosition() {
-            return position;
-        }
-        
-        public CellSetAxis getAxis() {
-            return axis;
-        }
-        
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) return false;
-            
-            if (obj instanceof String) {
-                return ((String) obj).equals(getColumnName());
-            } else if (obj instanceof Position) {
-                return ((Position) obj).getOrdinal() == getPosition().getOrdinal();
-            } else if (obj instanceof Axis) {
-                return ((Axis) obj).equals(getAxis());
-            } else if (obj instanceof ColumnIdentifier) {
-                ColumnIdentifier ci = (ColumnIdentifier) obj;
-                if (getColumnName() != null) {
-                    if (ci.getColumnName() == null) return false;
-                    return getColumnName().equals(ci.getColumnName());
-                } else if (getPosition() != null) {
-                    if (ci.getPosition() == null) return false;
-                    return getPosition().getOrdinal() == ci.getPosition().getOrdinal();
-                } else if (getAxis() != null) {
-                    if (ci.getAxis() == null) return false;
-                    return getAxis().getAxisOrdinal() == ci.getAxis().getAxisOrdinal();
-                } else {
-                    throw new IllegalStateException("Either the column name or position must not be null to identify the column.");
-                }
-            } else {
-                return false;
-            }
-        }
-        
-        @Override
-        public int hashCode() {
-            int result = 17;
-            if (columnName != null) {
-                result = 37 * result + columnName.hashCode();
-            }
-            if (position != null) {
-                result = 37 * result + position.getOrdinal(); //Can't use the position's hash code because each position retrieved from the cell set is a new Position object.
-            }
-            if (axis != null) {
-                result = 37 * result + axis.getAxisOrdinal().hashCode();
-            }
-            return result;
-        }
-
-        public String getName() {
-            if (columnName != null) {
-                return columnName;
-            } else if (position != null) {
-                StringBuilder sb = new StringBuilder();
-                for (Member member : position.getMembers()) {
-                    sb.append(member.getName());
-                    if (position.getMembers().indexOf(member) != 0) {
-                        sb.append(", ");
-                    }
-                }
-                return sb.toString();
-            } else if (axis != null) {
-                return axis.getAxisOrdinal().name();
-            } else {
-                throw new IllegalStateException("Unknown name type for a column, everything in the column identifier is null or something is unimplemented.");
-            }
-        }
 	}
 
 	/**
@@ -503,8 +397,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						JComboBox sourceCombo = (JComboBox) e.getSource();
 						final int columnIndexAtX = tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX());
-						String colSeriesName = columnNamesInOrder.get(columnIndexAtX).getColumnName();
-						columnsToDataTypes.put(new ColumnIdentifier(colSeriesName), (DataTypeSeries) e.getItem());
+						String colSeriesName = ((ColumnNameColumnIdentifier) columnNamesInOrder.get(columnIndexAtX)).getColumnName();
+						columnsToDataTypes.put(new ColumnNameColumnIdentifier(colSeriesName), (DataTypeSeries) e.getItem());
 						if (((DataTypeSeries) e.getItem()) == DataTypeSeries.NONE) {
 							columnSeriesToColumnXAxis.remove(colSeriesName);
 							columnToXAxisComboBox.remove(columnIndexAtX);
@@ -522,7 +416,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				public void itemStateChanged(ItemEvent e) {
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						JComboBox sourceCombo = (JComboBox) e.getSource();
-						columnSeriesToColumnXAxis.put(columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX())), new ColumnIdentifier((String) e.getItem()));
+						columnSeriesToColumnXAxis.put(columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX())), new ColumnNameColumnIdentifier((String) e.getItem()));
 						tableHeader.repaint();
 						updateChartPreview();
 					}
@@ -646,7 +540,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				}
 				List<String> numericAndDateCols = new ArrayList<String>();
 				for (ColumnIdentifier identifier : columnNamesInOrder) {
-				    String col = identifier.getColumnName();
+				    String col = ((ColumnNameColumnIdentifier) identifier).getColumnName();
 					int columnType;
 					try {
 						columnType = rs.getMetaData().getColumnType(rs.findColumn(col));
@@ -1098,9 +992,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 }
                 
                 for (ColumnIdentifier identifier : currentColumnNamesInOrder) {
-                    String colName = identifier.getColumnName();
-                    if (columnNamesInOrder.indexOf(colName) != currentColumnNamesInOrder.indexOf(colName)) {
-                        resultTable.getColumnModel().moveColumn(columnNamesInOrder.indexOf(colName), currentColumnNamesInOrder.indexOf(colName));
+                    if (columnNamesInOrder.indexOf(identifier) != currentColumnNamesInOrder.indexOf(identifier)) {
+                        resultTable.getColumnModel().moveColumn(columnNamesInOrder.indexOf(identifier), currentColumnNamesInOrder.indexOf(identifier));
                     }
                 }
                 
@@ -1158,6 +1051,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			resultTable.setModel(new ResultSetTableModel(rs));
             chartEditorPanel.removeAll();
             chartEditorPanel.add(tableScrollPane, BorderLayout.CENTER);
+            chartEditorPanel.revalidate();
 		}
 
         /**
@@ -1187,7 +1081,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 for (int i = 0; i < cellSetViewer.getTable().getColumnModel().getColumnCount(); i++) {
                     final Position position = columnAxis.getPositions().get(i);
                     final JComboBox comboBox = new JComboBox(DataTypeSeries.values());
-                    final DataTypeSeries columnDataType = columnsToDataTypes.get(new ColumnIdentifier(position));
+                    final DataTypeSeries columnDataType = columnsToDataTypes.get(new PositionColumnIdentifier(position));
                     if (columnDataType != null) {
                         comboBox.setSelectedItem(columnDataType);
                     }
@@ -1197,7 +1091,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                         public void itemStateChanged(ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
                                 logger.debug("Position ordinal is " + position.getOrdinal());
-                                columnsToDataTypes.put(new ColumnIdentifier(position), (DataTypeSeries) e.getItem());
+                                columnsToDataTypes.put(new PositionColumnIdentifier(position), (DataTypeSeries) e.getItem());
                                 logger.debug("Column data types are now " + columnsToDataTypes);
                                 updateChartPreview();
                             }
@@ -1213,7 +1107,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 JPanel rowAxisComboBoxHeader = new JPanel(new BorderLayout());
                 final JComboBox comboBox = new JComboBox(new DataTypeSeries[]{DataTypeSeries.NONE, DataTypeSeries.CATEGORY});
                 final CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-                final DataTypeSeries hierarchyDataType = columnsToDataTypes.get(new ColumnIdentifier(rowAxis));
+                final DataTypeSeries hierarchyDataType = columnsToDataTypes.get(new AxisColumnIdentifier(rowAxis));
                 if (hierarchyDataType != null) {
                     comboBox.setSelectedItem(hierarchyDataType);
                 }
@@ -1222,7 +1116,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
                     public void itemStateChanged(ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
-                            columnsToDataTypes.put(new ColumnIdentifier(rowAxis), (DataTypeSeries) e.getItem());
+                            columnsToDataTypes.put(new AxisColumnIdentifier(rowAxis), (DataTypeSeries) e.getItem());
                             logger.debug("Column data types are now " + columnsToDataTypes);
                             updateChartPreview();
                         }
@@ -1258,13 +1152,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                     columnComboBoxPanel.add(xAxisComboBox);
                     xAxisComboBox.setVisible(false);
                     
-                    if (columnsToDataTypes.get(new ColumnIdentifier(position)) == DataTypeSeries.SERIES) {
+                    if (columnsToDataTypes.get(new PositionColumnIdentifier(position)) == DataTypeSeries.SERIES) {
                         seriesComboBox.setSelectedItem(DataTypeSeries.SERIES);
                         xAxisComboBox.setVisible(true);
                         
-                        final ColumnIdentifier xAxisIdentifier = columnSeriesToColumnXAxis.get(new ColumnIdentifier(position));
+                        final PositionColumnIdentifier xAxisIdentifier = ((PositionColumnIdentifier) columnSeriesToColumnXAxis.get(position));
                         if (xAxisIdentifier != null) {
-                            xAxisComboBox.setSelectedIndex(xAxisIdentifier.getPosition().getOrdinal());
+                            xAxisComboBox.setSelectedIndex(xAxisIdentifier.getPosition(cellSet).getOrdinal());
                         }
                     }
                     
@@ -1275,9 +1169,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                                     xAxisComboBox.setVisible(true);
                                 } else if (e.getItem() == DataTypeSeries.NONE) {
                                     xAxisComboBox.setVisible(false);
-                                    columnSeriesToColumnXAxis.remove(new ColumnIdentifier(position));
+                                    columnSeriesToColumnXAxis.remove(new PositionColumnIdentifier(position));
                                 }
-                                columnsToDataTypes.put(new ColumnIdentifier(position), (DataTypeSeries) e.getItem());
+                                columnsToDataTypes.put(new PositionColumnIdentifier(position), (DataTypeSeries) e.getItem());
                                 updateChartPreview();
                             }
                         }
@@ -1287,7 +1181,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                     
                         public void itemStateChanged(ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
-                                columnSeriesToColumnXAxis.put(new ColumnIdentifier(position), new ColumnIdentifier(columnAxis.getPositions().get(xAxisComboBox.getSelectedIndex())));
+                                columnSeriesToColumnXAxis.put(new PositionColumnIdentifier(position), new PositionColumnIdentifier(columnAxis.getPositions().get(xAxisComboBox.getSelectedIndex())));
                                 updateChartPreview();
                             }
                         }
@@ -1317,18 +1211,18 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 columnSeriesToColumnXAxis.clear();
                 for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
                     String columnName = rs.getMetaData().getColumnName(i);
-                    columnNamesInOrder.add(new ColumnIdentifier(columnName));
-                    columnsToDataTypes.put(new ColumnIdentifier(columnName), DataTypeSeries.NONE);
+                    columnNamesInOrder.add(new ColumnNameColumnIdentifier(columnName));
+                    columnsToDataTypes.put(new ColumnNameColumnIdentifier(columnName), DataTypeSeries.NONE);
                 }
             } else if (cellSet != null) {
                 CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-                columnNamesInOrder.add(new ColumnIdentifier(rowAxis));
-                columnsToDataTypes.put(new ColumnIdentifier(rowAxis), DataTypeSeries.NONE);
+                columnNamesInOrder.add(new AxisColumnIdentifier(rowAxis));
+                columnsToDataTypes.put(new AxisColumnIdentifier(rowAxis), DataTypeSeries.NONE);
                 final CellSetAxis columnsAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-                for (int i = 0; i <= columnsAxis.getPositionCount(); i++) {
+                for (int i = 0; i < columnsAxis.getPositionCount(); i++) {
                     Position position = columnsAxis.getPositions().get(i);
-                    columnNamesInOrder.add(new ColumnIdentifier(position));
-                    columnsToDataTypes.put(new ColumnIdentifier(position), DataTypeSeries.NONE);
+                    columnNamesInOrder.add(new PositionColumnIdentifier(position));
+                    columnsToDataTypes.put(new PositionColumnIdentifier(position), DataTypeSeries.NONE);
                 }
             }
             
@@ -1427,6 +1321,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			setColumnSeriesToColumnXAxis(columnSeriesToColumnXAxis);
 			setYaxisName(yaxisNameField.getText());
 			setXaxisName(xaxisNameField.getText());
+			missingIdentifiers.clear();
 			return true;
 		}
 	};
@@ -1501,6 +1396,67 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		}
 	};
 	
+	/**
+	 * This is a listener placed on OLAP queries to find if columns removed from a query were in use
+	 * in this chart. 
+	 * 
+	 * XXX This can be simplified when the olap4j query can be listened to and we can specifically
+	 * listen for members in the column axis being removed.
+	 */
+	private final PropertyChangeListener olapQueryChangeListener = new PropertyChangeListener() {
+
+        public void propertyChange(PropertyChangeEvent evt) {
+            
+            if (!(query instanceof OlapQuery)) throw new IllegalStateException("The listener to update the chart on OLAP query changes was added to a query of type " + query + " which does not extend OlapQuery.");
+            
+            OlapQuery olapQuery = (OlapQuery) query;
+            
+            CellSetAxis columnAxis;
+            final CellSet cellSet;
+            try {
+                cellSet = olapQuery.getMdxQueryCopy().execute();
+                columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            
+            //XXX Positions aren't comparable so going to compare based on the unique names of their member list.
+            //This can be simplified when positions become comparable or their equals method is defined.
+            List<List<String>> positionMemberUniqueNamesInColumnAxis = new ArrayList<List<String>>();
+            for (Position position : columnAxis.getPositions()) {
+                List<String> positionMembers = new ArrayList<String>();
+                for (Member member : position.getMembers()) {
+                    positionMembers.add(member.getUniqueName());
+                }
+                positionMemberUniqueNamesInColumnAxis.add(positionMembers);
+            }
+            
+            List<ColumnIdentifier> positionColumnsInUse = new ArrayList<ColumnIdentifier>();
+            for (Map.Entry<ColumnIdentifier, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
+                if (entry.getValue() != DataTypeSeries.NONE && entry.getKey() instanceof PositionColumnIdentifier) {
+                    positionColumnsInUse.add(entry.getKey());
+                }
+            }
+            
+            missingIdentifiers.clear();
+            for (ColumnIdentifier identifier : positionColumnsInUse) {
+                if (!positionMemberUniqueNamesInColumnAxis.contains(((PositionColumnIdentifier) identifier).getUniqueMemberNames())) {
+                    missingIdentifiers.add(identifier);
+                }
+            }
+            
+        }
+	    
+	};
+	
+	/**
+	 * This list tracks all of the column identifiers currently in use in the query but
+	 * cannot be found in the actual query object that backs this chart. The common reason
+	 * for columns being missing is that the user created a chart, modified the query and
+	 * removed columns in use in the chart, and then when to modify or use the chart.
+	 */
+	private final List<ColumnIdentifier> missingIdentifiers = new ArrayList<ColumnIdentifier>();
+	
 	public GraphRenderer(ContentBox parent, WabitWorkspace workspace, String uuid) {
 		super(uuid);
 		this.workspace = workspace;
@@ -1530,6 +1486,16 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing) {
+	    if (!missingIdentifiers.isEmpty()) {
+	        int fontHeight = g.getFontMetrics().getHeight();
+	        int startingYPos = (contentBox.getHeight() - fontHeight) / 2;
+	        String errorString = "There are columns missing from the query but used in the chart.";
+            g.drawString(errorString, (contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2, startingYPos);
+	        errorString = "Edit the query to update the columns.";
+	        g.drawString(errorString, (contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2, fontHeight + startingYPos);
+	        return false;
+	    }
+	        
 		JFreeChart chart = null;
 		try {
 			if (query != null) {
@@ -1772,7 +1738,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			throw new IllegalStateException("Unknown graph type " + graphType);
 		}
 	}
-
+	
 	private static void setTransparentChartBackground(JFreeChart chart) {
 		chart.setBackgroundPaint(new Color(255,255,255,0));
 		chart.getPlot().setBackgroundPaint(new Color(255,255,255,0));	
@@ -1829,9 +1795,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
         for (int i = 0; i < rowsAxis.getPositions().size(); i++) {
             ComparableCategoryRow categoryRow = new ComparableCategoryRow();
             for (ColumnIdentifier categoryColumnIdentifier : categoryColumnIdentifiers) {
-                if (categoryColumnIdentifier.getPosition() != null) {
-                    categoryRow.add(cellSet.getCell(categoryColumnIdentifier.getPosition(), rowsAxis.getPositions().get(i)).getFormattedValue());
-                } else if (categoryColumnIdentifier.getAxis() != null) {
+                if (categoryColumnIdentifier instanceof PositionColumnIdentifier) {
+                    PositionColumnIdentifier positionColumnIdentifier = (PositionColumnIdentifier) categoryColumnIdentifier;
+                    categoryRow.add(cellSet.getCell(positionColumnIdentifier.getPosition(cellSet), rowsAxis.getPositions().get(i)).getFormattedValue());
+                } else if (categoryColumnIdentifier instanceof AxisColumnIdentifier) {
                     categoryRow.add(rowsAxis.getPositions().get(i));
                 } else {
                     throw new IllegalStateException("Creating a dataset on an OLAP cube. A column is used as a category but has neither a position or hierarchy.");
@@ -1844,12 +1811,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
         List<String> seriesNames = new ArrayList<String>();
         for (int colPosition = 0; colPosition < columnNamesInOrder.size(); colPosition++) {
             ColumnIdentifier identifier = columnNamesInOrder.get(colPosition);
-            if (identifier.getPosition() == null) continue; //Only positions can be used as series, not hierarchies, as they are numeric.
+            if (!(identifier instanceof PositionColumnIdentifier)) continue; //Only positions can be used as series, not hierarchies, as they are numeric.
             ColumnIdentifier colToTypeIdentifier = null;
             DataTypeSeries dataType = null;
             for (Map.Entry<ColumnIdentifier, DataTypeSeries> colToTypeIdentifierEntry : columnsToDataTypes.entrySet()) {
-                if (colToTypeIdentifierEntry.getKey().getPosition() == null) continue;
-                if (colToTypeIdentifierEntry.getKey().getPosition().getOrdinal() == identifier.getPosition().getOrdinal()) {
+                if (colToTypeIdentifierEntry.getKey().equals(identifier)) {
                     colToTypeIdentifier = colToTypeIdentifierEntry.getKey();
                     dataType = colToTypeIdentifierEntry.getValue();
                     break;
@@ -1857,7 +1823,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             }
             if (dataType != DataTypeSeries.SERIES) continue;
             
-            seriesPositions.add(identifier.getPosition().getOrdinal());
+            seriesPositions.add(((PositionColumnIdentifier) identifier).getPosition(cellSet).getOrdinal());
             seriesNames.add(colToTypeIdentifier.getName());
         }
         
@@ -1897,7 +1863,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		List<String> uniqueNamesInCategory = new ArrayList<String>();
 		final List<String> categoryColumnNames = new ArrayList<String>();
 		for (ColumnIdentifier identifier : categoryColumnIdentifiers) {
-		    categoryColumnNames.add(identifier.getColumnName());
+		    categoryColumnNames.add(((ColumnNameColumnIdentifier) identifier).getColumnName());
 		}
 		List<Integer> columnIndicies = new ArrayList<Integer>();
         try {
@@ -1922,7 +1888,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
         List<String> seriesColumnNames = new ArrayList<String>();
         for (ColumnIdentifier identifier : columnNamesInOrder) {
         	if (columnsToDataTypes.get(identifier) == DataTypeSeries.SERIES) {
-        		seriesColumnNames.add(identifier.getColumnName());
+        		seriesColumnNames.add(((ColumnNameColumnIdentifier) identifier).getColumnName());
         	}
         }
         
@@ -1978,7 +1944,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		boolean allDate = true;
 		try {
 			for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-				int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue().getColumnName()));
+				int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(((ColumnNameColumnIdentifier) entry.getValue()).getColumnName()));
 				if (columnType != Types.DATE && columnType != Types.TIMESTAMP) {
 					allDate = false;
 				} 
@@ -1992,12 +1958,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		if (allNumeric) {
 			XYSeriesCollection xyCollection = new XYSeriesCollection();
 			for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-				XYSeries newSeries = new XYSeries(entry.getKey().getColumnName());
+			    ColumnNameColumnIdentifier seriesColIdentifier = ((ColumnNameColumnIdentifier) entry.getKey());
+			    ColumnNameColumnIdentifier xAxisColIdentifier = ((ColumnNameColumnIdentifier) entry.getValue());
+				XYSeries newSeries = new XYSeries(seriesColIdentifier.getColumnName());
 				try {
 					resultSet.beforeFirst();
 					while (resultSet.next()) {
 						//XXX: need to switch from double to bigDecimal if it is needed.
-						newSeries.add(resultSet.getDouble(entry.getValue().getColumnName()), resultSet.getDouble(entry.getKey().getColumnName()));
+						newSeries.add(resultSet.getDouble(xAxisColIdentifier.getColumnName()), resultSet.getDouble(seriesColIdentifier.getColumnName()));
 					}
 				} catch (SQLException e) {
 					throw new RuntimeException(e);
@@ -2008,15 +1976,17 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		} else if (allDate) {
 			TimePeriodValuesCollection timeCollection = new TimePeriodValuesCollection();
 			for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-				TimePeriodValues newSeries = new TimePeriodValues(entry.getKey().getColumnName());
+			    ColumnNameColumnIdentifier seriesColIdentifier = ((ColumnNameColumnIdentifier) entry.getKey());
+                ColumnNameColumnIdentifier xAxisColIdentifier = ((ColumnNameColumnIdentifier) entry.getValue());
+				TimePeriodValues newSeries = new TimePeriodValues(seriesColIdentifier.getColumnName());
 				try {
 					resultSet.beforeFirst();
 					while (resultSet.next()) {
-						int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(entry.getValue().getColumnName()));
+						int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(xAxisColIdentifier.getColumnName()));
 						if (columnType == Types.DATE) {
-							newSeries.add(new FixedMillisecond(resultSet.getDate(entry.getValue().getColumnName())), resultSet.getDouble(entry.getKey().getColumnName()));
+							newSeries.add(new FixedMillisecond(resultSet.getDate(xAxisColIdentifier.getColumnName())), resultSet.getDouble(seriesColIdentifier.getColumnName()));
 						} else if (columnType == Types.TIMESTAMP){
-							newSeries.add(new FixedMillisecond(resultSet.getTimestamp(entry.getValue().getColumnName())), resultSet.getDouble(entry.getKey().getColumnName()));
+							newSeries.add(new FixedMillisecond(resultSet.getTimestamp(xAxisColIdentifier.getColumnName())), resultSet.getDouble(seriesColIdentifier.getColumnName()));
 						}
 					}
 				} catch (SQLException e) {
@@ -2040,8 +2010,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, CellSet cellSet) {
         XYSeriesCollection xyCollection = new XYSeriesCollection();
         for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
+            PositionColumnIdentifier seriesColIdentifier = ((PositionColumnIdentifier) entry.getKey());
+            PositionColumnIdentifier xAxisColIdentifier = ((PositionColumnIdentifier) entry.getValue());
             List<String> memberNames = new ArrayList<String>();
-            for (Member member : entry.getKey().getPosition().getMembers()) {
+            for (Member member : seriesColIdentifier.getPosition(cellSet).getMembers()) {
                 memberNames.add(member.getName());
             }
             XYSeries newSeries = new XYSeries(createCategoryName(memberNames));
@@ -2049,7 +2021,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             try {
                 for (int rowNumber = 0; rowNumber < rowAxis.getPositionCount(); rowNumber++) {
                     Position rowPosition = rowAxis.getPositions().get(rowNumber);
-                    newSeries.add(cellSet.getCell(entry.getValue().getPosition(), rowPosition).getDoubleValue(), cellSet.getCell(entry.getKey().getPosition(), rowPosition).getDoubleValue());
+                    newSeries.add(cellSet.getCell(xAxisColIdentifier.getPosition(cellSet), rowPosition).getDoubleValue(), cellSet.getCell(seriesColIdentifier.getPosition(cellSet), rowPosition).getDoubleValue());
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -2102,9 +2074,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			if (this.query != null) {
 				((StatementExecutor) this.query).removeRowSetChangeListener(queryListener);
 			}
+		} else if (this.query instanceof OlapQuery) {
+		    if (this.query != null) {
+		        ((OlapQuery) this.query).removePropertyChangeListener(olapQueryChangeListener);
+		    }
 		}
 		if (query instanceof StatementExecutor) {
 			((StatementExecutor) query).addRowSetChangeListener(queryListener);
+		} else if (query instanceof OlapQuery) {
+		    ((OlapQuery) query).addPropertyChangeListener(olapQueryChangeListener);
 		}
 		this.query = query;
 	}
@@ -2205,6 +2183,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
     public List<WabitObject> getDependencies() {
         return Collections.singletonList(query);
+    }
+
+    public List<ColumnIdentifier> getMissingIdentifiers() {
+        return Collections.unmodifiableList(missingIdentifiers);
+    }
+    
+    public void addMissingIdentifier(ColumnIdentifier identifier) {
+        missingIdentifiers.add(identifier);
     }
 	
 }

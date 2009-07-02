@@ -44,6 +44,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
+import org.olap4j.metadata.Member;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
@@ -73,7 +74,10 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
-import ca.sqlpower.wabit.report.GraphRenderer.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.AxisColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.xml.XMLHelper;
 
 import com.sun.mail.util.BASE64EncoderStream;
@@ -464,6 +468,15 @@ public class WorkspaceXMLDAO {
                         }
                         xml.indent--;
                         xml.println(out, "</graph-series-to-x-axis>");
+                        xml.println(out, "<missing-identifiers>");
+                        xml.indent++;
+                        for (ColumnIdentifier identifier : graphRenderer.getMissingIdentifiers()) {
+                            xml.print(out, "<missing-identifier");
+                            saveColumnIdentifier(out, identifier, "");
+                            xml.niprintln(out, "/>");
+                        }
+                        xml.indent--;
+                        xml.println(out, "</missing-identifiers>");
 						xml.indent--;
 						xml.println(out, "</graph-renderer>");
 					} else if (box.getContentRenderer() instanceof CellSetRenderer) {
@@ -526,12 +539,15 @@ public class WorkspaceXMLDAO {
      * in cases where multiples are saved in one element.
      */
     private void saveColumnIdentifier(PrintWriter out, ColumnIdentifier identifier, String namePrefix) {
-        if (identifier.getColumnName() != null) {
-            printAttribute(namePrefix + "column-name", identifier.getColumnName());
-        } else if (identifier.getPosition() != null) {
-            printAttribute(namePrefix + "position-ordinal", identifier.getPosition().getOrdinal());
-        } else if (identifier.getAxis() != null) {
-            printAttribute(namePrefix + "axis-ordinal", identifier.getAxis().getAxisOrdinal().axisOrdinal());
+        if (identifier instanceof ColumnNameColumnIdentifier) {
+            printAttribute(namePrefix + "column-name", ((ColumnNameColumnIdentifier) identifier).getColumnName());
+        } else if (identifier instanceof PositionColumnIdentifier) {
+            PositionColumnIdentifier positionIdentifier = ((PositionColumnIdentifier) identifier);
+            for (int i = 0; i < positionIdentifier.getUniqueMemberNames().size(); i++) {
+                printAttribute(namePrefix + "unique-member-name" + i, positionIdentifier.getUniqueMemberNames().get(i));
+            }
+        } else if (identifier instanceof AxisColumnIdentifier) {
+            printAttribute(namePrefix + "axis-ordinal", ((AxisColumnIdentifier) identifier).getAxis().getAxisOrdinal().axisOrdinal());
         } else {
             throw new IllegalStateException("Column identifier " + identifier + " has no values defined to save.");
         }
@@ -615,12 +631,24 @@ public class WorkspaceXMLDAO {
      */
     private void saveOlap4jSelection(String name, Selection selection) {
         xml.print(out, "<" + name + "-selection");
-        printAttribute("member-name", selection.getMember().getName());
-        printAttribute("hierarchy-name", selection.getMember().getHierarchy().getName());
-        printAttribute("dimension-name", selection.getMember().getHierarchy().getDimension().getName());
-        printAttribute("member-level", selection.getMember().getLevel().getName());
+        saveOlapMember(selection.getMember(), "");
         printAttribute("operator", selection.getOperator().toString());
         xml.println(out, "/>");
+    }
+
+    /**
+     * This is a helper method for any OLAP object that needs to save a member.
+     * The member will save attributes to the current tag it is in.
+     * 
+     * @param member
+     *            The member to save.
+     * @param prefix
+     *            A string to prefix all of the member properties to uniquely
+     *            identify a member in cases where there are multiple members
+     *            per xml tag.
+     */
+    private void saveOlapMember(Member member, String prefix) {
+        printAttribute(prefix + "unique-member-name", member.getUniqueName());
     }
 	
 	/**

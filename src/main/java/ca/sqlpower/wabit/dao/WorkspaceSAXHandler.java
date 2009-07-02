@@ -95,13 +95,16 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
-import ca.sqlpower.wabit.report.GraphRenderer.ColumnIdentifier;
 import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
 import ca.sqlpower.wabit.report.GraphRenderer.ExistingGraphTypes;
 import ca.sqlpower.wabit.report.GraphRenderer.LegendPosition;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
+import ca.sqlpower.wabit.report.chart.AxisColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 
 import com.sun.mail.util.BASE64DecoderStream;
 
@@ -807,7 +810,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             //this is how charts were loaded in version 1.0.1 and older
             String colName = attributes.getValue("name");
             if (colName != null) {
-                colIdentifier = graphRenderer.new ColumnIdentifier(colName);
+                colIdentifier = new ColumnNameColumnIdentifier(colName);
             } else {
                 //This is how charts are loaded in version 1.0.2 and newer
                 colIdentifier = loadColumnIdentifier(attributes, "");
@@ -826,7 +829,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             String colName = attributes.getValue("name");
             ColumnIdentifier colIdentifier;
             if (colName != null) {
-                colIdentifier = graphRenderer.new ColumnIdentifier(colName);
+                colIdentifier = new ColumnNameColumnIdentifier(colName);
             } else {
                 //This is how charts are loaded in version 1.0.2 and newer
                 colIdentifier = loadColumnIdentifier(attributes, "");
@@ -847,8 +850,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             ColumnIdentifier seriesIdentifier = null;
             ColumnIdentifier xAxisIdentifier = null;
             if (seriesName != null && xAxisName != null) {
-                seriesIdentifier = graphRenderer.new ColumnIdentifier(seriesName);
-                xAxisIdentifier = graphRenderer.new ColumnIdentifier(xAxisName);
+                seriesIdentifier = new ColumnNameColumnIdentifier(seriesName);
+                xAxisIdentifier = new ColumnNameColumnIdentifier(xAxisName);
             } else {
                 //this is how charts are loaded in version 1.0.2 and newer
                 seriesIdentifier = loadColumnIdentifier(attributes, "series-");
@@ -865,6 +868,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             Map<ColumnIdentifier, ColumnIdentifier> seriesToXAxis = new HashMap<ColumnIdentifier, ColumnIdentifier>(graphRenderer.getColumnSeriesToColumnXAxis());
             seriesToXAxis.put(seriesIdentifier, xAxisIdentifier);
             graphRenderer.setColumnSeriesToColumnXAxis(seriesToXAxis);
+        } else if (name.equals("missing-identifier")) {
+            ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
+            graphRenderer.addMissingIdentifier(colIdentifier);
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
@@ -1063,17 +1069,30 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         colName = attributes.getValue(prefix + "column-name");
         String positionOrdinalString = attributes.getValue(prefix + "position-ordinal");
         String axisOrdinalString = attributes.getValue(prefix + "axis-ordinal");
+        String firstMemberPositionName = attributes.getValue(prefix + "unique-member-name0");
         ColumnIdentifier colIdentifier = null;
         if (colName != null) {
-            colIdentifier = graphRenderer.new ColumnIdentifier(colName); 
+            colIdentifier = new ColumnNameColumnIdentifier(colName); 
         } else if (positionOrdinalString != null) {
             Integer positionOrdinal = Integer.parseInt(positionOrdinalString);
             CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(org.olap4j.Axis.COLUMNS.axisOrdinal());
-            colIdentifier = graphRenderer.new ColumnIdentifier(rowAxis.getPositions().get(positionOrdinal));
+            //This is how a position describing a column identifier was loaded in 1.0.2
+            colIdentifier = new PositionColumnIdentifier(rowAxis.getPositions().get(positionOrdinal));
+        //This is loading positions in column identifiers in 1.0.3 and newer.
+        } else if (firstMemberPositionName != null) {
+            int i = 0;
+            String memberPositionName = attributes.getValue(prefix + "unique-member-name" + i);
+            List<String> memberPositionNames = new ArrayList<String>();
+            while (memberPositionName != null) {
+                memberPositionNames.add(memberPositionName);
+                i++;
+                memberPositionName = attributes.getValue(prefix + "unique-member-name" + i);
+            }
+            colIdentifier = new PositionColumnIdentifier(memberPositionNames);
         } else if (axisOrdinalString != null) {
             Integer axisOrdinal = Integer.parseInt(axisOrdinalString);
             CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(axisOrdinal);
-            colIdentifier = graphRenderer.new ColumnIdentifier(rowAxis);
+            colIdentifier = new AxisColumnIdentifier(rowAxis);
         }
         if (colIdentifier == null) {
             throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier and cannot be loaded.");
@@ -1085,28 +1104,42 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 * This method finds a member from a cube based on given attributes.
 	 */
 	public Member findMember(Attributes attributes, Cube cube) {
-	    String dimensionName = attributes.getValue("dimension-name");
-        String hierarchyName = attributes.getValue("hierarchy-name");
-        String levelName = attributes.getValue("member-level");
-        String memberName = attributes.getValue("member-name");
-        Dimension dimension = cube.getDimensions().get(dimensionName);
-        Member actualMember = null;
-        final Hierarchy hierarchy = dimension.getHierarchies().get(hierarchyName);
-        final Level level = hierarchy.getLevels().get(levelName);
-        try {
-            for (Member member : level.getMembers()) {
-                if (member.getName().equals(memberName)) {
-                    actualMember = member;
-                    break;
-                }
+	    String uniqueMemberName = attributes.getValue("unique-member-name");
+	    if (uniqueMemberName != null) {
+	        String[] uniqueMemberNameList = uniqueMemberName.split("\\]\\.\\[");
+            uniqueMemberNameList[0] = uniqueMemberNameList[0].substring(1); //remove starting [ bracket
+            final int lastMemberNamePosition = uniqueMemberNameList.length - 1;
+            uniqueMemberNameList[lastMemberNamePosition] = uniqueMemberNameList[lastMemberNamePosition].substring(0, uniqueMemberNameList[lastMemberNamePosition].length() - 1); //remove ending ] bracket
+	        try {
+                return cube.lookupMember(uniqueMemberNameList);
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
             }
-        } catch (OlapException e) {
-            throw new RuntimeException(e);
-        }
-        if (actualMember == null) {
-            throw new NullPointerException("Cannot find member " + memberName + " in hierarchy " + hierarchyName + " in dimension " + dimensionName);
-        }
-        return actualMember;
+	        
+	    } else {
+	        String dimensionName = attributes.getValue("dimension-name");
+	        String hierarchyName = attributes.getValue("hierarchy-name");
+	        String levelName = attributes.getValue("member-level");
+	        String memberName = attributes.getValue("member-name");
+	        Dimension dimension = cube.getDimensions().get(dimensionName);
+	        Member actualMember = null;
+	        final Hierarchy hierarchy = dimension.getHierarchies().get(hierarchyName);
+	        final Level level = hierarchy.getLevels().get(levelName);
+	        try {
+	            for (Member member : level.getMembers()) {
+	                if (member.getName().equals(memberName)) {
+	                    actualMember = member;
+	                    break;
+	                }
+	            }
+	        } catch (OlapException e) {
+	            throw new RuntimeException(e);
+	        }
+	        if (actualMember == null) {
+	            throw new NullPointerException("Cannot find member " + memberName + " in hierarchy " + hierarchyName + " in dimension " + dimensionName);
+	        }
+	        return actualMember;
+	    }
 	}
 
 	/**

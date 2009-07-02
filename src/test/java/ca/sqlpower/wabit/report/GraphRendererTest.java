@@ -36,8 +36,9 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.report.GraphRenderer.ColumnIdentifier;
 import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
+import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 
 //TODO change this to extend AbstractWabitObjectTest
 public class GraphRendererTest extends TestCase {
@@ -76,8 +77,8 @@ public class GraphRendererTest extends TestCase {
         
         
         List<ColumnIdentifier> columnNamesInOrder = new ArrayList<ColumnIdentifier>(); 
-        final ColumnIdentifier categoryIdentifier = renderer.new ColumnIdentifier("category");
-        final ColumnIdentifier seriesIdentifier = renderer.new ColumnIdentifier("series");
+        final ColumnIdentifier categoryIdentifier = new ColumnNameColumnIdentifier("category");
+        final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
         Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
@@ -118,9 +119,9 @@ public class GraphRendererTest extends TestCase {
         
         
         List<ColumnIdentifier> columnNamesInOrder = new ArrayList<ColumnIdentifier>(); 
-        final ColumnIdentifier categoryIdentifier = renderer.new ColumnIdentifier("category");
-        final ColumnIdentifier category2Identifier = renderer.new ColumnIdentifier("category2");
-        final ColumnIdentifier seriesIdentifier = renderer.new ColumnIdentifier("series");
+        final ColumnIdentifier categoryIdentifier = new ColumnNameColumnIdentifier("category");
+        final ColumnIdentifier category2Identifier = new ColumnNameColumnIdentifier("category2");
+        final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
         Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
