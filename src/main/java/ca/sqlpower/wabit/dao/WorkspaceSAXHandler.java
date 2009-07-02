@@ -54,7 +54,6 @@ import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
-import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -630,8 +629,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("olap4j-selection")) {
             String operation = attributes.getValue("operator");
             Member actualMember = findMember(attributes, olapQuery.getCurrentCube());
-            Selection selection = queryDimension.createSelection(actualMember, Operator.valueOf(operation));
-            queryDimension.getSelections().add(selection);
+            queryDimension.select(Operator.valueOf(operation), actualMember);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
@@ -1029,8 +1027,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     }
                 }
             }
-            Selection selection = queryDimension.createSelection(member, Operator.valueOf(operation));
-            queryDimension.getSelections().add(selection);
+            queryDimension.select(Operator.valueOf(operation), member);
         } else if (name.equals("guide")) {
         	String guideName = attributes.getValue("name");
         	String axisName = attributes.getValue("axis");

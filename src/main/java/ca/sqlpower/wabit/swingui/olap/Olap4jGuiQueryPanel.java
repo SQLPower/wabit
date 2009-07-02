@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -46,7 +45,6 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.JWindow;
@@ -61,6 +59,7 @@ import javax.swing.tree.TreePath;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
+import org.jfree.util.Log;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.OlapException;
@@ -84,7 +83,6 @@ import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapUtils;
-import ca.sqlpower.wabit.swingui.QueryPanel;
 
 public class Olap4jGuiQueryPanel {
 
@@ -469,11 +467,13 @@ public class Olap4jGuiQueryPanel {
                 return;
             }
             
-            CellSet cellSet = mdxQuery.execute();
-            cellSetViewer.showCellSet(cellSet);
             StringWriter sw = new StringWriter();
             ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
             mdxQuery.getSelect().unparse(ptw);
+            logger.debug("Executing MDX Query : \n\r".concat(sw.toString()));
+            
+            CellSet cellSet = mdxQuery.execute();
+            cellSetViewer.showCellSet(cellSet);
             this.olapQueryPanel.updateMdxText(sw.toString());
         } catch (SQLException ex) {
             logger.error("failed to build/execute MDX query", ex);
@@ -491,8 +491,7 @@ public class Olap4jGuiQueryPanel {
             QueryDimension qd = new QueryDimension(mdxQuery, d);
             for (Member m : expandedMembers.get(h)) {
                 logger.debug("    Creating selection for member " + m.getName());
-                Selection selection = qd.createSelection(m);
-                qd.getSelections().add(selection);
+                qd.select(m);
             }
             axis.getDimensions().add(qd);
         }

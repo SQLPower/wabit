@@ -358,7 +358,7 @@ public class OlapQuery extends AbstractWabitObject {
     public List<WabitObject> getDependencies() {
         ArrayList<WabitObject> dependencies = new ArrayList<WabitObject>();
         
-        // For now only the elected datasource is a dependency.
+        // For now only the selected datasource is a dependency.
         if (getOlapDataSource()!=null) {
             dependencies.addAll(Collections.singleton(new WabitDataSource(getOlapDataSource())));
         }

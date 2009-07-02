@@ -88,8 +88,7 @@ public class OlapUtils {
             for (QueryDimension oldDimension : axisEntry.getValue().getDimensions()) {
                 QueryDimension copiedDimension = new QueryDimension(modifiedMDXQuery, oldDimension.getDimension());
                 for (Selection selection : oldDimension.getSelections()) {
-                    Selection copiedSelection = copiedDimension.createSelection(selection.getMember(), selection.getOperator());
-                    copiedDimension.getSelections().add(copiedSelection);
+                    copiedDimension.select(selection.getOperator(),selection.getMember());
                 }
                 copiedAxis.getDimensions().add(copiedDimension);
             }
@@ -137,8 +136,7 @@ public class OlapUtils {
         try {
             if (isLeaf) {
                 for (Member child : member.getChildMembers()) {
-                    Selection newSelection = containingDimension.createSelection(child);
-                    containingDimension.getSelections().add(newSelection);
+                    containingDimension.select(child);
                 }
                 Collections.sort(containingDimension.getSelections(), new Comparator<Selection>() {
                     private final MemberHierarchyComparator memberComparator = new MemberHierarchyComparator();

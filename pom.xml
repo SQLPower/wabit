@@ -694,7 +694,7 @@
         <dependency>
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j</artifactId>
-            <version>0.9.7.241</version>
+            <version>0.9.8-SNAPSHOT</version>
         </dependency>
         
         <dependency>
