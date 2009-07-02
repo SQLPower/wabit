@@ -332,7 +332,117 @@
 						</goals>
 					</execution>
 					<execution>
-						<id>launch4j</id>
+						<id>launch4j-executables</id>
+						<phase>prepare-package</phase>
+						<configuration>
+							<tasks>
+								<!-- There's a Maven plugin for launch4j, but it uses an old version
+								of launch4j (1.0.0.2) -->
+							
+								<!-- When the build runs on a Mac, we can create the .dmg disk image
+								     using the native hdiutil program.  Otherwise, we just make a .tar.gz.
+								-->
+								<condition property="isMac">
+									<os family="mac"/>
+								</condition>
+							
+								<condition property="isNotMac">
+									<not>
+										<os family="mac"/>
+									</not>
+								</condition>
+							
+								<!-- When the build runs on Windows, we can create the .exe executable
+								     using the izpack2exe's exe tool. Otherwise, we would use python
+								     along with the python izpack2exe python script.
+								-->
+								<condition property="isWindows">
+									<os family="windows"/>
+								</condition>
+							
+								<condition property="isNotWindows">
+									<not>
+										<os family="windows"/>
+									</not>
+								</condition>
+							
+								<!-- 
+									Actually, I wanted to test for if this is Linux so to know which
+									launch4j binaries to use, but unfortunately, there is no 'linux' 
+									value, just unix. So if it's unix, then we will try to use the linux binary.
+								-->
+								<condition property="isUnix">
+									<os family="unix"/>
+								</condition>
+							
+								<condition property="isNotUnix">
+									<not>
+										<os family="unix"/>
+									</not>
+								</condition>
+								
+								<condition property="launch4j.dir" value="src/main/installer/launch4j/launch4j-macosx" >
+									<isset property="isMac"/>
+								</condition>
+								
+								<condition property="launch4j.dir" value="src/main/installer/launch4j/launch4j-linux" >
+									<isset property="isUnix"/>
+								</condition>
+								
+								<condition property="launch4j.dir" value="src/main/installer/launch4j/launch4j-win32" >
+									<isset property="isWindows"/>
+								</condition>
+								
+								<taskdef name="launch4j"
+								    classname="net.sf.launch4j.ant.Launch4jTask"
+								    classpath="${launch4j.dir}/launch4j.jar
+								        :${launch4j.dir}/lib/xstream.jar" />
+								        
+				        		<launch4j>
+									<config dontwrapjar="true" 
+											headertype="gui"
+											jarpath="wabit.jar"
+											outfile="target/wabit.exe"
+											errtitle="Java Runtime Required"
+											priority="normal"
+											downloadurl="http://java.com/download"
+											supporturl="http://www.sqlpower.ca/forum"
+											customprocname="false"
+											stayalive="false"
+											icon="src/main/resources/icons/wabit.ico">
+										<jre minVersion="1.5.0"
+											 maxHeapSize="600"
+										/>
+									</config>
+								</launch4j>
+						    	
+						    	<launch4j>
+									<config dontwrapjar="true" 
+											headertype="gui"
+											jarpath="uninstaller.jar"
+											outfile="target/uninstaller.exe"
+											errtitle="Java Runtime Required"
+											priority="normal"
+											downloadurl="http://java.com/download"
+											supporturl="http://www.sqlpower.ca/forum"
+											customprocname="false"
+											stayalive="false"
+											icon="src/main/installer/uninstall.ico">
+										<singleInstance
+											mutexName="Wabit Uninstaller"
+											windowTitle="Wabit Uninstaller"
+										/>
+										<jre minVersion="1.5.0"/>
+									</config>
+								</launch4j>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>launch4j-installer</id>
 						<phase>package</phase>
 						<configuration>
 							<tasks>
