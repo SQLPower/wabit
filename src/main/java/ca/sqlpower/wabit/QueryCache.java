@@ -31,7 +31,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
@@ -157,10 +156,19 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     /**
      * This makes a copy of the given query cache. The query in the given query cache
-     * has its listeners connected to allow using this query cache in the workspace.
+     * has its listeners disconnected to prevent copies from being affected by user
+     * actions. This also makes cleanup of copies easier.
      */
     public QueryCache(QueryCache q) {
-        this.query = new Query(q.query, true);
+        this(q, false);
+    }
+    
+    /**
+     * This makes a copy of the given query cache. The query in the given query cache
+     * can have its listeners connected to allow using this query cache in the workspace.
+     */
+    public QueryCache(QueryCache q, boolean copyQuery) {
+        this.query = new Query(q.query, copyQuery);
         
         for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {
@@ -322,6 +330,10 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     }
 
     public ResultSet getResultSet() {
+        return getCachedRowSet();
+    }
+    
+    public CachedRowSet getCachedRowSet() {
         if (resultPosition >= resultSets.size()) {
             return null;
         }
