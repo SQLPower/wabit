@@ -641,6 +641,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public boolean setEditorPanel(WabitObject entryPanelModel) {
+	    if (isLoading()) return false;
 		if (!removeEditorPanel()) {
 			return false;
 		}
@@ -695,6 +696,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		if (currentEditorPanel instanceof OlapQueryPanel) {
 			((OlapQueryPanel) currentEditorPanel).executeQuery();
 		}
+		// TODO Select the proper panel in the wabit tree
 		return true;
 	}
 	

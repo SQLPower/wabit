@@ -243,8 +243,8 @@ public class Olap4jGuiQueryPanel {
         this.olapQuery = query;
         this.olapQueryPanel = olapQueryPanel;
         this.dsCollection = dsCollection;
-        if (olapQuery.getMdxQueryCopy() != null) {
-            for (QueryDimension queryDim : olapQuery.getMdxQueryCopy().getAxes().get(Axis.ROWS).getDimensions()) {
+        if (olapQuery.getMDXQuery() != null) {
+            for (QueryDimension queryDim : olapQuery.getMDXQuery().getAxes().get(Axis.ROWS).getDimensions()) {
                 for (Selection sel : queryDim.getSelections()) {
                     final Member member = sel.getMember();
                     if (!rowHierarchies.contains(member.getHierarchy())) {
@@ -259,7 +259,7 @@ public class Olap4jGuiQueryPanel {
                     memberSet.add(member);
                 }
             }
-            for (QueryDimension queryDim : olapQuery.getMdxQueryCopy().getAxes().get(Axis.COLUMNS).getDimensions()) {
+            for (QueryDimension queryDim : olapQuery.getMDXQuery().getAxes().get(Axis.COLUMNS).getDimensions()) {
                 for (Selection sel : queryDim.getSelections()) {
                     final Member member = sel.getMember();
                     if (!columnHierarchies.contains(member.getHierarchy())) {
@@ -433,13 +433,13 @@ public class Olap4jGuiQueryPanel {
      */
     public void executeQuery() {
         Query mdxQuery;
-        try {
-            mdxQuery = olapQuery.getMdxQueryCopy();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        
-        if (mdxQuery == null) {
+//        try {
+            mdxQuery = olapQuery.getMDXQuery();
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+
+            if (mdxQuery == null) {
             cellSetViewer.showMessage("No cube selected--please select one from the dropdown list");
             return;
         }

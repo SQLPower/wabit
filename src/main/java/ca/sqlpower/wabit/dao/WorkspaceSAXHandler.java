@@ -54,9 +54,11 @@ import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.query.Container;
@@ -228,7 +230,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
 	/**
 	 * This is an {@link OlapQuery} that is currently being loaded from the file. This
-	 * may be null if no OlapQuery is currently being loaded.
+	 * may be null if no OlapQuery is currently being loaded. This variable is also used
+	 * when loading up the olapQuery in a report.
 	 */
     private OlapQuery olapQuery;
 
@@ -254,6 +257,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private CellSetRenderer cellSetRenderer;
 
     private final UserPrompterFactory promptFactory;
+    
+    private QueryAxis olap4jReportQueryAxis;
+
+    private QueryDimension olap4jReportQueryDimension;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of workspace
@@ -289,6 +296,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 UserPrompter up = promptFactory.createUserPrompter(
                         "The Wabit workspace you are opening is an old version that does not record\n" +
                         "information about page orientation. All pages will default to portrait orientation.",
+                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+                        null, "OK");
+                up.promptUser();
+		    } else if (this.minorVersion(versionString)<1) {
+                UserPrompter up = promptFactory.createUserPrompter(
+                        "The Wabit workspace you are opening contains OLAP and/or reports from an.\n" +
+                        "old version of the wabit. These items cannot be loaded and need to be updated\n" +
+                        "to the latest version.",
                         UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
                         null, "OK");
                 up.promptUser();
@@ -562,81 +577,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	checkMandatory("string", queryString);
         	cache.getQuery().defineUserModifiedQuery(queryString);
         } else if (name.equals("olap-query")) {
-            String uuid = attributes.getValue("uuid");
-            checkMandatory("uuid", uuid);
-            olapQuery = new OlapQuery(uuid);
-            session.getWorkspace().addOlapQuery(olapQuery);
-            for (int i = 0; i < attributes.getLength(); i++) {
-                String aname = attributes.getQName(i);
-                String aval = attributes.getValue(i);
-                if (aname.equals("uuid")) {
-                    //already loaded
-                } else if (aname.equals("name")) {
-                    olapQuery.setName(aval);
-                } else if (aname.equals("data-source")) {
-                    Olap4jDataSource ds = session.getWorkspace().getDataSource(aval, Olap4jDataSource.class);
-                    if (ds == null) {
-                        String newDSName = oldToNewDSNames.get(aval);
-                        if (newDSName != null) {
-                            ds = session.getWorkspace().getDataSource(newDSName, Olap4jDataSource.class);
-                            if (ds == null) {
-                                logger.debug("Data source " + aval + " is not in the workspace. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
-                                throw new NullPointerException("Data source " + newDSName + " was not found in the workspace.");
-                            }
-                        }
-                        logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
-                    }
-                    olapQuery.setOlapDataSource(ds);
-                } else {
-                    logger.warn("Unexpected attribute of <olap-query>: " + aname + " = " + aval);
-                }
-            }
+            loadOlapQuery(attributes, false);
         } else if (name.equals("olap-cube")) {
-            String catalogName = attributes.getValue("catalog");
-            String schemaName = attributes.getValue("schema");
-            String cubeName = attributes.getValue("cube-name");
-            
-            //XXX If we can't connect to an OLAP data source because the user isn't connected
-            //XXX to a network or can't connect to the specific data source then we will not
-            //XXX be able to load their file. This is a rather silly problem.
-            if (olapQuery.getOlapDataSource() == null) {
-                throw new NullPointerException("Missing database for cube " + cubeName + " for use in " + olapQuery.getName() + ".");
-            }
-            try {
-                OlapConnection createOlapConnection = olapQuery.createOlapConnection();
-                Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
-                Schema schema = catalog.getSchemas().get(schemaName);
-                Cube cube = schema.getCubes().get(cubeName);
-                olapQuery.setCurrentCube(cube);
-            } catch (Exception e) {
-                throw new RuntimeException("Cannot connect to " + olapQuery.getOlapDataSource(), e);
-            }
+            olapQuery.appendElement("olap-cube", attributes);
         } else if (name.equals("olap4j-query")) {
-            String queryName = attributes.getValue("name");
-            try {
-                org.olap4j.query.Query olap4jQuery = new org.olap4j.query.Query(queryName, olapQuery.getCurrentCube());
-                olapQuery.setMdxQuery(olap4jQuery);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            olapQuery.appendElement("olap4j-query", attributes);
         } else if (name.equals("olap4j-axis")) {
-            String ordinalNumber = attributes.getValue("ordinal");
-            org.olap4j.Axis axis = org.olap4j.Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
-            queryAxis = new QueryAxis(olapQuery.getMDXQuery(), axis);
-            olapQuery.getMDXQuery().getAxes().put(axis, queryAxis);
+            olapQuery.appendElement("olap4j-axis", attributes);
         } else if (name.equals("olap4j-dimension")) {
-            String dimensionName = attributes.getValue("dimension-name");
-            Dimension dimension = olapQuery.getCurrentCube().getDimensions().get(dimensionName);
-            queryDimension = new QueryDimension(olapQuery.getMDXQuery(), dimension);
-            queryAxis.getDimensions().add(queryDimension);
+            olapQuery.appendElement("olap4j-dimension", attributes);
         } else if (name.equals("olap4j-selection")) {
-            String operation = attributes.getValue("operator");
-            Member actualMember = findMember(attributes, olapQuery.getCurrentCube());
-            queryDimension.select(Operator.valueOf(operation), actualMember);
+            olapQuery.appendElement("olap4j-selection", attributes);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
-    		layout = new Layout(layoutName);
+    		layout = new Layout(layoutName,attributes.getValue("uuid"));
     		session.getWorkspace().addLayout(layout);
           	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -645,7 +600,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			//already loaded
         		} else if (aname.equals("zoom")) {
         			layout.setZoomLevel(Integer.parseInt(aval));
-        		} else {
+                } else {
         			logger.warn("Unexpected attribute of <layout>: " + aname + "=" + aval);
         		}
           	}
@@ -993,7 +948,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             if (newQuery == null) {
                 throw new NullPointerException("Cannot load workspace due to missing olap query in report.");
             }
-            cellSetRenderer = new CellSetRenderer(newQuery, uuid);
+            cellSetRenderer = new CellSetRenderer(newQuery, uuid, true);
             contentBox.setContentRenderer(cellSetRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
@@ -1010,30 +965,24 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     logger.warn("Unexpected attribute of <cell-set-renderer>: " + aname + "=" + aval);
                 }
             }
-            for (QueryAxis axis : cellSetRenderer.getModifiedMDXQuery().getAxes().values()) {
-                for (QueryDimension dimension : axis.getDimensions()) {
-                    dimension.getSelections().clear();
-                }
-            }
+            
         } else if (name.equals("olap-header-font")) {
             cellSetRenderer.setHeaderFont(loadFont(attributes));
         } else if (name.equals("olap-body-font")) {
             cellSetRenderer.setBodyFont(loadFont(attributes));
+        } else if (name.equals("olap-report-query")) {
+            olapQuery = new OlapQuery();
+            loadOlapQuery(attributes, true);
+        } else if (name.equals("olap-report-cube")) {
+            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
+        } else if (name.equals("olap4j-report-query")) {
+            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
+        } else if (name.equals("olap4j-report-axis")) {
+            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
+        } else if (name.equals("olap4j-report-dimension")) {
+            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
         } else if (name.equals("olap4j-report-selection")) {
-            Member member = findMember(attributes, cellSetRenderer.getModifiedMDXQuery().getCube());
-            String operation = attributes.getValue("operator");
-            String dimensionName = attributes.getValue("dimension-name");
-            QueryDimension queryDimension = null;
-            for (Entry<org.olap4j.Axis, QueryAxis> axis : cellSetRenderer.getModifiedMDXQuery().getAxes().entrySet()) {
-                if (axis.getKey() == null) continue;
-                for (QueryDimension dimension : axis.getValue().getDimensions()) {
-                    if (dimension.getDimension().getName().equals(dimensionName)) {
-                        queryDimension = dimension;
-                        break;
-                    }
-                }
-            }
-            queryDimension.select(Operator.valueOf(operation), member);
+            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
         } else if (name.equals("guide")) {
         	String guideName = attributes.getValue("name");
         	String axisName = attributes.getValue("axis");
@@ -1057,6 +1006,50 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         }
 		
 	}
+
+    private int minorVersion(String versionString) {
+        return Integer.parseInt(
+                versionString.substring(
+                        versionString.indexOf('.')+1,
+                        versionString.lastIndexOf('.')));
+    }
+
+    private void loadOlapQuery(Attributes attributes, boolean isReport) throws SAXException {
+        String uuid = attributes.getValue("uuid");
+        checkMandatory("uuid", uuid);
+        olapQuery = new OlapQuery(uuid);
+        if (!isReport) {
+            session.getWorkspace().addOlapQuery(olapQuery);
+        } else {
+            cellSetRenderer.setModifiedOlapQuery(olapQuery);
+        }
+        
+        for (int i = 0; i < attributes.getLength(); i++) {
+            String aname = attributes.getQName(i);
+            String aval = attributes.getValue(i);
+            if (aname.equals("uuid")) {
+                //already loaded
+            } else if (aname.equals("name")) {
+                olapQuery.setName(aval);
+            } else if (aname.equals("data-source")) {
+                Olap4jDataSource ds = session.getWorkspace().getDataSource(aval, Olap4jDataSource.class);
+                if (ds == null) {
+                    String newDSName = oldToNewDSNames.get(aval);
+                    if (newDSName != null) {
+                        ds = session.getWorkspace().getDataSource(newDSName, Olap4jDataSource.class);
+                        if (ds == null) {
+                            logger.debug("Data source " + aval + " is not in the workspace. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
+                            throw new NullPointerException("Data source " + newDSName + " was not found in the workspace.");
+                        }
+                    }
+                    logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
+                }
+                olapQuery.setOlapDataSource(ds);
+            } else {
+                logger.warn("Unexpected attribute of <olap-query>: " + aname + " = " + aval);
+            }
+        }
+    }
 	
 	/**
      * This is a helper method for loading {@link ColumnIdentifier}s introduced in
@@ -1173,7 +1166,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * Returns true if the name of the parent element in the XML context
      * (the one just below the top of the stack) is the given name.
      * 
-     * @param qName The name to check for equality with the parent element name.
+     * @param qName The name to check for equality with the parent element name.olap-report-cube cata
      * @return If qName == parent element name
      */
     private boolean parentIs(String qName) {
@@ -1186,7 +1179,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	if (cancelled) return;
     	
     	if (name.equals("project")) {
-    	    session.setLoading(false);
     	    WabitObject initialView = session.getWorkspace();
     		for (WabitObject obj : session.getWorkspace().getChildren()) {
     			if (obj.getUUID().equals(currentEditorPanelModel)) {
@@ -1195,6 +1187,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     			}
     		}
     		session.getWorkspace().setEditorPanelModel(initialView);
+    		session.setLoading(false);
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
@@ -1220,12 +1213,17 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 			}
 			imageRenderer = null;
     	} else if (name.equals("cell-set-renderer")) {
-    	    try {
-                cellSetRenderer.setCellSet(cellSetRenderer.getModifiedMDXQuery().execute());
-            } catch (OlapException e) {
-                throw new RuntimeException(e);
-            }
-    	}
+    	    cellSetRenderer.setLoadingWorkspace(false);
+    	} 
+    	
+    	else if (name.equals("olap-cube") || name.equals("olap-report-cube")
+    	        || name.equals("olap4j-query") || name.equals("olap4j-report-query")
+    	        || name.equals("olap4j-axis") || name.equals("olap4j-report-axis")
+    	        || name.equals("olap4j-dimension") || name.equals("olap4j-report-dimension")
+    	        || name.equals("olap4j-selection") || name.equals("olap4j-report-selection")) {
+    	    olapQuery.appendElement("/".concat(name),new AttributesImpl());
+        }
+    	
     	xmlContext.pop();
     }
     

@@ -112,6 +112,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 			for (WabitSession session : sessions) {
 				try {
 					((WabitSwingSession)session).buildUI();
+					((WabitSwingSession)session).setEditorPanel(session.getWorkspace().getEditorPanelModel());
 				} catch (SQLObjectException e1) {
 					throw new RuntimeException(e1);
 				}

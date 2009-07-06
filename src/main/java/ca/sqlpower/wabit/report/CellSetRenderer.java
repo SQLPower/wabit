@@ -87,11 +87,16 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
     
     /**
-     * This is the OLAP query being displayed by this cell set renderer.
+     * This is the OLAP query this {@link CellSetRenderer} was originally based off of
      */
     private final OlapQuery olapQuery;
     
     private final static int PADDING = 10;
+    
+    /**
+     * This is the OLAP query being displayed by this cell set renderer.
+     */
+    private OlapQuery modifiedOlapQuery;
     
     /**
      * This is the current cell set being displayed.
@@ -102,13 +107,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * The font of the column and row headers.
      */
     private Font headerFont;
-    
-    /**
-     * This query is a modified version of the one in the olapQuery object.
-     * This is used to track members that have been expanded or collapsed
-     * independently of the original olapQuery's MDX query.
-     */
-    private Query modifiedMDXQuery;
     
     /**
      * The font of the text in the cell set.
@@ -151,6 +149,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private boolean refreshCellSet = false;
     
     /**
+     * Memorizes the saved XML structure for last minute load.
+     */
+    private List<String> rootNodes = new ArrayList<String>();
+    
+    private List<Map<String,String>> attributes = new ArrayList<Map<String,String>>();
+    
+    /**
      * This listener will listen for changes to the query and set the refresh
      * variable to decide when to refresh.
      */
@@ -168,34 +173,38 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * proper column width for each.
      */
     private int[] columnWidthList;
+
+    private boolean initDone = false;
+
+    private boolean loadingWorkspace = false;
     
     public CellSetRenderer(OlapQuery olapQuery) {
-        this(olapQuery, null);
+        this(olapQuery, null, false);
     }
     
-    public CellSetRenderer(OlapQuery olapQuery, String uuid) {
+    public CellSetRenderer(OlapQuery olapQuery, String uuid, boolean loadingWorkspace) {
         super(uuid);
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
         olapQuery.addPropertyChangeListener(queryListener);
-        if (olapQuery.getMDXQuery() != null) {
-	        try {
-				modifiedMDXQuery = olapQuery.getMdxQueryCopy();
-			} catch (SQLException e) {
-				throw new RuntimeException();
-			}
-	        try {
-				setCellSet(modifiedMDXQuery.execute());
-			} catch (Exception e) {
-	            //XXX it seems that this error message doesn't say anything conclusive
+        this.loadingWorkspace  = loadingWorkspace;
+    }
+    
+    private void init() {
+        if (this.initDone) return;
+        if (!loadingWorkspace) {
+            try {
+                setCellSet(modifiedOlapQuery.getMDXQuery().execute());
+            } catch (Exception e) {
+                //XXX it seems that this error message doesn't say anything conclusive
                 //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
                 //there are no rows.
-				logger.warn(e.toString());
-				errorMessage = "Error when executing query.";
-				queryValid = false;
-			}
+                logger.warn(e.toString());
+                errorMessage = "Error when executing query.";
+                queryValid = false;
+            }
+            this.initDone=true;
         }
-        
     }
     
     /**
@@ -204,6 +213,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * a new cell set.
      */
     public void updateMDXQuery() {
+        init();
         Query newModifiedMDXQuery;
         try {
             newModifiedMDXQuery = olapQuery.getMdxQueryCopy();
@@ -211,9 +221,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
             throw new RuntimeException(e1);
         }
 
-        if (modifiedMDXQuery == null) {
+        if (modifiedOlapQuery == null) {
         	try {
-				modifiedMDXQuery = olapQuery.getMdxQueryCopy();
+				modifiedOlapQuery = olapQuery.createCopyOfSelf();
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
@@ -221,7 +231,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	        if (newModifiedMDXQuery != null) {
 		        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
 		            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-		                for (QueryDimension oldDimension : modifiedMDXQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
+		                for (QueryDimension oldDimension : modifiedOlapQuery.getMDXQuery().getAxes().get(axisEntry.getKey()).getDimensions()) {
 		                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
 		                        dimension.getSelections().clear();
 		                        for (Selection selection : oldDimension.getSelections()) {
@@ -233,7 +243,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 		        }
 	        }
 	        
-	        modifiedMDXQuery = newModifiedMDXQuery;
+	        modifiedOlapQuery.setMdxQuery(newModifiedMDXQuery);
         }
         refreshCellSet = true;
     }
@@ -333,9 +343,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
             double scaleFactor, int pageIndex, boolean printing) {
+        init();
         if (refreshCellSet) {
             try {
-                setCellSet(modifiedMDXQuery.execute());
+                setCellSet(getModifiedMDXQuery().execute());
             } catch (Exception e) {
             	logger.warn(e.getMessage());
                 queryValid = false;
@@ -622,6 +633,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public void processEvent(PInputEvent event, int type) {
+        init();
         if (type == MouseEvent.MOUSE_MOVED) {
             final PNode pickedNode = event.getPickedNode();
             Point2D p = event.getPositionRelativeTo(pickedNode);
@@ -638,10 +650,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         } else if (type == MouseEvent.MOUSE_RELEASED) {
             if (selectedMember == null) return;
             
-            OlapUtils.expandOrCollapseMDX(selectedMember, modifiedMDXQuery);
+            OlapUtils.expandOrCollapseMDX(selectedMember, getModifiedMDXQuery());
             
             try {
-                setCellSet(modifiedMDXQuery.execute());
+                setCellSet(getModifiedMDXQuery().execute());
             } catch (OlapException e) {
                 throw new RuntimeException(e);
             }
@@ -649,12 +661,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public void setSelectedMember(Member selectedMember) {
+        init();
         Member oldSelection = this.selectedMember; 
         this.selectedMember = selectedMember;
         firePropertyChange("selectedMember", oldSelection, selectedMember);
     }
 
-    public void setCellSet(CellSet cellSet) {
+    private void setCellSet(CellSet cellSet) {
         logger.debug("Row axis position count: " + cellSet.getAxes().get(Axis.ROWS.axisOrdinal()).getPositionCount());
         logger.debug("Column axis position count: " + cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal()).getPositionCount());
         queryValid = true;
@@ -680,7 +693,15 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
     
     public Query getModifiedMDXQuery() {
-        return modifiedMDXQuery;
+        return modifiedOlapQuery.getMDXQuery();
+    }
+    
+    public OlapQuery getModifiedOlapQuery() {
+        return modifiedOlapQuery;
+    }
+    
+    public void setModifiedOlapQuery(OlapQuery modifiedOlapQuery) {
+        this.modifiedOlapQuery = modifiedOlapQuery; //XXX this may not fire the correct events
     }
     
     public Boolean getQueryValid() {
@@ -690,6 +711,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public String getErrorMessage() {
 		return errorMessage;
 	}
+    
+    public void setLoadingWorkspace(boolean loadingWorkspace) {
+        this.loadingWorkspace = loadingWorkspace;
+    }
 
     public List<WabitObject> getDependencies() {
         if (getOlapQuery() == null) return Collections.emptyList();

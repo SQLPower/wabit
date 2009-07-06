@@ -44,6 +44,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
+import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
@@ -98,10 +99,11 @@ public class WorkspaceXMLDAO {
      *  <dt>1.0.0 <dd>initial version. lots of changes. (too many!)
      *  <dt>1.0.1 <dd>adds page orientation attribute
      *  <dt>1.0.2 <dd>update to the chart column identifier, they are now objects instead of just column names
+     *  <dt>1.0.3 <dd>Added more info to saved queries inside a report definition.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 0, 2); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 1, 0); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
@@ -269,7 +271,7 @@ public class WorkspaceXMLDAO {
             if (wabitObject instanceof QueryCache) {
                 saveQueryCache(((QueryCache) wabitObject).getQuery());
             } else if (wabitObject instanceof OlapQuery) {
-                saveOlapQuery((OlapQuery) wabitObject);
+                saveOlapQuery((OlapQuery) wabitObject, "");
             } else if (wabitObject instanceof Layout) {
                 saveLayout((Layout) wabitObject);
             } else {
@@ -312,6 +314,7 @@ public class WorkspaceXMLDAO {
 		xml.print(out, "<layout");
 		printAttribute("name", layout.getName());
 		printAttribute("zoom", layout.getZoomLevel());
+		printAttribute("uuid", layout.getUUID());
 		xml.niprintln(out, ">");
 		xml.indent++;
 		
@@ -500,13 +503,8 @@ public class WorkspaceXMLDAO {
 					    
 					    saveFont(renderer.getHeaderFont(), "olap-header-font");
 					    saveFont(renderer.getBodyFont(), "olap-body-font");
-					    for (QueryAxis axis : renderer.getModifiedMDXQuery().getAxes().values()) {
-					        for (QueryDimension dimension : axis.getDimensions()) {
-					            for (Selection selection : dimension.getSelections()) {
-					                saveOlap4jSelection("olap4j-report", selection);
-					            }
-					        }
-					    }
+				        
+					    this.saveOlapQuery(renderer.getModifiedOlapQuery(), "-report");
 					    
 					    xml.indent--;
 					    xml.println(out, "</cell-set-renderer>");
@@ -559,43 +557,56 @@ public class WorkspaceXMLDAO {
         }
     }
 	
-	private void saveOlapQuery(OlapQuery query) {
-	    xml.print(out, "<olap-query");
-	    printAttribute("name", query.getName());
-	    printAttribute("uuid", query.getUUID());
-	    if (query.getOlapDataSource() != null) {
-	        printAttribute("data-source", query.getOlapDataSource().getName());
-	    }
-	    xml.println(out, ">");
-	    xml.indent++;
+    /**
+     * This method will save an {@link OlapQuery}
+     * 
+     * @param query
+     *      The {@link OlapQuery} to save
+     * @param name
+     *      A unique name to append to the start of XML tags
+     */
+	private void saveOlapQuery(OlapQuery query, String name) {
 	    
-	    if (query.getCurrentCube()!=null &&
-	            query.getCurrentCube().getSchema()!=null &&
-	            query.getCurrentCube().getSchema().getCatalog()!=null) {
-    	    xml.print(out, "<olap-cube");
-    	    printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
-    	    printAttribute("schema", query.getCurrentCube().getSchema().getName());
-    	    printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
-    	    xml.println(out, "/>");
-	    }
-	    
-	    org.olap4j.query.Query mdxQuery = query.getMDXQuery();
-	    
-	    if (mdxQuery!=null) {
-    	    xml.print(out, "<olap4j-query");
-    	    printAttribute("name", mdxQuery.getName());
-    	    xml.println(out, ">");
-    	    xml.indent++;
+	    xml.print(out, "<olap" + name + "-query");
+        printAttribute("name", query.getName());
+        printAttribute("uuid", query.getUUID());
+        if (query.getOlapDataSource() != null) {
+            printAttribute("data-source", query.getOlapDataSource().getName());
+        }
+        xml.println(out, ">");
+        xml.indent++;
+        
+        if (query.getCurrentCube()!=null &&
+                query.getCurrentCube().getSchema()!=null &&
+                query.getCurrentCube().getSchema().getCatalog()!=null) {
+            xml.print(out, "<olap" + name + "-cube");
+            printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
+            printAttribute("schema", query.getCurrentCube().getSchema().getName());
+            printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
+            xml.println(out, "/>");
+        }
+        
+	    if (query.hasCachedXml()) {
+	        query.writeCachedXml(xml, out);
+	    } else {
     	    
-    	    saveOlap4jQuery(mdxQuery, "olap4j");
-    	    
-    	    xml.indent--;
-    	    xml.println(out, "</olap4j-query>");
+            org.olap4j.query.Query mdxQuery = query.getMDXQuery();
+            
+            if (mdxQuery!=null) {
+                xml.print(out, "<olap4j" + name + "-query");
+                printAttribute("name", mdxQuery.getName());
+                xml.println(out, ">");
+                xml.indent++;
+                
+                saveOlap4jQuery(mdxQuery, name);
+                
+                xml.indent--;
+                xml.println(out, "</olap4j" + name + "-query>");
+            }
+            
+            xml.indent--;
 	    }
-	    
-	    xml.indent--;
-	    xml.println(out, "</olap-query>");
-	    
+	    xml.println(out, "</olap" + name + "-query>");
 	}
 
     /**
@@ -610,13 +621,14 @@ public class WorkspaceXMLDAO {
      */
     private void saveOlap4jQuery(org.olap4j.query.Query mdxQuery, String name) {
         for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
-	        if (axisEntry.getKey() == null) continue; //TODO why does this have a null entry?
-	        xml.print(out, "<" + name + "-axis");
+            // Check if it is the UNUSED axis, we can skip it safely.
+	        if (axisEntry.getKey() == null) continue;
+	        xml.print(out, "<olap4j" + name + "-axis");
 	        printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
 	        xml.println(out, ">");
 	        xml.indent++;
 	        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-	            xml.print(out, "<" + name + "-dimension");
+	            xml.print(out, "<olap4j" + name + "-dimension");
 	            printAttribute("dimension-name", dimension.getDimension().getName());
 	            xml.println(out, ">");
 	            xml.indent++;
@@ -624,10 +636,10 @@ public class WorkspaceXMLDAO {
 	                saveOlap4jSelection(name, selection);
 	            }
 	            xml.indent--;
-	            xml.println(out, "</" + name + "-dimension>");
+	            xml.println(out, "</olap4j" + name + "-dimension>");
 	        }
 	        xml.indent--;
-	        xml.println(out, "</" + name + "-axis>");
+	        xml.println(out, "</olap4j" + name + "-axis>");
 	    }
     }
 
@@ -636,7 +648,7 @@ public class WorkspaceXMLDAO {
      * selection.
      */
     private void saveOlap4jSelection(String name, Selection selection) {
-        xml.print(out, "<" + name + "-selection");
+        xml.print(out, "<olap4j" + name + "-selection");
         saveOlapMember(selection.getMember(), "");
         printAttribute("operator", selection.getOperator().toString());
         xml.println(out, "/>");

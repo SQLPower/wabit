@@ -93,6 +93,11 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     private AtomicBoolean currentlyPrinting = new AtomicBoolean(false);
 
     public Layout(String name) {
+        this(name,null);
+    }
+    
+    public Layout(String name, String uuid) {
+        super(uuid);
         setName(name);
         PageFormat pageFormat = new PageFormat();
         pageFormat.setOrientation(PageFormat.LANDSCAPE);

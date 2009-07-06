@@ -19,14 +19,18 @@
 
 package ca.sqlpower.wabit.olap;
 
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -34,107 +38,45 @@ import javax.naming.NamingException;
 
 import org.olap4j.Axis;
 import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
 import org.olap4j.OlapWrapper;
+import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
+import org.olap4j.metadata.Dimension;
+import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Level;
+import org.olap4j.metadata.Member;
+import org.olap4j.metadata.Schema;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection.Operator;
+import org.xml.sax.Attributes;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.xml.XMLHelper;
 
 /**
  * This is the model of an OLAP query. This will store all values that need to be persisted
  * in an OLAP query.
  */
 public class OlapQuery extends AbstractWabitObject {
-
-//    /**
-//     * If there is no connection to the database this class will be used to
-//     * assure that the user does not lose any of their work. It will store all
-//     * the data that is normally stored when a workspace is saved. This is all
-//     * because we cannot create an {@link Cube} and {@link Query} when there is
-//     * no {@link Olap4jDataSource} to connect to.
-//     */
-//    public class SavedQueryData { 
-//        
-//        public class SavedMemberData {
-//            private String name;
-//            private String operation;
-//
-//            public String getName() {
-//                return name;
-//            }
-//            public void setName(String name) {
-//                this.name = name;
-//            }
-//            public String getOperation() {
-//                return operation;
-//            }
-//            public void setOperation(String operation) {
-//                this.operation = operation;
-//            }
-//        }
-//        
-//        private String catalogName;
-//        private String schemaName;
-//        private String cubeName;
-//        
-//        private Map<String, Map<String, TreeSet<SavedMemberData>>> axisData;
-//        
-//        
-//        public Map<String, Map<String, SavedMemberData>> getAxisData() {
-//            return axisData;
-//        }
-//
-//        public void setAxisData(Map<String, Map<String, SavedMemberData>> axisData) {
-//            this.axisData = axisData;
-//        }
-//
-//        public void setCatalogName(String catalogName) {
-//            this.catalogName = catalogName;
-//        }
-//        
-//        public String getCatalogName() {
-//            return catalogName;
-//        }
-//
-//        public void setSchemaName(String schemaName) {
-//            this.schemaName = schemaName;
-//        }
-//
-//        public String getSchemaName() {
-//            return schemaName;
-//        }
-//
-//        public void setCubeName(String cubeName) {
-//            this.cubeName = cubeName;
-//        }
-//
-//        public String getCubeName() {
-//            return cubeName;
-//        }
-//        
-//    }
-//    
-//    /**
-//     * This allows us to persist all the data a user might have
-//     * for an {@link Query} in case a user does not have a database connection
-//     */
-//    private SavedQueryData savedQueryData;
     
     /**
      * This will create a copy of the query.
      */
-    public static OlapQuery createCopy(OlapQuery copy) throws SQLException {
+    public OlapQuery createCopyOfSelf() throws SQLException {
         OlapQuery newQuery = new OlapQuery();
-        newQuery.setCurrentCube(copy.getCurrentCube());
-        newQuery.setOlapDataSource(copy.getOlapDataSource());
-        newQuery.setMdxQuery(copy.getMdxQueryCopy());
+        for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
+            newQuery.appendElement(
+                    this.rootNodes.get(mickey), this.attributes.get(mickey));
+        }
+        newQuery.setOlapDataSource(this.getOlapDataSource());
+        newQuery.setMdxQuery(this.getMdxQueryCopy());
         return newQuery;
     }
     
@@ -142,7 +84,11 @@ public class OlapQuery extends AbstractWabitObject {
      * The current query. Gets replaced whenever a new cube is selected via
      * {@link #setCurrentCube(Cube)}.
      */
-    private Query mdxQuery;
+    private Query mdxQuery = null;
+    
+    private boolean initDone = false;
+    
+    private boolean wasLoadedFromXml = false;
     
     /**
      * The current cube (this can be selected/changed via the GUI or the
@@ -160,6 +106,13 @@ public class OlapQuery extends AbstractWabitObject {
      * of creating Olap4j connections.
      */
     private final Context ctx;
+    
+    /**
+     * Memorizes the saved XML structure for last minute load.
+     */
+    private List<String> rootNodes = new ArrayList<String>();
+    
+    private List<Map<String,String>> attributes = new ArrayList<Map<String,String>>();
 
     /**
      * Creates a new, empty query with no set persistent object ID.
@@ -195,8 +148,6 @@ public class OlapQuery extends AbstractWabitObject {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        } else if (currentCube == null) {
-            setMdxQuery(null);
         }
         
         firePropertyChange("currentCube", oldCube, currentCube);
@@ -215,6 +166,7 @@ public class OlapQuery extends AbstractWabitObject {
     public void setMdxQuery(Query mdxQuery) {
         Query oldMDXQuery = this.mdxQuery;
         this.mdxQuery = mdxQuery;
+        this.currentCube = this.mdxQuery.getCube();
         firePropertyChange("mdxQuery", oldMDXQuery, mdxQuery);
     }
 
@@ -228,6 +180,7 @@ public class OlapQuery extends AbstractWabitObject {
      * classes can be notified of changes.
      */
     public Query getMdxQueryCopy() throws SQLException {
+        this.init();
         Query copyQuery = OlapUtils.copyMDXQuery(mdxQuery);
         return copyQuery;
     }
@@ -239,6 +192,7 @@ public class OlapQuery extends AbstractWabitObject {
      * accordingly.
      */
     public Query getMDXQuery() {
+        this.init();
         return mdxQuery;
     }
 
@@ -365,4 +319,158 @@ public class OlapQuery extends AbstractWabitObject {
         return dependencies;
     }
     
+    private void init() {
+        
+        if (this.initDone || this.mdxQuery!=null) return;
+        
+        QueryAxis queryAxis = null;
+        QueryDimension queryDimension = null;
+        
+        for (int cpt = 0; cpt < this.rootNodes.size(); cpt++) {
+            
+            Map<String,String> entry = this.attributes.get(cpt);
+            
+            if (this.rootNodes.get(cpt).equals("olap-cube")
+                    || this.rootNodes.get(cpt).equals("olap-report-cube")) {
+                String catalogName = entry.get("catalog");
+                String schemaName = entry.get("schema");
+                String cubeName = entry.get("cube-name");
+                
+                if (getOlapDataSource() == null) {
+                    throw new RuntimeException("Missing database for cube " + cubeName + " for use in " + getName() + ".");
+                }
+                try {
+                    OlapConnection createOlapConnection = createOlapConnection();
+                    Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
+                    Schema schema = catalog.getSchemas().get(schemaName);
+                    Cube cube = schema.getCubes().get(cubeName);
+                    this.currentCube = cube; // We don't like firing property changes which wipe out the query
+                } catch (Exception e) {
+                    throw new RuntimeException("Cannot connect to " + getOlapDataSource(), e);
+                }
+            } else if (this.rootNodes.get(cpt).equals("olap4j-query")
+                    || this.rootNodes.get(cpt).equals("olap4j-report-query")) {
+                String queryName = entry.get("name");
+                try {
+                    this.mdxQuery = new Query(queryName, getCurrentCube());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (this.rootNodes.get(cpt).equals("olap4j-axis")
+                    || this.rootNodes.get(cpt).equals("olap4j-report-axis")) {
+                String ordinalNumber = entry.get("ordinal");
+                Axis axis = Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
+                queryAxis = new QueryAxis(getMDXQuery(), axis);
+                getMDXQuery().getAxes().put(axis, queryAxis);
+            } else if (this.rootNodes.get(cpt).equals("olap4j-dimension")
+                    || this.rootNodes.get(cpt).equals("olap4j-report-dimension")) {
+                String dimensionName = entry.get("dimension-name");
+                Dimension dimension = getCurrentCube().getDimensions().get(dimensionName);
+                queryDimension = new QueryDimension(getMDXQuery(), dimension);
+                queryAxis.getDimensions().add(queryDimension);
+            } else if (this.rootNodes.get(cpt).equals("olap4j-selection")
+                    || this.rootNodes.get(cpt).equals("olap4j-report-selection")) {
+                String operation = entry.get("operator");
+                Member actualMember = findMember(entry, getCurrentCube());
+                queryDimension.select(Operator.valueOf(operation), actualMember);
+            } else if (this.rootNodes.get(cpt).startsWith("/")) {
+                // we can safely ignore end tags here.
+            } else {
+                throw new UnsupportedOperationException("Missing element parsing code for element name :".concat(this.rootNodes.get(cpt)));
+            }
+        }
+        //this.setMdxQuery(mdxQuery);
+        this.initDone = true;
+    }
+    
+    public void appendElement(String elementName, Attributes attributes) {
+        this.wasLoadedFromXml=true;
+        Map<String,String> attributesMap = new HashMap<String, String>();
+        for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
+            attributesMap.put(attributes.getQName(cpt), attributes.getValue(cpt));
+        }
+        this.appendElement(elementName, attributesMap);
+    }
+    
+    public void appendElement(String elementName, Map<String,String> attributesMap) {
+        this.rootNodes.add(elementName);
+        this.attributes.add(attributesMap);
+    }
+    
+    /**
+     * This method finds a member from a cube based on given attributes.
+     */
+    public Member findMember(Map<String,String> attributes, Cube cube) {
+        String uniqueMemberName = attributes.get("unique-member-name");
+        if (uniqueMemberName != null) {
+            String[] uniqueMemberNameList = uniqueMemberName.split("\\]\\.\\[");
+            uniqueMemberNameList[0] = uniqueMemberNameList[0].substring(1); //remove starting [ bracket
+            final int lastMemberNamePosition = uniqueMemberNameList.length - 1;
+            uniqueMemberNameList[lastMemberNamePosition] = uniqueMemberNameList[lastMemberNamePosition].substring(0, uniqueMemberNameList[lastMemberNamePosition].length() - 1); //remove ending ] bracket
+            try {
+                return cube.lookupMember(uniqueMemberNameList);
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
+            
+        } else {
+            String dimensionName = attributes.get("dimension-name");
+            String hierarchyName = attributes.get("hierarchy-name");
+            String levelName = attributes.get("member-level");
+            String memberName = attributes.get("member-name");
+            Dimension dimension = cube.getDimensions().get(dimensionName);
+            Member actualMember = null;
+            final Hierarchy hierarchy = dimension.getHierarchies().get(hierarchyName);
+            final Level level = hierarchy.getLevels().get(levelName);
+            try {
+                for (Member member : level.getMembers()) {
+                    if (member.getName().equals(memberName)) {
+                        actualMember = member;
+                        break;
+                    }
+                }
+            } catch (OlapException e) {
+                throw new RuntimeException(e);
+            }
+            if (actualMember == null) {
+                throw new NullPointerException("Cannot find member " + memberName + " in hierarchy " + hierarchyName + " in dimension " + dimensionName);
+            }
+            return actualMember;
+        }
+    }
+    
+    /**
+     * Tells if the connection was initialized.
+     */
+    public boolean hasCachedXml() {
+        // Create a copy of the init flag so the object is immutable.
+        return (!this.initDone && this.wasLoadedFromXml);
+    }
+    
+    
+    /**
+     * Will return the cached XML code that was saved in the original workspace file
+     * if and only if the object was no initialized or modified in the meantime.
+     * @return XML representation of the object, null if it was initialized
+     * and the cached XML code is not relevant anymore.
+     */
+    public void writeCachedXml(XMLHelper xml, PrintWriter out) {
+        // If it is already initialized, return null.
+        if (!this.initDone && this.wasLoadedFromXml) {
+            for (int i = 0; i < this.rootNodes.size(); i++) {
+                StringBuilder sb = new StringBuilder("");
+                sb.append("<")
+                    .append(this.rootNodes.get(i));
+                for (Entry<String,String> attribute : this.attributes.get(i).entrySet()) {
+                    sb.append(" ")
+                        .append(attribute.getKey())
+                        .append("=\"")
+                        .append(attribute.getValue())
+                        .append("\"");
+                }
+                sb.append(">");
+                xml.println(out, sb.toString());
+            }
+        }
+    }
 }
