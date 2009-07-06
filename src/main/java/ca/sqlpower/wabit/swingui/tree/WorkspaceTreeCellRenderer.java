@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.apache.log4j.Logger;
@@ -124,13 +125,51 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         return r;
     }
 
-
-	public void updateTimer(WabitObject object, Integer newValue) {
-		logger.debug("Received update event of " + newValue);
-		objectToTimedImageMap.put(object, newValue);
+    /**
+     * Updates the frame counter for the given wabit object's "busy badge."
+     * <p>
+     * Important things to keep in mind:
+     * <ol>
+     *  <li>Calling this method does not cause the bagde to repaint; you will
+     *      have to ask the tree to repaint on your own
+     *  <li>this method <i>must</i> be called on the AWT/Swing Event Dispatch
+     *      Thread.
+     * </ol>
+     * 
+     * @param object
+     *            The tree object that should have a "busy" badge on its icon
+     * @param frameNum
+     *            The new frame number. This value will automatically be
+     *            "wrapped" to the actual number of frames in the badge's
+     *            animation, so a monotonically increasing integer is
+     *            sufficient.
+     */
+	public void updateTimer(WabitObject object, Integer frameNum) {
+		logger.debug("Received update event of " + frameNum);
+		if (!SwingUtilities.isEventDispatchThread()) {
+		    throw new IllegalStateException("This method can only be called on the event dispatch thread");
+		}
+		objectToTimedImageMap.put(object, frameNum);
 	}
 	
+    /**
+     * Causes the given Wabit object to not have a "busy badge" next time it is rendered.
+     * <p>
+     * Important things to keep in mind:
+     * <ol>
+     *  <li>Calling this method does not cause the bagde to repaint; you will
+     *      have to ask the tree to repaint on your own
+     *  <li>this method <i>must</i> be called on the AWT/Swing Event Dispatch
+     *      Thread.
+     * </ol>
+     * 
+     * @param object
+     *            The tree object that should have a "busy" badge on its icon
+     */
 	public void removeTimer(WabitObject object) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalStateException("This method can only be called on the event dispatch thread");
+        }
 		objectToTimedImageMap.remove(object);
 	}
 }
