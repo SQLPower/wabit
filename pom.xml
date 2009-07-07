@@ -222,7 +222,7 @@
 					</execution>
 					<execution>
 						<id>download-page</id>
-						<phase>compile</phase>
+						<phase>site</phase>
 						<configuration>
 							<tasks>
 								<echo message="Building Wabit version" />
@@ -256,9 +256,7 @@
 										<isset property="app.ver.suffix" />
 									</not>
 								</condition>
-					
-								<property name="app.version" value="0.9.4${app.ver.suffix}" />
-								<property name="dist.dir" value="${dist.base}/wabit-${app.version}" />
+								<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
 								<condition property="downloadLinkBase"
 									value="http://nightlybuild.sqlpower.ca/wabit/nightly/${app.version}">
 									<isset property="nightly" />
@@ -278,20 +276,6 @@
 									</not>
 								</condition>
 					
-								<mkdir dir="${dist.dir}/doc/api" />
-								<echo
-									message="NOTE: If the javadoc command is not accessible from your PATH variable, then this target WILL fail." />
-								<javadoc sourcepath="${src}" destdir="${dist.dir}/doc/api"
-									packagenames="ca.sqlpower.*" maxmemory="100m" windowtitle="ca.sqlpower.wabit.* Wabit"
-									Version="true" Author="true" Use="true" Overview="html/overview.html"
-									classpathref="test.classpath">
-									<packageset dir="${src}" defaultexcludes="yes">
-										<include name="ca/sqlpower/**" />
-										<exclude name="regress/**" />
-									</packageset>
-									<bottom><![CDATA[<i>Copyright &#169; 2003-2008 SQL Power Group Inc. <a href="http://www.sqlpower.ca/">www.sqlpower.ca</a>]]></bottom>
-								</javadoc>
-					
 								<get dest="target/index.html" src="http://www.sqlpower.ca/page/wabit_download_template" />
 								<replace file="target/index.html">
 									<replacefilter token="&lt;head&gt;"
@@ -302,6 +286,9 @@
 								</replace>
 							</tasks>
 						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
 					</execution>
 					<execution>
 						<id>version</id>
