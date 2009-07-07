@@ -503,7 +503,25 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
                     g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
                 }
-                g.drawString(layoutItem.getText(), (float) x, (float) y);
+                
+                String headerText = layoutItem.getText();
+                double alignmentShift = 0;
+                int columnWidth = columnWidthList[col - 1];
+                //final int columnWidth = tableAsModel.getColumnModel().getColumn(col).getWidth();
+                final double textWidthInContext = getBodyFont().getStringBounds(headerText, g.getFontRenderContext()).getWidth();
+                switch (bodyAlignment) {
+                    case RIGHT:
+                        alignmentShift = columnWidth - textWidthInContext;
+                        break;
+                    case LEFT:
+                        break;
+                    case CENTER:
+                        alignmentShift = (columnWidth - textWidthInContext) / 2;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown alignment of type " + bodyAlignment);
+                }
+				g.drawString(headerText, (float)(x + alignmentShift), (float) y);
                 g.setColor(oldColour);
                 hierarchySize = (int) Math.max((relativeMemberDepth * headerFontHeight) + headerFontHeight, hierarchySize);
             }
@@ -542,6 +560,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
                     g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
                 }
+                
                 g.drawString(layoutItem.getText(), (float) x, (float) y);
                 g.setColor(oldColour);
             }
