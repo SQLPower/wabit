@@ -436,12 +436,20 @@ public class CellSetRenderer extends AbstractWabitObject implements
 		CellSetAxis cellAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
 		columnWidthList = new int[tableAsModel.getColumnCount()];
 		int i = 0;
+		Map<Integer, String> lastMember = new HashMap<Integer, String>();
         for (Position position : cellAxis.getPositions()) {
-            Member member = position.getMembers().get(position.getMembers().size() - 1);
-            String name = member.getName();
-            int colWidth = (int) getHeaderFont().getStringBounds(name, g.getFontRenderContext()).getWidth();
-            columnWidthList[i] = Math.max(columnWidthList[i], colWidth + PADDING);
-            i++;
+        	for (int j = 0; j < position.getMembers().size(); j++) {
+        		Member member = position.getMembers().get(j);
+        		if (lastMember.get(j) != null && member.getUniqueName() == lastMember.get(j)) continue;
+        		for (int k = (j + 1); k < position.getMembers().size(); k++) {
+        			lastMember.put(k, null);
+        		}
+	            String name = member.getName();
+	            int colWidth = (int) getHeaderFont().getStringBounds(name, g.getFontRenderContext()).getWidth();
+	            columnWidthList[i] = Math.max(columnWidthList[i], colWidth + PADDING);
+	            lastMember.put(j, member.getUniqueName());
+        	}
+        	i++;
         }
         
         //get all the data's widths
