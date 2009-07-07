@@ -57,7 +57,6 @@ import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
 import org.olap4j.Position;
-import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
@@ -384,7 +383,15 @@ public class CellSetRenderer extends AbstractWabitObject implements
         CellSetAxis cellSetAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
         CellSetAxisMetaData axisMetaData = cellSetAxis.getAxisMetaData();
         int hierarchyCount = axisMetaData.getHierarchies().size();
-        int totalHeaderHeight = headerFontHeight * hierarchyCount;
+        Position firstPosition = cellSetAxis.getPositions().get(0);
+		int[] parentDepth = new int[firstPosition.getMembers().size()];
+		int totalDepthToSubtract = 0; //this variable is for drill member
+        for (int j = 0; j < firstPosition.getMembers().size(); j++) {
+        	Member member = firstPosition.getMembers().get(j);
+        	parentDepth[j] = member.getDepth();
+        	totalDepthToSubtract += parentDepth[j];
+        }
+        int totalHeaderHeight = headerFontHeight * (hierarchyCount - totalDepthToSubtract);
         
         
         //If the max row height is zero there will be a divide by 0 error in the next line...
@@ -447,14 +454,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
         	}
         }
         
-        
         int colHeaderSumHeight = 0;
         g.setFont(getHeaderFont());
+        int hierarchyComponentIndex = 0;
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
             int maxDepth = 0;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
-            	maxDepth = Math.max(layoutItem.getMember().getDepth() + 1, maxDepth);
+            	maxDepth = Math.max((layoutItem.getMember().getDepth() - parentDepth[hierarchyComponentIndex]) + 1, maxDepth);
             }
             
             g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
@@ -474,7 +481,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 lastMemberDisplayed = layoutItem.getMember();
                 
                 //final double x = layoutItem.getBounds().getX() + rowHeaderWidth;
-                final double y = (layoutItem.getMember().getDepth() * headerFontHeight) + colHeaderSumHeight + headerFontHeight;
+                int relativeMemberDepth = layoutItem.getMember().getDepth() - parentDepth[hierarchyComponentIndex];
+				final double y = (relativeMemberDepth * headerFontHeight) + colHeaderSumHeight + headerFontHeight;
                 if (!printing) {
                     Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
                     if (memberRanges == null) {
@@ -489,10 +497,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 }
                 g.drawString(layoutItem.getText(), (float) x, (float) y);
                 g.setColor(oldColour);
-                hierarchySize = (int) Math.max((layoutItem.getMember().getDepth() * headerFontHeight) + headerFontHeight, hierarchySize);
+                hierarchySize = (int) Math.max((relativeMemberDepth * headerFontHeight) + headerFontHeight, hierarchySize);
             }
             colHeaderSumHeight += hierarchySize;
             colourSchemeNum++;
+            hierarchyComponentIndex++;
         }
         
         g.setBackground(oldForeground);
