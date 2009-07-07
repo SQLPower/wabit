@@ -167,12 +167,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
     };
     
-    /**
-     * This is an Array of integers which iterates down through each column and finds the
-     * proper column width for each.
-     */
-    private int[] columnWidthList;
-
     private boolean initDone = false;
 
     private boolean loadingWorkspace = false;
@@ -340,6 +334,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
         };
     }
     
+    /**
+     * This method renders the report content in the CellSetRenderer
+     */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
             double scaleFactor, int pageIndex, boolean printing) {
         init();
@@ -393,19 +390,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         int totalHeaderHeight = headerFontHeight * (hierarchyCount - totalDepthToSubtract);
         
-        
-        //If the max row height is zero there will be a divide by 0 error in the next line...
-        //therefore if the height is so small that its less than one pixel just display it as 1 pixel.
+        // divide by 0 error when going to smallest zoom level if maxRowHeight is 0
         if (maxRowHeight == 0) {
         	maxRowHeight = 1;
         }
-        
         int numRows = (contentBox.getHeight() - totalHeaderHeight) / maxRowHeight;
-        
-        if (numRows <= 0) return false; //Can't display anything here because there's not enough space.
+        if (numRows <= 0) return false;
         
         int firstRecord = numRows * pageIndex;
-        
         CellSetTableModel tableModel = new CellSetTableModel(getCellSet());
         final JTable tableAsModel = new JTable(tableModel);
         tableAsModel.setRowHeight(maxRowHeight);
@@ -413,28 +405,32 @@ public class CellSetRenderer extends AbstractWabitObject implements
             memberHeaderMap.clear();
         }
         
-        
-        
-        CellSetTableHeaderComponent columnHeaderComponent =
-        	new CellSetTableHeaderComponent(
-        			getCellSet(), Axis.COLUMNS, tableAsModel, g.create(),
-        			getHeaderFont());
-        
         CellSetTableHeaderComponent rowHeaderComponent =
         	new CellSetTableHeaderComponent(
         			getCellSet(), Axis.ROWS, tableAsModel, g.create(),
         			getHeaderFont());
-        
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
-        int colourSchemeNum = 0;
         Color oldForeground = g.getColor();
+        int[] columnWidthList = getDesiredColumnWidths(g, tableAsModel);
         
+        // Actually print
+        int colHeaderSumHeight = printColumnHeaders(g, contentBox, printing,
+				headerFontHeight, maxRowHeight, parentDepth,
+				tableAsModel, rowHeaderWidth, oldForeground, columnWidthList);
+        printRowHeaders(g, contentBox, printing, maxRowHeight, numRows,
+				firstRecord, rowHeaderComponent, oldForeground,
+				colHeaderSumHeight, columnWidthList);
+        boolean shouldContinue = printBody(g, maxRowHeight, numRows, firstRecord, rowHeaderWidth,
+				colHeaderSumHeight, columnWidthList, oldForeground);
         
-        
-        //get all the headers widths
+        return shouldContinue;
+    }
+
+	private int[] getDesiredColumnWidths(Graphics2D g, final JTable tableAsModel) {
+		//get all the headers widths
         g.setFont(getHeaderFont());
 		CellSetAxis cellAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
-		columnWidthList = new int[tableAsModel.getColumnCount()];
+		int[] columnWidthList = new int[tableAsModel.getColumnCount()];
 		int i = 0;
 		Map<Integer, String> lastMember = new HashMap<Integer, String>();
         for (Position position : cellAxis.getPositions()) {
@@ -461,8 +457,130 @@ public class CellSetRenderer extends AbstractWabitObject implements
         		columnWidthList[col] = Math.max(columnWidthList[col], colWidth + PADDING);
         	}
         }
+        return columnWidthList;
+	}
+	
+	/**
+	 * Prints the body in the CellSetRenderer
+	 */
+	private boolean printBody(Graphics2D g, int maxRowHeight, int numRows,
+			int firstRecord, double rowHeaderWidth, int colHeaderSumHeight,
+			int[] columnWidthList, Color oldForeground) {
+		
+		g.setBackground(oldForeground);
+		
+		CellSetAxis columnsAxis = getCellSet().getAxes().get(0);
+        CellSetAxis rowsAxis = getCellSet().getAxes().get(1);
+        g.setFont(getBodyFont());
+        for (int row = firstRecord; row < rowsAxis.getPositionCount(); row++) {
+            if (row == numRows + firstRecord) {
+                return true;
+            }
+            int colPosition = 0;
+            for (int col = 0; col < columnsAxis.getPositionCount(); col++) {
+                String formattedValue;
+                if (bodyFormat != null) {
+                    try {
+                        formattedValue = bodyFormat.format(getCellSet().getCell(
+                                columnsAxis.getPositions().get(col),
+                                rowsAxis.getPositions().get(row)).getDoubleValue());
+                    } catch (OlapException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    formattedValue = getCellSet().getCell(
+                            columnsAxis.getPositions().get(col),
+                            rowsAxis.getPositions().get(row)).getFormattedValue();
+                }
+                
+                double alignmentShift = 0;
+                int columnWidth = columnWidthList[col];
+                //final int columnWidth = tableAsModel.getColumnModel().getColumn(col).getWidth();
+                final double textWidthInContext = getBodyFont().getStringBounds(formattedValue, g.getFontRenderContext()).getWidth();
+                switch (bodyAlignment) {
+                    case RIGHT:
+                        alignmentShift = columnWidth - textWidthInContext;
+                        break;
+                    case LEFT:
+                        break;
+                    case CENTER:
+                        alignmentShift = (columnWidth - textWidthInContext) / 2;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown alignment of type " + bodyAlignment);
+                }
+                
+                g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (colHeaderSumHeight + ((row - firstRecord) * maxRowHeight) + maxRowHeight));
+                colPosition += columnWidth;
+            }
+        }
+        return false;
+	}
+	
+	/**
+	 * Prints the Row Headers in the Cell Set Renderer
+	 */
+	private void printRowHeaders(Graphics2D g, ContentBox contentBox,
+			boolean printing, int maxRowHeight, int numRows, int firstRecord,
+			CellSetTableHeaderComponent rowHeaderComponent,
+			Color oldForeground, int colHeaderSumHeight, int[] columnWidthList) {
+		
+		 g.setBackground(oldForeground);
+		int colourSchemeNum;
+		
+		//XXX properly size up the rows with the font width, this will take an iteration through all the headers
+        double rowHeaderSumWidth = 0;
+        colourSchemeNum = 0;
+        for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
+            hierarchyComponent.createLayout();
+            g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
+            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
+            g.setColor(oldForeground);
+            Member lastMemberDisplayed = null;
+            for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
+                if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
+                lastMemberDisplayed = layoutItem.getMember();
+                final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
+                double y = layoutItem.getBounds().getY() + colHeaderSumHeight + maxRowHeight;
+                if (firstRecord * maxRowHeight > y - maxRowHeight || (firstRecord + numRows) * maxRowHeight < y - maxRowHeight) continue;
+                y = y - (firstRecord * maxRowHeight);
+                if (!printing) {
+                    Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
+                    if (memberRanges == null) {
+                        memberRanges = new HashSet<Rectangle>();
+                        memberHeaderMap.put(layoutItem.getMember(), memberRanges);
+                    }
+                    memberRanges.add(new Rectangle((int) x, (int) y - maxRowHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
+                }
+                Color oldColour = g.getColor();
+                if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
+                    g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
+                }
+                
+                g.drawString(layoutItem.getText(), (float) x, (float) y);
+                g.setColor(oldColour);
+            }
+            rowHeaderSumWidth += hierarchyComponent.getPreferredSize().getWidth();
+            colourSchemeNum++;
+        }
+	}
+	
+	/**
+	 * Prints the column headers in the CellSetRenderer.
+	 */
+	private int printColumnHeaders(Graphics2D g, ContentBox contentBox,
+			boolean printing, int headerFontHeight, int maxRowHeight,
+			int[] parentDepth, JTable tableAsModel, double rowHeaderWidth, 
+			Color oldForeground, int[] columnWidthList) {
+		
+		int colourSchemeNum = 0;
+		
+        CellSetTableHeaderComponent columnHeaderComponent =
+        	new CellSetTableHeaderComponent(
+        			getCellSet(), Axis.COLUMNS, tableAsModel, g.create(),
+        			getHeaderFont());
         
-        int colHeaderSumHeight = 0;
+		int colHeaderSumHeight = 0;
         g.setFont(getHeaderFont());
         int hierarchyComponentIndex = 0;
         for (HierarchyComponent hierarchyComponent : columnHeaderComponent.getHierarchies()) {
@@ -529,94 +647,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
             colourSchemeNum++;
             hierarchyComponentIndex++;
         }
-        
-        g.setBackground(oldForeground);
-        
-        //XXX properly size up the rows with the font width, this will take an iteration through all the headers
-        double rowHeaderSumWidth = 0;
-        colourSchemeNum = 0;
-        for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
-            hierarchyComponent.createLayout();
-            g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
-            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
-            g.setColor(oldForeground);
-            Member lastMemberDisplayed = null;
-            for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
-                if (layoutItem.getMember().equals(lastMemberDisplayed)) continue;
-                lastMemberDisplayed = layoutItem.getMember();
-                final double x = layoutItem.getBounds().getX() + rowHeaderSumWidth;
-                double y = layoutItem.getBounds().getY() + colHeaderSumHeight + maxRowHeight;
-                if (firstRecord * maxRowHeight > y - maxRowHeight || (firstRecord + numRows) * maxRowHeight < y - maxRowHeight) continue;
-                y = y - (firstRecord * maxRowHeight);
-                if (!printing) {
-                    Set<Rectangle> memberRanges = memberHeaderMap.get(layoutItem.getMember());
-                    if (memberRanges == null) {
-                        memberRanges = new HashSet<Rectangle>();
-                        memberHeaderMap.put(layoutItem.getMember(), memberRanges);
-                    }
-                    memberRanges.add(new Rectangle((int) x, (int) y - maxRowHeight, (int) layoutItem.getBounds().getWidth(), (int) layoutItem.getBounds().getHeight()));
-                }
-                Color oldColour = g.getColor();
-                if (selectedMember != null && selectedMember.equals(layoutItem.getMember())) {
-                    g.setColor(Color.BLUE);//XXX choose a better selected colour, probably based on the current l&f
-                }
-                
-                g.drawString(layoutItem.getText(), (float) x, (float) y);
-                g.setColor(oldColour);
-            }
-            rowHeaderSumWidth += hierarchyComponent.getPreferredSize().getWidth();
-            colourSchemeNum++;
-        }
-        g.setBackground(oldForeground);
-        
-        CellSetAxis columnsAxis = getCellSet().getAxes().get(0);
-        CellSetAxis rowsAxis = getCellSet().getAxes().get(1);
-        
-        g.setFont(getBodyFont());
-        for (int row = firstRecord; row < rowsAxis.getPositionCount(); row++) {
-            if (row == numRows + firstRecord) {
-                return true;
-            }
-            int colPosition = 0;
-            for (int col = 0; col < columnsAxis.getPositionCount(); col++) {
-                String formattedValue;
-                if (bodyFormat != null) {
-                    try {
-                        formattedValue = bodyFormat.format(getCellSet().getCell(
-                                columnsAxis.getPositions().get(col),
-                                rowsAxis.getPositions().get(row)).getDoubleValue());
-                    } catch (OlapException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else {
-                    formattedValue = getCellSet().getCell(
-                            columnsAxis.getPositions().get(col),
-                            rowsAxis.getPositions().get(row)).getFormattedValue();
-                }
-                
-                double alignmentShift = 0;
-                int columnWidth = columnWidthList[col];
-                //final int columnWidth = tableAsModel.getColumnModel().getColumn(col).getWidth();
-                final double textWidthInContext = getBodyFont().getStringBounds(formattedValue, g.getFontRenderContext()).getWidth();
-                switch (bodyAlignment) {
-                    case RIGHT:
-                        alignmentShift = columnWidth - textWidthInContext;
-                        break;
-                    case LEFT:
-                        break;
-                    case CENTER:
-                        alignmentShift = (columnWidth - textWidthInContext) / 2;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown alignment of type " + bodyAlignment);
-                }
-                
-                g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (colHeaderSumHeight + ((row - firstRecord) * maxRowHeight) + maxRowHeight));
-                colPosition += columnWidth;
-            }
-        }
-        return false;
-    }
+		return colHeaderSumHeight;
+	}
     
 
     public void resetToFirstPage() {
