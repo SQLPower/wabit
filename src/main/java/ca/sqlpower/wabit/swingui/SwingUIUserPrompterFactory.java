@@ -22,10 +22,7 @@ package ca.sqlpower.wabit.swingui;
 import javax.swing.JFrame;
 
 import ca.sqlpower.sql.DataSourceCollection;
-import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.DataSourceUserPrompter;
 import ca.sqlpower.swingui.ModalDialogUserPrompter;
 import ca.sqlpower.util.UserPrompter;
@@ -49,9 +46,8 @@ public class SwingUIUserPrompterFactory implements UserPrompterFactory {
             case BOOLEAN :
                 return new ModalDialogUserPrompter(optionType, defaultResponseType, owner, question, buttonNames);
             case JDBC_DATA_SOURCE:
-                return new DataSourceUserPrompter(optionType, defaultResponseType, (SPDataSource) defaultResponse, owner, question, new SpecificDataSourceCollection<JDBCDataSource>(dsCollection, JDBCDataSource.class), buttonNames);
             case OLAP_DATA_SOURCE:
-            	return new DataSourceUserPrompter(optionType, defaultResponseType, (SPDataSource) defaultResponse, owner, question, new SpecificDataSourceCollection<Olap4jDataSource>(dsCollection, Olap4jDataSource.class), buttonNames);
+            	return new DataSourceUserPrompter(responseType, optionType, defaultResponseType, (SPDataSource) defaultResponse, owner, question, dsCollection, buttonNames);
             default :
                 throw new UnsupportedOperationException("User prompt type " + responseType + " is unknown.");
         }
