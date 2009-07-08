@@ -47,6 +47,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -123,6 +124,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     
     private static final Icon DB_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
+    /**
+	 * The icon for the "Open Demonstration Workspace" button.
+	 */
+	private static final Icon OPEN_DEMO_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
+    
 	/**
 	 * A constant for storing the location of the query dividers in prefs.
 	 */
@@ -426,6 +432,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                 return new OpenOnServerMenu(dialogOwner, serviceInfo);
             }
         }));
+		JMenuItem openDemoButton = new JMenuItem(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				frame.dispose();
+				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
+				        "/ca/sqlpower/wabit/example_workspace.wabit"), getContext());
+			}
+		});
+		openDemoButton.setText("Open Demo Workspace");
+		openDemoButton.setIcon(OPEN_DEMO_ICON);
+		fileMenu.add(openDemoButton);
 		fileMenu.add(new AbstractAction("Close Workspace") {
 			public void actionPerformed(ActionEvent e) {
 				close();
