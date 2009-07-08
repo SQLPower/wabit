@@ -328,6 +328,7 @@ public class Olap4jGuiQueryPanel {
 	                SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
 	                p.add(new JScrollPane(tree));
 	                p.pack();
+	                windowLocation.y += cubeChooserButton.getHeight();
 	                p.setLocation(windowLocation);
 	                p.setVisible(true);
 	                	
