@@ -41,9 +41,11 @@ import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.metadata.Hierarchy;
+import org.olap4j.query.Query;
 import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.swingui.table.TableUtils;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 
 public class CellSetViewer {
@@ -80,6 +82,10 @@ public class CellSetViewer {
 		public void memberRemoved(MemberEvent e) {
 			fireMemberRemovedEvent(e);
 		}
+
+        public void memberExcluded(MemberEvent e) {
+            fireMemberExcludedEvent(e);
+        }
     };
 
     /**
@@ -220,6 +226,12 @@ public class CellSetViewer {
             axisListeners.get(0).memberRemoved(e);
         }
 	}
+    
+    private void fireMemberExcludedEvent(MemberEvent e) {
+        for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(0).memberExcluded(e);
+        }
+    }
     
     /**
      * Adds the given axis listener to this component. Note that source field on

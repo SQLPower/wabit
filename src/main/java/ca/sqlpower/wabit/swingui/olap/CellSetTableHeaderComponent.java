@@ -66,6 +66,7 @@ import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.table.TableColumnModel;
 
+import mondrian.olap.MondrianDef.MemberReaderParameter;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
@@ -78,10 +79,13 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
+import org.olap4j.query.Query;
+import org.olap4j.query.Selection;
 
 import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class CellSetTableHeaderComponent extends JComponent {
 
@@ -522,6 +526,14 @@ public class CellSetTableHeaderComponent extends JComponent {
         }
     }
     
+    private void fireMemberExcluded(Member member, Selection.Operator operator) {
+        final MemberExcludedEvent e = new MemberExcludedEvent(
+                this, MemberEvent.Type.MEMBER_EXCLUDED, axis, member, operator);
+        for (int i = axisListeners.size() - 1; i >= 0; i--) {
+            axisListeners.get(i).memberExcluded(e);
+        }
+    }
+    
     /**
      * Adds the given axis listener to this component.
      * 
@@ -594,6 +606,22 @@ public class CellSetTableHeaderComponent extends JComponent {
 				}
 			}
 
+            private final class ExcludeMemberAction extends
+            AbstractAction {
+                private Member member;
+                private Selection.Operator operator;
+                
+                private ExcludeMemberAction(String label, Member member, Selection.Operator operator) {
+                    super(label);
+                    this.member = member;
+                    this.operator = operator;
+                }
+        
+                public void actionPerformed(ActionEvent e) {
+                    fireMemberExcluded(member, this.operator);
+                }
+            }
+
 			public void mouseMoved(MouseEvent e) {
                 setSelectedMember(getMemberAtPoint(e.getPoint()));
             }
@@ -614,7 +642,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             	final Member clickedOnMember = selectedMember;
             	if (e.getButton() == MouseEvent.BUTTON3) {
             		JPopupMenu popUpMenu = new JPopupMenu();
-            		popUpMenu.add(new AbstractAction("Remove Hierarchy '" + hierarchy.getName() + "'") {
+            		popUpMenu.add(new AbstractAction("Remove the " + hierarchy.getName() + " hierarchy") {
 						public void actionPerformed(ActionEvent e) {
 							Member member = null;
 							try {
@@ -628,16 +656,26 @@ public class CellSetTableHeaderComponent extends JComponent {
             		});
             		if (clickedOnMember != null && 
             				!(clickedOnMember instanceof Measure)) {
+            		    popUpMenu.addSeparator();
+            		    popUpMenu.add(new ExcludeMemberAction(
+                                "Exclude " + clickedOnMember.getName() + " from this query",
+                                clickedOnMember,
+                                Selection.Operator.MEMBER));
+            		    popUpMenu.add(new ExcludeMemberAction(
+                                "Exclude " + clickedOnMember.getName() + "'s children from this query",
+                                clickedOnMember,
+                                Selection.Operator.CHILDREN));
+            		    popUpMenu.addSeparator();
 	            		popUpMenu.add(new DrillOnMemberAction(
-	            				"Drill Replace on Member '" + clickedOnMember.getName() + "'",
+	            				"Drill Replace on " + clickedOnMember.getName(),
 								clickedOnMember));
 	            		if (clickedOnMember.getParentMember() != null) {
 		            		popUpMenu.add(new DrillOnMemberAction(
-		            				"Drill Up on Member '" + clickedOnMember.getName() + "'",
+		            				"Drill Up on " + clickedOnMember.getName(),
 									clickedOnMember.getParentMember()));
 		            		try {
 								popUpMenu.add(new DrillOnMemberAction(
-										"Drill Up to Root Member",
+										"Drill Up to " + hierarchy.getName() + "'s root",
 										hierarchy.getRootMembers().get(0)));
 							} catch (OlapException ex) {
 								throw new RuntimeException(

@@ -19,13 +19,28 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
-public interface AxisListener {
+import javax.swing.JComponent;
 
-    void memberClicked(MemberEvent e);
-    
-    void memberDropped(MemberDroppedEvent e);
-    
-    void memberRemoved(MemberEvent e);
+import org.olap4j.Axis;
+import org.olap4j.metadata.Member;
+import org.olap4j.query.Selection;
+import org.olap4j.query.Selection.Operator;
 
-    void memberExcluded(MemberEvent e);
+/**
+ * A subclass of {@link MemberEvent} for dealing with dropping Members into a
+ * list of Members at a specific ordinal. 
+ */
+public class MemberExcludedEvent extends MemberEvent {
+	
+	private final Operator operator;
+	
+	public MemberExcludedEvent(JComponent source, Type type, Axis axis,
+			Member member, Selection.Operator operator) {
+		super(source, type, axis, member);
+		this.operator = operator;
+	}
+	
+	public Operator getOperator() {
+        return operator;
+    }
 }

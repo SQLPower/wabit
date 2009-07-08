@@ -50,6 +50,7 @@ import org.olap4j.metadata.Schema;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
+import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 
@@ -208,6 +209,10 @@ public class OlapQuery extends AbstractWabitObject {
             }
         }
         // XXX I believe this should fire an event.
+    }
+
+    public void excludeMember(String dimensionName, Member memberToExclude, Selection.Operator operator) {
+        this.mdxQuery.getDimension(dimensionName).exclude(operator, memberToExclude);
     }
 
     public OlapConnection createOlapConnection()

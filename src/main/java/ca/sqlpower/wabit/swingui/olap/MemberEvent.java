@@ -30,7 +30,7 @@ import org.olap4j.metadata.Member;
 public class MemberEvent {
 
     public static enum Type {
-        MEMBER_CLICKED, MEMBER_DROPPED, MEMBER_REMOVED
+        MEMBER_CLICKED, MEMBER_DROPPED, MEMBER_REMOVED, MEMBER_EXCLUDED
     }
     
     /**

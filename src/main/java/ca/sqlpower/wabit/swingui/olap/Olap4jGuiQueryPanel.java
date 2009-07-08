@@ -127,6 +127,10 @@ public class Olap4jGuiQueryPanel {
 		public void memberRemoved(MemberEvent e) {
 			removeHierarchy(e.getMember().getHierarchy(), e.getAxis());
 		}
+
+        public void memberExcluded(MemberEvent e) {
+            excludeMember((MemberExcludedEvent)e);
+        }
     };
     
     /**
@@ -407,6 +411,15 @@ public class Olap4jGuiQueryPanel {
     	executeQuery();
     }
 
+    private void excludeMember(MemberExcludedEvent e) {
+        Member member = e.getMember();
+        olapQuery.excludeMember(
+                member.getDimension().getName(), 
+                member, 
+                e.getOperator());
+        executeQuery();
+    }
+    
 	public JPanel getPanel() {
         return panel;
     }
