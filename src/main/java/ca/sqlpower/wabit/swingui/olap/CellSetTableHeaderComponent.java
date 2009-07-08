@@ -66,7 +66,6 @@ import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.table.TableColumnModel;
 
-import mondrian.olap.MondrianDef.MemberReaderParameter;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
@@ -79,13 +78,11 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
-import org.olap4j.query.Query;
 import org.olap4j.query.Selection;
 
 import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class CellSetTableHeaderComponent extends JComponent {
 
@@ -738,10 +735,12 @@ public class CellSetTableHeaderComponent extends JComponent {
 		public Dimension getPreferredSizeAtPosition(int position) {
 			return preferredSizes.get(position);
 		}
-		
+
 		/**
 		 * @param axis
 		 *            The {@link CellSetAxis} that this HierachyComponent is in.
+		 * @param hierarchy
+		 *            The hierarchy that this Component represents
 		 * @param hierarchyOrdinal
 		 *            The ordinal for the Hierarchy this component is for
 		 * @param columnModel
@@ -750,7 +749,11 @@ public class CellSetTableHeaderComponent extends JComponent {
 		 *            {@link Axis#COLUMNS}, then this can be null.
 		 */
         public HierarchyComponent(CellSetAxis axis, Hierarchy hierarchy, final int hierarchyOrdinal, TableColumnModel columnModel) {
-            this.axis = axis;
+			// HierarchyComponent may exceed the default maximum size of
+			// Short.MAX_VALUE x Short.MAX_VALUE, so we have to increase it or
+			// it won't display properly.
+        	this.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        	this.axis = axis;
             this.hierarchyOrdinal = hierarchyOrdinal;
             this.columnModel = columnModel;
             this.hierarchy = hierarchy;
@@ -957,6 +960,12 @@ public class CellSetTableHeaderComponent extends JComponent {
             	}
             	previousLabel = li.text;
             }
+            logger.debug("maximum size = " + this.getMaximumSize());
+            logger.debug("x = " + this.getX() + ", " +
+            			 "y = " + this.getY() + ", " +
+            			 "location = " + this.getLocation() + ", " +
+            			 "width = " + this.getWidth() + ", " +
+            			 "height = " + this.getHeight());
         }
 
         /**
