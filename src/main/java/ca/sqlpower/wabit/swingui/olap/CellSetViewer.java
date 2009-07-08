@@ -35,6 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.apache.log4j.Logger;
@@ -129,7 +130,6 @@ public class CellSetViewer {
         
         table.setModel(new CellSetTableModel(cellSet));
         setCellSet(cellSet);
-        
         rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table);
         rowHeader.addAxisListener(axisEventHandler);
         
@@ -154,7 +154,7 @@ public class CellSetViewer {
                 }
             }
         }
-        
+       
         scrollPane.setViewportView(table);
     	scrollPane.setRowHeaderView(rowHeader);
     	scrollPane.setColumnHeaderView(columnHeader);
@@ -168,6 +168,20 @@ public class CellSetViewer {
     			return label;
     		}
     	};
+    	TableCellRenderer bodyRenderer = new DefaultTableCellRenderer() {
+    		@Override
+    		public Component getTableCellRendererComponent(JTable table,
+    				Object value, boolean isSelected, boolean hasFocus,
+    				int row, int column) {
+    			JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
+    					row, column);
+    			label.setHorizontalAlignment(JLabel.RIGHT);
+    			return label;
+    		}
+    	};
+    	for (int i = 0; i < table.getColumnCount(); i++) {
+    		table.setDefaultRenderer(table.getColumnClass(i), bodyRenderer);
+    	}
     	table.getTableHeader().setDefaultRenderer(defaultRenderer);
     	TableUtils.fitColumnWidths(table, minColumnWidth, -1, 5); //The max width is set to -1 to not use the max width when resizing columns.
     }
