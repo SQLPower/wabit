@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -43,10 +44,12 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -255,6 +258,17 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         panel.add(new JLabel("Header Font"), "gap related");
         final JLabel headerFontExample = new JLabel("Header Font Example");
+        headerFontExample.addPropertyChangeListener("font" , new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent arg0) {
+				JDialog dialog = (JDialog) SwingUtilities.getWindowAncestor(panel);
+				if (dialog != null) {
+					panel.invalidate();
+					int newWidth = (int) Math.max(dialog.getContentPane().getPreferredSize().getWidth(), dialog.getContentPane().getSize().getWidth());
+					int newHeight = (int) Math.max(dialog.getContentPane().getPreferredSize().getHeight(), dialog.getContentPane().getSize().getHeight());
+					dialog.setSize(new Dimension(newWidth, newHeight));
+				}
+			}
+        });
         headerFontExample.setFont(getHeaderFont());
         panel.add(headerFontExample, "gap related");
         panel.add(ReportUtil.createFontButton(headerFontExample), "wrap");
@@ -295,6 +309,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         panel.add(new JLabel("Body Format"), "gap related");
         panel.add(bodyFormatComboBox, "span 2, wrap");
+        
         
         return new DataEntryPanel() {
             
