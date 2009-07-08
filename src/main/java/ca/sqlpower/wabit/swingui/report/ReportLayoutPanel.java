@@ -81,7 +81,6 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
@@ -96,6 +95,9 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 
 public class ReportLayoutPanel implements WabitPanel, MouseState {
 
+	private static final ImageIcon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
+	private static final ImageIcon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
+	private static final ImageIcon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"));
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
     public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/text_add.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
@@ -104,6 +106,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     private static final Icon CREATE_IMAGE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/image_add.png"));
     private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/chart_bar_add.png"));
     private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
+    private static final ImageIcon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge_1.png")); //originally said throbber-badge.gif, that icon doesn't exist. I think this is what we need...
     
     private final JSlider zoomSlider;
     
@@ -333,7 +336,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.add(new ExportLayoutAction(session, report));
         toolbar.addSeparator();
         JPanel zoomPanel = new JPanel(new BorderLayout());
-        zoomPanel.add(new JLabel(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"))), BorderLayout.WEST);
+        zoomPanel.add(new JLabel(ZOOM_OUT_ICON), BorderLayout.WEST);
         final int defaultSliderValue = 500;
         zoomSlider= new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
         zoomSlider.addChangeListener(new ChangeListener() {
@@ -398,17 +401,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				((JLabel) c).setText(((WabitObject) value).getName());
 				
 				if (value instanceof QueryCache) {
-				    final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
 				    if (((QueryCache) value).isRunning()) {
 				        if (((QueryCache) value).isStreaming()) {
-				            final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
-				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_DB, STREAM_BADGE})));
 				        } else {
-				            final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge.gif"));
-				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
+				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_DB, THROBBER_BADGE})));
 				        }
 				    } else {
-				        ((JLabel) c).setIcon(queryIcon);
+				        ((JLabel) c).setIcon(QUERY_DB);
 				    }
 				} else if (value instanceof OlapQuery) {
 				    ((JLabel) c).setIcon(OLAP_QUERY_ICON);
