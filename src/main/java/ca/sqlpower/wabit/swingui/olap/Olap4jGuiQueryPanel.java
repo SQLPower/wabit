@@ -44,10 +44,10 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.TreeSelectionEvent;
@@ -59,7 +59,6 @@ import javax.swing.tree.TreePath;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
-import org.jfree.util.Log;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.OlapException;
@@ -303,7 +302,8 @@ public class Olap4jGuiQueryPanel {
             	}
                 try {
 	            	cubeChooserButton.setEnabled(false);
-	                final JWindow w = new JWindow(owningFrame);
+	                //final JWindow w = new JWindow(owningFrame);
+	                final JPopupMenu p = new JPopupMenu();
 	                JTree tree;
 	                try {
 	                    tree = new JTree(
@@ -320,12 +320,13 @@ public class Olap4jGuiQueryPanel {
 	                    tree.expandRow(row);
 	                    row++;
 	                }
-	                w.setContentPane(new JScrollPane(tree));
-	                w.pack();
 	                Point windowLocation = new Point(0, 0);
 	                SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
-	                w.setLocation(windowLocation);
-	                w.setVisible(true);
+	                p.add(new JScrollPane(tree));
+	                p.pack();
+	                p.setLocation(windowLocation);
+	                p.setVisible(true);
+	                	
 	                
 	                tree.addTreeSelectionListener(new TreeSelectionListener() {
 	                    public void valueChanged(TreeSelectionEvent e) {
@@ -336,7 +337,7 @@ public class Olap4jGuiQueryPanel {
 	                                Cube cube = (Cube) node;
 	                                cubeChooserButton.setEnabled(true);
 	                                setCurrentCube(cube);
-	                                w.dispose();
+	                                p.setVisible(false);
 	                            }
 	                        } catch (SQLException ex) {
 	                            throw new RuntimeException(ex);
