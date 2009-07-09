@@ -69,6 +69,7 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
+import ca.sqlpower.sql.CachedRowSet.RowComparator;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
@@ -76,6 +77,9 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.resultset.Position;
+import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
+import ca.sqlpower.wabit.report.resultset.Section;
 import ca.sqlpower.wabit.swingui.Icons;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -87,10 +91,17 @@ import edu.umd.cs.piccolo.event.PInputEvent;
  * Renders a JDBC result set using configurable absolute column widths.
  */
 public class ResultSetRenderer extends AbstractWabitObject implements ReportContentRenderer {
-
+    
     private static final Logger logger = Logger.getLogger(ResultSetRenderer.class);
     
 	private static final int COLUMN_WIDTH_BUFFER = 5;
+
+    /**
+     * This is the number of pixels each cell will be indented by if there is a
+     * border to the left of the cell. If no indent is given then the left part
+     * of the text will be overwritten by the border itself.
+     */
+	public static final int BORDER_INDENT = 2;
 
 	/**
 	 * Notes a change to the query has occurred that would require a refresh to the renderer
@@ -164,6 +175,48 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	HORIZONTAL
     }
     
+    /**
+     * This is the list of all of the sections in the current result set. Each
+     * section is defined by the breaks in the result set. This will be null if
+     * a change has occurred to the result set and requires the layout to be
+     * recreated by calling {@link ResultSetRenderer#createResultSetLayout()}.
+     * This and its associated properties can be cleared by calling
+     * {@link ResultSetRenderer#clearResultSetLayout()}.
+     */
+    private List<Section> sectionList = null;
+
+    /**
+     * This list contains an in-order list of positions per page. Each entry in
+     * the outer list represents one page. The values in the inner list
+     * represents the {@link Section}s in each page where each section in a page
+     * may not be the entire section as defined by a {@link Position}. This will
+     * be null if a change has occurred and requires the positions to be
+     * recreated from the {@link ResultSetRenderer#createResultSetLayout()}
+     * method.
+     */
+    private List<List<Position>> pagePositions = null;
+    
+    /**
+     * This renderer is used to layout and display the different parts of
+     * a result set. This will be null until the result set has been laid
+     * out and should be recreated each time the result set changes.
+     */
+    private ReportPositionRenderer reportPositionRenderer = null;
+    
+    /**
+     * This enum is used to describe the types of rows that are able to
+     * be printed. Some row types may not be printable due to font sizes
+     * and the remaining amount of space to print in. 
+     * <p>
+     * Package private for testing.
+     */
+    enum PrintableRowTypes {
+        NONE,
+        HEADER,
+        BODY,
+        BOTH
+    }
+    
     private BorderStyles borderType = BorderStyles.NONE;
     
     private final List<ColumnInfo> columnInfo;
@@ -201,7 +254,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * done then this result set should be null. This result set will contain the entire
      * result of the query instead of just a result set limited by a row limit.
      */
-    private ResultSet printingResultSet = null;
+    private CachedRowSet printingResultSet = null;
 
     /**
      * If the query fails to execute, the corresponding exception will be saved here and
@@ -209,22 +262,27 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     private Exception executeException;
 
-    /**
-	 * A list containing the ResultSet row numbers that each page starts with.
-	 * The List index corresponds with the page index.
-	 */
-    private List<Integer> pageRowNumberList = new ArrayList<Integer>();
-
 	/**
 	 * This will store the background colour for the result set renderer.
 	 */
 	private Color backgroundColour;
-
-	/**
-	 * This map stores the current subtotal for each column in this map.
-	 */
-	private final Map<ColumnInfo, BigDecimal> subtotalForCols = new HashMap<ColumnInfo, BigDecimal>();
 	
+	/**
+	 * This listens for all property changes on the parent content box to 
+	 * know when to recreate the layout of the result set. This also listens
+	 * to changes in the result set renderer for changes that the ContentBox
+	 * doesn't receive.
+	 * <p>
+	 * XXX Make the ContentBox aware of changes to the query. The content box
+	 * should receive events when the query changes when it is listening to
+	 * the children of a result set renderer.
+	 */
+	private final PropertyChangeListener parentChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            clearResultSetLayout();
+        }
+    };
+
 	/**
 	 * This change listener is placed on {@link CachedRowSet}s to monitor streaming result sets
 	 * to know when a new row is added to the result set.
@@ -271,8 +329,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     /**
      * This will execute the query contained in this result set and
      * set the result set to be a new result set.
+     * <p>
+     * Package private for testing.
      */
-	private void executeQuery() {
+	void executeQuery() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
@@ -305,7 +365,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
-        ResultSet executedRs = null;
+        CachedRowSet executedRs = null;
         executeException = null;
         QueryCache cachedQuery = new QueryCache(query);
 		try {
@@ -313,7 +373,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			boolean hasNext = true;
 			while (hasNext) {
             	if (cachedQuery.getResultSet() != null) {
-            		executedRs = cachedQuery.getResultSet();
+            		executedRs = cachedQuery.getCachedRowSet();
             		break;
             	}
                 boolean sqlResult = cachedQuery.getMoreResults();
@@ -446,8 +506,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public void resetToFirstPage() {
-    	paintingRS = null;
-    	pageRowNumberList.clear();
+        clearResultSetLayout();
     }
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
@@ -498,280 +557,331 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
-    	ResultSet rs = this.paintingRS;
+    	CachedRowSet rs = this.paintingRS;
     	if (printing) {
     		rs = printingResultSet;
     	}
-        try {
-        	if (pageIndex >= pageRowNumberList.size() || pageRowNumberList.get(pageIndex) == null) {
-        		while (pageRowNumberList.size() < pageIndex) {
-        			pageRowNumberList.add(null);
-        		}
-        		pageRowNumberList.add(rs.getRow());
-        	}
-        	
-        	logger.debug("Setting result set to start at " + pageRowNumberList.get(pageIndex));
-        	int pageToSet = pageRowNumberList.get(pageIndex);
-        	rs.absolute(pageRowNumberList.get(pageIndex));
-   			
-        	ResultSetMetaData rsmd = rs.getMetaData();
-            
-            g.setFont(getHeaderFont());
-            FontMetrics fm = g.getFontMetrics();
-            int x = 0;
-            int y = fm.getAscent();
-            int colCount = rsmd.getColumnCount();
-            
-            if (borderType == BorderStyles.FULL || borderType == BorderStyles.OUTSIDE) {
-            	x += 2;
+    	
+    	RowComparator comparator = new RowComparator();
+    	for (int i = 0; i < getColumnInfoList().size(); i++) {
+    	    if (getColumnInfoList().get(i).getWillBreak()) {
+    	        comparator.addSortColumn(i + 1, true);
+    	    }
+    	}
+    	try {
+    	    rs = rs.createSharedSorted(comparator);
+    	    
+    	    autosizeColumnInformation(g, contentBox, rs);
+
+    	    Graphics2D zeroClipGraphics = (Graphics2D) g.create(0, 0, 0, 0);
+            createResultSetLayout(zeroClipGraphics, rs);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (pageIndex >= pagePositions.size()) {
+            logger.warn("Trying to print page " + pageIndex + " but only " + pagePositions.size() + " pages exist.");
+            return false;
+        }
+        
+        Graphics2D g2 = (Graphics2D) g.create();
+        List<Position> currentPagePositions = pagePositions.get(pageIndex);
+        List<Position.PositionType> positionTypes = Arrays.asList(Position.PositionType.values());
+        for (Position position : currentPagePositions) {
+            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.SECTION_HEADER)
+                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.SECTION_HEADER)) {
+                Dimension dim = reportPositionRenderer.renderSectionHeader(g2, position.getSection().getSectionHeader(), getColumnInfoList());
+                g2.translate(0, dim.getHeight());
             }
-            for (int col = 1; col <= colCount; col++) {
-                ColumnInfo ci = columnInfo.get(col-1);
-                g.drawString(replaceNull(ci.getName()), x, y);
-                x += ci.getWidth();
-                if (borderType == BorderStyles.VERTICAL || borderType == BorderStyles.FULL || borderType == BorderStyles.INSIDE) {
-                	x += 2;
+            
+            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.COLUMN_HEADER)
+                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.COLUMN_HEADER)) {
+                Dimension dim = reportPositionRenderer.renderColumnHeader(g2, columnInfo);
+                g2.translate(0, dim.getHeight());
+            }
+            
+            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.ROW)
+                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.ROW)) {
+                int startingRow = position.getSection().getStartRow();
+                if (position.getStartingRow() != null) {
+                    startingRow = position.getStartingRow();
                 }
-            }
-            
-            y += fm.getHeight();
-            g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
-            
-            g.setFont(getBodyFont());
-            fm = g.getFontMetrics();
-            
-            for (ColumnInfo ci : columnInfo) {
-            	if (ci.getWidth() < 0) {
-            		int currentRow = rs.getRow();
-            		rs.beforeFirst();
-            		int columnIndex = columnInfo.indexOf(ci) + 1;
-					double maxWidth = fm.getStringBounds(rs.getMetaData().getColumnName(columnIndex), g).getWidth();
-					double currentHeight = 0;
-            		while (rs.next() && currentHeight < contentBox.getHeight()) {
-            			if (rs.getString(columnIndex) == null) {
-            				continue;
-            			}
-            			Rectangle2D stringBounds = fm.getStringBounds(rs.getString(columnIndex), g);
-						double stringLength = stringBounds.getWidth();
-            			currentHeight += stringBounds.getHeight();
-            			if (stringLength > maxWidth) {
-            				maxWidth = stringLength;
-            			}
-            		}
-            		rs.absolute(currentRow);
-            		ci.setWidth((int) maxWidth + COLUMN_WIDTH_BUFFER);
-            	}
-            }
-            
-            List<String> lastRenderedRow = new ArrayList<String>();
-            int rowCount = 0;
-            logger.debug("Content box has height " + contentBox.getHeight() + " and next height will be " + (y + fm.getHeight()));
-            if (contentBox.getHeight() < (y + fm.getHeight())) {
-            	return false;
-            }
-            while (((y + fm.getHeight()) < contentBox.getHeight()) && rs.next()) {
-            	rowCount++;
-            	List<String> renderedRow = new ArrayList<String>();
-            	List<Object> rawRow = new ArrayList<Object>();
-            	
-                x = 0;
-                if (borderType == BorderStyles.FULL || borderType == BorderStyles.INSIDE) {
-                	x += 2;
+                int endingRow = position.getSection().getEndRow();
+                if (position.getEndingRow() != null) {
+                    endingRow = position.getEndingRow();
                 }
-                
-                for (int col = 1; col <= colCount; col++) {
-                    ColumnInfo ci = columnInfo.get(col-1);
-                    Object value = rs.getObject(col);
-                    String formattedValue;
-                    if (ci.getFormat() != null && value != null) {
-                    	logger.debug("Format iss:"+ ci.getFormat()+ "string is:"+ rs.getString(col));
-                    	formattedValue = ci.getFormat().format(value);
-                    } else {
-                    	formattedValue = replaceNull(rs.getString(col));
+                for (int row = startingRow; row <= endingRow; row++) {
+                    Dimension dim;
+                    try {
+                        rs.absolute(row);
+                        dim = reportPositionRenderer.renderRow(g2, rs, columnInfo);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
                     }
-                    renderedRow.add(formattedValue);
-                    rawRow.add(value);
-                }
-                
-                List<String> nextRenderedRow = new ArrayList<String>();
-                if (rs.next()) {
-                	for (int col = 1; col <= colCount; col++) {
-                		ColumnInfo ci = columnInfo.get(col-1);
-                		Object value = rs.getObject(col);
-                		String formattedValue;
-                		if (ci.getFormat() != null && value != null) {
-                			logger.debug("Format iss:"+ ci.getFormat()+ "string is:"+ rs.getString(col));
-                			formattedValue = ci.getFormat().format(value);
-                		} else {
-                			formattedValue = replaceNull(rs.getString(col));
-                		}
-                		nextRenderedRow.add(formattedValue);
-                	}
-                	rs.previous();
-                }
-                
-                //Decides if there is enough space for the last row before the subtotal
-                //and the subtotal itself.
-                if (!subtotalForCols.isEmpty() && !renderedRow.isEmpty() && !nextRenderedRow.isEmpty()) {
-                	boolean nextContentBox = false;
-                	for (int i = 0; i < colCount; i++) {
-                		ColumnInfo ci = columnInfo.get(i);
-                		if ((ci.getWillBreak() && !nextRenderedRow.get(i).equals(renderedRow.get(i))) 
-                				&& (y + fm.getHeight() + subtotalHeight(g)) > contentBox.getHeight()) {
-                			nextContentBox = true;
-                			break;
-                		}
-                	}
-                	if (nextContentBox) {
-                		rs.previous();
-                		break;
-                	}
-                }
-                
-                boolean spaceForNextLine = true;
-                for (int i = 0; i < colCount; i++) {
-                	ColumnInfo ci = columnInfo.get(i);
-                	if (ci.getWillBreak() && i < lastRenderedRow.size() && !lastRenderedRow.get(i).equals(renderedRow.get(i))) {
-                		y = renderSubtotals(g, fm, y, colCount, subtotalForCols);
-                		subtotalForCols.clear();
-                		if ((y + fm.getHeight() * 2) > contentBox.getHeight()) {
-                			spaceForNextLine = false;
-                			break;
-                		}
-                		y += fm.getHeight();
-                		logger.debug("Printing break line: y height = " + y + ", font height = " + fm.getHeight() + " content box height = " + contentBox.getHeight());
-                		g.drawLine(0, y - fm.getHeight()/2, contentBox.getWidth(), y - fm.getHeight()/2);
-                		break;
-                	}
-                }
-                if (!spaceForNextLine) {
-                	logger.debug("Not enough space for newline.");
-                	rs.previous();
-                	break;
-                }
-                
-                y += fm.getHeight();
-                lastRenderedRow.clear();
-                for (int col = 0; col < colCount; col++) {
-                	ColumnInfo ci = columnInfo.get(col);
-                	if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && col != 0) {
-                		g.drawLine(x, 0, x, contentBox.getHeight() - 1);
-                		x += 2;
-                	}
-                	String formattedValue = renderedRow.get(col);
-                	int offset = ci.getHorizontalAlignment().computeStartX(
-                			ci.getWidth(), fm.stringWidth(formattedValue));
-                	g.drawString(formattedValue, x + offset, y); // TODO clip and/or line wrap and/or warn
-                	x += ci.getWidth();
-                	lastRenderedRow.add(formattedValue);
-                	Object value = rawRow.get(col);
-                	if (value instanceof Number) {
-                		BigDecimal oldValue = subtotalForCols.get(ci);
-                		if (oldValue == null) {
-                			oldValue = BigDecimal.valueOf(0);
-                		}
-                		BigDecimal augend;
-                		if (value instanceof BigDecimal) {
-                			augend = (BigDecimal) value;
-                		} else {
-                			augend = new BigDecimal(value.toString());
-                		}
-                		subtotalForCols.put(ci, oldValue.add(augend));
-                	}
-                }
-                if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) {
-                	g.drawLine(0, y + fm.getHeight() / 4, contentBox.getWidth() - 1, y + fm.getHeight() / 4);
-                	y += fm.getHeight() / 2;
+                    g2.translate(0, dim.getHeight());
                 }
             }
-            logger.debug("Content box has height " + contentBox.getHeight() + " ended at row " + rs.getRow() + " in result set.");
-            logger.debug("Printed " + rowCount + " rows in the current result set renderer.");
-            if (rs.isAfterLast() && !subtotalForCols.isEmpty()) {
-            	renderSubtotals(g, fm, y, colCount, subtotalForCols);
-            	subtotalForCols.clear();
+            
+            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.TOTALS)
+                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.TOTALS)) {
+                Dimension dim = reportPositionRenderer.renderTotals(g2, position.getSection().getTotals(), columnInfo);
+                g2.translate(0, dim.getHeight());
             }
-        	if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
-        		g.drawLine(0, 0, 0, contentBox.getHeight() - 1);
-        		g.drawLine(contentBox.getWidth() - 1, 0, contentBox.getWidth() - 1, contentBox.getHeight());
-            	g.drawLine(0, contentBox.getHeight() - 1, contentBox.getWidth() - 1, contentBox.getHeight() - 1);
-            	g.drawLine(0, 0, contentBox.getWidth() - 1, 0);
+        }
+        
+        //TODO render grand total here
+        if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
+            g.drawLine(0, 0, 0, contentBox.getHeight() - 1);
+            g.drawLine(contentBox.getWidth() - 1, 0, contentBox.getWidth() - 1, contentBox.getHeight());
+            g.drawLine(0, contentBox.getHeight() - 1, contentBox.getWidth() - 1, contentBox.getHeight() - 1);
+            g.drawLine(0, 0, contentBox.getWidth() - 1, 0);
+        }
+        
+        //TODO come up with a better way to clear the result sets, probably at the same time the page positions are cleared to get fresh data.
+        final boolean isLastPage = pagePositions.size() - 1 == pageIndex;
+        if (isLastPage) {
+            if (printing) {
+                printingResultSet = null;
+            } else {
+                this.paintingRS = null;
             }
-        	if (rs.isAfterLast()) {
-        		if (printing) {
-        			printingResultSet = null;
-        		} else {
-        			this.paintingRS = null;
+        }
+        return !isLastPage;
+    }
+    
+    /**
+     * Call this method if something changes in the result set that causes
+     * the need to redefine the layout of the result set. 
+     */
+    private void clearResultSetLayout() {
+        sectionList = null;
+        pagePositions = null;
+        reportPositionRenderer = null;
+        printingResultSet = null;
+        paintingRS = null;
+    }
+
+    /**
+     * This method does all of the layout of each section of a result set. This
+     * should be executed any time a part of the result set renderer changes. If
+     * all of the properties that defines a layout are set this method will
+     * return immediately. This includes but is not limited to: font changes,
+     * break changes, new columns being sub-totaled, different graphics in use
+     * such as printing vs painting, and changes to the query.
+     * <p>
+     * This method will first create all of the sections based on the result set
+     * and the columns defined as breaks. Then the {@link Position}s will be
+     * created to lay out the result set. Multiple passes of the layout can be
+     * done if desired to try and increase the look of the layout.
+     * <p>
+     * Package private for testing.
+     * 
+     * @param g
+     *            This should be a graphics object that is the same as the
+     *            graphics the result set will be rendered into. If this
+     *            graphics object is different the components may be laid out in
+     *            a way that will have text clipped by the bounding
+     *            {@link ContentBox}.
+     * @param rs
+     *            This result set will be iterated over to lay out the result
+     *            set. If the result set pointer should not be changed a copy of
+     *            the result set, using a CachedRowSet or calling createShared
+     *            on a {@link CachedRowSet} should be passed instead. The result
+     *            set should also be sorted by the columns defined as breaks to
+     *            avoid sections that are identified by the same section.
+     */
+    void createResultSetLayout(Graphics2D g, ResultSet rs) throws SQLException {
+        if (sectionList != null && pagePositions != null) return; 
+        
+        sectionList = new ArrayList<Section>();
+        pagePositions = new ArrayList<List<Position>>();
+        reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, getParent().getWidth(), nullString);
+        rs.beforeFirst();
+        
+        int sectionStartRow = 1;
+        int sectionEndRow = 1;
+        List<BigDecimal> sectionTotals = new ArrayList<BigDecimal>();
+        List<Object> sectionKey = null;
+        
+        while (rs.next()) {
+            
+            List<Object> newSectionKey = new ArrayList<Object>();
+            for (ColumnInfo ci : getColumnInfoList()) {
+                if (ci.getWillBreak()) {
+                    newSectionKey.add(rs.getObject(getColumnInfoList().indexOf(ci) + 1));
+                } else {
+                    newSectionKey.add(null);
+                }
+            }
+            
+            if (!rs.isFirst()) {
+                if (sectionKey == null) throw new IllegalStateException("The initial section key was undefined! Cannot start laying out the result set.");
+                if (!newSectionKey.equals(sectionKey)) {
+                    Section newSection = new Section(sectionStartRow, sectionEndRow - 1, sectionTotals, sectionKey);
+                    sectionList.add(newSection);
+                    
+                    sectionKey = newSectionKey;
+                    sectionStartRow = sectionEndRow;
+                    sectionTotals = new ArrayList<BigDecimal>();
+                    for (ColumnInfo ci : getColumnInfoList()) {
+                        if (ci.getWillSubtotal()) {
+                            sectionTotals.add(new BigDecimal(0));
+                        } else {
+                            sectionTotals.add(null);
+                        }
+                    }
+                }
+            } else {
+                sectionKey = newSectionKey;
+                for (ColumnInfo ci : getColumnInfoList()) {
+                    if (ci.getWillSubtotal()) {
+                        sectionTotals.add(new BigDecimal(0));
+                    } else {
+                        sectionTotals.add(null);
+                    }
+                }
+            }
+            
+            for (ColumnInfo ci : getColumnInfoList()) {
+                if (ci.getWillSubtotal()) {
+                    final int colIndex = getColumnInfoList().indexOf(ci);
+                    BigDecimal total = sectionTotals.get(colIndex);
+                    total = total.add(rs.getBigDecimal(colIndex + 1));
+                    sectionTotals.set(colIndex, total);
+                }
+            }
+            
+            sectionEndRow++;
+        }
+        sectionList.add(new Section(sectionStartRow, sectionEndRow - 1, sectionTotals, sectionKey));
+        
+        //The way the Position objects are created here are tied to how
+        //renderSuccess works. If renderSuccess changes such that the
+        //header order or arrangement changes this section will need to be changed
+        //as well.
+        
+        int y = 0;
+        List<Position> onePagePositions = new ArrayList<Position>();
+        Position.PositionType startingPositionType;
+        Integer startingPositionRow;
+        Position.PositionType endingPositionType;
+        Integer endingPositionRow;
+        for (Section section : sectionList) {
+            startingPositionRow = null;
+            endingPositionRow = null;
+            startingPositionType = Position.PositionType.SECTION_HEADER;
+            endingPositionType = Position.PositionType.SECTION_HEADER;
+            
+            Dimension headerDimension = reportPositionRenderer.renderSectionHeader(g, section.getSectionHeader(), getColumnInfoList());
+            if (headerDimension.height > getParent().getHeight()) {
+                pagePositions = new ArrayList<List<Position>>();
+                return;
+            }
+            if (y + headerDimension.getHeight() > getParent().getHeight()) {
+                pagePositions.add(onePagePositions);
+                onePagePositions = new ArrayList<Position>();
+                y = 0;
+            }
+            
+            y += headerDimension.getHeight();
+            
+            Dimension columnHeaderDimension = reportPositionRenderer.renderColumnHeader(g, columnInfo);
+            if (columnHeaderDimension.height > getParent().getHeight()) {
+                pagePositions = new ArrayList<List<Position>>();
+                return;
+            }
+            if (y + columnHeaderDimension.getHeight() > getParent().getHeight()) {
+                onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow));
+                pagePositions.add(onePagePositions);
+                onePagePositions = new ArrayList<Position>();
+                startingPositionType = Position.PositionType.COLUMN_HEADER;
+                y = 0;
+            }
+            endingPositionType = Position.PositionType.COLUMN_HEADER;
+            
+            y += columnHeaderDimension.getHeight();
+            
+            for (int row = section.getStartRow(); row <= section.getEndRow(); row++) {
+                rs.absolute(row);
+                Dimension rowDimension = reportPositionRenderer.renderRow(g, rs, columnInfo);
+                if (rowDimension.height > getParent().getHeight()) {
+                    pagePositions = new ArrayList<List<Position>>();
+                    return;
+                }
+                if (y + rowDimension.getHeight() > getParent().getHeight()) {
+                    onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow));
+                    pagePositions.add(onePagePositions);
+                    onePagePositions = new ArrayList<Position>();
+                    startingPositionType = Position.PositionType.ROW;
+                    startingPositionRow = Integer.valueOf(row);
+                    y = 0;
+                }
+                endingPositionType = Position.PositionType.ROW;
+                endingPositionRow = Integer.valueOf(row);
+                
+                y += rowDimension.getHeight();
+            }
+            
+            Dimension totalsDimension = reportPositionRenderer.renderTotals(g, section.getTotals(), columnInfo);
+            if (totalsDimension.getHeight() >  getParent().getHeight()) {
+                pagePositions = new ArrayList<List<Position>>();
+                return;
+            }
+            if (y + totalsDimension.getHeight() > getParent().getHeight()) {
+                onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow));
+                pagePositions.add(onePagePositions);
+                onePagePositions = new ArrayList<Position>();
+                startingPositionType = Position.PositionType.TOTALS;
+                endingPositionRow = null;
+                y = 0;
+            }
+            endingPositionType = Position.PositionType.TOTALS;
+            
+            y += totalsDimension.getHeight();
+            
+            onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow));
+        }
+        logger.debug("The result set will print across " + pagePositions.size() + " pages.");
+    }
+
+    /**
+     * This is a helper method for printing. If a column is found to have an
+     * invalid width (ie: less than 0) its width will be redefined to be the
+     * width of the largest value in the column. This is mainly used for new
+     * columns added to a table when the query is modified.
+     */
+    private void autosizeColumnInformation(Graphics2D g,
+            ContentBox contentBox, ResultSet rs)
+            throws SQLException {
+        FontMetrics fm = g.getFontMetrics(getBodyFont());
+        for (ColumnInfo ci : columnInfo) {
+        	if (ci.getWidth() < 0) {
+        		int currentRow = rs.getRow();
+        		rs.beforeFirst();
+        		int columnIndex = columnInfo.indexOf(ci) + 1;
+        		double maxWidth = fm.getStringBounds(rs.getMetaData().getColumnName(columnIndex), g).getWidth();
+        		double currentHeight = 0;
+        		while (rs.next() && currentHeight < contentBox.getHeight()) {
+        			if (rs.getString(columnIndex) == null) {
+        				continue;
+        			}
+        			Rectangle2D stringBounds = fm.getStringBounds(rs.getString(columnIndex), g);
+        			double stringLength = stringBounds.getWidth();
+        			currentHeight += stringBounds.getHeight();
+        			if (stringLength > maxWidth) {
+        				maxWidth = stringLength;
+        			}
         		}
+        		rs.absolute(currentRow);
+        		ci.setWidth((int) maxWidth + COLUMN_WIDTH_BUFFER);
         	}
-            return !rs.isAfterLast();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
         }
     }
     
     /**
-     * This will render the subtotals at the current y position.
-     * @param g The graphic to render the subtotals to.
-     * @param fm The current font metrics.
-     * @param y The y position for the subtotals to start at.
-     * @param colCount The number of columns that exist in the result set.
-     * @param subtotalForCols A map that maps column info to their subtotal if they have one.
-     * @return The new y position after the subtotal rows.
+     * This will replace null values with the designated null string.
      */
-	private int renderSubtotals(Graphics2D g, FontMetrics fm, int y,
-			int colCount, Map<ColumnInfo, BigDecimal> subtotalForCols) {
-		if (!subtotalForCols.isEmpty()) {
-			int localX = 0;
-
-			y += fm.getHeight();
-			boolean firstSubtotal = true;
-			for (int subCol = 0; subCol < colCount; subCol++) {
-				if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
-					localX += 2;
-				}
-				ColumnInfo colInfo = columnInfo.get(subCol);
-				BigDecimal subtotal = subtotalForCols.get(colInfo);
-				if (colInfo.getWillSubtotal() && subtotal != null) {
-					if (firstSubtotal) {
-						y += fm.getHeight();
-						g.setFont(getHeaderFont());
-						g.drawString("Subtotal", 2, y);
-						y += g.getFontMetrics().getHeight();
-						g.setFont(getBodyFont());
-						firstSubtotal = false;
-					}
-					String formattedValue;
-					if (colInfo.getFormat() != null) {
-						formattedValue = colInfo.getFormat().format(subtotal);
-					} else {
-						formattedValue = subtotal.toString();
-					}
-					int offset = colInfo.getHorizontalAlignment().computeStartX(
-							colInfo.getWidth(), fm.stringWidth(formattedValue));
-					g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
-				}
-				localX += colInfo.getWidth();
-			}
-		}
-		return y;
-	}
-	
-	/**
-	 * This will return the height of the subtotal displayed by
-	 * renderSubtotals.
-	 */
-	private int subtotalHeight(Graphics2D g) {
-		Font currentFont = g.getFont();
-		int subtotalHeight = 0;
-		g.setFont(getHeaderFont());
-		subtotalHeight += g.getFontMetrics().getHeight();
-		g.setFont(getBodyFont());
-		subtotalHeight += 2 * g.getFontMetrics().getHeight();
-		g.setFont(currentFont);
-		return subtotalHeight;
-	}
-
-    private String replaceNull(String string) {
+    public String replaceNull(String string) {
         if (string == null) {
             return nullString;
         } else {
@@ -1041,6 +1151,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 ci.setWillBreak(breakCheckbox.isSelected());
                 ci.setWillSubtotal(subtotalCheckbox.isSelected());
                 
+                clearResultSetLayout();
+                
                 return true;
             }
 
@@ -1105,5 +1217,23 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
         dependencies.addAll(columnInfo);
         return dependencies;
+    }
+    
+    @Override
+    public void setParent(WabitObject parent) {
+        if (getParent() != null) {
+            getParent().removePropertyChangeListener(parentChangeListener);
+        }
+        super.setParent(parent);
+        if (getParent() != null) {
+            getParent().addPropertyChangeListener(parentChangeListener);
+        }
+    }
+
+    /**
+     * Package private for testing.
+     */
+    List<Section> getSections() {
+        return Collections.unmodifiableList(sectionList);
     }
 }
