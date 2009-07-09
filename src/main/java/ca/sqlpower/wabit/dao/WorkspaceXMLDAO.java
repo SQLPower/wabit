@@ -44,7 +44,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
-import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
@@ -100,6 +99,7 @@ public class WorkspaceXMLDAO {
      *  <dt>1.0.1 <dd>adds page orientation attribute
      *  <dt>1.0.2 <dd>update to the chart column identifier, they are now objects instead of just column names
      *  <dt>1.0.3 <dd>Added more info to saved queries inside a report definition.
+     *  <dt>1.1.0 <dd>OLAP query syntax has changed, both inside the datasources definition and the report.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
