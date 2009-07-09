@@ -391,6 +391,44 @@ public class Olap4jGuiQueryPanel {
         
     }
     
+    private Window owningFrame = null;
+    private Popup popup = null;
+    private JPanel glassPane = null;
+    
+    
+	private MouseAdapter clickListener = new MouseAdapter() {
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			super.mouseReleased(e);
+			popup.hide();
+			glassPane.removeMouseListener(this);
+			owningFrame.removeComponentListener(resizeListener);
+		}
+	};
+	
+	private ComponentListener resizeListener = new ComponentListener() {
+
+		public void componentHidden(ComponentEvent e) {
+			//Do nothing
+		}
+
+		public void componentMoved(ComponentEvent e) {
+			popup.hide();
+			owningFrame.removeComponentListener(this);
+			glassPane.removeMouseListener(clickListener);
+		}
+
+		public void componentResized(ComponentEvent e) {
+			//Do nothing
+			
+		}
+
+		public void componentShown(ComponentEvent e) {
+			//Do nothing
+		}
+		
+	};
+    
     /**
      * This function will popup the Cube chooser popup from the 'Choose Cube'
      * button. It will popup the window in the bounds of the screen no matter
@@ -405,6 +443,8 @@ public class Olap4jGuiQueryPanel {
      */
 	private void popupChooseCube(final Window owningFrame,
 			final JButton cubeChooserButton, JTree tree) {
+		this.owningFrame = owningFrame;
+		glassPane = new JPanel();
 		
 		JScrollPane treeScroll = new JScrollPane(tree);
 		treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -435,44 +475,15 @@ public class Olap4jGuiQueryPanel {
 		
 		treeScroll.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED, Color.GRAY, Color.GRAY));
 		
-		final JPanel glassPane = new JPanel();
-		final Popup p = pFactory.getPopup(glassPane, treeScroll, x, windowLocation.y);
+		popup = pFactory.getPopup(glassPane, treeScroll, x, windowLocation.y);
 		JFrame frame = (JFrame)owningFrame;
 		frame.setGlassPane(glassPane);
 		glassPane.setVisible(true);
 		glassPane.setOpaque(false);
-		p.show();
+		popup.show();
 		
-		final MouseAdapter clickListener = new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				super.mouseReleased(e);
-				p.hide();
-				glassPane.removeMouseListener(this);
-			}
-		};
 		glassPane.addMouseListener(clickListener);
-		owningFrame.addComponentListener(new ComponentListener() {
-
-			public void componentHidden(ComponentEvent e) {
-				//Do nothing
-			}
-
-			public void componentMoved(ComponentEvent e) {
-				p.hide();
-				owningFrame.removeComponentListener(this);
-			}
-
-			public void componentResized(ComponentEvent e) {
-				//Do nothing
-				
-			}
-
-			public void componentShown(ComponentEvent e) {
-				//Do nothing
-			}
-			
-		});
+		owningFrame.addComponentListener(resizeListener);
 		
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
 		    public void valueChanged(TreeSelectionEvent e) {
@@ -484,7 +495,7 @@ public class Olap4jGuiQueryPanel {
 		                cubeChooserButton.setEnabled(true);
 		                setCurrentCube(cube);
 		                glassPane.removeMouseListener(clickListener);
-		                p.hide();
+		                popup.hide();
 		            }
 		        } catch (SQLException ex) {
 		            throw new RuntimeException(ex);
