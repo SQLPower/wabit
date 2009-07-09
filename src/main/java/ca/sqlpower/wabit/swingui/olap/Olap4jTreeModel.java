@@ -84,6 +84,10 @@ public class Olap4jTreeModel implements TreeModel {
         public List<?> getChildren() {
             return children;
         }
+        
+        public String toString() {
+            return "Current Connection";
+        }
     }
     
     private final OlapTreeRoot root;
