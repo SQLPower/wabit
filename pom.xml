@@ -175,8 +175,10 @@
 								<!-- The pre-compiled osx adapter class (it only compiles on OS X) -->
 								<copy file="src/main/installer/osx/osx_adapter.jar" todir="target/lib" />
 
-								<copy todir="target/jdbc">
-									<fileset dir="src/main/resources/jdbc" />
+								<copy todir="target">
+									<fileset dir="src/main/resources">
+									   <include name="*.jar" />
+									</fileset>
 								</copy>
 
 								<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
@@ -190,7 +192,7 @@
 									vmoptions="-Xmx600m">
 									<jarfileset dir="target" includes="lib/*.jar" />
 									<jarfileset dir="target" includes="wabit.jar" />
-									<jarfileset dir="target" includes="jdbc/*.jar" />
+									<jarfileset dir="target" includes="*.jar" />
 									<extraclasspathfilelist dir="KICKME"
 										files="jdbc" />
 								</jarbundler>
