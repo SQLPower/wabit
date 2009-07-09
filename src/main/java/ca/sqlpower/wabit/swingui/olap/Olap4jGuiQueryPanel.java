@@ -384,10 +384,10 @@ public class Olap4jGuiQueryPanel {
         panel = new JPanel(new MigLayout(
                 "fill",
                 "[fill,grow 1]",
-                "[][][grow,fill]"));
+                "[ | | grow,fill ]"));
         panel.add(databaseComboBox, "wrap");
         panel.add(cubeChooserButton, "grow 0,left,wrap");
-        panel.add(new JScrollPane(cubeTree), "wrap");
+        panel.add(new JScrollPane(cubeTree), "spany, wrap");
         
     }
     
