@@ -87,6 +87,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.olap4j.Axis;
+import org.olap4j.Cell;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.OlapException;
@@ -1832,7 +1833,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             for (int row = 0; row < rowsAxis.getPositions().size(); row++) {
                 for (Integer colPosition : seriesPositions) {
                     logger.debug("At row " + row + " of " + rowsAxis.getPositions().size() + " and column " + colPosition);
-                    data[seriesPositions.indexOf(colPosition)][row] += cellSet.getCell(Arrays.asList(new Integer[]{colPosition, row})).getDoubleValue();
+                    final Cell cell = cellSet.getCell(Arrays.asList(new Integer[]{colPosition, row}));
+                    double value;
+                    if (cell.getValue() != null) {
+                        value = cell.getDoubleValue();
+                    } else {
+                        value = 0;
+                    }
+                    data[seriesPositions.indexOf(colPosition)][row] += value;
                 }
             }
         } catch (SQLException e) {
@@ -2021,7 +2029,21 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             try {
                 for (int rowNumber = 0; rowNumber < rowAxis.getPositionCount(); rowNumber++) {
                     Position rowPosition = rowAxis.getPositions().get(rowNumber);
-                    newSeries.add(cellSet.getCell(xAxisColIdentifier.getPosition(cellSet), rowPosition).getDoubleValue(), cellSet.getCell(seriesColIdentifier.getPosition(cellSet), rowPosition).getDoubleValue());
+                    final Cell xCell = cellSet.getCell(xAxisColIdentifier.getPosition(cellSet), rowPosition);
+                    double xValue;
+                    if (xCell.getValue() != null) {
+                        xValue = xCell.getDoubleValue();
+                    } else {
+                        xValue = 0;
+                    }
+                    final Cell yCell = cellSet.getCell(seriesColIdentifier.getPosition(cellSet), rowPosition);
+                    double yValue;
+                    if (yCell.getValue() != null) {
+                        yValue = yCell.getDoubleValue();
+                    } else {
+                        yValue = 0;
+                    }
+                    newSeries.add(xValue, yValue);
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
