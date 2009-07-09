@@ -26,6 +26,9 @@ import java.awt.Window;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.ContainerListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -438,8 +441,8 @@ public class Olap4jGuiQueryPanel {
 		frame.setGlassPane(glassPane);
 		glassPane.setVisible(true);
 		glassPane.setOpaque(false);
-		
 		p.show();
+		
 		final MouseAdapter clickListener = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -449,6 +452,27 @@ public class Olap4jGuiQueryPanel {
 			}
 		};
 		glassPane.addMouseListener(clickListener);
+		owningFrame.addComponentListener(new ComponentListener() {
+
+			public void componentHidden(ComponentEvent e) {
+				//Do nothing
+			}
+
+			public void componentMoved(ComponentEvent e) {
+				p.hide();
+				owningFrame.removeComponentListener(this);
+			}
+
+			public void componentResized(ComponentEvent e) {
+				//Do nothing
+				
+			}
+
+			public void componentShown(ComponentEvent e) {
+				//Do nothing
+			}
+			
+		});
 		
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
 		    public void valueChanged(TreeSelectionEvent e) {
