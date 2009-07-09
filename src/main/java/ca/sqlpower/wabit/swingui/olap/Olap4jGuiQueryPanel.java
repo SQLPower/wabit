@@ -19,13 +19,13 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Window;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -54,10 +55,13 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.Popup;
 import javax.swing.PopupFactory;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
+import javax.swing.border.BevelBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.plaf.basic.BasicBorders;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -333,48 +337,96 @@ public class Olap4jGuiQueryPanel {
 	                    tree.expandRow(row);
 	                    row++;
 	                }
-	                Point windowLocation = new Point(0, 0);
-	                SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
-	                windowLocation.y += cubeChooserButton.getHeight();
-	                final Popup p = pFactory.getPopup(owningFrame, tree, windowLocation.x, windowLocation.y);
-	                final JPanel glassPane = new JPanel();
-	                JFrame frame = (JFrame)owningFrame;
-	                frame.setGlassPane(glassPane);
-	                glassPane.setVisible(true);
-	                glassPane.setOpaque(false);
 	                
-	                p.show();
-	                final MouseAdapter clickListener = new MouseAdapter() {
-	                	@Override
-	                	public void mouseReleased(MouseEvent e) {
-	                		super.mouseReleased(e);
-	                		p.hide();
-	                		glassPane.removeMouseListener(this);
-	                	}
-	                };
-					glassPane.addMouseListener(clickListener);
-	                
-	                tree.addTreeSelectionListener(new TreeSelectionListener() {
-	                    public void valueChanged(TreeSelectionEvent e) {
-	                        try {
-	                            TreePath path = e.getNewLeadSelectionPath();
-	                            Object node = path.getLastPathComponent();
-	                            if (node instanceof Cube) {
-	                                Cube cube = (Cube) node;
-	                                cubeChooserButton.setEnabled(true);
-	                                setCurrentCube(cube);
-	                                glassPane.removeMouseListener(clickListener);
-	                                p.hide();
-	                            }
-	                        } catch (SQLException ex) {
-	                            throw new RuntimeException(ex);
-	                        }
-	                    }
-	                });
+	                popupChooseCube(owningFrame, cubeChooserButton, tree);
                 } finally {
                 	cubeChooserButton.setEnabled(true);
                 }
             }
+            
+            /**
+             * This function will popup the Cube chooser popup from the 'Choose Cube'
+             * button. It will popup the window in the bounds of the screen no matter
+             * what happens, it will add scrollbars in the right circumstances as well
+             * 
+             * @param owningFrame
+             * 		The frame which the popup is being popped up on
+             * @param cubeChooserButton
+             * 		The button which pops up the cube chooser
+             * @param tree
+             * 		The tree in the cube chooser
+             */
+			private void popupChooseCube(final Window owningFrame,
+					final JButton cubeChooserButton, JTree tree) {
+				
+				JScrollPane treeScroll = new JScrollPane(tree);
+				treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+				treeScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+				Point windowLocation = new Point(0, 0);
+				SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
+				windowLocation.y += cubeChooserButton.getHeight();
+				
+
+				
+				Point frameLocation = new Point(0, 0);
+				SwingUtilities.convertPointToScreen(frameLocation, owningFrame);
+				
+				int popupScreenSpaceY = (windowLocation.y - frameLocation.y);
+				int maxHeight = (int)(owningFrame.getSize().getHeight() - popupScreenSpaceY);
+				
+				int width = (int) Math.min(treeScroll.getPreferredSize().getWidth(), owningFrame.getSize().getWidth());
+				int height = (int) Math.min(treeScroll.getPreferredSize().getHeight(), maxHeight);
+				treeScroll.setPreferredSize(new java.awt.Dimension(width, height));
+				
+				double popupWidth = treeScroll.getPreferredSize().getWidth();
+				int popupScreenSpaceX = (int) (owningFrame.getSize().getWidth() - (windowLocation.x - frameLocation.x));
+				int x;
+				if (popupWidth > popupScreenSpaceX) {
+					x = (int) (windowLocation.x - (popupWidth - popupScreenSpaceX));
+				} else {
+					x = windowLocation.x;
+				}
+				
+				treeScroll.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED, Color.GRAY, Color.GRAY));
+
+				
+				final JPanel glassPane = new JPanel();
+				final Popup p = pFactory.getPopup(glassPane, treeScroll, x, windowLocation.y);
+				JFrame frame = (JFrame)owningFrame;
+				frame.setGlassPane(glassPane);
+				glassPane.setVisible(true);
+				glassPane.setOpaque(false);
+				
+				p.show();
+				final MouseAdapter clickListener = new MouseAdapter() {
+					@Override
+					public void mouseReleased(MouseEvent e) {
+						super.mouseReleased(e);
+						p.hide();
+						glassPane.removeMouseListener(this);
+					}
+				};
+				glassPane.addMouseListener(clickListener);
+				
+				tree.addTreeSelectionListener(new TreeSelectionListener() {
+				    public void valueChanged(TreeSelectionEvent e) {
+				        try {
+				            TreePath path = e.getNewLeadSelectionPath();
+				            Object node = path.getLastPathComponent();
+				            if (node instanceof Cube) {
+				                Cube cube = (Cube) node;
+				                cubeChooserButton.setEnabled(true);
+				                setCurrentCube(cube);
+				                glassPane.removeMouseListener(clickListener);
+				                p.hide();
+				            }
+				        } catch (SQLException ex) {
+				            throw new RuntimeException(ex);
+				        }
+				    }
+				});
+			}
         });
         resetQueryButton = new JButton();
         resetQueryButton.setIcon(new ImageIcon(Olap4jGuiQueryPanel.class.getClassLoader().getResource("icons/reset.png")));
