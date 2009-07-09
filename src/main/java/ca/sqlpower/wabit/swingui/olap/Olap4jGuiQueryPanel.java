@@ -24,8 +24,12 @@ import java.awt.Window;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -42,12 +46,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.Popup;
+import javax.swing.PopupFactory;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.TreeSelectionEvent;
@@ -148,6 +154,11 @@ public class Olap4jGuiQueryPanel {
      * and maintained by this class.
      */
     private final JPanel panel;
+    
+    /**
+     * The popup factory which creates the cube chooser window
+     */
+    private final PopupFactory pFactory = new PopupFactory();
 
 	/**
 	 * This {@link JToolBar} is at the top of the Olap4jGuiQueryPanel, it contains the
@@ -306,8 +317,6 @@ public class Olap4jGuiQueryPanel {
             	}
                 try {
 	            	cubeChooserButton.setEnabled(false);
-	                //final JWindow w = new JWindow(owningFrame);
-	                final JPopupMenu p = new JPopupMenu();
 	                JTree tree;
 	                try {
 	                    tree = new JTree(
@@ -326,12 +335,24 @@ public class Olap4jGuiQueryPanel {
 	                }
 	                Point windowLocation = new Point(0, 0);
 	                SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
-	                p.add(new JScrollPane(tree));
-	                p.pack();
 	                windowLocation.y += cubeChooserButton.getHeight();
-	                p.setLocation(windowLocation);
-	                p.setVisible(true);
-	                	
+	                final Popup p = pFactory.getPopup(owningFrame, tree, windowLocation.x, windowLocation.y);
+	                final JPanel glassPane = new JPanel();
+	                JFrame frame = (JFrame)owningFrame;
+	                frame.setGlassPane(glassPane);
+	                glassPane.setVisible(true);
+	                glassPane.setOpaque(false);
+	                
+	                p.show();
+	                final MouseAdapter clickListener = new MouseAdapter() {
+	                	@Override
+	                	public void mouseReleased(MouseEvent e) {
+	                		super.mouseReleased(e);
+	                		p.hide();
+	                		glassPane.removeMouseListener(this);
+	                	}
+	                };
+					glassPane.addMouseListener(clickListener);
 	                
 	                tree.addTreeSelectionListener(new TreeSelectionListener() {
 	                    public void valueChanged(TreeSelectionEvent e) {
@@ -342,7 +363,8 @@ public class Olap4jGuiQueryPanel {
 	                                Cube cube = (Cube) node;
 	                                cubeChooserButton.setEnabled(true);
 	                                setCurrentCube(cube);
-	                                p.setVisible(false);
+	                                glassPane.removeMouseListener(clickListener);
+	                                p.hide();
 	                            }
 	                        } catch (SQLException ex) {
 	                            throw new RuntimeException(ex);
