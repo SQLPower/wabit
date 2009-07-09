@@ -597,18 +597,16 @@
 			<systemPath>${basedir}/lib/architect_test_util_lib.jar</systemPath>
 		</dependency>
 		<dependency>
-            <groupId>org.jfree.chart</groupId>
+            <groupId>jfree</groupId>
             <artifactId>jfreechart</artifactId>
             <version>1.0.12</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/jfreechart-1.0.12.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
 		<dependency>
-            <groupId>org.jcommon</groupId>
+            <groupId>jfree</groupId>
             <artifactId>jcommon</artifactId>
             <version>1.0.15</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/jcommon-1.0.15.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
 		<dependency>
 			<groupId>org.fife</groupId>
@@ -696,25 +694,21 @@
         </dependency>
         
         <dependency>
-            <groupId>org.osjava</groupId>
+            <groupId>simple-jndi</groupId>
             <artifactId>simple-jndi</artifactId>
             <version>0.11.4.1</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/simple-jndi-0.11.4.1.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
-        
         <dependency>
         	<groupId>com.miglayout</groupId>
 			<artifactId>miglayout</artifactId>
 			<version>3.7</version>
 			<classifier>swing</classifier>
 		</dependency>
-		        
-        <!-- httpcomponents-client should be available in a maven repository, but we couldn't find it -->
         <dependency>
 		  	<groupId>org.apache.httpcomponents</groupId>
-		  	<artifactId>httpcomponents-client</artifactId>
-		  	<version>4.0-beta2</version>
+			<artifactId>httpcomponents-client</artifactId>
+			<version>4.0-beta2</version>
             <scope>system</scope>
             <systemPath>${basedir}/lib/httpclient-4.0-beta2.jar</systemPath>
         </dependency>
@@ -722,8 +716,7 @@
 			<groupId>org.apache.james</groupId>
 			<artifactId>apache-mime4j</artifactId>
 			<version>0.5</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/apache-mime4j-0.5.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
@@ -779,80 +772,64 @@
             <scope>system</scope>
             <systemPath>${basedir}/lib/httpmime-4.0-beta2.jar</systemPath>
         </dependency>
-        <!-- END of httpcomponents-httpclient explicit dependencies -->
-        <!-- Mondrian 3.1, olap4j, and dependencies -->
-
         <dependency>
             <groupId>pentaho</groupId>
             <artifactId>mondrian</artifactId>
             <version>3.1.1</version>
         </dependency>
-
         <dependency>
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j</artifactId>
             <version>0.9.8-SNAPSHOT</version>
         </dependency>
-        
         <dependency>
-		  	<groupId>java_cup</groupId>
-		  	<artifactId>java_cup</artifactId>
-		  	<version>0.10k</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/javacup.jar</systemPath>
+		  	<groupId>javacup</groupId>
+		  	<artifactId>javacup</artifactId>
+		  	<version>10k</version>
+            <scope>compile</scope>
         </dependency>
-
         <dependency>
-		  	<groupId>org.apache.commons.math</groupId>
+		  	<groupId>commons-math</groupId>
 		  	<artifactId>commons-math</artifactId>
 		  	<version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/commons-math-1.0.jar</systemPath>
+            <scope>compile</scope>
         </dependency>
-
         <dependency>
-		  	<groupId>org.apache.commons.vfs</groupId>
+		  	<groupId>commons-vfs</groupId>
 		  	<artifactId>commons-vfs</artifactId>
-		  	<version>0.8</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/commons-vfs.jar</systemPath>
+		  	<version>1.0</version>
+            <scope>compile</scope>
         </dependency>
-        
         <dependency>
-		  	<groupId>org.eigenbase.properties</groupId>
+		  	<groupId>eigenbase</groupId>
 		  	<artifactId>eigenbase-properties</artifactId>
-		  	<version>0.8</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/eigenbase-properties.jar</systemPath>
+		  	<version>1.1.0.10924</version>
+            <scope>compile</scope>
         </dependency>
-        
+        <dependency>
+            <groupId>eigenbase</groupId>
+            <artifactId>eigenbase-resgen</artifactId>
+            <version>1.3.0.11873</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>eigenbase</groupId>
+            <artifactId>eigenbase-xom</artifactId>
+            <version>1.3.0.11999</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
             <version>1.4</version>
             <scope>compile</scope>
         </dependency>
-        
-        <dependency>
-		  	<groupId>org.eigenbase.resgen</groupId>
-		  	<artifactId>eigenbase-resgen</artifactId>
-		  	<version>0.8</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/eigenbase-resgen.jar</systemPath>
-        </dependency>
-        
-        <dependency>
-		  	<groupId>org.eigenbase.xom</groupId>
-		  	<artifactId>eigenbase-xom</artifactId>
-		  	<version>0.8</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/eigenbase-xom.jar</systemPath>
-        </dependency>
-
-        <!-- END Mondrian 3.1, olap4j, and dependencies -->
-        
 	</dependencies>
 	<repositories>
+	   <repository>
+            <id>maven-central</id>
+            <url>http://repo2.maven.org/maven2/</url>
+        </repository>
 		<repository>
 			<id>java.net</id>
 			<url>http://download.java.net/maven/2</url>
@@ -871,6 +848,5 @@
 			<id>pentaho-third-party</id>
 			<url>http://repo.pentaho.org/artifactory/third-party/</url>
         </repository>
-        
 	</repositories>
 </project>
