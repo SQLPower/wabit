@@ -1240,7 +1240,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		        rs = ((QueryCache) query).fetchResultSet();
 		        cellSet = null;
 		    } else if (query instanceof OlapQuery) {
-		        cellSet = ((OlapQuery) query).getMdxQueryCopy().execute();
+		    	try {
+		    		cellSet = ((OlapQuery) query).getMdxQueryCopy().execute();
+		    	} catch (Exception e) {
+		    		throw new RuntimeException("Encountered error when executing the query, this query may be null or broken.");
+		    	}
 		        rs = null;
 		    } else {
 		        throw new IllegalArgumentException("Unknown query type " + query.getClass());
