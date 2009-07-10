@@ -420,18 +420,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				newWorkspace.showFrame();
 			}
 		});
-        fileMenu.add(getContext().createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
-                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, serviceInfo));
-            }
-        }));
 		fileMenu.add(new OpenWorkspaceAction(this, this.getContext()));
-        fileMenu.add(getContext().createRecentMenu());
-        fileMenu.add(getContext().createServerListMenu(frame, "Open Server Workspace", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
-                return new OpenOnServerMenu(dialogOwner, serviceInfo);
-            }
-        }));
+		fileMenu.add(getContext().createRecentMenu());
+		fileMenu.add(new ImportWorkspaceAction(this));
+		
+		fileMenu.addSeparator();
 		JMenuItem openDemoButton = new JMenuItem(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
@@ -439,14 +432,23 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				        "/ca/sqlpower/wabit/example_workspace.wabit"), getContext());
 			}
 		});
+		
+        fileMenu.add(getContext().createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
+            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, serviceInfo));
+            }
+        }));
+        fileMenu.add(getContext().createServerListMenu(frame, "Open Server Workspace", new ServerListMenuItemFactory() {
+            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+                return new OpenOnServerMenu(dialogOwner, serviceInfo);
+            }
+        }));
+        
+        fileMenu.addSeparator();
 		openDemoButton.setText("Open Demo Workspace");
 		openDemoButton.setIcon(OPEN_DEMO_ICON);
 		fileMenu.add(openDemoButton);
-		fileMenu.add(new AbstractAction("Close Workspace") {
-			public void actionPerformed(ActionEvent e) {
-				close();
-			}
-		});
+		
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveWorkspaceAction(this));
 		fileMenu.add(new SaveWorkspaceAsAction(this));
@@ -463,7 +465,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             }
 		}));
 		fileMenu.addSeparator();
-		fileMenu.add(new ImportWorkspaceAction(this));
+		fileMenu.add(new AbstractAction("Close Workspace") {
+			public void actionPerformed(ActionEvent e) {
+				close();
+			}
+		});
 		
 		if (!getContext().isMacOSX()) {
 			fileMenu.addSeparator();
