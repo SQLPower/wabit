@@ -36,26 +36,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
-import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
-import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
-import org.olap4j.metadata.Schema;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
-import org.olap4j.query.Selection;
-import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -971,7 +965,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("olap-body-font")) {
             cellSetRenderer.setBodyFont(loadFont(attributes));
         } else if (name.equals("olap-report-query")) {
-            olapQuery = new OlapQuery();
+            olapQuery = new OlapQuery(session);
             loadOlapQuery(attributes, true);
         } else if (name.equals("olap-report-cube")) {
             cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
@@ -1017,7 +1011,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private void loadOlapQuery(Attributes attributes, boolean isReport) throws SAXException {
         String uuid = attributes.getValue("uuid");
         checkMandatory("uuid", uuid);
-        olapQuery = new OlapQuery(uuid);
+        olapQuery = new OlapQuery(uuid, session);
         if (!isReport) {
             session.getWorkspace().addOlapQuery(olapQuery);
         } else {

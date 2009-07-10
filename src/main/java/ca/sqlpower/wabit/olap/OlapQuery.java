@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.UUID;
 import java.util.Map.Entry;
 
@@ -56,6 +55,8 @@ import org.xml.sax.Attributes;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -71,7 +72,7 @@ public class OlapQuery extends AbstractWabitObject {
      * This will create a copy of the query.
      */
     public OlapQuery createCopyOfSelf() throws SQLException {
-        OlapQuery newQuery = new OlapQuery();
+        OlapQuery newQuery = new OlapQuery(dbMapping);
         for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
             newQuery.appendElement(
                     this.rootNodes.get(mickey), this.attributes.get(mickey));
@@ -116,10 +117,16 @@ public class OlapQuery extends AbstractWabitObject {
     private List<Map<String,String>> attributes = new ArrayList<Map<String,String>>();
 
     /**
+     * This mapping is used to get a database connection based on a JDBCDataSource.
+     * This allows us to pool connections and not go over a connection limit.
+     */
+    private final SQLDatabaseMapping dbMapping;
+    
+    /**
      * Creates a new, empty query with no set persistent object ID.
      */
-    public OlapQuery() {
-        this(null);
+    public OlapQuery(SQLDatabaseMapping dbMapping) {
+        this(null, dbMapping);
     }
 
     /**
@@ -127,8 +134,9 @@ public class OlapQuery extends AbstractWabitObject {
      * when it's saved. This constructor is only of particular use to the
      * persistence layer.
      */
-    public OlapQuery(String uuid) {
+    public OlapQuery(String uuid, SQLDatabaseMapping dbMapping) {
         super(uuid);
+        this.dbMapping = dbMapping;
         // FIXME this should be configured in an external jndi.properties file.
         System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
         System.setProperty("org.osjava.sj.jndi.shared", "true");
@@ -223,10 +231,11 @@ public class OlapQuery extends AbstractWabitObject {
         if (getOlapDataSource() == null) return null;
         
         JDBCDataSource ds = olapDataSource.getDataSource();
+        SQLDatabase database = dbMapping.getDatabase(ds);
         
         try {
             
-            ctx.bind(uniqueName, new DataSourceAdapter(ds));
+            ctx.bind(uniqueName, new DataSourceAdapter(database));
             
             if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.IN_PROCESS)) {
                 if (getOlapDataSource().getMondrianSchema() == null

@@ -352,7 +352,7 @@ public class WorkspacePanel implements WabitPanel {
             session.getWorkspace().addDataSource(ds);
         }
         
-        OlapQuery newQuery = new OlapQuery();
+        OlapQuery newQuery = new OlapQuery(session);
         newQuery.setOlapDataSource(ds);
         newQuery.setName("New " + ds.getName() + " query");
         session.getWorkspace().addOlapQuery(newQuery);

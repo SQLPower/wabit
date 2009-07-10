@@ -61,6 +61,8 @@ import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -161,7 +163,9 @@ public class MondrianTest {
         
         Olap4jDataSource olapDataSource = new Olap4jDataSource(plIni);
         olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
-        olapDataSource.setDataSource(plIni.getDataSource(prefs.get("mondrianDataSource", null), JDBCDataSource.class));
+        final JDBCDataSource ds = plIni.getDataSource(prefs.get("mondrianDataSource", null), JDBCDataSource.class);
+        final SQLDatabase db = new SQLDatabase(ds);
+        olapDataSource.setDataSource(ds);
 
         Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, new SpecificDataSourceCollection<JDBCDataSource>(plIni, JDBCDataSource.class));
         JFrame dummyFrame = new JFrame();
@@ -180,7 +184,12 @@ public class MondrianTest {
         prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
         prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
         
-        OlapQuery olapQuery = new OlapQuery();
+        OlapQuery olapQuery = new OlapQuery(new SQLDatabaseMapping() {
+        
+            public SQLDatabase getDatabase(JDBCDataSource ds) {
+                return db;
+            }
+        });
         olapQuery.setOlapDataSource(olapDataSource);
         
         new MondrianTest(olapQuery);
