@@ -620,7 +620,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
         }
         
-        //TODO render grand total here
         if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
             g.drawLine(0, 0, 0, contentBox.getHeight() - 1);
             g.drawLine(contentBox.getWidth() - 1, 0, contentBox.getWidth() - 1, contentBox.getHeight());
