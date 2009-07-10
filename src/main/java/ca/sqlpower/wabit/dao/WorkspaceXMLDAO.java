@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -233,7 +234,11 @@ public class WorkspaceXMLDAO {
 	 */
 	public WorkspaceXMLDAO(OutputStream out, WabitWorkspace workspace) {
 		this.workspace = workspace;
-		this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out)));
+		try {
+            this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, "UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("The UTF-8 encoding should always be supported.");
+        }
 		xml = new XMLHelper();
 	}
 	

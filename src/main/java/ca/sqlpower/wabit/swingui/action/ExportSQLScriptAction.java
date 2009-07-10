@@ -76,8 +76,8 @@ public class ExportSQLScriptAction extends AbstractAction {
 			throw new RuntimeException(e1);
 		}
 		
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
 		try {
+		    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
 			writer.write(query.generateQuery());
 			writer.flush();
 			writer.close();
