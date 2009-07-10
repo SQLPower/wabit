@@ -75,6 +75,15 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	private WabitWelcomeScreen welcomeScreen;
 
 	/**
+	 * Set to true if the {@link #close()} method has been called at least once.
+	 * Otherwise, it should be set to false. It is currently used to prevent
+	 * {@link #deregisterChildSession(WabitSession)} from overriding the
+	 * {@link #PREFS_START_ON_WELCOME_SCREEN} preference value that
+	 * {@link #close()} writes.
+	 */
+	private boolean closing = false;
+
+	/**
 	 * @param terminateWhenLastSessionCloses
 	 *            Set to true if the context should stop the app when the last
 	 *            session is closed. If false the app will have to be closed in
@@ -124,8 +133,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	public void deregisterChildSession(WabitSession child) {
 	    delegateContext.deregisterChildSession(child);
-		if (getSessionCount() == 0) {
+		if (getSessionCount() == 0 && !closing) {
 			welcomeScreen.showFrame();
+			logger.debug("Wrote true in deregisterChildSession() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 			getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
 		}
 	}
@@ -189,14 +199,18 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	public void putRecentFileName(String fileName) {
 		createRecentMenu().putRecentFileName(fileName);
 		getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
+		logger.debug("Wrote false in putRecentFileName() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 	}
 
 	public boolean startOnWelcomeScreen() {
+		logger.debug("Got " + (getSessionCount() == 0) + " from " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 		return getPrefs().getBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 	}
 
     public void close() {
+    	closing = true;
         getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, getSessionCount() == 0);
+        logger.debug("Wrote " + (getSessionCount() == 0) + " in close() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
         delegateContext.close();
     }
 
