@@ -49,7 +49,14 @@ public class MemberHierarchyComparator implements Comparator<Member> {
         if (m2path.size() == i) return 1;
         logger.debug("m1path[i] ordinal=" + m1path.get(i).getOrdinal() + " name=" + m1path.get(i).getName());
         logger.debug("m2path[i] ordinal=" + m2path.get(i).getOrdinal() + " name=" + m2path.get(i).getName());
-        return m1path.get(i).getName().compareToIgnoreCase(m2path.get(i).getName());
+        
+        if (m1path.get(i).getName().matches("[0-9]+") && m2path.get(i).getName().matches("[0-9]+")) {
+        	Integer member1Int = Integer.parseInt(m1path.get(i).getName());
+        	Integer member2Int = Integer.parseInt(m2path.get(i).getName());
+        	return member1Int.compareTo(member2Int);
+        } else {
+        	return m1path.get(i).getName().compareToIgnoreCase(m2path.get(i).getName());
+        }
     }
     
     private List<Member> path(Member m) {
