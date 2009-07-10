@@ -425,7 +425,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.add(new ImportWorkspaceAction(this));
 		
 		fileMenu.addSeparator();
-		JMenuItem openDemoButton = new JMenuItem(new AbstractAction() {
+		JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
 				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
@@ -445,9 +445,20 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }));
         
         fileMenu.addSeparator();
-		openDemoButton.setText("Open Demo Workspace");
-		openDemoButton.setIcon(OPEN_DEMO_ICON);
-		fileMenu.add(openDemoButton);
+		openDemoMenuItem.setText("Open Demo Workspace");
+		openDemoMenuItem.setIcon(OPEN_DEMO_ICON);
+		fileMenu.add(openDemoMenuItem);
+		
+        JMenuItem openOlapDemoMenuItem = new JMenuItem(new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                OpenWorkspaceAction.loadFile(WabitSwingSessionImpl.class.getResourceAsStream(
+                        "/ca/sqlpower/wabit/WorldFactsOlapWorkspace.wabit"), getContext());
+            }
+        });
+        openOlapDemoMenuItem.setIcon(OPEN_DEMO_ICON);
+        openOlapDemoMenuItem.setText("Open OLAP Demo Workspace");
+        fileMenu.add(openOlapDemoMenuItem);
 		
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveWorkspaceAction(this));
