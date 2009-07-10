@@ -221,9 +221,9 @@ public class MondrianTest {
     		return Collections.unmodifiableList(dataSources);
     	}
 
-        public <Olap4jDataSource> Olap4jDataSource getDataSource(String name,
-                Class<Olap4jDataSource> classType) {
-            return (Olap4jDataSource) dataSources;
+        public <C extends Olap4jDataSource> C getDataSource(String name,
+                Class<C> classType) {
+            return (C) dataSources;
         }
 
     	public List<JDBCDataSourceType> getDataSourceTypes() {
@@ -294,13 +294,5 @@ public class MondrianTest {
             }
             return null;
         }
-
-		public <C extends Olap4jDataSource> C getDataSource(String name,
-				Class<C> classType) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-    	
     }
 }
