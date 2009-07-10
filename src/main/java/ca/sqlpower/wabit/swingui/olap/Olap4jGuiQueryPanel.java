@@ -495,6 +495,7 @@ public class Olap4jGuiQueryPanel {
 		                cubeChooserButton.setEnabled(true);
 		                setCurrentCube(cube);
 		                glassPane.removeMouseListener(clickListener);
+		                owningFrame.removeComponentListener(resizeListener);
 		                popup.hide();
 		            }
 		        } catch (SQLException ex) {
