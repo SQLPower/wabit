@@ -25,7 +25,10 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
@@ -46,24 +49,32 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     private final WabitWorkspace workspace;
 
     /**
-     * The {@link ReportContentRenderer} associated with the new default layout being used.
-     */
-    private ReportContentRenderer contentRenderer;
-    
-    /**
      * The name of the new Layout, + " Layout" will be appended to the name.
      */
     private String layoutName;
+
+    /**
+     * This is the object that this action will create a layout for.
+     */
+    private final WabitObject objectToLayout;
     
-    public CreateLayoutFromQueryAction(WabitWorkspace wabitworkspace, ReportContentRenderer contentRenderer, String layoutName) {
+    public CreateLayoutFromQueryAction(WabitWorkspace wabitworkspace, WabitObject objectToLayout, String layoutName) {
         super("Create Layout...", ADD_LAYOUT_ICON);
+        this.objectToLayout = objectToLayout;
         putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
         this.workspace = wabitworkspace;
-        this.contentRenderer = contentRenderer;
         this.layoutName = layoutName;
     }
     
     public void actionPerformed(ActionEvent e) {
+        ReportContentRenderer contentRenderer;
+        if (objectToLayout instanceof QueryCache) {
+            contentRenderer = new ResultSetRenderer((QueryCache) objectToLayout);
+        } else if (objectToLayout instanceof OlapQuery) {
+            contentRenderer = new CellSetRenderer((OlapQuery) objectToLayout);
+        } else {
+            throw new IllegalStateException("Don't know how to create layouts for components of type " + objectToLayout.getClass() + ", object is " + objectToLayout.getName());
+        }
         createDefaultLayout(workspace, contentRenderer, layoutName);
     }
 

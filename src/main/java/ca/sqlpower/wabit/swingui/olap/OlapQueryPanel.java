@@ -233,7 +233,7 @@ public class OlapQueryPanel implements WabitPanel {
 	    toolBar.add(queryPanel.getResetQueryButton());
 	    toolBar.addSeparator();
 	    
-	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), new CellSetRenderer(query), query.getName()));
+	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
 	    
 	    return toolBar;
 	}

@@ -95,7 +95,6 @@ import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
@@ -554,7 +553,7 @@ public class QueryPanel implements WabitPanel {
 		exportSQL.setToolTipText("Export query to SQL script.");
 		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
-		queryToolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), new ResultSetRenderer(queryCache), queryCache.getName()));
+		queryToolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 		queryToolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
 		
 		JToolBar wabitBar = new JToolBar();
@@ -686,7 +685,7 @@ public class QueryPanel implements WabitPanel {
 	    toolBar.add(pen.getZoomSliderContainer());
 	    toolBar.addSeparator();
 	        
-	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), new ResultSetRenderer(queryCache), queryCache.getName()));
+	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 	    toolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
 	    
 	    return toolBar;
