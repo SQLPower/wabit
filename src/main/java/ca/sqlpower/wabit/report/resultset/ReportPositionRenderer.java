@@ -120,6 +120,17 @@ public class ReportPositionRenderer {
             
             int offset = ci.getHorizontalAlignment().computeStartX(
                     ci.getWidth(), fm.stringWidth(formattedValue));
+            double stringLength = fm.getStringBounds(formattedValue, g).getWidth();
+            if (stringLength > ci.getWidth()) {
+                String ellipse = "...";
+                double ellipseLength = fm.getStringBounds(ellipse, g).getWidth();
+                int charLimit = 0;
+                while (fm.getStringBounds(formattedValue, 0, charLimit, g).getWidth() < ci.getWidth() - ellipseLength) {
+                    charLimit++;
+                }
+                charLimit--;
+                formattedValue = formattedValue.substring(0, charLimit) + ellipse;
+            }
             g.drawString(formattedValue, x + offset, fm.getHeight()); // TODO clip and/or line wrap and/or warn
             x += ci.getWidth();
         }
