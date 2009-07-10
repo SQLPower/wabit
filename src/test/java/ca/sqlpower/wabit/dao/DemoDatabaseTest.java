@@ -22,11 +22,13 @@ package ca.sqlpower.wabit.dao;
 import java.io.InputStream;
 
 import junit.framework.TestCase;
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.swingui.WabitWelcomeScreen;
 
 /**
@@ -34,16 +36,28 @@ import ca.sqlpower.wabit.swingui.WabitWelcomeScreen;
  */
 public class DemoDatabaseTest extends TestCase {
 
+    
+    
     public void testVersionNumberUpToDate() throws Exception {
+    
+        final PlDotIni defaultPlIni = new PlDotIni();
+        defaultPlIni.read(ClassLoader.getSystemResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
+        defaultPlIni.read(ClassLoader.getSystemResourceAsStream("ca/sqlpower/demodata/example_database.ini"));
         
-        WabitSessionContext context = new WabitSessionContextImpl(true, false) {
+        WabitSessionContext context = new StubWabitSessionContext() {
             @Override
             public UserPrompter createUserPrompter(String question,
                     UserPromptType responseType, UserPromptOptions optionType,
                     UserPromptResponse defaultResponseType,
                     Object defaultResponse, String... buttonNames) {
-                fail("Loading the example workspace should not prompt the user, it should just work");
+                fail("Loading the example workspace should not prompt the user, it should just work." +
+                        " Prompt was: " + question);
                 throw new IllegalStateException();
+            }
+            
+            @Override
+            public DataSourceCollection getDataSources() {
+                return defaultPlIni;
             }
         };
         
