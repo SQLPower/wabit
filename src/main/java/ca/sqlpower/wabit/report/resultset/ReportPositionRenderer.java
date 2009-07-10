@@ -128,7 +128,9 @@ public class ReportPositionRenderer {
                 while (fm.getStringBounds(formattedValue, 0, charLimit, g).getWidth() < ci.getWidth() - ellipseLength) {
                     charLimit++;
                 }
-                charLimit--;
+                if (charLimit > 0) {
+                    charLimit--;
+                }
                 formattedValue = formattedValue.substring(0, charLimit) + ellipse;
             }
             g.drawString(formattedValue, x + offset, fm.getHeight()); // TODO clip and/or line wrap and/or warn
