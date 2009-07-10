@@ -47,7 +47,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -90,10 +89,10 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -101,11 +100,11 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
-import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
-import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
-import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -470,6 +469,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				close();
 			}
 		});
+		fileMenu.addSeparator();
+		JMenuItem databaseConnectionManager = new JMenuItem(new AbstractAction("Database Connection Manager...") {
+			public void actionPerformed(ActionEvent e) {
+				 dbConnectionManager.showDialog(getFrame());
+			}
+		});
+		fileMenu.add(databaseConnectionManager);
+
 		
 		if (!getContext().isMacOSX()) {
 			fileMenu.addSeparator();
