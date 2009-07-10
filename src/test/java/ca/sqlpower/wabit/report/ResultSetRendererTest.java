@@ -126,7 +126,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         renderer.setHeaderFont(font);
         renderer.setBodyFont(font);
         renderer.createResultSetLayout((Graphics2D) graphics, cache.getCachedRowSet());
-        List<Section> sections = renderer.getSections();
+        List<Section> sections = renderer.findSections();
         assertEquals(3, sections.size());
         
         Map<List<Object>, BigDecimal> sectionKeyToSubTotal = new HashMap<List<Object>, BigDecimal>();

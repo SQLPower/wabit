@@ -62,6 +62,12 @@ public class Position {
     private final Integer endingRow;
     
     private final Section section;
+    
+    /**
+     * This renderer is used to layout and display the different parts of
+     * a result set.
+     */
+    private final ReportPositionRenderer reportPositionRenderer;
 
     /**
      * This is the one constructor that builds all of the positions.
@@ -70,7 +76,8 @@ public class Position {
      * number will be null.
      */
     public Position(Section section, PositionType firstPositionType, 
-            Integer startingRow, PositionType lastPositionType, Integer endingRow) {
+            Integer startingRow, PositionType lastPositionType, Integer endingRow,
+            ReportPositionRenderer reportPositionRenderer) {
         this.section = section;
         this.firstPositionType = firstPositionType;
         this.lastPositionType = lastPositionType;
@@ -84,6 +91,7 @@ public class Position {
         } else {
             this.endingRow = null;
         }
+        this.reportPositionRenderer = reportPositionRenderer;
     }
     
     public Section getSection() {
@@ -104,6 +112,10 @@ public class Position {
     
     public Integer getEndingRow() {
         return endingRow;
+    }
+    
+    public ReportPositionRenderer getReportPositionRenderer() {
+        return reportPositionRenderer;
     }
     
 }

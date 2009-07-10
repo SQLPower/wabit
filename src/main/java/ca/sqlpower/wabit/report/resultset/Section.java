@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.report.resultset;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +31,14 @@ import java.util.List;
  */
 public class Section {
 
+    /**
+     * This describes the way a total can be rendered for a section.
+     */
+    public enum TotalRenderStyle {
+        SUBTOTAL,
+        GRAND_TOTAL
+    }
+    
     /**
      * This is the starting row of this section. This value should be greater or equal to 1
      * to allow it to be used with result sets and to set the absolute row position of a result set.
@@ -57,6 +66,25 @@ public class Section {
      */
     private final List<Object> sectionKey;
     
+    /**
+     * If this is true the section header should be displayed at the start of each section.
+     */
+    private final boolean showingSectionHeader;
+    
+    /**
+     * If true the rows in this section will be displayed.
+     */
+    private final boolean showingRows;
+    
+    /**
+     * If true the column headers will be displayed for this section.
+     */
+    private final boolean showingColumnHeader;
+
+    /**
+     * Describes the way a total of a section will be rendered.
+     */
+    private final TotalRenderStyle totalRenderStyle;
     
     public Section(int startRow, int endRow, List<BigDecimal> totals, 
             List<Object> sectionKey) {
@@ -64,6 +92,25 @@ public class Section {
         this.endRow = endRow;
         this.totals = totals;
         this.sectionKey = sectionKey;
+        showingSectionHeader = true;
+        showingRows = true;
+        showingColumnHeader = true;
+        totalRenderStyle = TotalRenderStyle.SUBTOTAL;
+    }
+    
+    /**
+     * This constructor creates a section that is used to display the grand total
+     * of the result set.
+     */
+    public Section(List<BigDecimal> grandTotals) {
+        startRow = -1;
+        endRow = -2;
+        totals = grandTotals;
+        sectionKey = new ArrayList<Object>();
+        showingSectionHeader = false;
+        showingRows = false;
+        showingColumnHeader = false;
+        totalRenderStyle = TotalRenderStyle.GRAND_TOTAL;
     }
     
     public int getStartRow() {
@@ -80,5 +127,21 @@ public class Section {
     
     public List<BigDecimal> getTotals() {
         return Collections.unmodifiableList(totals);
+    }
+    
+    public boolean isShowingSectionHeader() {
+        return showingSectionHeader;
+    }
+
+    public boolean isShowingRows() {
+        return showingRows;
+    }
+
+    public boolean isShowingColumnHeader() {
+        return showingColumnHeader;
+    }
+
+    public TotalRenderStyle getTotalRenderStyle() {
+        return totalRenderStyle;
     }
 }

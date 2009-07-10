@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
+import ca.sqlpower.wabit.report.resultset.Section.TotalRenderStyle;
 
 /**
  * This class renders the different parts of each result set. The rendering is
@@ -87,7 +88,9 @@ public class ReportPositionRenderer {
      *            This will define formatting, spacing, alignment, and other
      *            values specific to each column.
      */
-    public Dimension renderRow(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation) throws SQLException {
+    public Dimension renderRow(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation, Section section) throws SQLException {
+        if (!section.isShowingRows()) return new Dimension(0, 0);
+        
         if (rs.getMetaData().getColumnCount() != columnInformation.size()) throw new IllegalArgumentException("The column information for rendering a row was missing columns for the given result set");
         
         FontMetrics fm = g.getFontMetrics(bodyFont);
@@ -127,7 +130,9 @@ public class ReportPositionRenderer {
         return new Dimension(x, y);
     }
     
-    public Dimension renderSectionHeader(Graphics2D g, List<Object> sectionHeader, List<ColumnInfo> colInfo) {
+    public Dimension renderSectionHeader(Graphics2D g, List<Object> sectionHeader, List<ColumnInfo> colInfo, Section section) {
+        if (!section.isShowingSectionHeader()) return new Dimension(0, 0);
+        
         StringBuffer headerBuffer = new StringBuffer();
         for (Object headerObject : sectionHeader) {
             if (headerObject != null) {
@@ -165,7 +170,9 @@ public class ReportPositionRenderer {
         return new Dimension(fm.stringWidth(header), fm.getHeight());
     }
     
-    public Dimension renderColumnHeader(Graphics2D g, List<ColumnInfo> colInfo) {
+    public Dimension renderColumnHeader(Graphics2D g, List<ColumnInfo> colInfo, Section section) {
+        if (!section.isShowingColumnHeader()) return new Dimension(0, 0);
+        
         int x = 0;
         FontMetrics fm = g.getFontMetrics(headerFont);
         g.setFont(headerFont);
@@ -191,7 +198,7 @@ public class ReportPositionRenderer {
         return new Dimension(x, y);
     }
     
-    public Dimension renderTotals(Graphics2D g, List<BigDecimal> totalsRow, List<ColumnInfo> colInfo) {
+    public Dimension renderTotals(Graphics2D g, List<BigDecimal> totalsRow, List<ColumnInfo> colInfo, Section section) {
         int localX = 0;
         final int subtotalLineYShift = 2; //Shifting the subtotal line slightly down to make it look nicer.
         
@@ -205,57 +212,117 @@ public class ReportPositionRenderer {
             return new Dimension(0, 0);
         }
         
-        FontMetrics bodyFM = g.getFontMetrics(bodyFont);
-        FontMetrics headerFM = g.getFontMetrics(headerFont);
-        
-        final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
-        int y = rowHeight;
-        
-        g.setFont(headerFont);
-        g.drawString("Subtotal", ResultSetRenderer.BORDER_INDENT, y);
-        g.setFont(bodyFont);
-        
-        for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
-            ColumnInfo ci = colInfo.get(subCol);
-            if (ci.getWillBreak()) continue;
-            if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
-                localX += ResultSetRenderer.BORDER_INDENT;
-            }
-            BigDecimal subtotal = totalsRow.get(subCol);
-            if (subtotal != null) {
-                String formattedValue;
-                if (ci.getFormat() != null) {
-                    formattedValue = ci.getFormat().format(subtotal);
-                } else {
-                    formattedValue = subtotal.toString();
+        if (section.getTotalRenderStyle() == TotalRenderStyle.SUBTOTAL) {
+
+            FontMetrics bodyFM = g.getFontMetrics(bodyFont);
+            FontMetrics headerFM = g.getFontMetrics(headerFont);
+
+            final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
+            int y = rowHeight;
+
+            g.setFont(headerFont);
+            g.drawString("Subtotal", ResultSetRenderer.BORDER_INDENT, y);
+            g.setFont(bodyFont);
+
+            for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
+                ColumnInfo ci = colInfo.get(subCol);
+                if (ci.getWillBreak()) continue;
+                if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
+                    localX += ResultSetRenderer.BORDER_INDENT;
                 }
-                int offset = ci.getHorizontalAlignment().computeStartX(
-                        ci.getWidth(), bodyFM.stringWidth(formattedValue));
-                Stroke oldStroke = g.getStroke();
-                
-                //Thinning the stroke for the subtotal line for looks. We can't get the
-                //line width from a regular stroke so if the stroke is somehow different
-                //from a BasicStroke we will just log the warning. (For cases where the
-                //platform may make the Stroke significantly different.)
-                if (g.getStroke() instanceof BasicStroke) {
-                    BasicStroke currentStroke = ((BasicStroke) g.getStroke());
-                    BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
-                            currentStroke.getEndCap(), currentStroke.getLineJoin(), 
-                            currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
-                            currentStroke.getDashPhase());
-                    g.setStroke(newStroke);
-                } else {
-                    logger.warn("The stroke was of type " + g.getStroke().getClass() + " when drawing the totals line. We only change BasicStroke lines.");
+                BigDecimal subtotal = totalsRow.get(subCol);
+                if (subtotal != null) {
+                    String formattedValue;
+                    if (ci.getFormat() != null) {
+                        formattedValue = ci.getFormat().format(subtotal);
+                    } else {
+                        formattedValue = subtotal.toString();
+                    }
+                    int offset = ci.getHorizontalAlignment().computeStartX(
+                            ci.getWidth(), bodyFM.stringWidth(formattedValue));
+                    Stroke oldStroke = g.getStroke();
+
+                    //Thinning the stroke for the subtotal line for looks. We can't get the
+                    //line width from a regular stroke so if the stroke is somehow different
+                    //from a BasicStroke we will just log the warning. (For cases where the
+                    //platform may make the Stroke significantly different.)
+                    if (g.getStroke() instanceof BasicStroke) {
+                        BasicStroke currentStroke = ((BasicStroke) g.getStroke());
+                        BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
+                                currentStroke.getEndCap(), currentStroke.getLineJoin(), 
+                                currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
+                                currentStroke.getDashPhase());
+                        g.setStroke(newStroke);
+                    } else {
+                        logger.warn("The stroke was of type " + g.getStroke().getClass() + " when drawing the totals line. We only change BasicStroke lines.");
+                    }
+                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
+                    g.setStroke(oldStroke);
+
+                    g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
                 }
-                g.drawLine(localX, y - rowHeight + subtotalLineYShift, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
-                g.setStroke(oldStroke);
-                
-                g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
+                localX += ci.getWidth();
             }
-            localX += ci.getWidth();
+            y += rowHeight / 2;
+            return new Dimension(localX, y);
+        } else if (section.getTotalRenderStyle() == TotalRenderStyle.GRAND_TOTAL) {
+
+            Font boldBodyFont = bodyFont.deriveFont(Font.BOLD);
+            FontMetrics bodyFM = g.getFontMetrics(boldBodyFont);
+            FontMetrics headerFM = g.getFontMetrics(headerFont);
+
+            final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
+            int y = rowHeight;
+
+            g.setFont(headerFont);
+            g.drawString("Grand Total", ResultSetRenderer.BORDER_INDENT, y);
+            g.setFont(boldBodyFont);
+
+            for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
+                ColumnInfo ci = colInfo.get(subCol);
+                if (ci.getWillBreak()) continue;
+                if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
+                    localX += ResultSetRenderer.BORDER_INDENT;
+                }
+                BigDecimal subtotal = totalsRow.get(subCol);
+                if (subtotal != null) {
+                    String formattedValue;
+                    if (ci.getFormat() != null) {
+                        formattedValue = ci.getFormat().format(subtotal);
+                    } else {
+                        formattedValue = subtotal.toString();
+                    }
+                    int offset = ci.getHorizontalAlignment().computeStartX(
+                            ci.getWidth(), bodyFM.stringWidth(formattedValue));
+                    Stroke oldStroke = g.getStroke();
+
+                    //Thinning the stroke for the subtotal line for looks. We can't get the
+                    //line width from a regular stroke so if the stroke is somehow different
+                    //from a BasicStroke we will just log the warning. (For cases where the
+                    //platform may make the Stroke significantly different.)
+                    if (g.getStroke() instanceof BasicStroke) {
+                        BasicStroke currentStroke = ((BasicStroke) g.getStroke());
+                        BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
+                                currentStroke.getEndCap(), currentStroke.getLineJoin(), 
+                                currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
+                                currentStroke.getDashPhase());
+                        g.setStroke(newStroke);
+                    } else {
+                        logger.warn("The stroke was of type " + g.getStroke().getClass() + " when drawing the totals line. We only change BasicStroke lines.");
+                    }
+                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
+                    g.drawLine(localX, y - rowHeight + subtotalLineYShift + 2, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift + 2);
+                    g.setStroke(oldStroke);
+
+                    g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
+                }
+                localX += ci.getWidth();
+            }
+            y += rowHeight / 2;
+            return new Dimension(localX, y);
+        } else {
+            throw new IllegalStateException("The totals of the section " + section.getSectionHeader() + " are being displayed in the style " + section.getTotalRenderStyle() + " which is unknown.");
         }
-        y += rowHeight / 2;
-        return new Dimension(localX, y);
     }
     
     /**
