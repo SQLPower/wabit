@@ -100,7 +100,6 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         
         ContentBox body = new ContentBox();
         if (contentRenderer instanceof CellSetRenderer) {
-        	((CellSetRenderer) contentRenderer).updateMDXQuery();
 	        body.setContentRenderer(contentRenderer);
         } else if (contentRenderer instanceof ResultSetRenderer) {
         	body.setContentRenderer(contentRenderer);

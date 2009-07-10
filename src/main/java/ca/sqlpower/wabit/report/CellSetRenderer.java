@@ -164,6 +164,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private final PropertyChangeListener queryListener = new PropertyChangeListener() {
     
         public void propertyChange(PropertyChangeEvent evt) {
+        	init();
             if (evt.getPropertyName().equals("mdxQuery")) {
                 updateMDXQuery();
             }
@@ -190,6 +191,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (this.initDone) return;
         if (!loadingWorkspace) {
             try {
+            	updateMDXQuery();
                 setCellSet(modifiedOlapQuery.getMDXQuery().execute());
             } catch (Exception e) {
                 //XXX it seems that this error message doesn't say anything conclusive
@@ -209,7 +211,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * a new cell set.
      */
     public void updateMDXQuery() {
-        init();
         Query newModifiedMDXQuery;
         try {
             newModifiedMDXQuery = olapQuery.getMdxQueryCopy();
