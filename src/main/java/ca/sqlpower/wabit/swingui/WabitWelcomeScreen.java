@@ -170,19 +170,6 @@ public class WabitWelcomeScreen {
 		builder.append(openDemoButton);
 		builder.append(Messages.getString("WabitWelcomeScreen.openDemo"));
 		
-		JButton openOlapDemoButton = new JButton(new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
-                        "/ca/sqlpower/wabit/WorldFactsOlapWorkspace.wabit"), context);
-            }
-        });
-		
-		openOlapDemoButton.setIcon(OPEN_DEMO_ICON);
-        builder.append(new JLabel());
-        builder.append(openOlapDemoButton);
-        builder.append(Messages.getString("WabitWelcomeScreen.openOlapDemo"));
-		
 		DefaultFormBuilder bottomPanelBuilder = new DefaultFormBuilder(new FormLayout("pref, 4dlu, pref, 4dlu:grow, pref"));
 		bottomPanelBuilder.setDefaultDialogBorder();
 		JButton helpButton = new JButton(new HelpAction(frame));
