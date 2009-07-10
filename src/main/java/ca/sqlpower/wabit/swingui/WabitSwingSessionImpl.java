@@ -449,17 +449,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		openDemoMenuItem.setIcon(OPEN_DEMO_ICON);
 		fileMenu.add(openDemoMenuItem);
 		
-        JMenuItem openOlapDemoMenuItem = new JMenuItem(new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                OpenWorkspaceAction.loadFile(WabitSwingSessionImpl.class.getResourceAsStream(
-                        "/ca/sqlpower/wabit/WorldFactsOlapWorkspace.wabit"), getContext());
-            }
-        });
-        openOlapDemoMenuItem.setIcon(OPEN_DEMO_ICON);
-        openOlapDemoMenuItem.setText("Open OLAP Demo Workspace");
-        fileMenu.add(openOlapDemoMenuItem);
-		
 		fileMenu.addSeparator();
 		fileMenu.add(new SaveWorkspaceAction(this));
 		fileMenu.add(new SaveWorkspaceAsAction(this));
