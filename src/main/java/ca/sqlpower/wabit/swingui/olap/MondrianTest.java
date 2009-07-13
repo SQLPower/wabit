@@ -63,10 +63,10 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
-import ca.sqlpower.wabit.StubWabitSession;
-import ca.sqlpower.wabit.StubWabitSessionContext;
+import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
 
@@ -170,23 +170,6 @@ public class MondrianTest {
         final SQLDatabase db = new SQLDatabase(ds);
         olapDataSource.setDataSource(ds);
         
-        final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext()) {
-            final OlapConnectionPool olapPool = new OlapConnectionPool(olapDataSource, this);
-            
-            @Override
-            public SQLDatabase getDatabase(JDBCDataSource dataSource) {
-                return db;
-            }
-            
-            @Override
-            public OlapConnection createConnection(Olap4jDataSource dataSource)
-                    throws SQLException, ClassNotFoundException,
-                    NamingException {
-                return olapPool.getConnection();
-            }
-            
-        };
-
         Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, new SpecificDataSourceCollection<JDBCDataSource>(plIni, JDBCDataSource.class));
         JFrame dummyFrame = new JFrame();
         dummyFrame.setSize(0, 0);
@@ -204,7 +187,19 @@ public class MondrianTest {
         prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
         prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
         
-        OlapQuery olapQuery = new OlapQuery(session);
+        OlapQuery olapQuery = new OlapQuery(new OlapConnectionMapping() {
+            final OlapConnectionPool olapPool = new OlapConnectionPool(olapDataSource, new SQLDatabaseMapping() {
+            
+                public SQLDatabase getDatabase(JDBCDataSource ds) {
+                    return db;
+                }
+            });
+        
+            public OlapConnection createConnection(Olap4jDataSource dataSource)
+                    throws SQLException, ClassNotFoundException, NamingException {
+                return olapPool.getConnection();
+            }
+        });
         olapQuery.setOlapDataSource(olapDataSource);
         
         new MondrianTest(olapQuery);
