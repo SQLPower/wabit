@@ -133,7 +133,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	public void deregisterChildSession(WabitSession child) {
 	    delegateContext.deregisterChildSession(child);
-		if (getSessionCount() == 0 && !closing) {
+	    // TODO: Re-enabled this fix for the open most recent project
+	    // after the bug where the wrong recent project is opened is fixed.
+//		if (getSessionCount() == 0 && !closing) {
+	    if (getSessionCount() == 0) {
 			welcomeScreen.showFrame();
 			logger.debug("Wrote true in deregisterChildSession() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 			getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
