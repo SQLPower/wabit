@@ -658,15 +658,16 @@ public class CellSetTableHeaderComponent extends JComponent {
             		if (clickedOnMember != null && 
             				!(clickedOnMember instanceof Measure)) {
             		    popUpMenu.addSeparator();
-            		    popUpMenu.add(new ExcludeMemberAction(
-                                "Exclude " + clickedOnMember.getName() + " from this query",
-                                clickedOnMember,
-                                Selection.Operator.MEMBER));
-            		    popUpMenu.add(new ExcludeMemberAction(
-                                "Exclude " + clickedOnMember.getName() + "'s children from this query",
-                                clickedOnMember,
-                                Selection.Operator.CHILDREN));
-            		    popUpMenu.addSeparator();
+            		    //TODO put these menu items back in when implementing exclusions, this is taken out for the 0.9.7 release
+//            		    popUpMenu.add(new ExcludeMemberAction(
+//                                "Exclude " + clickedOnMember.getName() + " from this query",
+//                                clickedOnMember,
+//                                Selection.Operator.MEMBER));
+//            		    popUpMenu.add(new ExcludeMemberAction(
+//                                "Exclude " + clickedOnMember.getName() + "'s children from this query",
+//                                clickedOnMember,
+//                                Selection.Operator.CHILDREN));
+//            		    popUpMenu.addSeparator();
 	            		popUpMenu.add(new DrillOnMemberAction(
 	            				"Drill Replace on " + clickedOnMember.getName(),
 								clickedOnMember));
