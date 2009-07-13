@@ -1419,10 +1419,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             CellSetAxis columnAxis;
             final CellSet cellSet;
             try {
-                cellSet = olapQuery.getMdxQueryCopy().execute();
+                cellSet = olapQuery.getMdxQueryCopy().execute();  //XXX will need to be changed once the Olap4j Query can be listened to
                 columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+            	logger.warn(e);
+               	return; //XXX should not squish this exception, when we can just listen to the query directly. The problem right
+               	//XXX now is that if a user has a query with a graph based upon it and they are just building up the query
+               	//XXX and it is broken, this will throw an error unneccesarily.
             }
             
             //XXX Positions aren't comparable so going to compare based on the unique names of their member list.
