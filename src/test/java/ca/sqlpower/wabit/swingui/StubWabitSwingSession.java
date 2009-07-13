@@ -22,18 +22,22 @@ package ca.sqlpower.wabit.swingui;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.naming.NamingException;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JSpinner;
 import javax.swing.JTree;
 
 import org.apache.log4j.Logger;
+import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -191,5 +195,11 @@ public class StubWabitSwingSession implements WabitSwingSession {
 
     public SQLDatabase getDatabase(JDBCDataSource dataSource) {
     	return delegateSession.getDatabase(dataSource);
+    }
+
+    public OlapConnection createConnection(Olap4jDataSource dataSource)
+            throws SQLException, ClassNotFoundException, NamingException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

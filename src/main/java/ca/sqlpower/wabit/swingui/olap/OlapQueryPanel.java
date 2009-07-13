@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,7 +36,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -46,10 +44,8 @@ import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.undo.UndoManager;
 
-import mondrian.olap.ParserSym;
-
+import org.apache.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.RTextArea;
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
@@ -59,13 +55,14 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 
 public class OlapQueryPanel implements WabitPanel {
+    
+    private static final Logger logger = Logger.getLogger(OlapQueryPanel.class);
     
     /**
      * This is the view component that shows what's in the query.
@@ -207,14 +204,6 @@ public class OlapQueryPanel implements WabitPanel {
                     }
                 } catch (Exception e1) {
                     throw new RuntimeException(e1);
-                } finally {
-                    if (connection != null) {
-                        try {
-                            connection.close();
-                        } catch (SQLException e1) {
-                            //squish exception to not hide any exceptions thrown by the catch.
-                        }
-                    }
                 }
             }
         });

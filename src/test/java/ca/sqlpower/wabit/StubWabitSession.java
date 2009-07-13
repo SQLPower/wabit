@@ -21,10 +21,16 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.naming.NamingException;
+
+import org.olap4j.OlapConnection;
+
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -121,6 +127,12 @@ public class StubWabitSession implements WabitSession {
             databases.put(dataSource, db);
         }
         return db;
+    }
+
+    public OlapConnection createConnection(Olap4jDataSource dataSource)
+            throws SQLException, ClassNotFoundException, NamingException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

@@ -20,25 +20,19 @@
 package ca.sqlpower.wabit.olap;
 
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.olap4j.Axis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
-import org.olap4j.OlapWrapper;
 import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
@@ -53,11 +47,9 @@ import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 
-import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.xml.XMLHelper;
@@ -72,7 +64,7 @@ public class OlapQuery extends AbstractWabitObject {
      * This will create a copy of the query.
      */
     public OlapQuery createCopyOfSelf() throws SQLException {
-        OlapQuery newQuery = new OlapQuery(dbMapping);
+        OlapQuery newQuery = new OlapQuery(olapMapping);
         for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
             newQuery.appendElement(
                     this.rootNodes.get(mickey), this.attributes.get(mickey));
@@ -104,12 +96,6 @@ public class OlapQuery extends AbstractWabitObject {
     private Olap4jDataSource olapDataSource;
 
     /**
-     * This JNDI context is used as a temporary holding place during the process
-     * of creating Olap4j connections.
-     */
-    private final Context ctx;
-    
-    /**
      * Memorizes the saved XML structure for last minute load.
      */
     private List<String> rootNodes = new ArrayList<String>();
@@ -117,16 +103,18 @@ public class OlapQuery extends AbstractWabitObject {
     private List<Map<String,String>> attributes = new ArrayList<Map<String,String>>();
 
     /**
-     * This mapping is used to get a database connection based on a JDBCDataSource.
-     * This allows us to pool connections and not go over a connection limit.
+     * This mapping is used to get an OLAP connection based on an
+     * {@link Olap4jDataSource}. This allows us to reuse the same connection and
+     * reduced the number of times an object gets cached. The connections in
+     * this mapping should not be closed as they may be used by other objects.
      */
-    private final SQLDatabaseMapping dbMapping;
+    private final OlapConnectionMapping olapMapping;
     
     /**
      * Creates a new, empty query with no set persistent object ID.
      */
-    public OlapQuery(SQLDatabaseMapping dbMapping) {
-        this(null, dbMapping);
+    public OlapQuery(OlapConnectionMapping olapMapping) {
+        this(null, olapMapping);
     }
 
     /**
@@ -134,17 +122,9 @@ public class OlapQuery extends AbstractWabitObject {
      * when it's saved. This constructor is only of particular use to the
      * persistence layer.
      */
-    public OlapQuery(String uuid, SQLDatabaseMapping dbMapping) {
+    public OlapQuery(String uuid, OlapConnectionMapping olapMapping) {
         super(uuid);
-        this.dbMapping = dbMapping;
-        // FIXME this should be configured in an external jndi.properties file.
-        System.setProperty("java.naming.factory.initial", "org.osjava.sj.memory.MemoryContextFactory");
-        System.setProperty("org.osjava.sj.jndi.shared", "true");
-        try {
-            ctx = new InitialContext();
-        } catch (NamingException e) {
-            throw new RuntimeException(e);
-        }
+        this.olapMapping = olapMapping;
     }
     
     public void setCurrentCube(Cube currentCube) {
@@ -225,57 +205,7 @@ public class OlapQuery extends AbstractWabitObject {
 
     public OlapConnection createOlapConnection()
     throws SQLException, ClassNotFoundException, NamingException {
-        final String uniqueName = UUID.randomUUID().toString();
-        
-        // FIXME This validation should not be performed here.
-        if (getOlapDataSource() == null) return null;
-        
-        JDBCDataSource ds = olapDataSource.getDataSource();
-        SQLDatabase database = dbMapping.getDatabase(ds);
-        
-        try {
-            
-            ctx.bind(uniqueName, new DataSourceAdapter(database));
-            
-            if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.IN_PROCESS)) {
-                if (getOlapDataSource().getMondrianSchema() == null
-                        || getOlapDataSource().getDataSource() == null) {
-                    // FIXME This validation should not be performed here.
-                    return null;
-                }
-                
-                // Init the class loader. This might not be necessary with JDK 1.6, but just for kicks....
-                Class.forName(Olap4jDataSource.IN_PROCESS_DRIVER_CLASS_NAME);
-                
-                // Build a JDBC URL for Mondrian driver connection
-                StringBuilder url = new StringBuilder("jdbc:mondrian:");
-                url.append("DataSource='").append(uniqueName);
-                url.append("';Catalog=").append(getOlapDataSource().getMondrianSchema().toString());
-                
-                Connection connection = DriverManager.getConnection(url.toString());
-                return ((OlapWrapper) connection).unwrap(OlapConnection.class);
-                
-            } else if (getOlapDataSource().getType().equals(Olap4jDataSource.Type.XMLA)) {
-
-                // Init the class loader
-                Class.forName(Olap4jDataSource.XMLA_DRIVER_CLASS_NAME);
-                
-                // Build the JDBC URL for an XMLA connection.
-                StringBuilder url = new StringBuilder("jdbc:xmla:");
-                url.append("Server=").append(getOlapDataSource().getXmlaServer()); // FIXME This requires validation. Should be performed with the other ones identified higher up in this function.
-                
-                // Establish the connection
-                Connection conn = DriverManager.getConnection(url.toString());
-                OlapConnection olapConn = ((OlapWrapper) conn).unwrap(OlapConnection.class);
-                
-                return olapConn;
-                
-            } else {
-                throw new RuntimeException("Someone forgot to add a connection type handler in the code.");
-            }
-        } finally {
-            ctx.unbind(uniqueName);
-        }
+        return olapMapping.createConnection(getOlapDataSource());
     }
 
     /**

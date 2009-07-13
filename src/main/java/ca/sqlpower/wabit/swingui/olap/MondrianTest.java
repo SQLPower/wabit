@@ -51,6 +51,7 @@ import javax.swing.JTree;
 import javax.swing.event.UndoableEditListener;
 
 import org.olap4j.CellSet;
+import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
 
@@ -62,9 +63,11 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.db.Olap4jConnectionPanel;
+import ca.sqlpower.wabit.StubWabitSession;
+import ca.sqlpower.wabit.StubWabitSessionContext;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class MondrianTest {
@@ -161,11 +164,28 @@ public class MondrianTest {
         PlDotIni plIni = new PlDotIni();
         plIni.read(new File(System.getProperty("user.home"), "pl.ini"));
         
-        Olap4jDataSource olapDataSource = new Olap4jDataSource(plIni);
+        final Olap4jDataSource olapDataSource = new Olap4jDataSource(plIni);
         olapDataSource.setMondrianSchema(new URI(prefs.get("mondrianSchemaURI", "")));
         final JDBCDataSource ds = plIni.getDataSource(prefs.get("mondrianDataSource", null), JDBCDataSource.class);
         final SQLDatabase db = new SQLDatabase(ds);
         olapDataSource.setDataSource(ds);
+        
+        final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext()) {
+            final OlapConnectionPool olapPool = new OlapConnectionPool(olapDataSource, this);
+            
+            @Override
+            public SQLDatabase getDatabase(JDBCDataSource dataSource) {
+                return db;
+            }
+            
+            @Override
+            public OlapConnection createConnection(Olap4jDataSource dataSource)
+                    throws SQLException, ClassNotFoundException,
+                    NamingException {
+                return olapPool.getConnection();
+            }
+            
+        };
 
         Olap4jConnectionPanel dep = new Olap4jConnectionPanel(olapDataSource, new SpecificDataSourceCollection<JDBCDataSource>(plIni, JDBCDataSource.class));
         JFrame dummyFrame = new JFrame();
@@ -184,12 +204,7 @@ public class MondrianTest {
         prefs.put("mondrianSchemaURI", olapDataSource.getMondrianSchema().toString());
         prefs.put("mondrianDataSource", olapDataSource.getDataSource().getName());
         
-        OlapQuery olapQuery = new OlapQuery(new SQLDatabaseMapping() {
-        
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return db;
-            }
-        });
+        OlapQuery olapQuery = new OlapQuery(session);
         olapQuery.setOlapDataSource(olapDataSource);
         
         new MondrianTest(olapQuery);

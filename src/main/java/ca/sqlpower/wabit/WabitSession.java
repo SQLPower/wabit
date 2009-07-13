@@ -37,7 +37,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
  * The basic interface for a Wabit session. This interface provides all the
  * UI-independent state and behaviour of a Wabit session. 
  */
-public interface WabitSession extends SQLDatabaseMapping {
+public interface WabitSession extends SQLDatabaseMapping, OlapConnectionMapping {
 
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l);
 

@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.naming.NamingException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -71,8 +73,10 @@ import javax.swing.tree.TreePath;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
+import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -95,6 +99,7 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
@@ -265,6 +270,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * limit spinner changes.
 	 */
 	private int oldRowLimitValue;
+	
+	/**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = new HashMap<Olap4jDataSource, OlapConnectionPool>();
 	
 	/**
 	 * Creates a new session 
@@ -599,6 +609,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    	    db.disconnect();
 	    	}
 	    	
+	    	for (OlapConnectionPool olapPool : olapConnectionPools.values()) {
+	    	    try {
+                    olapPool.disconnect();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+	    	}
+	    	
     		frame.dispose();
 		}
 		return closing;
@@ -842,5 +860,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             databases.put(dataSource, db);
         }
         return db;
+    }
+    
+    public OlapConnection createConnection(Olap4jDataSource dataSource) 
+    throws SQLException, ClassNotFoundException, NamingException {
+        if (dataSource == null) return null;
+        OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+        if (olapConnectionPool == null) {
+            olapConnectionPool = new OlapConnectionPool(dataSource, this);
+            olapConnectionPools.put(dataSource, olapConnectionPool);
+        }
+        return olapConnectionPool.getConnection();
     }
 }
