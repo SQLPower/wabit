@@ -728,7 +728,7 @@
       <para>In Wabit you can choose between the integrated Mondrian server and
       an external OLAP server as your data source. The external OLAP server
       must support the XMLA standard. For more information on XMLA please see
-      the<ulink url="http://en.wikipedia.org/wiki/XMLA">article on
+      the <ulink url="http://en.wikipedia.org/wiki/XMLA">article on
       Wikipedia.</ulink></para>
 
       <section id="setup_database_olap_xmla">
@@ -748,7 +748,7 @@
           </listitem>
 
           <listitem>
-            <para>Click on the 'New' button.</para>
+            <para>Click on 'OLAP Connection...'.</para>
           </listitem>
 
           <listitem>
@@ -765,7 +765,7 @@
           </listitem>
 
           <listitem>
-            <para>Click on 'Ok'.</para>
+            <para>Click on 'OK'.</para>
           </listitem>
         </orderedlist>
       </section>
@@ -794,7 +794,7 @@
           </listitem>
 
           <listitem>
-            <para>Click on 'OLAP connection'.</para>
+            <para>Click on 'OLAP connection...'.</para>
           </listitem>
 
           <listitem>
@@ -816,7 +816,7 @@
           </listitem>
 
           <listitem>
-            <para>Click on the 'Ok" button.</para>
+            <para>Click on the 'OK' button.</para>
           </listitem>
         </orderedlist>
       </section>
@@ -1188,7 +1188,7 @@
     <title>OLAP queries</title>
 
     <para>Wabit allows you to create OLAP queries based on existing OLAP
-    connections. To learn how to add a OLAP connection, please read
+    connections. To learn how to add a OLAP connection, please read 
     section<xref linkend="setup_database_olap" />.</para>
 
     <section id="query_olap_gui">
@@ -1263,8 +1263,8 @@
         </listitem>
 
         <listitem>
-          <para>To drill down or up just click on the +/- symbols in front of
-          the related dimension element.</para>
+			<para>To drill down or up just click on the dimension element you wish
+				to drill down or up on.</para>
         </listitem>
       </orderedlist>
     </section>
