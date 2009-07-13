@@ -39,6 +39,7 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
 
 public class StubWabitSession implements WabitSession {
 	
@@ -46,6 +47,11 @@ public class StubWabitSession implements WabitSession {
 	private WabitWorkspace workspace;
 	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
+    /**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = new HashMap<Olap4jDataSource, OlapConnectionPool>();
+	
 	public StubWabitSession(WabitSessionContext context) {
 		this.context = context;
 		workspace = new WabitWorkspace();
@@ -131,8 +137,12 @@ public class StubWabitSession implements WabitSession {
 
     public OlapConnection createConnection(Olap4jDataSource dataSource)
             throws SQLException, ClassNotFoundException, NamingException {
-        // TODO Auto-generated method stub
-        return null;
+    	if (dataSource == null) return null;
+	    OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+	    if (olapConnectionPool == null) {
+	        olapConnectionPool = new OlapConnectionPool(dataSource, this);
+	        olapConnectionPools.put(dataSource, olapConnectionPool);
+	    }
+	    return olapConnectionPool.getConnection();
     }
-
 }
