@@ -36,7 +36,6 @@
                         <goals>
                             <goal>generate-html</goal>
                             <goal>generate-pdf</goal>
-                            <goal>generate-manpages</goal>
                         </goals>
                         <phase>site</phase>
                     </execution>
