@@ -144,6 +144,10 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
 
 		public void dragExit(DropTargetEvent dte) {
+			resetUIAfterDrag();
+		}
+
+		private void resetUIAfterDrag() {
 			if (borderedComponent != null) {
 				borderedComponent.setBorder(defaultBorder);
 				borderedComponent = null;
@@ -151,10 +155,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
-			if (borderedComponent != null) {
-				borderedComponent.setBorder(defaultBorder);
-				borderedComponent = null;
-			}
+			resetUIAfterDrag();
 			
 			Point point = dtde.getLocation();
 			int insertIndex = calcDropInsertIndex(point);
@@ -206,6 +207,9 @@ public class CellSetTableHeaderComponent extends JComponent {
 						CellSetTableHeaderComponent.this,
 						dtde.getTransferable(),
 						dtde.getLocation());
+				if (!success) {
+					resetUIAfterDrag();
+				}
 				dtde.dropComplete(success);
 			}
 		}
