@@ -984,9 +984,7 @@
         if they require columns. The only restriction on adding functions
         depending on columns is the tables containing those columns must be in
         the query, even if nothing is selected from them.</para>
-      </section>
 
-      <section>
         <para>To add a more general where clause to the query or add grouping
         to the query on the graphical query see <xref
         linkend="query_builder.results" />.</para>
