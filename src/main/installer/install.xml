@@ -51,7 +51,7 @@
 				the directory jdbc is referenced in the manifest as well as various
 				targets.
 			-->
-			<fileset dir="../src/main/resources" targetdir="$INSTALL_PATH">
+			<fileset dir="../src/main/jdbc" targetdir="$INSTALL_PATH/jdbc">
 				<include name="*.jar" />
 			</fileset>
 			<fileset dir="../" targetdir="$INSTALL_PATH">
