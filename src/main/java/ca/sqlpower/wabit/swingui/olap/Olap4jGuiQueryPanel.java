@@ -19,22 +19,26 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Window;
 import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.event.ContainerListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -47,6 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.activation.DataSource;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -66,7 +71,6 @@ import javax.swing.TransferHandler;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.plaf.basic.BasicBorders;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -103,7 +107,6 @@ public class Olap4jGuiQueryPanel {
     private static final Logger logger = Logger.getLogger(Olap4jGuiQueryPanel.class);
     
     public class OlapTreeTransferHandler extends TransferHandler {
-        
         @Override
         protected Transferable createTransferable(JComponent c) {
             logger.debug("tree handler: createTransferable()");
@@ -254,6 +257,52 @@ public class Olap4jGuiQueryPanel {
     };
     
     /**
+     * This class is mainly used so that the CubeTree can be a DragSourceListener.
+     * This enables our own Drag gesture etc... to be added to the cube tree
+     * which is good because this means mac's can drag on one click and drag
+     * instead of selecting then dragging.
+     */
+    public class CubeTree extends JTree implements DragSourceListener {
+    	public CubeTree() {
+            setRootVisible(false);
+            setCellRenderer(new Olap4JTreeCellRenderer());
+    	}
+    	
+		public void dragDropEnd(DragSourceDropEvent dsde) {
+			//Do nothing
+		}
+
+		public void dragEnter(DragSourceDragEvent dsde) {
+			//Do nothing
+		}
+
+		public void dragExit(DragSourceEvent dse) {
+			//Do nothing
+		}
+
+		public void dragOver(DragSourceDragEvent dsde) {
+			//Do nothing
+		}
+
+		public void dropActionChanged(DragSourceDragEvent dsde) {
+			//Do nothing
+		}
+    	
+    }
+    
+    /**
+     * This class is the cube trees drag gesture listener, it starts the drag
+     * process when necessary.
+     */
+    private class CubeTreeDragGestureListener implements DragGestureListener {
+		public void dragGestureRecognized(DragGestureEvent dge) {
+			dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
+			CubeTree t = (CubeTree) dge.getComponent();
+			dge.getDragSource().startDrag(dge, null, new OlapMetadataTransferable(t.getLastSelectedPathComponent()), t);
+		}
+    }
+    
+    /**
      * Creates 
      * @param dsCollection
      * @param owningFrame
@@ -306,12 +355,10 @@ public class Olap4jGuiQueryPanel {
         
         cellSetViewer.addAxisListener(axisEventHandler);
         
-        cubeTree = new JTree();
-        cubeTree.setRootVisible(false);
-        cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
-        cubeTree.setDragEnabled(true);
-        cubeTree.setTransferHandler(new OlapTreeTransferHandler());
-        
+        cubeTree = new CubeTree();
+        DragSource ds = new DragSource();
+        ds.createDefaultDragGestureRecognizer(cubeTree, DnDConstants.ACTION_COPY, new CubeTreeDragGestureListener());
+
         setCurrentCube(olapQuery.getCurrentCube()); // inits cubetree state
         
         final JButton cubeChooserButton = new JButton("Choose Cube...");
