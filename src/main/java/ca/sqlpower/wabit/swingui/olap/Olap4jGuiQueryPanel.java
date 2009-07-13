@@ -33,6 +33,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -250,7 +252,7 @@ public class Olap4jGuiQueryPanel {
         }
         
     };
-
+    
     /**
      * Creates 
      * @param dsCollection
@@ -353,14 +355,10 @@ public class Olap4jGuiQueryPanel {
         resetQueryButton.setToolTipText("Reset Query");
         resetQueryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				olapQuery.resetMDXQuery();
-				hierarchiesBeingUsed.clear();
-				expandedMembers.clear();
-				rowHierarchies.clear();
-				columnHierarchies.clear();
-				executeQuery();
+				resetMDXQuery();
 			}
         });
+        
         
         databaseComboBox = new JComboBox(dsCollection.getConnections(Olap4jDataSource.class).toArray());
         databaseComboBox.setSelectedItem(olapQuery.getOlapDataSource());
@@ -388,8 +386,16 @@ public class Olap4jGuiQueryPanel {
         panel.add(databaseComboBox, "wrap");
         panel.add(cubeChooserButton, "grow 0,left,wrap");
         panel.add(new JScrollPane(cubeTree), "spany, wrap");
-        
     }
+    
+	private void resetMDXQuery() {
+		olapQuery.resetMDXQuery();
+		hierarchiesBeingUsed.clear();
+		expandedMembers.clear();
+		rowHierarchies.clear();
+		columnHierarchies.clear();
+		executeQuery();
+	}
     
     private Window owningFrame = null;
     private Popup popup = null;
@@ -534,6 +540,14 @@ public class Olap4jGuiQueryPanel {
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
+    	try {
+    		if (currentCube != olapQuery.getMDXQuery().getCube()) { //this makes sure that when you're loading and set the cube you dont erase your query
+    			resetMDXQuery(); 
+    		}
+    	} catch (Exception e) {
+    		resetMDXQuery(); //if getting the cube on the olapQuery fails reset the query.
+    	}
+    	
         olapQuery.setCurrentCube(currentCube);
         if (currentCube != null) {
             cubeTree.setModel(new Olap4jTreeModel(Collections.singletonList(currentCube)));
