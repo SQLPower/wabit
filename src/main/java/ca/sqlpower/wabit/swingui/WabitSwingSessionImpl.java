@@ -106,6 +106,7 @@ import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
@@ -143,11 +144,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
 	
-	/**
-	 * An icon for a new Wabit workspace.
-	 */
-	private static final Icon NEW_WORKSPACE_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
-
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private class WindowClosingListener extends WindowAdapter {
@@ -423,12 +419,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
-		fileMenu.add(new AbstractAction("New Workspace...", NEW_WORKSPACE_ICON) {
-			public void actionPerformed(ActionEvent e) {
-				NewWorkspaceScreen newWorkspace = new NewWorkspaceScreen(getContext());
-				newWorkspace.showFrame();
-			}
-		});
+		fileMenu.add(new NewWorkspaceAction(getContext()));
 		fileMenu.add(new OpenWorkspaceAction(this, this.getContext()));
 		fileMenu.add(getContext().createRecentMenu());
 		fileMenu.add(new ImportWorkspaceAction(this));
