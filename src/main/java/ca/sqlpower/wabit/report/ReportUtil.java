@@ -90,6 +90,10 @@ public class ReportUtil {
         numberFormats.add(new DecimalFormat("(#,000.00)"));
         numberFormats.add(new DecimalFormat("(#,000)"));
         numberFormats.add(new DecimalFormat("##0.##E0"));
+        numberFormats.add(new DecimalFormat("$#,##0.00"));
+        numberFormats.add(new DecimalFormat("´#,##0.00"));
+        numberFormats.add(new DecimalFormat("£#,##0.00"));
+        numberFormats.add(new DecimalFormat("Û#,##0.00"));
         numberFormats.add((DecimalFormat)NumberFormat.getCurrencyInstance());
         numberFormats.add((DecimalFormat)NumberFormat.getInstance());
         numberFormats.add((DecimalFormat)NumberFormat.getPercentInstance());
