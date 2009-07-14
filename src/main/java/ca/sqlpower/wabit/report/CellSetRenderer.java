@@ -140,6 +140,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private final Map<Member, Set<Rectangle>> memberHeaderMap = new HashMap<Member, Set<Rectangle>>();
     
+    private PropertyChangeListener nameListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName() == "name") {
+				setName((String) evt.getNewValue());
+			}
+		}
+    };
+    
     /**
      * This member is the member the user is over with their mouse
      */
@@ -185,6 +193,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
         this.olapQuery = olapQuery;
         olapQuery.addPropertyChangeListener(queryListener);
         this.loadingWorkspace  = loadingWorkspace;
+        setName(olapQuery.getName());
+        olapQuery.addPropertyChangeListener(nameListener);
     }
     
     private void init() {
@@ -247,6 +257,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 
     public void cleanup() {
         olapQuery.removePropertyChangeListener(queryListener);
+        olapQuery.removePropertyChangeListener(nameListener);
     }
 
     public Color getBackgroundColour() {
