@@ -44,6 +44,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -334,15 +335,20 @@ public class QueryPanel implements WabitPanel {
 		this.session = session;
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = cache;
-		queryPen = new QueryPen(new AbstractAction() {
-        
+		
+		final Action queryPenExecuteButtonAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 executeQueryInCache();
             }
-        }, queryCache.getQuery(), WabitSwingSessionContextImpl.FORUM_ACTION);
+        };
+        queryPen = new QueryPen(
+                queryPenExecuteButtonAction,
+                queryCache.getQuery(),
+                WabitSwingSessionContextImpl.FORUM_ACTION);
 		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("ca/sqlpower/swingui/querypen/wabit_execute.png")));
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
+		
 		queryUIComponents = new SQLQueryUIComponents(session, new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), session, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
