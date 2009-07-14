@@ -1,12 +1,30 @@
 Wabit Release Notes
 
 Noteworthy Changes in 0.9.7
+  Charts
+    * Support for creating Line, Bar, and Scatter charts based off of 
+      relational and OLAP queries in a Report
+
+  OLAP Support
+    * Brand new support for creating reports based of Multi-dimensional OLAP Cubes
+    * Support for querying on XML/A servers, or on an in-process Mondrian server
+    * A new OLAP query editor that supports a mouse-driven, drag-and-drop interface, 
+      and the ability to modify the underlying MDX query directly
+    * Ability to create charts off of OLAP queries
+
+  Server Support
+    * Added support for discovering and connecting to remote servers
+    * Capability of saving and loading projects on a remote server    
+
+  Other
+  	* Added support for streaming queries (SQLstream support)
+
   User Interface
     * The concept that was called "Project" up until 0.9.6 is now called
       "Workspace." The semantics of a workspace are exactly the same as
       the semantics of a project. In other words, "Fun new name, same
       great taste!"
-
+  
 
 Noteworthy Changes in 0.9.6
   User Interface
