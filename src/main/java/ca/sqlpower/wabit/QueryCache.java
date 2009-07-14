@@ -509,5 +509,13 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         if (getWabitDataSource() == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(getWabitDataSource()));
     }
+    
+    /**
+     * If this returns true then this query cache is a query that should
+     * not be hooked up to listeners. 
+     */
+    public boolean isPhantomQuery() {
+        return getParent() == null;
+    }
 
 }

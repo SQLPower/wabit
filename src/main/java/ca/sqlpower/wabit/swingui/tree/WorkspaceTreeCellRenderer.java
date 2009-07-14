@@ -149,7 +149,9 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 		if (!SwingUtilities.isEventDispatchThread()) {
 		    throw new IllegalStateException("This method can only be called on the event dispatch thread");
 		}
-		objectToTimedImageMap.put(object, frameNum);
+		if (object instanceof QueryCache && !((QueryCache) object).isPhantomQuery()) {
+		    objectToTimedImageMap.put(object, frameNum);
+		}
 	}
 	
     /**
