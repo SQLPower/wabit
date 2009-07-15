@@ -134,8 +134,10 @@ public class ServerListMenu extends JMenu {
         this.itemFactory = itemFactory;
         this.serverManagerAction = makeServerManagerAction(context, dialogOwner);
         refillMenu.run();
-        context.getJmDNS().addServiceListener(
+        if (context.getJmDNS() != null) {
+        	context.getJmDNS().addServiceListener(
                 WabitSessionContext.WABIT_ENTERPRISE_SERVER_MDNS_TYPE, serviceListener);
+        }
     }
     
     private final Runnable refillMenu = new Runnable() {
