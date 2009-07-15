@@ -101,7 +101,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS) throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
 		if (useJmDNS) {
-			//jmdns = JmDNS.create();
+			jmdns = JmDNS.create();
 			//TODO reenable this.. taking it out for the release due to Bug 1905 in the bug database
 			//It causes crashes on startup if no network interface can be found and likely will have
 			//some terrible things happening when we try to close the connection. Therefore it is being 
