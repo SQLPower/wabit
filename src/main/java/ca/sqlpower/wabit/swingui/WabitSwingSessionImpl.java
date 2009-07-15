@@ -49,6 +49,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -84,6 +85,8 @@ import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
+import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
+import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
@@ -325,7 +328,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame.addWindowListener(new WindowClosingListener(this));
 		aboutAction = new AboutAction(frame);
 		
-		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
+		List<Class<? extends SPDataSource>> newDSTypes = new ArrayList<Class<? extends SPDataSource>>();
+        newDSTypes.add(JDBCDataSource.class);
+        newDSTypes.add(Olap4jDataSource.class);
+        dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources(), 
+				new DefaultDataSourceDialogFactory(), 
+				new DefaultDataSourceTypeDialogFactory(getContext().getDataSources()),
+				new ArrayList<Action>(), new ArrayList<JComponent>(), frame, false, newDSTypes);
 		dbConnectionManager.setDbIcon(DB_ICON);
 		
 		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, sessionContext.getDataSources());
