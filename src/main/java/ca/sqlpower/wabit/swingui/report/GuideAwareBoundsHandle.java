@@ -36,10 +36,10 @@ public class GuideAwareBoundsHandle extends PBoundsHandle {
      * When the dragged edge(s) of the node come within this distance (in global
      * pixels) of a guide, that edge will snap to the guide.
      */
-    private final int threshold;
+    private final double threshold;
     private final Collection<GuideNode> guides;
 
-    public GuideAwareBoundsHandle(PBoundsLocator locator, int threshold, Collection<GuideNode> guides) {
+    public GuideAwareBoundsHandle(PBoundsLocator locator, double threshold, Collection<GuideNode> guides) {
         super(locator);
         this.threshold = threshold;
         this.guides = guides;
@@ -60,7 +60,7 @@ public class GuideAwareBoundsHandle extends PBoundsHandle {
             
             //left
             if (side == SwingConstants.NORTH_WEST || side == SwingConstants.WEST || side == SwingConstants.SOUTH_WEST) {
-                int leftDistance = (int) Math.abs(b.getX() - guideBounds.getX());
+                double leftDistance = Math.abs(b.getX() - guideBounds.getX());
                 if (leftDistance < threshold) {
                     b.width += b.getX() - guideBounds.getX();
                     b.x = guideBounds.getX();
@@ -69,7 +69,7 @@ public class GuideAwareBoundsHandle extends PBoundsHandle {
 
             // right
             if (side == SwingConstants.NORTH_EAST || side == SwingConstants.EAST || side == SwingConstants.SOUTH_EAST) {
-                int rightDistance = (int) Math.abs(b.getX() + b.getWidth() - guideBounds.getX());
+                double rightDistance = Math.abs(b.getX() + b.getWidth() - guideBounds.getX());
                 if (rightDistance < threshold) {
                     b.width = guideBounds.getX() - b.getX();
                 }
@@ -77,7 +77,7 @@ public class GuideAwareBoundsHandle extends PBoundsHandle {
 
             // top
             if (side == SwingConstants.NORTH_WEST || side == SwingConstants.NORTH || side == SwingConstants.NORTH_EAST) {
-                int topDistance = (int) Math.abs(b.getY() - guideBounds.getY());
+                double topDistance = Math.abs(b.getY() - guideBounds.getY());
                 if (topDistance < threshold) {
                     b.height += b.getY() - guideBounds.getY();
                     b.y = guideBounds.getY();
@@ -86,7 +86,7 @@ public class GuideAwareBoundsHandle extends PBoundsHandle {
 
             // bottom
             if (side == SwingConstants.SOUTH_WEST || side == SwingConstants.SOUTH || side == SwingConstants.SOUTH_EAST) {
-                int bottomDistance = (int) Math.abs(b.getY() + b.getHeight() - guideBounds.getY());
+                double bottomDistance = Math.abs(b.getY() + b.getHeight() - guideBounds.getY());
                 if (bottomDistance < threshold) {
                     b.height = guideBounds.getY() - b.getY();
                 }

@@ -193,7 +193,7 @@ public class Page extends AbstractWabitObject {
     private void adjustMarginForPageWidth(int oldWidth, int newWidth) {
         Guide rightMargin = getGuideWithLargestOffset(Axis.VERTICAL);
         if (rightMargin != null) {
-            int oldMarginWidth = oldWidth - rightMargin.getOffset();
+            int oldMarginWidth = (int) (oldWidth - rightMargin.getOffset());
             rightMargin.setOffset(newWidth - oldMarginWidth);
         }
     }
@@ -220,7 +220,7 @@ public class Page extends AbstractWabitObject {
     private void adjustMarginForPageHeight(int oldHeight, int newHeight) {
         Guide bottomMargin = getGuideWithLargestOffset(Axis.HORIZONTAL);
         if (bottomMargin != null) {
-            int oldMarginHeight = oldHeight - bottomMargin.getOffset();
+            int oldMarginHeight = (int) (oldHeight - bottomMargin.getOffset());
             bottomMargin.setOffset(newHeight - oldMarginHeight);
         }
     }
@@ -337,7 +337,7 @@ public class Page extends AbstractWabitObject {
         fireChildAdded(Guide.class, addme, index);
     }
 
-    public int getLeftMarginOffset() {
+    public double getLeftMarginOffset() {
         Guide leftMargin = getGuideWithSmallestOffset(Axis.VERTICAL);
         if (leftMargin != null) {
             return leftMargin.getOffset();
@@ -346,7 +346,7 @@ public class Page extends AbstractWabitObject {
         }
     }
     
-    public int getRightMarginOffset() {
+    public double getRightMarginOffset() {
         Guide rightMargin = getGuideWithLargestOffset(Axis.VERTICAL);
         if (rightMargin != null) {
             return rightMargin.getOffset();
@@ -355,7 +355,7 @@ public class Page extends AbstractWabitObject {
         }
     }
 
-    public int getUpperMarginOffset() {
+    public double getUpperMarginOffset() {
         Guide upperMargin = getGuideWithSmallestOffset(Axis.HORIZONTAL);
         if (upperMargin != null) {
             return upperMargin.getOffset();
@@ -364,7 +364,7 @@ public class Page extends AbstractWabitObject {
         }
     }
     
-    public int getLowerMarginOffset() {
+    public double getLowerMarginOffset() {
         Guide lowerMargin = getGuideWithLargestOffset(Axis.HORIZONTAL);
         if (lowerMargin != null) {
             return lowerMargin.getOffset();

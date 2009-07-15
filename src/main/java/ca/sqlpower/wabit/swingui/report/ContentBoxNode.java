@@ -111,20 +111,11 @@ public class ContentBoxNode extends PNode implements ReportNode {
     @Override
     public boolean setBounds(double x, double y, double width, double height) {
     	logger.debug("settingBounds: x="+x+" y="+y+" width="+width+" height="+ height);
-    	contentBox.setX((int) x);
-    	contentBox.setY((int) y);
-    	contentBox.setWidth((int) width);
-    	contentBox.setHeight((int) height);
+    	contentBox.setX(x);
+    	contentBox.setY(y);
+    	contentBox.setWidth(width);
+    	contentBox.setHeight(height);
         return true;
-    }
-    
-    @Override
-    public void offset(double dx, double dy) {
-    	logger.debug("setting offset: x="+dx+" y="+dy);
-    	double x = contentBox.getX()+dx;
-    	double y = contentBox.getY()+dy;
-    	contentBox.setX((int)x);
-    	contentBox.setY((int)y);
     }
     
     @Override
@@ -157,7 +148,14 @@ public class ContentBoxNode extends PNode implements ReportNode {
             g2.drawString("Empty box\u2014drag content provider here!", 0, (int) (getHeight() / 2));
         }
     }
-    
+    @Override
+    public void offset(double dx, double dy) {
+    	logger.debug("setting offset: x="+dx+" y="+dy);
+    	double x = contentBox.getX() + dx;
+    	double y = contentBox.getY() + dy;
+    	contentBox.setX(x);
+    	contentBox.setY(y);
+    }
     @Override
     public void setParent(PNode newParent) {
         

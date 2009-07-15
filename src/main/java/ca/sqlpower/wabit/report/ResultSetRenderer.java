@@ -532,8 +532,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
         }
         FontMetrics fm = g.getFontMetrics();
-        int width = contentBox.getWidth();
-        int height = contentBox.getHeight();
+        int width =  (int) contentBox.getWidth();
+        int height = (int) contentBox.getHeight();
         int textHeight = fm.getHeight() * errorMessage.size();
         
         int y = Math.max(0, height/2 - textHeight/2);
@@ -621,10 +621,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
         
         if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
-            g.drawLine(0, 0, 0, contentBox.getHeight() - 1);
-            g.drawLine(contentBox.getWidth() - 1, 0, contentBox.getWidth() - 1, contentBox.getHeight());
-            g.drawLine(0, contentBox.getHeight() - 1, contentBox.getWidth() - 1, contentBox.getHeight() - 1);
-            g.drawLine(0, 0, contentBox.getWidth() - 1, 0);
+            int contentBoxHeight = (int) contentBox.getHeight();
+            int contentBoxWidth = (int) contentBox.getWidth();
+			g.drawLine(0, 0, 0, contentBoxHeight - 1);
+			g.drawLine(contentBoxWidth - 1, 0, contentBoxWidth - 1, contentBoxHeight);
+            g.drawLine(0, contentBoxHeight - 1, contentBoxWidth - 1, contentBoxHeight - 1);
+            g.drawLine(0, 0, contentBoxWidth - 1, 0);
         }
         
         //TODO come up with a better way to clear the result sets, probably at the same time the page positions are cleared to get fresh data.
@@ -692,7 +694,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             }
         }
         
-        final ReportPositionRenderer reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, getParent().getWidth(), nullString);
+        final ReportPositionRenderer reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, (int) getParent().getWidth(), nullString);
         rs.beforeFirst();
         
         int sectionStartRow = 1;

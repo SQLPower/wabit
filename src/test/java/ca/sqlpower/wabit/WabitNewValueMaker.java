@@ -70,7 +70,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	replay(newValue);
         } else if (valueType.equals(Guide.class)) {
             if (oldVal != null) {
-                newValue = new Guide(Axis.HORIZONTAL, ((Guide) oldVal).getOffset() + 1);
+                newValue = new Guide(Axis.HORIZONTAL, (int) (((Guide) oldVal).getOffset() + 1));
             } else {
                 newValue = new Guide(Axis.HORIZONTAL, 123);
             }

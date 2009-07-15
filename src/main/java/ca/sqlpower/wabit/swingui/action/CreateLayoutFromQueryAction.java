@@ -95,8 +95,8 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
     public static Layout createDefaultLayout(WabitWorkspace workspace, ReportContentRenderer contentRenderer, String layoutName) {
         Layout l = new Layout(layoutName + " Layout");
         Page p = l.getPage();
-        final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();
-        final int pageBodyHeight = p.getLowerMarginOffset() - p.getUpperMarginOffset();
+        final int pageBodyWidth = (int) (p.getRightMarginOffset() - p.getLeftMarginOffset());
+        final int pageBodyHeight = (int) (p.getLowerMarginOffset() - p.getUpperMarginOffset());
         
         ContentBox body = new ContentBox();
         if (contentRenderer instanceof CellSetRenderer) {

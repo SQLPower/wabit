@@ -421,7 +421,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (maxRowHeight == 0) {
         	maxRowHeight = 1;
         }
-        int numRows = (contentBox.getHeight() - totalHeaderHeight) / maxRowHeight;
+        int numRows = (int) ((contentBox.getHeight() - totalHeaderHeight) / maxRowHeight);
         if (numRows <= 0) return false;
         
         int firstRecord = numRows * pageIndex;

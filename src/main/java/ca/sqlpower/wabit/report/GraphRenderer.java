@@ -1496,11 +1496,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			double scaleFactor, int pageIndex, boolean printing) {
 	    if (!missingIdentifiers.isEmpty()) {
 	        int fontHeight = g.getFontMetrics().getHeight();
-	        int startingYPos = (contentBox.getHeight() - fontHeight) / 2;
+	        int startingYPos = (int) ((contentBox.getHeight() - fontHeight) / 2);
 	        String errorString = "There are columns missing from the query but used in the chart.";
-            g.drawString(errorString, (contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2, startingYPos);
+            g.drawString(errorString, (int) ((contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2), startingYPos);
 	        errorString = "Edit the query to update the columns.";
-	        g.drawString(errorString, (contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2, fontHeight + startingYPos);
+	        g.drawString(errorString, (int) ((contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2), fontHeight + startingYPos);
 	        return false;
 	    }
 	        

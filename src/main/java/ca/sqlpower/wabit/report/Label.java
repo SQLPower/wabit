@@ -180,14 +180,14 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         
         if (getBackgroundColour() != null) {
 	        g.setColor(getBackgroundColour());
-	        g.fillRect(0, 0, contentBox.getWidth(), contentBox.getHeight());
+	        g.fillRect(0, 0, (int) contentBox.getWidth(), (int) contentBox.getHeight());
 	        g.setColor(Color.BLACK);
         }
         logger.debug("Rendering label text: " + Arrays.toString(textToRender));
-        int y = vAlignment.calculateStartY(contentBox.getHeight(), textHeight, fm);
+        int y = vAlignment.calculateStartY((int) contentBox.getHeight(), textHeight, fm);
         for (String text : textToRender) {
             int textWidth = fm.stringWidth(text);
-            int x = hAlignment.computeStartX(contentBox.getWidth(), textWidth);
+            int x = hAlignment.computeStartX((int) contentBox.getWidth(), textWidth);
             g.drawString(text, x, y);
             y += fm.getHeight();
         }

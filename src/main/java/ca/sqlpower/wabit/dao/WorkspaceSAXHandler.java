@@ -649,13 +649,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		if (aname.equals("name")) {
         			// already loaded
         		} else if (aname.equals("width")) {
-        			contentBox.setWidth(Integer.parseInt(aval));
+        			contentBox.setWidth(Double.parseDouble(aval));
         		} else if (aname.equals("height")) {
-        			contentBox.setHeight(Integer.parseInt(aval));
+        			contentBox.setHeight(Double.parseDouble(aval));
         		} else if (aname.equals("xpos")) {
-        			contentBox.setX(Integer.parseInt(aval));
+        			contentBox.setX(Double.parseDouble(aval));
         		} else if (aname.equals("ypos")) {
-        			contentBox.setY(Integer.parseInt(aval));
+        			contentBox.setY(Double.parseDouble(aval));
         		} else {
         			logger.warn("Unexpected attribute of <content-box>: " + aname + "=" + aval);
         		}
