@@ -87,6 +87,7 @@ import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
+import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -341,7 +342,11 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         zoomSlider= new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
         zoomSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				canvas.getCamera().setViewScale((double) zoomSlider.getValue()/defaultSliderValue);
+			    final double newScale = (double)zoomSlider.getValue()/defaultSliderValue;
+                final PCamera camera = canvas.getCamera();
+                double oldScale = camera.getViewScale();
+                camera.scaleViewAboutPoint(newScale/oldScale, camera.getViewBounds().getCenterX(), camera.getViewBounds().getCenterY());
+                logger.debug("Camera scaled by " + newScale/oldScale + " and is now at " + camera.getViewScale());
 				ReportLayoutPanel.this.report.setZoomLevel(zoomSlider.getValue());
 			}
 		});
