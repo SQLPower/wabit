@@ -983,7 +983,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	String offsetAmount = attributes.getValue("offset");
         	checkMandatory("axis", axisName);
         	checkMandatory("offset", offsetAmount);
-        	Guide guide = new Guide(Axis.valueOf(axisName), Integer.parseInt(offsetAmount));
+        	Guide guide = new Guide(Axis.valueOf(axisName), Double.parseDouble(offsetAmount));
         	if(guideName != null) {
         		guide.setName(guideName);
         	}
