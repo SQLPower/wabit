@@ -27,8 +27,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -41,8 +39,6 @@ import javax.swing.table.TableCellRenderer;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
-import org.olap4j.metadata.Hierarchy;
-import org.olap4j.query.Query;
 import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.swingui.table.TableUtils;
@@ -58,7 +54,6 @@ public class CellSetViewer {
     private final JTable table;
     private final JScrollPane scrollPane;
     private final JLabel messageLabel = new JLabel("", JLabel.CENTER);
-    private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
     private int minColumnWidth = 5;
 
     /**
@@ -66,28 +61,6 @@ public class CellSetViewer {
      * null until the first cell set is displayed.
      */
     private CellSet cellSet;
-
-    /**
-     * Rebroadcasts axis events to listeners of this viewer.
-     */
-    private final AxisListener axisEventHandler = new AxisListener() {
-        public void memberClicked(MemberEvent e) {
-            fireMemberClickedEvent(e);
-        }
-
-        public void memberDropped(MemberDroppedEvent e) {
-        	logger.debug("AxisListener memberDropped");
-            fireMemberDroppedEvent(e);
-        }
-
-		public void memberRemoved(MemberEvent e) {
-			fireMemberRemovedEvent(e);
-		}
-
-        public void memberExcluded(MemberEvent e) {
-            fireMemberExcludedEvent(e);
-        }
-    };
 
     /**
      * If false the listeners that allow expanding and collapsing members
@@ -100,22 +73,36 @@ public class CellSetViewer {
      */
     private CellSetTableHeaderComponent rowHeader;
     
-    public CellSetViewer() {
-        this(true);
+	/**
+	 * Creates a CellSetViewer on the given {@link OlapQuery} and by default
+	 * allows Member modification
+	 */
+    public CellSetViewer(OlapQuery query) {
+        this(query, true);
     }
     
-    public CellSetViewer(boolean allowMemberModification) {
-        this.allowMemberModification = allowMemberModification;
-        viewerComponent.setPreferredSize(new Dimension(640, 480));
+	/**
+	 * Creates a CellSetViewer on the given {@link OlapQuery}
+	 * 
+	 * @param query
+	 *            The {@link OlapQuery} whose {@link CellSet} results this
+	 *            viewer will be displaying
+	 * @param allowMemberModification
+	 *            Whether or not the CellSetViewer GUI will allow modification
+	 *            of the members of the Query.
+	 */
+    public CellSetViewer(OlapQuery query, boolean allowMemberModification) {
+    	this.allowMemberModification = allowMemberModification;
+    	viewerComponent.setPreferredSize(new Dimension(640, 480));
         table = new JTable();
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);
-        showMessage("No query defined");
+        showMessage(query, "No query defined");
         viewerComponent.add(scrollPane);
     }
 
-    public void showCellSet(CellSet cellSet) {
+    public void showCellSet(OlapQuery query, CellSet cellSet) {
         if (logger.isDebugEnabled()) {
             logger.debug("Showing cell set:");
             RectangularCellSetFormatter f = new RectangularCellSetFormatter(true);
@@ -130,11 +117,9 @@ public class CellSetViewer {
         
         table.setModel(new CellSetTableModel(cellSet));
         setCellSet(cellSet);
-        rowHeader = new CellSetTableHeaderComponent(cellSet, Axis.ROWS, table);
-        rowHeader.addAxisListener(axisEventHandler);
+        rowHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.ROWS, table);
         
-        final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(cellSet, Axis.COLUMNS, table);
-        columnHeader.addAxisListener(axisEventHandler);
+        final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.COLUMNS, table);
         
         if (!allowMemberModification) {
             for (HierarchyComponent hierarchy : rowHeader.getHierarchies()) {
@@ -186,11 +171,7 @@ public class CellSetViewer {
     	TableUtils.fitColumnWidths(table, minColumnWidth, -1, 5); //The max width is set to -1 to not use the max width when resizing columns.
     }
 
-    public void showMessage(String message) {
-    	showMessage(message, null, null);
-    }
-    
-	public void showMessage(String message, List<Hierarchy> rowHierarchies, List<Hierarchy> columnHierarchies) {
+	public void showMessage(OlapQuery query, String message) {
         messageLabel.setText(message);
         
         // This line needs to be called before setting the column header. If it
@@ -198,71 +179,15 @@ public class CellSetViewer {
 		// added, resulting in a missing column header.
         scrollPane.setViewportView(messageLabel);
         
-        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(Axis.ROWS, rowHierarchies);
-        rowHeader.addAxisListener(axisEventHandler);
+        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(query, Axis.ROWS);
         scrollPane.setRowHeaderView(rowHeader);
         
-        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(Axis.COLUMNS, columnHierarchies);
-        columnHeader.addAxisListener(axisEventHandler);
+        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, Axis.COLUMNS);
         scrollPane.setColumnHeaderView(columnHeader);
 	}
     
     public JComponent getViewComponent() {
         return viewerComponent;
-    }
-    
-    /**
-     * Fires a member clicked event to all axis listeners currently registered
-     * on this viewer.
-     */
-    private void fireMemberClickedEvent(MemberEvent e) {
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(0).memberClicked(e);
-        }
-    }
-
-    /**
-     * Fires a member clicked event to all axis listeners currently registered
-     * on this viewer.
-     */
-    private void fireMemberDroppedEvent(MemberDroppedEvent e) {
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(0).memberDropped(e);
-        }
-    }
-
-    /**
-     * Fires a member removed event to all axis listeners currently registered
-     * on this viewer.
-     */
-    private void fireMemberRemovedEvent(MemberEvent e) {
-    	for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(0).memberRemoved(e);
-        }
-	}
-    
-    private void fireMemberExcludedEvent(MemberEvent e) {
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(0).memberExcluded(e);
-        }
-    }
-    
-    /**
-     * Adds the given axis listener to this component. Note that source field on
-     * events received from this viewer will (unfortunately) be an internal
-     * component, and the actual object identity of the source may change from
-     * time to time.
-     * 
-     * @param l
-     *            The listener to add. Must not be null.
-     */
-    public void addAxisListener(AxisListener l) {
-        if (l == null) throw new NullPointerException("Null listener not allowed");
-        axisListeners.add(l);
-    }
-    
-    public void removeAxisLisener(AxisListener l) {
-        axisListeners.remove(l);
     }
     
     public JTable getTable() {

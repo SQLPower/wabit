@@ -595,7 +595,8 @@ public class WorkspaceXMLDAO {
 	        query.writeCachedXml(xml, out);
 	    } else {
     	    
-            org.olap4j.query.Query mdxQuery = query.getMDXQuery();
+	        logger.error("Skipping save of OLAP query");
+            org.olap4j.query.Query mdxQuery = null;//query.getMDXQuery();
             
             if (mdxQuery!=null) {
                 xml.print(out, "<olap4j" + name + "-query");
@@ -637,7 +638,7 @@ public class WorkspaceXMLDAO {
 	            printAttribute("dimension-name", dimension.getDimension().getName());
 	            xml.println(out, ">");
 	            xml.indent++;
-	            for (Selection selection : dimension.getSelections()) {
+	            for (Selection selection : dimension.getInclusions()) {
 	                saveOlap4jSelection(name, selection);
 	            }
 	            xml.indent--;

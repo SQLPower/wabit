@@ -17,30 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.olap;
+package ca.sqlpower.wabit.swingui.olap.action;
 
-import javax.swing.JComponent;
-
-import org.olap4j.Axis;
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
-import org.olap4j.query.Selection;
-import org.olap4j.query.Selection.Operator;
+
+import ca.sqlpower.wabit.olap.OlapQuery;
 
 /**
- * A subclass of {@link MemberEvent} for dealing with dropping Members into a
- * list of Members at a specific ordinal. 
+ * Sets the root ancestor of the given member as the root Member in the query
+ * result, and also adds all ancestor members in between.
  */
-public class MemberExcludedEvent extends MemberEvent {
-	
-	private final Operator operator;
-	
-	public MemberExcludedEvent(JComponent source, Type type, Axis axis,
-			Member member, Selection.Operator operator) {
-		super(source, type, axis, member);
-		this.operator = operator;
-	}
-	
-	public Operator getOperator() {
-        return operator;
+public class DrillUpToRootAction extends MemberAction {
+
+    public DrillUpToRootAction(OlapQuery query, Member member) {
+        super("Drill up to root member " + member.getName(), query, member);
     }
+
+	@Override
+	protected void performMemberAction(Member member, OlapQuery query) throws OlapException {
+		while (member.getParentMember() != null) {
+			member = member.getParentMember();
+			query.includeMember(member);
+		}
+	}
+
 }

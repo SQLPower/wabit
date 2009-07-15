@@ -742,7 +742,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     if (olapQuery != null) {
                         try {
                             graphRenderer.defineQuery(olapQuery);
-                            graphRendererCellSet = olapQuery.getMdxQueryCopy().execute();
+                            graphRendererCellSet = olapQuery.execute();
                         } catch (SQLException e) {
                             throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
                         }

@@ -62,16 +62,12 @@ import org.olap4j.OlapException;
 import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
-import org.olap4j.query.QueryAxis;
-import org.olap4j.query.QueryDimension;
-import org.olap4j.query.Selection;
 
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.OlapUtils;
 import ca.sqlpower.wabit.swingui.Icons;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
@@ -159,13 +155,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private boolean refreshCellSet = false;
     
     /**
-     * Memorizes the saved XML structure for last minute load.
-     */
-    private List<String> rootNodes = new ArrayList<String>();
-    
-    private List<Map<String,String>> attributes = new ArrayList<Map<String,String>>();
-    
-    /**
      * This listener will listen for changes to the query and set the refresh
      * variable to decide when to refresh.
      */
@@ -202,7 +191,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (!loadingWorkspace) {
             try {
             	updateMDXQuery();
-                setCellSet(modifiedOlapQuery.getMDXQuery().execute());
+                setCellSet(modifiedOlapQuery.execute());
             } catch (Exception e) {
                 //XXX it seems that this error message doesn't say anything conclusive
                 //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
@@ -214,20 +203,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
             this.initDone=true;
         }
     }
-    
+
     /**
-     * Call this method when the {@link Query} in the {@link OlapQuery} model changes.
-     * This will update the current modifiedMDXQuery and re-execute it to generate
-     * a new cell set.
+     * Updates the current modifiedMDXQuery and re-executes it to generate a new
+     * cell set. This method is intended to be invoked automatically every time
+     * the {@link Query} in the {@link OlapQuery} model changes.
      */
     public void updateMDXQuery() {
-        Query newModifiedMDXQuery;
-        try {
-            newModifiedMDXQuery = olapQuery.getMdxQueryCopy();
-        } catch (SQLException e1) {
-            throw new RuntimeException(e1);
-        }
-
         if (modifiedOlapQuery == null) {
         	try {
 				modifiedOlapQuery = olapQuery.createCopyOfSelf();
@@ -235,22 +217,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 				throw new RuntimeException(e);
 			}
         } else {
-	        if (newModifiedMDXQuery != null) {
-		        for (Map.Entry<Axis, QueryAxis> axisEntry : newModifiedMDXQuery.getAxes().entrySet()) {
-		            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-		                for (QueryDimension oldDimension : modifiedOlapQuery.getMDXQuery().getAxes().get(axisEntry.getKey()).getDimensions()) {
-		                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
-		                        dimension.getSelections().clear();
-		                        for (Selection selection : oldDimension.getSelections()) {
-		                            dimension.getSelections().add(selection);
-		                        }
-		                    }
-		                }
-		            }
-		        }
-	        }
-	        
-	        modifiedOlapQuery.setMdxQuery(newModifiedMDXQuery);
+	        modifiedOlapQuery.absorb(olapQuery);
         }
         refreshCellSet = true;
     }
@@ -369,7 +336,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         init();
         if (refreshCellSet) {
             try {
-                setCellSet(getModifiedMDXQuery().execute());
+                setCellSet(getModifiedOlapQuery().execute());
             } catch (Exception e) {
             	logger.warn(e.getMessage());
                 queryValid = false;
@@ -434,7 +401,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         CellSetTableHeaderComponent rowHeaderComponent =
         	new CellSetTableHeaderComponent(
-        			getCellSet(), Axis.ROWS, tableAsModel, g.create(),
+        			modifiedOlapQuery, getCellSet(), Axis.ROWS, tableAsModel, g.create(),
         			getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
         Color oldForeground = g.getColor();
@@ -604,7 +571,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 		
         CellSetTableHeaderComponent columnHeaderComponent =
         	new CellSetTableHeaderComponent(
-        			getCellSet(), Axis.COLUMNS, tableAsModel, g.create(),
+        			modifiedOlapQuery, getCellSet(), Axis.COLUMNS, tableAsModel, g.create(),
         			getHeaderFont());
         
 		int colHeaderSumHeight = 0;
@@ -742,15 +709,15 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 }
             }
             setSelectedMember(null);
+
         } else if (type == MouseEvent.MOUSE_RELEASED) {
-            if (selectedMember == null) return;
-            
-            OlapUtils.expandOrCollapseMDX(selectedMember, getModifiedMDXQuery());
-            
-            try {
-                setCellSet(getModifiedMDXQuery().execute());
-            } catch (OlapException e) {
-                throw new RuntimeException(e);
+            if (selectedMember != null) {
+                try {
+                    modifiedOlapQuery.toggleMember(selectedMember);
+                    setCellSet(modifiedOlapQuery.execute());
+                } catch (OlapException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
@@ -785,10 +752,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     public DecimalFormat getBodyFormat() {
         return bodyFormat;
-    }
-    
-    public Query getModifiedMDXQuery() {
-        return modifiedOlapQuery.getMDXQuery();
     }
     
     public OlapQuery getModifiedOlapQuery() {

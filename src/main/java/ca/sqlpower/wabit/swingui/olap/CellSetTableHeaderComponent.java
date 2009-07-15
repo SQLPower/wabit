@@ -38,7 +38,6 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -50,7 +49,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
@@ -83,7 +81,16 @@ import org.olap4j.query.Selection;
 import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.swingui.olap.action.DrillReplaceAction;
+import ca.sqlpower.wabit.swingui.olap.action.DrillUpAction;
+import ca.sqlpower.wabit.swingui.olap.action.DrillUpToRootAction;
+import ca.sqlpower.wabit.swingui.olap.action.ExcludeMemberAction;
+import ca.sqlpower.wabit.swingui.olap.action.RemoveHierarchyAction;
 
+/**
+ * A Component to be used as the header component in the CellSetViewer.
+ */
 public class CellSetTableHeaderComponent extends JComponent {
 
 	/**
@@ -248,7 +255,7 @@ public class CellSetTableHeaderComponent extends JComponent {
                         return false;
                     }
 
-                    fireMemberDropped(calcDropInsertIndex(p), m);
+                    query.addToAxis(calcDropInsertIndex(p), m, axis);
                     logger.debug("  -- import complete");
                     return true;
 
@@ -263,8 +270,6 @@ public class CellSetTableHeaderComponent extends JComponent {
         }
 	}
 
-    private final List<AxisListener> axisListeners = new ArrayList<AxisListener>();
-    
     /**
      * Which axis this component represents. Should be either ROWS or COLUMNS.
      */
@@ -302,10 +307,22 @@ public class CellSetTableHeaderComponent extends JComponent {
      */
 	private final Border defaultBorder;
 
+    private final OlapQuery query;
+
 	/**
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
 	 * and Axis.
 	 * 
+	 * @param query
+	 *            The query that generated the cell set. This query will be
+	 *            manipulated by the various drill down, up, replace,
+	 *            across, through, over, under across the woods to
+	 *            grandmother's house we go!
+	 *            <p>
+	 *            Can be null (for example, if the cell set was obtained by
+	 *            direct execution of an MDX statement), but in that case no
+	 *            query manipulations will be offered to the person viewing
+	 *            the cell set.
 	 * @param cellSet
 	 *            The {@link CellSet} that this header component is for
 	 * @param axis
@@ -315,13 +332,23 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 *            this table so we can track its row height. The table's columnModel
 	 *            will be used to determine column positions in the table.
 	 */
-    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, JTable table) {
-        this(cellSet, axis, table, null, null);
+    public CellSetTableHeaderComponent(OlapQuery query, CellSet cellSet, Axis axis, JTable table) {
+        this(query, cellSet, axis, table, null, null);
     }
 
     /**
      * Creates a component for viewing the given CellSet and Axis.
      * 
+     * @param query
+     *            The query that generated the cell set. This query will be
+     *            manipulated by the various drill down, up, replace,
+     *            across, through, over, under across the woods to
+     *            grandmother's house we go!
+     *            <p>
+     *            Can be null (for example, if the cell set was obtained by
+     *            direct execution of an MDX statement), but in that case no
+     *            query manipulations will be offered to the person viewing
+     *            the cell set.
      * @param cellSet
      *            The {@link CellSet} that this header component is for
      * @param axis
@@ -335,7 +362,8 @@ public class CellSetTableHeaderComponent extends JComponent {
      *            the JComponent. This allows using the component to use the
      *            header in different graphics for things like printing.
      */
-    public CellSetTableHeaderComponent(CellSet cellSet, Axis axis, final JTable table, Graphics g, Font headerFont) {
+    public CellSetTableHeaderComponent(OlapQuery query, CellSet cellSet, Axis axis, final JTable table, Graphics g, Font headerFont) {
+        this.query = query;
         this.axis = axis;
         setRowHeight(table.getRowHeight());
         
@@ -421,27 +449,32 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * it can display its existing hierarchies so that the user can tell what
 	 * they have added already.
 	 * 
+	 * @param query
+	 *            The query that things dropped on the axis component should be
+	 *            added to.
 	 * @param axis
 	 *            The {@link Axis} this component is the header for
-	 * @param hierarchies
-	 *            A list of Hierarchies that the user has already dropped into
-	 *            the header. If the list is empty, then it will print a
-	 *            label asking the user to drop a Member, Hierarchy, or
-	 *            Dimension into it.
 	 */
-    public CellSetTableHeaderComponent(Axis axis, List<Hierarchy> hierarchies) {
+    public CellSetTableHeaderComponent(OlapQuery query, Axis axis) {
+        this.query = query;
     	this.axis = axis;
     	graphic = null;
     	int hierarchiesSize = 0;
     	
-    	if (hierarchies != null) {
-    		hierarchiesSize = hierarchies.size();
-    	}
+    	List<Hierarchy> hierarchies;
     	
     	if (axis == Axis.ROWS) {
-    		setLayout(new GridLayout(1, Math.max(1, hierarchiesSize)));
+    		hierarchies = query.getRowHierarchies(); 
+    		if (hierarchies != null) {
+    			hierarchiesSize = hierarchies.size();
+    			setLayout(new GridLayout(1, Math.max(1, hierarchiesSize)));
+    		}
     	} else if (axis == Axis.COLUMNS) {
-    		setLayout(new GridLayout(Math.max(1, hierarchiesSize), 1));
+    		hierarchies = query.getColumnHierarchies();
+    		if (hierarchies != null) {
+    			hierarchiesSize = hierarchies.size();
+    			setLayout(new GridLayout(Math.max(1, hierarchiesSize), 1));
+    		}
     	} else {
     		throw new IllegalArgumentException(
     				"Only rows and columns axes are supported, but I got " + axis);
@@ -493,62 +526,6 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
 	}
 
-	/**
-     * Fires a member clicked event to all axis listeners currently registered
-     * on this component.
-     */
-    private void fireMemberClicked(Member member) {
-        final MemberEvent e = new MemberEvent(
-                this, MemberEvent.Type.MEMBER_CLICKED, axis, member);
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(i).memberClicked(e);
-        }
-    }
-    
-    /**
-     * Fires a member dropped event to all axis listeners currently registered
-     * on this component.
-     * @param p 
-     */
-    private void fireMemberDropped(int insertIndex, Member member) {
-        final MemberDroppedEvent e = new MemberDroppedEvent(
-                this, MemberEvent.Type.MEMBER_DROPPED, axis, insertIndex, member);
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(i).memberDropped(e);
-        }
-    }
-    
-    
-    private void fireMemberRemoved(Member member) {
-        final MemberEvent e = new MemberEvent(
-                this, MemberEvent.Type.MEMBER_REMOVED, axis, member);
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(i).memberRemoved(e);
-        }
-    }
-    
-    private void fireMemberExcluded(Member member, Selection.Operator operator) {
-        final MemberExcludedEvent e = new MemberExcludedEvent(
-                this, MemberEvent.Type.MEMBER_EXCLUDED, axis, member, operator);
-        for (int i = axisListeners.size() - 1; i >= 0; i--) {
-            axisListeners.get(i).memberExcluded(e);
-        }
-    }
-    
-    /**
-     * Adds the given axis listener to this component.
-     * 
-     * @param l The listener to add. Must not be null.
-     */
-    public void addAxisListener(AxisListener l) {
-        if (l == null) throw new NullPointerException("Null listener not allowed");
-        axisListeners.add(l);
-    }
-    
-    public void removeAxisLisener(AxisListener l) {
-        axisListeners.remove(l);
-    }
-
     /**
      * Container for information relating to the layout of a hierarchy.
      * Instances of this class are created in createLayout().
@@ -593,36 +570,6 @@ public class CellSetTableHeaderComponent extends JComponent {
 
         private class MouseHandler implements MouseListener, MouseMotionListener {
 
-            private final class DrillOnMemberAction extends
-					AbstractAction {
-            	private Member member;
-            	
-				private DrillOnMemberAction(String label, Member member) {
-					super(label);
-					this.member = member;
-				}
-
-				public void actionPerformed(ActionEvent e) {
-					fireMemberDropped(hierarchyOrdinal, member);
-				}
-			}
-
-            private final class ExcludeMemberAction extends
-            AbstractAction {
-                private Member member;
-                private Selection.Operator operator;
-                
-                private ExcludeMemberAction(String label, Member member, Selection.Operator operator) {
-                    super(label);
-                    this.member = member;
-                    this.operator = operator;
-                }
-        
-                public void actionPerformed(ActionEvent e) {
-                    fireMemberExcluded(member, this.operator);
-                }
-            }
-
 			public void mouseMoved(MouseEvent e) {
                 setSelectedMember(getMemberAtPoint(e.getPoint()));
             }
@@ -640,60 +587,57 @@ public class CellSetTableHeaderComponent extends JComponent {
             }
 
             public void mousePressed(MouseEvent e) {
-            	final Member clickedOnMember = selectedMember;
-            	if (e.getButton() == MouseEvent.BUTTON3) {
-            		JPopupMenu popUpMenu = new JPopupMenu();
-            		popUpMenu.add(new AbstractAction("Remove the " + hierarchy.getName() + " hierarchy") {
-						public void actionPerformed(ActionEvent e) {
-							Member member = null;
-							try {
-								member = hierarchy.getDefaultMember();
-							} catch (OlapException ex) {
-								throw new RuntimeException("OlapException while trying to retrieve " +
-										"default member of Hierarchy '" + hierarchy.getName() + "'", ex);
-							}
-							fireMemberRemoved(member);
-						}
-            		});
-            		if (clickedOnMember != null && 
-            				!(clickedOnMember instanceof Measure)) {
-            		    popUpMenu.addSeparator();
-            		    //TODO put these menu items back in when implementing exclusions, this is taken out for the 0.9.7 release
-//            		    popUpMenu.add(new ExcludeMemberAction(
-//                                "Exclude " + clickedOnMember.getName() + " from this query",
-//                                clickedOnMember,
-//                                Selection.Operator.MEMBER));
-//            		    popUpMenu.add(new ExcludeMemberAction(
-//                                "Exclude " + clickedOnMember.getName() + "'s children from this query",
-//                                clickedOnMember,
-//                                Selection.Operator.CHILDREN));
-//            		    popUpMenu.addSeparator();
-	            		popUpMenu.add(new DrillOnMemberAction(
-	            				"Drill Replace on " + clickedOnMember.getName(),
-								clickedOnMember));
-	            		if (clickedOnMember.getParentMember() != null) {
-		            		popUpMenu.add(new DrillOnMemberAction(
-		            				"Drill Up on " + clickedOnMember.getName(),
-									clickedOnMember.getParentMember()));
-		            		try {
-								popUpMenu.add(new DrillOnMemberAction(
-										"Drill Up to " + hierarchy.getName() + "'s root",
-										hierarchy.getRootMembers().get(0)));
-							} catch (OlapException ex) {
-								throw new RuntimeException(
-										"OLAP error occured while trying to get Root Member of hierarchy " 
-										+ hierarchy.getName(), ex);
-							}
-	            		}
-            		}
-            		popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
+            	if (e.isPopupTrigger()) { // FIXME must use e.isPopupTrigger and check from mouse(down|up|clicked)
+            		maybeShowPopUpMenu(e, selectedMember);
             	} else if (selectedMember != null) {
-                    fireMemberClicked(selectedMember);
-                }
+                    query.toggleMember(selectedMember);
+                    try {
+						query.execute();
+					} catch (OlapException ex) {
+						throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
+					}
+            	}
             }
 
+			private void maybeShowPopUpMenu(MouseEvent e,
+					final Member clickedOnMember) {
+				JPopupMenu popUpMenu = new JPopupMenu();
+				popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, axis.getAxisOrdinal()));
+				if (clickedOnMember != null && 
+						!(clickedOnMember instanceof Measure)) {
+				    popUpMenu.addSeparator();
+				    //TODO put these menu items back in when implementing exclusions, this is taken out for the 0.9.7 release
+				    popUpMenu.add(new ExcludeMemberAction(
+				            query,
+				            clickedOnMember,
+				            Selection.Operator.MEMBER));
+				    popUpMenu.add(new ExcludeMemberAction(
+				            query,
+				            clickedOnMember,
+				            Selection.Operator.CHILDREN));
+				    popUpMenu.addSeparator();
+					popUpMenu.add(new DrillReplaceAction(query, clickedOnMember));
+					if (clickedOnMember.getParentMember() != null) {
+						popUpMenu.add(new DrillUpAction(query,
+								clickedOnMember.getParentMember()));
+						try {
+							popUpMenu.add(new DrillUpToRootAction(
+									query,
+									hierarchy.getRootMembers().get(0)));
+						} catch (OlapException ex) {
+							throw new RuntimeException(
+									"OLAP error occured while trying to get Root Member of hierarchy " 
+									+ hierarchy.getName(), ex);
+						}
+					}
+				}
+				popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
+			}
+
             public void mouseReleased(MouseEvent e) {
-                // don't care
+            	if (e.isPopupTrigger()) { // FIXME must use e.isPopupTrigger and check from mouse(down|up|clicked)
+            		maybeShowPopUpMenu(e, selectedMember);
+            	} 
             }
 
             public void mouseDragged(MouseEvent e) {
@@ -725,7 +669,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         private double indentAmount = 15;
 
         private List<Dimension> preferredSizes = new ArrayList<Dimension>();
-        
+
         /**
 		 * Returns a {@link Dimension} that specifies the preferred size of the
 		 * Member at the provided position in this HierarchyComponent.
@@ -741,37 +685,46 @@ public class CellSetTableHeaderComponent extends JComponent {
 			return preferredSizes.get(position);
 		}
 
-		/**
-		 * @param axis
-		 *            The {@link CellSetAxis} that this HierachyComponent is in.
-		 * @param hierarchy
-		 *            The hierarchy that this Component represents
-		 * @param hierarchyOrdinal
-		 *            The ordinal for the Hierarchy this component is for
-		 * @param columnModel
-		 *            The columnModel that will be used to determine column
-		 *            positions in the table. If the axis type is not
-		 *            {@link Axis#COLUMNS}, then this can be null.
-		 */
+        /**
+         * @param axis
+         *            The {@link CellSetAxis} that this HierachyComponent is in.
+         * @param hierarchy
+         *            The hierarchy that this Component represents. Must not be
+         *            null.
+         * @param hierarchyOrdinal
+         *            The index of <tt>hierarchy</tt> within <tt>axis</tt>.
+         * @param columnModel
+         *            The columnModel that will be used to determine column
+         *            positions in the table. If the axis type is not
+         *            {@link Axis#COLUMNS}, then this can be null.
+         */
         public HierarchyComponent(CellSetAxis axis, Hierarchy hierarchy, final int hierarchyOrdinal, TableColumnModel columnModel) {
-			// HierarchyComponent may exceed the default maximum size of
+			
+            // HierarchyComponent may exceed the default maximum size of
 			// Short.MAX_VALUE x Short.MAX_VALUE, so we have to increase it or
 			// it won't display properly.
         	this.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        	
         	this.axis = axis;
             this.hierarchyOrdinal = hierarchyOrdinal;
             this.columnModel = columnModel;
             this.hierarchy = hierarchy;
+            if (hierarchy == null) {
+                throw new NullPointerException("Null hierarchy not allowed");
+            }
             setOpaque(true);
             addMouseListener(mouseHandler);
             addMouseMotionListener(mouseHandler);
         }
         
         /**
-         * A HierarchyComponent that only contains the hierarchy name and is
+         * Creates a HierarchyComponent that only displays the hierarchy name and is
          * not drilldownable.
+         * 
          * @param hierarchy
+         *            The hierarchy that this Component represents. Must not be null.
          * @param hierarchyOrdinal
+         *            The index of <tt>hierarchy</tt> within <tt>axis</tt>.
          */
         public HierarchyComponent(Hierarchy hierarchy, int hierarchyOrdinal) {
         	this(null, hierarchy, hierarchyOrdinal, null);

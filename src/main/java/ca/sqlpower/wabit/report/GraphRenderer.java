@@ -971,7 +971,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			        if (renderer.getQuery() instanceof QueryCache) {
 			            rs = ((QueryCache) renderer.getQuery()).fetchResultSet();
 			        } else if (renderer.getQuery() instanceof OlapQuery) {
-			            cellSet = ((OlapQuery) renderer.getQuery()).getMdxQueryCopy().execute();
+			            cellSet = ((OlapQuery) renderer.getQuery()).execute();
 			        }
                     resetChartColumns();
                 } catch (SQLException e1) {
@@ -1063,7 +1063,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
          * defining the chart in cases where the query changed.
          */
 		private void displayOlapChartEditor() {
-            CellSetViewer cellSetViewer = new CellSetViewer(false);
+            CellSetViewer cellSetViewer = new CellSetViewer(null, false);
             
             JComboBox comboBoxForWidth = new JComboBox(new String[]{"MMMMM"});
             double comboBoxWidth = comboBoxForWidth.getUI().getPreferredSize(comboBoxForWidth).getWidth();
@@ -1072,7 +1072,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             chartEditorPanel.removeAll();
             cellSetViewer.getScrollPane().setPreferredSize(new Dimension(0, 0));
             chartEditorPanel.add(cellSetViewer.getScrollPane(), BorderLayout.CENTER);
-            cellSetViewer.showCellSet(cellSet);
+            cellSetViewer.showCellSet(null, cellSet);
             chartEditorPanel.revalidate();
 
             final CellSetAxis columnAxis = cellSetViewer.getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
@@ -1241,7 +1241,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		        cellSet = null;
 		    } else if (query instanceof OlapQuery) {
 		    	try {
-		    		cellSet = ((OlapQuery) query).getMdxQueryCopy().execute();
+		            cellSet = ((OlapQuery) query).execute();
 		    	} catch (Exception e) {
 		    		throw new RuntimeException("Encountered error when executing the query, this query may be null or broken.");
 		    	}
@@ -1419,7 +1419,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             CellSetAxis columnAxis;
             final CellSet cellSet;
             try {
-                cellSet = olapQuery.getMdxQueryCopy().execute();  //XXX will need to be changed once the Olap4j Query can be listened to
+                
+                //XXX will need to be changed once the Olap4j Query can be listened to
+                cellSet = olapQuery.execute();
+                
                 columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
             } catch (Exception e) {
             	logger.warn(e);
@@ -1510,7 +1513,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			    if (query instanceof QueryCache) {
 			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			    } else if (query instanceof OlapQuery) {
-			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((OlapQuery) query).getMdxQueryCopy().execute(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
+			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((OlapQuery) query).execute(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			    } else {
 			        throw new IllegalStateException("Unknown query type " + query.getClass() + " when trying to create a chart.");
 			    }
@@ -2183,10 +2186,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 switch (graphType) {
                 case BAR:
                 case CATEGORY_LINE:
-                    return GraphRenderer.createOlapCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((OlapQuery) query).getMdxQueryCopy().execute(), GraphRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
+                    return GraphRenderer.createOlapCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((OlapQuery) query).execute(), GraphRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
                 case LINE:
                 case SCATTER:
-                    return GraphRenderer.createOlapSeriesCollection(columnSeriesToColumnXAxis, ((OlapQuery) query).getMdxQueryCopy().execute());
+                    return GraphRenderer.createOlapSeriesCollection(columnSeriesToColumnXAxis, ((OlapQuery) query).execute());
                 default :
                     throw new IllegalStateException("Unknown graph type " + graphType);
                 }

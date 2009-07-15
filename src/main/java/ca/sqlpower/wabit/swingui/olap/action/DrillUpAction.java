@@ -17,15 +17,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.olap;
+package ca.sqlpower.wabit.swingui.olap.action;
 
-public interface AxisListener {
+import org.olap4j.OlapException;
+import org.olap4j.metadata.Member;
 
-    void memberClicked(MemberEvent e);
-    
-    void memberDropped(MemberDroppedEvent e);
-    
-    void memberRemoved(MemberEvent e);
+import ca.sqlpower.wabit.olap.OlapQuery;
 
-    void memberExcluded(MemberEvent e);
+public class DrillUpAction extends MemberAction {
+
+    public DrillUpAction(OlapQuery query, Member member) {
+        super("Drill up on member " + member.getName(), query, member);
+    }
+
+	@Override
+	protected void performMemberAction(Member member, OlapQuery query) throws OlapException {
+		query.drillReplace(member.getParentMember());
+		query.execute();
+	}
 }

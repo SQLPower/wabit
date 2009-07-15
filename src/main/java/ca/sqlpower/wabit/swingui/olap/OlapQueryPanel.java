@@ -105,7 +105,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.parentComponent = parentComponent;
         this.query = query;
         this.session = session;
-        cellSetViewer = new CellSetViewer();
+        cellSetViewer = new CellSetViewer(query);
         
         buildUI();
     }
@@ -199,7 +199,7 @@ public class OlapQueryPanel implements WabitPanel {
                             }
                         }
 
-                        cellSetViewer.showCellSet(cellSet);
+                        cellSetViewer.showCellSet(query, cellSet);
                         queryPanels.setSelectedIndex(0);
                     }
                 } catch (Exception e1) {
@@ -261,8 +261,8 @@ public class OlapQueryPanel implements WabitPanel {
 	 * Executes the containing OlapQuery and updates the results in the
 	 * CellSetViewer.
 	 */
-    public void executeQuery() {
-    	olap4jGuiQueryPanel.executeQuery();
+    public void updateCellSetViewer() {
+    	olap4jGuiQueryPanel.updateCellSetViewer(null);
     }
     
     private Action undoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.undo")){

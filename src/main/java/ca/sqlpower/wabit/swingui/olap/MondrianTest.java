@@ -82,7 +82,7 @@ public class MondrianTest {
         tree.setCellRenderer(new Olap4JTreeCellRenderer());
         tree.setRootVisible(false);
 
-        cellSetViewer = new CellSetViewer();
+        cellSetViewer = new CellSetViewer(olapQuery);
         
         JTabbedPane queryPanels = new JTabbedPane();
         JComponent mdxPanel = createTextQueryPanel();
@@ -147,7 +147,7 @@ public class MondrianTest {
                     return;
                 }
 
-                cellSetViewer.showCellSet(cellSet);
+                cellSetViewer.showCellSet(olapQuery, cellSet);
             }
         });
         
