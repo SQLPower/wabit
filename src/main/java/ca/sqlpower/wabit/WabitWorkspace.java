@@ -154,6 +154,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     		queries.remove(query);
     		session.removePropertyChangeListener(query.getRowLimitChangeListener());
     		fireChildRemoved(QueryCache.class, query, index);
+    		if (editorPanelModel == query) {
+                setEditorPanelModel(this);
+            }
     		return true;
     	} else {
     		return false;
@@ -173,6 +176,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	if (index != -1) {
     		layouts.remove(layout);
     		fireChildRemoved(Layout.class, layout, index);
+    		if (editorPanelModel == layout) {
+    		    setEditorPanelModel(this);
+    		}
     		return true;
     	} else {
     		return false;
@@ -424,6 +430,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	if (index != -1) {
     		olapQueries.remove(query);
     		fireChildRemoved(OlapQuery.class, query, index);
+    		if (editorPanelModel == query) {
+                setEditorPanelModel(this);
+            }
     		return true;
     	} else {
     		return false;

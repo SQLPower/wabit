@@ -19,8 +19,20 @@
 
 package ca.sqlpower.wabit;
 
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.naming.NamingException;
+
+import org.olap4j.OlapConnection;
+
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.Layout;
 
 public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
@@ -43,6 +55,60 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return workspace;
+    }
+    
+    /**
+     * Regression test for bug 1976. If a query cache is selected and is
+     * removed the wabit object being edited should be changed.
+     */
+    public void testRemovingSelectedQueryCacheChangesSelection() throws Exception {
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        QueryCache query = new QueryCache(new SQLDatabaseMapping() {
+            public SQLDatabase getDatabase(JDBCDataSource ds) {
+                return null;
+            }
+        });
+        workspace.addQuery(query, session);
+        workspace.setEditorPanelModel(query);
+        assertEquals(query, workspace.getEditorPanelModel());
+        
+        workspace.removeQuery(query, session);
+        assertNotSame(query, workspace.getEditorPanelModel());
+    }
+    
+    /**
+     * Regression test for bug 1976. If an OLAP query is selected and is
+     * removed the wabit object being edited should be changed.
+     */
+    public void testRemovingSelectedOlapQueryChangesSelection() throws Exception {
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        OlapQuery query = new OlapQuery(new OlapConnectionMapping() {
+            public OlapConnection createConnection(Olap4jDataSource dataSource)
+                    throws SQLException, ClassNotFoundException, NamingException {
+                return null;
+            }
+        });
+        workspace.addOlapQuery(query);
+        workspace.setEditorPanelModel(query);
+        assertEquals(query, workspace.getEditorPanelModel());
+        
+        workspace.removeOlapQuery(query);
+        assertNotSame(query, workspace.getEditorPanelModel());
+    }
+    
+    /**
+     * Regression test for bug 1976. If a layout is selected and is
+     * removed the wabit object being edited should be changed.
+     */
+    public void testRemovingSelectedLayoutChangesSelection() throws Exception {
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        Layout layout = new Layout("Layout");
+        workspace.addLayout(layout);
+        workspace.setEditorPanelModel(layout);
+        assertEquals(layout, workspace.getEditorPanelModel());
+        
+        workspace.removeLayout(layout);
+        assertNotSame(layout, workspace.getEditorPanelModel());
     }
 
 }
