@@ -29,6 +29,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.metadata.Catalog;
@@ -66,7 +67,8 @@ import org.olap4j.metadata.Schema;
  *     </ul></li>
  */
 public class Olap4jTreeModel implements TreeModel {
-
+    
+    private static final Logger logger = Logger.getLogger(Olap4jTreeModel.class);
 
     private class OlapTreeRoot {
         
@@ -136,7 +138,26 @@ public class Olap4jTreeModel implements TreeModel {
             } else if (parent instanceof OlapConnection) {
                 children = ((OlapConnection) parent).getCatalogs();
             } else if (parent instanceof Catalog) {
-                children = ((Catalog) parent).getSchemas();
+                List<Schema> childrenWithDuplicates = ((Catalog) parent).getSchemas();
+                if (logger.isDebugEnabled()) {
+                    for (Schema s : ((Catalog) parent).getSchemas()) {
+                        logger.debug("Child schema is " + s.getName());
+                    }
+                }
+                //From two threads in the olap4j forum:
+                //http://sourceforge.net/forum/message.php?msg_id=7172403
+                //http://sourceforge.net/forum/message.php?msg_id=5707249
+                //Some XML/A drivers like to return a schema object for each cube in
+                //the schema. Fortunately, the schemas returned in the schema list 
+                //are all the same object which means we can simply remove the 
+                //duplicates from the list and still keep the order of the schemas.
+                List<Schema> catalogChildren = new ArrayList<Schema>();
+                for (Schema schema : childrenWithDuplicates) {
+                    if (!catalogChildren.contains(schema)) {
+                        catalogChildren.add(schema);
+                    }
+                }
+                children = catalogChildren;
             } else if (parent instanceof Schema) {
                 Schema s = (Schema) parent;
                 NamedList<Cube> cubes = s.getCubes();
@@ -199,6 +220,7 @@ public class Olap4jTreeModel implements TreeModel {
             children = filteredChildren;
         }
         
+        logger.debug("Children of type " + parent.getClass() + " are " + children);
         return children;
     }
 
