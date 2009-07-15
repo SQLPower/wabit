@@ -1017,7 +1017,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         fb.appendRow("fill:pref");
         Box box = Box.createVerticalBox();
         final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
-        final FormLayout columnLayout = new FormLayout("pref:grow, 5dlu, pref:grow, 5dlu, pref:grow, 5dlu, pref:grow", "pref, pref");
+        final FormLayout columnLayout = new FormLayout("min(pref; 100dlu):grow, 5dlu, min(pref; 100dlu):grow, 5dlu, pref:grow, 5dlu, pref:grow", "pref, pref");
         for (ColumnInfo ci : columnInfo) {
             DataEntryPanel columnPropsPanel = createColumnPropsPanel(columnLayout, ci);
             columnPanels.add(columnPropsPanel);
@@ -1076,7 +1076,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         fb.append(columnLabel);
         
         // TODO better UI (auto/manual, and manual is based on a jtable with resizable headers)
-        final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, 1000, 12));
+        final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, Integer.MAX_VALUE, 12));
         fb.append(widthSpinner);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
