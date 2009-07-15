@@ -96,7 +96,6 @@ public class NewWorkspaceScreen {
 			public void windowClosed(WindowEvent e) {
 				if (!databaseAdded) {
 					context.deregisterChildSession(session);
-					frame.dispose();
 				}
 				session.getWorkspace().removeDatabaseListChangeListener(workspaceDataSourceListener);
 			}
