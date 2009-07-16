@@ -602,7 +602,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 			private void maybeShowPopUpMenu(MouseEvent e,
 					final Member clickedOnMember) {
 				JPopupMenu popUpMenu = new JPopupMenu();
-				popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, axis.getAxisOrdinal()));
+				popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, CellSetTableHeaderComponent.this.axis));
 				if (clickedOnMember != null && 
 						!(clickedOnMember instanceof Measure)) {
 				    popUpMenu.addSeparator();

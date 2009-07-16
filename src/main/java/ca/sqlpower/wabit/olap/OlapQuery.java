@@ -216,6 +216,8 @@ public class OlapQuery extends AbstractWabitObject {
         QueryAxis qa = mdxQuery.getAxis(axis);
         QueryDimension qd = mdxQuery.getDimension(hierarchy.getDimension().getName());
         if (qa.equals(qd.getAxis())) {
+        	qd.clearInclusions();
+        	qd.clearExclusions();
             qa.removeDimension(qd);
             hierarchiesInUse.remove(qd);
         }
@@ -255,6 +257,7 @@ public class OlapQuery extends AbstractWabitObject {
 	        	for (Iterator<QueryDimension> i = axisEntry.getValue().getDimensions().iterator(); i.hasNext(); ) {
 	                QueryDimension dimension = i.next();
 	        		dimension.clearInclusions();
+	        		dimension.clearExclusions();
 	        		hierarchiesInUse.remove(dimension);
 	        		i.remove();
 	            }
