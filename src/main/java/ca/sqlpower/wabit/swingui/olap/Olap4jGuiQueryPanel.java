@@ -86,6 +86,7 @@ import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 public class Olap4jGuiQueryPanel {
 
@@ -259,10 +260,6 @@ public class Olap4jGuiQueryPanel {
 			public void queryExecuted(OlapQueryEvent e) {
 				updateCellSetViewer(e.getCellSet());
 			}
-
-			public void queryReset() {
-				Olap4jGuiQueryPanel.this.olapQueryPanel.updateMdxText("");
-			}
 		});
         
         this.cellSetViewer = cellSetViewer;
@@ -317,7 +314,11 @@ public class Olap4jGuiQueryPanel {
         resetQueryButton.setToolTipText("Reset Query");
         resetQueryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				olapQuery.reset();
+				try {
+					olapQuery.reset();
+				} catch (SQLException e1) {
+					throw new RuntimeException(e1);
+				}
                 updateCellSetViewer(null);
 			}
         });
@@ -511,8 +512,14 @@ public class Olap4jGuiQueryPanel {
         }
         
         if (cellSet == null) {
-	        List<Hierarchy> rowHierarchies = olapQuery.getRowHierarchies();
-	        List<Hierarchy> columnHierarchies = olapQuery.getColumnHierarchies();
+	        List<Hierarchy> rowHierarchies;
+	        List<Hierarchy> columnHierarchies;
+			try {
+				rowHierarchies = olapQuery.getRowHierarchies();
+				columnHierarchies = olapQuery.getColumnHierarchies();
+			} catch (QueryInitializationException e) {
+				throw new RuntimeException(e);
+			}
 	        
 	        if (rowHierarchies.isEmpty() && !columnHierarchies.isEmpty()) {
 	            cellSetViewer.showMessage(olapQuery, "Rows axis is empty--please drop something on it");
@@ -525,7 +532,11 @@ public class Olap4jGuiQueryPanel {
         }
         
         cellSetViewer.showCellSet(olapQuery, cellSet);
-        olapQueryPanel.updateMdxText(olapQuery.getMdxText());
+        try {
+			olapQueryPanel.updateMdxText(olapQuery.getMdxText());
+		} catch (QueryInitializationException e) {
+			throw new RuntimeException(e);
+		}
     }
    
     public JToolBar getOlapPanelToolbar() {

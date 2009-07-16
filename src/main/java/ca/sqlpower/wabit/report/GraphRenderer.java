@@ -974,7 +974,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			            cellSet = ((OlapQuery) renderer.getQuery()).execute();
 			        }
                     resetChartColumns();
-                } catch (SQLException e1) {
+                } catch (Exception e1) {
                     throw new RuntimeException(e1);
                 }
                 List<ColumnIdentifier> currentColumnNamesInOrder = new ArrayList<ColumnIdentifier>();
@@ -1518,7 +1518,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			        throw new IllegalStateException("Unknown query type " + query.getClass() + " when trying to create a chart.");
 			    }
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		if (chart == null) {
@@ -2193,7 +2193,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 default :
                     throw new IllegalStateException("Unknown graph type " + graphType);
                 }
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 	    } else {

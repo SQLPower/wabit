@@ -82,6 +82,7 @@ import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.olap.action.DrillReplaceAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillUpAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillUpToRootAction;
@@ -461,16 +462,24 @@ public class CellSetTableHeaderComponent extends JComponent {
     	graphic = null;
     	int hierarchiesSize = 0;
     	
-    	List<Hierarchy> hierarchies;
+    	List<Hierarchy> hierarchies = null;
     	
     	if (axis == Axis.ROWS) {
-    		hierarchies = query.getRowHierarchies(); 
+    		try {
+				hierarchies = query.getRowHierarchies();
+			} catch (QueryInitializationException e) {
+				throw new RuntimeException(e);
+			} 
     		if (hierarchies != null) {
     			hierarchiesSize = hierarchies.size();
     			setLayout(new GridLayout(1, Math.max(1, hierarchiesSize)));
     		}
     	} else if (axis == Axis.COLUMNS) {
-    		hierarchies = query.getColumnHierarchies();
+    		try {
+				hierarchies = query.getColumnHierarchies();
+			} catch (QueryInitializationException e) {
+				throw new RuntimeException(e);
+			}
     		if (hierarchies != null) {
     			hierarchiesSize = hierarchies.size();
     			setLayout(new GridLayout(Math.max(1, hierarchiesSize), 1));
@@ -590,10 +599,10 @@ public class CellSetTableHeaderComponent extends JComponent {
             	if (e.isPopupTrigger()) { // FIXME must use e.isPopupTrigger and check from mouse(down|up|clicked)
             		maybeShowPopUpMenu(e, selectedMember);
             	} else if (selectedMember != null) {
-                    query.toggleMember(selectedMember);
                     try {
+                    	query.toggleMember(selectedMember);
 						query.execute();
-					} catch (OlapException ex) {
+					} catch (Exception ex) {
 						throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
 					}
             	}

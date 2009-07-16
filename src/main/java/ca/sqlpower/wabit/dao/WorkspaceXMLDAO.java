@@ -44,11 +44,6 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
-import org.olap4j.Axis;
-import org.olap4j.metadata.Member;
-import org.olap4j.query.QueryAxis;
-import org.olap4j.query.QueryDimension;
-import org.olap4j.query.Selection;
 
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
@@ -65,6 +60,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.SaveAndLoadOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -276,7 +272,7 @@ public class WorkspaceXMLDAO {
             if (wabitObject instanceof QueryCache) {
                 saveQueryCache(((QueryCache) wabitObject).getQuery());
             } else if (wabitObject instanceof OlapQuery) {
-                saveOlapQuery((OlapQuery) wabitObject, "");
+                saveOlapQuery((OlapQuery) wabitObject);
             } else if (wabitObject instanceof Layout) {
                 saveLayout((Layout) wabitObject);
             } else {
@@ -509,7 +505,7 @@ public class WorkspaceXMLDAO {
 					    saveFont(renderer.getHeaderFont(), "olap-header-font");
 					    saveFont(renderer.getBodyFont(), "olap-body-font");
 				        
-					    this.saveOlapQuery(renderer.getModifiedOlapQuery(), "-report");
+					    this.saveOlapQuery(renderer.getModifiedOlapQuery());
 					    
 					    xml.indent--;
 					    xml.println(out, "</cell-set-renderer>");
@@ -570,9 +566,9 @@ public class WorkspaceXMLDAO {
      * @param name
      *      A unique name to append to the start of XML tags
      */
-	private void saveOlapQuery(OlapQuery query, String name) {
+	private void saveOlapQuery(OlapQuery query) {
 	    
-	    xml.print(out, "<olap" + name + "-query");
+	    xml.print(out, "<olap-query");
         printAttribute("name", query.getName());
         printAttribute("uuid", query.getUUID());
         if (query.getOlapDataSource() != null) {
@@ -584,98 +580,19 @@ public class WorkspaceXMLDAO {
         if (query.getCurrentCube()!=null &&
                 query.getCurrentCube().getSchema()!=null &&
                 query.getCurrentCube().getSchema().getCatalog()!=null) {
-            xml.print(out, "<olap" + name + "-cube");
+            xml.print(out, "<olap-cube");
             printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
             printAttribute("schema", query.getCurrentCube().getSchema().getName());
             printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
             xml.println(out, "/>");
         }
         
-	    if (query.hasCachedXml()) {
-	        query.writeCachedXml(xml, out);
-	    } else {
-    	    
-	        logger.error("Skipping save of OLAP query");
-            org.olap4j.query.Query mdxQuery = null;//query.getMDXQuery();
-            
-            if (mdxQuery!=null) {
-                xml.print(out, "<olap4j" + name + "-query");
-                printAttribute("name", mdxQuery.getName());
-                xml.println(out, ">");
-                xml.indent++;
-                
-                saveOlap4jQuery(mdxQuery, name);
-                
-                xml.indent--;
-                xml.println(out, "</olap4j" + name + "-query>");
-            }
-            
-            xml.indent--;
-	    }
-	    xml.println(out, "</olap" + name + "-query>");
+        SaveAndLoadOLAP4jQuery.saveOlap4jQuery(query, xml, out, this);
+        
+        xml.indent--;
+	    xml.println(out, "</olap-query>");
 	}
 
-    /**
-     * Given an Olap4j {@link org.olap4j.query.Query} and a string to start the
-     * XML tags with this method will save the {@link org.olap4j.query.Query} to
-     * the print writer in this file.
-     * 
-     * @param mdxQuery
-     *            The query to save.
-     * @param name
-     *            A unique name to append to the start of XML tags
-     */
-    private void saveOlap4jQuery(org.olap4j.query.Query mdxQuery, String name) {
-        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
-            // Check if it is the UNUSED axis, we can skip it safely.
-	        if (axisEntry.getKey() == null) continue;
-	        xml.print(out, "<olap4j" + name + "-axis");
-	        printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
-	        xml.println(out, ">");
-	        xml.indent++;
-	        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-	            xml.print(out, "<olap4j" + name + "-dimension");
-	            printAttribute("dimension-name", dimension.getDimension().getName());
-	            xml.println(out, ">");
-	            xml.indent++;
-	            for (Selection selection : dimension.getInclusions()) {
-	                saveOlap4jSelection(name, selection);
-	            }
-	            xml.indent--;
-	            xml.println(out, "</olap4j" + name + "-dimension>");
-	        }
-	        xml.indent--;
-	        xml.println(out, "</olap4j" + name + "-axis>");
-	    }
-    }
-
-    /**
-     * Saves a selection and everything needed to find the member that is in the
-     * selection.
-     */
-    private void saveOlap4jSelection(String name, Selection selection) {
-        xml.print(out, "<olap4j" + name + "-selection");
-        saveOlapMember(selection.getMember(), "");
-        printAttribute("operator", selection.getOperator().toString());
-        xml.println(out, "/>");
-    }
-
-    /**
-     * This is a helper method for any OLAP object that needs to save a member.
-     * The member will save attributes to the current tag it is in.
-     * 
-     * @param member
-     *            The member to save.
-     * @param prefix
-     *            A string to prefix all of the member properties to uniquely
-     *            identify a member in cases where there are multiple members
-     *            per xml tag.
-     */
-    private void saveOlapMember(Member member, String prefix) {
-        printAttribute(prefix + "dimension-name", member.getDimension().getName());
-        printAttribute(prefix + "unique-member-name", member.getUniqueName());
-    }
-	
 	/**
 	 * This will save a font to the print writer. The font tag must be contained within tags of 
 	 * the font's parent object. This allows giving a specific font name for the XML tag.
@@ -815,17 +732,17 @@ public class WorkspaceXMLDAO {
 	 * Prints an attribute to the file. If the attribute value is null
 	 * no attribute will be printed.
 	 */
-    private void printAttribute(String name, String value) {
+    public void printAttribute(String name, String value) {
         if (value == null) return;
         xml.niprint(out, " " + name + "=\"");
         xml.niprint(out, SQLPowerUtils.escapeXML(value) + "\"");
     }
     
-    private void printAttribute(String name, double value) {
+    public void printAttribute(String name, double value) {
     	xml.niprint(out, " " + name + "=\"" + value + "\"");
     }
     
-    private void printAttribute(String name, int value) {
+    public void printAttribute(String name, int value) {
     	xml.niprint(out, " " + name + "=\"" + value + "\"");
     }
     

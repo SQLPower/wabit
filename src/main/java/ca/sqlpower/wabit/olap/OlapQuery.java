@@ -69,9 +69,15 @@ public class OlapQuery extends AbstractWabitObject {
     private static final Logger logger = Logger.getLogger(OlapQuery.class);
     
     /**
-     * This will create a copy of the query.
+     * This is the query name given to all Olap4j queries in this class.
      */
-    public OlapQuery createCopyOfSelf() throws SQLException {
+    private static final String OLAP4J_QUERY_NAME = "GUI Query";
+    
+    /**
+     * This will create a copy of the query.
+     * @throws QueryInitializationException 
+     */
+    public OlapQuery createCopyOfSelf() throws SQLException, QueryInitializationException {
         OlapQuery newQuery = new OlapQuery(olapMapping);
         for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
             newQuery.appendElement(
@@ -84,7 +90,8 @@ public class OlapQuery extends AbstractWabitObject {
     
     /**
      * The current query. Gets replaced whenever a new cube is selected via
-     * {@link #setCurrentCube(Cube)}.
+     * {@link #setCurrentCube(Cube)}. This variable should only be accessed
+     * through {@link #getMDXQuery()} to ensure that it is properly initialised.
      */
     private Query mdxQuery = null;
     
@@ -148,7 +155,7 @@ public class OlapQuery extends AbstractWabitObject {
         
         if (currentCube != oldCube && currentCube != null) {
             try {
-                setMdxQuery(new Query("GUI Query", currentCube));
+				setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -178,8 +185,9 @@ public class OlapQuery extends AbstractWabitObject {
 	 *         null.
 	 * @throws OlapException
 	 *             If there was a database error
+	 * @throws QueryInitializationException 
 	 */
-    public CellSet execute() throws OlapException {
+    public CellSet execute() throws OlapException, QueryInitializationException {
         logger.debug("Executing MDX query...");
         // TODO execute the textual query if there is one
         CellSet cellSet = null;
@@ -197,12 +205,6 @@ public class OlapQuery extends AbstractWabitObject {
     	}
 	}
     
-    private void fireQueryReset() {
-    	for (OlapQueryListener listener: listeners) {
-    		listener.queryReset();
-    	}
-	}
-
 	/**
 	 * Removes the given {@link Hierarchy} from the given {@link Axis} in the
 	 * query
@@ -211,10 +213,11 @@ public class OlapQuery extends AbstractWabitObject {
 	 *            The {@link Hierarchy} to remove
 	 * @param axis
 	 *            The {@link Axis} to remove the {@link Hierarchy} from
+	 * @throws QueryInitializationException 
 	 */
-	public void removeHierarchy(Hierarchy hierarchy, Axis axis) {
-        QueryAxis qa = mdxQuery.getAxis(axis);
-        QueryDimension qd = mdxQuery.getDimension(hierarchy.getDimension().getName());
+	public void removeHierarchy(Hierarchy hierarchy, Axis axis) throws QueryInitializationException {
+        QueryAxis qa = getMDXQuery().getAxis(axis);
+        QueryDimension qd = getMDXQuery().getDimension(hierarchy.getDimension().getName());
         if (qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
         	qd.clearExclusions();
@@ -225,45 +228,70 @@ public class OlapQuery extends AbstractWabitObject {
     
     /**
      * Replaces the current olap4j query with the given one, and fires a
-     * property change event.
+     * property change event. The query passed in should not be null.
      * 
      * @param mdxQuery The new query. 
      */
     private void setMdxQuery(Query mdxQuery) {
-        Query oldMDXQuery = this.mdxQuery;
+    	if (mdxQuery == null) throw new NullPointerException();
+        Query oldMDXQuery;
+		try {
+			oldMDXQuery = this.getMDXQuery();
+		} catch (QueryInitializationException e) {
+			//The MDX Query was never initialized and cannot be so it is null.
+			oldMDXQuery = null;
+		}
         this.mdxQuery = mdxQuery;
-        this.currentCube = this.mdxQuery.getCube();
-        firePropertyChange("mdxQuery", oldMDXQuery, mdxQuery);
+        try {
+			this.currentCube = this.getMDXQuery().getCube();
+			firePropertyChange("mdxQuery", oldMDXQuery, getMDXQuery());
+		} catch (QueryInitializationException e) {
+			throw new AssertionError("The initialization of the MDX query failed when an Olap4j " +
+					"Query object was specified. The initialization method should not do anything " +
+					"in this case.");
+		}
     }
 
-    private Query getMdxQueryCopy() throws SQLException {
-        this.init();
-        Query copyQuery = OlapUtils.copyMDXQuery(mdxQuery);
+    private Query getMdxQueryCopy() throws SQLException, QueryInitializationException {
+        Query copyQuery = OlapUtils.copyMDXQuery(getMDXQuery());
         return copyQuery;
     }
 
-    private Query getMDXQuery() {
+	/**
+	 * This is and must remain a package private method. The modifier on this
+	 * method should not be changed in order to maintain our encapsulation of
+	 * the Olap4jQuery object. This is used within the OlapQuery object in order
+	 * to modify it and should not be used outside the class. This is only used
+	 * in saving and loading outside the class because in order to save an
+	 * Olap4jQuery we need to iterate through the query.
+	 * 
+	 * @return Returns the Olap4jQuery model for saving and loading.
+	 * @throws QueryInitializationException
+	 *             Thrown if any problem occurrs while initializing the query.
+	 */
+    Query getMDXQuery() throws QueryInitializationException { //Do not change my modifier, i am package private so the Olap4jQuery doesn't leak out
         this.init();
         return mdxQuery;
+    }
+
+    /**
+     * This method lets you know whether or not the OlapQuery has been initialized.
+     * 
+     * @return
+     * 		The boolean value that is responsible for tracking whether or not the
+     * 		OlapQuery has been initialized.
+     */
+    public boolean isInitDone() {
+    	return initDone;
     }
 
 	/**
 	 * This function is called by the 'Reset Query' button on the toolbar. It
 	 * will replace the current MDX Query with a blank one.
+	 * @throws SQLException 
 	 */
-    public void reset() {
-        if (mdxQuery != null) {
-	        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
-	        	for (Iterator<QueryDimension> i = axisEntry.getValue().getDimensions().iterator(); i.hasNext(); ) {
-	                QueryDimension dimension = i.next();
-	        		dimension.clearInclusions();
-	        		dimension.clearExclusions();
-	        		hierarchiesInUse.remove(dimension);
-	        		i.remove();
-	            }
-	        }
-        }
-        fireQueryReset();
+    public void reset() throws SQLException {
+        setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
     }
 
 	/**
@@ -280,9 +308,10 @@ public class OlapQuery extends AbstractWabitObject {
 	 *            Member's children get excluded. Due to insufficient
 	 *            documentation in the Olap4j API, I am not certain what the
 	 *            other values of {@link Operator} will do.
+	 * @throws QueryInitializationException 
 	 */
-    public void excludeMember(String dimensionName, Member memberToExclude, Selection.Operator operator) {
-        this.mdxQuery.getDimension(dimensionName).exclude(operator, memberToExclude);
+    public void excludeMember(String dimensionName, Member memberToExclude, Selection.Operator operator) throws QueryInitializationException {
+        this.getMDXQuery().getDimension(dimensionName).exclude(operator, memberToExclude);
     }
 
     public OlapConnection createOlapConnection()
@@ -345,72 +374,76 @@ public class OlapQuery extends AbstractWabitObject {
         return dependencies;
     }
     
-    private void init() {
+    /**
+     * This method will initialize the query based upon which data was loaded. This is necessary
+     * because if we were to initialize the query during saving and loading exceptions will be thrown
+     * which will corrupt the workspace and performance will be bad. All exceptions in this method
+     * will be wrapped in a QueryInitializationException, including runtime exceptions, as methods
+     * calling init should be aware of any errors with intialization.
+     */
+    private void init() throws QueryInitializationException {
+        if (!this.wasLoadedFromXml || this.initDone || this.mdxQuery!=null) return;
         
-        if (this.initDone || this.mdxQuery!=null) return;
-        
-        QueryAxis queryAxis = null;
-        QueryDimension queryDimension = null;
-        
-        for (int cpt = 0; cpt < this.rootNodes.size(); cpt++) {
-            
-            Map<String,String> entry = this.attributes.get(cpt);
-            
-            if (this.rootNodes.get(cpt).equals("olap-cube")
-                    || this.rootNodes.get(cpt).equals("olap-report-cube")) {
-                String catalogName = entry.get("catalog");
-                String schemaName = entry.get("schema");
-                String cubeName = entry.get("cube-name");
-                
-                if (getOlapDataSource() == null) {
-                    throw new RuntimeException("Missing database for cube " + cubeName + " for use in " + getName() + ".");
-                }
-                try {
-                    OlapConnection createOlapConnection = createOlapConnection();
-                    Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
-                    Schema schema = catalog.getSchemas().get(schemaName);
-                    Cube cube = schema.getCubes().get(cubeName);
-                    this.currentCube = cube; // We don't like firing property changes which wipe out the query
-                } catch (Exception e) {
-                    throw new RuntimeException("Cannot connect to " + getOlapDataSource(), e);
-                }
-            } else if (this.rootNodes.get(cpt).equals("olap4j-query")
-                    || this.rootNodes.get(cpt).equals("olap4j-report-query")) {
-                String queryName = entry.get("name");
-                try {
-                    this.mdxQuery = new Query(queryName, getCurrentCube());
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (this.rootNodes.get(cpt).equals("olap4j-axis")
-                    || this.rootNodes.get(cpt).equals("olap4j-report-axis")) {
-                String ordinalNumber = entry.get("ordinal");
-                Axis axis = Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
-                queryAxis = new QueryAxis(getMDXQuery(), axis);
-                getMDXQuery().getAxes().put(axis, queryAxis);
-            } else if (this.rootNodes.get(cpt).equals("olap4j-dimension")
-                    || this.rootNodes.get(cpt).equals("olap4j-report-dimension")) {
-                String dimensionName = entry.get("dimension-name");
-                Dimension dimension = getCurrentCube().getDimensions().get(dimensionName);
-                queryDimension = new QueryDimension(getMDXQuery(), dimension);
-                queryAxis.addDimension(queryDimension);
-            } else if (this.rootNodes.get(cpt).equals("olap4j-selection")
-                    || this.rootNodes.get(cpt).equals("olap4j-report-selection")) {
-                String operation = entry.get("operator");
-                Member actualMember = findMember(entry, getCurrentCube());
-                queryDimension.include(Operator.valueOf(operation), actualMember);
-                
-                // Not optimal to do this for every selection, but we're not recording
-                // the hierarchy with the <dimension> element.
-                hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
-                
-            } else if (this.rootNodes.get(cpt).startsWith("/")) {
-                // we can safely ignore end tags here.
-            } else {
-                throw new UnsupportedOperationException("Missing element parsing code for element name :".concat(this.rootNodes.get(cpt)));
-            }
+        try {
+        	QueryAxis queryAxis = null;
+        	QueryDimension queryDimension = null;
+
+        	for (int cpt = 0; cpt < this.rootNodes.size(); cpt++) {
+
+        		Map<String,String> entry = this.attributes.get(cpt);
+
+        		if (this.rootNodes.get(cpt).equals("olap-cube")) {
+        			String catalogName = entry.get("catalog");
+        			String schemaName = entry.get("schema");
+        			String cubeName = entry.get("cube-name");
+
+        			if (getOlapDataSource() == null) {
+        				throw new QueryInitializationException("Missing database for cube " + cubeName + " for use in " + getName() + ".");
+        			}
+        			try {
+        				OlapConnection createOlapConnection = createOlapConnection();
+        				Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
+        				Schema schema = catalog.getSchemas().get(schemaName);
+        				Cube cube = schema.getCubes().get(cubeName);
+        				this.currentCube = cube; // We don't like firing property changes which wipe out the query
+        			} catch (Exception e) {
+        				throw new QueryInitializationException("Cannot connect to " + getOlapDataSource(), e);
+        			}
+        		} else if (this.rootNodes.get(cpt).equals("olap4j-query")) {
+        			String queryName = entry.get("name");
+        			try {
+        				this.mdxQuery = new Query(queryName, getCurrentCube());
+        			} catch (SQLException e) {
+        				throw new QueryInitializationException(e);
+        			}
+        		} else if (this.rootNodes.get(cpt).equals("olap4j-axis")) {
+        			String ordinalNumber = entry.get("ordinal");
+        			Axis axis = Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
+        			queryAxis = new QueryAxis(getMDXQuery(), axis);
+        			getMDXQuery().getAxes().put(axis, queryAxis);
+        		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
+        			String dimensionName = entry.get("dimension-name");
+        			Dimension dimension = getCurrentCube().getDimensions().get(dimensionName);
+        			queryDimension = new QueryDimension(getMDXQuery(), dimension);
+        			queryAxis.addDimension(queryDimension);
+        		} else if (this.rootNodes.get(cpt).equals("olap4j-selection")) {
+        			String operation = entry.get("operator");
+        			Member actualMember = findMember(entry, getCurrentCube());
+        			queryDimension.include(Operator.valueOf(operation), actualMember);
+
+        			// Not optimal to do this for every selection, but we're not recording
+        			// the hierarchy with the <dimension> element.
+        			hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
+
+        		} else if (this.rootNodes.get(cpt).startsWith("/")) {
+        			// we can safely ignore end tags here.
+        		} else {
+        			throw new QueryInitializationException("Missing element parsing code for element name :".concat(this.rootNodes.get(cpt)));
+        		}
+        	}
+        } catch (RuntimeException e) {
+        	throw new QueryInitializationException(e);
         }
-        //this.setMdxQuery(mdxQuery);
         this.initDone = true;
     }
     
@@ -478,11 +511,12 @@ public class OlapQuery extends AbstractWabitObject {
      * member selections have been adjusted.
      * 
      * @param member The member whose drilldown state to toggle. Must not be null.
+     * @throws QueryInitializationException 
      * @throws OlapException if the list of child members can't be retrieved
      */
-    public void toggleMember(Member member) {
+    public void toggleMember(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
-        QueryDimension qd = mdxQuery.getDimension(d.getName());
+        QueryDimension qd = getMDXQuery().getDimension(d.getName());
         boolean wasExpanded = false;
         for (Iterator<Selection> it = qd.getInclusions().iterator(); it.hasNext(); ) {
             Selection s = it.next();
@@ -520,8 +554,7 @@ public class OlapQuery extends AbstractWabitObject {
      * and the cached XML code is not relevant anymore.
      */
     public void writeCachedXml(XMLHelper xml, PrintWriter out) {
-        // If it is already initialized, return null.
-        if (!this.initDone && this.wasLoadedFromXml) {
+        if (this.wasLoadedFromXml) {
             for (int i = 0; i < this.rootNodes.size(); i++) {
                 StringBuilder sb = new StringBuilder("");
                 sb.append("<")
@@ -541,8 +574,9 @@ public class OlapQuery extends AbstractWabitObject {
 
     /**
      * Returns the current MDX text that this query object's state represents.
+     * @throws QueryInitializationException 
      */
-    public String getMdxText() {
+    public String getMdxText() throws QueryInitializationException {
         // TODO synchronization
         StringWriter sw = new StringWriter();
         ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
@@ -565,10 +599,11 @@ public class OlapQuery extends AbstractWabitObject {
 	 *            Axis.COLUMNS.
 	 * @throws OlapException
 	 *             If a database error occurs
+	 * @throws QueryInitializationException 
 	 */
-    public void addToAxis(int ordinal, Member member, Axis axis) throws OlapException {
-        QueryAxis qa = mdxQuery.getAxis(axis);
-        QueryDimension qd = mdxQuery.getDimension(member.getDimension().getName());
+    public void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
+        QueryAxis qa = getMDXQuery().getAxis(axis);
+        QueryDimension qd = getMDXQuery().getDimension(member.getDimension().getName());
         if (!qa.equals(qd.getAxis())) {
             logger.debug("Moving dimension " + qd + " to Axis " + qa);
             qa.addDimension(qd);
@@ -581,11 +616,11 @@ public class OlapQuery extends AbstractWabitObject {
     	execute();
     }
 
-    public List<Hierarchy> getRowHierarchies() {
+    public List<Hierarchy> getRowHierarchies() throws QueryInitializationException {
         return getHierarchies(Axis.ROWS);
     }
 
-    public List<Hierarchy> getColumnHierarchies() {
+    public List<Hierarchy> getColumnHierarchies() throws QueryInitializationException {
         return getHierarchies(Axis.COLUMNS);
     }
 
@@ -598,9 +633,9 @@ public class OlapQuery extends AbstractWabitObject {
     private final Map<QueryDimension, Hierarchy> hierarchiesInUse =
         new HashMap<QueryDimension, Hierarchy>();
     
-    private List<Hierarchy> getHierarchies(Axis axis) {
-    	if (mdxQuery == null) return Collections.emptyList();
-        QueryAxis qa = mdxQuery.getAxis(axis);
+    private List<Hierarchy> getHierarchies(Axis axis) throws QueryInitializationException {
+    	if (getMDXQuery() == null) return Collections.emptyList();
+        QueryAxis qa = getMDXQuery().getAxis(axis);
         List<Hierarchy> selectedHierarchies = new ArrayList<Hierarchy>();
         for (QueryDimension qd : qa.getDimensions()) {
             Hierarchy h = hierarchiesInUse.get(qd);
@@ -623,11 +658,12 @@ public class OlapQuery extends AbstractWabitObject {
      * @param olapQuery
      *            The query to absorb into this one. It will not be modified.
      *            Must not be null.
+     * @throws QueryInitializationException 
      */
-    public void absorb(OlapQuery olapQuery) {
-        for (Map.Entry<Axis, QueryAxis> axisEntry : olapQuery.mdxQuery.getAxes().entrySet()) {
+    public void absorb(OlapQuery olapQuery) throws QueryInitializationException {
+        for (Map.Entry<Axis, QueryAxis> axisEntry : olapQuery.getMDXQuery().getAxes().entrySet()) {
             for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-                for (QueryDimension oldDimension : olapQuery.mdxQuery.getAxes().get(axisEntry.getKey()).getDimensions()) {
+                for (QueryDimension oldDimension : olapQuery.getMDXQuery().getAxes().get(axisEntry.getKey()).getDimensions()) {
                     if (dimension.getDimension().equals(oldDimension.getDimension())) {
                         dimension.getInclusions().clear();
                         for (Selection selection : oldDimension.getInclusions()) {
@@ -647,8 +683,9 @@ public class OlapQuery extends AbstractWabitObject {
      * @param member
      *            The member to drill replace on. This member will be the new
      *            root of the selection for its hierarchy.
+     * @throws QueryInitializationException 
      */
-    public void drillReplace(Member member) {
+    public void drillReplace(Member member) throws QueryInitializationException {
         QueryDimension qd = findQueryDimension(member);
         for (Iterator<Selection> it = qd.getInclusions().iterator(); it.hasNext(); ) {
             Selection s = it.next();
@@ -659,9 +696,9 @@ public class OlapQuery extends AbstractWabitObject {
         }
     }
 
-    private QueryDimension findQueryDimension(Member member) {
+    private QueryDimension findQueryDimension(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
-        QueryDimension qd = mdxQuery.getDimension(d.getName());
+        QueryDimension qd = getMDXQuery().getDimension(d.getName());
         assert qd != null : d + " not in query!?";
         return qd;
     }
@@ -673,8 +710,9 @@ public class OlapQuery extends AbstractWabitObject {
      * @param member
      *            The member to include in the query. If the member is already
      *            included, this method has no effect.
+     * @throws QueryInitializationException 
      */
-    public void includeMember(Member member) {
+    public void includeMember(Member member) throws QueryInitializationException {
         QueryDimension qd = findQueryDimension(member);
         qd.include(member);
     }

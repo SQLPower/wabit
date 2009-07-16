@@ -23,6 +23,7 @@ import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 public class DrillUpAction extends MemberAction {
 
@@ -31,7 +32,7 @@ public class DrillUpAction extends MemberAction {
     }
 
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException {
+	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
 		query.drillReplace(member.getParentMember());
 		query.execute();
 	}

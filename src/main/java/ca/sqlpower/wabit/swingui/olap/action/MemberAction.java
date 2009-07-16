@@ -23,6 +23,7 @@ import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * Abstract base action for all of the actions that make modifications to an
@@ -41,11 +42,11 @@ public abstract class MemberAction extends OlapQueryAction {
     }
     
     @Override
-    protected final void performOlapQueryAction(OlapQuery query) throws OlapException {
+    protected final void performOlapQueryAction(OlapQuery query) throws OlapException, QueryInitializationException {
     	performMemberAction(member, query);
     }
     
-    protected abstract void performMemberAction(Member member, OlapQuery query) throws OlapException;
+    protected abstract void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException;
 
 	public Member getMember() {
         return member;

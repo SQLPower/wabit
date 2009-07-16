@@ -78,6 +78,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.SaveAndLoadOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -571,17 +572,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	checkMandatory("string", queryString);
         	cache.getQuery().defineUserModifiedQuery(queryString);
         } else if (name.equals("olap-query")) {
-            loadOlapQuery(attributes, false);
-        } else if (name.equals("olap-cube")) {
-            olapQuery.appendElement("olap-cube", attributes);
-        } else if (name.equals("olap4j-query")) {
-            olapQuery.appendElement("olap4j-query", attributes);
-        } else if (name.equals("olap4j-axis")) {
-            olapQuery.appendElement("olap4j-axis", attributes);
-        } else if (name.equals("olap4j-dimension")) {
-            olapQuery.appendElement("olap4j-dimension", attributes);
-        } else if (name.equals("olap4j-selection")) {
-            olapQuery.appendElement("olap4j-selection", attributes);
+            loadOlapQuery(attributes);
+        } else if (name.equals("olap-cube") || name.equals("olap4j-query") || name.equals("olap4j-axis")
+        		|| name.equals("olap4j-dimension") || name.equals("olap4j-selection")) {
+            olapQuery.appendElement(name, attributes);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
@@ -742,7 +736,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     if (olapQuery != null) {
                         try {
                             graphRenderer.defineQuery(olapQuery);
-                            graphRendererCellSet = olapQuery.execute();
+                            //Thomas fixed this, it will conflict XXX this comment should not be committed
+                            //graphRendererCellSet = olapQuery.execute();
                         } catch (SQLException e) {
                             throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
                         }
@@ -964,19 +959,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             cellSetRenderer.setHeaderFont(loadFont(attributes));
         } else if (name.equals("olap-body-font")) {
             cellSetRenderer.setBodyFont(loadFont(attributes));
-        } else if (name.equals("olap-report-query")) {
-            olapQuery = new OlapQuery(session);
-            loadOlapQuery(attributes, true);
-        } else if (name.equals("olap-report-cube")) {
-            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
-        } else if (name.equals("olap4j-report-query")) {
-            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
-        } else if (name.equals("olap4j-report-axis")) {
-            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
-        } else if (name.equals("olap4j-report-dimension")) {
-            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
-        } else if (name.equals("olap4j-report-selection")) {
-            cellSetRenderer.getModifiedOlapQuery().appendElement(name, attributes);
         } else if (name.equals("guide")) {
         	String guideName = attributes.getValue("name");
         	String axisName = attributes.getValue("axis");
@@ -1008,12 +990,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                         versionString.lastIndexOf('.')));
     }
 
-    private void loadOlapQuery(Attributes attributes, boolean isReport) throws SAXException {
+    private void loadOlapQuery(Attributes attributes) throws SAXException {
         String uuid = attributes.getValue("uuid");
         checkMandatory("uuid", uuid);
         olapQuery = new OlapQuery(uuid, session);
-        if (!isReport) {
-            session.getWorkspace().addOlapQuery(olapQuery);
+        if (cellSetRenderer == null) {
+        	session.getWorkspace().addOlapQuery(olapQuery);
         } else {
             cellSetRenderer.setModifiedOlapQuery(olapQuery);
         }
@@ -1160,7 +1142,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * Returns true if the name of the parent element in the XML context
      * (the one just below the top of the stack) is the given name.
      * 
-     * @param qName The name to check for equality with the parent element name.olap-report-cube cata
+     * @param qName The name to check for equality with the parent element name.
      * @return If qName == parent element name
      */
     private boolean parentIs(String qName) {
@@ -1208,13 +1190,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 			imageRenderer = null;
     	} else if (name.equals("cell-set-renderer")) {
     	    cellSetRenderer.setLoadingWorkspace(false);
-    	} 
-    	
-    	else if (name.equals("olap-cube") || name.equals("olap-report-cube")
-    	        || name.equals("olap4j-query") || name.equals("olap4j-report-query")
-    	        || name.equals("olap4j-axis") || name.equals("olap4j-report-axis")
-    	        || name.equals("olap4j-dimension") || name.equals("olap4j-report-dimension")
-    	        || name.equals("olap4j-selection") || name.equals("olap4j-report-selection")) {
+    	} else if (name.equals("olap-cube")
+    	        || name.equals("olap4j-query")
+    	        || name.equals("olap4j-axis") 
+    	        || name.equals("olap4j-dimension")
+    	        || name.equals("olap4j-selection")) {
     	    olapQuery.appendElement("/".concat(name),new AttributesImpl());
         }
     	

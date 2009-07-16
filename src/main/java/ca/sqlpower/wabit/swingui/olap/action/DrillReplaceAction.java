@@ -23,6 +23,7 @@ import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * A Member action that replaces the root of the hierarchy of the given member
@@ -35,7 +36,7 @@ public class DrillReplaceAction extends MemberAction {
     }
     
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException {
+	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
 		query.drillReplace(member);
 		query.execute();
 	}

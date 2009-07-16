@@ -23,6 +23,7 @@ import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * Sets the root ancestor of the given member as the root Member in the query
@@ -35,7 +36,7 @@ public class DrillUpToRootAction extends MemberAction {
     }
 
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException {
+	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
 		while (member.getParentMember() != null) {
 			member = member.getParentMember();
 			query.includeMember(member);

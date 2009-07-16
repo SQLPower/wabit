@@ -24,6 +24,7 @@ import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * Excludes the given Member from the query.
@@ -42,7 +43,7 @@ public class ExcludeMemberAction extends MemberAction {
     }
 
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException {
+	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
 		query.excludeMember(
 				member.getDimension().getName(), 
 				member, 

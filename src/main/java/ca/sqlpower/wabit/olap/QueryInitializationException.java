@@ -20,13 +20,28 @@
 package ca.sqlpower.wabit.olap;
 
 /**
- * An event listener interface to listen for important events from an
- * {@link OlapQuery} that a listening class may be interested in, particularly
- * UI classes.
+ * This exception is thrown when a query is being initialized but 
+ * failed. The failure could come from different places such as:
+ * not being able to connect to a data source, not being able to 
+ * find parts of the query in the data source. Any operation that
+ * throws this exception can be retried later in case the connection
+ * was temporarily missing or other temporary error-prone situations.
  */
-public interface OlapQueryListener {
-	/**
-	 * Called when {@link OlapQuery#execute()} has been called. 
-	 */
-	public void queryExecuted(OlapQueryEvent e);
+public class QueryInitializationException extends Exception {
+	
+	public QueryInitializationException() {
+		super ();
+	}
+	
+	public QueryInitializationException(String message) {
+		super(message);
+	}
+	
+	public QueryInitializationException(Throwable t) {
+		super(t);
+	}
+	
+	public QueryInitializationException(String message, Throwable t) {
+		super(message, t);
+	}
 }

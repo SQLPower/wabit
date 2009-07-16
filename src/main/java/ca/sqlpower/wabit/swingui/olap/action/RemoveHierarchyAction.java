@@ -24,6 +24,7 @@ import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 public class RemoveHierarchyAction extends OlapQueryAction {
 
@@ -37,7 +38,7 @@ public class RemoveHierarchyAction extends OlapQueryAction {
     }
 
 	@Override
-	protected void performOlapQueryAction(OlapQuery query) throws OlapException {
+	protected void performOlapQueryAction(OlapQuery query) throws OlapException, QueryInitializationException {
 		 query.removeHierarchy(hierarchy, axis);
 		 query.execute();
 	}

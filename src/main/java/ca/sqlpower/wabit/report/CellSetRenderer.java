@@ -68,6 +68,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.Icons;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
@@ -213,11 +214,15 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (modifiedOlapQuery == null) {
         	try {
 				modifiedOlapQuery = olapQuery.createCopyOfSelf();
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
         } else {
-	        modifiedOlapQuery.absorb(olapQuery);
+	        try {
+				modifiedOlapQuery.absorb(olapQuery);
+			} catch (QueryInitializationException e) {
+				throw new RuntimeException(e);
+			}
         }
         refreshCellSet = true;
     }
@@ -715,7 +720,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
                 try {
                     modifiedOlapQuery.toggleMember(selectedMember);
                     setCellSet(modifiedOlapQuery.execute());
-                } catch (OlapException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }

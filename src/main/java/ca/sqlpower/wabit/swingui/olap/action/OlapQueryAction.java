@@ -28,6 +28,7 @@ import org.olap4j.OlapException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * An abstract base action meant to be extended by actions that modify
@@ -64,5 +65,5 @@ public abstract class OlapQueryAction extends AbstractAction {
     	}
     }
     
-    protected abstract void performOlapQueryAction(OlapQuery query) throws OlapException;
+    protected abstract void performOlapQueryAction(OlapQuery query) throws OlapException, QueryInitializationException;
 }
