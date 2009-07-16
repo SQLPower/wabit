@@ -84,6 +84,23 @@ public class OlapUtils {
             isDescendant(parent, testForEquidescendituitivitiness);
     }
     
+	/**
+	 * Tests whether or not the given parent member has the other member as one
+	 * of a direct child. Does not consider parent to be a direct child of
+	 * itself, so in the case both arguments are equal, this method returns
+	 * false.
+	 * 
+	 * @param parent
+	 *            The potential parent member
+	 * @param testForChildishness
+	 *            The member to check if it has parent as its parent member
+	 * @return True if testForChildishness is a direct child of parent. False
+	 *         otherwise.
+	 */
+    public static boolean isChild(Member parent, Member testForChildishness) {
+    	return parent.equals(testForChildishness.getParentMember());
+    }
+    
     /**
      * This method returns a deep copy of an MDX Query because there is no such
      * method in the API.

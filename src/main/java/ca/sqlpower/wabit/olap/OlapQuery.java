@@ -690,7 +690,15 @@ public class OlapQuery extends AbstractWabitObject {
         for (Iterator<Selection> it = qd.getInclusions().iterator(); it.hasNext(); ) {
             Selection s = it.next();
             Member victim = s.getMember();
+            logger.debug("member = " + member.getName() + ", victim = " + victim.getName());
             if (!OlapUtils.isDescendantOrEqualTo(member, victim)) {
+            	if (OlapUtils.isChild(victim, member) && 
+            			(s.getOperator() == Operator.CHILDREN)) {
+					// If the member is there as one of its parent's children
+					// rather than itself, then we need to replace the selection
+					// of children with itself in the inclusions
+            		qd.include(member);
+            	}
                 it.remove();
             }
         }
