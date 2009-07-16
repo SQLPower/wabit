@@ -520,16 +520,12 @@ public class OlapQuery extends AbstractWabitObject {
         boolean wasExpanded = false;
         for (Iterator<Selection> it = qd.getInclusions().iterator(); it.hasNext(); ) {
             Selection s = it.next();
-            if (member.equals(s.getMember())) {
-                Operator operator = s.getOperator();
-                if (operator == Operator.CHILDREN || operator == Operator.INCLUDE_CHILDREN) {
-                    
-                    // XXX query model docs now say not to do this,
-                    // but there is no other way in the API
-                    it.remove();
-                    
-                    wasExpanded = true;
-                }
+            if (OlapUtils.isDescendant(member, s.getMember()) || 
+            		(member.equals(s.getMember()) && (s.getOperator() == Operator.CHILDREN || s.getOperator() == Operator.INCLUDE_CHILDREN))) {
+                // XXX query model docs now say not to do this,
+                // but there is no other way in the API
+                it.remove();
+                wasExpanded = true;
             }
         }
         
