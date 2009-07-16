@@ -23,14 +23,10 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 import org.olap4j.Axis;
-import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
-import org.xml.sax.Attributes;
-
-import com.sun.org.apache.bcel.internal.classfile.Attribute;
 
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.xml.XMLHelper;
