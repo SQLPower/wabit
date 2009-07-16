@@ -267,31 +267,31 @@
      <cell-set-renderer uuid="wf53107a3-e790-41e9-ac1f-2e7f298de398" olap-query-uuid="w34aa0826-197c-41a3-8361-bef5c5d0ad30" body-alignment="RIGHT"     >
       <olap-header-font name="Dialog" size="10" style="0"/>
       <olap-body-font name="Dialog" size="10" style="0"/>
-      <olap-report-query uuid="wd616900f-8e49-49b5-b537-5ecc76862626" data-source="World Facts OLAP Connection"      >
-       <olap-report-cube catalog="LOCALDB" schema="World" cube-name="World Countries"       />
-       <olap4j-report-query name="GUI Query"       >
-        <olap4j-report-axis ordinal="1"        >
-         <olap4j-report-dimension dimension-name="Geography"         >
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Angola]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Cameroon]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Central African Republic]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Chad]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Congo]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Congo, The Democratic Republic of the]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Equatorial Guinea]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Gabon]" operator="MEMBER"          />
-         </olap4j-report-dimension>
-        </olap4j-report-axis>
-        <olap4j-report-axis ordinal="0"        >
-         <olap4j-report-dimension dimension-name="Measures"         >
-          <olap4j-report-selection dimension-name="Measures" unique-member-name="[Measures].[Gross National Product]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Measures" unique-member-name="[Measures].[Life Expectancy]" operator="MEMBER"          />
-         </olap4j-report-dimension>
-        </olap4j-report-axis>
-        <olap4j-report-axis ordinal="-1"        >
-        </olap4j-report-axis>
-       </olap4j-report-query>
-      </olap-report-query>
+      <olap-query uuid="wd616900f-8e49-49b5-b537-5ecc76862626" data-source="World Facts OLAP Connection"      >
+       <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"       />
+       <olap4j-query name="GUI Query"       >
+        <olap4j-axis ordinal="1"        >
+         <olap4j-dimension dimension-name="Geography"         >
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Angola]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Cameroon]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Central African Republic]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Chad]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Congo]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Congo, The Democratic Republic of the]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Equatorial Guinea]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Africa].[Central Africa].[Gabon]" operator="MEMBER"          />
+         </olap4j-dimension>
+        </olap4j-axis>
+        <olap4j-axis ordinal="0"        >
+         <olap4j-dimension dimension-name="Measures"         >
+          <olap4j-selection dimension-name="Measures" unique-member-name="[Measures].[Gross National Product]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Measures" unique-member-name="[Measures].[Life Expectancy]" operator="MEMBER"          />
+         </olap4j-dimension>
+        </olap4j-axis>
+        <olap4j-axis ordinal="-1"        >
+        </olap4j-axis>
+       </olap4j-query>
+      </olap-query>
      </cell-set-renderer>
     </content-box>
     <content-box name="Content from Label" width="648" height="36" xpos="72" ypos="36">
@@ -340,32 +340,32 @@
      <cell-set-renderer uuid="w799a39f4-343b-476b-94f9-b84366a4a9d4" olap-query-uuid="w9577bd13-e7fb-4306-882d-03bf095df383" body-alignment="RIGHT"     >
       <olap-header-font name="Dialog" size="10" style="0"/>
       <olap-body-font name="Dialog" size="10" style="0"/>
-      <olap-report-query uuid="wf51feede-5401-48ae-bb33-ee915ec3a259" data-source="World Facts OLAP Connection"      >
-       <olap-report-cube catalog="LOCALDB" schema="World" cube-name="World Countries"       />
-       <olap4j-report-query name="GUI Query"       >
-        <olap4j-report-axis ordinal="1"        >
-         <olap4j-report-dimension dimension-name="Geography"         >
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Austria]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Belgium]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[France]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Germany]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Liechtenstein]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Luxembourg]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Monaco]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Netherlands]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Switzerland]" operator="MEMBER"          />
-         </olap4j-report-dimension>
-        </olap4j-report-axis>
-        <olap4j-report-axis ordinal="0"        >
-         <olap4j-report-dimension dimension-name="Measures"         >
-          <olap4j-report-selection dimension-name="Measures" unique-member-name="[Measures].[Gross National Product]" operator="MEMBER"          />
-          <olap4j-report-selection dimension-name="Measures" unique-member-name="[Measures].[Population]" operator="MEMBER"          />
-         </olap4j-report-dimension>
-        </olap4j-report-axis>
-        <olap4j-report-axis ordinal="-1"        >
-        </olap4j-report-axis>
-       </olap4j-report-query>
-      </olap-report-query>
+      <olap-query uuid="wf51feede-5401-48ae-bb33-ee915ec3a259" data-source="World Facts OLAP Connection"      >
+       <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"       />
+       <olap4j-query name="GUI Query"       >
+        <olap4j-axis ordinal="1"        >
+         <olap4j-dimension dimension-name="Geography"         >
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Austria]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Belgium]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[France]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Germany]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Liechtenstein]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Luxembourg]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Monaco]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Netherlands]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Geography" unique-member-name="[Geography].[World].[Europe].[Western Europe].[Switzerland]" operator="MEMBER"          />
+         </olap4j-dimension>
+        </olap4j-axis>
+        <olap4j-axis ordinal="0"        >
+         <olap4j-dimension dimension-name="Measures"         >
+          <olap4j-selection dimension-name="Measures" unique-member-name="[Measures].[Gross National Product]" operator="MEMBER"          />
+          <olap4j-selection dimension-name="Measures" unique-member-name="[Measures].[Population]" operator="MEMBER"          />
+         </olap4j-dimension>
+        </olap4j-axis>
+        <olap4j-axis ordinal="-1"        >
+        </olap4j-axis>
+       </olap4j-query>
+      </olap-query>
      </cell-set-renderer>
     </content-box>
     <content-box name="Content from Label" width="538" height="36" xpos="39" ypos="18">
