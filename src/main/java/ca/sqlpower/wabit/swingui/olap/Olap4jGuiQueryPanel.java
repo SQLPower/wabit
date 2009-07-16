@@ -202,6 +202,7 @@ public class Olap4jGuiQueryPanel {
     	public CubeTree() {
             setRootVisible(false);
             setCellRenderer(new Olap4JTreeCellRenderer());
+            setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
     	}
     	
 		public void dragDropEnd(DragSourceDropEvent dsde) {
