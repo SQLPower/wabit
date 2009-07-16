@@ -19,6 +19,19 @@
 
 package ca.sqlpower.wabit.olap;
 
+/**
+ * An event listener interface to listen for important events from an
+ * {@link OlapQuery} that a listening class may be interested in, particularly
+ * UI classes.
+ */
 public interface OlapQueryListener {
+	/**
+	 * Called when {@link OlapQuery#execute()} has been called. 
+	 */
 	public void queryExecuted(OlapQueryEvent e);
+	
+	/**
+	 * Called when {@link OlapQuery#reset()} has been called.
+	 */
+	public void queryReset();
 }

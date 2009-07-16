@@ -202,7 +202,6 @@ public class Olap4jGuiQueryPanel {
     	public CubeTree() {
             setRootVisible(false);
             setCellRenderer(new Olap4JTreeCellRenderer());
-            setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
     	}
     	
 		public void dragDropEnd(DragSourceDropEvent dsde) {
@@ -253,13 +252,18 @@ public class Olap4jGuiQueryPanel {
             final Window owningFrame, CellSetViewer cellSetViewer,
             OlapQuery query, OlapQueryPanel olapQueryPanel) throws SQLException {
         this.olapQuery = query;
+        this.olapQueryPanel = olapQueryPanel;
+        this.dsCollection = dsCollection;
+
         query.addOlapQueryListener(new OlapQueryListener() {
 			public void queryExecuted(OlapQueryEvent e) {
 				updateCellSetViewer(e.getCellSet());
 			}
+
+			public void queryReset() {
+				Olap4jGuiQueryPanel.this.olapQueryPanel.updateMdxText("");
+			}
 		});
-        this.olapQueryPanel = olapQueryPanel;
-        this.dsCollection = dsCollection;
         
         this.cellSetViewer = cellSetViewer;
         if (cellSetViewer == null) {
@@ -479,13 +483,13 @@ public class Olap4jGuiQueryPanel {
     public void setCurrentCube(Cube currentCube) throws SQLException {
         if (currentCube != olapQuery.getCurrentCube()) {
             olapQuery.setCurrentCube(currentCube);
-            if (currentCube != null) {
-                cubeTree.setModel(new Olap4jTreeModel(Collections.singletonList(currentCube)));
-                cubeTree.expandRow(0);
-            } else {
-                cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
-            }
             updateCellSetViewer(null); 
+        }
+        if (currentCube != null) {
+            cubeTree.setModel(new Olap4jTreeModel(Collections.singletonList(currentCube)));
+            cubeTree.expandRow(0);
+        } else {
+            cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
         }
     }
 

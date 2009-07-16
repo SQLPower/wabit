@@ -196,6 +196,12 @@ public class OlapQuery extends AbstractWabitObject {
     		listener.queryExecuted(new OlapQueryEvent(cellSet));
     	}
 	}
+    
+    private void fireQueryReset() {
+    	for (OlapQueryListener listener: listeners) {
+    		listener.queryReset();
+    	}
+	}
 
 	/**
 	 * Removes the given {@link Hierarchy} from the given {@link Axis} in the
@@ -244,13 +250,16 @@ public class OlapQuery extends AbstractWabitObject {
 	 * will replace the current MDX Query with a blank one.
 	 */
     public void reset() {
-        if (mdxQuery == null) return;
-        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
-            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-                dimension.getInclusions().clear();
-            }
+        if (mdxQuery != null) {
+	        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
+	        	for (Iterator<QueryDimension> i = axisEntry.getValue().getDimensions().iterator(); i.hasNext(); ) {
+	                QueryDimension dimension = i.next();
+	        		dimension.clearInclusions();
+	        		i.remove();
+	            }
+	        }
         }
-        // XXX I believe this should fire an event.
+        fireQueryReset();
     }
 
 	/**
@@ -533,7 +542,7 @@ public class OlapQuery extends AbstractWabitObject {
         // TODO synchronization
         StringWriter sw = new StringWriter();
         ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
-        mdxQuery.getSelect().unparse(ptw);
+        getMDXQuery().getSelect().unparse(ptw);
         return sw.toString();
     }
 
