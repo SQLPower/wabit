@@ -1028,7 +1028,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                         if (renderer.getQuery() instanceof QueryCache) {
                             updateTableModel();
                         } else if (renderer.getQuery() instanceof OlapQuery) {
-                            displayOlapChartEditor();
+                            displayOlapChartEditor((OlapQuery) renderer.getQuery());
                         } else {
                             throw new IllegalStateException("Cannot set chart column chooser to a query of type " + renderer.getQuery().getClass());
                         }
@@ -1062,8 +1062,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
          * the chart. This will also reset the columns selected to take part in
          * defining the chart in cases where the query changed.
          */
-		private void displayOlapChartEditor() {
-            CellSetViewer cellSetViewer = new CellSetViewer(null, false);
+		private void displayOlapChartEditor(OlapQuery query) {
+            CellSetViewer cellSetViewer = new CellSetViewer(query, false);
             
             JComboBox comboBoxForWidth = new JComboBox(new String[]{"MMMMM"});
             double comboBoxWidth = comboBoxForWidth.getUI().getPreferredSize(comboBoxForWidth).getWidth();
@@ -1072,7 +1072,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             chartEditorPanel.removeAll();
             cellSetViewer.getScrollPane().setPreferredSize(new Dimension(0, 0));
             chartEditorPanel.add(cellSetViewer.getScrollPane(), BorderLayout.CENTER);
-            cellSetViewer.showCellSet(null, cellSet);
+            cellSetViewer.showCellSet(query, cellSet);
             chartEditorPanel.revalidate();
 
             final CellSetAxis columnAxis = cellSetViewer.getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
@@ -1255,7 +1255,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		    if (query instanceof QueryCache) {
 		        updateTableModel();
 		    } else if (query instanceof OlapQuery) {
-		        displayOlapChartEditor();
+		        displayOlapChartEditor((OlapQuery) query);
 		    } else {
                 throw new IllegalArgumentException("Unknown query type " + query.getClass());
             }
