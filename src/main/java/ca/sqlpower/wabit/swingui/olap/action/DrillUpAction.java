@@ -28,7 +28,7 @@ import ca.sqlpower.wabit.olap.QueryInitializationException;
 public class DrillUpAction extends MemberAction {
 
     public DrillUpAction(OlapQuery query, Member member) {
-        super("Drill up on member " + member.getName(), query, member);
+        super("Drill up to member '" + member.getName() + "'", query, member);
     }
 
 	@Override
