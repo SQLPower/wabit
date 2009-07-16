@@ -436,7 +436,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		fileMenu.addSeparator();
 		JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
-				frame.dispose();
 				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
 				        "/ca/sqlpower/wabit/example_workspace.wabit"), getContext());
 			}
