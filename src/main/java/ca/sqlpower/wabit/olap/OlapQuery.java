@@ -255,6 +255,7 @@ public class OlapQuery extends AbstractWabitObject {
 	        	for (Iterator<QueryDimension> i = axisEntry.getValue().getDimensions().iterator(); i.hasNext(); ) {
 	                QueryDimension dimension = i.next();
 	        		dimension.clearInclusions();
+	        		hierarchiesInUse.remove(dimension);
 	        		i.remove();
 	            }
 	        }
