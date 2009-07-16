@@ -39,5 +39,6 @@ public class RemoveHierarchyAction extends OlapQueryAction {
 	@Override
 	protected void performOlapQueryAction(OlapQuery query) throws OlapException {
 		 query.removeHierarchy(hierarchy, axis);
+		 query.execute();
 	}
 }

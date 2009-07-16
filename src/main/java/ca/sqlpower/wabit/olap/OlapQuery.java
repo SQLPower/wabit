@@ -215,10 +215,10 @@ public class OlapQuery extends AbstractWabitObject {
 	public void removeHierarchy(Hierarchy hierarchy, Axis axis) {
         QueryAxis qa = mdxQuery.getAxis(axis);
         QueryDimension qd = mdxQuery.getDimension(hierarchy.getDimension().getName());
-        if (!qa.equals(qd.getAxis())) {
+        if (qa.equals(qd.getAxis())) {
             qa.removeDimension(qd);
+            hierarchiesInUse.remove(qd);
         }
-        hierarchiesInUse.remove(qd);
     }
     
     /**
