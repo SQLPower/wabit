@@ -22,19 +22,18 @@ package ca.sqlpower.wabit.report.chart;
 import org.olap4j.Axis;
 import org.olap4j.CellSetAxis;
 
-public class AxisColumnIdentifier implements ColumnIdentifier {
+/**
+ * This column identifier specifically represents the rows axis.
+ */
+public class RowAxisColumnIdentifier implements ColumnIdentifier {
 
-    private final CellSetAxis axis;
-    
-    public AxisColumnIdentifier(CellSetAxis axis) {
-        this.axis = axis;
-    }
+    private final Axis axis = Axis.ROWS;
     
     public Object getUniqueIdentifier() {
         return getAxis();
     }
     
-    public CellSetAxis getAxis() {
+    public Axis getAxis() {
         return axis;
     }
     
@@ -42,11 +41,11 @@ public class AxisColumnIdentifier implements ColumnIdentifier {
     public boolean equals(Object obj) {
         if (obj == null) return false;
         
-        if (obj instanceof CellSetAxis) {
+        if (obj instanceof Axis) {
             return ((CellSetAxis) obj).equals(getAxis());
-        } else if (obj instanceof AxisColumnIdentifier) {
-            AxisColumnIdentifier ci = (AxisColumnIdentifier) obj;
-            return getAxis().getAxisOrdinal() == ci.getAxis().getAxisOrdinal();
+        } else if (obj instanceof RowAxisColumnIdentifier) {
+            RowAxisColumnIdentifier ci = (RowAxisColumnIdentifier) obj;
+            return getAxis() == ci.getAxis();
         } else {
             return false;
         }
@@ -55,12 +54,12 @@ public class AxisColumnIdentifier implements ColumnIdentifier {
     @Override
     public int hashCode() {
         int result = 17;
-        result = 37 * result + axis.getAxisOrdinal().hashCode();
+        result = 37 * result + axis.hashCode();
         return result;
     }
 
     public String getName() {
-        return axis.getAxisOrdinal().name();
+        return axis.name();
     }
 
 }

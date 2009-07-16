@@ -78,7 +78,6 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.SaveAndLoadOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -98,10 +97,10 @@ import ca.sqlpower.wabit.report.GraphRenderer.LegendPosition;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
-import ca.sqlpower.wabit.report.chart.AxisColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 
 import com.sun.mail.util.BASE64DecoderStream;
 
@@ -215,14 +214,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 */
 	private GraphRenderer graphRenderer;
 	
-    /**
-     * This is a cell set in a {@link GraphRenderer} that is stored here since
-     * the {@link OlapQuery} does not do any caching. This speeds up the loading
-     * of a {@link GraphRenderer} based on an OLAP query. This may be null when
-     * charts are loading if the charts are based on a relational query.
-     */
-    private CellSet graphRendererCellSet;
-
 	/**
 	 * This is an {@link OlapQuery} that is currently being loaded from the file. This
 	 * may be null if no OlapQuery is currently being loaded. This variable is also used
@@ -736,8 +727,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     if (olapQuery != null) {
                         try {
                             graphRenderer.defineQuery(olapQuery);
-                            //Thomas fixed this, it will conflict XXX this comment should not be committed
-                            //graphRendererCellSet = olapQuery.execute();
                         } catch (SQLException e) {
                             throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
                         }
@@ -1043,6 +1032,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         if (colName != null) {
             colIdentifier = new ColumnNameColumnIdentifier(colName); 
         } else if (positionOrdinalString != null) {
+            CellSet graphRendererCellSet;
+            try {
+                graphRendererCellSet = ((OlapQuery) graphRenderer.getQuery()).execute();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             Integer positionOrdinal = Integer.parseInt(positionOrdinalString);
             CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(org.olap4j.Axis.COLUMNS.axisOrdinal());
             //This is how a position describing a column identifier was loaded in 1.0.2
@@ -1060,8 +1055,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             colIdentifier = new PositionColumnIdentifier(memberPositionNames);
         } else if (axisOrdinalString != null) {
             Integer axisOrdinal = Integer.parseInt(axisOrdinalString);
-            CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(axisOrdinal);
-            colIdentifier = new AxisColumnIdentifier(rowAxis);
+            if (org.olap4j.Axis.ROWS.axisOrdinal() == axisOrdinal) {
+                colIdentifier = new RowAxisColumnIdentifier();
+            } else {
+                throw new IllegalStateException("Unknown axis being loaded for chart " + graphRenderer.getName() + ". The row ordinal being loaded is " + axisOrdinal);
+            }
         }
         if (colIdentifier == null) {
             throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier and cannot be loaded.");

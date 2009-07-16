@@ -71,7 +71,7 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
-import ca.sqlpower.wabit.report.chart.AxisColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
@@ -551,8 +551,8 @@ public class WorkspaceXMLDAO {
             for (int i = 0; i < positionIdentifier.getUniqueMemberNames().size(); i++) {
                 printAttribute(namePrefix + "unique-member-name" + i, positionIdentifier.getUniqueMemberNames().get(i));
             }
-        } else if (identifier instanceof AxisColumnIdentifier) {
-            printAttribute(namePrefix + "axis-ordinal", ((AxisColumnIdentifier) identifier).getAxis().getAxisOrdinal().axisOrdinal());
+        } else if (identifier instanceof RowAxisColumnIdentifier) {
+            printAttribute(namePrefix + "axis-ordinal", ((RowAxisColumnIdentifier) identifier).getAxis().axisOrdinal());
         } else {
             throw new IllegalStateException("Column identifier " + identifier + " has no values defined to save.");
         }

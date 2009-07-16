@@ -110,7 +110,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.chart.AxisColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
@@ -1108,7 +1108,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 JPanel rowAxisComboBoxHeader = new JPanel(new BorderLayout());
                 final JComboBox comboBox = new JComboBox(new DataTypeSeries[]{DataTypeSeries.NONE, DataTypeSeries.CATEGORY});
                 final CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-                final DataTypeSeries hierarchyDataType = columnsToDataTypes.get(new AxisColumnIdentifier(rowAxis));
+                final DataTypeSeries hierarchyDataType = columnsToDataTypes.get(new RowAxisColumnIdentifier());
                 if (hierarchyDataType != null) {
                     comboBox.setSelectedItem(hierarchyDataType);
                 }
@@ -1117,7 +1117,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
                     public void itemStateChanged(ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
-                            columnsToDataTypes.put(new AxisColumnIdentifier(rowAxis), (DataTypeSeries) e.getItem());
+                            columnsToDataTypes.put(new RowAxisColumnIdentifier(), (DataTypeSeries) e.getItem());
                             logger.debug("Column data types are now " + columnsToDataTypes);
                             updateChartPreview();
                         }
@@ -1217,8 +1217,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 }
             } else if (cellSet != null) {
                 CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-                columnNamesInOrder.add(new AxisColumnIdentifier(rowAxis));
-                columnsToDataTypes.put(new AxisColumnIdentifier(rowAxis), DataTypeSeries.NONE);
+                columnNamesInOrder.add(new RowAxisColumnIdentifier());
+                columnsToDataTypes.put(new RowAxisColumnIdentifier(), DataTypeSeries.NONE);
                 final CellSetAxis columnsAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
                 for (int i = 0; i < columnsAxis.getPositionCount(); i++) {
                     Position position = columnsAxis.getPositions().get(i);
@@ -1809,7 +1809,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 if (categoryColumnIdentifier instanceof PositionColumnIdentifier) {
                     PositionColumnIdentifier positionColumnIdentifier = (PositionColumnIdentifier) categoryColumnIdentifier;
                     categoryRow.add(cellSet.getCell(positionColumnIdentifier.getPosition(cellSet), rowsAxis.getPositions().get(i)).getFormattedValue());
-                } else if (categoryColumnIdentifier instanceof AxisColumnIdentifier) {
+                } else if (categoryColumnIdentifier instanceof RowAxisColumnIdentifier) {
                     categoryRow.add(rowsAxis.getPositions().get(i));
                 } else {
                     throw new IllegalStateException("Creating a dataset on an OLAP cube. A column is used as a category but has neither a position or hierarchy.");
