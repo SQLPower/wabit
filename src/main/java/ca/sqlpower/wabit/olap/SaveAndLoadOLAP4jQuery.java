@@ -77,7 +77,7 @@ public class SaveAndLoadOLAP4jQuery {
 			
             xml.print(out, "<olap4j-query");
             savingClass.printAttribute("name", mdxQuery.getName());
-            xml.println(out, ">");
+            xml.niprintln(out, ">");
             xml.indent++;
             
 	        for (Map.Entry<Axis, QueryAxis> axisEntry : mdxQuery.getAxes().entrySet()) {
@@ -85,19 +85,19 @@ public class SaveAndLoadOLAP4jQuery {
 		        if (axisEntry.getKey() == null) continue;
 		        xml.print(out, "<olap4j-axis");
 		        savingClass.printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
-		        xml.println(out, ">");
+		        xml.niprintln(out, ">");
 		        xml.indent++;
 		        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
 		            xml.print(out, "<olap4j-dimension");
 		            savingClass.printAttribute("dimension-name", dimension.getDimension().getName());
-		            xml.println(out, ">");
+		            xml.niprintln(out, ">");
 		            xml.indent++;
 		            for (Selection selection : dimension.getInclusions()) {
 		            	xml.print(out, "<olap4j-selection");
 		            	savingClass.printAttribute("dimension-name", selection.getMember().getDimension().getName());
 		                savingClass.printAttribute("unique-member-name", selection.getMember().getUniqueName());
 		                savingClass.printAttribute("operator", selection.getOperator().toString());
-		                xml.println(out, "/>");
+		                xml.niprintln(out, "/>");
 		            }
 		            xml.indent--;
 		            xml.println(out, "</olap4j-dimension>");
