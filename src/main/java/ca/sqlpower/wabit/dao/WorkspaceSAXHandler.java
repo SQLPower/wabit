@@ -926,7 +926,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             if (newQuery == null) {
                 throw new NullPointerException("Cannot load workspace due to missing olap query in report.");
             }
-            cellSetRenderer = new CellSetRenderer(newQuery, uuid, true);
+            cellSetRenderer = new CellSetRenderer(newQuery, uuid);
             contentBox.setContentRenderer(cellSetRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
@@ -1186,8 +1186,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 				throw new RuntimeException(e);
 			}
 			imageRenderer = null;
-    	} else if (name.equals("cell-set-renderer")) {
-    	    cellSetRenderer.setLoadingWorkspace(false);
     	} else if (name.equals("olap-cube")
     	        || name.equals("olap4j-query")
     	        || name.equals("olap4j-axis") 

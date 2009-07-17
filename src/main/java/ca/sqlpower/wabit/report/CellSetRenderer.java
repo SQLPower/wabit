@@ -163,43 +163,41 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     private boolean initDone = false;
 
-    private boolean loadingWorkspace = false;
-    
     public CellSetRenderer(OlapQuery olapQuery) {
-        this(olapQuery, null, false);
+        this(olapQuery, null);
     }
     
-    public CellSetRenderer(OlapQuery olapQuery, String uuid, boolean loadingWorkspace) {
+    public CellSetRenderer(OlapQuery olapQuery, String uuid) {
         super(uuid);
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
-        this.loadingWorkspace  = loadingWorkspace;
         setName(olapQuery.getName());
         olapQuery.addPropertyChangeListener(nameListener);
     }
     
     private void init() {
         if (this.initDone) return;
-        if (!loadingWorkspace) {
-            try {
-            	if (modifiedOlapQuery == null) {
-                	try {
-        				modifiedOlapQuery = olapQuery.createCopyOfSelf();
-        				modifiedOlapQuery.addOlapQueryListener(queryListener);
-        				modifiedOlapQuery.execute(); //This code will fire the change and set the cellset
-        			} catch (Exception e) {
-        				throw new RuntimeException(e);
-        			}
-                }
-            } catch (Exception e) {
-                //XXX it seems that this error message doesn't say anything conclusive
-                //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
-                //there are no rows.
-                logger.warn(e.toString());
-                errorMessage = "Error when executing query.";
+        try {
+        	if (modifiedOlapQuery == null) {
+            	try {
+    				modifiedOlapQuery = olapQuery.createCopyOfSelf();
+    				modifiedOlapQuery.addOlapQueryListener(queryListener);
+    				modifiedOlapQuery.execute(); //This code will fire the change and set the cellset
+    			} catch (Exception e) {
+    				throw new RuntimeException(e);
+    			}
+            } else if (modifiedOlapQuery.hasCachedXml()) {
+            	modifiedOlapQuery.addOlapQueryListener(queryListener);
+            	modifiedOlapQuery.execute();
             }
-            this.initDone=true;
+        } catch (Exception e) {
+            //XXX it seems that this error message doesn't say anything conclusive
+            //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
+            //there are no rows.
+            logger.warn(e.toString());
+            errorMessage = "Error when executing query.";
         }
+        this.initDone=true;
     }
 
     public void cleanup() {
@@ -724,10 +722,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
 		return errorMessage;
 	}
     
-    public void setLoadingWorkspace(boolean loadingWorkspace) {
-        this.loadingWorkspace = loadingWorkspace;
-    }
-
     public List<WabitObject> getDependencies() {
         if (getOlapQuery() == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(getOlapQuery()));
