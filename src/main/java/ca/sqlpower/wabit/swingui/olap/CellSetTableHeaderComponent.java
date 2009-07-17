@@ -892,12 +892,13 @@ public class CellSetTableHeaderComponent extends JComponent {
             FontMetrics fm = g2.getFontMetrics();
             int ascent = fm.getAscent();
             
-            String previousLabel = null;
+            LayoutItem previousLabel = null;
             
             List<LayoutItem> layoutItems = getLayoutItems();
             for (int i = 0 ; i < layoutItems.size() ; i++) {
             	LayoutItem li = layoutItems.get(i);
-            	if (!WabitUtils.nullSafeEquals(previousLabel, li.text)) {
+            	if (previousLabel == null || !WabitUtils.nullSafeEquals(previousLabel.text, li.text) || 
+            			!previousLabel.member.getLevel().equals(li.member.getLevel())) {
             		if (li.member == selectedMember) {
             			g2.setColor(Color.BLUE);
             		}
@@ -930,7 +931,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             			g2.setColor(getForeground());
             		}
             	}
-            	previousLabel = li.text;
+            	previousLabel = li;
             }
             logger.debug("maximum size = " + this.getMaximumSize());
             logger.debug("x = " + this.getX() + ", " +
