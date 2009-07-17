@@ -83,6 +83,7 @@ import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.olap.action.ClearExclusionsAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillReplaceAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillUpAction;
 import ca.sqlpower.wabit.swingui.olap.action.ExcludeMemberAction;
@@ -611,6 +612,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 					final Member clickedOnMember) {
 				JPopupMenu popUpMenu = new JPopupMenu();
 				popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, CellSetTableHeaderComponent.this.axis));
+			    popUpMenu.add(new ClearExclusionsAction(query, hierarchy));
 				if (clickedOnMember != null && 
 						!(clickedOnMember instanceof Measure)) {
 				    popUpMenu.addSeparator();

@@ -798,4 +798,14 @@ public class OlapQuery extends AbstractWabitObject {
     public void removeOlapQueryListener(OlapQueryListener listener) {
     	listeners.remove(listener);
     }
+
+    /**
+     * Takes the given Hierarchy and clears all exclusions from its Dimension.
+     * @param hierarchy
+     * @throws QueryInitializationException
+     */
+	public void clearExclusions(Hierarchy hierarchy) throws QueryInitializationException {
+		QueryDimension dimension = getMDXQuery().getDimension(hierarchy.getDimension().getName());
+		dimension.clearExclusions();
+	}
 }
