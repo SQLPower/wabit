@@ -45,6 +45,7 @@ import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
+import org.olap4j.metadata.Member.Type;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
@@ -624,7 +625,11 @@ public class OlapQuery extends AbstractWabitObject {
         	qd.include(Operator.MEMBER, member);
 //        	toggleMember(member);
         }
-        qd.setSortOrder(SortOrder.ASC);
+        Type memberType = member.getMemberType();
+        logger.debug("memberType = " + memberType);
+		if (!(memberType.equals(Member.Type.MEASURE) || memberType.equals(Member.Type.FORMULA))) {
+        	qd.setSortOrder(SortOrder.ASC);
+        }
     	execute();
     }
 
