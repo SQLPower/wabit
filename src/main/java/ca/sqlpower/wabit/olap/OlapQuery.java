@@ -231,20 +231,14 @@ public class OlapQuery extends AbstractWabitObject {
      * property change event. The query passed in should not be null.
      * 
      * @param mdxQuery The new query. 
+     * @throws OlapException 
      */
-    private void setMdxQuery(Query mdxQuery) {
+    private void setMdxQuery(Query mdxQuery) throws OlapException {
     	if (mdxQuery == null) throw new NullPointerException();
-        Query oldMDXQuery;
-		try {
-			oldMDXQuery = this.getMDXQuery();
-		} catch (QueryInitializationException e) {
-			//The MDX Query was never initialized and cannot be so it is null.
-			oldMDXQuery = null;
-		}
         this.mdxQuery = mdxQuery;
         try {
 			this.currentCube = this.getMDXQuery().getCube();
-			firePropertyChange("mdxQuery", oldMDXQuery, getMDXQuery());
+			execute();
 		} catch (QueryInitializationException e) {
 			throw new AssertionError("The initialization of the MDX query failed when an Olap4j " +
 					"Query object was specified. The initialization method should not do anything " +
