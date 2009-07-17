@@ -262,7 +262,12 @@ public class OlapQueryPanel implements WabitPanel {
 	 * CellSetViewer.
 	 */
     public void updateCellSetViewer() {
-    	olap4jGuiQueryPanel.updateCellSetViewer(null);
+    	try {
+			olap4jGuiQueryPanel.updateCellSetViewer(query.execute());
+		} catch (Exception e) {
+			cellSetViewer.showMessage(query, "Could not execute the query due to the following error: \n" + e.getClass().getName() + ":" + e.getMessage());
+			logger.warn("Could not execute the query " + query, e);
+		}
     }
     
     private Action undoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.undo")){
