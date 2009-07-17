@@ -600,6 +600,7 @@ public class OlapQuery extends AbstractWabitObject {
     public void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(member.getDimension().getName());
+        qd.clearInclusions();
         if (!qa.equals(qd.getAxis())) {
             logger.debug("Moving dimension " + qd + " to Axis " + qa);
             qa.addDimension(qd);
