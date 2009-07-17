@@ -701,6 +701,57 @@ public class OlapQuery extends AbstractWabitObject {
         }
     }
 
+	/**
+	 * Modifies this query's selection so that targetAncestor, and every
+	 * ancestor of fromMember in between will be included. If targetAncestor
+	 * isn't actually an ancestor, it returns right away.
+	 * 
+	 * @param fromMember
+	 *            The member whose ancestors will be added to the query
+	 *            selection
+	 * @param targetAncestor
+	 *            The highest ancestor member that will be added to the query
+	 *            selection
+	 * @throws QueryInitializationException
+	 */
+    public void drillUpTo(Member fromMember, Member targetAncestor) throws QueryInitializationException {
+    	// is targetAncestor REALLY an ancestor?
+    	if (!OlapUtils.isDescendant(targetAncestor, fromMember)) return;
+    	
+    	Member member = fromMember;
+    	while (member.getParentMember() != null && !member.equals(targetAncestor)) {
+			member = member.getParentMember();
+			if (!isIncluded(member)) {
+				includeMember(member);
+			}
+		}
+    }
+    
+	/**
+	 * Checks if the given {@link Member} is already included in the given
+	 * {@link QueryDimension}.
+	 * 
+	 * Note that this currently does not take into account the value of
+	 * {@link Selection#getOperator()}
+	 * 
+	 * @param member
+	 *            The member to check if it's included in the given
+	 *            QueryDimension
+	 * @param dimension
+	 *            The QueryDimension to check for inclusion.
+	 * @return True if member is in one of the {@link Selection}s in dimension's
+	 *         inclusions. Otherwise false.
+	 */
+    public boolean isIncluded(Member member) throws QueryInitializationException {
+    	QueryDimension dimension = findQueryDimension(member);
+    	for (Selection s: dimension.getInclusions()) {
+    		if (s.getMember().equals(member)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     private QueryDimension findQueryDimension(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
         QueryDimension qd = getMDXQuery().getDimension(d.getName());

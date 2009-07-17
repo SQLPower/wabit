@@ -25,15 +25,35 @@ import org.olap4j.metadata.Member;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 
+/**
+ * A Member action that replaces the root of the hierarchy of the given member
+ * with that of the given ancestor member, and all ancestor members in all
+ * levels in between the target ancestor's level and the given member's level
+ * will be added to the query selection. Note that if the given ancestor member
+ * actually is not an ancestor, then the query will not be changed.
+ */
 public class DrillUpAction extends MemberAction {
 
-    public DrillUpAction(OlapQuery query, Member member) {
-        super("Drill up to member '" + member.getName() + "'", query, member);
+    private Member targetAncestor;
+
+	/**
+	 * @param query
+	 *            The query whose selection will be modified
+	 * @param member
+	 *            The member whose ancestor Members will be added to the query
+	 *            selection
+	 * @param targetAncestor
+	 *            The ancestor Member of member that will be set as the root
+	 *            selection in member's hierarchy
+	 */
+	public DrillUpAction(OlapQuery query, Member member, Member targetAncestor) {
+        super("Drill up to '" + targetAncestor.getName() + "'", query, member);
+        this.targetAncestor = targetAncestor;
     }
 
 	@Override
 	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
-		query.drillReplace(member.getParentMember());
+		query.drillUpTo(member, targetAncestor);
 		query.execute();
 	}
 }

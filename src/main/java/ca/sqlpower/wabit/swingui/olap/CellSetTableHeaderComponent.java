@@ -85,7 +85,6 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.olap.action.DrillReplaceAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillUpAction;
-import ca.sqlpower.wabit.swingui.olap.action.DrillUpToRootAction;
 import ca.sqlpower.wabit.swingui.olap.action.ExcludeMemberAction;
 import ca.sqlpower.wabit.swingui.olap.action.RemoveHierarchyAction;
 
@@ -626,18 +625,24 @@ public class CellSetTableHeaderComponent extends JComponent {
 				            Selection.Operator.CHILDREN));
 				    popUpMenu.addSeparator();
 					popUpMenu.add(new DrillReplaceAction(query, clickedOnMember));
-					if (clickedOnMember.getParentMember() != null) {
-						popUpMenu.add(new DrillUpAction(query,
-								clickedOnMember.getParentMember()));
-						try {
-							popUpMenu.add(new DrillUpToRootAction(
-									query,
-									hierarchy.getRootMembers().get(0)));
-						} catch (OlapException ex) {
-							throw new RuntimeException(
-									"OLAP error occured while trying to get Root Member of hierarchy " 
-									+ hierarchy.getName(), ex);
+					Member parentMember = clickedOnMember.getParentMember();
+					try {
+						if (parentMember != null && !query.isIncluded(parentMember)) {
+							popUpMenu.add(new DrillUpAction(query, clickedOnMember, parentMember));
+							try {
+								Member rootMember = hierarchy.getRootMembers().get(0);
+								if (!parentMember.equals(rootMember)  && !query.isIncluded(rootMember)) {
+									popUpMenu.add(new DrillUpAction(query, clickedOnMember, rootMember));
+								}
+							} catch (OlapException ex) {
+								throw new RuntimeException(
+										"OLAP error occured while trying to get Root Member of hierarchy " 
+										+ hierarchy.getName(), ex);
+							}
 						}
+					} catch (QueryInitializationException ex) {
+						throw new RuntimeException(
+								"OLAP error occured while initializing the OLAP query", ex);
 					}
 				}
 				popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
