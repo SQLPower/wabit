@@ -424,7 +424,7 @@ public class OlapQuery extends AbstractWabitObject {
         			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-axis")) {
         			String ordinalNumber = entry.get("ordinal");
-        			queryAxis = mdxQuery.getAxes().get(Integer.parseInt(ordinalNumber));
+        			queryAxis = mdxQuery.getAxes().get(Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber)));
         		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
         			String dimensionName = entry.get("dimension-name");
         			queryDimension =  mdxQuery.getDimension(dimensionName);
