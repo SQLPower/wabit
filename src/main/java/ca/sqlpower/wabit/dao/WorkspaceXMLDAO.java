@@ -97,10 +97,11 @@ public class WorkspaceXMLDAO {
      *  <dt>1.0.2 <dd>update to the chart column identifier, they are now objects instead of just column names
      *  <dt>1.0.3 <dd>Added more info to saved queries inside a report definition.
      *  <dt>1.1.0 <dd>OLAP query syntax has changed, both inside the datasources definition and the report.
+     *  <dt>1.1.1 <dd>OLAP query syntax has changed for reports, -report tag was removed.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 1, 0); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 1, 1); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
