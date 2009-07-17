@@ -602,15 +602,28 @@ public class OlapQuery extends AbstractWabitObject {
     public void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(member.getDimension().getName());
-        qd.clearInclusions();
+        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + " in ordinal " + ordinal);
         if (!qa.equals(qd.getAxis())) {
-            logger.debug("Moving dimension " + qd + " to Axis " + qa);
-            qa.addDimension(qd);
+        	qd.clearInclusions();
+			// qa.addDimension(qd);
+			// This way doesn't fire events like addDimension does, but I see
+			// currently no other way to add a dimension at a given index
+            qa.getDimensions().add(ordinal, qd);
+        } else {
+        	int index = qa.getDimensions().indexOf(qd);
+        	if (index >= 0) {
+        		qa.getDimensions().remove(index);
+        		if (index < ordinal) {
+        			ordinal--;
+        		}
+        		qa.getDimensions().add(ordinal, qd);
+        	}
         }
-
         hierarchiesInUse.put(qd, member.getHierarchy());
-        qd.include(Operator.MEMBER, member);
-        toggleMember(member);
+        if (!isIncluded(member)) {
+        	qd.include(Operator.MEMBER, member);
+//        	toggleMember(member);
+        }
         qd.setSortOrder(SortOrder.ASC);
     	execute();
     }
