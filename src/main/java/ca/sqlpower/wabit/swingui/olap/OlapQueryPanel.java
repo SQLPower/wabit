@@ -540,8 +540,8 @@ public class OlapQueryPanel implements WabitPanel {
         cellSetViewer.updateCellSetViewer(query, cellSet);
         try {
             updateMdxText(query.getMdxText());
-        } catch (QueryInitializationException ex) {
-            throw new RuntimeException(ex);
+        } catch (Exception ex) {
+            updateMdxText("Exception thrown while retrieving MDX statement:\n" + ex.getMessage());
         }
     }
     

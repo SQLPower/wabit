@@ -801,8 +801,8 @@ public class MondrianTest {
             cellSetViewer.showCellSet(olapQuery, cellSet);
             try {
                 olapQueryPanel.updateMdxText(olapQuery.getMdxText());
-            } catch (QueryInitializationException e) {
-                throw new RuntimeException(e);
+            } catch (Exception ex) {
+                olapQueryPanel.updateMdxText("Exception thrown while retrieving MDX statement:\n" + ex.getMessage());
             }
         }
        

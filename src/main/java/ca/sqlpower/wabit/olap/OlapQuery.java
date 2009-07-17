@@ -577,6 +577,7 @@ public class OlapQuery extends AbstractWabitObject {
         // TODO synchronization
         StringWriter sw = new StringWriter();
         ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
+        
         getMDXQuery().getSelect().unparse(ptw);
         return sw.toString();
     }
