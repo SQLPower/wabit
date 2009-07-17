@@ -100,6 +100,8 @@ public class OlapQuery extends AbstractWabitObject {
      * The current query. Gets replaced whenever a new cube is selected via
      * {@link #setCurrentCube(Cube)}. This variable should only be accessed
      * through {@link #getMDXQuery()} to ensure that it is properly initialised.
+     * However init() can access this function directly because {@link #getMDXQuery()}
+     * calls init() and this would cause an infinite loop.
      */
     private Query mdxQuery = null;
     
@@ -265,7 +267,9 @@ public class OlapQuery extends AbstractWabitObject {
 	 * the Olap4jQuery object. This is used within the OlapQuery object in order
 	 * to modify it and should not be used outside the class. This is only used
 	 * in saving and loading outside the class because in order to save an
-	 * Olap4jQuery we need to iterate through the query.
+	 * Olap4jQuery we need to iterate through the query. The init() function should
+	 * not use this method because this method calls init(), init is allowed to access
+	 * the mdxQuery directly.
 	 * 
 	 * @return Returns the Olap4jQuery model for saving and loading.
 	 * @throws QueryInitializationException
