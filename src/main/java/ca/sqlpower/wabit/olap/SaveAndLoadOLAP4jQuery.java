@@ -85,6 +85,9 @@ public class SaveAndLoadOLAP4jQuery {
 		        if (axisEntry.getKey() == null) continue;
 		        xml.print(out, "<olap4j-axis");
 		        savingClass.printAttribute("ordinal", axisEntry.getKey().axisOrdinal());
+		        if (axisEntry.getKey().axisOrdinal() == Axis.Standard.ROWS.axisOrdinal()) {
+		            savingClass.printAttribute("non-empty", olapQuery.isNonEmpty());
+		        }
 		        xml.niprintln(out, ">");
 		        xml.indent++;
 		        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {

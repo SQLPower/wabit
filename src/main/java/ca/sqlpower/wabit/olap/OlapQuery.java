@@ -429,6 +429,9 @@ public class OlapQuery extends AbstractWabitObject {
         		} else if (this.rootNodes.get(cpt).equals("olap4j-axis")) {
         			String ordinalNumber = entry.get("ordinal");
         			queryAxis = mdxQuery.getAxes().get(Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber)));
+        			if (entry.get("non-empty") != null) {
+        			    queryAxis.setNonEmpty(Boolean.parseBoolean(entry.get("non-empty")));
+        			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
         			String dimensionName = entry.get("dimension-name");
         			queryDimension =  mdxQuery.getDimension(dimensionName);
@@ -766,6 +769,26 @@ public class OlapQuery extends AbstractWabitObject {
     public void includeMember(Member member) throws QueryInitializationException {
         QueryDimension qd = findQueryDimension(member);
         qd.include(member);
+    }
+
+    /**
+     * Sets the ROWS axis of this query to omit empty positions.
+     * 
+     * @param nonEmpty
+     *            True means to omit empty positions; false means to include
+     *            them.
+     */
+    public void setNonEmpty(boolean nonEmpty) {
+        mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
+    }
+
+    /**
+     * Tells whether the ROWS axis of this query omits empty positions.
+     * 
+     * @return True is this query omits empty rows; false if it includes them.
+     */
+    public boolean isNonEmpty() {
+        return mdxQuery.getAxis(Axis.ROWS).isNonEmpty();
     }
     
     public void addOlapQueryListener(OlapQueryListener listener) {

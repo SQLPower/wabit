@@ -46,6 +46,7 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -91,7 +92,6 @@ import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
@@ -373,6 +373,20 @@ public class OlapQueryPanel implements WabitPanel {
         olapPanelToolbar.addSeparator();
         
         olapPanelToolbar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
+        
+        final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
+        nonEmptyRowsCheckbox.setSelected(query.isNonEmpty());
+        nonEmptyRowsCheckbox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    query.setNonEmpty(nonEmptyRowsCheckbox.isSelected());
+                    query.execute();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        olapPanelToolbar.add(nonEmptyRowsCheckbox);
         
         JPanel guiPanel = new JPanel(new BorderLayout());
         

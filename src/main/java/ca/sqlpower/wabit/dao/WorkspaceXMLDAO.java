@@ -744,9 +744,13 @@ public class WorkspaceXMLDAO {
     }
     
     public void printAttribute(String name, int value) {
-    	xml.niprint(out, " " + name + "=\"" + value + "\"");
+        xml.niprint(out, " " + name + "=\"" + value + "\"");
     }
-    
+
+    public void printAttribute(String name, boolean value) {
+        xml.niprint(out, " " + name + "=\"" + value + "\"");
+    }
+
     /**
      * Call this to flush and close the output stream if only part
      * of the file is being saved.
