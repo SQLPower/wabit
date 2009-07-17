@@ -20,29 +20,59 @@
 package ca.sqlpower.wabit.swingui.olap;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
+import java.util.Collections;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.Popup;
+import javax.swing.PopupFactory;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import javax.swing.undo.UndoManager;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -50,11 +80,18 @@ import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
+import org.olap4j.metadata.Cube;
+import org.olap4j.metadata.Dimension;
+import org.olap4j.query.Query;
 
+import ca.sqlpower.sql.DatabaseListChangeEvent;
+import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.OlapQueryEvent;
+import ca.sqlpower.wabit.olap.OlapQueryListener;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
@@ -63,6 +100,22 @@ import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 public class OlapQueryPanel implements WabitPanel {
     
     private static final Logger logger = Logger.getLogger(OlapQueryPanel.class);
+    
+    /**
+     * This class is the cube trees drag gesture listener, it starts the drag
+     * process when necessary.
+     */
+    private static class CubeTreeDragGestureListener implements DragGestureListener {
+        public void dragGestureRecognized(DragGestureEvent dge) {
+            dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
+            JTree t = (JTree) dge.getComponent();
+            dge.getDragSource().startDrag(dge, null, 
+                    new OlapMetadataTransferable(t.getLastSelectedPathComponent()), 
+                    new DragSourceAdapter() {//just need a default adapter
+                    }
+            );
+        }
+    }
     
     /**
      * This is the view component that shows what's in the query.
@@ -85,9 +138,6 @@ public class OlapQueryPanel implements WabitPanel {
      */
     private JSplitPane queryAndResultsPanel = null;
 
-    private Olap4jGuiQueryPanel olap4jGuiQueryPanel;
-    
-
     private static final Object UNDO_MDX_EDIT = "Undo MDX Edit";
 
     private static final Object REDO_MDX_EDIT = "Redo MDX Edit";
@@ -99,13 +149,211 @@ public class OlapQueryPanel implements WabitPanel {
 	 */
 	private RSyntaxTextArea mdxTextArea;
 
-    private UndoManager undoManager = null;
+	/**
+	 * This undo manager is attached to the {@link #mdxTextArea} to allow users to
+	 * undo and redo changes to a typed query.
+	 */
+    private final UndoManager undoManager;
+    
+    /**
+     * This action handles the undo of text editing on the {@link #mdxTextArea}
+     */
+    private final  Action undoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.undo")){
 
-    public OlapQueryPanel(WabitSwingSession session, JComponent parentComponent, OlapQuery query) {
+        public void actionPerformed(ActionEvent arg0) {
+            if (undoManager.canUndo()) {
+                undoManager.undo();
+            }
+            
+        }
+    };
+    
+    /**
+     * This action handles the redo of text editing on the {@link #mdxTextArea}
+     */
+    private final Action redoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.redo")){
+
+        public void actionPerformed(ActionEvent arg0) {
+            if (undoManager.canRedo()) {
+                undoManager.redo();
+            }
+            
+        }
+    };
+
+    /**
+     * This tabbed pane has one tab for the drag and drop style query builder
+     * and another tab for the text editor.
+     */
+    private JTabbedPane queryPanels;
+    
+    /**
+     * This tree is the drag source tree that can have parts of a cube dragged from
+     * it and dropped on an editor.
+     */
+    private final JTree cubeTree;
+    
+    /**
+     * This listener is attached to the underlying query being displayed by this
+     * panel. This will update the panel when changes occur in the query.
+     */
+    private final OlapQueryListener queryListener = new OlapQueryListener() {
+        public void queryExecuted(OlapQueryEvent e) {
+            final CellSet cellSet = e.getCellSet();
+            updateCellSet(cellSet);
+        }
+    };
+    
+    /**
+     * This is the {@link JButton} which will reset the Olap4j {@link Query} in the table below.
+     * This will allow a user to start their query over without going through the painful and
+     * slow steps required to remove each hierarchy. Additionally if the user somehow gets their
+     * query into a broken state they can just easily restart.
+     */
+    private final JButton resetQueryButton;
+    
+    /**
+     * A {@link JComboBox} containing a list of OLAP data sources to choose from
+     * to use for the OLAP query
+     */
+    private JComboBox databaseComboBox;
+    
+    /**
+     * This recreates the database combo box when the list of databases changes.
+     */
+    private DatabaseListChangeListener dbListChangeListener = new DatabaseListChangeListener() {
+
+        public void databaseAdded(DatabaseListChangeEvent e) {
+            if (!(e.getDataSource() instanceof Olap4jDataSource)) return;
+            logger.debug("dataBase added");
+            databaseComboBox.addItem(e.getDataSource());
+            databaseComboBox.revalidate();
+        }
+
+        public void databaseRemoved(DatabaseListChangeEvent e) {
+            if (!(e.getDataSource() instanceof Olap4jDataSource)) return;
+            logger.debug("dataBase removed");
+            if (databaseComboBox.getSelectedItem() != null && databaseComboBox.getSelectedItem().equals(e.getDataSource())) {
+                databaseComboBox.setSelectedItem(null);
+            }
+            
+            databaseComboBox.removeItem(e.getDataSource());
+            databaseComboBox.revalidate();
+        }
+        
+    };
+    
+    /**
+     * This panel contains the cube drag tree as well as a way to choose
+     * a connection and cube to drag from.
+     */
+    private final JPanel dragTreePanel;
+    
+    /**
+     * This toolbar is placed at the top of the olap query editor.
+     */
+    private JToolBar olapPanelToolbar;
+
+    public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
         this.parentComponent = parentComponent;
         this.query = query;
         this.session = session;
         cellSetViewer = new CellSetViewer(query);
+        
+        this.undoManager  = new UndoManager();
+        
+        cubeTree = new JTree();
+        cubeTree.setRootVisible(false);
+        cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
+        DragSource ds = new DragSource();
+        ds.createDefaultDragGestureRecognizer(cubeTree, DnDConstants.ACTION_COPY, new CubeTreeDragGestureListener());
+
+        // inits cubetree state
+        try {
+            setCurrentCube(query.getCurrentCube());
+        } catch (SQLException e2) {
+            JOptionPane.showMessageDialog(session.getFrame(), "The cube in the query " + query.getName() + " could not be accessed from the connection " + query.getOlapDataSource().getName(), "Cannot access cube", JOptionPane.WARNING_MESSAGE);
+        } 
+        
+        resetQueryButton = new JButton();
+        resetQueryButton.setIcon(new ImageIcon(OlapQueryPanel.class.getClassLoader().getResource("icons/reset.png")));
+        resetQueryButton.setToolTipText("Reset Query");
+        resetQueryButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    query.reset();
+                } catch (SQLException e1) {
+                    throw new RuntimeException(e1);
+                }
+            }
+        });
+        
+        databaseComboBox = new JComboBox(session.getWorkspace().getConnections(Olap4jDataSource.class).toArray());
+        databaseComboBox.setSelectedItem(query.getOlapDataSource());
+        databaseComboBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                Object item = e.getItem();
+                if (item instanceof Olap4jDataSource) {
+                    query.setOlapDataSource((Olap4jDataSource) item);
+                    try {
+                        setCurrentCube(null);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(
+                                "SQL exception occured while trying to set the current cube to null",
+                                ex);
+                    }
+                }
+            }
+        });
+        
+        final JButton cubeChooserButton = new JButton("Choose Cube...");
+        cubeChooserButton.addActionListener(new AbstractAction() {
+        
+            public void actionPerformed(ActionEvent e) {
+                if (databaseComboBox.getSelectedItem() == null) {
+                    JOptionPane.showMessageDialog(parentComponent, 
+                            "Please choose a database from the above list first", 
+                            "Choose a database", 
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                try {
+                    cubeChooserButton.setEnabled(false);
+                    JTree tree;
+                    try {
+                        tree = new JTree(
+                                new Olap4jTreeModel(
+                                        Collections.singletonList(query.createOlapConnection()),
+                                        Cube.class,
+                                        Dimension.class));
+                    } catch (Exception e1) {
+                        throw new RuntimeException(e1);
+                    }
+                    tree.setCellRenderer(new Olap4JTreeCellRenderer());
+                    int row = 0;
+                    while (row < tree.getRowCount()) {
+                        tree.expandRow(row);
+                        row++;
+                    }
+                    
+                    popupChooseCube(session.getFrame(), cubeChooserButton, tree);
+                } finally {
+                    cubeChooserButton.setEnabled(true);
+                }        
+            }
+        });
+        
+        session.getWorkspace().addDatabaseListChangeListener(dbListChangeListener);
+        
+        dragTreePanel = new JPanel(new MigLayout(
+                "fill",
+                "[fill,grow 1]",
+                "[ | | grow,fill ]"));
+        dragTreePanel.add(databaseComboBox, "wrap");
+        dragTreePanel.add(cubeChooserButton, "grow 0,left,wrap");
+        dragTreePanel.add(new JScrollPane(cubeTree), "spany, wrap");
+        
+        query.addOlapQueryListener(queryListener);
         
         buildUI();
     }
@@ -114,12 +362,17 @@ public class OlapQueryPanel implements WabitPanel {
     	JComponent textQueryPanel;
         try {
             textQueryPanel = createTextQueryPanel();
-            olap4jGuiQueryPanel = new Olap4jGuiQueryPanel(new SpecificDataSourceCollection<Olap4jDataSource>(session.getWorkspace(), Olap4jDataSource.class), SwingUtilities.getWindowAncestor(parentComponent), cellSetViewer, query, this);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         queryPanels = new JTabbedPane();
-        olap4jGuiQueryPanel.setOlapPanelToolbar(createOlapPanelToolBar(olap4jGuiQueryPanel));
+        olapPanelToolbar = new JToolBar(JToolBar.HORIZONTAL);
+        olapPanelToolbar.setFloatable(false);
+        
+        olapPanelToolbar.add(resetQueryButton);
+        olapPanelToolbar.addSeparator();
+        
+        olapPanelToolbar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
         
         JPanel guiPanel = new JPanel(new BorderLayout());
         
@@ -131,7 +384,7 @@ public class OlapQueryPanel implements WabitPanel {
         
         JToolBar toolBar = new JToolBar();
 		toolBar.setLayout(new BorderLayout());
-		toolBar.add(olap4jGuiQueryPanel.getOlapPanelToolbar(), BorderLayout.CENTER);
+		toolBar.add(olapPanelToolbar, BorderLayout.CENTER);
 		toolBar.add(wabitBar, BorderLayout.EAST);
         
         guiPanel.add(toolBar, BorderLayout.NORTH);
@@ -143,11 +396,15 @@ public class OlapQueryPanel implements WabitPanel {
         
         queryAndResultsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		queryAndResultsPanel.setLeftComponent(queryPanels);
-        queryAndResultsPanel.setRightComponent(olap4jGuiQueryPanel.getPanel());
-        queryAndResultsPanel.setDividerLocation(queryAndResultsPanel.getWidth() - olap4jGuiQueryPanel.getPanel().getMinimumSize().width);
+        queryAndResultsPanel.setRightComponent(dragTreePanel);
+        queryAndResultsPanel.setDividerLocation(queryAndResultsPanel.getWidth() - dragTreePanel.getMinimumSize().width);
         queryAndResultsPanel.setResizeWeight(1);
     }
     
+    /**
+     * Helper method for buildUI. This creates the text editor of
+     * the OlapQueryPanel to allow users to type in an MDX query.
+     */
     private JComponent createTextQueryPanel() throws OlapException {
         
         // Set basic properties for the mdx window
@@ -158,7 +415,6 @@ public class OlapQueryPanel implements WabitPanel {
         this.mdxTextArea.setSyntaxEditingStyle(RSyntaxTextArea.SQL_SYNTAX_STYLE);
         
         // Add support for undo
-        this.undoManager  = new UndoManager();
         this.mdxTextArea.getDocument().addUndoableEditListener(new UndoableEditListener() {
             public void undoableEditHappened(UndoableEditEvent e) {
                 undoManager.addEdit(e.getEdit());
@@ -215,25 +471,13 @@ public class OlapQueryPanel implements WabitPanel {
         return queryPanel;
     }
     
-	private JToolBar createOlapPanelToolBar(Olap4jGuiQueryPanel queryPanel) {
-	    JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
-	    toolBar.setFloatable(false);
-	    
-	    toolBar.add(queryPanel.getResetQueryButton());
-	    toolBar.addSeparator();
-	    
-	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
-	    
-	    return toolBar;
-	}
-
     public void maximizeEditor() {
         // TODO Auto-generated method stub
 
     }
 
     public boolean applyChanges() {
-        //no-op
+        cleanup();
         return true;
     }
     
@@ -243,7 +487,16 @@ public class OlapQueryPanel implements WabitPanel {
     }
 
     public void discardChanges() {
-        //do nothing
+        cleanup();
+    }
+
+    /**
+     * This method will remove listeners and release resources as required when
+     * the panel is being disposed.
+     */
+    private void cleanup() {
+        query.removeOlapQueryListener(queryListener);
+        session.getWorkspace().removeDatabaseListChangeListener(dbListChangeListener);
     }
 
     public JComponent getPanel() {
@@ -256,39 +509,186 @@ public class OlapQueryPanel implements WabitPanel {
     public boolean hasUnsavedChanges() {
         return false;
     }
-
+    
     /**
-	 * Executes the containing OlapQuery and updates the results in the
-	 * CellSetViewer.
-	 */
-    public void updateCellSetViewer() {
-    	try {
-			olap4jGuiQueryPanel.updateCellSetViewer(query.execute());
-		} catch (Exception e) {
-			cellSetViewer.showMessage(query, "Could not execute the query due to the following error: \n" + e.getClass().getName() + ":" + e.getMessage());
-			logger.warn("Could not execute the query " + query, e);
-		}
+     * Sets the current cube to the given cube. This affects the tree of items
+     * that can be dragged into the query builder, and it resets the query
+     * builder.
+     * 
+     * @param currentCube
+     *            The new cube to make current. If this is already the current
+     *            cube, the query will not be reset. Can be null to revert to
+     *            the "no cube selected" state.
+     * @throws SQLException
+     */
+    public void setCurrentCube(Cube currentCube) throws SQLException {
+        if (currentCube != query.getCurrentCube()) {
+            query.setCurrentCube(currentCube);
+        }
+        if (currentCube != null) {
+            cubeTree.setModel(new Olap4jTreeModel(Collections.singletonList(currentCube)));
+            cubeTree.expandRow(0);
+        } else {
+            cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
+        }
     }
     
-    private Action undoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.undo")){
-
-        public void actionPerformed(ActionEvent arg0) {
-            if (undoManager.canUndo()) {
-                undoManager.undo();
-            }
-            
+    /**
+     * This method will update the cell set in this panel.
+     */
+    public void updateCellSet(final CellSet cellSet) {
+        cellSetViewer.updateCellSetViewer(query, cellSet);
+        try {
+            updateMdxText(query.getMdxText());
+        } catch (QueryInitializationException ex) {
+            throw new RuntimeException(ex);
         }
-    };
+    }
+    
+    /**
+     * This function will popup the Cube chooser popup from the 'Choose Cube'
+     * button. It will popup the window in the bounds of the screen no matter
+     * what happens, it will add scrollbars in the right circumstances as well
+     * 
+     * @param owningFrame
+     *      The frame which the popup is being popped up on
+     * @param cubeChooserButton
+     *      The button which pops up the cube chooser
+     * @param tree
+     *      The tree in the cube chooser
+     */
+    private void popupChooseCube(final JFrame owningFrame, final JButton cubeChooserButton, JTree tree) {
+        JScrollPane treeScroll = new JScrollPane(tree);
+        treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        treeScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        Point windowLocation = new Point(0, 0);
+        SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
+        windowLocation.y += cubeChooserButton.getHeight();
         
-    private Action redoMdxStatementAction = new AbstractAction(Messages.getString("SQLQuery.redo")){
-
-        public void actionPerformed(ActionEvent arg0) {
-            if (undoManager.canRedo()) {
-                undoManager.redo();
-            }
-            
+        Point frameLocation = new Point(0, 0);
+        SwingUtilities.convertPointToScreen(frameLocation, owningFrame);
+        
+        int popupScreenSpaceY = (windowLocation.y - frameLocation.y);
+        int maxHeight = (int)(owningFrame.getSize().getHeight() - popupScreenSpaceY);
+        
+        int width = (int) Math.min(treeScroll.getPreferredSize().getWidth(), owningFrame.getSize().getWidth());
+        int height = (int) Math.min(treeScroll.getPreferredSize().getHeight(), maxHeight);
+        treeScroll.setPreferredSize(new java.awt.Dimension(width, height));
+        
+        double popupWidth = treeScroll.getPreferredSize().getWidth();
+        int popupScreenSpaceX = (int) (owningFrame.getSize().getWidth() - (windowLocation.x - frameLocation.x));
+        int x;
+        if (popupWidth > popupScreenSpaceX) {
+            x = (int) (windowLocation.x - (popupWidth - popupScreenSpaceX));
+        } else {
+            x = windowLocation.x;
         }
-    };
+        
+        treeScroll.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED, Color.GRAY, Color.GRAY));
+        
+        JFrame frame = (JFrame)owningFrame;
+        final JComponent glassPane; 
+        if (frame.getGlassPane() == null) {
+            glassPane = new JPanel();
+            frame.setGlassPane(glassPane);
+        } else {
+            glassPane = (JComponent) frame.getGlassPane();
+        }
+        glassPane.setVisible(true);
+        glassPane.setOpaque(false);
+        
+        PopupFactory pFactory = new PopupFactory();
+        final Popup popup = pFactory.getPopup(glassPane, treeScroll, x, windowLocation.y);
+        popup.show();
+        
+        final PopupListenerHandler popupListenerHandler = new PopupListenerHandler(popup, glassPane,owningFrame);
+        
+        tree.addTreeSelectionListener(new TreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent e) {
+                try {
+                    TreePath path = e.getNewLeadSelectionPath();
+                    Object node = path.getLastPathComponent();
+                    if (node instanceof Cube) {
+                        Cube cube = (Cube) node;
+                        cubeChooserButton.setEnabled(true);
+                        setCurrentCube(cube);
+                        popupListenerHandler.cleanup();
+                    }
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        
+    }
 
-    private JTabbedPane queryPanels;
+    /**
+     * This class is a helper class for the
+     * {@link OlapQueryPanel#popupChooseCube(JFrame, JButton, JTree)} method.
+     * This will add listeners to the popup for clicking on the glass pane and
+     * resizing the owning frame. If the popup passed in is hidden in other
+     * places the cleanup method should be called.<br>
+     * TODO Refactor the cube chooser popup into its own action.
+     */
+    private static class PopupListenerHandler {
+        
+        private final MouseAdapter clickListener;
+        private final ComponentListener resizeListener;
+        private final Popup popup;
+        private final JComponent glassPane;
+        private final JFrame owningFrame;
+        
+        public PopupListenerHandler(final Popup popup, final JComponent glassPane, final JFrame owningFrame) {
+            this.popup = popup;
+            this.glassPane = glassPane;
+            this.owningFrame = owningFrame;
+            
+            clickListener = new MouseAdapter() {
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    super.mouseReleased(e);
+                    popup.hide();
+                    glassPane.removeMouseListener(this);
+                    owningFrame.removeComponentListener(resizeListener);
+                }
+            };
+
+            resizeListener = new ComponentListener() {
+
+                public void componentHidden(ComponentEvent e) {
+                    //Do nothing
+                }
+
+                public void componentMoved(ComponentEvent e) {
+                    popup.hide();
+                    owningFrame.removeComponentListener(this);
+                    glassPane.removeMouseListener(clickListener);
+                }
+
+                public void componentResized(ComponentEvent e) {
+                    //Do nothing
+
+                }
+
+                public void componentShown(ComponentEvent e) {
+                    //Do nothing
+                }
+
+            };
+            
+            glassPane.addMouseListener(clickListener);
+            owningFrame.addComponentListener(resizeListener);
+        }
+        
+        /**
+         * This method removes the listeners this class added to the
+         * glass pane and the owning frame. This also hides the pop-up.
+         */
+        public void cleanup() {
+            popup.hide();
+            owningFrame.removeComponentListener(resizeListener);
+            glassPane.removeMouseListener(clickListener);
+        }
+    }
 }

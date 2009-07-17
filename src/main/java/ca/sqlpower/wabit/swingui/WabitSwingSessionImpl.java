@@ -740,7 +740,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		// FontMetrics to use to calculate optimal column widths in the
 		// CellSetViewer. If done before, the Graphics2D object is null.
 		if (currentEditorPanel instanceof OlapQueryPanel) {
-			((OlapQueryPanel) currentEditorPanel).updateCellSetViewer();
+			try {
+                ((OlapQueryPanel) currentEditorPanel).updateCellSet(((OlapQuery) entryPanelModel).execute());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 		}
 		// TODO Select the proper panel in the wabit tree
 		return true;

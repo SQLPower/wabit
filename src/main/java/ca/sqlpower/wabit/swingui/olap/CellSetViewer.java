@@ -27,6 +27,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -39,10 +40,12 @@ import javax.swing.table.TableCellRenderer;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
+import org.olap4j.metadata.Hierarchy;
 import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 
 public class CellSetViewer {
@@ -212,6 +215,44 @@ public class CellSetViewer {
 
     public void setCellSet(CellSet cellSet) {
         this.cellSet = cellSet;
+    }
+    
+    /**
+     * Executes the containing OlapQuery and updates the results in the
+     * CellSetViewer.
+     */
+    public void updateCellSetViewer(OlapQuery query, CellSet cellSet) {
+        try {
+            if (query.getCurrentCube() == null) {
+                showMessage(query, "No cube selected--please select one from the dropdown list");
+                return;
+            }
+            
+            if (cellSet == null) {
+                List<Hierarchy> rowHierarchies;
+                List<Hierarchy> columnHierarchies;
+                try {
+                    rowHierarchies = query.getRowHierarchies();
+                    columnHierarchies = query.getColumnHierarchies();
+                } catch (QueryInitializationException e) {
+                    throw new RuntimeException(e);
+                }
+                
+                if (rowHierarchies.isEmpty() && !columnHierarchies.isEmpty()) {
+                    showMessage(query, "Rows axis is empty--please drop something on it");
+                } else if (columnHierarchies.isEmpty() && !rowHierarchies.isEmpty()) {
+                    showMessage(query, "Columns axis is empty--please drop something on it");
+                } else {
+                    showMessage(query, "No query defined");
+                }
+                return;
+            }
+            
+            showCellSet(query, cellSet);
+        } catch (Exception e) {
+            showMessage(query, "Could not execute the query due to the following error: \n" + e.getClass().getName() + ":" + e.getMessage());
+            logger.warn("Could not execute the query " + query, e);
+        }
     }
 
 }
