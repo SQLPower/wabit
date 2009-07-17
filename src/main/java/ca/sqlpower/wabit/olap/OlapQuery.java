@@ -43,6 +43,7 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
+import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Schema;
 import org.olap4j.metadata.Member.Type;
@@ -627,7 +628,7 @@ public class OlapQuery extends AbstractWabitObject {
         }
         Type memberType = member.getMemberType();
         logger.debug("memberType = " + memberType);
-		if (!(memberType.equals(Member.Type.MEASURE) || memberType.equals(Member.Type.FORMULA))) {
+		if (!(member instanceof Measure)) {
         	qd.setSortOrder(SortOrder.ASC);
         }
     	execute();
