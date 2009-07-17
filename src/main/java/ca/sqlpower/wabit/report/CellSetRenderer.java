@@ -29,7 +29,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -61,14 +60,14 @@ import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
 import org.olap4j.Position;
 import org.olap4j.metadata.Member;
-import org.olap4j.query.Query;
 
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.olap.OlapQueryEvent;
+import ca.sqlpower.wabit.olap.OlapQueryListener;
 import ca.sqlpower.wabit.swingui.Icons;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
@@ -114,8 +113,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     private String errorMessage = null;
     
-    private Boolean queryValid = true;
-    
     /**
      * The alignment of the text in the body of this
      * cell set.
@@ -151,22 +148,17 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private Member selectedMember;
 
     /**
-     * This tracks when the cell set's query has changed and needs to be refreshed.
-     */
-    private boolean refreshCellSet = false;
-    
-    /**
      * This listener will listen for changes to the query and set the refresh
      * variable to decide when to refresh.
      */
-    private final PropertyChangeListener queryListener = new PropertyChangeListener() {
-    
-        public void propertyChange(PropertyChangeEvent evt) {
-        	init();
-            if (evt.getPropertyName().equals("mdxQuery")) {
-                updateMDXQuery();
-            }
-        }
+    private final OlapQueryListener queryListener = new OlapQueryListener() {
+		public void queryExecuted(OlapQueryEvent evt) {
+			try {
+				setCellSet(evt.getCellSet());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
     };
     
     private boolean initDone = false;
@@ -181,7 +173,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         super(uuid);
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
-        olapQuery.addPropertyChangeListener(queryListener);
         this.loadingWorkspace  = loadingWorkspace;
         setName(olapQuery.getName());
         olapQuery.addPropertyChangeListener(nameListener);
@@ -191,44 +182,30 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (this.initDone) return;
         if (!loadingWorkspace) {
             try {
-            	updateMDXQuery();
-                setCellSet(modifiedOlapQuery.execute());
+            	if (modifiedOlapQuery == null) {
+                	try {
+        				modifiedOlapQuery = olapQuery.createCopyOfSelf();
+        				modifiedOlapQuery.addOlapQueryListener(queryListener);
+        				modifiedOlapQuery.execute(); //This code will fire the change and set the cellset
+        			} catch (Exception e) {
+        				throw new RuntimeException(e);
+        			}
+                }
             } catch (Exception e) {
                 //XXX it seems that this error message doesn't say anything conclusive
                 //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
                 //there are no rows.
                 logger.warn(e.toString());
                 errorMessage = "Error when executing query.";
-                queryValid = false;
             }
             this.initDone=true;
         }
     }
 
-    /**
-     * Updates the current modifiedMDXQuery and re-executes it to generate a new
-     * cell set. This method is intended to be invoked automatically every time
-     * the {@link Query} in the {@link OlapQuery} model changes.
-     */
-    public void updateMDXQuery() {
-        if (modifiedOlapQuery == null) {
-        	try {
-				modifiedOlapQuery = olapQuery.createCopyOfSelf();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-        } else {
-	        try {
-				modifiedOlapQuery.absorb(olapQuery);
-			} catch (QueryInitializationException e) {
-				throw new RuntimeException(e);
-			}
-        }
-        refreshCellSet = true;
-    }
-
     public void cleanup() {
-        olapQuery.removePropertyChangeListener(queryListener);
+    	if (modifiedOlapQuery != null && !this.initDone) {
+    		modifiedOlapQuery.removeOlapQueryListener(queryListener);
+    	}
         olapQuery.removePropertyChangeListener(nameListener);
     }
 
@@ -338,22 +315,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
             double scaleFactor, int pageIndex, boolean printing) {
-        init();
-        if (refreshCellSet) {
-            try {
-                setCellSet(getModifiedOlapQuery().execute());
-            } catch (Exception e) {
-            	logger.warn(e.getMessage());
-                queryValid = false;
-                //XXX it seems that this error message doesn't say anything conclusive
-                //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
-                //there are no rows.
-                errorMessage = "Error when executing query.";
-            }
-            refreshCellSet = false;
-            return false;
-        }
-        
+    	init();
         if (getBodyFont() == null) {
             setBodyFont(g.getFont());
         }
@@ -362,12 +324,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         
         g.setFont(getHeaderFont());
+//        g.drawString(getErrorMessage(), 0, g.getFontMetrics().getHeight()); TODO
         
-        if (!queryValid) {
-        	g.drawString(getErrorMessage(), 0, g.getFontMetrics().getHeight());
-        	return false;
-        }
-
         int headerFontHeight = g.getFontMetrics().getHeight();
         
         g.setFont(getBodyFont());
@@ -700,7 +658,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public void processEvent(PInputEvent event, int type) {
-        init();
         if (type == MouseEvent.MOUSE_MOVED) {
             final PNode pickedNode = event.getPickedNode();
             Point2D p = event.getPositionRelativeTo(pickedNode);
@@ -719,7 +676,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
             if (selectedMember != null) {
                 try {
                     modifiedOlapQuery.toggleMember(selectedMember);
-                    setCellSet(modifiedOlapQuery.execute());
+                    modifiedOlapQuery.execute();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -728,16 +685,12 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public void setSelectedMember(Member selectedMember) {
-        init();
         Member oldSelection = this.selectedMember; 
         this.selectedMember = selectedMember;
         firePropertyChange("selectedMember", oldSelection, selectedMember);
     }
 
     private void setCellSet(CellSet cellSet) {
-        logger.debug("Row axis position count: " + cellSet.getAxes().get(Axis.ROWS.axisOrdinal()).getPositionCount());
-        logger.debug("Column axis position count: " + cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal()).getPositionCount());
-        queryValid = true;
         CellSet oldSet = this.cellSet;
         this.cellSet = cellSet;
         firePropertyChange("cellSet", oldSet, cellSet);
@@ -766,10 +719,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public void setModifiedOlapQuery(OlapQuery modifiedOlapQuery) {
         this.modifiedOlapQuery = modifiedOlapQuery; //XXX this may not fire the correct events
     }
-    
-    public Boolean getQueryValid() {
-		return queryValid;
-	}
     
     public String getErrorMessage() {
 		return errorMessage;

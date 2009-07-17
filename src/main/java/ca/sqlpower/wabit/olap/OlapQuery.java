@@ -79,12 +79,18 @@ public class OlapQuery extends AbstractWabitObject {
      */
     public OlapQuery createCopyOfSelf() throws SQLException, QueryInitializationException {
         OlapQuery newQuery = new OlapQuery(olapMapping);
-        for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
-            newQuery.appendElement(
-                    this.rootNodes.get(mickey), this.attributes.get(mickey));
-        }
+
         newQuery.setOlapDataSource(this.getOlapDataSource());
-        newQuery.setMdxQuery(this.getMdxQueryCopy());
+        
+        if (hasCachedXml()) {
+        	for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
+        		newQuery.appendElement(
+        				this.rootNodes.get(mickey), this.attributes.get(mickey));
+        	}
+        } else {
+        	newQuery.setCurrentCube(mdxQuery.getCube());
+        	newQuery.setMdxQuery(this.getMdxQueryCopy());
+        }
         return newQuery;
     }
     
@@ -156,7 +162,7 @@ public class OlapQuery extends AbstractWabitObject {
         if (currentCube != oldCube && currentCube != null) {
             try {
 				setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -285,7 +291,11 @@ public class OlapQuery extends AbstractWabitObject {
 	 * @throws SQLException 
 	 */
     public void reset() throws SQLException {
-        setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
+        try {
+			setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
     }
 
 	/**
@@ -412,13 +422,10 @@ public class OlapQuery extends AbstractWabitObject {
         			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-axis")) {
         			String ordinalNumber = entry.get("ordinal");
-        			Axis axis = Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
-        			queryAxis = new QueryAxis(getMDXQuery(), axis);
-        			getMDXQuery().getAxes().put(axis, queryAxis);
+        			queryAxis = getMDXQuery().getAxes().get(Integer.parseInt(ordinalNumber));
         		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
         			String dimensionName = entry.get("dimension-name");
-        			Dimension dimension = getCurrentCube().getDimensions().get(dimensionName);
-        			queryDimension = new QueryDimension(getMDXQuery(), dimension);
+        			queryDimension =  getMDXQuery().getDimension(dimensionName);
         			queryAxis.addDimension(queryDimension);
         		} else if (this.rootNodes.get(cpt).equals("olap4j-selection")) {
         			String operation = entry.get("operator");
@@ -634,36 +641,6 @@ public class OlapQuery extends AbstractWabitObject {
             selectedHierarchies.add(h);
         }
         return selectedHierarchies;
-    }
-
-    /**
-     * Absorbs the high-level changes in the given query into this query.
-     * Specifically, for each axis, the set of hierarchies selected in this
-     * query will be updated to match those in the given olapQuery. This can
-     * entail removing some hierarchies from this query and adding others.
-     * Hierarchies that exist on the same axis in both this query and the given
-     * query will retain the state they had in this query prior to the absorb
-     * operation. Those hierarchies that were added to an axis of this query
-     * will have the same selections as they do in the given olapQuery.
-     * 
-     * @param olapQuery
-     *            The query to absorb into this one. It will not be modified.
-     *            Must not be null.
-     * @throws QueryInitializationException 
-     */
-    public void absorb(OlapQuery olapQuery) throws QueryInitializationException {
-        for (Map.Entry<Axis, QueryAxis> axisEntry : olapQuery.getMDXQuery().getAxes().entrySet()) {
-            for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {
-                for (QueryDimension oldDimension : olapQuery.getMDXQuery().getAxes().get(axisEntry.getKey()).getDimensions()) {
-                    if (dimension.getDimension().equals(oldDimension.getDimension())) {
-                        dimension.getInclusions().clear();
-                        for (Selection selection : oldDimension.getInclusions()) {
-                            dimension.getInclusions().add(selection);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**

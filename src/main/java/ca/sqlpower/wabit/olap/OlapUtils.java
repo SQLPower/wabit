@@ -116,11 +116,12 @@ public class OlapUtils {
         if (query == null) return null;
         Query modifiedMDXQuery = new Query(query.getName(), query.getCube());
         for (Map.Entry<Axis, QueryAxis> axisEntry : query.getAxes().entrySet()) {
-            QueryAxis copiedAxis = new QueryAxis(modifiedMDXQuery, axisEntry.getValue().getLocation());
+        	if (axisEntry.getKey() == null) continue;
+        	QueryAxis copiedAxis = modifiedMDXQuery.getAxes().get(axisEntry.getKey());
             for (QueryDimension oldDimension : axisEntry.getValue().getDimensions()) {
-                QueryDimension copiedDimension = new QueryDimension(modifiedMDXQuery, oldDimension.getDimension());
-                for (Selection selection : oldDimension.getSelections()) {
-                    copiedDimension.select(selection.getOperator(),selection.getMember());
+            	QueryDimension copiedDimension = modifiedMDXQuery.getDimension(oldDimension.getName());
+                for (Selection selection : oldDimension.getInclusions()) {
+                    copiedDimension.include(selection.getOperator(),selection.getMember());
                 }
                 copiedAxis.getDimensions().add(copiedDimension);
             }
