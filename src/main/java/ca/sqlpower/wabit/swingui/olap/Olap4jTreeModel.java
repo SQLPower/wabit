@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui.olap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -185,9 +186,18 @@ public class Olap4jTreeModel implements TreeModel {
                 
                 List<Object> cubeKids = new ArrayList<Object>(measures.size() + dimensions.size() + sets.size());
                 cubeKids.addAll(measures);
-                cubeKids.addAll(dimensions.subList(1, dimensions.size()));
+                
+                // see bug 1981
+                for (Iterator<Dimension> it = dimensions.iterator(); it.hasNext(); ) {
+                    Dimension d = it.next();
+                    if (d.getDimensionType() != Dimension.Type.MEASURE) {
+                        cubeKids.add(d);
+                    }
+                }
+                
                 cubeKids.addAll(sets);
                 children = cubeKids;
+                
             } else if (parent instanceof Dimension) {
                 children = ((Dimension) parent).getHierarchies();
             } else if (parent instanceof Measure) {
