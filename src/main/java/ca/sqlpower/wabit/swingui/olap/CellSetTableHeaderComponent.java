@@ -680,7 +680,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         /**
          * Number of pixels to indent per level of member nesting.
          */
-        private double indentAmount = 15;
+        private double indentAmount = Math.max(15, Math.max(EXPANDED_TREE_ICON.getIconWidth(), EXPANDED_TREE_ICON.getIconWidth()));
 
         private List<Dimension> preferredSizes = new ArrayList<Dimension>();
 
