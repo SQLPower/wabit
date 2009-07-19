@@ -372,8 +372,11 @@ public class MondrianTest {
                 JTree tree = (JTree) c;
                 TreePath selectionPath = tree.getSelectionPath();
                 if (selectionPath == null) return null;
-                Object selectedItem = selectionPath.getLastPathComponent();
-                return new OlapMetadataTransferable(selectedItem);
+                List<Object> selectedItems = new ArrayList<Object>();
+                for (TreePath path : tree.getSelectionPaths()) {
+                	selectedItems.add(path.getLastPathComponent());
+                }
+                return new OlapMetadataTransferable(selectedItems.toArray());
             }
 
             @Override
@@ -508,7 +511,11 @@ public class MondrianTest {
             public void dragGestureRecognized(DragGestureEvent dge) {
                 dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
                 CubeTree t = (CubeTree) dge.getComponent();
-                dge.getDragSource().startDrag(dge, null, new OlapMetadataTransferable(t.getLastSelectedPathComponent()), t);
+                List<Object> objectList = new ArrayList<Object>();
+                for (TreePath path : t.getSelectionPaths()) {
+                	objectList.add(path.getLastPathComponent());
+                }
+                dge.getDragSource().startDrag(dge, null, new OlapMetadataTransferable(objectList.toArray()), t);
             }
         }
         

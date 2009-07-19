@@ -26,39 +26,39 @@ import java.io.IOException;
 
 public class OlapMetadataTransferable implements Transferable {
 
-    private final Object transferData;
+    private final Object[] transferData;
 
     /**
      * Data flavour that indicates a JVM-local reference to any object (because
      * olap4j metadata classes do not implement a common interface or extend a
      * more specific common base class).
      */
-    public static final DataFlavor LOCAL_OBJECT_FLAVOUR =
+    public static final DataFlavor LOCAL_OBJECT_ARRAY_FLAVOUR =
         new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
-                "; class=\"java.lang.Object\"", "Local Object");
+                "; class=\"[Ljava.lang.Object;\"", "Local Object Array");
     
     /**
      * @param transferData
      */
-    public OlapMetadataTransferable(Object transferData) {
+    public OlapMetadataTransferable(Object[] transferData) {
         super();
         this.transferData = transferData;
     }
 
     public Object getTransferData(DataFlavor flavor)
             throws UnsupportedFlavorException, IOException {
-        if (flavor != LOCAL_OBJECT_FLAVOUR) {
+        if (flavor != LOCAL_OBJECT_ARRAY_FLAVOUR) {
             throw new UnsupportedFlavorException(flavor);
         }
         return transferData;
     }
 
     public DataFlavor[] getTransferDataFlavors() {
-        return new DataFlavor[] { LOCAL_OBJECT_FLAVOUR };
+        return new DataFlavor[] { LOCAL_OBJECT_ARRAY_FLAVOUR };
     }
 
     public boolean isDataFlavorSupported(DataFlavor flavor) {
-        return flavor == LOCAL_OBJECT_FLAVOUR;
+        return flavor == LOCAL_OBJECT_ARRAY_FLAVOUR;
     }
 
 }

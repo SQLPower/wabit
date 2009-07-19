@@ -39,7 +39,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -88,6 +90,7 @@ import org.olap4j.query.Query;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.swingui.MultiDragTreeUI;
 import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
@@ -109,8 +112,12 @@ public class OlapQueryPanel implements WabitPanel {
         public void dragGestureRecognized(DragGestureEvent dge) {
             dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
             JTree t = (JTree) dge.getComponent();
+            List<Object> selectedNodes = new ArrayList<Object>();
+            for (TreePath path : t.getSelectionPaths()) {
+            	selectedNodes.add(path.getLastPathComponent());
+            }
             dge.getDragSource().startDrag(dge, null, 
-                    new OlapMetadataTransferable(t.getLastSelectedPathComponent()), 
+                    new OlapMetadataTransferable(selectedNodes.toArray()), 
                     new DragSourceAdapter() {//just need a default adapter
                     }
             );
@@ -263,6 +270,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.undoManager  = new UndoManager();
         
         cubeTree = new JTree();
+        cubeTree.setUI(new MultiDragTreeUI());
         cubeTree.setRootVisible(false);
         cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
         DragSource ds = new DragSource();

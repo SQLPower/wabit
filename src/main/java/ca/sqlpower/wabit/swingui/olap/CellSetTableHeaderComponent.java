@@ -229,7 +229,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         public boolean canImport(JComponent comp, DataFlavor[] transferFlavors) {
             logger.debug("canImport()");
             for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor == OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR) {
+                if (dataFlavor == OlapMetadataTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR) {
                     return true;
                 }
             }
@@ -238,25 +238,27 @@ public class CellSetTableHeaderComponent extends JComponent {
 
         public boolean importData(JComponent comp, Transferable t, Point p) {
             logger.debug("importData("+t+")");
-            if (t.isDataFlavorSupported(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR)) {
+            if (t.isDataFlavorSupported(OlapMetadataTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR)) {
                 try {
                     
-                    Object transferData = t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_FLAVOUR);
-                    Member m;
-                    if (transferData instanceof org.olap4j.metadata.Dimension) {
-                        org.olap4j.metadata.Dimension d = (org.olap4j.metadata.Dimension) transferData;
-                        Hierarchy h = d.getDefaultHierarchy();
-                        m = h.getDefaultMember();
-                    } else if (transferData instanceof Hierarchy) {
-                        Hierarchy h = (Hierarchy) transferData;
-                        m = h.getDefaultMember();
-                    } else if (transferData instanceof Member) {
-                        m = (Member) transferData;
-                    } else {
-                        return false;
-                    }
+                    Object[] transferDataArray = (Object[]) t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR);
+                    for (Object transferData : transferDataArray) {
+                    	Member m;
+                    	if (transferData instanceof org.olap4j.metadata.Dimension) {
+                    		org.olap4j.metadata.Dimension d = (org.olap4j.metadata.Dimension) transferData;
+                    		Hierarchy h = d.getDefaultHierarchy();
+                    		m = h.getDefaultMember();
+                    	} else if (transferData instanceof Hierarchy) {
+                    		Hierarchy h = (Hierarchy) transferData;
+                    		m = h.getDefaultMember();
+                    	} else if (transferData instanceof Member) {
+                    		m = (Member) transferData;
+                    	} else {
+                    		return false;
+                    	}
 
-                    query.addToAxis(calcDropInsertIndex(p), m, axis);
+                    	query.addToAxis(calcDropInsertIndex(p), m, axis);
+                    }
                     logger.debug("  -- import complete");
                     return true;
 
