@@ -1617,12 +1617,6 @@
     <section id="report_layout.graphs">
       <title>Graphs</title>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata />
-        </imageobject>
-      </mediaobject>
-
       <para>To add a graph, click on the button ( <inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/chart_bar_add.png"
