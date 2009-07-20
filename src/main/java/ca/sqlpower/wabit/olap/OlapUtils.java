@@ -122,6 +122,7 @@ public class OlapUtils {
         for (Map.Entry<Axis, QueryAxis> axisEntry : query.getAxes().entrySet()) {
         	if (axisEntry.getKey() == null) continue;
         	QueryAxis copiedAxis = modifiedMDXQuery.getAxes().get(axisEntry.getKey());
+        	copiedAxis.setNonEmpty(axisEntry.getValue().isNonEmpty());
             for (QueryDimension oldDimension : axisEntry.getValue().getDimensions()) {
             	QueryDimension copiedDimension = modifiedMDXQuery.getDimension(oldDimension.getName());
             	copiedDimension.setSortOrder(SortOrder.ASC);
