@@ -25,11 +25,10 @@ Good luck with the release!
 *(Clover will be added later) Generate the JUnit and Clover test reports (run the 'clover.test.and.report' build.xml
  target). This must be done separately from 'dist', otherwise the executables generated will
  require the clover.jar library to run.
-*Change the systemPath property in the pom.xml to absolute paths for the dependencies of architect_lib.jar,
- architect_dbtree_lib.jar, and architect_test_util_lib.jar.
+*Change the systemPath property in the pom.xml to absolute paths for the Maven dependencies in both sqlpower-library and wabit
 *Run the 'Maven clean' target from the "Run as" menu on the POM to remove the Clover-dependent 
  compiled class files.
-*Build the distribution (build.xml target "dist") by running the command "mvn assembly:assembly" from a terminal
+*Build the distribution by running the command "mvn assembly:assembly" from a terminal
  in the Wabit directory. For an official release, this has to be done on OS X, since the tools for creating the dmg 
  disk image file are unavailable elsewhere.
 *Test the three flavours of binaries (Generic tarball, OS X disk image, Windows
