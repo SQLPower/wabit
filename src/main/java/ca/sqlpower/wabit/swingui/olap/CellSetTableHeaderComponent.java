@@ -458,7 +458,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * @param axis
 	 *            The {@link Axis} this component is the header for
 	 */
-    public CellSetTableHeaderComponent(OlapQuery query, Axis axis) {
+    public CellSetTableHeaderComponent(OlapQuery query, Axis axis) throws QueryInitializationException {
         this.query = query;
     	this.axis = axis;
     	graphic = null;
@@ -467,21 +467,13 @@ public class CellSetTableHeaderComponent extends JComponent {
     	List<Hierarchy> hierarchies = null;
     	
     	if (axis == Axis.ROWS) {
-    		try {
-				hierarchies = query.getRowHierarchies();
-			} catch (QueryInitializationException e) {
-				throw new RuntimeException(e);
-			} 
+    	    hierarchies = query.getRowHierarchies();
     		if (hierarchies != null) {
     			hierarchiesSize = hierarchies.size();
     			setLayout(new GridLayout(1, Math.max(1, hierarchiesSize)));
     		}
     	} else if (axis == Axis.COLUMNS) {
-    		try {
-				hierarchies = query.getColumnHierarchies();
-			} catch (QueryInitializationException e) {
-				throw new RuntimeException(e);
-			}
+    	    hierarchies = query.getColumnHierarchies();
     		if (hierarchies != null) {
     			hierarchiesSize = hierarchies.size();
     			setLayout(new GridLayout(Math.max(1, hierarchiesSize), 1));

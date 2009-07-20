@@ -401,6 +401,7 @@ public class OlapQuery extends AbstractWabitObject {
     private void init() throws QueryInitializationException {
         if (!this.wasLoadedFromXml || this.initDone || this.mdxQuery!=null) return;
         
+        Query localMDXQuery = null;
         try {
         	QueryAxis queryAxis = null;
         	QueryDimension queryDimension = null;
@@ -429,24 +430,28 @@ public class OlapQuery extends AbstractWabitObject {
         		} else if (this.rootNodes.get(cpt).equals("olap4j-query")) {
         			String queryName = entry.get("name");
         			try {
-        				this.mdxQuery = new Query(queryName, getCurrentCube());
+        			    localMDXQuery = new Query(queryName, getCurrentCube());
         			} catch (SQLException e) {
         				throw new QueryInitializationException(e);
         			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-axis")) {
         			String ordinalNumber = entry.get("ordinal");
-        			queryAxis = mdxQuery.getAxes().get(Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber)));
+        			queryAxis = localMDXQuery.getAxes().get(Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber)));
         			if (entry.get("non-empty") != null) {
         			    setNonEmpty(Boolean.parseBoolean(entry.get("non-empty")));
         			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
         			String dimensionName = entry.get("dimension-name");
-        			queryDimension =  mdxQuery.getDimension(dimensionName);
+        			queryDimension =  localMDXQuery.getDimension(dimensionName);
+        			queryDimension.setSortOrder(SortOrder.ASC);
         			queryDimension.setSortOrder(SortOrder.ASC);
         			queryAxis.addDimension(queryDimension);
         		} else if (this.rootNodes.get(cpt).equals("olap4j-selection")) {
         			String operation = entry.get("operator");
         			Member actualMember = findMember(entry, getCurrentCube());
+        			if (actualMember == null) {
+        			    throw new QueryInitializationException("Could not find member " + entry.get("unique-member-name") + " in the cube" + (getCurrentCube() != null?" " + getCurrentCube().getName():"") + ".");
+        			}
         			queryDimension.include(Operator.valueOf(operation), actualMember);
 
         			// Not optimal to do this for every selection, but we're not recording
@@ -469,6 +474,7 @@ public class OlapQuery extends AbstractWabitObject {
         } catch (RuntimeException e) {
         	throw new QueryInitializationException(e);
         }
+        mdxQuery = localMDXQuery;
         this.initDone = true;
     }
     

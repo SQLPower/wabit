@@ -182,11 +182,32 @@ public class CellSetViewer {
 		// added, resulting in a missing column header.
         scrollPane.setViewportView(messageLabel);
         
-        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(query, Axis.ROWS);
-        scrollPane.setRowHeaderView(rowHeader);
+        CellSetTableHeaderComponent rowHeader;
+        try {
+            rowHeader = new CellSetTableHeaderComponent(query, Axis.ROWS);
+            scrollPane.setRowHeaderView(rowHeader);
+        } catch (QueryInitializationException e) {
+            messageLabel.setText(e.getMessage());
+            logger.error("Exception while creating row header.", e);
+        }
         
-        CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, Axis.COLUMNS);
-        scrollPane.setColumnHeaderView(columnHeader);
+        CellSetTableHeaderComponent columnHeader;
+        try {
+            columnHeader = new CellSetTableHeaderComponent(query, Axis.COLUMNS);
+            scrollPane.setColumnHeaderView(columnHeader);
+        } catch (QueryInitializationException e) {
+            messageLabel.setText(e.getMessage());
+            logger.error("Exception while creating row header.", e);
+        }
+	}
+	
+	/**
+	 * This method will show a message without defining the row and column headers. This
+	 * is useful for exceptions among other messages.
+	 */
+	public void showMessage(String message) {
+	    messageLabel.setText(message);
+	    scrollPane.setViewportView(messageLabel);
 	}
     
     public JComponent getViewComponent() {
