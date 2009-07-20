@@ -143,6 +143,12 @@ public class OlapQuery extends AbstractWabitObject {
     private final List<OlapQueryListener> listeners = new ArrayList<OlapQueryListener>();
     
     /**
+     * This boolean tracks if the ROWS axis of this query omits empty positions.
+     * This is used when the mdxQuery is null.
+     */
+    private boolean nonEmpty = false;
+    
+    /**
      * Creates a new, empty query with no set persistent object ID.
      */
     public OlapQuery(OlapConnectionMapping olapMapping) {
@@ -246,6 +252,7 @@ public class OlapQuery extends AbstractWabitObject {
     private void setMdxQuery(Query mdxQuery) throws OlapException {
     	if (mdxQuery == null) throw new NullPointerException();
         this.mdxQuery = mdxQuery;
+        mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
         try {
 			this.currentCube = this.getMDXQuery().getCube();
 			execute();
@@ -430,7 +437,7 @@ public class OlapQuery extends AbstractWabitObject {
         			String ordinalNumber = entry.get("ordinal");
         			queryAxis = mdxQuery.getAxes().get(Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber)));
         			if (entry.get("non-empty") != null) {
-        			    queryAxis.setNonEmpty(Boolean.parseBoolean(entry.get("non-empty")));
+        			    setNonEmpty(Boolean.parseBoolean(entry.get("non-empty")));
         			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
         			String dimensionName = entry.get("dimension-name");
@@ -779,7 +786,11 @@ public class OlapQuery extends AbstractWabitObject {
      *            them.
      */
     public void setNonEmpty(boolean nonEmpty) {
-        mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
+    	this.nonEmpty = nonEmpty;
+    	if (mdxQuery != null) {
+    		mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
+    		logger.debug("Query has rows non-empty? " + mdxQuery.getAxis(Axis.ROWS).isNonEmpty());
+    	}
     }
 
     /**
@@ -788,7 +799,7 @@ public class OlapQuery extends AbstractWabitObject {
      * @return True is this query omits empty rows; false if it includes them.
      */
     public boolean isNonEmpty() {
-        return mdxQuery.getAxis(Axis.ROWS).isNonEmpty();
+    	return nonEmpty;
     }
     
     public void addOlapQueryListener(OlapQueryListener listener) {
