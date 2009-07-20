@@ -29,11 +29,13 @@ import java.util.Map;
 import org.olap4j.Axis;
 import org.olap4j.OlapException;
 import org.olap4j.metadata.Dimension;
+import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
+import org.olap4j.query.QueryDimension.SortOrder;
 
 /**
  * This is a class full of static helper methods to assist with the execution of
@@ -120,6 +122,7 @@ public class OlapUtils {
         	QueryAxis copiedAxis = modifiedMDXQuery.getAxes().get(axisEntry.getKey());
             for (QueryDimension oldDimension : axisEntry.getValue().getDimensions()) {
             	QueryDimension copiedDimension = modifiedMDXQuery.getDimension(oldDimension.getName());
+            	copiedDimension.setSortOrder(SortOrder.ASC);
                 for (Selection selection : oldDimension.getInclusions()) {
                     copiedDimension.include(selection.getOperator(),selection.getMember());
                 }
