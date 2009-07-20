@@ -1190,7 +1190,7 @@
 
     <para>Wabit allows you to create OLAP queries based on existing OLAP
     connections. To learn how to add a OLAP connection, please read 
-    section<xref linkend="setup_database_olap" />.</para>
+    <xref linkend="setup_database_olap" />.</para>
 
     <section id="query_olap_gui">
       <title>The OLAP query editor</title>
@@ -1227,13 +1227,6 @@
 
     <section id="query_olap_new">
       <title>Create a new OLAP query</title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="src/docbkx/images/blankOLAPQuery.png"
-                     format="PNG" width="6in" />
-        </imageobject>
-      </mediaobject>
 
       <para>To create a new OLAP query:</para>
 
