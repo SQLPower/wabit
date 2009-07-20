@@ -83,13 +83,13 @@ public class OlapQuery extends AbstractWabitObject {
         OlapQuery newQuery = new OlapQuery(olapMapping);
 
         newQuery.setOlapDataSource(this.getOlapDataSource());
-        
         if (hasCachedXml()) {
         	for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
         		newQuery.appendElement(
         				this.rootNodes.get(mickey), this.attributes.get(mickey));
         	}
         } else {
+        	newQuery.setNonEmpty(isNonEmpty());
         	newQuery.setCurrentCube(mdxQuery.getCube());
         	newQuery.setMdxQuery(this.getMdxQueryCopy());
         }
@@ -436,7 +436,8 @@ public class OlapQuery extends AbstractWabitObject {
         			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-axis")) {
         			String ordinalNumber = entry.get("ordinal");
-        			queryAxis = localMDXQuery.getAxes().get(Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber)));
+        			Axis axis = Axis.Factory.forOrdinal(Integer.parseInt(ordinalNumber));
+					queryAxis = localMDXQuery.getAxes().get(axis);
         			if (entry.get("non-empty") != null) {
         			    setNonEmpty(Boolean.parseBoolean(entry.get("non-empty")));
         			}
@@ -474,7 +475,11 @@ public class OlapQuery extends AbstractWabitObject {
         } catch (RuntimeException e) {
         	throw new QueryInitializationException(e);
         }
-        mdxQuery = localMDXQuery;
+        try {
+			setMdxQuery(localMDXQuery);
+		} catch (OlapException e) {
+			throw new QueryInitializationException(e);
+		}
         this.initDone = true;
     }
     
