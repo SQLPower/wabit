@@ -24,6 +24,9 @@ Noteworthy Changes in 0.9.7
       "Workspace." The semantics of a workspace are exactly the same as
       the semantics of a project. In other words, "Fun new name, same
       great taste!"
+      
+  Bug Fixes
+    * The sub-totals in the result set renderer are now correct on printouts. 
   
 
 Noteworthy Changes in 0.9.6
