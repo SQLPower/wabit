@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -183,9 +182,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * may not be the entire section as defined by a {@link Position}. This will
      * be null if a change has occurred and requires the positions to be
      * recreated from the {@link ResultSetRenderer#createResultSetLayout()}
-     * method.
+     * method. This is wrapped by a ThreadLocal to give each printing thread and
+     * the UI thread different copies of the page positions. This is required
+     * as the printing will render a result set without a limit while the screen
+     * does have a limit to it.
      */
-    private final AtomicReference<List<List<Position>>> pagePositions = new AtomicReference<List<List<Position>>>();
+    private final ThreadLocal<List<List<Position>>> pagePositions = new ThreadLocal<List<List<Position>>>();
     
     /**
      * This decides if the grand totals will be printed at the end of a result
