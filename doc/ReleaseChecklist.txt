@@ -15,7 +15,7 @@ Good luck with the release!
 
 
 *Comment out all the logging configs set to DEBUG (leave the RootLogger at INFO)
-*Update the wabit.properties file in src/main/resources and the pom.xml and in the src/main/installer/install.xml to reflect the correct
+*Update the wabit.properties file in the pom.xml to reflect the correct
  release number.  Normally, this will mean setting the suffix to "" for a full
  release, or "beta", "rc1", etc for a pre-release.
 *Update the doc/ReleaseNotes.txt file with the latest features and bugfixes.
@@ -26,6 +26,7 @@ Good luck with the release!
 *(Clover will be added later) Generate the JUnit and Clover test reports (run the 'clover.test.and.report' build.xml
  target). This must be done separately from 'dist', otherwise the executables generated will
  require the clover.jar library to run.
+ * To run the JUnit report create a new Maven build with the goal "surefire-report:report".
 *Change the systemPath property in the pom.xml to absolute paths for the Maven dependencies in both sqlpower-library and wabit
 *Run the 'Maven clean' target from the "Run as" menu on the POM to remove the Clover-dependent 
  compiled class files.
@@ -36,7 +37,7 @@ Good luck with the release!
  installer) for the following:
  *Rename your PL.INI file so you get the "new user experience" 
   (Or better yet, create a fresh user account to test from)
- *File size is close to the expected size (it was ~12.4 MB in 0.9.3)
+ *File size is close to the expected size (it was ~20 MB in 0.9.7)
  *Archive expands properly or installer works as expected
  *Try connecting to all databases that the Wabit is preconfigured for (MySQL,
   PostgreSQL, SQL Server)
