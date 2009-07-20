@@ -110,6 +110,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
@@ -356,7 +357,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				final JPanel newHeader = new JPanel(new BorderLayout());
 				final JComboBox dataTypeComboBox = new JComboBox(DataTypeSeries.values());
 				try {
-					if (!SQL.isNumeric(rs.getMetaData().getColumnType(column + 1))) {
+				    String columnName = (String) columnNamesInOrder.get(column).getUniqueIdentifier();
+				    int rsColumnIndex = 0;
+				    for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+				        if (rs.getMetaData().getColumnName(i).equals(columnName)) {
+				            rsColumnIndex = i;
+				            break;
+				        }
+				    }
+					if (!SQL.isNumeric(rs.getMetaData().getColumnType(rsColumnIndex))) {
 						dataTypeComboBox.removeItem(DataTypeSeries.SERIES);
 					}
 				} catch (SQLException e) {
@@ -523,7 +532,15 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				final JComboBox dataTypeComboBox = new JComboBox(DataTypeSeries.values());
 				dataTypeComboBox.removeItem(DataTypeSeries.CATEGORY);
 				try {
-					if (!SQL.isNumeric(rs.getMetaData().getColumnType(column + 1))) {
+				    String columnName = (String) columnNamesInOrder.get(column).getUniqueIdentifier();
+                    int rsColumnIndex = 0;
+                    for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                        if (rs.getMetaData().getColumnName(i).equals(columnName)) {
+                            rsColumnIndex = i;
+                            break;
+                        }
+                    }
+					if (!SQL.isNumeric(rs.getMetaData().getColumnType(rsColumnIndex))) {
 						JLabel emptyLabel = new JLabel();
 						emptyLabel.setPreferredSize(new Dimension(0, (int) dataTypeComboBox.getPreferredSize().getHeight() * 2));
 						newHeader.add(emptyLabel, BorderLayout.NORTH);
@@ -829,6 +846,37 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
          * queries.
          */
         private JPanel chartEditorPanel;
+        
+        /**
+         * This listener updates the column name list that keeps track of the
+         * current order the columns have been arranged in. If the order of the
+         * columns in the table are being arranged according to the order in
+         * the {@link #columnNamesInOrder} list this listener should not be
+         * attached to the table.
+         */
+        private final TableColumnModelListener columnMovingListener = new TableColumnModelListener() {
+            
+            public void columnSelectionChanged(ListSelectionEvent e) {
+                //don't care            
+            }
+        
+            public void columnRemoved(TableColumnModelEvent e) {
+                //don't care            
+            }
+        
+            public void columnMoved(TableColumnModelEvent e) {
+                columnNamesInOrder.add(e.getToIndex(), columnNamesInOrder.remove(e.getFromIndex()));
+                
+            }
+        
+            public void columnMarginChanged(ChangeEvent e) {
+                //don't care            
+            }
+        
+            public void columnAdded(TableColumnModelEvent e) {
+                //don't care
+            }
+        };
 
 		public ChartRendererPropertyPanel(WabitWorkspace workspace, final GraphRenderer renderer) {
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
@@ -857,30 +905,6 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			nameField.setText(renderer.getName());
 			yaxisNameField.setText(renderer.getYaxisName());
 			xaxisNameField.setText(renderer.getXaxisName());
-			
-			resultTable.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
-				
-				public void columnSelectionChanged(ListSelectionEvent e) {
-					//don't care			
-				}
-			
-				public void columnRemoved(TableColumnModelEvent e) {
-					//don't care			
-				}
-			
-				public void columnMoved(TableColumnModelEvent e) {
-					columnNamesInOrder.add(e.getToIndex(), columnNamesInOrder.remove(e.getFromIndex()));
-					
-				}
-			
-				public void columnMarginChanged(ChangeEvent e) {
-					//don't care			
-				}
-			
-				public void columnAdded(TableColumnModelEvent e) {
-					//don't care
-				}
-			});
 			
 			queryComboBox.addItemListener(new ItemListener() {
 
@@ -992,11 +1016,16 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                     }
                 }
                 
-                for (ColumnIdentifier identifier : currentColumnNamesInOrder) {
-                    if (columnNamesInOrder.indexOf(identifier) != currentColumnNamesInOrder.indexOf(identifier)) {
-                        resultTable.getColumnModel().moveColumn(columnNamesInOrder.indexOf(identifier), currentColumnNamesInOrder.indexOf(identifier));
-                    }
-                }
+//                for (ColumnIdentifier identifier : currentColumnNamesInOrder) {
+//                    final int newIndex = currentColumnNamesInOrder.indexOf(identifier);
+//                    if (columnNamesInOrder.indexOf(identifier) != newIndex) {
+//                        logger.debug("identifier is " + identifier.getName());
+//                        logger.debug("Moving column from " + columnNamesInOrder.indexOf(identifier) + " to " + newIndex);
+//                        logger.debug("Result table has " + resultTable.getColumnCount() + " columns.");
+//                        resultTable.getColumnModel().moveColumn(columnNamesInOrder.indexOf(identifier), newIndex);
+//                        logger.debug("Column at position " + newIndex + " is " + resultTable.getColumnName(newIndex));
+//                    }
+//                }
                 
                 for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : renderer.getColumnSeriesToColumnXAxis().entrySet()) {
                     if (columnNamesInOrder.contains(entry.getKey())) {
@@ -1049,7 +1078,26 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				return;
 			}
 			
-			resultTable.setModel(new ResultSetTableModel(rs));
+			final ResultSetTableModel model = new ResultSetTableModel(rs);
+            resultTable.setModel(model);
+			
+            //reorder the columns from the result set to the order the user specified by dragging column headers.
+            resultTable.getColumnModel().removeColumnModelListener(columnMovingListener);
+            for (ColumnIdentifier identifier : columnNamesInOrder) {
+                final int newIndex = columnNamesInOrder.indexOf(identifier);
+                int oldIndex = -1;
+                for (int i = 0; i < resultTable.getColumnCount(); i++) {
+                    if (resultTable.getColumnName(i).equalsIgnoreCase((String) identifier.getUniqueIdentifier())) {
+                        oldIndex = i;
+                        break;
+                    }
+                }
+                if (oldIndex != newIndex) {
+                    resultTable.getColumnModel().moveColumn(oldIndex, newIndex);
+                }
+            }
+            resultTable.getColumnModel().addColumnModelListener(columnMovingListener);
+			
             chartEditorPanel.removeAll();
             chartEditorPanel.add(tableScrollPane, BorderLayout.CENTER);
             chartEditorPanel.revalidate();
@@ -1513,18 +1561,21 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			    if (query instanceof QueryCache) {
 			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			    } else if (query instanceof OlapQuery) {
-			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((OlapQuery) query).execute(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
+			        final OlapQuery olapQuery = (OlapQuery) query;
+                    logger.debug("The olap query being charted is " + olapQuery.getName() + " and the query text is " + olapQuery.getMdxText());
+			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, olapQuery.execute(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			    } else {
 			        throw new IllegalStateException("Unknown query type " + query.getClass() + " when trying to create a chart.");
 			    }
 			}
+			if (chart == null) {
+			    return false;
+			}
+			chart.draw(g, new Rectangle2D.Double(0, 0, contentBox.getWidth(), contentBox.getHeight()));
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+		    logger.error("Error while rendering chart", e);
+		    g.drawString("Could not render chart: " + e.getMessage(), 0, g.getFontMetrics().getHeight());
 		}
-		if (chart == null) {
-			return false;
-		}
-		chart.draw(g, new Rectangle2D.Double(0, 0, contentBox.getWidth(), contentBox.getHeight()));
 		return false;
 	}
 
@@ -2115,6 +2166,14 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			((StatementExecutor) query).addRowSetChangeListener(queryListener);
 		} else if (query instanceof OlapQuery) {
 		    ((OlapQuery) query).addPropertyChangeListener(olapQueryChangeListener);
+		    if (logger.isDebugEnabled()) {
+		        logger.debug("Getting MDX Query");
+		        try {
+                    logger.debug("MDX Query is " + ((OlapQuery) query).getMdxText());
+                } catch (QueryInitializationException e) {
+                    logger.debug("Error while trying to print mdx text ", e);
+                }
+		    }
 		}
 		this.query = query;
 	}
