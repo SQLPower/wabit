@@ -20,6 +20,7 @@ Good luck with the release!
  release, or "beta", "rc1", etc for a pre-release.
 *Update the doc/ReleaseNotes.txt file with the latest features and bugfixes.
 *Run the LibraryMegaTest and Wabit tests. It should pass with a flying colour (green)
+*Run 'mvn site' to generate the PDF and JavaHelp documentation, and the download page
 *Read the formatted documentation, noting what's missing or incorrect. Then update
  the documentation. (This will need to be done when Wabit has documentation.)
 *(Clover will be added later) Generate the JUnit and Clover test reports (run the 'clover.test.and.report' build.xml
