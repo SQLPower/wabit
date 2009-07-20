@@ -565,7 +565,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("olap-query")) {
             loadOlapQuery(attributes);
         } else if (name.equals("olap-cube") || name.equals("olap4j-query") || name.equals("olap4j-axis")
-        		|| name.equals("olap4j-dimension") || name.equals("olap4j-selection")) {
+        		|| name.equals("olap4j-dimension") || name.equals("olap4j-selection") || name.equals("olap4j-exclusion")) {
             olapQuery.appendElement(name, attributes);
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
@@ -1190,7 +1190,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	        || name.equals("olap4j-query")
     	        || name.equals("olap4j-axis") 
     	        || name.equals("olap4j-dimension")
-    	        || name.equals("olap4j-selection")) {
+    	        || name.equals("olap4j-selection")
+    	        || name.equals("olap4j-exclusion")) {
     	    olapQuery.appendElement("/".concat(name),new AttributesImpl());
         }
     	

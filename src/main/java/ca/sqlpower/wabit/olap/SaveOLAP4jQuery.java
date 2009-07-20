@@ -38,12 +38,12 @@ import ca.sqlpower.xml.XMLHelper;
  * necessary because in order to save an OlapQuery we need the Olap4jQuery model and the
  * whole point of the OlapQuery is to protect the Olap4jQuery model.
  */
-public class SaveAndLoadOLAP4jQuery {
+public class SaveOLAP4jQuery {
 	/**
 	 * This is the class which saves and loads the Olap4jQuery, this is done in this separate package
 	 * to prevent the Olap4jQuery model from leaking out. See the class level comment for more details.
 	 */
-	private SaveAndLoadOLAP4jQuery() {
+	private SaveOLAP4jQuery() {
 	}
 	
 	/**
@@ -97,6 +97,13 @@ public class SaveAndLoadOLAP4jQuery {
 		            xml.indent++;
 		            for (Selection selection : dimension.getInclusions()) {
 		            	xml.print(out, "<olap4j-selection");
+		            	savingClass.printAttribute("dimension-name", selection.getMember().getDimension().getName());
+		                savingClass.printAttribute("unique-member-name", selection.getMember().getUniqueName());
+		                savingClass.printAttribute("operator", selection.getOperator().toString());
+		                xml.niprintln(out, "/>");
+		            }
+		            for (Selection selection : dimension.getExclusions()) {
+		            	xml.print(out, "<olap4j-exclusion");
 		            	savingClass.printAttribute("dimension-name", selection.getMember().getDimension().getName());
 		                savingClass.printAttribute("unique-member-name", selection.getMember().getUniqueName());
 		                savingClass.printAttribute("operator", selection.getOperator().toString());

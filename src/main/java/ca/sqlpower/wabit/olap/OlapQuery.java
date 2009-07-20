@@ -452,7 +452,14 @@ public class OlapQuery extends AbstractWabitObject {
         			// Not optimal to do this for every selection, but we're not recording
         			// the hierarchy with the <dimension> element.
         			hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
+        		} else if (this.rootNodes.get(cpt).equals("olap4j-exclusion")) {
+        			String operation = entry.get("operator");
+        			Member actualMember = findMember(entry, getCurrentCube());
+        			queryDimension.exclude(Operator.valueOf(operation), actualMember);
 
+        			// Not optimal to do this for every selection, but we're not recording
+        			// the hierarchy with the <dimension> element.
+        			hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
         		} else if (this.rootNodes.get(cpt).startsWith("/")) {
         			// we can safely ignore end tags here.
         		} else {

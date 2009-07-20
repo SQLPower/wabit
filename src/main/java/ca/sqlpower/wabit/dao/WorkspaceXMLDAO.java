@@ -60,7 +60,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.SaveAndLoadOLAP4jQuery;
+import ca.sqlpower.wabit.olap.SaveOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -98,10 +98,11 @@ public class WorkspaceXMLDAO {
      *  <dt>1.0.3 <dd>Added more info to saved queries inside a report definition.
      *  <dt>1.1.0 <dd>OLAP query syntax has changed, both inside the datasources definition and the report.
      *  <dt>1.1.1 <dd>OLAP query syntax has changed for reports, -report tag was removed.
+     *  <dt>1.1.2 <dd>Added exclusions when saving an OLAP query
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 1, 1); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 1, 2); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
@@ -588,7 +589,7 @@ public class WorkspaceXMLDAO {
             xml.println(out, "/>");
         }
         
-        SaveAndLoadOLAP4jQuery.saveOlap4jQuery(query, xml, out, this);
+        SaveOLAP4jQuery.saveOlap4jQuery(query, xml, out, this);
         
         xml.indent--;
 	    xml.println(out, "</olap-query>");

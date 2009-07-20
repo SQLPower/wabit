@@ -37,6 +37,8 @@ import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 import org.olap4j.query.QueryDimension.SortOrder;
 
+import ca.sqlpower.wabit.swingui.olap.action.ExcludeMemberAction;
+
 /**
  * This is a class full of static helper methods to assist with the execution of
  * olap queries
@@ -124,7 +126,11 @@ public class OlapUtils {
             	QueryDimension copiedDimension = modifiedMDXQuery.getDimension(oldDimension.getName());
             	copiedDimension.setSortOrder(SortOrder.ASC);
                 for (Selection selection : oldDimension.getInclusions()) {
-                    copiedDimension.include(selection.getOperator(),selection.getMember());
+                    copiedDimension.include(selection.getOperator(), selection.getMember());
+                }
+                
+                for (Selection selection : oldDimension.getExclusions()) {
+                	copiedDimension.exclude(selection.getOperator(), selection.getMember());
                 }
                 copiedAxis.getDimensions().add(copiedDimension);
             }
