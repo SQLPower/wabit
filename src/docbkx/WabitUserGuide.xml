@@ -1271,28 +1271,12 @@
     </section>
 
     <section id="query_olap_mdx">
-      <title>The MDX query editor</title>
+      <title>The MDX query viewer</title>
 
       <para>Just as the SQL queries created in the Playpen, Wabit generates
-      the MDX query used to retrieve the OLAP results. Individuals with MDX
-      programming expertise may customize the queries in the MDX query
-      editor.</para>
+      the MDX query used to retrieve the OLAP results.</para>
 
-      <para>To view or modify the created MDX query:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Click on 'MDX' above your OLAP query editor.</para>
-        </listitem>
-
-        <listitem>
-          <para>Change the MDX query.</para>
-        </listitem>
-
-        <listitem>
-          <para>Click on 'Execute' to see the results.</para>
-        </listitem>
-      </orderedlist>
+      <para>To view the created MDX query, click on 'MDX' above your OLAP query editor.</para>
     </section>
   </chapter>
 
