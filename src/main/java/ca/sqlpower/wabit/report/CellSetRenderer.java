@@ -85,11 +85,17 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
     
     /**
+     * This message will be displayed if the cell set being rendered is null.
+     */
+    private static final String EMPTY_CELL_SET_MESSAGE = "Empty cell set.";
+    
+    /**
      * This is the OLAP query this {@link CellSetRenderer} was originally based off of
      */
     private final OlapQuery olapQuery;
     
     private final static int PADDING = 10;
+
     
     /**
      * This is the OLAP query being displayed by this cell set renderer.
@@ -322,7 +328,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
         
         g.setFont(getHeaderFont());
-//        g.drawString(getErrorMessage(), 0, g.getFontMetrics().getHeight()); TODO
+        
+        if (getCellSet() == null) {
+        	g.drawString(EMPTY_CELL_SET_MESSAGE, 0, g.getFontMetrics().getHeight());
+        	return false;
+        }
         
         int headerFontHeight = g.getFontMetrics().getHeight();
         
