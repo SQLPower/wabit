@@ -80,19 +80,19 @@ public class OlapQuery extends AbstractWabitObject {
      * @throws QueryInitializationException 
      */
     public OlapQuery createCopyOfSelf() throws SQLException, QueryInitializationException {
-        OlapQuery newQuery = new OlapQuery(olapMapping);
-
-        newQuery.setOlapDataSource(this.getOlapDataSource());
+    	OlapQuery newQuery = new OlapQuery(olapMapping);
+    	newQuery.setOlapDataSource(this.getOlapDataSource());
         if (hasCachedXml()) {
-        	for (int mickey = 0; mickey < this.rootNodes.size(); mickey++) {
+        	for (int i = 0; i < this.rootNodes.size(); i++) {
         		newQuery.appendElement(
-        				this.rootNodes.get(mickey), this.attributes.get(mickey));
+        				this.rootNodes.get(i), this.attributes.get(i));
         	}
         } else {
         	newQuery.setNonEmpty(isNonEmpty());
         	newQuery.setCurrentCube(mdxQuery.getCube());
         	newQuery.setMdxQuery(this.getMdxQueryCopy());
         }
+        newQuery.setName(getName());
         return newQuery;
     }
     
@@ -484,17 +484,17 @@ public class OlapQuery extends AbstractWabitObject {
     }
     
     public void appendElement(String elementName, Attributes attributes) {
-        this.wasLoadedFromXml=true;
         Map<String,String> attributesMap = new HashMap<String, String>();
         for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
             attributesMap.put(attributes.getQName(cpt), attributes.getValue(cpt));
         }
-        this.appendElement(elementName, attributesMap);
+        appendElement(elementName, attributesMap);
     }
     
     public void appendElement(String elementName, Map<String,String> attributesMap) {
-        this.rootNodes.add(elementName);
-        this.attributes.add(attributesMap);
+    	wasLoadedFromXml = true;
+        rootNodes.add(elementName);
+        attributes.add(attributesMap);
     }
     
     /**

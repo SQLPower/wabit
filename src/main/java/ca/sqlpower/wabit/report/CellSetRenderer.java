@@ -196,6 +196,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
             	modifiedOlapQuery.addOlapQueryListener(queryListener);
             	modifiedOlapQuery.execute();
             }
+        	this.initDone=true;
         } catch (Exception e) {
             //XXX it seems that this error message doesn't say anything conclusive
             //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
@@ -203,7 +204,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
             logger.warn(e.toString());
             errorMessage = "Error when executing query.";
         }
-        this.initDone=true;
     }
 
     public void cleanup() {
