@@ -1197,7 +1197,7 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="src/docbkx/images/OLAPQuery.png" format="PNG"
+          <imagedata fileref="src/docbkx/images/OLAPquery.png" format="PNG"
                      width="6in" />
         </imageobject>
       </mediaobject>
