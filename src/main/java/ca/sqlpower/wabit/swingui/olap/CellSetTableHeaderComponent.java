@@ -598,65 +598,63 @@ public class CellSetTableHeaderComponent extends JComponent {
             }
 
             public void mousePressed(MouseEvent e) {
-            	if (e.isPopupTrigger()) { // FIXME must use e.isPopupTrigger and check from mouse(down|up|clicked)
-            		maybeShowPopUpMenu(e, selectedMember);
-            	} else if (selectedMember != null) {
-                    try {
-                    	query.toggleMember(selectedMember);
-						query.execute();
-					} catch (Exception ex) {
-						throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
-					}
-            	}
+            	maybeShowPopup(e, selectedMember, true);
             }
-
-			private void maybeShowPopUpMenu(MouseEvent e,
-					final Member clickedOnMember) {
-				JPopupMenu popUpMenu = new JPopupMenu();
-				popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, CellSetTableHeaderComponent.this.axis));
-			    popUpMenu.add(new ClearExclusionsAction(query, hierarchy));
-				if (clickedOnMember != null && 
-						!(clickedOnMember instanceof Measure)) {
-				    popUpMenu.addSeparator();
-				    //TODO put these menu items back in when implementing exclusions, this is taken out for the 0.9.7 release
-				    popUpMenu.add(new ExcludeMemberAction(
-				            query,
-				            clickedOnMember,
-				            Selection.Operator.MEMBER));
-				    popUpMenu.add(new ExcludeMemberAction(
-				            query,
-				            clickedOnMember,
-				            Selection.Operator.CHILDREN));
-				    popUpMenu.addSeparator();
-					popUpMenu.add(new DrillReplaceAction(query, clickedOnMember));
-					Member parentMember = clickedOnMember.getParentMember();
-					try {
-						if (parentMember != null && !query.isIncluded(parentMember)) {
-							popUpMenu.add(new DrillUpAction(query, clickedOnMember, parentMember));
-							try {
-								Member rootMember = hierarchy.getRootMembers().get(0);
-								if (!parentMember.equals(rootMember)  && !query.isIncluded(rootMember)) {
-									popUpMenu.add(new DrillUpAction(query, clickedOnMember, rootMember));
-								}
-							} catch (OlapException ex) {
-								throw new RuntimeException(
-										"OLAP error occured while trying to get Root Member of hierarchy " 
-										+ hierarchy.getName(), ex);
-							}
-						}
-					} catch (QueryInitializationException ex) {
-						throw new RuntimeException(
-								"OLAP error occured while initializing the OLAP query", ex);
-					}
-				}
-				popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
-			}
-
+            
             public void mouseReleased(MouseEvent e) {
-            	if (e.isPopupTrigger()) { // FIXME must use e.isPopupTrigger and check from mouse(down|up|clicked)
-            		maybeShowPopUpMenu(e, selectedMember);
-            	} 
+            	maybeShowPopup(e, selectedMember, false);
             }
+
+			private void maybeShowPopup(MouseEvent e,
+					final Member clickedOnMember, boolean isMousePressed) {
+				if (e.isPopupTrigger()) {
+					JPopupMenu popUpMenu = new JPopupMenu();
+					popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, CellSetTableHeaderComponent.this.axis));
+				    popUpMenu.add(new ClearExclusionsAction(query, hierarchy));
+					if (clickedOnMember != null && 
+							!(clickedOnMember instanceof Measure)) {
+					    popUpMenu.addSeparator();
+					    //TODO put these menu items back in when implementing exclusions, this is taken out for the 0.9.7 release
+					    popUpMenu.add(new ExcludeMemberAction(
+					            query,
+					            clickedOnMember,
+					            Selection.Operator.MEMBER));
+					    popUpMenu.add(new ExcludeMemberAction(
+					            query,
+					            clickedOnMember,
+					            Selection.Operator.CHILDREN));
+					    popUpMenu.addSeparator();
+						popUpMenu.add(new DrillReplaceAction(query, clickedOnMember));
+						Member parentMember = clickedOnMember.getParentMember();
+						try {
+							if (parentMember != null && !query.isIncluded(parentMember)) {
+								popUpMenu.add(new DrillUpAction(query, clickedOnMember, parentMember));
+								try {
+									Member rootMember = hierarchy.getRootMembers().get(0);
+									if (!parentMember.equals(rootMember)  && !query.isIncluded(rootMember)) {
+										popUpMenu.add(new DrillUpAction(query, clickedOnMember, rootMember));
+									}
+								} catch (OlapException ex) {
+									throw new RuntimeException(
+											"OLAP error occured while trying to get Root Member of hierarchy " 
+											+ hierarchy.getName(), ex);
+								}
+							}
+						} catch (QueryInitializationException ex) {
+							throw new RuntimeException(
+									"OLAP error occured while initializing the OLAP query", ex);
+						}
+					}
+					popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
+				} else if (selectedMember != null && !isMousePressed && e.getButton() == MouseEvent.BUTTON1) {
+            		try {
+            			query.toggleMember(selectedMember);
+            			query.execute();
+            		} catch (Exception ex) {
+            			throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
+            		}
+				}
+			}
 
             public void mouseDragged(MouseEvent e) {
                 // don't care
