@@ -125,7 +125,7 @@ public class OlapUtils {
         	copiedAxis.setNonEmpty(axisEntry.getValue().isNonEmpty());
             for (QueryDimension oldDimension : axisEntry.getValue().getDimensions()) {
             	QueryDimension copiedDimension = modifiedMDXQuery.getDimension(oldDimension.getName());
-            	copiedDimension.setSortOrder(SortOrder.ASC);
+            	copiedDimension.setHierarchizeMode(oldDimension.getHierarchizeMode());
                 for (Selection selection : oldDimension.getInclusions()) {
                     copiedDimension.include(selection.getOperator(), selection.getMember());
                 }
