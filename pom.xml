@@ -311,7 +311,7 @@
 					</execution>
 					<execution>
 						<id>version</id>
-						<phase>compile</phase>
+						<phase>generate-resources</phase>
 						<configuration>
 							<tasks>
 								<taskdef name="propertyfile" classname="org.apache.tools.ant.taskdefs.optional.PropertyFile"/>
