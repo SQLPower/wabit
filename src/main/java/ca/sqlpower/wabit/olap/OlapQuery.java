@@ -51,6 +51,7 @@ import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
+import org.olap4j.query.QueryDimension.HierarchizeMode;
 import org.olap4j.query.QueryDimension.SortOrder;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
@@ -657,12 +658,11 @@ public class OlapQuery extends AbstractWabitObject {
         hierarchiesInUse.put(qd, member.getHierarchy());
         if (!isIncluded(member)) {
         	qd.include(Operator.MEMBER, member);
-//        	toggleMember(member);
         }
         Type memberType = member.getMemberType();
         logger.debug("memberType = " + memberType);
 		if (!(member instanceof Measure)) {
-        	qd.setSortOrder(SortOrder.ASC);
+			qd.setHierarchizeMode(HierarchizeMode.PRE);
         }
     	execute();
     }
