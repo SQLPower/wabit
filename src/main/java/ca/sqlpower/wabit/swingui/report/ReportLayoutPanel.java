@@ -324,6 +324,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		
 		addContentBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
 		addImageBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add image");
+		addGraphBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add chart");
 		addHorizontalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add horizontal guide");
 		addVerticalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add vertical guide");
 		zoomToFitAction.putValue(Action.SHORT_DESCRIPTION, "Zoom to fit");
