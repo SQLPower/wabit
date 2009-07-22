@@ -35,7 +35,7 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.GraphRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
@@ -88,7 +88,7 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         equalObjectsSet.add(ResultSetRenderer.class);
         classOrderList.add(equalObjectsSet);
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ColumnInfo.class)));
-        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(GraphRenderer.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ChartRenderer.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ImageRenderer.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Label.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Guide.class)));

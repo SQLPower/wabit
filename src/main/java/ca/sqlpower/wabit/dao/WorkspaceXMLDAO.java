@@ -64,7 +64,7 @@ import ca.sqlpower.wabit.olap.SaveOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.GraphRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
@@ -433,15 +433,15 @@ public class WorkspaceXMLDAO {
 						}
 						out.println("</image-renderer>");
 						
-					} else if (box.getContentRenderer() instanceof GraphRenderer) {
-						GraphRenderer graphRenderer = (GraphRenderer) box.getContentRenderer();
+					} else if (box.getContentRenderer() instanceof ChartRenderer) {
+						ChartRenderer graphRenderer = (ChartRenderer) box.getContentRenderer();
 						xml.print(out, "<graph-renderer");
 						printAttribute("name", graphRenderer.getName());
 						printAttribute("uuid", graphRenderer.getUUID());
 						printAttribute("y-axis-name", graphRenderer.getYaxisName());
 						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
-						if (graphRenderer.getGraphType() != null) {
-						    printAttribute("graph-type", graphRenderer.getGraphType().name());
+						if (graphRenderer.getChartType() != null) {
+						    printAttribute("graph-type", graphRenderer.getChartType().name());
 						}
 						if (graphRenderer.getLegendPosition() != null) {
 						    printAttribute("legend-position", graphRenderer.getLegendPosition().name());
@@ -462,7 +462,7 @@ public class WorkspaceXMLDAO {
                         xml.println(out, "</graph-col-names-in-order>");
                         xml.println(out, "<graph-col-names-to-data-types>");
                         xml.indent++;
-                        for (Map.Entry<ColumnIdentifier, GraphRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
+                        for (Map.Entry<ColumnIdentifier, ChartRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
                             xml.print(out, "<graph-name-to-data-type");
                             saveColumnIdentifier(out, entry.getKey(), "");
                             printAttribute("data-type", entry.getValue().name());

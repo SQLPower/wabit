@@ -36,7 +36,7 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
+import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 
@@ -45,7 +45,7 @@ public class GraphRendererTest extends TestCase {
     
     private PlDotIni plIni;
     private JDBCDataSource ds;
-    private GraphRenderer renderer;
+    private ChartRenderer renderer;
 
     @Override
     protected void setUp() throws Exception {
@@ -54,7 +54,7 @@ public class GraphRendererTest extends TestCase {
         ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         ContentBox contentBox = new ContentBox();
         WabitWorkspace workspace = new WabitWorkspace();
-        renderer = new GraphRenderer(contentBox, workspace);
+        renderer = new ChartRenderer(contentBox, workspace);
     }
 
     /**
@@ -86,7 +86,7 @@ public class GraphRendererTest extends TestCase {
         columnsToDataTypes.put(seriesIdentifier, DataTypeSeries.SERIES);
         List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
         categoryColumnIdentifiers.add(categoryIdentifier);
-        CategoryDataset dataset = GraphRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, rs, categoryColumnIdentifiers);
+        CategoryDataset dataset = ChartRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, rs, categoryColumnIdentifiers);
         
         assertEquals(3, dataset.getColumnCount());
         System.out.println(dataset.getColumnKeys());
@@ -131,14 +131,14 @@ public class GraphRendererTest extends TestCase {
         List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
         categoryColumnIdentifiers.add(categoryIdentifier);
         categoryColumnIdentifiers.add(category2Identifier);
-        CategoryDataset dataset = GraphRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, rs, categoryColumnIdentifiers);
+        CategoryDataset dataset = ChartRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, rs, categoryColumnIdentifiers);
         
         assertEquals(3, dataset.getColumnCount());
         System.out.println(dataset.getColumnKeys());
         System.out.println(dataset.getRowKeys());
-        String row1ColKey = GraphRenderer.createCategoryName(Arrays.asList(new String[]{"a", "d"}));
-        String row2ColKey = GraphRenderer.createCategoryName(Arrays.asList(new String[]{"b", "e"}));
-        String row3ColKey = GraphRenderer.createCategoryName(Arrays.asList(new String[]{"c", "f"}));
+        String row1ColKey = ChartRenderer.createCategoryName(Arrays.asList(new String[]{"a", "d"}));
+        String row2ColKey = ChartRenderer.createCategoryName(Arrays.asList(new String[]{"b", "e"}));
+        String row3ColKey = ChartRenderer.createCategoryName(Arrays.asList(new String[]{"c", "f"}));
         assertTrue(dataset.getColumnKeys().contains(row1ColKey));
         assertTrue(dataset.getColumnKeys().contains(row2ColKey));
         assertTrue(dataset.getColumnKeys().contains(row3ColKey));

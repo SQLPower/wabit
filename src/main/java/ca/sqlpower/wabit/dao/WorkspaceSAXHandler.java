@@ -82,7 +82,7 @@ import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
-import ca.sqlpower.wabit.report.GraphRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
@@ -91,9 +91,9 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
-import ca.sqlpower.wabit.report.GraphRenderer.DataTypeSeries;
-import ca.sqlpower.wabit.report.GraphRenderer.ExistingGraphTypes;
-import ca.sqlpower.wabit.report.GraphRenderer.LegendPosition;
+import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
+import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
+import ca.sqlpower.wabit.report.ChartRenderer.LegendPosition;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
@@ -212,7 +212,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 * This is a temporary graph renderer used to load in the last graph renderer found
 	 * in the workspace being loaded.
 	 */
-	private GraphRenderer graphRenderer;
+	private ChartRenderer graphRenderer;
 	
 	/**
 	 * This is an {@link OlapQuery} that is currently being loaded from the file. This
@@ -682,9 +682,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             
             String uuid = attributes.getValue("uuid");
             if (uuid == null) {
-                graphRenderer = new GraphRenderer(contentBox, session.getWorkspace());
+                graphRenderer = new ChartRenderer(contentBox, session.getWorkspace());
             } else {
-                graphRenderer = new GraphRenderer(contentBox, session.getWorkspace(), uuid);
+                graphRenderer = new ChartRenderer(contentBox, session.getWorkspace(), uuid);
             }
             contentBox.setContentRenderer(graphRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {
@@ -699,7 +699,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 } else if (aname.equals("x-axis-name")) {
                     graphRenderer.setXaxisName(aval);
                 } else if (aname.equals("graph-type")) {
-                    graphRenderer.setGraphType(ExistingGraphTypes.valueOf(aval));
+                    graphRenderer.setChartType(ExistingChartTypes.valueOf(aval));
                 } else if (aname.equals("legend-position")) {
                     graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
                 } else if (aname.equals("query-id")) {

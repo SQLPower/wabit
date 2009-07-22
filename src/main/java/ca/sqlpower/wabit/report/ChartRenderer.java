@@ -124,12 +124,12 @@ import com.jgoodies.forms.layout.FormLayout;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
 /**
- * This class will render a graph from a query's result set in a graph format
+ * This class will render a chart from a query's result set in a chart format
  * defined by the user.
  */
-public class GraphRenderer extends AbstractWabitObject implements ReportContentRenderer {
+public class ChartRenderer extends AbstractWabitObject implements ReportContentRenderer {
 	
-	private static final Logger logger = Logger.getLogger(GraphRenderer.class);
+	private static final Logger logger = Logger.getLogger(ChartRenderer.class);
 
     /**
      * This separator is used to separate category names when more then one
@@ -139,7 +139,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	
 	/**
 	 * This enum contains the values that each column can be defined as
-	 * for laying out a graph.
+	 * for laying out a chart.
 	 */
 	public enum DataTypeSeries {
 		NONE,
@@ -148,9 +148,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	};
 	
 	/**
-	 * The types of graph this renderer can create.
+	 * The types of charts this renderer can create.
 	 */
-	public enum ExistingGraphTypes {
+	public enum ExistingChartTypes {
 		BAR,
 		CATEGORY_LINE,
 		LINE,
@@ -246,9 +246,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 	
 	/**
-	 * This is the property panel for a GraphRenderer object. This will
-	 * let users specify the type of graph to display as well as what
-	 * values the graph will display.
+	 * This is the property panel for a ChartRenderer object. This will
+	 * let users specify the type of chart to display as well as what
+	 * values the chart will display.
 	 */
 	private class ChartRendererPropertyPanel implements DataEntryPanel {
 		
@@ -257,9 +257,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * the properties panel. The combo boxes will allow users to define columns to be categories
 		 * or series. This is for relational queries only.
 		 * <p>
-		 * This is for category type graphs
+		 * This is for category type charts
 		 */
-		private class CategoryGraphRendererTableCellRenderer implements CleanupTableCellRenderer {
+		private class CategoryChartRendererTableCellRenderer implements CleanupTableCellRenderer {
 			
 			/**
 			 * This listens to all of the combo boxes that define how the column relates
@@ -343,7 +343,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				}
 			};
 			
-			public CategoryGraphRendererTableCellRenderer(final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
+			public CategoryChartRendererTableCellRenderer(final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
 				this.tableHeader = tableHeader;
 				this.defaultTableCellRenderer = defaultTableCellRenderer;
 				
@@ -393,13 +393,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 
 		/**
 		 * This table cell renderer is used to make headers for the result set
-		 * table for line and scatter graphs. This is for relational queries only.
+		 * table for line and scatter charts. This is for relational queries only.
 		 */
-		private class XYGraphRendererCellRenderer implements CleanupTableCellRenderer {
+		private class XYChartRendererCellRenderer implements CleanupTableCellRenderer {
 			
 			/**
 			 * This listens to all of the combo boxes that define how the column relates
-			 * to a graph.
+			 * to a chart.
 			 */
 			private final ItemListener dataTypeSeriesChangeListener = new ItemListener() {
 				
@@ -516,7 +516,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 				}
 			};
 			
-			public XYGraphRendererCellRenderer(final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
+			public XYChartRendererCellRenderer(final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
 				this.tableHeader = tableHeader;
 				this.defaultTableCellRenderer = defaultTableCellRenderer;
 				
@@ -715,13 +715,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		private final JPanel panel = new JPanel();
 		
 		/**
-		 * A field to change the graph's name in
+		 * A field to change the chart's name in
 		 */
 		private final JTextField nameField = new JTextField();
 		
 		/**
 		 * A combo box containing all the queries in the workspace. This
-		 * will let the user choose which query to graph.
+		 * will let the user choose which query to chart.
 		 */
 		private final JComboBox queryComboBox;
 		
@@ -768,12 +768,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		private final JLabel resultTableLabel = new JLabel();
 		
 		/**
-		 * This combo box holds all of the graph types that the {@link GraphRenderer}
+		 * This combo box holds all of the chart types that the {@link ChartRenderer}
 		 * can generate and display.
 		 * <p>
-		 * This will eventually change to buttons to select the desired graph type.
+		 * This will eventually change to buttons to select the desired chart type.
 		 */
-		private final JComboBox graphTypeComboBox;
+		private final JComboBox chartTypeComboBox;
 		
 		/**
 		 * This combo box contains all the possible positions the legend can occupy on
@@ -816,7 +816,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		
 		/**
 		 * This change listener will be added to the query that is selected in the combo box.
-		 * The change listener will update the graph that users can view as a preview.
+		 * The change listener will update the chart that users can view as a preview.
 		 */
 		private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
 			public void rowAdded(RowSetChangeEvent e) {
@@ -827,7 +827,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		/**
 		 * This {@link TableCellRenderer} is the current wrapper on the regular {@link TableCellRenderer}.
 		 * This wrapper will place appropriate combo boxes above the table headers to allow users
-		 * to specify if the columns are to be used as series, categories, or x-axis values in a graph.
+		 * to specify if the columns are to be used as series, categories, or x-axis values in a chart.
 		 */
 		private CleanupTableCellRenderer currentHeaderTableCellRenderer;
 
@@ -878,22 +878,22 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             }
         };
 
-		public ChartRendererPropertyPanel(WabitWorkspace workspace, final GraphRenderer renderer) {
+		public ChartRendererPropertyPanel(WabitWorkspace workspace, final ChartRenderer renderer) {
 			defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
 			List<WabitObject> queries = new ArrayList<WabitObject>();
 			queries.addAll(workspace.getQueries());
 			queries.addAll(workspace.getOlapQueries());
 			queryComboBox = new JComboBox(queries.toArray());
-			graphTypeComboBox = new JComboBox(ExistingGraphTypes.values());
+			chartTypeComboBox = new JComboBox(ExistingChartTypes.values());
 			legendPositionComboBox = new JComboBox(LegendPosition.values());
 	        	        
 			queryComboBox.setSelectedItem(renderer.getQuery());
-			graphTypeComboBox.setSelectedItem(renderer.getGraphType());
-			if (renderer.getGraphType() == ExistingGraphTypes.BAR || renderer.getGraphType() == ExistingGraphTypes.CATEGORY_LINE) {
-				currentHeaderTableCellRenderer = new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+			chartTypeComboBox.setSelectedItem(renderer.getChartType());
+			if (renderer.getChartType() == ExistingChartTypes.BAR || renderer.getChartType() == ExistingChartTypes.CATEGORY_LINE) {
+				currentHeaderTableCellRenderer = new CategoryChartRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
 				resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
-			} else if (renderer.getGraphType() == ExistingGraphTypes.LINE || renderer.getGraphType() == ExistingGraphTypes.SCATTER) {
-				currentHeaderTableCellRenderer = new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+			} else if (renderer.getChartType() == ExistingChartTypes.LINE || renderer.getChartType() == ExistingChartTypes.SCATTER) {
+				currentHeaderTableCellRenderer = new XYChartRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
 				resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 			}
 			if(renderer.getLegendPosition() != null) {
@@ -930,29 +930,29 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 					}
 				}
 			});
-			graphTypeComboBox.addItemListener(new ItemListener() {
+			chartTypeComboBox.addItemListener(new ItemListener() {
 				public void itemStateChanged(ItemEvent e) {
 					if (e.getStateChange() == ItemEvent.SELECTED) {
 						if (currentHeaderTableCellRenderer != null) {
 							currentHeaderTableCellRenderer.cleanup();
 						}
-						switch ((ExistingGraphTypes) graphTypeComboBox.getSelectedItem()) {
+						switch ((ExistingChartTypes) chartTypeComboBox.getSelectedItem()) {
 						case BAR:
 						case CATEGORY_LINE:
 							xaxisNameField.setVisible(false);
 							xaxisNameLabel.setVisible(false);
-							currentHeaderTableCellRenderer = new CategoryGraphRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+							currentHeaderTableCellRenderer = new CategoryChartRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
 							resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 							break;
 						case LINE:
 						case SCATTER:
-							currentHeaderTableCellRenderer = new XYGraphRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
+							currentHeaderTableCellRenderer = new XYChartRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
 							resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
 							xaxisNameField.setVisible(true);
 							xaxisNameLabel.setVisible(true);
 							break;
 						default:
-							throw new IllegalStateException("Unknown graph type " + graphTypeComboBox.getSelectedItem());
+							throw new IllegalStateException("Unknown chart type " + chartTypeComboBox.getSelectedItem());
 						}
 						if(queryComboBox.getSelectedItem() != null) {
 						    final WabitObject selectedItem = (WabitObject) queryComboBox.getSelectedItem();
@@ -1069,7 +1069,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
         /**
          * This will display a table for editing a chart based on the result set
          * in this class. The result set will allow users to select columns as
-         * categories or series for the graph.
+         * categories or series for the chart.
          */
 		private void updateTableModel() {
 			if (rs == null) {
@@ -1124,8 +1124,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             chartEditorPanel.revalidate();
 
             final CellSetAxis columnAxis = cellSetViewer.getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
-            if (graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.BAR 
-                    || graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.CATEGORY_LINE) {
+            if (chartTypeComboBox.getSelectedItem() == ExistingChartTypes.BAR 
+                    || chartTypeComboBox.getSelectedItem() == ExistingChartTypes.CATEGORY_LINE) {
                 JPanel comboBoxCellHeader = new JPanel(new OlapTableHeaderLayoutManager(cellSetViewer.getTable()));
                 for (int i = 0; i < cellSetViewer.getTable().getColumnModel().getColumnCount(); i++) {
                     final Position position = columnAxis.getPositions().get(i);
@@ -1174,8 +1174,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
                 JPanel upperLeftCorner = new JPanel(new BorderLayout());
                 upperLeftCorner.add(rowAxisComboBoxHeader, BorderLayout.NORTH);
                 cellSetViewer.getScrollPane().setCorner(JScrollPane.UPPER_LEFT_CORNER, upperLeftCorner);
-            } else if (graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.LINE 
-                    || graphTypeComboBox.getSelectedItem() == ExistingGraphTypes.SCATTER) {
+            } else if (chartTypeComboBox.getSelectedItem() == ExistingChartTypes.LINE 
+                    || chartTypeComboBox.getSelectedItem() == ExistingChartTypes.SCATTER) {
                 
                 JPanel comboBoxCellHeader = new JPanel(new OlapTableHeaderLayoutManager(cellSetViewer.getTable()));
                 for (int i = 0; i < cellSetViewer.getTable().getColumnModel().getColumnCount(); i++) {
@@ -1316,7 +1316,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		 * property panel.
 		 */
 		private void updateChartPreview() {
-			JFreeChart chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, cellSet, (ExistingGraphTypes) graphTypeComboBox.getSelectedItem(), (LegendPosition) legendPositionComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
+			JFreeChart chart = ChartRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, cellSet, (ExistingChartTypes) chartTypeComboBox.getSelectedItem(), (LegendPosition) legendPositionComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
 			chartPanel.setChart(chart);
 		}
 
@@ -1324,7 +1324,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref:grow", "pref, pref, pref, pref, fill:max(25; pref):grow, fill:max(25; pref):grow, pref"), panel);
 			builder.append("Name", nameField);
 			builder.nextLine();
-			builder.append("Type", graphTypeComboBox);
+			builder.append("Type", chartTypeComboBox);
 			builder.nextLine();
 			builder.append("Query", queryComboBox);
 			builder.nextLine();
@@ -1367,7 +1367,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
-			setGraphType((ExistingGraphTypes) graphTypeComboBox.getSelectedItem());
+			setChartType((ExistingChartTypes) chartTypeComboBox.getSelectedItem());
 			setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
 			setColumnNamesInOrder(columnNamesInOrder);
 			setColumnsToDataTypes(columnsToDataTypes);
@@ -1387,24 +1387,24 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	/**
 	 * The workspace this renderer is in. This allows the
 	 * properties panel to tell what queries are accessible
-	 * to create a graph from.
+	 * to create a chart from.
 	 */
 	private final WabitWorkspace workspace;
 	
 	/**
-	 * The Y axis label in the graph.
+	 * The Y axis label in the chart.
 	 */
 	private String yaxisName;
 	
 	/**
-	 * The X axis label in the graph.
+	 * The X axis label in the chart.
 	 */
 	private String xaxisName;
 	
 	/**
-	 * This is the current style of graph the user has made.
+	 * This is the current style of chart the user has made.
 	 */
-	private ExistingGraphTypes graphType;
+	private ExistingChartTypes chartType;
 	
 	/**
 	 * The position of the legend in relation to the chart. This
@@ -1413,7 +1413,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	private LegendPosition selectedLegendPosition = LegendPosition.BOTTOM;
 	
 	/**
-	 * The query the graph is based off of. This can be either a {@link QueryCache}
+	 * The query the chart is based off of. This can be either a {@link QueryCache}
 	 * or an {@link OlapQuery} object.
 	 */
 	private WabitObject query;
@@ -1429,19 +1429,19 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	
 	/**
 	 * This maps each column in the result set to a DataTypeSeries. The types
-	 * decide how each column in the result set are used to display on the graph. 
+	 * decide how each column in the result set are used to display on the chart. 
 	 */
 	private final Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
 
 	/**
 	 * This map contains each column listed as a series and the column to be used as X axis values.
-	 * This mapping is used for line and line-like graphs.
+	 * This mapping is used for line and line-like charts.
 	 */
 	private final Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis = new HashMap<ColumnIdentifier, ColumnIdentifier>();
 	
 	/**
 	 * This change listener watches for changes to the query and refreshes the
-	 * graph when a change occurs.
+	 * chart when a change occurs.
 	 */
 	private final RowSetChangeListener queryListener = new RowSetChangeListener() {
 		public void rowAdded(RowSetChangeEvent e) {
@@ -1475,7 +1475,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
             } catch (Exception e) {
             	logger.warn(e);
                	return; //XXX should not squish this exception, when we can just listen to the query directly. The problem right
-               	//XXX now is that if a user has a query with a graph based upon it and they are just building up the query
+               	//XXX now is that if a user has a query with a chart based upon it and they are just building up the query
                	//XXX and it is broken, this will throw an error unneccesarily.
             }
             
@@ -1516,16 +1516,16 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	 */
 	private final List<ColumnIdentifier> missingIdentifiers = new ArrayList<ColumnIdentifier>();
 	
-	public GraphRenderer(ContentBox parent, WabitWorkspace workspace, String uuid) {
+	public ChartRenderer(ContentBox parent, WabitWorkspace workspace, String uuid) {
 		super(uuid);
 		this.workspace = workspace;
 	}
 	
-	public GraphRenderer(ContentBox parent, WabitWorkspace workspace) {
+	public ChartRenderer(ContentBox parent, WabitWorkspace workspace) {
 		this.workspace = workspace;
 		parent.setWidth(100);
 		parent.setHeight(100);
-		setName("Empty graph");
+		setName("Empty chart");
 	}
 	
 	public void cleanup() {
@@ -1559,11 +1559,11 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		try {
 			if (query != null) {
 			    if (query instanceof QueryCache) {
-			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
+			        chart = ChartRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet(), chartType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			    } else if (query instanceof OlapQuery) {
 			        final OlapQuery olapQuery = (OlapQuery) query;
                     logger.debug("The olap query being charted is " + olapQuery.getName() + " and the query text is " + olapQuery.getMdxText());
-			        chart = GraphRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, olapQuery.execute(), graphType, selectedLegendPosition, getName(), yaxisName, xaxisName);
+			        chart = ChartRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, olapQuery.execute(), chartType, selectedLegendPosition, getName(), yaxisName, xaxisName);
 			    } else {
 			        throw new IllegalStateException("Unknown query type " + query.getClass() + " when trying to create a chart.");
 			    }
@@ -1597,8 +1597,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
      *            used for line and scatter charts.
      * @param resultSet
      *            The result set to take values from for chart data.
-     * @param graphType
-     *            The type of graph to create.
+     * @param chartType
+     *            The type of chart to create.
      * @param legendPosition
      *            Where the legend should go in the chart.
      * @param chartName
@@ -1611,10 +1611,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public static JFreeChart createJFreeChart(List<ColumnIdentifier> columnNamesInOrder, 
 	        Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes, 
 	        Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, 
-	        ResultSet resultSet, ExistingGraphTypes graphType, LegendPosition legendPosition, 
+	        ResultSet resultSet, ExistingChartTypes chartType, LegendPosition legendPosition, 
 	        String chartName, String yaxisName, String xaxisName) {
 	    return createJFreeChart(columnNamesInOrder, columnsToDataTypes,
-	            columnSeriesToColumnXAxis, resultSet, null, graphType,
+	            columnSeriesToColumnXAxis, resultSet, null, chartType,
 	            legendPosition, chartName, yaxisName, xaxisName);
 	}
 	
@@ -1636,8 +1636,8 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
      *            used for line and scatter charts.
      * @param cellSet
      *            The cell set to take values from for chart data.
-     * @param graphType
-     *            The type of graph to create.
+     * @param chartType
+     *            The type of chart to create.
      * @param legendPosition
      *            Where the legend should go in the chart.
      * @param chartName
@@ -1650,10 +1650,10 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
     public static JFreeChart createJFreeChart(List<ColumnIdentifier> columnNamesInOrder, 
             Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes, 
             Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, 
-            CellSet cellSet, ExistingGraphTypes graphType, LegendPosition legendPosition, 
+            CellSet cellSet, ExistingChartTypes chartType, LegendPosition legendPosition, 
             String chartName, String yaxisName, String xaxisName) {
         return createJFreeChart(columnNamesInOrder, columnsToDataTypes,
-                columnSeriesToColumnXAxis, null, cellSet, graphType,
+                columnSeriesToColumnXAxis, null, cellSet, chartType,
                 legendPosition, chartName, yaxisName, xaxisName);
     }
 
@@ -1667,9 +1667,9 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	private static JFreeChart createJFreeChart(List<ColumnIdentifier> columnNamesInOrder, 
 	        Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes, 
 	        Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, 
-	        ResultSet resultSet, CellSet cellSet, ExistingGraphTypes graphType, LegendPosition legendPosition, 
+	        ResultSet resultSet, CellSet cellSet, ExistingChartTypes chartType, LegendPosition legendPosition, 
 	        String chartName, String yaxisName, String xaxisName) {
-		if (graphType == null) {
+		if (chartType == null) {
 			return null;
 		}
 		RectangleEdge rEdge = RectangleEdge.BOTTOM;
@@ -1693,7 +1693,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
 		BarRenderer.setDefaultBarPainter(new StandardBarPainter());
 		
-		switch (graphType) {
+		switch (chartType) {
 		case BAR :
 		case CATEGORY_LINE:
 			if (!columnsToDataTypes.containsValue(DataTypeSeries.CATEGORY) || !columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
@@ -1714,12 +1714,12 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			for (ColumnIdentifier identifier : categoryColumns) {
 			    categoryColumnNames.add(identifier.getName());
 			}
-			if (graphType == ExistingGraphTypes.BAR) {
+			if (chartType == ExistingChartTypes.BAR) {
 			    chart = ChartFactory.createBarChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
-			} else if (graphType == ExistingGraphTypes.CATEGORY_LINE) {
+			} else if (chartType == ExistingChartTypes.CATEGORY_LINE) {
 			    chart = ChartFactory.createLineChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
 			} else {
-			    throw new IllegalArgumentException("Unknown graph type " + graphType + " for a category dataset.");
+			    throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
 			}
 			if (legendPosition != LegendPosition.NONE) {
 				chart.getLegend().setPosition(rEdge);
@@ -1797,7 +1797,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 			setTransparentChartBackground(chart);
 			return chart; 
 		default:
-			throw new IllegalStateException("Unknown graph type " + graphType);
+			throw new IllegalStateException("Unknown chart type " + chartType);
 		}
 	}
 	
@@ -2002,7 +2002,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
     /**
-	 * Helper method for creating line and scatter graphs in the
+	 * Helper method for creating line and scatter charts in the
 	 * createJFreeChart method. This is for relational queries only.
 	 * @return An XYDataset for use in a JFreeChart or null if an 
 	 * XYDataset cannot be created.
@@ -2070,7 +2070,7 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	}
 	
 	/**
-     * Helper method for creating line and scatter graphs in the
+     * Helper method for creating line and scatter charts in the
      * createJFreeChart method. This is for olap queries only.
      * @return An XYDataset for use in a JFreeChart or null if an 
      * XYDataset cannot be created.
@@ -2130,13 +2130,13 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 		return new ArrayList<WabitObject>();
 	}
 
-	public ExistingGraphTypes getGraphType() {
-		return graphType;
+	public ExistingChartTypes getChartType() {
+		return chartType;
 	}
 
-	public void setGraphType(ExistingGraphTypes graphType) {
-		firePropertyChange("graphType", this.graphType, graphType);
-		this.graphType = graphType;
+	public void setChartType(ExistingChartTypes chartType) {
+		firePropertyChange("chartType", this.chartType, chartType);
+		this.chartType = chartType;
 	}
 	
 	public LegendPosition getLegendPosition() {
@@ -2227,36 +2227,36 @@ public class GraphRenderer extends AbstractWabitObject implements ReportContentR
 	public Dataset createDataset() {
 	    if (query instanceof QueryCache) {
 	        try {
-	            switch (graphType) {
+	            switch (chartType) {
 	            case BAR:
 	            case CATEGORY_LINE:
-	                return GraphRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((QueryCache) query).fetchResultSet(), GraphRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
+	                return ChartRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((QueryCache) query).fetchResultSet(), ChartRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
 	            case LINE:
 	            case SCATTER:
-	                return GraphRenderer.createSeriesCollection(columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet());
+	                return ChartRenderer.createSeriesCollection(columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet());
 	            default :
-	                throw new IllegalStateException("Unknown graph type " + graphType);
+	                throw new IllegalStateException("Unknown chart type " + chartType);
 	            }
 	        } catch (SQLException e) {
 	            throw new RuntimeException(e);
 	        }
 	    } else if (query instanceof OlapQuery) {
 	        try {
-                switch (graphType) {
+                switch (chartType) {
                 case BAR:
                 case CATEGORY_LINE:
-                    return GraphRenderer.createOlapCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((OlapQuery) query).execute(), GraphRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
+                    return ChartRenderer.createOlapCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((OlapQuery) query).execute(), ChartRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
                 case LINE:
                 case SCATTER:
-                    return GraphRenderer.createOlapSeriesCollection(columnSeriesToColumnXAxis, ((OlapQuery) query).execute());
+                    return ChartRenderer.createOlapSeriesCollection(columnSeriesToColumnXAxis, ((OlapQuery) query).execute());
                 default :
-                    throw new IllegalStateException("Unknown graph type " + graphType);
+                    throw new IllegalStateException("Unknown chart type " + chartType);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 	    } else {
-	        throw new IllegalStateException("Unknown query type " + query.getClass() + " when creating a " + graphType + " chart dataset.");
+	        throw new IllegalStateException("Unknown query type " + query.getClass() + " when creating a " + chartType + " chart dataset.");
 	    }
 	}
 
