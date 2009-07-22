@@ -1569,6 +1569,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 			    }
 			}
 			if (chart == null) {
+			    g.drawString("Empty Chart", 0, g.getFontMetrics().getHeight());
 			    return false;
 			}
 			chart.draw(g, new Rectangle2D.Double(0, 0, contentBox.getWidth(), contentBox.getHeight()));
