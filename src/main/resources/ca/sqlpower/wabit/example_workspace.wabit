@@ -306,7 +306,7 @@
      <font name="Dialog" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Empty graph" width="648" height="327" xpos="72" ypos="237">
+    <content-box name="Content from Chart" width="648" height="327" xpos="72" ypos="237">
      <font name="Dialog" size="10" style="0"/>
      <graph-renderer name="" uuid="webf1f290-10ce-4f64-9eeb-a167e99faea5" y-axis-name="GNP" x-axis-name="Life Expectancy" graph-type="SCATTER" legend-position="NONE" query-id="w34aa0826-197c-41a3-8361-bef5c5d0ad30">
       <graph-col-names-in-order>
@@ -380,7 +380,7 @@
      <font name="Dialog" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Empty graph" width="712" height="307" xpos="39" ypos="256">
+    <content-box name="Content from Chart" width="712" height="307" xpos="39" ypos="256">
      <font name="Dialog" size="10" style="0"/>
      <graph-renderer name="" uuid="w19dfc385-0ba8-4205-bc8c-82e91525d4bd" y-axis-name="" x-axis-name="" graph-type="BAR" legend-position="BOTTOM" query-id="w9577bd13-e7fb-4306-882d-03bf095df383">
       <graph-col-names-in-order>

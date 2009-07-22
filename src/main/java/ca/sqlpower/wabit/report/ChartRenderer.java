@@ -1525,7 +1525,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		this.workspace = workspace;
 		parent.setWidth(100);
 		parent.setHeight(100);
-		setName("Empty chart");
+		setName("Chart");
 	}
 	
 	public void cleanup() {
