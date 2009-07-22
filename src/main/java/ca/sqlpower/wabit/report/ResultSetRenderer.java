@@ -24,6 +24,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
@@ -593,6 +594,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 g2.translate(0, dim.getHeight());
             }
             
+            Graphics2D verticalBorderG = (Graphics2D) g2.create();
+            int sectionHeight = 0;
             if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.ROW)
                     && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.ROW)) {
                 int startingRow = position.getSection().getStartRow();
@@ -612,6 +615,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                         throw new RuntimeException(e);
                     }
                     g2.translate(0, dim.getHeight());
+                    if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE
+                            || borderType == BorderStyles.FULL) {
+                        g2.drawLine(0, 0, (int) contentBox.getWidth() - 1, 0);
+                    }
+                    sectionHeight += dim.getHeight();
+                }
+            }
+            if (borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE 
+                    || borderType == BorderStyles.FULL) {
+                int x = 0;
+                for (int col = 0; col < columnInfo.size() - 1; col++) {
+                    if (columnInfo.get(col).getWillBreak()) continue;
+                    Insets padding = reportPositionRenderer.getPadding(columnInfo.get(col));
+                    x += padding.left + columnInfo.get(col).getWidth() + padding.right;
+                    verticalBorderG.drawLine(x, 0, x, sectionHeight);
                 }
             }
             

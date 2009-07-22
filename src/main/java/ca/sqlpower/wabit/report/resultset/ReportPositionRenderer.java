@@ -24,6 +24,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.Stroke;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -96,18 +97,15 @@ public class ReportPositionRenderer {
         FontMetrics fm = g.getFontMetrics(bodyFont);
         g.setFont(bodyFont);
         int x = 0;
-        int y = fm.getHeight();
-        if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) {
-            y += 2;
-        }
+        int maxY = 0;
         for (int col = 0; col < columnInformation.size(); col++) {
+            int y = fm.getHeight();
             ColumnInfo ci = columnInformation.get(col);
             if (ci.getWillBreak()) continue;
-            //XXX This is probably not the best place to draw border lines.
-            if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && col != 0) {
-                g.drawLine(x, 0, x, y);
-                x += ResultSetRenderer.BORDER_INDENT;
-            }
+            
+            Insets padding = getPadding(ci);
+            x += padding.left;
+            y += padding.top;
             
             Object value = rs.getObject(col + 1);
             String formattedValue;
@@ -135,14 +133,37 @@ public class ReportPositionRenderer {
             }
             g.drawString(formattedValue, x + offset, fm.getHeight()); // TODO clip and/or line wrap and/or warn
             x += ci.getWidth();
-        }
-        if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) {
-            g.drawLine(0, y, availableWidth, y);
+            
+            x += padding.right;
+            y += padding.bottom;
+            
+            maxY = Math.max(maxY, y);
         }
         
-        return new Dimension(x, y);
+        return new Dimension(x, maxY);
     }
-    
+
+    /**
+     * This renders each section header above the column headers.
+     * 
+     * @param g
+     *            The graphics to render the headers on. Also used to define the
+     *            dimension returned which represents the amount of space the
+     *            header takes up on the graphics object.
+     * @param sectionHeader
+     *            These objects define a unique section. Each column in the
+     *            result set should have an entry in this list. If the column is
+     *            not part of the section header the value should be null.
+     *            Otherwise the value should be a unique entry in the result set
+     *            and will be displayed in the header.
+     * @param colInfo
+     *            The column information describing the columns of the result
+     *            set.
+     * @param section
+     *            The section that is being displayed.
+     * @return A dimension that describes how much space the header took up in
+     *         the graphics object.
+     */
     public Dimension renderSectionHeader(Graphics2D g, List<Object> sectionHeader, List<ColumnInfo> colInfo, Section section) {
         if (!section.isShowingSectionHeader()) return new Dimension(0, 0);
         
@@ -189,28 +210,50 @@ public class ReportPositionRenderer {
         int x = 0;
         FontMetrics fm = g.getFontMetrics(headerFont);
         g.setFont(headerFont);
-        int y = 0;
-        if (borderType == BorderStyles.FULL || borderType == BorderStyles.OUTSIDE) {
-            x += ResultSetRenderer.BORDER_INDENT;
-        }
-        for (int col = 1; col <= colInfo.size(); col++) {
-            ColumnInfo ci = colInfo.get(col-1);
+        int maxY = 0;
+        for (int col = 0; col < colInfo.size(); col++) {
+            int y = 0;
+            ColumnInfo ci = colInfo.get(col);
             if (ci.getWillBreak()) continue;
+            
+            Insets padding = getPadding(ci);
+            x += padding.left;
+            y += padding.top;
+            
             final String colHeaderName = replaceNull(ci.getName());
             int offset = ci.getHorizontalAlignment().computeStartX(
                     ci.getWidth(), fm.stringWidth(colHeaderName));
             g.drawString(colHeaderName, x + offset, fm.getHeight());
             x += ci.getWidth();
-            if (borderType == BorderStyles.VERTICAL || borderType == BorderStyles.FULL || borderType == BorderStyles.INSIDE) {
-                x += ResultSetRenderer.BORDER_INDENT;
-            }
+            x += padding.right;
+            y += padding.bottom;
+            maxY = Math.max(maxY, y);
         }
         
-        y += fm.getHeight() + fm.getHeight()/2;
-        g.drawLine(0, y, availableWidth, y);
-        return new Dimension(x, y);
+        maxY += fm.getHeight() + fm.getHeight()/2;
+        g.drawLine(0, maxY, availableWidth, maxY);
+        return new Dimension(x, maxY);
     }
-    
+
+    /**
+     * This method will render the totals of a section. The section can either
+     * be tracking totals for a subtotal or totals for a grand total.
+     * 
+     * @param g
+     *            The graphics to draw the totals on. This will also be used to
+     *            define the dimension returned.
+     * @param totalsRow
+     *            A list of totals for each column. If the column has no totals
+     *            the entry in the list should be null.
+     * @param colInfo
+     *            A list of column information for each column in the result
+     *            set.
+     * @param section
+     *            A section that contains totals to be rendered for the section
+     *            of the result set the object represents.
+     * @return A dimension defining the space the row took to render in the
+     *         graphics object.
+     */
     public Dimension renderTotals(Graphics2D g, List<BigDecimal> totalsRow, List<ColumnInfo> colInfo, Section section) {
         int localX = 0;
         final int subtotalLineYShift = 2; //Shifting the subtotal line slightly down to make it look nicer.
@@ -231,18 +274,20 @@ public class ReportPositionRenderer {
             FontMetrics headerFM = g.getFontMetrics(headerFont);
 
             final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
-            int y = rowHeight;
 
             g.setFont(headerFont);
-            g.drawString("Subtotal", ResultSetRenderer.BORDER_INDENT, y);
+            g.drawString("Subtotal", ResultSetRenderer.BORDER_INDENT, rowHeight);
             g.setFont(bodyFont);
 
+            int maxY = 0;
             for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
+                int y = rowHeight;
                 ColumnInfo ci = colInfo.get(subCol);
                 if (ci.getWillBreak()) continue;
-                if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
-                    localX += ResultSetRenderer.BORDER_INDENT;
-                }
+                
+                Insets padding = getPadding(ci);
+                localX += padding.left;
+                y += padding.top;
                 BigDecimal subtotal = totalsRow.get(subCol);
                 if (subtotal != null) {
                     String formattedValue;
@@ -267,17 +312,22 @@ public class ReportPositionRenderer {
                                 currentStroke.getDashPhase());
                         g.setStroke(newStroke);
                     } else {
-                        logger.warn("The stroke was of type " + g.getStroke().getClass() + " when drawing the totals line. We only change BasicStroke lines.");
+                        logger.warn("The stroke was of type " + g.getStroke().getClass() 
+                                + " when drawing the totals line. We only change BasicStroke lines.");
                     }
-                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
+                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, 
+                            localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
                     g.setStroke(oldStroke);
 
                     g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
                 }
                 localX += ci.getWidth();
+                localX += padding.right;
+                y += padding.bottom;
+                maxY = Math.max(maxY, y);
             }
-            y += rowHeight / 2;
-            return new Dimension(localX, y);
+            maxY += rowHeight / 2;
+            return new Dimension(localX, maxY);
         } else if (section.getTotalRenderStyle() == TotalRenderStyle.GRAND_TOTAL) {
 
             Font boldBodyFont = bodyFont.deriveFont(Font.BOLD);
@@ -285,18 +335,21 @@ public class ReportPositionRenderer {
             FontMetrics headerFM = g.getFontMetrics(headerFont);
 
             final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
-            int y = rowHeight;
 
             g.setFont(headerFont);
-            g.drawString("Grand Total", ResultSetRenderer.BORDER_INDENT, y);
+            g.drawString("Grand Total", ResultSetRenderer.BORDER_INDENT, rowHeight);
             g.setFont(boldBodyFont);
 
+            int maxY = 0;
             for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
+                int y = rowHeight;
                 ColumnInfo ci = colInfo.get(subCol);
                 if (ci.getWillBreak()) continue;
-                if ((borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL) && subCol != 0) {
-                    localX += ResultSetRenderer.BORDER_INDENT;
-                }
+                
+                Insets padding = getPadding(ci);
+                localX += padding.left;
+                y += padding.top;
+                
                 BigDecimal subtotal = totalsRow.get(subCol);
                 if (subtotal != null) {
                     String formattedValue;
@@ -321,20 +374,28 @@ public class ReportPositionRenderer {
                                 currentStroke.getDashPhase());
                         g.setStroke(newStroke);
                     } else {
-                        logger.warn("The stroke was of type " + g.getStroke().getClass() + " when drawing the totals line. We only change BasicStroke lines.");
+                        logger.warn("The stroke was of type " + g.getStroke().getClass() 
+                                + " when drawing the totals line. We only change BasicStroke lines.");
                     }
-                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
-                    g.drawLine(localX, y - rowHeight + subtotalLineYShift + 2, localX + ci.getWidth(), y - rowHeight + subtotalLineYShift + 2);
+                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, 
+                            localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
+                    g.drawLine(localX, y - rowHeight + subtotalLineYShift + 2, 
+                            localX + ci.getWidth(), y - rowHeight + subtotalLineYShift + 2);
                     g.setStroke(oldStroke);
 
                     g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
                 }
                 localX += ci.getWidth();
+                localX += padding.right;
+                y += padding.bottom;
+                
+                maxY = Math.max(maxY, y);
             }
-            y += rowHeight / 2;
-            return new Dimension(localX, y);
+            maxY += rowHeight / 2;
+            return new Dimension(localX, maxY);
         } else {
-            throw new IllegalStateException("The totals of the section " + section.getSectionHeader() + " are being displayed in the style " + section.getTotalRenderStyle() + " which is unknown.");
+            throw new IllegalStateException("The totals of the section " + section.getSectionHeader() 
+                    + " are being displayed in the style " + section.getTotalRenderStyle() + " which is unknown.");
         }
     }
     
@@ -347,5 +408,36 @@ public class ReportPositionRenderer {
         } else {
             return string;
         }
+    }
+
+    /**
+     * This method will return the insets of each cell based on the border type
+     * being used.
+     * 
+     * @param borderType
+     *            The type of border that will be rendered around the result set
+     *            cells.
+     * @param column
+     *            The column that the cell being rendered is in.
+     * @param columnCount
+     *            The number of columns in the result set being rendered.
+     */
+    public Insets getPadding(ColumnInfo ci) {
+        if (ci.getWillBreak()) return new Insets(0, 0, 0, 0);
+        Insets insets = new Insets(1, 1, 1, 1);
+        if (borderType == BorderStyles.VERTICAL) {
+            insets.left += ResultSetRenderer.BORDER_INDENT;
+            insets.right += ResultSetRenderer.BORDER_INDENT;
+        } else if (borderType == BorderStyles.HORIZONTAL) {
+            insets.top += ResultSetRenderer.BORDER_INDENT;
+            insets.bottom += ResultSetRenderer.BORDER_INDENT;
+        } else if (borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL
+                || borderType == BorderStyles.OUTSIDE) {
+            insets.left += ResultSetRenderer.BORDER_INDENT;
+            insets.right += ResultSetRenderer.BORDER_INDENT;
+            insets.top += ResultSetRenderer.BORDER_INDENT;
+            insets.bottom += ResultSetRenderer.BORDER_INDENT;
+        }
+        return insets;
     }
 }
