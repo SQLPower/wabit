@@ -901,7 +901,15 @@ public class CellSetTableHeaderComponent extends JComponent {
             		}
             		if (axis != null && li.member.getChildMemberCount() > 0) {
             			Icon icon;
-            			if (i + 1 < layoutItems.size() && layoutItems.get(i + 1).member.getParentMember() != null && layoutItems.get(i + 1).member.getParentMember().equals(li.member)) {
+						// in a crossjoin, the next layout item may contain the
+						// same member, so we have to check the next after.
+            			LayoutItem next = null;
+            			int j = i ;
+            			while (j + 1 < layoutItems.size() && (next == null || next.member.equals(li.member))) {
+            				j++;
+            				next = layoutItems.get(j);
+            			}	
+        				if (next != null && next.member.getParentMember() != null && next.member.getParentMember().equals(li.member)) {
             				icon = EXPANDED_TREE_ICON;
             			} else {
             				icon = COLLAPSED_TREE_ICON;
