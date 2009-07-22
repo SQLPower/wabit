@@ -1716,9 +1716,9 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 			    categoryColumnNames.add(identifier.getName());
 			}
 			if (chartType == ExistingChartTypes.BAR) {
-			    chart = ChartFactory.createBarChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+			    chart = ChartFactory.createBarChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
 			} else if (chartType == ExistingChartTypes.CATEGORY_LINE) {
-			    chart = ChartFactory.createLineChart(chartName, createCategoryName(categoryColumnNames), yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+			    chart = ChartFactory.createLineChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
 			} else {
 			    throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
 			}
