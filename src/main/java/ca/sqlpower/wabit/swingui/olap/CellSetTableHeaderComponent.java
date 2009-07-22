@@ -774,20 +774,23 @@ public class CellSetTableHeaderComponent extends JComponent {
 	            	preferredSizes.add(new Dimension(0, 0));
 	            }
             	
-	            int shallowestDepth = 0;
-	            
+	            Member shallowestMember = null;
 	            if (axis.getPositionCount() > 0) {
 					// Get the depth of the shallowest member (lowest depth) so
 					// that it can be positioned at the left/top most position
 					// (depending on the axis) (ex. if you drag in a member
 					// beneath the default member)
-	            	Member shallowestMember = axis.getPositions().get(0).getMembers().get(hierarchyOrdinal);
-					shallowestDepth = shallowestMember.getDepth();
+	            	for (Position p: axis.getPositions()) {
+	            		Member member = p.getMembers().get(hierarchyOrdinal);
+	            		if (shallowestMember == null || member.getDepth() < shallowestMember.getDepth()) {
+	            			shallowestMember = member;
+	            		}
+	            	}
 	            }
 	            
 	            for (Position position : axis) {
 	                Member member = position.getMembers().get(hierarchyOrdinal);
-	                int memberDepth = member.getDepth() - shallowestDepth;
+	                int memberDepth = member.getDepth() - (shallowestMember == null ? 0 : shallowestMember.getDepth());
 	                LayoutItem li = new LayoutItem();
 	                Rectangle2D stringBounds = fm.getStringBounds(member.getName(), g2);
 	                if (axis.getAxisOrdinal() == Axis.ROWS) {
