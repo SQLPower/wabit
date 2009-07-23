@@ -61,7 +61,6 @@ import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
-import ca.sqlpower.query.StringCountItem;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.query.Query.OrderByArgument;
@@ -111,8 +110,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	
 	private static final Logger logger = Logger.getLogger(WorkspaceSAXHandler.class);
 
-	private static final String COUNT_STAR = "COUNT(*)";
-	
 	/**
 	 * This list will store all of the sessions loaded by this SAX handler.
 	 */
@@ -421,7 +418,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		String uuid = attributes.getValue("id");
         		checkMandatory("name", itemName);
         		checkMandatory("id", uuid);
-        		Item item = (itemName.equals(COUNT_STAR)) ? new StringCountItem(cache.getQuery()) : new StringItem(itemName, uuid);
+        		Item item = new StringItem(itemName, uuid);
             	for (int i = 0; i < attributes.getLength(); i++) {
             		String aname = attributes.getQName(i);
             		String aval = attributes.getValue(i);

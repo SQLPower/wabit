@@ -48,7 +48,6 @@ import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLGroupFunction;
-import ca.sqlpower.query.StringCountItem;
 import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -149,12 +148,7 @@ public class QueryController {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
 				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
-				if(column instanceof StringCountItem) {
-					logger.debug("this column is a StringCountItem, we will only setGrouping to Count");
-					column.setGroupBy(SQLGroupFunction.COUNT);
-				} else {
-					column.setGroupBy(SQLGroupFunction.getGroupType((String)e.getNewValue()));
-				}
+				column.setGroupBy(SQLGroupFunction.getGroupType((String)e.getNewValue()));
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
 				int indexOfTextField = cellRenderer.getTextFields().indexOf((JTextField)e.getSource());
