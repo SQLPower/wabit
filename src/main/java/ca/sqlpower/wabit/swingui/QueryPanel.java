@@ -722,7 +722,10 @@ public class QueryPanel implements WabitPanel {
 				QueryCache cache = null;
 				List<QueryCache> removeCacheList = new ArrayList<QueryCache>();
 				for (QueryCache c : queuedQueryCache) {
-					if (c.generateQuery().equals(queryUIComponents.getQueryForJTable(t))) {
+				    if (logger.isDebugEnabled()) {
+				        logger.debug("Looking at query " + c.generateQuery() + " to match " + queryUIComponents.getQueryForJTable(t));
+				    }
+					if (c.equals(queryUIComponents.getStatementExecutorForJTable(t))) {
 						cache = c;
 						break;
 					}
@@ -795,8 +798,9 @@ public class QueryPanel implements WabitPanel {
 	 * store a copy of the QueryCache in the queued list.
 	 */
 	public synchronized void executeQueryInCache() {
-		queuedQueryCache.add(new QueryCache(queryCache));
-		queryUIComponents.executeQuery(queryCache);
+		final QueryCache cacheCopy = new QueryCache(queryCache);
+        queuedQueryCache.add(cacheCopy);
+		queryUIComponents.executeQuery(cacheCopy);
 		columnNameLabel.setIcon(THROBBER);
 		for (JTable table : queryUIComponents.getResultTables()) {
 			table.setBackground(REFRESH_GREY);
