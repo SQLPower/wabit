@@ -29,20 +29,20 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * This action will export a given query to a file that
- * can be opened as a separate project.
+ * can be opened as a separate workspace.
  */
 public class ExportQueryAction extends AbstractAction {
 
 	private final WabitSwingSession session;
-	private final Query query;
+	private final QueryCache query;
 
-	public ExportQueryAction(WabitSwingSession session, Query query) {
+	public ExportQueryAction(WabitSwingSession session, QueryCache query) {
 		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabit-exportQuery.png")));
 		this.session = session;
 		this.query = query;
@@ -64,17 +64,17 @@ public class ExportQueryAction extends AbstractAction {
 		try {
 			File selectedFile = fc.getSelectedFile();
 
-			if (!selectedFile.getPath().endsWith(SaveAsProjectAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
-				selectedFile = new File(selectedFile.getPath()+SaveAsProjectAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
+			if (!selectedFile.getPath().endsWith(SaveWorkspaceAsAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
+				selectedFile = new File(selectedFile.getPath()+SaveWorkspaceAsAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
             }
 			
 			out = new FileOutputStream(selectedFile);
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
 		
-		projectSaver.save(query);
+		workspaceSaver.save(query);
 
 	}
 

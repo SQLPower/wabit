@@ -1,5 +1,34 @@
 Wabit Release Notes
 
+Noteworthy Changes in 0.9.7
+  Charts
+    * Support for creating Line, Bar, and Scatter charts based off of 
+      relational and OLAP queries in a Report
+
+  OLAP Support
+    * Brand new support for creating reports based of Multi-dimensional OLAP Cubes
+    * Support for querying on XML/A servers, or on an in-process Mondrian server
+    * A new OLAP query editor that supports a mouse-driven, drag-and-drop interface, 
+      and the ability to modify the underlying MDX query directly
+    * Ability to create charts off of OLAP queries
+
+  Server Support
+    * Added support for discovering and connecting to remote servers
+    * Capability of saving and loading projects on a remote server    
+
+  Other
+  	* Added support for streaming queries (SQLstream support)
+
+  User Interface
+    * The concept that was called "Project" up until 0.9.6 is now called
+      "Workspace." The semantics of a workspace are exactly the same as
+      the semantics of a project. In other words, "Fun new name, same
+      great taste!"
+      
+  Bug Fixes
+    * The sub-totals in the result set renderer are now correct on printouts. 
+  
+
 Noteworthy Changes in 0.9.6
   User Interface
     * There is a row limit that affects all queries and reports to speed up loading pages in Wabit. This limit does not affect printing.
@@ -8,6 +37,7 @@ Noteworthy Changes in 0.9.6
   Other
     * Fixed an exception occurring when loading a project with a data source that no longer exists in the pl.ini or cannot be connected to.
     * Updated the user guide.
+
 
 Noteworthy Changes in 0.9.5
   User Interface
@@ -29,6 +59,7 @@ Noteworthy Changes in 0.9.5
     * Added progress bars to printing and PDF creation.
     * About and Quit now work properly on Mac.
 
+
 Noteworthy Changes in 0.9.4
   Query Interface
     * Queries now have a log tab to display number of lines changed on inserts and updates
@@ -39,6 +70,7 @@ Noteworthy Changes in 0.9.4
   Other
     * Editor windows can now be maximized from the menu.
     * Fixed memory leaks.
+
 
 Noteworthy Changes in 0.9.3
   User Interface

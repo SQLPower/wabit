@@ -25,14 +25,14 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
 
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.WabitObject;
 
 /**
- * This transferable will allow dragging queries defined in a project to a layout.
+ * This transferable will allow dragging queries defined in a workspace to a layout.
  */
 public class ReportQueryTransferable implements Transferable {
 	
-	private final Query[] queries;
+	private final WabitObject[] queries;
 	
     /**
      * Data flavour that indicates a JVM-local reference to an ArrayList containing
@@ -40,19 +40,19 @@ public class ReportQueryTransferable implements Transferable {
      */
     public static final DataFlavor LOCAL_QUERY_ARRAY_FLAVOUR =
         new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
-                "; class=\"[Lca.sqlpower.wabit.Query;\"", "Local Array of Queries");
+                "; class=\"[Lca.sqlpower.wabit.WabitObject;\"", "Local Array of WabitObject");
 
-	public ReportQueryTransferable(Query[] queries) {
+	public ReportQueryTransferable(WabitObject[] queries) {
         if (queries == null) {
             throw new NullPointerException("Can't transfer a null array. Try an empty one instead!");
         }
 		this.queries = queries;
 	}
 	
-	public ReportQueryTransferable(List<Query> queries) {
-		this(queries.toArray(new Query[queries.size()]));
+	public ReportQueryTransferable(List<WabitObject> queries) {
+		this(queries.toArray(new WabitObject[queries.size()]));
 	}
-
+	
 	public Object getTransferData(DataFlavor flavor)
 	throws UnsupportedFlavorException, IOException {
 		if (flavor == LOCAL_QUERY_ARRAY_FLAVOUR) {

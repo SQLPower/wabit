@@ -44,6 +44,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -74,27 +75,31 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
-import ca.sqlpower.architect.swingui.dbtree.SQLObjectSelection;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.Query;
+import ca.sqlpower.query.QueryChangeEvent;
+import ca.sqlpower.query.QueryChangeListener;
+import ca.sqlpower.query.SQLGroupFunction;
+import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sql.SQLGroupFunction;
+import ca.sqlpower.sql.SpecificDataSourceCollection;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRoot;
+import ca.sqlpower.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
+import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
-import ca.sqlpower.wabit.swingui.action.ForumAction;
 import ca.sqlpower.wabit.swingui.action.ShowQueryPropertiesAction;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -210,14 +215,63 @@ public class QueryPanel implements WabitPanel {
 	/**
 	 * This will listen to any change in the query cache and update the results table as needed.
 	 */
-	private final PropertyChangeListener queryCacheListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName() != QueryCache.PROPERTY_QUERY_TEXT && e.getPropertyName() != "running") {
-				executeQueryInCache();
-			}
-		}
-	};
+	private final QueryChangeListener queryListener = new QueryChangeListener() {
+    
+        public void propertyChangeEvent(PropertyChangeEvent evt) {
+            if (queryCache.getQuery().getCanExecuteQuery() 
+                    && evt.getPropertyName() != Query.USER_MODIFIED_QUERY 
+                    && evt.getPropertyName() != "running") {
+                executeQueryInCache();
+            }
+        }
+    
+        public void joinRemoved(QueryChangeEvent evt) {
+            executeQuery();
+        }
 
+        private void executeQuery() {
+            if (queryCache.getQuery().getCanExecuteQuery()) {
+                executeQueryInCache();
+            }
+        }
+    
+        public void joinPropertyChangeEvent(PropertyChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void joinAdded(QueryChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void itemRemoved(QueryChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void itemOrderChanged(QueryChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void itemAdded(QueryChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void containerRemoved(QueryChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void containerAdded(QueryChangeEvent evt) {
+            executeQuery();
+        }
+    
+        public void canExecuteQuery() {
+            executeQueryInCache();
+        }
+    };
+    
 	/**
 	 * This is the panel that holds the QueryPen and the GUI SQL select in the tabbed pane.
 	 */
@@ -257,7 +311,7 @@ public class QueryPanel implements WabitPanel {
 					i++;
 				}
 				logger.debug("Received column width change on column " + i + " the new width is " + (Integer) evt.getNewValue());
-				Item resizedItem = queryCache.getSelectedColumns().get(i);
+				Item resizedItem = queryCache.getQuery().getSelectedColumns().get(i);
 				resizedItem.setColumnWidth((Integer) evt.getNewValue());
 				
 			}
@@ -281,13 +335,25 @@ public class QueryPanel implements WabitPanel {
 		this.session = session;
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = cache;
-		queryPen = new QueryPen(session, this, queryCache);
-		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
-		queryUIComponents = new SQLQueryUIComponents(session, session.getProject(), session, mainSplitPane, queryCache);
+		
+		final Action queryPenExecuteButtonAction = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                executeQueryInCache();
+            }
+        };
+        queryPen = new QueryPen(
+                queryPenExecuteButtonAction,
+                queryCache.getQuery(),
+                WabitSwingSessionContextImpl.FORUM_ACTION);
+		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("ca/sqlpower/swingui/querypen/wabit_execute.png")));
+		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
+		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
+		
+		queryUIComponents = new SQLQueryUIComponents(session, new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), session, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
-		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
-		queryPen.setZoom(queryCache.getZoomLevel());
+		queryController = new QueryController(queryCache.getQuery(), queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
+		queryPen.setZoom(queryCache.getQuery().getZoomLevel());
 		queuedQueryCache = new ArrayList<QueryCache>();
 		reportComboBox = queryUIComponents.getDatabaseComboBox();
 		
@@ -320,7 +386,7 @@ public class QueryPanel implements WabitPanel {
 					if(reportComboBox.getSelectedItem() != null) {
 					    // FIXME the session (or session context) should be maintaining a map of data
 					    // sources to SQLDatabase instances. Each SQLDatabase instance has its own connection pool! 
-						rootNode.addChild(QueryPanel.this.session.getDatabase((SPDataSource) reportComboBox.getSelectedItem()));
+						rootNode.addChild(QueryPanel.this.session.getDatabase((JDBCDataSource) reportComboBox.getSelectedItem()));
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 						dragTree.setModel(tempTreeModel);
 						dragTree.setVisible(true);
@@ -332,11 +398,11 @@ public class QueryPanel implements WabitPanel {
 
 			}
 		});
-		if (session.getProject().getDataSources().size() != 0) {
-            if (queryCache.getDatabase() == null) {
+		if (session.getWorkspace().getDataSources().size() != 0) {
+            if (queryCache.getQuery().getDatabase() == null) {
                 dragTree.setVisible(false);
             } else {
-                reportComboBox.setSelectedItem((SPDataSource) queryCache.getDatabase().getDataSource());
+                reportComboBox.setSelectedItem((SPDataSource) queryCache.getQuery().getDatabase().getDataSource());
                 dragTree.setVisible(true);
             }
         } else {
@@ -390,18 +456,27 @@ public class QueryPanel implements WabitPanel {
 				logger.debug("Table added.");
 				queryController.unlistenToCellRenderer();
 				TableModelSortDecorator sortDecorator = null;
-				JTable table = e.getChangedTable();
+				final JTable table = e.getChangedTable();
 				if (table instanceof FancyExportableJTable) {
 					FancyExportableJTable fancyTable = (FancyExportableJTable)table;
 					sortDecorator = fancyTable.getTableModelSortDecorator();
 				}
 				ComponentCellRenderer renderer = new ComponentCellRenderer(table, sortDecorator);
 				table.getTableHeader().setDefaultRenderer(renderer);
-				
+
 				ListModel lm = new RowListModel(table);
-				JList rowHeader = new JList(lm);
+				final JList rowHeader = new JList(lm);
 				rowHeader.setFixedCellWidth(groupingLabel.getPreferredSize().width + 2);
+				
 				rowHeader.setCellRenderer(new RowHeaderRenderer(table));
+				
+				table.addPropertyChangeListener("rowHeight", new PropertyChangeListener() {
+					public void propertyChange(PropertyChangeEvent evt) {
+						rowHeader.setFixedCellHeight(table.getRowHeight());
+					}
+		        });
+		        
+				rowHeader.setFixedCellHeight(table.getRowHeight());
 				
 				((JScrollPane)table.getParent().getParent()).setRowHeaderView(rowHeader);
 				
@@ -484,12 +559,12 @@ public class QueryPanel implements WabitPanel {
 		exportSQL.setToolTipText("Export query to SQL script.");
 		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
-		queryToolBar.add(new CreateLayoutFromQueryAction(session, session.getProject(), queryCache));
+		queryToolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 		queryToolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
 		
 		JToolBar wabitBar = new JToolBar();
 		wabitBar.setFloatable(false);
-		JButton forumButton = new JButton(new ForumAction());
+		JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		wabitBar.add(forumButton);
 		
@@ -502,7 +577,7 @@ public class QueryPanel implements WabitPanel {
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
-		queryCache.addPropertyChangeListener(queryCacheListener);
+		queryCache.getQuery().addQueryChangeListener(queryListener);
     	JPanel playPen = queryPen.createQueryPen();
     	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
 
@@ -538,7 +613,7 @@ public class QueryPanel implements WabitPanel {
 						//the query in a state where it thinks the user changed the query twice.
 						queryUIComponents.getQueryArea().setText("");
 						
-						queryCache.removeUserModifications();
+						queryCache.getQuery().removeUserModifications();
 						queryPen.getGlobalWhereText().setVisible(true);
 						groupingCheckBox.setVisible(true);
 						whereText.setVisible(true);
@@ -554,11 +629,11 @@ public class QueryPanel implements WabitPanel {
 		});
     	
     	groupingCheckBox = new JCheckBox("Grouping");
-    	groupingCheckBox.setSelected(queryCache.isGroupingEnabled());
+    	groupingCheckBox.setSelected(queryCache.getQuery().isGroupingEnabled());
     	groupingCheckBox.addActionListener(new AbstractAction() {
 
     		public void actionPerformed(ActionEvent e) {
-    			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
+    			queryCache.getQuery().setGroupingEnabled(groupingCheckBox.isSelected());
     			executeQueryInCache();
     		}
     	});
@@ -595,6 +670,33 @@ public class QueryPanel implements WabitPanel {
 		executeQueryInCache();
 	}
 	
+	private JToolBar createQueryPenToolBar(QueryPen pen) {
+	    JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
+	    toolBar.setFloatable(false);
+	    
+	    toolBar.add(pen.getPlayPenExecuteButton());
+	    toolBar.addSeparator();
+
+	    JButton exportQuery = new JButton(new ExportQueryAction(session, queryCache));
+	    exportQuery.setToolTipText("Export query to Wabit file.");
+	    toolBar.add(exportQuery);
+	    JButton exportSQL = new JButton(new ExportSQLScriptAction(session, queryCache));
+	    exportSQL.setToolTipText("Export query to SQL script.");
+	    toolBar.add(exportSQL);
+	    toolBar.addSeparator();
+	    
+	    toolBar.add(pen.getDeleteButton());
+	    toolBar.add(pen.getCreateJoinButton());
+	    toolBar.addSeparator();
+	    toolBar.add(pen.getZoomSliderContainer());
+	    toolBar.addSeparator();
+	        
+	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
+	    toolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
+	    
+	    return toolBar;
+	}
+	
 	/**
 	 * This will add a {@link ComponentCellRenderer} to the table headers
 	 * to allow grouping when the grouping checkbox is checked. This will
@@ -620,7 +722,10 @@ public class QueryPanel implements WabitPanel {
 				QueryCache cache = null;
 				List<QueryCache> removeCacheList = new ArrayList<QueryCache>();
 				for (QueryCache c : queuedQueryCache) {
-					if (c.generateQuery().equals(queryUIComponents.getQueryForJTable(t))) {
+				    if (logger.isDebugEnabled()) {
+				        logger.debug("Looking at query " + c.generateQuery() + " to match " + queryUIComponents.getQueryForJTable(t));
+				    }
+					if (c.equals(queryUIComponents.getStatementExecutorForJTable(t))) {
 						cache = c;
 						break;
 					}
@@ -647,24 +752,25 @@ public class QueryPanel implements WabitPanel {
 					havingLabel.setVisible(false);
 				}
 				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-					SQLGroupFunction groupByAggregate = cache.getGroupByAggregate(cache.getSelectedColumns().get(i));
-					if (groupByAggregate != null) {
-						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate.toString());
+				    final SQLGroupFunction groupBy = cache.getQuery().getSelectedColumns().get(i).getGroupBy();
+					if (!groupBy.equals(SQLGroupFunction.GROUP_BY)) {
+                        String groupByAggregate = groupBy.getGroupingName();
+						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate);
 					}
 				}
 
 				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-					String havingText = cache.getHavingClause(cache.getSelectedColumns().get(i));
+					String havingText = cache.getQuery().getSelectedColumns().get(i).getHaving();
 					if (havingText != null) {
 						renderPanel.getTextFields().get(i).setText(havingText);
 					}
 				}
 				
 				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (Item column : cache.getOrderByList()) {
-					int columnIndex = cache.getSelectedColumns().indexOf(column);
-					OrderByArgument arg = cache.getOrderByArgument(column);
-					if (arg != null) {
+				for (Item column : cache.getQuery().getOrderByList()) {
+					int columnIndex = cache.getQuery().getSelectedColumns().indexOf(column);
+					OrderByArgument arg = column.getOrderBy();
+					if (arg != null && arg != OrderByArgument.NONE) {
 						if (arg == OrderByArgument.ASC) {
 							columnSortMap.put(columnIndex, TableModelSortDecorator.ASCENDING);
 						} else if (arg == OrderByArgument.DESC) {
@@ -677,7 +783,7 @@ public class QueryPanel implements WabitPanel {
 				renderPanel.setSortingStatus(columnSortMap);
 				
 				for (int i = 0; i < t.getColumnCount(); i++) {
-					Integer width = cache.getSelectedColumns().get(i).getColumnWidth();
+					Integer width = cache.getQuery().getSelectedColumns().get(i).getColumnWidth();
 					logger.debug("Width in cache for column " + i + " is " + width);
 					if (width != null) {
 						t.getColumnModel().getColumn(i).setPreferredWidth(width);
@@ -692,8 +798,9 @@ public class QueryPanel implements WabitPanel {
 	 * store a copy of the QueryCache in the queued list.
 	 */
 	public synchronized void executeQueryInCache() {
-		queuedQueryCache.add(new QueryCache(queryCache));
-		queryUIComponents.executeQuery(queryCache);
+		final QueryCache cacheCopy = new QueryCache(queryCache);
+        queuedQueryCache.add(cacheCopy);
+		queryUIComponents.executeQuery(cacheCopy);
 		columnNameLabel.setIcon(THROBBER);
 		for (JTable table : queryUIComponents.getResultTables()) {
 			table.setBackground(REFRESH_GREY);
@@ -741,7 +848,7 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private void disconnect() {
 		queryController.disconnect();
-		queryCache.removePropertyChangeListener(queryCacheListener);
+		queryCache.getQuery().removeQueryChangeListener(queryListener);
 		logger.debug("Removed the query panel change listener on the query cache");
 		queryUIComponents.closeConMap();
 		queryUIComponents.disconnectListeners();

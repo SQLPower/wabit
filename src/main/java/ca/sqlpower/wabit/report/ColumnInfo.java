@@ -23,9 +23,9 @@ import java.text.Format;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.query.Item;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.query.Item;
 
 public class ColumnInfo extends AbstractWabitObject{
 
@@ -171,5 +171,9 @@ public class ColumnInfo extends AbstractWabitObject{
 	public String getColumnAlias() {
 		return columnAlias;
 	}
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
 }
 

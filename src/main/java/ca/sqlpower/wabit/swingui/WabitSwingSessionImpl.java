@@ -32,10 +32,10 @@ import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,10 +44,12 @@ import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.naming.NamingException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -61,6 +63,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -71,14 +74,20 @@ import javax.swing.tree.TreePath;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
+import org.olap4j.OlapConnection;
 
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
+import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
+import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
@@ -86,28 +95,31 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitProject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
-import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
-import ca.sqlpower.wabit.swingui.action.ImportProjectAction;
-import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
-import ca.sqlpower.wabit.swingui.action.NewProjectOnServerAction;
-import ca.sqlpower.wabit.swingui.action.SaveAsProjectAction;
-import ca.sqlpower.wabit.swingui.action.SaveProjectAction;
-import ca.sqlpower.wabit.swingui.action.SaveProjectOnServerAction;
+import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
+import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellEditor;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeCellRenderer;
-import ca.sqlpower.wabit.swingui.tree.ProjectTreeModel;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -118,7 +130,14 @@ import com.jgoodies.forms.layout.FormLayout;
  * the conventional way to start the application running.
  */
 public class WabitSwingSessionImpl implements WabitSwingSession {
+    
+    private static final Icon DB_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
+    /**
+	 * The icon for the "Open Demonstration Workspace" button.
+	 */
+	private static final Icon OPEN_DEMO_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
+    
 	/**
 	 * A constant for storing the location of the query dividers in prefs.
 	 */
@@ -129,11 +148,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
 	
-	/**
-	 * An icon for a new Wabit project.
-	 */
-	private static final Icon NEW_PROJECT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
-
 	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private class WindowClosingListener extends WindowAdapter {
@@ -152,9 +166,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	private final WabitSwingSessionContext sessionContext;
 	
-	private final WabitProject project;
+	private final WabitWorkspace workspace;
 	
-	private JTree projectTree;
+	private JTree workspaceTree;
 	private JSplitPane wabitPane;
 	private final JFrame frame;
 	private static JLabel statusLabel;
@@ -186,7 +200,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	/**
 	 * This is the current panel to the right of the JTree showing the parts of the 
-	 * project. This will allow editing the currently selected element in the JTree.
+	 * workspace. This will allow editing the currently selected element in the JTree.
 	 */
 	private WabitPanel currentEditorPanel;
 
@@ -199,14 +213,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	/**
 	 * This is the most recent file loaded in this session or the last file that the session
-	 * was saved to. This will be null if no file has been loaded or the project has not
+	 * was saved to. This will be null if no file has been loaded or the workspace has not
 	 * been saved yet.
 	 */
 	private File currentFile = null;
 	
 	/**
 	 * A {@link UserPrompterFactory} that will create a dialog for users to choose an existing
-	 * DB or create a new one if they load a project with a DB not in their pl.ini.
+	 * DB or create a new one if they load a workspace with a DB not in their pl.ini.
 	 */
 	private UserPrompterFactory upfMissingLoadedDB;
 	
@@ -226,22 +240,22 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		    if (isLoading()) return;
 			if (evt.getPropertyName().equals("editorPanelModel")) {
 				if (!setEditorPanel((WabitObject) evt.getNewValue())) {
-					project.setEditorPanelModel((WabitObject) evt.getOldValue());
+					workspace.setEditorPanelModel((WabitObject) evt.getOldValue());
 					return;
 				}
 				if (evt.getNewValue() != null) {
-					final TreePath createTreePathForObject = projectTreeModel.createTreePathForObject((WabitObject) evt.getNewValue());
+					final TreePath createTreePathForObject = workspaceTreeModel.createTreePathForObject((WabitObject) evt.getNewValue());
 					logger.debug("Tree path being set to " + createTreePathForObject + " as editor panel being set to " + ((WabitObject) evt.getNewValue()).getName());
-					projectTree.setSelectionPath(createTreePathForObject);
+					workspaceTree.setSelectionPath(createTreePathForObject);
 				}
 			}
 		}
 	};
 
 	/**
-	 * The model behind the project tree on the left side of Wabit.
+	 * The model behind the workspace tree on the left side of Wabit.
 	 */
-	private ProjectTreeModel projectTreeModel;
+	private WorkspaceTreeModel workspaceTreeModel;
 
 	/**
 	 * This is the limit of all result sets in Wabit. Changing this spinner
@@ -258,22 +272,27 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private int oldRowLimitValue;
 	
 	/**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = new HashMap<Olap4jDataSource, OlapConnectionPool>();
+	
+	/**
 	 * Creates a new session 
 	 * 
 	 * @param context
 	 */
 	public WabitSwingSessionImpl(WabitSwingSessionContext context) {
-	    project = new WabitProject();
-	    project.addPropertyChangeListener(editorModelListener);
+	    workspace = new WabitWorkspace();
+	    workspace.addPropertyChangeListener(editorModelListener);
 		sessionContext = context;
 		sessionContext.registerChildSession(this);
 		
 		statusLabel= new JLabel();
 		
 		wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		projectTreeModel = new ProjectTreeModel(project);
-		projectTree = new JTree(projectTreeModel);
-		projectTree.setToggleClickCount(0);
+		workspaceTreeModel = new WorkspaceTreeModel(workspace);
+		workspaceTree = new JTree(workspaceTreeModel);
+		workspaceTree.setToggleClickCount(0);
 		
         rowLimitSpinner = new JSpinner();
         final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
@@ -281,7 +300,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         getRowLimitSpinner().setValue(1000);
         rowLimitSpinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				pcs.firePropertyChange("rowLimit", oldRowLimitValue, ((Integer) rowLimitSpinner.getValue()).intValue());
+				pcs.firePropertyChange(QueryCache.ROW_LIMIT, oldRowLimitValue, ((Integer) rowLimitSpinner.getValue()).intValue());
 				oldRowLimitValue = (Integer) rowLimitSpinner.getValue();
 			}
 		});
@@ -310,38 +329,46 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		frame.addWindowListener(new WindowClosingListener(this));
 		aboutAction = new AboutAction(frame);
 		
-		dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources());
+		List<Class<? extends SPDataSource>> newDSTypes = new ArrayList<Class<? extends SPDataSource>>();
+        newDSTypes.add(JDBCDataSource.class);
+        newDSTypes.add(Olap4jDataSource.class);
+        dbConnectionManager = new DatabaseConnectionManager(getContext().getDataSources(), 
+				new DefaultDataSourceDialogFactory(), 
+				new DefaultDataSourceTypeDialogFactory(getContext().getDataSources()),
+				new ArrayList<Action>(), new ArrayList<JComponent>(), frame, false, newDSTypes);
+		dbConnectionManager.setDbIcon(DB_ICON);
 		
 		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, sessionContext.getDataSources());
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
     	
-		final ProjectTreeCellRenderer renderer = new ProjectTreeCellRenderer();
-		projectTree.setCellRenderer(renderer);
-		projectTree.setCellEditor(new ProjectTreeCellEditor(projectTree, renderer));
+		final WorkspaceTreeCellRenderer renderer = new WorkspaceTreeCellRenderer();
+		workspaceTree.setCellRenderer(renderer);
+		workspaceTree.setCellEditor(new WorkspaceTreeCellEditor(workspaceTree, renderer));
 		
-		for (Query query : project.getQueries()) {
-			if (query instanceof QueryCache) {
-				final QueryCache queryCache = (QueryCache) query;
-				queryCache.addTimerListener(new PropertyChangeListener() {
-					public void propertyChange(PropertyChangeEvent evt) {
-						renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-						projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
-					}
-				});
-				queryCache.addPropertyChangeListener(new PropertyChangeListener() {
-					public void propertyChange(PropertyChangeEvent evt) {
-						if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
-							renderer.removeTimer(queryCache);
-							projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
-						}
-					}
-				});
-			}
+		for (final QueryCache queryCache : workspace.getQueries()) {
+		    //Repaints the tree when the worker thread's timer fires. This will allow the tree node
+		    //to paint a throbber badge on the query node.
+		    queryCache.addTimerListener(new PropertyChangeListener() {
+		        public void propertyChange(PropertyChangeEvent evt) {
+		            renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
+		            workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
+		        }
+		    });
+
+		    //This removes the timer from the query if the query has stopped running.
+		    queryCache.addPropertyChangeListener(new PropertyChangeListener() {
+		        public void propertyChange(PropertyChangeEvent evt) {
+		            if (evt.getPropertyName().equals(QueryCache.RUNNING) && !((Boolean) evt.getNewValue())) {
+		                renderer.removeTimer(queryCache);
+		                workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
+		            }
+		        }
+		    });
 		}
 		
-		projectTree.getModel().addTreeModelListener(new TreeModelAdapter() {
+		workspaceTree.getModel().addTreeModelListener(new TreeModelAdapter() {
 			@Override
 			public void treeNodesInserted(final TreeModelEvent e) {
 				for (int i = 0; i < e.getChildren().length; i++) {
@@ -351,14 +378,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 						queryCache.addTimerListener(new PropertyChangeListener() {
 							public void propertyChange(PropertyChangeEvent evt) {
 								renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-								projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+								workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
 							}
 						});
 						queryCache.addPropertyChangeListener(new PropertyChangeListener() {
 							public void propertyChange(PropertyChangeEvent evt) {
 								if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
 									renderer.removeTimer(queryCache);
-									projectTree.repaint(projectTree.getPathBounds(new TreePath(new WabitObject[]{project, queryCache})));
+									workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{workspace, queryCache})));
 								}
 							}
 						});
@@ -366,12 +393,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				}
 			}
 		});
-		projectTree.addMouseListener(new ProjectTreeListener(this));
-    	projectTree.setEditable(true);
+		workspaceTree.addMouseListener(new WorkspaceTreeListener(this));
+    	workspaceTree.setEditable(true);
 
-        wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(projectTree)), JSplitPane.LEFT);
-        if (project.getEditorPanelModel() == null) {
-        	project.setEditorPanelModel(project);
+        wabitPane.add(new JScrollPane(SPSUtils.getBrandedTreePanel(workspaceTree)), JSplitPane.LEFT);
+        if (workspace.getEditorPanelModel() == null) {
+        	workspace.setEditorPanelModel(workspace);
         } else if (currentEditorPanel != null) {
             // This code was here, but I'm not sure if this actually does anything,
             // since the frame hasn't been realized yet...
@@ -402,36 +429,42 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic('f');
 		menuBar.add(fileMenu);
-		fileMenu.add(new AbstractAction("New", NEW_PROJECT_ICON) {
+		fileMenu.add(new NewWorkspaceAction(getContext()));
+		fileMenu.add(new OpenWorkspaceAction(this, this.getContext()));
+		fileMenu.add(getContext().createRecentMenu());
+		fileMenu.add(new ImportWorkspaceAction(this));
+		
+		fileMenu.addSeparator();
+		JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
-				NewProjectScreen newProject = new NewProjectScreen(getContext());
-				newProject.showFrame();
+				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
+				        "/ca/sqlpower/wabit/example_workspace.wabit"), getContext());
 			}
 		});
-        fileMenu.add(getContext().createServerListMenu(frame, "New Project On Server", new ServerListMenuItemFactory() {
+		
+        fileMenu.add(getContext().createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
-                return new JMenuItem(new NewProjectOnServerAction(dialogOwner, serviceInfo));
+                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, serviceInfo));
             }
         }));
-		fileMenu.add(new LoadProjectsAction(this, this.getContext()));
-        fileMenu.add(getContext().createRecentMenu());
-        fileMenu.add(getContext().createServerListMenu(frame, "Open On Server", new ServerListMenuItemFactory() {
+        fileMenu.add(getContext().createServerListMenu(frame, "Open Server Workspace", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 return new OpenOnServerMenu(dialogOwner, serviceInfo);
             }
         }));
-		fileMenu.add(new AbstractAction("Close Project") {
-			public void actionPerformed(ActionEvent e) {
-				close();
-			}
-		});
+        
+        fileMenu.addSeparator();
+		openDemoMenuItem.setText("Open Demo Workspace");
+		openDemoMenuItem.setIcon(OPEN_DEMO_ICON);
+		fileMenu.add(openDemoMenuItem);
+		
 		fileMenu.addSeparator();
-		fileMenu.add(new SaveProjectAction(this));
-		fileMenu.add(new SaveAsProjectAction(this));
-		fileMenu.add(getContext().createServerListMenu(frame, "Save On Server", new ServerListMenuItemFactory() {
+		fileMenu.add(new SaveWorkspaceAction(this));
+		fileMenu.add(new SaveWorkspaceAsAction(this));
+		fileMenu.add(getContext().createServerListMenu(frame, "Save Workspace on Server", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 try {
-                    return new JMenuItem(new SaveProjectOnServerAction(serviceInfo, dialogOwner, project));
+                    return new JMenuItem(new SaveServerWorkspaceAction(serviceInfo, dialogOwner, workspace));
                 } catch (Exception e) {
                     JMenuItem menuItem = new JMenuItem(e.toString());
                     menuItem.setEnabled(false);
@@ -441,7 +474,19 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             }
 		}));
 		fileMenu.addSeparator();
-		fileMenu.add(new ImportProjectAction(this));
+		fileMenu.add(new AbstractAction("Close Workspace") {
+			public void actionPerformed(ActionEvent e) {
+				close();
+			}
+		});
+		fileMenu.addSeparator();
+		JMenuItem databaseConnectionManager = new JMenuItem(new AbstractAction("Database Connection Manager...") {
+			public void actionPerformed(ActionEvent e) {
+				 dbConnectionManager.showDialog(getFrame());
+			}
+		});
+		fileMenu.add(databaseConnectionManager);
+
 		
 		if (!getContext().isMacOSX()) {
 			fileMenu.addSeparator();
@@ -497,7 +542,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
     
     public JTree getTree() {
-    	return projectTree;
+    	return workspaceTree;
     }
 
     /* docs inherited from interface */
@@ -540,10 +585,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             if (response == 0) {
                 closing = true;
             } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
-            	setEditorPanel(project.getEditorPanelModel());
+            	setEditorPanel(workspace.getEditorPanelModel());
             	return false;
             } else {
-            	if (SaveProjectAction.save(WabitSwingSessionImpl.this)) {
+            	if (SaveWorkspaceAction.save(WabitSwingSessionImpl.this)) {
             		closing = true;
             	}
             }
@@ -564,6 +609,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    	    db.disconnect();
 	    	}
 	    	
+	    	for (OlapConnectionPool olapPool : olapConnectionPools.values()) {
+	    	    try {
+                    olapPool.disconnect();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+	    	}
+	    	
     		frame.dispose();
 		}
 		return closing;
@@ -578,7 +631,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     public static void  main(final String[] args) throws Exception {
     	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
     	System.setProperty("apple.laf.useScreenMenuBar", "true");
-    	
+    	try {
+    		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    	} catch (Exception e) {
+    		logger.error("Unable to set native look and feel. Continuing with default.", e);
+    	}
+
     	SwingUtilities.invokeLater(new Runnable() {
 
 			public void run() {
@@ -599,7 +657,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 					
 					if (importFile != null) {
 						try {
-							LoadProjectsAction.loadFile(importFile, context);
+							OpenWorkspaceAction.loadFile(importFile, context);
 						} catch (Throwable e) {
 							context.getWelcomeScreen().showFrame();
 						}
@@ -617,8 +675,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     	
     }
 
-    public WabitProject getProject() {
-        return project;
+    public WabitWorkspace getWorkspace() {
+        return workspace;
     }
     
 	public WabitSwingSessionContext getContext() {
@@ -630,6 +688,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public boolean setEditorPanel(WabitObject entryPanelModel) {
+	    if (isLoading()) return false;
 		if (!removeEditorPanel()) {
 			return false;
 		}
@@ -650,21 +709,24 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 		
 		if (entryPanelModel instanceof QueryCache) {
-			QueryPanel queryPanel = new QueryPanel(this, (QueryCache)entryPanelModel);
+			QueryPanel queryPanel = new QueryPanel(this, (QueryCache) entryPanelModel);
 		   	if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
 	            String[] dividerLocations = prefs.get(QUERY_DIVIDER_LOCATON, null).split(",");
 	            queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
 	            queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
 		   	}
 		   	currentEditorPanel = queryPanel;
+		} else if (entryPanelModel instanceof OlapQuery) {
+		    OlapQueryPanel panel = new OlapQueryPanel(this, wabitPane, (OlapQuery) entryPanelModel);
+		    currentEditorPanel = panel;
 		} else if (entryPanelModel instanceof Layout) {
 			ReportLayoutPanel rlPanel = new ReportLayoutPanel(this, (Layout) entryPanelModel);
 			if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {
 				rlPanel.getSplitPane().setDividerLocation(Integer.parseInt(prefs.get(LAYOUT_DIVIDER_LOCATION, null)));
 			}
 			currentEditorPanel = rlPanel;
-		} else if (entryPanelModel instanceof WabitProject) {
-			currentEditorPanel = new ProjectPanel(this);
+		} else if (entryPanelModel instanceof WabitWorkspace) {
+			currentEditorPanel = new WorkspacePanel(this);
 		} else {
 			if (entryPanelModel instanceof WabitObject && ((WabitObject) entryPanelModel).getParent() != null) {
 				setEditorPanel(((WabitObject) entryPanelModel).getParent()); 
@@ -674,6 +736,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 		wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
 		wabitPane.setDividerLocation(dividerLoc);
+		// The execute query currently needs to be done after the panel is added
+		// to the split pane, because it requires a Graphics2D object to get a
+		// FontMetrics to use to calculate optimal column widths in the
+		// CellSetViewer. If done before, the Graphics2D object is null.
+		if (currentEditorPanel instanceof OlapQueryPanel) {
+			try {
+                ((OlapQueryPanel) currentEditorPanel).updateCellSet(((OlapQuery) entryPanelModel).execute());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+		}
+		// TODO Select the proper panel in the wabit tree
 		return true;
 	}
 	
@@ -708,34 +782,37 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	private boolean hasUnsavedChanges() {
 		if (currentFile == null) {
-			return project.getChildren().size() > 0;
+			return workspace.getChildren().size() > 0;
 		}
 		
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		new ProjectXMLDAO(out, project).save();
-		BufferedReader reader;
-		try {
-			reader = new BufferedReader(new FileReader(currentFile));
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+		// FIXME: this does not work, because some GUIDs change every time you load/save.
+		// It would be much better to track changes to the model using a listener.
 		
-		char[] buffer = new char[out.toString().toCharArray().length];
+		ByteArrayOutputStream currentWorkspaceOutStream = new ByteArrayOutputStream();
+		new WorkspaceXMLDAO(currentWorkspaceOutStream, workspace).save();
 		
+		BufferedReader existingWorkspaceFile = null;
 		try {
-			reader.read(buffer, 0, out.toString().toCharArray().length);
+		    String currentWorkspaceAsString = currentWorkspaceOutStream.toString("utf-8");
+		    StringBuilder existingWorkspaceBuffer = new StringBuilder(currentWorkspaceAsString.length());
+		    existingWorkspaceFile = new BufferedReader(new FileReader(currentFile));
+		    for (;;) {
+		        int nextChar = existingWorkspaceFile.read();
+		        if (nextChar == -1) break;
+		        existingWorkspaceBuffer.append((char) nextChar);
+		    }
+		    
+            return !existingWorkspaceBuffer.toString().equals(currentWorkspaceAsString);
+            
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+		    throw new RuntimeException(e);
+		} finally {
+		    try {
+		        if (existingWorkspaceFile != null) existingWorkspaceFile.close();
+		    } catch (IOException ex) {
+		        logger.warn("Couldn't close comparative input file. Squishing this exception:", ex);
+		    }
 		}
-		
-		for (int i = 0; i < out.toString().toCharArray().length && i < buffer.length; i++) {
-			if (out.toString().toCharArray()[i] != buffer[i]) {
-				logger.debug("Difference at position " + i + " character " + out.toString().toCharArray()[i] + " " + buffer[i]);
-				return true;
-			}
-		}
-		
-		return false;
 	}
 	
 	public void setCurrentFile(File savedOrLoadedFile) {
@@ -774,18 +851,29 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         this.loading = loading;
     }
 
-    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException {
         return getDatabase(dataSource).getConnection();
     }
 
-    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
     	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
-            dataSource = new SPDataSource(dataSource);  // defensive copy for cache key
+            dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
         }
         return db;
+    }
+    
+    public OlapConnection createConnection(Olap4jDataSource dataSource) 
+    throws SQLException, ClassNotFoundException, NamingException {
+        if (dataSource == null) return null;
+        OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+        if (olapConnectionPool == null) {
+            olapConnectionPool = new OlapConnectionPool(dataSource, this);
+            olapConnectionPools.put(dataSource, olapConnectionPool);
+        }
+        return olapConnectionPool.getConnection();
     }
 }

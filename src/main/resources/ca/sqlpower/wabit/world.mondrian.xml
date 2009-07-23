@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<Schema name="World">
+    <Cube name="World Countries" defaultMeasure="Population">
+        <Table name="COUNTRY" />
+        <Dimension name="Geography">
+            <Hierarchy hasAll="true" allMemberName="World">
+                <Level name="Continent" column="CONTINENT"/>
+                <Level name="Region" column="REGION"/>
+                <Level name="Country" column="NAME"/>
+            </Hierarchy>
+        </Dimension>
+        <Measure name="Population" column="POPULATION" aggregator="sum"
+            formatString="#,###"/>
+        <Measure name="Surface Area" column="SURFACEAREA" aggregator="sum"
+            formatString="#,###"/>
+        <Measure name="Life Expectancy" column="LIFEEXPECTANCY" aggregator="avg"
+            formatString="#,###"/>
+        <Measure name="Gross National Product" column="GNP" aggregator="sum"
+            formatString="#,###"/>
+    </Cube>
+</Schema>

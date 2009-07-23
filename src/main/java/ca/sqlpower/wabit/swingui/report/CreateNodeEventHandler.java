@@ -20,7 +20,7 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.GraphRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
@@ -75,7 +75,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			panel.getPageNode().addChild(newCBNode);
 		} else if (panel.getMouseState().equals(MouseStates.CREATE_GRAPH)) {
 			ContentBox contentBox = new ContentBox();
-			GraphRenderer graph = new GraphRenderer(contentBox, session.getProject());
+			ChartRenderer graph = new ChartRenderer(contentBox, session.getWorkspace());
 			contentBox.setContentRenderer(graph);
 			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
 			newCBNode.setX(event.getPosition().getX());

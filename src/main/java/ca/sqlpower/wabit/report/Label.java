@@ -58,6 +58,8 @@ import ca.sqlpower.wabit.swingui.InsertVariableButton;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import edu.umd.cs.piccolo.event.PInputEvent;
+
 /**
  * A simple report content item that prints out some text with optional variable
  * substitution. Variables are described in the documentation for the
@@ -176,13 +178,16 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         FontMetrics fm = g.getFontMetrics();
         int textHeight = fm.getHeight() * textToRender.length;
         
+        if (getBackgroundColour() != null) {
+	        g.setColor(getBackgroundColour());
+	        g.fillRect(0, 0, (int) contentBox.getWidth(), (int) contentBox.getHeight());
+	        g.setColor(Color.BLACK);
+        }
         logger.debug("Rendering label text: " + Arrays.toString(textToRender));
-        
-        int y = vAlignment.calculateStartY(contentBox.getHeight(), textHeight, fm);
-        
+        int y = vAlignment.calculateStartY((int) contentBox.getHeight(), textHeight, fm);
         for (String text : textToRender) {
             int textWidth = fm.stringWidth(text);
-            int x = hAlignment.computeStartX(contentBox.getWidth(), textWidth);
+            int x = hAlignment.computeStartX((int) contentBox.getWidth(), textWidth);
             g.drawString(text, x, y);
             y += fm.getHeight();
         }
@@ -348,4 +353,12 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
 		this.backgroundColour = backgroundColour;
 	}
+
+    public void processEvent(PInputEvent event, int type) {
+        //do nothing
+    }
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
+    }
 }

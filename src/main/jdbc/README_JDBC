@@ -1,0 +1,21 @@
+IMPORTANT NOTE REGARDING JDBC DRIVERS AND THE SYSTEM CLASSPATH
+
+The JDBC drivers must not be on the system classpath. They are treated
+as resources rather than libraries.
+
+Illustrative example:
+
+If xyz_driver.jar is a JDBC driver that contains class "com.xyz.Driver",
+the following statements must hold:
+
+Class.forName("com.xyz.Driver") must throw a NoClassDefFoundException
+
+ClassLoader.getSystemResource("xyz_driver.jar") must return a valid URL
+to the contents of the xyz_driver.jar file.
+
+For lots more information on the reason why, consult the javadoc
+documentation of the following:
+
+class ca.sqlpower.sql.JDBCDataSourceType
+class ca.sqlpower.sql.JDBCDataSourceType.JDBCClassLoader
+method ca.sqlpower.sql.JDBCDataSource.jarSpecToFile()

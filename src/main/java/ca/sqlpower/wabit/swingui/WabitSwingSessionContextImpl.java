@@ -30,6 +30,7 @@ import java.util.prefs.Preferences;
 import javax.jmdns.JmDNS;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 
 import org.apache.log4j.Logger;
@@ -37,11 +38,17 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
+import ca.sqlpower.swingui.SwingPopupUserPrompter;
+import ca.sqlpower.swingui.action.ForumAction;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
-import ca.sqlpower.wabit.swingui.action.LoadProjectsAction;
+import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
@@ -59,11 +66,22 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     
     /**
      * This is a preference that stores if the app should start up on the welcome screen
-     * or it should start on the last loaded/saved project. 
+     * or it should start on the last loaded/saved workspace. 
      */
     private static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
     
+    public static final ForumAction FORUM_ACTION = new ForumAction(new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-24px.png")), "Go to Wabit support forum");
+    
 	private WabitWelcomeScreen welcomeScreen;
+
+	/**
+	 * Set to true if the {@link #close()} method has been called at least once.
+	 * Otherwise, it should be set to false. It is currently used to prevent
+	 * {@link #deregisterChildSession(WabitSession)} from overriding the
+	 * {@link #PREFS_START_ON_WELCOME_SCREEN} preference value that
+	 * {@link #close()} writes.
+	 */
+	private boolean closing = false;
 
 	/**
 	 * @param terminateWhenLastSessionCloses
@@ -91,14 +109,18 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	}
 	
 	public RecentMenu createRecentMenu() {
-		return new RecentMenu(this.getClass()) {
+		RecentMenu menu = new RecentMenu(this.getClass()) {
 			
 			@Override
 			public void loadFile(String fileName) throws IOException {
 				File file = new File(fileName);
-				LoadProjectsAction.loadFile(file, WabitSwingSessionContextImpl.this);
+				OpenWorkspaceAction.loadFile(file, WabitSwingSessionContextImpl.this);
 			}
 		};
+		
+		menu.setText("Open Recent Workspace");
+		
+		return menu;
 	}
 //
 //	public JMenu createServerListMenu(Component dialogOwner) {
@@ -111,8 +133,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	public void deregisterChildSession(WabitSession child) {
 	    delegateContext.deregisterChildSession(child);
-		if (getSessionCount() == 0) {
+	    // TODO: Re-enabled this fix for the open most recent project
+	    // after the bug where the wrong recent project is opened is fixed.
+//		if (getSessionCount() == 0 && !closing) {
+	    if (getSessionCount() == 0) {
 			welcomeScreen.showFrame();
+			logger.debug("Wrote true in deregisterChildSession() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 			getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
 		}
 	}
@@ -176,14 +202,18 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	public void putRecentFileName(String fileName) {
 		createRecentMenu().putRecentFileName(fileName);
 		getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
+		logger.debug("Wrote false in putRecentFileName() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 	}
 
 	public boolean startOnWelcomeScreen() {
+		logger.debug("Got " + (getSessionCount() == 0) + " from " + PREFS_START_ON_WELCOME_SCREEN + " preference");
 		return getPrefs().getBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 	}
 
     public void close() {
+    	closing = true;
         getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, getSessionCount() == 0);
+        logger.debug("Wrote " + (getSessionCount() == 0) + " in close() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
         delegateContext.close();
     }
 
@@ -231,6 +261,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	public String getName() {
 		return delegateContext.getName();
 	}
+
+    public UserPrompter createUserPrompter(String question,
+            UserPromptType responseType, UserPromptOptions optionType,
+            UserPromptResponse defaultResponseType, Object defaultResponse,
+            String... buttonNames) {
+    	
+    	return SwingPopupUserPrompter.swingPopupUserPrompter(question, responseType, optionType,
+    			defaultResponseType, defaultResponse, null, delegateContext.getDataSources(),
+    			buttonNames);
+    }
 
 	
 }

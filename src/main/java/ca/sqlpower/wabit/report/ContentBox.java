@@ -23,6 +23,7 @@ import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,10 +42,10 @@ import ca.sqlpower.wabit.WabitUtils;
  */
 public class ContentBox extends AbstractWabitObject {
 
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+    private double x;
+    private double y;
+    private double width;
+    private double height;
 
     /**
      * The font for this content box's contents. If null, the containing page's
@@ -60,6 +61,10 @@ public class ContentBox extends AbstractWabitObject {
     private PropertyChangeListener rendererChangeHandler = new PropertyChangeListener() {
 
         public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("name") && evt.getNewValue() != null 
+                    && ((String) evt.getNewValue()).length() > 0) {
+                setName("Content from " + (String) evt.getNewValue());
+            }
             firePropertyChange("content", null, null);
         }
         
@@ -134,36 +139,36 @@ public class ContentBox extends AbstractWabitObject {
         return (Page) super.getParent();
     }
     
-    public int getX() {
+    public double getX() {
         return x;
     }
-    public void setX(int x) {
-        int oldX = this.x;
+    public void setX(double x) {
+        double oldX = this.x;
         this.x = x;
         firePropertyChange("x", oldX, x);
     }
-    public int getY() {
+    public double getY() {
         return y;
     }
-    public void setY(int y) {
-        int oldY = this.y;
+    public void setY(double y) {
+    	double oldY = this.y;
         this.y = y;
         firePropertyChange("y", oldY, y);
     }
     
-    public int getWidth() {
+    public double getWidth() {
         return width;
     }
-    public void setWidth(int width) {
-        int oldWidth = this.width;
+    public void setWidth(double width) {
+        double oldWidth = this.width;
         this.width = width;
         firePropertyChange("width", oldWidth, width);
     }
-    public int getHeight() {
+    public double getHeight() {
         return height;
     }
-    public void setHeight(int height) {
-        int oldHeight = this.height;
+    public void setHeight(double height) {
+        double oldHeight = this.height;
         this.height = height;
         firePropertyChange("height", oldHeight, height);
     }
@@ -214,5 +219,10 @@ public class ContentBox extends AbstractWabitObject {
 	public void cleanup() {
 		contentRenderer.cleanup();
 	}
+
+    public List<WabitObject> getDependencies() {
+        if (contentRenderer == null) return Collections.emptyList();
+        return new ArrayList<WabitObject>(Collections.singleton(contentRenderer));
+    }
 
 }

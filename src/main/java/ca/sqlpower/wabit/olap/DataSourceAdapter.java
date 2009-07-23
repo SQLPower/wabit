@@ -27,23 +27,33 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObjectException;
 
 public class DataSourceAdapter implements DataSource {
 
-    private final SPDataSource wrapMe;
+    private final SQLDatabase wrapMe;
     private PrintWriter logWriter = new PrintWriter(new OutputStreamWriter(System.out));
 
-    public DataSourceAdapter(SPDataSource wrapMe) {
+    public DataSourceAdapter(SQLDatabase wrapMe) {
         this.wrapMe = wrapMe;
         
     }
     public Connection getConnection() throws SQLException {
-        return wrapMe.createConnection();
+        try {
+            return wrapMe.getConnection();
+        } catch (SQLObjectException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Connection getConnection(String username, String password)
             throws SQLException {
-        return wrapMe.createConnection();
+        try {
+            return wrapMe.getConnection();
+        } catch (SQLObjectException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public PrintWriter getLogWriter() throws SQLException {

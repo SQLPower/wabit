@@ -49,9 +49,9 @@ public class Guide extends AbstractWabitObject {
      * The X or Y coordinate of this guide. For a horizontal guide, this is the Y coordinate;
      * for a vertical guide it's the X coordinate.
      */
-    private int offset;
+    private double offset;
 
-    public Guide(Axis axis, int offset) {
+    public Guide(Axis axis, double offset) {
         this.axis = axis;
 		setName(axis + " guide");
         setOffset(offset);
@@ -69,12 +69,12 @@ public class Guide extends AbstractWabitObject {
         return Collections.emptyList();
     }
 
-    public int getOffset() {
+    public double getOffset() {
         return offset;
     }
 
-    public void setOffset(int guideOffset) {
-        int oldOffset = this.offset;
+    public void setOffset(double guideOffset) {
+        double oldOffset = this.offset;
         this.offset = guideOffset;
         firePropertyChange("offset", oldOffset, guideOffset);
         dragSnappedEdges(oldOffset, guideOffset);
@@ -97,7 +97,7 @@ public class Guide extends AbstractWabitObject {
      * were snapped to if the snapping behaviour was moved into the model (it's
      * currently in the view's GuideAwareSelection...thing)
      */
-    private void dragSnappedEdges(int oldOffset, int newOffset) {
+    private void dragSnappedEdges(double oldOffset, double newOffset) {
         if (getParent() == null) return;
         for (ContentBox cb : getParent().getContentBoxes()) {
             if (axis == Axis.HORIZONTAL) {
@@ -116,5 +116,9 @@ public class Guide extends AbstractWabitObject {
                 }
             }
         }
+    }
+
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
     }
 }

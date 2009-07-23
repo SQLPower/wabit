@@ -24,13 +24,16 @@ import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.ItemContainer;
+import ca.sqlpower.query.StringItem;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
-import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.ItemContainer;
-import ca.sqlpower.wabit.query.StringItem;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
@@ -51,9 +54,13 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         if (valueType.equals(WabitObject.class)) {
             newValue = new StubWabitObject();
         } else if (valueType.equals(WabitDataSource.class)) {
-            newValue = new JDBCDataSource(new SPDataSource(new PlDotIni()));
-        } else if (valueType.equals(Query.class)) {
-            newValue = new StubQuery();
+            newValue = new WabitDataSource(new JDBCDataSource(new PlDotIni()));
+        } else if (valueType.equals(QueryCache.class)) {
+            newValue = new QueryCache(new SQLDatabaseMapping() {
+                public SQLDatabase getDatabase(JDBCDataSource ds) {
+                    return null;
+                }
+            });
         } else if (valueType.equals(Layout.class)) {
             newValue = new Layout("testing layout");
         } else if (valueType.equals(ContentBox.class)) {
@@ -63,7 +70,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	replay(newValue);
         } else if (valueType.equals(Guide.class)) {
             if (oldVal != null) {
-                newValue = new Guide(Axis.HORIZONTAL, ((Guide) oldVal).getOffset() + 1);
+                newValue = new Guide(Axis.HORIZONTAL, (int) (((Guide) oldVal).getOffset() + 1));
             } else {
                 newValue = new Guide(Axis.HORIZONTAL, 123);
             }
@@ -118,6 +125,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	} else {
         		newValue = new StringItem("Newer String Item");
         	}
+        } else if (valueType.equals(OlapQuery.class)) {
+        	newValue = new OlapQuery(new StubWabitSession(new StubWabitSessionContext()));
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

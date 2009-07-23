@@ -24,25 +24,25 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 /**
- * An action that adds a certain data source to a certain project when it is
+ * An action that adds a certain data source to a certain workspace when it is
  * invoked. The main purpose for this action is to act as an "add data source"
  * menu item.
  */
 public class AddDataSourceAction extends AbstractAction {
 
-    private final WabitProject project;
+    private final WabitWorkspace workspace;
     private final SPDataSource dataSource;
 
-    public AddDataSourceAction(WabitProject project, SPDataSource dataSource) {
+    public AddDataSourceAction(WabitWorkspace workspace, SPDataSource dataSource) {
         super(dataSource.getName());
-        this.project = project;
+        this.workspace = workspace;
         this.dataSource = dataSource;
     }
     
     public void actionPerformed(ActionEvent e) {
-        project.addDataSource(dataSource);
+        workspace.addDataSource(dataSource);
     }
 }

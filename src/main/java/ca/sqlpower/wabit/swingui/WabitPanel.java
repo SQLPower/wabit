@@ -23,7 +23,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 
 /**
  * All panels that are to be displayed in Wabit's main split pane 
- * to the left of the project tree should implement this interface.
+ * to the left of the workspace tree should implement this interface.
  * This interface defines basic behaviour required of all panels in
  * Wabit including maximizing the editor.
  */

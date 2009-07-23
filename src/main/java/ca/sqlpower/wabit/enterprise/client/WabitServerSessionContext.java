@@ -44,11 +44,12 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 
 /**
  * A special kind of session context that binds itself to a remote Wabit
@@ -94,9 +95,9 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
      * an HTTP firewall or proxy, where the present method would fail.
      */
     @Override
-    public DataSourceCollection getDataSources() {
-        ResponseHandler<DataSourceCollection> plIniHandler = new ResponseHandler<DataSourceCollection>() {
-            public DataSourceCollection handleResponse(HttpResponse response)
+    public DataSourceCollection<SPDataSource> getDataSources() {
+        ResponseHandler<DataSourceCollection<SPDataSource>> plIniHandler = new ResponseHandler<DataSourceCollection<SPDataSource>>() {
+            public DataSourceCollection<SPDataSource> handleResponse(HttpResponse response)
                     throws ClientProtocolException, IOException {
                 if (response.getStatusLine().getStatusCode() != 200) {
                     throw new IOException(
@@ -120,18 +121,18 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     }
     
     /**
-     * List all the projects on this context's server.
+     * List all the workspaces on this context's server.
      * 
      * @param serviceInfo
      * @return
      * @throws IOException
      * @throws URISyntaxException
      */
-    public List<String> getProjectNames() throws IOException, URISyntaxException {
-        String responseBody = executeServerRequest("project", new BasicResponseHandler());
-        logger.debug("Project list:\n" + responseBody);
-        List<String> projects = Arrays.asList(responseBody.split("\r?\n"));
-        return projects;
+    public List<String> getWorkspaceNames() throws IOException, URISyntaxException {
+        String responseBody = executeServerRequest("workspace", new BasicResponseHandler());
+        logger.debug("Workspace list:\n" + responseBody);
+        List<String> workspaces = Arrays.asList(responseBody.split("\r?\n"));
+        return workspaces;
     }
 
     private <T> T executeServerRequest(String contextRelativePath, ResponseHandler<T> responseHandler)
@@ -157,27 +158,27 @@ public class WabitServerSessionContext extends WabitSessionContextImpl {
     }
 
     /**
-     * Saves the given project on this session context's server. The name to
-     * save as is determined by the project's name.
+     * Saves the given workspace on this session context's server. The name to
+     * save as is determined by the workspace's name.
      * 
-     * @param project
-     *            The project to save. Its name determines the name of the
-     *            resource saved to the server. If there is already a project on
+     * @param workspace
+     *            The workspace to save. Its name determines the name of the
+     *            resource saved to the server. If there is already a workspace on
      *            the server with the same name, it will be replaced.
      * @throws IOException
      *             If the upload fails
      * @throws URISyntaxException
-     *             If the project name can't be properly encoded in a URI
+     *             If the workspace name can't be properly encoded in a URI
      */
-    public void saveProject(WabitProject project) throws IOException, URISyntaxException {
+    public void saveWorkspace(WabitWorkspace workspace) throws IOException, URISyntaxException {
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ProjectXMLDAO dao = new ProjectXMLDAO(out, project);
+        WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, workspace);
         dao.save();
         out.close(); // has no effect, but feels sensible :)
         
-        HttpPost request = new HttpPost(getServerURI("project/" + project.getName()));
-        logger.debug("Posting project to " + request);
+        HttpPost request = new HttpPost(getServerURI("workspace/" + workspace.getName()));
+        logger.debug("Posting workspace to " + request);
         request.setEntity(new ByteArrayEntity(out.toByteArray()));
         httpClient.execute(request);
         logger.debug("Post complete!");

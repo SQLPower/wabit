@@ -32,9 +32,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.swingui.querypen.QueryPen;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
  * This action will export the given query as a SQL Script file when it is executed.
@@ -44,11 +44,11 @@ public class ExportSQLScriptAction extends AbstractAction {
 	
 	private static final String SQL_FILE_EXTENSION = ".sql";
 
-	private final Query query;
+	private final QueryCache query;
 	
 	private final WabitSwingSession session;
 
-	public ExportSQLScriptAction(WabitSwingSession session, Query query) {
+	public ExportSQLScriptAction(WabitSwingSession session, QueryCache query) {
 		super("", new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/wabit_exportSQL.png")));
 		this.session = session;
 		this.query = query;
@@ -76,8 +76,8 @@ public class ExportSQLScriptAction extends AbstractAction {
 			throw new RuntimeException(e1);
 		}
 		
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
 		try {
+		    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
 			writer.write(query.generateQuery());
 			writer.flush();
 			writer.close();

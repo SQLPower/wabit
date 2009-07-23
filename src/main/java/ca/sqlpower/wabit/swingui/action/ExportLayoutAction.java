@@ -29,7 +29,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.dao.ProjectXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
@@ -61,17 +61,17 @@ public class ExportLayoutAction extends AbstractAction {
 		try {
 			File selectedFile = fc.getSelectedFile();
 
-			if (!selectedFile.getPath().endsWith(SaveAsProjectAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
-				selectedFile = new File(selectedFile.getPath()+SaveAsProjectAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
+			if (!selectedFile.getPath().endsWith(SaveWorkspaceAsAction.WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
+				selectedFile = new File(selectedFile.getPath()+SaveWorkspaceAsAction.WABIT_FILE_EXTENSION); //$NON-NLS-1$
             }
 			
 			out = new FileOutputStream(selectedFile);
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		ProjectXMLDAO projectSaver = new ProjectXMLDAO(out, session.getProject());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
 		
-		projectSaver.save(layout);
+		workspaceSaver.save(layout);
 
 	}
 }

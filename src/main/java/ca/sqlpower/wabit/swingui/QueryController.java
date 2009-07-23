@@ -19,14 +19,11 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -42,21 +39,20 @@ import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import javax.swing.text.JTextComponent;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.Query;
+import ca.sqlpower.query.SQLGroupFunction;
+import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.wabit.query.Container;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.SQLJoin;
-import ca.sqlpower.wabit.query.StringCountItem;
-import ca.sqlpower.wabit.query.QueryCache.OrderByArgument;
-import ca.sqlpower.wabit.swingui.querypen.QueryPen;
 
 /**
  * This is the controller between the QueryCache and the QueryPen.
@@ -67,7 +63,7 @@ public class QueryController {
 	
 	private static final Logger logger = Logger.getLogger(QueryController.class);
 	
-	private final QueryCache queryCache;
+	private final Query query;
 
 	/**
 	 * This is the current cell renderer we are listening on for group by 
@@ -78,9 +74,9 @@ public class QueryController {
 	private final PropertyChangeListener fromChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals(Container.PROPERTY_TABLE_ADDED)) {
-				queryCache.addTable((Container)evt.getNewValue());
+				query.addTable((Container)evt.getNewValue());
 			} else if (evt.getPropertyName().equals(Container.PROPERTY_TABLE_REMOVED)) {
-				queryCache.removeTable((Container)evt.getOldValue());
+				query.removeTable((Container)evt.getOldValue());
 			}
 		}
 	};
@@ -89,30 +85,19 @@ public class QueryController {
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
 				Item item = (Item)evt.getNewValue();
-				queryCache.addItem(item);
+				query.addItem(item);
 				logger.debug("Item " + item + " added to the query cache");
 			} else if (evt.getPropertyName().equals(Container.CONTAINER_ITEM_REMOVED)) {
 				Item item = (Item)evt.getOldValue();
-				queryCache.removeItem(item);
+				query.removeItem(item);
 			}
 		}
 	};
 
-	private final PropertyChangeListener joinChangeListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent e) {
-			if (e.getPropertyName().equals(SQLJoin.PROPERTY_JOIN_ADDED)) {
-				queryCache.addJoin((SQLJoin)e.getNewValue());
-			} else if (e.getPropertyName().equals(SQLJoin.PROPERTY_JOIN_REMOVED)) {
-				SQLJoin joinLine = (SQLJoin) e.getOldValue();
-				queryCache.removeJoin(joinLine);
-			}
-		}
-	};
-	
 	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
-				queryCache.setGlobalWhereClause((String)e.getNewValue());
+				query.setGlobalWhereClause((String)e.getNewValue());
 			}
 		}
 	};
@@ -125,12 +110,12 @@ public class QueryController {
 	
 		public void tableChanged(TableModelEvent e) {
 			TableModelSortDecorator sortDecorator = (TableModelSortDecorator)e.getSource();
-			queryCache.startCompoundEdit();
+			query.startCompoundEdit();
 			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
 				int sortStatus = sortDecorator.getSortingStatus(i);
-				Item column = queryCache.getSelectedColumns().get(i);
-				OrderByArgument orderByArgument = queryCache.getOrderByArgumentMap().get(column);
-				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgument == null)
+				Item column = query.getSelectedColumns().get(i);
+				OrderByArgument orderByArgument = column.getOrderBy();
+				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgument == OrderByArgument.NONE)
 						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgument == OrderByArgument.ASC)
 						|| (sortStatus == TableModelSortDecorator.DESCENDING && orderByArgument == OrderByArgument.DESC)) {
 					if (sortStatus != TableModelSortDecorator.NOT_SORTED) {
@@ -140,18 +125,18 @@ public class QueryController {
 				}
 				
 				if (sortStatus == TableModelSortDecorator.NOT_SORTED) {
-					queryCache.removeSort(column);
+				    column.setOrderBy(OrderByArgument.NONE);
 				} else if (sortStatus == TableModelSortDecorator.ASCENDING) {
 					logger.debug("Setting sort order of " + column.getName() + " to ascending.");
-					queryCache.setSortOrder(column, OrderByArgument.ASC);
+					column.setOrderBy(OrderByArgument.ASC);
 				} else if (sortStatus == TableModelSortDecorator.DESCENDING) {
 					logger.debug("Setting sort order of " + column.getName() + " to descending.");
-					queryCache.setSortOrder(column, OrderByArgument.DESC);
+					column.setOrderBy(OrderByArgument.DESC);
 				} else {
 					throw new IllegalStateException("The column " + column.getName() + " was sorted in an unknown way");
 				}
 			}
-			queryCache.endCompoundEdit();
+			query.endCompoundEdit();
 		}
 	};
 	
@@ -162,21 +147,16 @@ public class QueryController {
 	
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
-				Item column = queryCache.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
-				if(column instanceof StringCountItem) {
-					logger.debug("this column is a StringCountItem, we will only setGrouping to Count");
-					queryCache.setGrouping(column, "COUNT");
-				} else {
-					queryCache.setGrouping(column, (String)e.getNewValue());
-				}
+				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
+				column.setGroupBy(SQLGroupFunction.getGroupType((String)e.getNewValue()));
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
 				int indexOfTextField = cellRenderer.getTextFields().indexOf((JTextField)e.getSource());
 				if (indexOfTextField < 0) {
 					return;
 				}
-				Item item = queryCache.getSelectedColumns().get(indexOfTextField);
-				queryCache.setHavingClause(item, newValue);
+				Item item = query.getSelectedColumns().get(indexOfTextField);
+				item.setHaving(newValue);
 			}
 
 		}
@@ -200,8 +180,8 @@ public class QueryController {
 		public void mouseReleased(MouseEvent e) {
 			if (lastTableColumnMove != null) {
 				logger.debug("Moving column in select from " + lastTableColumnMove.getFromIndex() + " to " + lastTableColumnMove.getToIndex());
-				Item movedColumn = queryCache.getSelectedColumns().get(lastTableColumnMove.getFromIndex());
-				queryCache.moveItem(movedColumn, lastTableColumnMove.getToIndex());
+				Item movedColumn = query.getSelectedColumns().get(lastTableColumnMove.getFromIndex());
+				query.moveItem(movedColumn, lastTableColumnMove.getToIndex());
 				lastTableColumnMove = null;
 			}
 		}
@@ -241,11 +221,11 @@ public class QueryController {
 	private final ActionListener dataSourceListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			Object selectedItem = dataSourceComboBox.getSelectedItem();
-			if (selectedItem != null && !(selectedItem instanceof SPDataSource)) {
+			if (selectedItem != null && !(selectedItem instanceof JDBCDataSource)) {
 				throw new IllegalStateException("The data source combo box does not have data sources in it.");
 			}
-			SPDataSource ds = (SPDataSource) selectedItem;
-			queryCache.setDataSource(ds);
+			JDBCDataSource ds = (JDBCDataSource) selectedItem;
+			query.setDataSource(ds);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
 			}
@@ -257,13 +237,13 @@ public class QueryController {
 	 */
 	private final DocumentListener queryTextListener = new DocumentListener() {
 		public void removeUpdate(DocumentEvent e) {
-			queryCache.defineUserModifiedQuery(queryText.getText());
+			query.defineUserModifiedQuery(queryText.getText());
 		}
 		public void insertUpdate(DocumentEvent e) {
-			queryCache.defineUserModifiedQuery(queryText.getText());	
+			query.defineUserModifiedQuery(queryText.getText());	
 		}
 		public void changedUpdate(DocumentEvent e) {
-			queryCache.defineUserModifiedQuery(queryText.getText());	
+			query.defineUserModifiedQuery(queryText.getText());	
 		}
 	};
 
@@ -289,24 +269,23 @@ public class QueryController {
 
 	private final ChangeListener zoomListener = new ChangeListener() {
 		public void stateChanged(ChangeEvent e) {
-			queryCache.setZoomLevel(zoomSlider.getValue());
+			query.setZoomLevel(zoomSlider.getValue());
 		}
 	};
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
-	 * the state of the {@link QueryCache}. The dataSourceComboBox will also have
-	 * a listener added so the {@link QueryCache} can track which database to execute
+	 * the state of the {@link Query}. The dataSourceComboBox will also have
+	 * a listener added so the {@link Query} can track which database to execute
 	 * on.
 	 */
-	public QueryController(QueryCache cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {
-		queryCache = cache;
+	public QueryController(Query cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {
+		query = cache;
 		this.pen = pen;
 		this.dataSourceComboBox = dataSourceComboBox;
 		queryText = textComponent;
 		this.zoomSlider = zoomSlider;
 		pen.addQueryListener(fromChangeListener);
-		pen.addQueryListener(joinChangeListener);
 		pen.addQueryListener(whereListener);
 		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
@@ -320,7 +299,6 @@ public class QueryController {
 	 */
 	public void disconnect() {
 		pen.removeQueryListener(fromChangeListener);
-		pen.removeQueryListener(joinChangeListener);
 		pen.removeQueryListener(whereListener);
 		pen.removeQueryListener(tableItemListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);

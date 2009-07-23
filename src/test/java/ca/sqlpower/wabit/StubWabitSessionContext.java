@@ -25,6 +25,9 @@ import java.util.prefs.Preferences;
 import javax.jmdns.JmDNS;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class StubWabitSessionContext implements WabitSessionContext {
@@ -85,6 +88,13 @@ public class StubWabitSessionContext implements WabitSessionContext {
     public void removeServer(WabitServerInfo si) {
         // TODO Auto-generated method stub
         
+    }
+
+    public UserPrompter createUserPrompter(String question,
+            UserPromptType responseType, UserPromptOptions optionType,
+            UserPromptResponse defaultResponseType, Object defaultResponse,
+            String... buttonNames) {
+        return null;
     }
 
 }

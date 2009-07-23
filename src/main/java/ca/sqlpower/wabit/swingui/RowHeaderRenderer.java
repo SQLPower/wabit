@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
+import java.awt.Dimension;
 
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -32,8 +33,8 @@ import javax.swing.table.JTableHeader;
  * This class creates a row header for the JTable and Numbers its Rows.
  */
 public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
-
-
+	private JTable table;
+	
 	RowHeaderRenderer(JTable table) {
 		JTableHeader header = table.getTableHeader();
 		setOpaque(true);
@@ -42,7 +43,16 @@ public class RowHeaderRenderer extends JLabel implements ListCellRenderer {
 		setForeground(header.getForeground());
 		setBackground(header.getBackground());
 		setFont(header.getFont());
+		this.table = table;
 	}
+	
+	@Override
+	public Dimension getPreferredSize() {
+		Dimension preferredSize = super.getPreferredSize();
+		preferredSize.height =  table.getRowHeight();
+		return preferredSize;
+	}
+	
 	/**
 	 * Implementing the getComponent method on the renderer, take the JList and renders its object value
 	 * which should just be a its Row Number.

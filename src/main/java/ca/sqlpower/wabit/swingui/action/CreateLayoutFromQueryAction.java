@@ -25,8 +25,11 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.Query;
-import ca.sqlpower.wabit.WabitProject;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
@@ -35,53 +38,74 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
     private static final Icon ADD_LAYOUT_ICON = new ImageIcon(CreateLayoutFromQueryAction.class.getResource("/icons/layout_add.png"));
 
     /**
-     * The project we will add the new layout to when this action is invoked.
+     * The workspace we will add the new layout to when this action is invoked.
      */
-    private final WabitProject project;
+    private final WabitWorkspace workspace;
 
     /**
-     * The query we will fill the layout from when this action is invoked.
+     * The name of the new Layout, + " Layout" will be appended to the name.
      */
-    private final Query query;
+    private String layoutName;
 
-    private final WabitSwingSession session;
-
-    public CreateLayoutFromQueryAction(WabitSwingSession session, WabitProject wabitProject, Query query) {
+    /**
+     * This is the object that this action will create a layout for.
+     */
+    private final WabitObject objectToLayout;
+    
+    public CreateLayoutFromQueryAction(WabitWorkspace wabitworkspace, WabitObject objectToLayout, String layoutName) {
         super("Create Layout...", ADD_LAYOUT_ICON);
+        this.objectToLayout = objectToLayout;
         putValue(SHORT_DESCRIPTION, "Create a page layout for this report (use this when you want to print)");
-        this.session = session;
-        this.project = wabitProject;
-        this.query = query;
+        this.workspace = wabitworkspace;
+        this.layoutName = layoutName;
     }
     
     public void actionPerformed(ActionEvent e) {
-        createDefaultLayout(project, query);
+        ReportContentRenderer contentRenderer;
+        if (objectToLayout instanceof QueryCache) {
+            contentRenderer = new ResultSetRenderer((QueryCache) objectToLayout);
+        } else if (objectToLayout instanceof OlapQuery) {
+            contentRenderer = new CellSetRenderer((OlapQuery) objectToLayout);
+        } else {
+            throw new IllegalStateException("Don't know how to create layouts for components of type " + objectToLayout.getClass() + ", object is " + objectToLayout.getName());
+        }
+        createDefaultLayout(workspace, contentRenderer, layoutName);
     }
-    
-    /**
-     * Creates a new layout with standard margins, headers, and footers. The body
-     * of the content is provided by the given query.
-     * 
-     * @param project The project that the new layout will be added to
-     * @param query The query to use for the body content.
-     * @return The new layout that was added to the project.
-     */
-    public static Layout createDefaultLayout(WabitProject project, Query query) {
-        Layout l = new Layout(query.getName() + " Layout");
+
+	/**
+	 * Creates a new layout with standard margins, headers, and footers. The
+	 * body of the content is provided by the given
+	 * {@link ReportContentRenderer}
+	 * 
+	 * @param workspace
+	 *            The workspace that the new layout will be added to
+	 * @param contentRenderer
+	 *            This is the renderer which the new layout will use
+	 * @param layoutName
+	 *            This is the name of the new Layout, in the tree " Layout" will
+	 *            be appended to this name.
+	 * @return The new layout that was added to the workspace.
+	 */
+    public static Layout createDefaultLayout(WabitWorkspace workspace, ReportContentRenderer contentRenderer, String layoutName) {
+        Layout l = new Layout(layoutName + " Layout");
         Page p = l.getPage();
-        final int pageBodyWidth = p.getRightMarginOffset() - p.getLeftMarginOffset();
-        final int pageBodyHeight = p.getLowerMarginOffset() - p.getUpperMarginOffset();
+        final int pageBodyWidth = (int) (p.getRightMarginOffset() - p.getLeftMarginOffset());
+        final int pageBodyHeight = (int) (p.getLowerMarginOffset() - p.getUpperMarginOffset());
         
         ContentBox body = new ContentBox();
-        ReportContentRenderer bodyRenderer = new ResultSetRenderer(query);
-        body.setContentRenderer(bodyRenderer);
+        if (contentRenderer instanceof CellSetRenderer) {
+	        body.setContentRenderer(contentRenderer);
+        } else if (contentRenderer instanceof ResultSetRenderer) {
+        	body.setContentRenderer(contentRenderer);
+        } else {
+        	throw new UnsupportedOperationException("Creating the default layout is unsupported for the current ReportContentRenderer being passed. It's name is: " + contentRenderer.getName());
+        }
         p.addContentBox(body);
         body.setWidth(pageBodyWidth);
         body.setHeight(pageBodyHeight);
@@ -89,7 +113,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         body.setY(p.getUpperMarginOffset());
         
         ContentBox header = new ContentBox();
-        header.setContentRenderer(new Label(l, "Header!"));
+        header.setContentRenderer(new Label(l, layoutName));
         p.addContentBox(header);
         header.setWidth(pageBodyWidth / 2);
         header.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
@@ -132,7 +156,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         shameless.setY(footer.getY() + footer.getHeight());
         
 
-        project.addLayout(l);
+        workspace.addLayout(l);
         
         return l;
     }

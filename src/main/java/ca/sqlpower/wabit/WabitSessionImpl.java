@@ -22,14 +22,20 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.NamingException;
+
+import org.olap4j.OlapConnection;
+
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
@@ -38,13 +44,14 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
 
 
 public class WabitSessionImpl implements WabitSession {
 
 	private WabitSessionContext sessionContext;
 	
-	private WabitProject project;
+	private WabitWorkspace workspace;
 	
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
@@ -57,10 +64,15 @@ public class WabitSessionImpl implements WabitSession {
      * The database instances we've created due to calls to {@link #getDatabase(SPDataSource)}.
      */
     private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
+    
+    /**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = new HashMap<Olap4jDataSource, OlapConnectionPool>();
 
     public WabitSessionImpl(WabitSessionContext context) {
     	this.sessionContext = context;
-    	project = new WabitProject();
+    	workspace = new WabitWorkspace();
 		sessionContext.registerChildSession(this);
     }
     
@@ -73,7 +85,7 @@ public class WabitSessionImpl implements WabitSession {
 		lifecycleListeners.add(l);
 	}
 
-	public Connection borrowConnection(SPDataSource dataSource)
+	public Connection borrowConnection(JDBCDataSource dataSource)
 			throws SQLObjectException {
 		return getDatabase(dataSource).getConnection();
 	}
@@ -91,6 +103,14 @@ public class WabitSessionImpl implements WabitSession {
     	    db.disconnect();
     	}
     	
+    	for (OlapConnectionPool olapPool : olapConnectionPools.values()) {
+            try {
+                olapPool.disconnect();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    	
     	return true;
 	}
 
@@ -106,18 +126,18 @@ public class WabitSessionImpl implements WabitSession {
 		return sessionContext;
 	}
 
-	public WabitProject getProject() {
-		return project;
+	public WabitWorkspace getWorkspace() {
+		return workspace;
 	}
 
 	public int getRowLimit() {
 		return 0;
 	}
 
-	public SQLDatabase getDatabase(SPDataSource dataSource) {
+	public SQLDatabase getDatabase(JDBCDataSource dataSource) {
 		SQLDatabase db = databases.get(dataSource);
         if (db == null) {
-            dataSource = new SPDataSource(dataSource);  // defensive copy for cache key
+            dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
         }
@@ -139,6 +159,17 @@ public class WabitSessionImpl implements WabitSession {
 
 	public void setLoading(boolean loading) {
 		this.loading = loading;
+	}
+	
+	public OlapConnection createConnection(Olap4jDataSource dataSource) 
+	throws SQLException, ClassNotFoundException, NamingException {
+	    if (dataSource == null) return null;
+	    OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+	    if (olapConnectionPool == null) {
+	        olapConnectionPool = new OlapConnectionPool(dataSource, this);
+	        olapConnectionPools.put(dataSource, olapConnectionPool);
+	    }
+	    return olapConnectionPool.getConnection();
 	}
 
 }

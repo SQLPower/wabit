@@ -19,19 +19,20 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
 
 import junit.framework.TestCase;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryChangeAdapter;
+import ca.sqlpower.query.StringItem;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
-import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.testutil.CountingPropertyChangeListener;
-import ca.sqlpower.wabit.query.Item;
-import ca.sqlpower.wabit.query.QueryCache;
-import ca.sqlpower.wabit.query.StringItem;
+import ca.sqlpower.wabit.QueryCache;
 
 public class QueryCacheTest extends TestCase {
 	
@@ -47,6 +48,20 @@ public class QueryCacheTest extends TestCase {
 		}
 	};
 	
+	private class CountingQueryChangeListener extends QueryChangeAdapter {
+	    
+	    private int changeCount = 0;
+	    
+	    @Override
+	    public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
+	        changeCount++;
+	    }
+	    
+	    public int getChangeCount() {
+            return changeCount;
+        }
+	}
+	
 	private QueryCache queryCache;
 	
 	protected void setUp() throws Exception {
@@ -54,23 +69,15 @@ public class QueryCacheTest extends TestCase {
 		queryCache = new QueryCache(new StubWabitSwingSession());
 	}
 	
-	public void testSelectListener() throws Exception {
-		Item item = new StringItem("ItemName");
-		queryCache.selectionChanged(item, true);
-		assertTrue(queryCache.getSelectedColumns().contains(item));
-		queryCache.selectionChanged(item, false);
-		assertTrue(!queryCache.getSelectedColumns().contains(item));
-	}
-	
 	public void testAliasListener() throws Exception {
 		Item item = new StringItem("ItemName");
-		queryCache.addItem(item);
+		queryCache.getQuery().addItem(item);
 		item.setSelected(true);
-		CountingPropertyChangeListener listener = new CountingPropertyChangeListener();
-		queryCache.addPropertyChangeListener(listener);
+		CountingQueryChangeListener listener = new CountingQueryChangeListener();
+		queryCache.getQuery().addQueryChangeListener(listener);
 		String newAlias = "Alias test.";
 		item.setAlias(newAlias);
-		assertEquals(1, listener.getPropertyChangeCount());
+		assertEquals(1, listener.getChangeCount());
 	}
 	
 	/**
@@ -80,7 +87,7 @@ public class QueryCacheTest extends TestCase {
 	public void testQueryFiresRSChange() throws Exception {
 		PlDotIni plIni = new PlDotIni();
 		plIni.read(new File("src/test/java/pl.regression.ini"));
-		SPDataSource ds = plIni.getDataSource("regression_test");
+		JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
 		Connection con = ds.createConnection();
 		Statement stmt = con.createStatement();
 		stmt.execute("create table rsTest (col1 varchar(50), col2 varchar(50))");
@@ -92,8 +99,8 @@ public class QueryCacheTest extends TestCase {
 		CountingRowSetChangeListener listener = new CountingRowSetChangeListener();
 		queryCache.addRowSetChangeListener(listener);
 		queryCache.setDataSource(ds);
-		queryCache.setStreaming(true);
-		queryCache.defineUserModifiedQuery("select * from rsTest");
+		queryCache.getQuery().setStreaming(true);
+		queryCache.getQuery().defineUserModifiedQuery("select * from rsTest");
 		queryCache.executeStatement();
 		
 		for (Thread t : queryCache.getStreamingThreads()) {

@@ -15,28 +15,29 @@ Good luck with the release!
 
 
 *Comment out all the logging configs set to DEBUG (leave the RootLogger at INFO)
-*Update the wabit.properties file in src/main/resources and the pom.xml and in the src/main/installer/install.xml to reflect the correct
+*Update the wabit.properties file in the pom.xml to reflect the correct
  release number.  Normally, this will mean setting the suffix to "" for a full
  release, or "beta", "rc1", etc for a pre-release.
 *Update the doc/ReleaseNotes.txt file with the latest features and bugfixes.
 *Run the LibraryMegaTest and Wabit tests. It should pass with a flying colour (green)
+*Run 'mvn site' to generate the PDF and JavaHelp documentation, and the download page
 *Read the formatted documentation, noting what's missing or incorrect. Then update
  the documentation. (This will need to be done when Wabit has documentation.)
 *(Clover will be added later) Generate the JUnit and Clover test reports (run the 'clover.test.and.report' build.xml
  target). This must be done separately from 'dist', otherwise the executables generated will
  require the clover.jar library to run.
-*Change the systemPath property in the pom.xml to absolute paths for the dependencies of architect_lib.jar,
- architect_dbtree_lib.jar, and architect_test_util_lib.jar.
+ * To run the JUnit report create a new Maven build with the goal "surefire-report:report".
+*Change the systemPath property in the pom.xml to absolute paths for the Maven dependencies in both sqlpower-library and wabit
 *Run the 'Maven clean' target from the "Run as" menu on the POM to remove the Clover-dependent 
  compiled class files.
-*Build the distribution (build.xml target "dist") by running the command "mvn assembly:assembly" from a terminal
+*Build the distribution by running the command "mvn assembly:assembly" from a terminal
  in the Wabit directory. For an official release, this has to be done on OS X, since the tools for creating the dmg 
  disk image file are unavailable elsewhere.
 *Test the three flavours of binaries (Generic tarball, OS X disk image, Windows
  installer) for the following:
  *Rename your PL.INI file so you get the "new user experience" 
   (Or better yet, create a fresh user account to test from)
- *File size is close to the expected size (it was ~12.4 MB in 0.9.3)
+ *File size is close to the expected size (it was ~20 MB in 0.9.7)
  *Archive expands properly or installer works as expected
  *Try connecting to all databases that the Wabit is preconfigured for (MySQL,
   PostgreSQL, SQL Server)
@@ -47,7 +48,7 @@ Good luck with the release!
  *Ensure the online help is present
  *(When documentation exists) Scan through the PDF documentation. Ensure the pictures are included properly
   (not stretched, properly cropped)
- *Try saving and loading a project file. Ensure project settings are persistent:
+ *Try saving and loading a Wabit file. Ensure workspace settings are persistent:
   data sources, queries and reports and so on
  *Make sure the app quits once all windows have been closed
  *For Windows only, test the uninstaller

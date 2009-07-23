@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
@@ -36,7 +37,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
  * The basic interface for a Wabit session. This interface provides all the
  * UI-independent state and behaviour of a Wabit session. 
  */
-public interface WabitSession extends SQLDatabaseMapping {
+public interface WabitSession extends SQLDatabaseMapping, OlapConnectionMapping {
 
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l);
 
@@ -60,9 +61,9 @@ public interface WabitSession extends SQLDatabaseMapping {
 	public boolean close();
 
 	/**
-	 * Returns the project associated with this session.
+	 * Returns the workspace associated with this session.
 	 */
-	public WabitProject getProject();
+	public WabitWorkspace getWorkspace();
 
 	/**
 	 * This will create a UserPrompter to let users decide the given question.
@@ -125,7 +126,7 @@ public interface WabitSession extends SQLDatabaseMapping {
 
     /**
      * The DAO can tell this session that it's currently being configured based
-     * on a project file being loaded. When this is the case, certain things
+     * on a workspace file being loaded. When this is the case, certain things
      * (such as GUI updates) will not be performed. If you're not a DAO, it's
      * not necessary or desirable for you to call this method!
      */
@@ -141,7 +142,7 @@ public interface WabitSession extends SQLDatabaseMapping {
      * the database structure in all sessions to update. We have to consider any
      * possible negative or positive implications of this.
      */
-    public SQLDatabase getDatabase(SPDataSource dataSource);
+    public SQLDatabase getDatabase(JDBCDataSource dataSource);
 
     /**
      * Borrows a connection to the given data source from this session's
@@ -164,5 +165,5 @@ public interface WabitSession extends SQLDatabaseMapping {
      *             unavailable, or an incorrect username or password, a missing
      *             JDBC driver, or many other things.
      */
-    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException;
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException;
 }

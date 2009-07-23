@@ -99,7 +99,7 @@ public class GuideNode extends PNode implements WabitNode {
         model.setOffset(guideOffset);
     }
     
-    public int getGuideOffset() {
+    public double getGuideOffset() {
         return model.getOffset();
     }
 
@@ -119,11 +119,11 @@ public class GuideNode extends PNode implements WabitNode {
     private void adjustBoundsForParent() {
         PNode parent = getParent();
         Axis axis = model.getAxis();
-        int guideOffset = model.getOffset();
+        double guideOffset = model.getOffset();
         if (axis == Axis.HORIZONTAL) {
-            setBounds((int) parent.getX(), guideOffset, (int) parent.getWidth(), 1);
+            setBounds(parent.getX(), guideOffset, parent.getWidth(), 1);
         } else if (axis == Axis.VERTICAL) {
-            setBounds(guideOffset, (int) parent.getY(), 1, (int) parent.getHeight());
+            setBounds(guideOffset, parent.getY(), 1, parent.getHeight());
         } else {
             throw new IllegalStateException("Unknown axis: " + axis);
         }
@@ -178,7 +178,7 @@ public class GuideNode extends PNode implements WabitNode {
             super.mouseDragged(event);
             Point2D pagePosition = event.getPositionRelativeTo(getParent());
             double offset = model.getAxis() == Axis.HORIZONTAL ? pagePosition.getY() : pagePosition.getX();
-            model.setOffset((int) offset);
+            model.setOffset(offset);
         }
         
         @Override
@@ -232,14 +232,14 @@ public class GuideNode extends PNode implements WabitNode {
      * @return True if the node's bounds were snapped to this guide; false if
      *         the node was not modified.
      */
-    public boolean snap(PNode node, int threshold) {
+    public boolean snap(PNode node, double threshold) {
         boolean snap = false;
         PBounds nodeBounds = node.getGlobalBounds();
         PBounds guideBounds = getGlobalBounds();
         Axis axis = model.getAxis();
         if (axis == Axis.HORIZONTAL) {
-            int topEdgeDistance = (int) Math.abs(nodeBounds.getY() - guideBounds.getY());
-            int bottomEdgeDistance = (int) Math.abs(nodeBounds.getY() + nodeBounds.getHeight() - guideBounds.getY());
+            double topEdgeDistance = Math.abs(nodeBounds.getY() - guideBounds.getY());
+            double bottomEdgeDistance = Math.abs(nodeBounds.getY() + nodeBounds.getHeight() - guideBounds.getY());
             if (topEdgeDistance < threshold) {
                 logger.debug("Top edge snap!");
                 nodeBounds.y = guideBounds.getY();
@@ -250,8 +250,8 @@ public class GuideNode extends PNode implements WabitNode {
                 snap = true;
             }
         } else if (axis == Axis.VERTICAL) {
-            int leftEdgeDistance = (int) Math.abs(nodeBounds.getX() - guideBounds.getX());
-            int rightEdgeDistance = (int) Math.abs(nodeBounds.getX() + nodeBounds.getWidth() - guideBounds.getX());
+            double leftEdgeDistance = Math.abs(nodeBounds.getX() - guideBounds.getX());
+            double rightEdgeDistance = Math.abs(nodeBounds.getX() + nodeBounds.getWidth() - guideBounds.getX());
             if (leftEdgeDistance < threshold) {
                 logger.debug("Left edge snap!");
                 nodeBounds.x = guideBounds.getX();

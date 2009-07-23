@@ -19,17 +19,18 @@
 
 package ca.sqlpower.wabit;
 
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 
 public class JDBCDataSourceTest extends AbstractWabitObjectTest {
 
-    private JDBCDataSource ds;
+    private WabitDataSource ds;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        ds = new JDBCDataSource(new SPDataSource(new PlDotIni()));
+        ds = new WabitDataSource(new JDBCDataSource(new PlDotIni()));
     }
     
     @Override

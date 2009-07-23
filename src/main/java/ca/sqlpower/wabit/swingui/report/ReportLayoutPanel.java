@@ -73,7 +73,10 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.Query;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
@@ -82,8 +85,9 @@ import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
-import ca.sqlpower.wabit.swingui.action.ForumAction;
+import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -92,13 +96,18 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 
 public class ReportLayoutPanel implements WabitPanel, MouseState {
 
+	private static final ImageIcon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
+	private static final ImageIcon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
+	private static final ImageIcon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"));
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
-    public static final Icon CREATE_BOX_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/text_add.png"));		
-    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
-    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
-    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_fit16.png"));
+    public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/text_add.png"));		
+    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
+    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
+    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_fit16.png"));
     private static final Icon CREATE_IMAGE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/image_add.png"));
     private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/chart_bar_add.png"));
+    private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
+    private static final ImageIcon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge_1.png")); //originally said throbber-badge.gif, that icon doesn't exist. I think this is what we need...
     
     private final JSlider zoomSlider;
     
@@ -143,9 +152,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				return;
 			}			
 			
-			Query[] queries;
+			WabitObject[] queries;
 			try {
-				queries = (Query[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
+				queries = (WabitObject[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
 			} catch (UnsupportedFlavorException e) {
 				dtde.dropComplete(false);
 				dtde.rejectDrop();
@@ -156,16 +165,32 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				throw new RuntimeException(e);
 			}
 			
-			for (Query query : queries) {
-				ContentBox contentBox = new ContentBox();
-				ResultSetRenderer rsRenderer = new ResultSetRenderer(query);
-				contentBox.setContentRenderer(rsRenderer);
-				ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
-						contentBox);
-				newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-						(report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
-						pageNode.getHeight() / 10);
-				pageNode.addChild(newCBNode);
+			for (WabitObject query : queries) {
+			    if (query instanceof QueryCache) {
+			        QueryCache queryCache = (QueryCache) query;
+			        ContentBox contentBox = new ContentBox();
+			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
+			        contentBox.setContentRenderer(rsRenderer);
+			        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+			                contentBox);
+			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
+			                pageNode.getHeight() / 10);
+			        pageNode.addChild(newCBNode);
+			    } else if (query instanceof OlapQuery) {
+			        OlapQuery olapQuery = (OlapQuery) query;
+			        ContentBox contentBox = new ContentBox();
+			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
+			        contentBox.setContentRenderer(renderer);
+			        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+                            contentBox);
+                    newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+                            (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
+                            pageNode.getHeight() / 10);
+                    pageNode.addChild(newCBNode);
+			    } else {
+			        throw new IllegalStateException("Unknown query dragged into the report layout. Object was " + query.getClass());
+			    }
 			}
 			
 			dtde.dropComplete(true);
@@ -270,7 +295,10 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         pageNode = new PageNode(session, report.getPage());
         canvas.getLayer().addChild(pageNode);
+        
+        // XXX why is this being done? skipping it appears to have no effect
         pageNode.setBounds(0, 0, pageNode.getWidth(), pageNode.getHeight());
+        
         PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
@@ -296,6 +324,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		
 		addContentBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
 		addImageBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add image");
+		addGraphBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add chart");
 		addHorizontalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add horizontal guide");
 		addVerticalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add vertical guide");
 		zoomToFitAction.putValue(Action.SHORT_DESCRIPTION, "Zoom to fit");
@@ -309,12 +338,16 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.add(new ExportLayoutAction(session, report));
         toolbar.addSeparator();
         JPanel zoomPanel = new JPanel(new BorderLayout());
-        zoomPanel.add(new JLabel(new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"))), BorderLayout.WEST);
+        zoomPanel.add(new JLabel(ZOOM_OUT_ICON), BorderLayout.WEST);
         final int defaultSliderValue = 500;
         zoomSlider= new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
         zoomSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				canvas.getCamera().setViewScale((double) zoomSlider.getValue()/defaultSliderValue);
+			    final double newScale = (double)zoomSlider.getValue()/defaultSliderValue;
+                final PCamera camera = canvas.getCamera();
+                double oldScale = camera.getViewScale();
+                camera.scaleViewAboutPoint(newScale/oldScale, camera.getViewBounds().getCenterX(), camera.getViewBounds().getCenterY());
+                logger.debug("Camera scaled by " + newScale/oldScale + " and is now at " + camera.getViewScale());
 				ReportLayoutPanel.this.report.setZoomLevel(zoomSlider.getValue());
 			}
 		});
@@ -343,7 +376,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
-        JButton forumButton = new JButton(new ForumAction());
+        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		wabitBar.add(forumButton);
         
@@ -364,26 +397,27 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         mainSplitPane.setResizeWeight(1);
         mainSplitPane.add(leftPanel, JSplitPane.LEFT);
         
-        final JList queryList = new JList(new QueryListModel(session.getProject()));
+        final JList queryList = new JList(new QueryListModel(session.getWorkspace()));
         queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         queryList.setCellRenderer(new DefaultListCellRenderer() {
         	@Override
 			public Component getListCellRendererComponent(JList list, Object value,
 					int index, boolean isSelected, boolean cellHasFocus) {
 				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
-				((JLabel) c).setText(((Query) value).getName());
+				((JLabel) c).setText(((WabitObject) value).getName());
 				
-				final ImageIcon queryIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/wabit_query.png"));
-				if (((Query) value).isRunning()) {
-					if (((Query) value).isStreaming()) {
-						final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
-						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
-            		} else {
-            			final ImageIcon runningIcon = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge.gif"));
-						((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{queryIcon, runningIcon})));
-            		}
-				} else {
-					((JLabel) c).setIcon(queryIcon);
+				if (value instanceof QueryCache) {
+				    if (((QueryCache) value).isRunning()) {
+				        if (((QueryCache) value).isStreaming()) {
+				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_DB, STREAM_BADGE})));
+				        } else {
+				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_DB, THROBBER_BADGE})));
+				        }
+				    } else {
+				        ((JLabel) c).setIcon(QUERY_DB);
+				    }
+				} else if (value instanceof OlapQuery) {
+				    ((JLabel) c).setIcon(OLAP_QUERY_ICON);
 				}
 				return c;
 			}
@@ -395,9 +429,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				if (queryList.getSelectedValues() == null || queryList.getSelectedValues().length <= 0) {
 					return;
 				}
-				List<Query> queries = new ArrayList<Query>();
+				List<WabitObject> queries = new ArrayList<WabitObject>();
 				for (Object q : queryList.getSelectedValues()) {
-					queries.add((Query) q);
+					queries.add((WabitObject) q);
 				}
 				Transferable dndTransferable = new ReportQueryTransferable(queries);
 				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {

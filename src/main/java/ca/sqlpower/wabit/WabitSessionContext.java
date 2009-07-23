@@ -25,9 +25,24 @@ import java.util.prefs.Preferences;
 import javax.jmdns.JmDNS;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
-public interface WabitSessionContext {
+/**
+ * A WabitSessionContext provides the basic non-session-specific services that
+ * all Wabit code can depend upon. Each live session belongs to exactly one
+ * session context, which is where the non-session-specific preferences are
+ * stored. The session context manages the lifecycle of the sessions that belong
+ * to it.
+ * <p>
+ * The session context is also a UserPrompterFactory (as are each of the sessions
+ * it owns). The session context should be used as a user prompter factory for
+ * alerts and questions that are not directly related to a live session, such as
+ * questions and warnings that arise during application startup as well as when
+ * in the process of opening a Wabit workspace file.
+ */
+public interface WabitSessionContext extends UserPrompterFactory {
 
     /**
      * The service type to look for when discovering enterprise servers on the
@@ -36,7 +51,7 @@ public interface WabitSessionContext {
      */
     public static final String WABIT_ENTERPRISE_SERVER_MDNS_TYPE = "_wabitenterprise._tcp.local.";
     
-	DataSourceCollection getDataSources();
+	DataSourceCollection<SPDataSource> getDataSources();
 	
 	/**
 	 * Adds the given Wabit session to the list of child sessions for this

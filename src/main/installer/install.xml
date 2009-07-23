@@ -42,6 +42,7 @@
 			<description>Wabit Core Files</description>
 			<fileset dir="./" targetdir="$INSTALL_PATH">
 				<include name="wabit.jar" />
+				<include name="wabit.exe" />
 			</fileset>
 			<fileset dir="../target/lib" targetdir="$INSTALL_PATH/lib">
 				<include name="*.jar" />
@@ -50,7 +51,7 @@
 				the directory jdbc is referenced in the manifest as well as various
 				targets.
 			-->
-			<fileset dir="../src/main/resources/jdbc" targetdir="$INSTALL_PATH/jdbc">
+			<fileset dir="../src/main/jdbc" targetdir="$INSTALL_PATH/jdbc">
 				<include name="*.jar" />
 			</fileset>
 			<fileset dir="../" targetdir="$INSTALL_PATH">
@@ -65,6 +66,9 @@
 			</fileset>
 			<fileset dir="../src/main/installer" targetdir="$INSTALL_PATH">
 				<include name="uninstall.ico" />
+			</fileset>
+			<fileset dir="./" targetdir="$INSTALL_PATH/uninstaller">
+				<include name="uninstaller.exe"/>
 			</fileset>
 		</pack>
 	</packs>

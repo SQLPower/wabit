@@ -54,6 +54,13 @@ public interface WabitObject {
      */
     void setName(String name);
     
-    UUID getUUID();
+    String getUUID();
+    
+    /**
+     * Returns a list of all {@link WabitObject}s that this Wabit object is dependent
+     * on. This is used in exporting to find what Wabit objects to save. If there
+     * are no objects this Wabit object is dependent on an empty list should be returned.
+     */
+    List<WabitObject> getDependencies();
     
 }

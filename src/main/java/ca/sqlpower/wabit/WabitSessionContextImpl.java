@@ -34,16 +34,19 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
+import ca.sqlpower.util.DefaultUserPrompter;
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
- * A placeholder for all state and behaviour that is shared among
- * Wabit sessions. Every session belongs to a session context, and
- * there is typically one session context in each JVM. However,
- * the limit of one session context is not enforced or required. It's
- * just typical.
+ * This is the canonical headless implementation of WabitSessionContext
+ * interface. Other session context implementations that cover more specialized
+ * use cases can either extend this one or delegate certain operations to it.
  */
 public class WabitSessionContextImpl implements WabitSessionContext {
 	
@@ -57,7 +60,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     protected final JmDNS jmdns;
     private final List<WabitServerInfo> manuallyConfiguredServers = new ArrayList<WabitServerInfo>();
     
-	private DataSourceCollection dataSources;
+	private DataSourceCollection<SPDataSource> dataSources;
 	protected final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
 	/**
@@ -98,7 +101,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS) throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
 		if (useJmDNS) {
-			jmdns = JmDNS.create();
+//			jmdns = JmDNS.create();
+			//TODO reenable this.. taking it out for the release due to Bug 1905 in the bug database
+			//It causes crashes on startup if no network interface can be found and likely will have
+			//some terrible things happening when we try to close the connection. Therefore it is being 
+			//taken out for releasing Wabit in 0.9.7.
+			jmdns = null;
 		} else {
 			jmdns = null;
 		}
@@ -128,7 +136,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * Tries to read the plDotIni if it hasn't been done already.  If it can't be read,
      * returns null and leaves the plDotIni property as null as well. See {@link #plDotIni}.
      */
-    public DataSourceCollection getDataSources() {
+    public DataSourceCollection<SPDataSource> getDataSources() {
         String path = getPlDotIniPath();
         if (path == null) return null;
         
@@ -291,4 +299,15 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public String getName() {
 		return "Local";
 	}
+
+    /**
+     * Returns a user prompter that always gives the default response, since
+     * this is a headless session context and there is no user to ask.
+     */
+    public UserPrompter createUserPrompter(String question,
+            UserPromptType responseType, UserPromptOptions optionType,
+            UserPromptResponse defaultResponseType, Object defaultResponse,
+            String... buttonNames) {
+        return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
+    }
 }

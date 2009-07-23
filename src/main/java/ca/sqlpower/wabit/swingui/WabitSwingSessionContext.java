@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
-import java.net.URI;
 
 import javax.swing.JMenu;
 
@@ -30,7 +29,7 @@ import ca.sqlpower.wabit.WabitSessionContext;
 public interface WabitSwingSessionContext extends WabitSessionContext {
 
     /**
-     * Creates a menu that keeps track of the last few opened and saved project
+     * Creates a menu that keeps track of the last few opened and saved workspace
      * files.
      */
 	RecentMenu createRecentMenu();
@@ -59,7 +58,7 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
 	
 	/**
 	 * Returns true if Wabit should open on the welcome screen. Returns false
-	 * if the most recent project in the recent menu should be loaded and displayed.
+	 * if the most recent workspace in the recent menu should be loaded and displayed.
 	 */
 	boolean startOnWelcomeScreen();
 

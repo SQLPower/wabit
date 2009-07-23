@@ -40,7 +40,7 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
     @SuppressWarnings("unused")
     private static final Logger logger = Logger.getLogger(GuideAwareSelectionEventHandler.class);
     
-    private int snapThreshold = 5;
+    private double snapThreshold = 7;
     
     public GuideAwareSelectionEventHandler(PNode marqueeParent, PNode selectableParent) {
         super(marqueeParent, selectableParent);

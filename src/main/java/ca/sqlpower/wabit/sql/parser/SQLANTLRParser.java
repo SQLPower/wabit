@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g 2008-10-27 12:13:46
+// $ANTLR 3.0.1 /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g 2009-07-23 13:53:15
 
 package ca.sqlpower.wabit.sql.parser;
 
@@ -117,7 +117,7 @@ public class SQLANTLRParser extends Parser {
     }
 
     public String[] getTokenNames() { return tokenNames; }
-    public String getGrammarFileName() { return "/Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g"; }
+    public String getGrammarFileName() { return "/Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g"; }
 
      
         public static void main(String[] args) throws Exception {
@@ -141,7 +141,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start stmtblock
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:81:1: stmtblock : stmtmulti ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:81:1: stmtblock : stmtmulti ;
     public final stmtblock_return stmtblock() throws RecognitionException {
         stmtblock_return retval = new stmtblock_return();
         retval.start = input.LT(1);
@@ -153,8 +153,8 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:81:11: ( stmtmulti )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:81:13: stmtmulti
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:81:11: ( stmtmulti )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:81:13: stmtmulti
             {
             root_0 = (Object)adaptor.nil();
 
@@ -189,7 +189,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start stmtmulti
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:1: stmtmulti : ( simple_select ) ( ';' simple_select )* ( ';' )? ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:1: stmtmulti : ( simple_select ) ( ';' simple_select )* ( ';' )? ;
     public final stmtmulti_return stmtmulti() throws RecognitionException {
         stmtmulti_return retval = new stmtmulti_return();
         retval.start = input.LT(1);
@@ -207,13 +207,13 @@ public class SQLANTLRParser extends Parser {
         Object char_literal5_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:11: ( ( simple_select ) ( ';' simple_select )* ( ';' )? )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:13: ( simple_select ) ( ';' simple_select )* ( ';' )?
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:11: ( ( simple_select ) ( ';' simple_select )* ( ';' )? )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:13: ( simple_select ) ( ';' simple_select )* ( ';' )?
             {
             root_0 = (Object)adaptor.nil();
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:13: ( simple_select )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:14: simple_select
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:13: ( simple_select )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:14: simple_select
             {
             pushFollow(FOLLOW_simple_select_in_stmtmulti272);
             simple_select2=simple_select();
@@ -223,7 +223,7 @@ public class SQLANTLRParser extends Parser {
 
             }
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:29: ( ';' simple_select )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:29: ( ';' simple_select )*
             loop1:
             do {
                 int alt1=2;
@@ -242,7 +242,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt1) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:30: ';' simple_select
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:30: ';' simple_select
             	    {
             	    char_literal3=(Token)input.LT(1);
             	    match(input,88,FOLLOW_88_in_stmtmulti276); if (failed) return retval;
@@ -264,7 +264,7 @@ public class SQLANTLRParser extends Parser {
                 }
             } while (true);
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:50: ( ';' )?
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:50: ( ';' )?
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -273,7 +273,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt2) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:51: ';'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:84:51: ';'
                     {
                     char_literal5=(Token)input.LT(1);
                     match(input,88,FOLLOW_88_in_stmtmulti283); if (failed) return retval;
@@ -313,7 +313,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start select_with_parens
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:88:1: select_with_parens : LPAREN simple_select RPAREN ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:88:1: select_with_parens : LPAREN simple_select RPAREN ;
     public final select_with_parens_return select_with_parens() throws RecognitionException {
         select_with_parens_return retval = new select_with_parens_return();
         retval.start = input.LT(1);
@@ -329,8 +329,8 @@ public class SQLANTLRParser extends Parser {
         Object RPAREN8_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:88:20: ( LPAREN simple_select RPAREN )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:88:22: LPAREN simple_select RPAREN
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:88:20: ( LPAREN simple_select RPAREN )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:88:22: LPAREN simple_select RPAREN
             {
             root_0 = (Object)adaptor.nil();
 
@@ -377,7 +377,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start simple_select
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:91:1: simple_select : ( SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause -> ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause ) | values_clause );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:91:1: simple_select : ( SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause -> ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause ) | values_clause );
     public final simple_select_return simple_select() throws RecognitionException {
         simple_select_return retval = new simple_select_return();
         retval.start = input.LT(1);
@@ -415,7 +415,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleSubtreeStream stream_from_clause=new RewriteRuleSubtreeStream(adaptor,"rule from_clause");
         RewriteRuleSubtreeStream stream_into_clause=new RewriteRuleSubtreeStream(adaptor,"rule into_clause");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:91:14: ( SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause -> ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause ) | values_clause )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:91:14: ( SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause -> ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause ) | values_clause )
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -434,7 +434,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt3) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:91:16: SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:91:16: SELECT opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause
                     {
                     SELECT9=(Token)input.LT(1);
                     match(input,SELECT,FOLLOW_SELECT_in_simple_select312); if (failed) return retval;
@@ -482,7 +482,7 @@ public class SQLANTLRParser extends Parser {
                     if ( backtracking==0 ) stream_orderby_clause.add(orderby_clause17.getTree());
 
                     // AST REWRITE
-                    // elements: groupby_clause, SELECT, from_clause, opt_distinct, having_clause, into_clause, target_list, orderby_clause, where_clause
+                    // elements: into_clause, target_list, where_clause, groupby_clause, SELECT, orderby_clause, having_clause, opt_distinct, from_clause
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -494,7 +494,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 92:4: -> ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:92:7: ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:92:7: ^( SELECT[\"SELECT\"] opt_distinct target_list into_clause from_clause where_clause groupby_clause having_clause orderby_clause )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(SELECT,"SELECT"), root_1);
@@ -518,7 +518,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:93:5: values_clause
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:93:5: values_clause
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -555,7 +555,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start values_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:1: values_clause : VALUES '(' values_expr_list ')' ( ',' '(' values_expr_list ')' )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:1: values_clause : VALUES '(' values_expr_list ')' ( ',' '(' values_expr_list ')' )* ;
     public final values_clause_return values_clause() throws RecognitionException {
         values_clause_return retval = new values_clause_return();
         retval.start = input.LT(1);
@@ -581,8 +581,8 @@ public class SQLANTLRParser extends Parser {
         Object char_literal26_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:16: ( VALUES '(' values_expr_list ')' ( ',' '(' values_expr_list ')' )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:18: VALUES '(' values_expr_list ')' ( ',' '(' values_expr_list ')' )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:16: ( VALUES '(' values_expr_list ')' ( ',' '(' values_expr_list ')' )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:18: VALUES '(' values_expr_list ')' ( ',' '(' values_expr_list ')' )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -609,7 +609,7 @@ public class SQLANTLRParser extends Parser {
             char_literal22_tree = (Object)adaptor.create(char_literal22);
             adaptor.addChild(root_0, char_literal22_tree);
             }
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:50: ( ',' '(' values_expr_list ')' )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:50: ( ',' '(' values_expr_list ')' )*
             loop4:
             do {
                 int alt4=2;
@@ -622,7 +622,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt4) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:51: ',' '(' values_expr_list ')'
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:96:51: ',' '(' values_expr_list ')'
             	    {
             	    char_literal23=(Token)input.LT(1);
             	    match(input,89,FOLLOW_89_in_values_clause385); if (failed) return retval;
@@ -682,7 +682,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start values_expr_list
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:1: values_expr_list : ( values_expr ) ( ',' values_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:1: values_expr_list : ( values_expr ) ( ',' values_expr )* ;
     public final values_expr_list_return values_expr_list() throws RecognitionException {
         values_expr_list_return retval = new values_expr_list_return();
         retval.start = input.LT(1);
@@ -698,13 +698,13 @@ public class SQLANTLRParser extends Parser {
         Object char_literal28_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:17: ( ( values_expr ) ( ',' values_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:19: ( values_expr ) ( ',' values_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:17: ( ( values_expr ) ( ',' values_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:19: ( values_expr ) ( ',' values_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:19: ( values_expr )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:20: values_expr
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:19: ( values_expr )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:20: values_expr
             {
             pushFollow(FOLLOW_values_expr_in_values_expr_list407);
             values_expr27=values_expr();
@@ -714,7 +714,7 @@ public class SQLANTLRParser extends Parser {
 
             }
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:33: ( ',' values_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:33: ( ',' values_expr )*
             loop5:
             do {
                 int alt5=2;
@@ -727,7 +727,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt5) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:34: ',' values_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:99:34: ',' values_expr
             	    {
             	    char_literal28=(Token)input.LT(1);
             	    match(input,89,FOLLOW_89_in_values_expr_list411); if (failed) return retval;
@@ -775,7 +775,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start values_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:102:1: values_expr : ( a_expr | DEFAULT );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:102:1: values_expr : ( a_expr | DEFAULT );
     public final values_expr_return values_expr() throws RecognitionException {
         values_expr_return retval = new values_expr_return();
         retval.start = input.LT(1);
@@ -789,7 +789,7 @@ public class SQLANTLRParser extends Parser {
         Object DEFAULT31_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:102:13: ( a_expr | DEFAULT )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:102:13: ( a_expr | DEFAULT )
             int alt6=2;
             int LA6_0 = input.LA(1);
 
@@ -808,7 +808,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt6) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:102:15: a_expr
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:102:15: a_expr
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -821,7 +821,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:103:5: DEFAULT
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:103:5: DEFAULT
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -859,7 +859,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start opt_distinct
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:111:1: opt_distinct : ( DISTINCT | DISTINCT ON LPAREN expr_list RPAREN | ALL | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:111:1: opt_distinct : ( DISTINCT | DISTINCT ON LPAREN expr_list RPAREN | ALL | );
     public final opt_distinct_return opt_distinct() throws RecognitionException {
         opt_distinct_return retval = new opt_distinct_return();
         retval.start = input.LT(1);
@@ -883,7 +883,7 @@ public class SQLANTLRParser extends Parser {
         Object ALL38_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:111:14: ( DISTINCT | DISTINCT ON LPAREN expr_list RPAREN | ALL | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:111:14: ( DISTINCT | DISTINCT ON LPAREN expr_list RPAREN | ALL | )
             int alt7=4;
             switch ( input.LA(1) ) {
             case DISTINCT:
@@ -934,7 +934,7 @@ public class SQLANTLRParser extends Parser {
 
             switch (alt7) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:111:16: DISTINCT
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:111:16: DISTINCT
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -948,7 +948,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:112:5: DISTINCT ON LPAREN expr_list RPAREN
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:112:5: DISTINCT ON LPAREN expr_list RPAREN
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -985,7 +985,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:113:5: ALL
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:113:5: ALL
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -999,7 +999,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:115:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:115:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1030,7 +1030,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start expr_list
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:1: expr_list : ( a_expr ) ( ',' a_expr )* -> ( a_expr )+ ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:1: expr_list : ( a_expr ) ( ',' a_expr )* -> ( a_expr )+ ;
     public final expr_list_return expr_list() throws RecognitionException {
         expr_list_return retval = new expr_list_return();
         retval.start = input.LT(1);
@@ -1047,11 +1047,11 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_89=new RewriteRuleTokenStream(adaptor,"token 89");
         RewriteRuleSubtreeStream stream_a_expr=new RewriteRuleSubtreeStream(adaptor,"rule a_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:17: ( ( a_expr ) ( ',' a_expr )* -> ( a_expr )+ )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:19: ( a_expr ) ( ',' a_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:17: ( ( a_expr ) ( ',' a_expr )* -> ( a_expr )+ )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:19: ( a_expr ) ( ',' a_expr )*
             {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:19: ( a_expr )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:20: a_expr
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:19: ( a_expr )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:20: a_expr
             {
             pushFollow(FOLLOW_a_expr_in_expr_list493);
             a_expr39=a_expr();
@@ -1061,7 +1061,7 @@ public class SQLANTLRParser extends Parser {
 
             }
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:28: ( ',' a_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:28: ( ',' a_expr )*
             loop8:
             do {
                 int alt8=2;
@@ -1074,7 +1074,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt8) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:29: ',' a_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:117:29: ',' a_expr
             	    {
             	    char_literal40=(Token)input.LT(1);
             	    match(input,89,FOLLOW_89_in_expr_list497); if (failed) return retval;
@@ -1146,7 +1146,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start target_list
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:1: target_list : target ( ',' target )* -> ^( TARGETS ( target )+ ) ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:1: target_list : target ( ',' target )* -> ^( TARGETS ( target )+ ) ;
     public final target_list_return target_list() throws RecognitionException {
         target_list_return retval = new target_list_return();
         retval.start = input.LT(1);
@@ -1163,15 +1163,15 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_89=new RewriteRuleTokenStream(adaptor,"token 89");
         RewriteRuleSubtreeStream stream_target=new RewriteRuleSubtreeStream(adaptor,"rule target");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:17: ( target ( ',' target )* -> ^( TARGETS ( target )+ ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:19: target ( ',' target )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:17: ( target ( ',' target )* -> ^( TARGETS ( target )+ ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:19: target ( ',' target )*
             {
             pushFollow(FOLLOW_target_in_target_list524);
             target42=target();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_target.add(target42.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:26: ( ',' target )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:26: ( ',' target )*
             loop9:
             do {
                 int alt9=2;
@@ -1184,7 +1184,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt9) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:27: ',' target
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:27: ',' target
             	    {
             	    char_literal43=(Token)input.LT(1);
             	    match(input,89,FOLLOW_89_in_target_list527); if (failed) return retval;
@@ -1218,7 +1218,7 @@ public class SQLANTLRParser extends Parser {
             root_0 = (Object)adaptor.nil();
             // 126:40: -> ^( TARGETS ( target )+ )
             {
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:43: ^( TARGETS ( target )+ )
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:126:43: ^( TARGETS ( target )+ )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(adaptor.create(TARGETS, "TARGETS"), root_1);
@@ -1264,7 +1264,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start target
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:1: target : ( a_expr ( target_alias )? -> ^( TARGET a_expr ( target_alias )? ) | STAR -> ^( TARGET STAR ) );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:1: target : ( a_expr ( target_alias )? -> ^( TARGET a_expr ( target_alias )? ) | STAR -> ^( TARGET STAR ) );
     public final target_return target() throws RecognitionException {
         target_return retval = new target_return();
         retval.start = input.LT(1);
@@ -1282,7 +1282,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleSubtreeStream stream_target_alias=new RewriteRuleSubtreeStream(adaptor,"rule target_alias");
         RewriteRuleSubtreeStream stream_a_expr=new RewriteRuleSubtreeStream(adaptor,"rule a_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:8: ( a_expr ( target_alias )? -> ^( TARGET a_expr ( target_alias )? ) | STAR -> ^( TARGET STAR ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:8: ( a_expr ( target_alias )? -> ^( TARGET a_expr ( target_alias )? ) | STAR -> ^( TARGET STAR ) )
             int alt11=2;
             int LA11_0 = input.LA(1);
 
@@ -1301,14 +1301,14 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt11) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:10: a_expr ( target_alias )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:10: a_expr ( target_alias )?
                     {
                     pushFollow(FOLLOW_a_expr_in_target552);
                     a_expr45=a_expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_a_expr.add(a_expr45.getTree());
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:17: ( target_alias )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:17: ( target_alias )?
                     int alt10=2;
                     int LA10_0 = input.LA(1);
 
@@ -1317,7 +1317,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt10) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:17: target_alias
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:17: target_alias
                             {
                             pushFollow(FOLLOW_target_alias_in_target554);
                             target_alias46=target_alias();
@@ -1344,13 +1344,13 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 129:31: -> ^( TARGET a_expr ( target_alias )? )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:34: ^( TARGET a_expr ( target_alias )? )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:34: ^( TARGET a_expr ( target_alias )? )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(TARGET, "TARGET"), root_1);
 
                         adaptor.addChild(root_1, stream_a_expr.next());
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:50: ( target_alias )?
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:129:50: ( target_alias )?
                         if ( stream_target_alias.hasNext() ) {
                             adaptor.addChild(root_1, stream_target_alias.next());
 
@@ -1367,7 +1367,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:130:4: STAR
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:130:4: STAR
                     {
                     STAR47=(Token)input.LT(1);
                     match(input,STAR,FOLLOW_STAR_in_target571); if (failed) return retval;
@@ -1387,7 +1387,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 130:9: -> ^( TARGET STAR )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:130:12: ^( TARGET STAR )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:130:12: ^( TARGET STAR )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(TARGET, "TARGET"), root_1);
@@ -1428,7 +1428,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start target_alias
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:1: target_alias : ( ( AS id )=> AS id -> ^( ALIAS id ) | ( id )=> id -> ^( ALIAS id ) );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:1: target_alias : ( ( AS id )=> AS id -> ^( ALIAS id ) | ( id )=> id -> ^( ALIAS id ) );
     public final target_alias_return target_alias() throws RecognitionException {
         target_alias_return retval = new target_alias_return();
         retval.start = input.LT(1);
@@ -1445,7 +1445,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_AS=new RewriteRuleTokenStream(adaptor,"token AS");
         RewriteRuleSubtreeStream stream_id=new RewriteRuleSubtreeStream(adaptor,"rule id");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:14: ( ( AS id )=> AS id -> ^( ALIAS id ) | ( id )=> id -> ^( ALIAS id ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:14: ( ( AS id )=> AS id -> ^( ALIAS id ) | ( id )=> id -> ^( ALIAS id ) )
             int alt12=2;
             int LA12_0 = input.LA(1);
 
@@ -1464,7 +1464,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt12) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:16: ( AS id )=> AS id
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:16: ( AS id )=> AS id
                     {
                     AS48=(Token)input.LT(1);
                     match(input,AS,FOLLOW_AS_in_target_alias598); if (failed) return retval;
@@ -1489,7 +1489,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 133:33: -> ^( ALIAS id )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:36: ^( ALIAS id )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:36: ^( ALIAS id )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(ALIAS, "ALIAS"), root_1);
@@ -1506,7 +1506,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:5: ( id )=> id
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:5: ( id )=> id
                     {
                     pushFollow(FOLLOW_id_in_target_alias620);
                     id50=id();
@@ -1527,7 +1527,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 134:16: -> ^( ALIAS id )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:19: ^( ALIAS id )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:19: ^( ALIAS id )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(ALIAS, "ALIAS"), root_1);
@@ -1568,7 +1568,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start into_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:143:1: into_clause : ( INTO opt_temp_table_name | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:143:1: into_clause : ( INTO opt_temp_table_name | );
     public final into_clause_return into_clause() throws RecognitionException {
         into_clause_return retval = new into_clause_return();
         retval.start = input.LT(1);
@@ -1582,7 +1582,7 @@ public class SQLANTLRParser extends Parser {
         Object INTO51_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:143:13: ( INTO opt_temp_table_name | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:143:13: ( INTO opt_temp_table_name | )
             int alt13=2;
             int LA13_0 = input.LA(1);
 
@@ -1601,7 +1601,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt13) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:143:15: INTO opt_temp_table_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:143:15: INTO opt_temp_table_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1620,7 +1620,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:145:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:145:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1651,7 +1651,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start opt_temp_table_name
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:147:1: opt_temp_table_name : ( TEMPORARY opt_table qualified_name | TEMP opt_table qualified_name | LOCAL TEMPORARY opt_table qualified_name | LOCAL TEMP opt_table qualified_name | GLOBAL TEMPORARY opt_table qualified_name | GLOBAL TEMP opt_table qualified_name | TABLE qualified_name | qualified_name );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:147:1: opt_temp_table_name : ( TEMPORARY opt_table qualified_name | TEMP opt_table qualified_name | LOCAL TEMPORARY opt_table qualified_name | LOCAL TEMP opt_table qualified_name | GLOBAL TEMPORARY opt_table qualified_name | GLOBAL TEMP opt_table qualified_name | TABLE qualified_name | qualified_name );
     public final opt_temp_table_name_return opt_temp_table_name() throws RecognitionException {
         opt_temp_table_name_return retval = new opt_temp_table_name_return();
         retval.start = input.LT(1);
@@ -1711,7 +1711,7 @@ public class SQLANTLRParser extends Parser {
         Object TABLE75_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:147:21: ( TEMPORARY opt_table qualified_name | TEMP opt_table qualified_name | LOCAL TEMPORARY opt_table qualified_name | LOCAL TEMP opt_table qualified_name | GLOBAL TEMPORARY opt_table qualified_name | GLOBAL TEMP opt_table qualified_name | TABLE qualified_name | qualified_name )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:147:21: ( TEMPORARY opt_table qualified_name | TEMP opt_table qualified_name | LOCAL TEMPORARY opt_table qualified_name | LOCAL TEMP opt_table qualified_name | GLOBAL TEMPORARY opt_table qualified_name | GLOBAL TEMP opt_table qualified_name | TABLE qualified_name | qualified_name )
             int alt14=8;
             switch ( input.LA(1) ) {
             case TEMPORARY:
@@ -1784,7 +1784,7 @@ public class SQLANTLRParser extends Parser {
 
             switch (alt14) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:147:23: TEMPORARY opt_table qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:147:23: TEMPORARY opt_table qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1808,7 +1808,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:148:6: TEMP opt_table qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:148:6: TEMP opt_table qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1832,7 +1832,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:149:6: LOCAL TEMPORARY opt_table qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:149:6: LOCAL TEMPORARY opt_table qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1862,7 +1862,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:150:6: LOCAL TEMP opt_table qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:150:6: LOCAL TEMP opt_table qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1892,7 +1892,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:151:6: GLOBAL TEMPORARY opt_table qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:151:6: GLOBAL TEMPORARY opt_table qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1922,7 +1922,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:152:6: GLOBAL TEMP opt_table qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:152:6: GLOBAL TEMP opt_table qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1952,7 +1952,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 7 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:153:6: TABLE qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:153:6: TABLE qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -1971,7 +1971,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 8 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:154:6: qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:154:6: qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2008,7 +2008,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start opt_table
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:157:1: opt_table : ( TABLE | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:157:1: opt_table : ( TABLE | );
     public final opt_table_return opt_table() throws RecognitionException {
         opt_table_return retval = new opt_table_return();
         retval.start = input.LT(1);
@@ -2020,7 +2020,7 @@ public class SQLANTLRParser extends Parser {
         Object TABLE78_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:157:11: ( TABLE | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:157:11: ( TABLE | )
             int alt15=2;
             int LA15_0 = input.LA(1);
 
@@ -2039,7 +2039,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt15) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:157:13: TABLE
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:157:13: TABLE
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2053,7 +2053,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:159:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:159:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2084,7 +2084,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start qualified_name
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:1: qualified_name : relation_name ( indirection )* -> ^( RELATION_NAME relation_name ( indirection )* ) ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:1: qualified_name : relation_name ( indirection )* -> ^( RELATION_NAME relation_name ( indirection )* ) ;
     public final qualified_name_return qualified_name() throws RecognitionException {
         qualified_name_return retval = new qualified_name_return();
         retval.start = input.LT(1);
@@ -2099,15 +2099,15 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleSubtreeStream stream_relation_name=new RewriteRuleSubtreeStream(adaptor,"rule relation_name");
         RewriteRuleSubtreeStream stream_indirection=new RewriteRuleSubtreeStream(adaptor,"rule indirection");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:16: ( relation_name ( indirection )* -> ^( RELATION_NAME relation_name ( indirection )* ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:18: relation_name ( indirection )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:16: ( relation_name ( indirection )* -> ^( RELATION_NAME relation_name ( indirection )* ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:18: relation_name ( indirection )*
             {
             pushFollow(FOLLOW_relation_name_in_qualified_name786);
             relation_name79=relation_name();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_relation_name.add(relation_name79.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:32: ( indirection )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:32: ( indirection )*
             loop16:
             do {
                 int alt16=2;
@@ -2120,7 +2120,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt16) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:32: indirection
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:32: indirection
             	    {
             	    pushFollow(FOLLOW_indirection_in_qualified_name788);
             	    indirection80=indirection();
@@ -2138,7 +2138,7 @@ public class SQLANTLRParser extends Parser {
 
 
             // AST REWRITE
-            // elements: indirection, relation_name
+            // elements: relation_name, indirection
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -2150,13 +2150,13 @@ public class SQLANTLRParser extends Parser {
             root_0 = (Object)adaptor.nil();
             // 161:45: -> ^( RELATION_NAME relation_name ( indirection )* )
             {
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:48: ^( RELATION_NAME relation_name ( indirection )* )
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:48: ^( RELATION_NAME relation_name ( indirection )* )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(adaptor.create(RELATION_NAME, "RELATION_NAME"), root_1);
 
                 adaptor.addChild(root_1, stream_relation_name.next());
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:78: ( indirection )*
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:161:78: ( indirection )*
                 while ( stream_indirection.hasNext() ) {
                     adaptor.addChild(root_1, stream_indirection.next());
 
@@ -2195,7 +2195,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start relation_name
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:164:1: relation_name : ( id | special_rule_relation );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:164:1: relation_name : ( id | special_rule_relation );
     public final relation_name_return relation_name() throws RecognitionException {
         relation_name_return retval = new relation_name_return();
         retval.start = input.LT(1);
@@ -2209,7 +2209,7 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:164:15: ( id | special_rule_relation )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:164:15: ( id | special_rule_relation )
             int alt17=2;
             int LA17_0 = input.LA(1);
 
@@ -2228,7 +2228,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt17) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:164:17: id
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:164:17: id
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2241,7 +2241,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:165:5: special_rule_relation
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:165:5: special_rule_relation
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2278,7 +2278,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start special_rule_relation
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:168:1: special_rule_relation : ( OLD | NEW );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:168:1: special_rule_relation : ( OLD | NEW );
     public final special_rule_relation_return special_rule_relation() throws RecognitionException {
         special_rule_relation_return retval = new special_rule_relation_return();
         retval.start = input.LT(1);
@@ -2290,8 +2290,8 @@ public class SQLANTLRParser extends Parser {
         Object set83_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:168:23: ( OLD | NEW )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:168:23: ( OLD | NEW )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2334,7 +2334,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start indirection
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:1: indirection : ( DOT id -> ^( INDIRECTION id ) | DOT STAR -> ^( INDIRECTION STAR ) );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:1: indirection : ( DOT id -> ^( INDIRECTION id ) | DOT STAR -> ^( INDIRECTION STAR ) );
     public final indirection_return indirection() throws RecognitionException {
         indirection_return retval = new indirection_return();
         retval.start = input.LT(1);
@@ -2354,7 +2354,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_DOT=new RewriteRuleTokenStream(adaptor,"token DOT");
         RewriteRuleSubtreeStream stream_id=new RewriteRuleSubtreeStream(adaptor,"rule id");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:13: ( DOT id -> ^( INDIRECTION id ) | DOT STAR -> ^( INDIRECTION STAR ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:13: ( DOT id -> ^( INDIRECTION id ) | DOT STAR -> ^( INDIRECTION STAR ) )
             int alt18=2;
             int LA18_0 = input.LA(1);
 
@@ -2384,7 +2384,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt18) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:15: DOT id
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:15: DOT id
                     {
                     DOT84=(Token)input.LT(1);
                     match(input,DOT,FOLLOW_DOT_in_indirection854); if (failed) return retval;
@@ -2409,7 +2409,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 173:22: -> ^( INDIRECTION id )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:24: ^( INDIRECTION id )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:173:24: ^( INDIRECTION id )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(INDIRECTION, "INDIRECTION"), root_1);
@@ -2426,7 +2426,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:174:5: DOT STAR
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:174:5: DOT STAR
                     {
                     DOT86=(Token)input.LT(1);
                     match(input,DOT,FOLLOW_DOT_in_indirection869); if (failed) return retval;
@@ -2450,7 +2450,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 174:14: -> ^( INDIRECTION STAR )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:174:17: ^( INDIRECTION STAR )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:174:17: ^( INDIRECTION STAR )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(INDIRECTION, "INDIRECTION"), root_1);
@@ -2491,7 +2491,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start from_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:1: from_clause : ( FROM from_list -> ^( FROM[\"FROM\"] from_list ) | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:1: from_clause : ( FROM from_list -> ^( FROM[\"FROM\"] from_list ) | );
     public final from_clause_return from_clause() throws RecognitionException {
         from_clause_return retval = new from_clause_return();
         retval.start = input.LT(1);
@@ -2506,7 +2506,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_FROM=new RewriteRuleTokenStream(adaptor,"token FROM");
         RewriteRuleSubtreeStream stream_from_list=new RewriteRuleSubtreeStream(adaptor,"rule from_list");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:13: ( FROM from_list -> ^( FROM[\"FROM\"] from_list ) | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:13: ( FROM from_list -> ^( FROM[\"FROM\"] from_list ) | )
             int alt19=2;
             int LA19_0 = input.LA(1);
 
@@ -2525,7 +2525,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt19) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:15: FROM from_list
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:15: FROM from_list
                     {
                     FROM88=(Token)input.LT(1);
                     match(input,FROM,FOLLOW_FROM_in_from_clause895); if (failed) return retval;
@@ -2550,7 +2550,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 185:30: -> ^( FROM[\"FROM\"] from_list )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:33: ^( FROM[\"FROM\"] from_list )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:185:33: ^( FROM[\"FROM\"] from_list )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(FROM,"FROM"), root_1);
@@ -2567,7 +2567,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:187:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:187:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2598,7 +2598,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start from_list
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:189:1: from_list : ( table_joins | table_refs );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:189:1: from_list : ( table_joins | table_refs );
     public final from_list_return from_list() throws RecognitionException {
         from_list_return retval = new from_list_return();
         retval.start = input.LT(1);
@@ -2612,12 +2612,12 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:189:12: ( table_joins | table_refs )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:189:12: ( table_joins | table_refs )
             int alt20=2;
             alt20 = dfa20.predict(input);
             switch (alt20) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:189:14: table_joins
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:189:14: table_joins
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2630,7 +2630,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:190:5: table_refs
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:190:5: table_refs
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -2667,7 +2667,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start table_refs
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:1: table_refs : table_ref ( ',' table_ref )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:1: table_refs : table_ref ( ',' table_ref )* ;
     public final table_refs_return table_refs() throws RecognitionException {
         table_refs_return retval = new table_refs_return();
         retval.start = input.LT(1);
@@ -2683,8 +2683,8 @@ public class SQLANTLRParser extends Parser {
         Object char_literal93_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:13: ( table_ref ( ',' table_ref )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:15: table_ref ( ',' table_ref )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:13: ( table_ref ( ',' table_ref )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:15: table_ref ( ',' table_ref )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2693,7 +2693,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, table_ref92.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:25: ( ',' table_ref )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:25: ( ',' table_ref )*
             loop21:
             do {
                 int alt21=2;
@@ -2706,7 +2706,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt21) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:26: ',' table_ref
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:193:26: ',' table_ref
             	    {
             	    char_literal93=(Token)input.LT(1);
             	    match(input,89,FOLLOW_89_in_table_refs944); if (failed) return retval;
@@ -2754,7 +2754,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start table_joins
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:1: table_joins : relation_expr ( alias_clause )? ( table_join )+ ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:1: table_joins : relation_expr ( alias_clause )? ( table_join )+ ;
     public final table_joins_return table_joins() throws RecognitionException {
         table_joins_return retval = new table_joins_return();
         retval.start = input.LT(1);
@@ -2770,8 +2770,8 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:14: ( relation_expr ( alias_clause )? ( table_join )+ )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:16: relation_expr ( alias_clause )? ( table_join )+
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:14: ( relation_expr ( alias_clause )? ( table_join )+ )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:16: relation_expr ( alias_clause )? ( table_join )+
             {
             root_0 = (Object)adaptor.nil();
 
@@ -2780,7 +2780,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, relation_expr95.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:30: ( alias_clause )?
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:30: ( alias_clause )?
             int alt22=2;
             int LA22_0 = input.LA(1);
 
@@ -2789,7 +2789,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt22) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:30: alias_clause
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:30: alias_clause
                     {
                     pushFollow(FOLLOW_alias_clause_in_table_joins963);
                     alias_clause96=alias_clause();
@@ -2802,7 +2802,7 @@ public class SQLANTLRParser extends Parser {
 
             }
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:44: ( table_join )+
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:44: ( table_join )+
             int cnt23=0;
             loop23:
             do {
@@ -2816,7 +2816,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt23) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:44: table_join
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:196:44: table_join
             	    {
             	    pushFollow(FOLLOW_table_join_in_table_joins966);
             	    table_join97=table_join();
@@ -2863,7 +2863,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start table_ref
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:1: table_ref : ( ( func_expr ( alias_clause )? )=> func_expr ( alias_clause )? -> ^( FUNCTION func_expr ( alias_clause )? ) | relation_expr ( alias_clause )? -> ^( RELATION relation_expr ( alias_clause )? ) | ( LPAREN inner_select RPAREN ( alias_clause )? )=> LPAREN inner_select RPAREN ( alias_clause )? );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:1: table_ref : ( ( func_expr ( alias_clause )? )=> func_expr ( alias_clause )? -> ^( FUNCTION func_expr ( alias_clause )? ) | relation_expr ( alias_clause )? -> ^( RELATION relation_expr ( alias_clause )? ) | ( LPAREN inner_select RPAREN ( alias_clause )? )=> LPAREN inner_select RPAREN ( alias_clause )? );
     public final table_ref_return table_ref() throws RecognitionException {
         table_ref_return retval = new table_ref_return();
         retval.start = input.LT(1);
@@ -2891,7 +2891,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleSubtreeStream stream_func_expr=new RewriteRuleSubtreeStream(adaptor,"rule func_expr");
         RewriteRuleSubtreeStream stream_alias_clause=new RewriteRuleSubtreeStream(adaptor,"rule alias_clause");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:12: ( ( func_expr ( alias_clause )? )=> func_expr ( alias_clause )? -> ^( FUNCTION func_expr ( alias_clause )? ) | relation_expr ( alias_clause )? -> ^( RELATION relation_expr ( alias_clause )? ) | ( LPAREN inner_select RPAREN ( alias_clause )? )=> LPAREN inner_select RPAREN ( alias_clause )? )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:12: ( ( func_expr ( alias_clause )? )=> func_expr ( alias_clause )? -> ^( FUNCTION func_expr ( alias_clause )? ) | relation_expr ( alias_clause )? -> ^( RELATION relation_expr ( alias_clause )? ) | ( LPAREN inner_select RPAREN ( alias_clause )? )=> LPAREN inner_select RPAREN ( alias_clause )? )
             int alt27=3;
             int LA27_0 = input.LA(1);
 
@@ -2968,14 +2968,14 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt27) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:14: ( func_expr ( alias_clause )? )=> func_expr ( alias_clause )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:14: ( func_expr ( alias_clause )? )=> func_expr ( alias_clause )?
                     {
                     pushFollow(FOLLOW_func_expr_in_table_ref990);
                     func_expr98=func_expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_func_expr.add(func_expr98.getTree());
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:53: ( alias_clause )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:53: ( alias_clause )?
                     int alt24=2;
                     int LA24_0 = input.LA(1);
 
@@ -2984,7 +2984,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt24) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:53: alias_clause
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:53: alias_clause
                             {
                             pushFollow(FOLLOW_alias_clause_in_table_ref992);
                             alias_clause99=alias_clause();
@@ -3011,13 +3011,13 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 199:67: -> ^( FUNCTION func_expr ( alias_clause )? )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:70: ^( FUNCTION func_expr ( alias_clause )? )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:70: ^( FUNCTION func_expr ( alias_clause )? )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(FUNCTION, "FUNCTION"), root_1);
 
                         adaptor.addChild(root_1, stream_func_expr.next());
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:91: ( alias_clause )?
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:91: ( alias_clause )?
                         if ( stream_alias_clause.hasNext() ) {
                             adaptor.addChild(root_1, stream_alias_clause.next());
 
@@ -3034,14 +3034,14 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:5: relation_expr ( alias_clause )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:5: relation_expr ( alias_clause )?
                     {
                     pushFollow(FOLLOW_relation_expr_in_table_ref1010);
                     relation_expr100=relation_expr();
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) stream_relation_expr.add(relation_expr100.getTree());
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:19: ( alias_clause )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:19: ( alias_clause )?
                     int alt25=2;
                     int LA25_0 = input.LA(1);
 
@@ -3050,7 +3050,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt25) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:19: alias_clause
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:19: alias_clause
                             {
                             pushFollow(FOLLOW_alias_clause_in_table_ref1012);
                             alias_clause101=alias_clause();
@@ -3077,13 +3077,13 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 200:33: -> ^( RELATION relation_expr ( alias_clause )? )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:36: ^( RELATION relation_expr ( alias_clause )? )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:36: ^( RELATION relation_expr ( alias_clause )? )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(RELATION, "RELATION"), root_1);
 
                         adaptor.addChild(root_1, stream_relation_expr.next());
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:61: ( alias_clause )?
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:200:61: ( alias_clause )?
                         if ( stream_alias_clause.hasNext() ) {
                             adaptor.addChild(root_1, stream_alias_clause.next());
 
@@ -3100,7 +3100,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:5: ( LPAREN inner_select RPAREN ( alias_clause )? )=> LPAREN inner_select RPAREN ( alias_clause )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:5: ( LPAREN inner_select RPAREN ( alias_clause )? )=> LPAREN inner_select RPAREN ( alias_clause )?
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3121,7 +3121,7 @@ public class SQLANTLRParser extends Parser {
                     RPAREN104_tree = (Object)adaptor.create(RPAREN104);
                     adaptor.addChild(root_0, RPAREN104_tree);
                     }
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:79: ( alias_clause )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:79: ( alias_clause )?
                     int alt26=2;
                     int LA26_0 = input.LA(1);
 
@@ -3130,7 +3130,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt26) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:79: alias_clause
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:79: alias_clause
                             {
                             pushFollow(FOLLOW_alias_clause_in_table_ref1050);
                             alias_clause105=alias_clause();
@@ -3171,7 +3171,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start inner_select
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:204:1: inner_select : simple_select ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:204:1: inner_select : simple_select ;
     public final inner_select_return inner_select() throws RecognitionException {
         inner_select_return retval = new inner_select_return();
         retval.start = input.LT(1);
@@ -3183,8 +3183,8 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:204:15: ( simple_select )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:204:17: simple_select
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:204:15: ( simple_select )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:204:17: simple_select
             {
             root_0 = (Object)adaptor.nil();
 
@@ -3219,7 +3219,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start table_join
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:1: table_join : ( joined_table -> ^( JOIN[\"JOIN\"] joined_table ) | '(' joined_table ')' alias_clause );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:1: table_join : ( joined_table -> ^( JOIN[\"JOIN\"] joined_table ) | '(' joined_table ')' alias_clause );
     public final table_join_return table_join() throws RecognitionException {
         table_join_return retval = new table_join_return();
         retval.start = input.LT(1);
@@ -3239,7 +3239,7 @@ public class SQLANTLRParser extends Parser {
         Object char_literal110_tree=null;
         RewriteRuleSubtreeStream stream_joined_table=new RewriteRuleSubtreeStream(adaptor,"rule joined_table");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:13: ( joined_table -> ^( JOIN[\"JOIN\"] joined_table ) | '(' joined_table ')' alias_clause )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:13: ( joined_table -> ^( JOIN[\"JOIN\"] joined_table ) | '(' joined_table ')' alias_clause )
             int alt28=2;
             int LA28_0 = input.LA(1);
 
@@ -3258,7 +3258,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt28) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:15: joined_table
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:15: joined_table
                     {
                     pushFollow(FOLLOW_joined_table_in_table_join1079);
                     joined_table107=joined_table();
@@ -3279,7 +3279,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 207:28: -> ^( JOIN[\"JOIN\"] joined_table )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:31: ^( JOIN[\"JOIN\"] joined_table )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:207:31: ^( JOIN[\"JOIN\"] joined_table )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(JOIN, "JOIN"), root_1);
@@ -3296,7 +3296,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:208:5: '(' joined_table ')' alias_clause
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:208:5: '(' joined_table ')' alias_clause
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3350,7 +3350,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start joined_table
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:211:1: joined_table : ( CROSS JOIN table_ref | join_type JOIN table_ref join_qual | JOIN table_ref join_qual | NATURAL join_type JOIN table_ref | NATURAL JOIN table_ref );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:211:1: joined_table : ( CROSS JOIN table_ref | join_type JOIN table_ref join_qual | JOIN table_ref join_qual | NATURAL join_type JOIN table_ref | NATURAL JOIN table_ref );
     public final joined_table_return joined_table() throws RecognitionException {
         joined_table_return retval = new joined_table_return();
         retval.start = input.LT(1);
@@ -3394,7 +3394,7 @@ public class SQLANTLRParser extends Parser {
         Object JOIN127_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:211:15: ( CROSS JOIN table_ref | join_type JOIN table_ref join_qual | JOIN table_ref join_qual | NATURAL join_type JOIN table_ref | NATURAL JOIN table_ref )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:211:15: ( CROSS JOIN table_ref | join_type JOIN table_ref join_qual | JOIN table_ref join_qual | NATURAL join_type JOIN table_ref | NATURAL JOIN table_ref )
             int alt29=5;
             switch ( input.LA(1) ) {
             case CROSS:
@@ -3444,7 +3444,7 @@ public class SQLANTLRParser extends Parser {
 
             switch (alt29) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:211:17: CROSS JOIN table_ref
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:211:17: CROSS JOIN table_ref
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3469,7 +3469,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:212:5: join_type JOIN table_ref join_qual
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:212:5: join_type JOIN table_ref join_qual
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3498,7 +3498,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:213:5: JOIN table_ref join_qual
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:213:5: JOIN table_ref join_qual
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3522,7 +3522,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:214:5: NATURAL join_type JOIN table_ref
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:214:5: NATURAL join_type JOIN table_ref
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3552,7 +3552,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:215:5: NATURAL JOIN table_ref
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:215:5: NATURAL JOIN table_ref
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3601,7 +3601,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start join_type
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:218:1: join_type : ( FULL join_outer | LEFT join_outer | RIGHT join_outer | INNER );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:218:1: join_type : ( FULL join_outer | LEFT join_outer | RIGHT join_outer | INNER );
     public final join_type_return join_type() throws RecognitionException {
         join_type_return retval = new join_type_return();
         retval.start = input.LT(1);
@@ -3625,7 +3625,7 @@ public class SQLANTLRParser extends Parser {
         Object INNER135_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:218:11: ( FULL join_outer | LEFT join_outer | RIGHT join_outer | INNER )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:218:11: ( FULL join_outer | LEFT join_outer | RIGHT join_outer | INNER )
             int alt30=4;
             switch ( input.LA(1) ) {
             case FULL:
@@ -3658,7 +3658,7 @@ public class SQLANTLRParser extends Parser {
 
             switch (alt30) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:218:13: FULL join_outer
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:218:13: FULL join_outer
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3677,7 +3677,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:219:5: LEFT join_outer
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:219:5: LEFT join_outer
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3696,7 +3696,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:220:5: RIGHT join_outer
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:220:5: RIGHT join_outer
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3715,7 +3715,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:221:5: INNER
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:221:5: INNER
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3753,7 +3753,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start join_outer
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:225:1: join_outer : ( OUTER | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:225:1: join_outer : ( OUTER | );
     public final join_outer_return join_outer() throws RecognitionException {
         join_outer_return retval = new join_outer_return();
         retval.start = input.LT(1);
@@ -3765,7 +3765,7 @@ public class SQLANTLRParser extends Parser {
         Object OUTER136_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:225:12: ( OUTER | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:225:12: ( OUTER | )
             int alt31=2;
             int LA31_0 = input.LA(1);
 
@@ -3784,7 +3784,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt31) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:225:14: OUTER
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:225:14: OUTER
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3798,7 +3798,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:227:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:227:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3829,7 +3829,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start join_qual
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:229:1: join_qual : ( USING '(' name_list ')' | ON a_expr );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:229:1: join_qual : ( USING '(' name_list ')' | ON a_expr );
     public final join_qual_return join_qual() throws RecognitionException {
         join_qual_return retval = new join_qual_return();
         retval.start = input.LT(1);
@@ -3851,7 +3851,7 @@ public class SQLANTLRParser extends Parser {
         Object ON141_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:229:11: ( USING '(' name_list ')' | ON a_expr )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:229:11: ( USING '(' name_list ')' | ON a_expr )
             int alt32=2;
             int LA32_0 = input.LA(1);
 
@@ -3870,7 +3870,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt32) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:229:13: USING '(' name_list ')'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:229:13: USING '(' name_list ')'
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3901,7 +3901,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:230:5: ON a_expr
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:230:5: ON a_expr
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3944,7 +3944,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start opt_alias
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:1: opt_alias : ( ( alias_clause )=> alias_clause | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:1: opt_alias : ( ( alias_clause )=> alias_clause | );
     public final opt_alias_return opt_alias() throws RecognitionException {
         opt_alias_return retval = new opt_alias_return();
         retval.start = input.LT(1);
@@ -3956,7 +3956,7 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:12: ( ( alias_clause )=> alias_clause | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:12: ( ( alias_clause )=> alias_clause | )
             int alt33=2;
             int LA33_0 = input.LA(1);
 
@@ -3978,7 +3978,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt33) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:14: ( alias_clause )=> alias_clause
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:14: ( alias_clause )=> alias_clause
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -3991,7 +3991,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:236:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:236:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -4022,7 +4022,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start alias_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:1: alias_clause : ( ( id )=> id -> ^( ALIAS id ) | AS id -> ^( ALIAS id ) );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:1: alias_clause : ( ( id )=> id -> ^( ALIAS id ) | AS id -> ^( ALIAS id ) );
     public final alias_clause_return alias_clause() throws RecognitionException {
         alias_clause_return retval = new alias_clause_return();
         retval.start = input.LT(1);
@@ -4039,7 +4039,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_AS=new RewriteRuleTokenStream(adaptor,"token AS");
         RewriteRuleSubtreeStream stream_id=new RewriteRuleSubtreeStream(adaptor,"rule id");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:14: ( ( id )=> id -> ^( ALIAS id ) | AS id -> ^( ALIAS id ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:14: ( ( id )=> id -> ^( ALIAS id ) | AS id -> ^( ALIAS id ) )
             int alt34=2;
             int LA34_0 = input.LA(1);
 
@@ -4058,7 +4058,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt34) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:16: ( id )=> id
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:16: ( id )=> id
                     {
                     pushFollow(FOLLOW_id_in_alias_clause1303);
                     id144=id();
@@ -4079,7 +4079,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 238:27: -> ^( ALIAS id )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:30: ^( ALIAS id )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:30: ^( ALIAS id )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(ALIAS, "ALIAS"), root_1);
@@ -4096,7 +4096,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:239:5: AS id
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:239:5: AS id
                     {
                     AS145=(Token)input.LT(1);
                     match(input,AS,FOLLOW_AS_in_alias_clause1317); if (failed) return retval;
@@ -4121,7 +4121,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 239:11: -> ^( ALIAS id )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:239:14: ^( ALIAS id )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:239:14: ^( ALIAS id )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(ALIAS, "ALIAS"), root_1);
@@ -4162,7 +4162,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start name_list
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:1: name_list : id ( ',' id )* -> ( id )+ ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:1: name_list : id ( ',' id )* -> ( id )+ ;
     public final name_list_return name_list() throws RecognitionException {
         name_list_return retval = new name_list_return();
         retval.start = input.LT(1);
@@ -4179,15 +4179,15 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_89=new RewriteRuleTokenStream(adaptor,"token 89");
         RewriteRuleSubtreeStream stream_id=new RewriteRuleSubtreeStream(adaptor,"rule id");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:11: ( id ( ',' id )* -> ( id )+ )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:13: id ( ',' id )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:11: ( id ( ',' id )* -> ( id )+ )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:13: id ( ',' id )*
             {
             pushFollow(FOLLOW_id_in_name_list1344);
             id147=id();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_id.add(id147.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:16: ( ',' id )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:16: ( ',' id )*
             loop35:
             do {
                 int alt35=2;
@@ -4200,7 +4200,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt35) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:17: ',' id
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:242:17: ',' id
             	    {
             	    char_literal148=(Token)input.LT(1);
             	    match(input,89,FOLLOW_89_in_name_list1347); if (failed) return retval;
@@ -4272,7 +4272,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start relation_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:1: relation_expr : ( qualified_name ( STAR )? | ONLY qualified_name | ONLY '(' qualified_name ')' );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:1: relation_expr : ( qualified_name ( STAR )? | ONLY qualified_name | ONLY '(' qualified_name ')' );
     public final relation_expr_return relation_expr() throws RecognitionException {
         relation_expr_return retval = new relation_expr_return();
         retval.start = input.LT(1);
@@ -4298,7 +4298,7 @@ public class SQLANTLRParser extends Parser {
         Object char_literal157_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:15: ( qualified_name ( STAR )? | ONLY qualified_name | ONLY '(' qualified_name ')' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:15: ( qualified_name ( STAR )? | ONLY qualified_name | ONLY '(' qualified_name ')' )
             int alt37=3;
             int LA37_0 = input.LA(1);
 
@@ -4331,7 +4331,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt37) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:17: qualified_name ( STAR )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:17: qualified_name ( STAR )?
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -4340,7 +4340,7 @@ public class SQLANTLRParser extends Parser {
                     _fsp--;
                     if (failed) return retval;
                     if ( backtracking==0 ) adaptor.addChild(root_0, qualified_name150.getTree());
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:32: ( STAR )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:32: ( STAR )?
                     int alt36=2;
                     int LA36_0 = input.LA(1);
 
@@ -4349,7 +4349,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt36) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:32: STAR
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:245:32: STAR
                             {
                             STAR151=(Token)input.LT(1);
                             match(input,STAR,FOLLOW_STAR_in_relation_expr1371); if (failed) return retval;
@@ -4367,7 +4367,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:246:5: ONLY qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:246:5: ONLY qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -4386,7 +4386,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:247:5: ONLY '(' qualified_name ')'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:247:5: ONLY '(' qualified_name ')'
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -4441,7 +4441,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start func_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:1: func_expr : func_name '(' func_args ')' -> ^( func_name func_args ) ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:1: func_expr : func_name '(' func_args ')' -> ^( func_name func_args ) ;
     public final func_expr_return func_expr() throws RecognitionException {
         func_expr_return retval = new func_expr_return();
         retval.start = input.LT(1);
@@ -4462,8 +4462,8 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleSubtreeStream stream_func_name=new RewriteRuleSubtreeStream(adaptor,"rule func_name");
         RewriteRuleSubtreeStream stream_func_args=new RewriteRuleSubtreeStream(adaptor,"rule func_args");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:12: ( func_name '(' func_args ')' -> ^( func_name func_args ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:15: func_name '(' func_args ')'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:12: ( func_name '(' func_args ')' -> ^( func_name func_args ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:15: func_name '(' func_args ')'
             {
             pushFollow(FOLLOW_func_name_in_func_expr1411);
             func_name158=func_name();
@@ -4497,7 +4497,7 @@ public class SQLANTLRParser extends Parser {
             root_0 = (Object)adaptor.nil();
             // 252:44: -> ^( func_name func_args )
             {
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:47: ^( func_name func_args )
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:252:47: ^( func_name func_args )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(stream_func_name.nextNode(), root_1);
@@ -4536,7 +4536,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start func_args
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:1: func_args : ( ( ALL | DISTINCT )? expr_list | STAR );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:1: func_args : ( ( ALL | DISTINCT )? expr_list | STAR );
     public final func_args_return func_args() throws RecognitionException {
         func_args_return retval = new func_args_return();
         retval.start = input.LT(1);
@@ -4552,7 +4552,7 @@ public class SQLANTLRParser extends Parser {
         Object STAR164_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:11: ( ( ALL | DISTINCT )? expr_list | STAR )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:11: ( ( ALL | DISTINCT )? expr_list | STAR )
             int alt39=2;
             int LA39_0 = input.LA(1);
 
@@ -4571,11 +4571,11 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt39) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:13: ( ALL | DISTINCT )? expr_list
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:13: ( ALL | DISTINCT )? expr_list
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:13: ( ALL | DISTINCT )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:255:13: ( ALL | DISTINCT )?
                     int alt38=2;
                     int LA38_0 = input.LA(1);
 
@@ -4584,7 +4584,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt38) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
                             {
                             set162=(Token)input.LT(1);
                             if ( input.LA(1)==DISTINCT||input.LA(1)==ALL ) {
@@ -4614,7 +4614,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:256:5: STAR
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:256:5: STAR
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -4652,7 +4652,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start func_name
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:259:1: func_name : id ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:259:1: func_name : id ;
     public final func_name_return func_name() throws RecognitionException {
         func_name_return retval = new func_name_return();
         retval.start = input.LT(1);
@@ -4664,8 +4664,8 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:259:11: ( id )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:259:13: id
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:259:11: ( id )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:259:13: id
             {
             root_0 = (Object)adaptor.nil();
 
@@ -4700,7 +4700,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start a_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:1: a_expr : b_expr ( (or= OR ) b_expr )* -> {$or==null}? ( b_expr )+ -> ^( OR[\"OR\"] ( b_expr )+ ) ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:1: a_expr : b_expr ( (or= OR ) b_expr )* -> {$or==null}? ( b_expr )+ -> ^( OR[\"OR\"] ( b_expr )+ ) ;
     public final a_expr_return a_expr() throws RecognitionException {
         a_expr_return retval = new a_expr_return();
         retval.start = input.LT(1);
@@ -4717,15 +4717,15 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_OR=new RewriteRuleTokenStream(adaptor,"token OR");
         RewriteRuleSubtreeStream stream_b_expr=new RewriteRuleSubtreeStream(adaptor,"rule b_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:9: ( b_expr ( (or= OR ) b_expr )* -> {$or==null}? ( b_expr )+ -> ^( OR[\"OR\"] ( b_expr )+ ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:11: b_expr ( (or= OR ) b_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:9: ( b_expr ( (or= OR ) b_expr )* -> {$or==null}? ( b_expr )+ -> ^( OR[\"OR\"] ( b_expr )+ ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:11: b_expr ( (or= OR ) b_expr )*
             {
             pushFollow(FOLLOW_b_expr_in_a_expr1485);
             b_expr166=b_expr();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_b_expr.add(b_expr166.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:18: ( (or= OR ) b_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:18: ( (or= OR ) b_expr )*
             loop40:
             do {
                 int alt40=2;
@@ -4738,10 +4738,10 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt40) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:19: (or= OR ) b_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:19: (or= OR ) b_expr
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:19: (or= OR )
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:20: or= OR
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:19: (or= OR )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:269:20: or= OR
             	    {
             	    or=(Token)input.LT(1);
             	    match(input,OR,FOLLOW_OR_in_a_expr1491); if (failed) return retval;
@@ -4790,7 +4790,7 @@ public class SQLANTLRParser extends Parser {
             }
             else // 270:7: -> ^( OR[\"OR\"] ( b_expr )+ )
             {
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:270:10: ^( OR[\"OR\"] ( b_expr )+ )
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:270:10: ^( OR[\"OR\"] ( b_expr )+ )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(adaptor.create(OR,"OR"), root_1);
@@ -4836,7 +4836,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start b_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:1: b_expr : c_expr ( (and= AND ) c_expr )* -> {$and==null}? ( c_expr )+ -> ^( AND[\"AND\"] ( c_expr )+ ) ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:1: b_expr : c_expr ( (and= AND ) c_expr )* -> {$and==null}? ( c_expr )+ -> ^( AND[\"AND\"] ( c_expr )+ ) ;
     public final b_expr_return b_expr() throws RecognitionException {
         b_expr_return retval = new b_expr_return();
         retval.start = input.LT(1);
@@ -4853,15 +4853,15 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_AND=new RewriteRuleTokenStream(adaptor,"token AND");
         RewriteRuleSubtreeStream stream_c_expr=new RewriteRuleSubtreeStream(adaptor,"rule c_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:10: ( c_expr ( (and= AND ) c_expr )* -> {$and==null}? ( c_expr )+ -> ^( AND[\"AND\"] ( c_expr )+ ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:12: c_expr ( (and= AND ) c_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:10: ( c_expr ( (and= AND ) c_expr )* -> {$and==null}? ( c_expr )+ -> ^( AND[\"AND\"] ( c_expr )+ ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:12: c_expr ( (and= AND ) c_expr )*
             {
             pushFollow(FOLLOW_c_expr_in_b_expr1535);
             c_expr168=c_expr();
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) stream_c_expr.add(c_expr168.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:19: ( (and= AND ) c_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:19: ( (and= AND ) c_expr )*
             loop41:
             do {
                 int alt41=2;
@@ -4874,10 +4874,10 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt41) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:20: (and= AND ) c_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:20: (and= AND ) c_expr
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:20: (and= AND )
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:21: and= AND
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:20: (and= AND )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:273:21: and= AND
             	    {
             	    and=(Token)input.LT(1);
             	    match(input,AND,FOLLOW_AND_in_b_expr1541); if (failed) return retval;
@@ -4902,7 +4902,7 @@ public class SQLANTLRParser extends Parser {
 
 
             // AST REWRITE
-            // elements: c_expr, c_expr, AND
+            // elements: AND, c_expr, c_expr
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -4926,7 +4926,7 @@ public class SQLANTLRParser extends Parser {
             }
             else // 274:11: -> ^( AND[\"AND\"] ( c_expr )+ )
             {
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:274:14: ^( AND[\"AND\"] ( c_expr )+ )
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:274:14: ^( AND[\"AND\"] ( c_expr )+ )
                 {
                 Object root_1 = (Object)adaptor.nil();
                 root_1 = (Object)adaptor.becomeRoot(adaptor.create(AND,"AND"), root_1);
@@ -4972,7 +4972,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start c_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:1: c_expr : ( NOT )* d_expr ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:1: c_expr : ( NOT )* d_expr ;
     public final c_expr_return c_expr() throws RecognitionException {
         c_expr_return retval = new c_expr_return();
         retval.start = input.LT(1);
@@ -4986,12 +4986,12 @@ public class SQLANTLRParser extends Parser {
         Object NOT170_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:9: ( ( NOT )* d_expr )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:11: ( NOT )* d_expr
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:9: ( ( NOT )* d_expr )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:11: ( NOT )* d_expr
             {
             root_0 = (Object)adaptor.nil();
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:11: ( NOT )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:11: ( NOT )*
             loop42:
             do {
                 int alt42=2;
@@ -5004,7 +5004,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt42) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:12: NOT
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:277:12: NOT
             	    {
             	    NOT170=(Token)input.LT(1);
             	    match(input,NOT,FOLLOW_NOT_in_c_expr1588); if (failed) return retval;
@@ -5052,7 +5052,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start d_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:1: d_expr : e_expr ( EQ e_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:1: d_expr : e_expr ( EQ e_expr )* ;
     public final d_expr_return d_expr() throws RecognitionException {
         d_expr_return retval = new d_expr_return();
         retval.start = input.LT(1);
@@ -5068,8 +5068,8 @@ public class SQLANTLRParser extends Parser {
         Object EQ173_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:10: ( e_expr ( EQ e_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:12: e_expr ( EQ e_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:10: ( e_expr ( EQ e_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:12: e_expr ( EQ e_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5078,7 +5078,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, e_expr172.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:19: ( EQ e_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:19: ( EQ e_expr )*
             loop43:
             do {
                 int alt43=2;
@@ -5091,7 +5091,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt43) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:20: EQ e_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:280:20: EQ e_expr
             	    {
             	    EQ173=(Token)input.LT(1);
             	    match(input,EQ,FOLLOW_EQ_in_d_expr1613); if (failed) return retval;
@@ -5139,7 +5139,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start e_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:1: e_expr : f_expr ( ( GT | LT ) f_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:1: e_expr : f_expr ( ( GT | LT ) f_expr )* ;
     public final e_expr_return e_expr() throws RecognitionException {
         e_expr_return retval = new e_expr_return();
         retval.start = input.LT(1);
@@ -5157,8 +5157,8 @@ public class SQLANTLRParser extends Parser {
         Object LT177_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:10: ( f_expr ( ( GT | LT ) f_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:12: f_expr ( ( GT | LT ) f_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:10: ( f_expr ( ( GT | LT ) f_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:12: f_expr ( ( GT | LT ) f_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5167,7 +5167,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, f_expr175.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:19: ( ( GT | LT ) f_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:19: ( ( GT | LT ) f_expr )*
             loop45:
             do {
                 int alt45=2;
@@ -5180,9 +5180,9 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt45) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:20: ( GT | LT ) f_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:20: ( GT | LT ) f_expr
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:20: ( GT | LT )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:20: ( GT | LT )
             	    int alt44=2;
             	    int LA44_0 = input.LA(1);
 
@@ -5201,7 +5201,7 @@ public class SQLANTLRParser extends Parser {
             	    }
             	    switch (alt44) {
             	        case 1 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:21: GT
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:21: GT
             	            {
             	            GT176=(Token)input.LT(1);
             	            match(input,GT,FOLLOW_GT_in_e_expr1639); if (failed) return retval;
@@ -5213,7 +5213,7 @@ public class SQLANTLRParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:28: LT
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:283:28: LT
             	            {
             	            LT177=(Token)input.LT(1);
             	            match(input,LT,FOLLOW_LT_in_e_expr1645); if (failed) return retval;
@@ -5267,7 +5267,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start f_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:1: f_expr : g_expr ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:1: f_expr : g_expr ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )* ;
     public final f_expr_return f_expr() throws RecognitionException {
         f_expr_return retval = new f_expr_return();
         retval.start = input.LT(1);
@@ -5289,8 +5289,8 @@ public class SQLANTLRParser extends Parser {
         Object TO183_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:9: ( g_expr ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:11: g_expr ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:9: ( g_expr ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:11: g_expr ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5299,7 +5299,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, g_expr179.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:18: ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:18: ( ( LIKE | ILIKE | SIMILAR TO ) g_expr )*
             loop47:
             do {
                 int alt47=2;
@@ -5312,9 +5312,9 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt47) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:19: ( LIKE | ILIKE | SIMILAR TO ) g_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:19: ( LIKE | ILIKE | SIMILAR TO ) g_expr
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:19: ( LIKE | ILIKE | SIMILAR TO )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:19: ( LIKE | ILIKE | SIMILAR TO )
             	    int alt46=3;
             	    switch ( input.LA(1) ) {
             	    case LIKE:
@@ -5342,7 +5342,7 @@ public class SQLANTLRParser extends Parser {
 
             	    switch (alt46) {
             	        case 1 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:20: LIKE
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:20: LIKE
             	            {
             	            LIKE180=(Token)input.LT(1);
             	            match(input,LIKE,FOLLOW_LIKE_in_f_expr1670); if (failed) return retval;
@@ -5354,7 +5354,7 @@ public class SQLANTLRParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:29: ILIKE
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:29: ILIKE
             	            {
             	            ILIKE181=(Token)input.LT(1);
             	            match(input,ILIKE,FOLLOW_ILIKE_in_f_expr1676); if (failed) return retval;
@@ -5366,7 +5366,7 @@ public class SQLANTLRParser extends Parser {
             	            }
             	            break;
             	        case 3 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:39: SIMILAR TO
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:286:39: SIMILAR TO
             	            {
             	            SIMILAR182=(Token)input.LT(1);
             	            match(input,SIMILAR,FOLLOW_SIMILAR_in_f_expr1682); if (failed) return retval;
@@ -5426,7 +5426,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start g_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:1: g_expr : h_expr ( binary_op h_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:1: g_expr : h_expr ( binary_op h_expr )* ;
     public final g_expr_return g_expr() throws RecognitionException {
         g_expr_return retval = new g_expr_return();
         retval.start = input.LT(1);
@@ -5442,8 +5442,8 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:10: ( h_expr ( binary_op h_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:12: h_expr ( binary_op h_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:10: ( h_expr ( binary_op h_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:12: h_expr ( binary_op h_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5452,7 +5452,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, h_expr185.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:19: ( binary_op h_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:19: ( binary_op h_expr )*
             loop48:
             do {
                 int alt48=2;
@@ -5465,7 +5465,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt48) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:20: binary_op h_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:289:20: binary_op h_expr
             	    {
             	    pushFollow(FOLLOW_binary_op_in_g_expr1709);
             	    binary_op186=binary_op();
@@ -5512,7 +5512,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start h_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:1: h_expr : i_expr ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:1: h_expr : i_expr ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )* ;
     public final h_expr_return h_expr() throws RecognitionException {
         h_expr_return retval = new h_expr_return();
         retval.start = input.LT(1);
@@ -5538,8 +5538,8 @@ public class SQLANTLRParser extends Parser {
         Object NULL195_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:9: ( i_expr ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:11: i_expr ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:9: ( i_expr ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:11: i_expr ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5548,7 +5548,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, i_expr188.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:18: ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:18: ( NOTNULL | IS NULL | ISNULL | IS NOT NULL )*
             loop49:
             do {
                 int alt49=5;
@@ -5582,7 +5582,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt49) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:20: NOTNULL
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:20: NOTNULL
             	    {
             	    NOTNULL189=(Token)input.LT(1);
             	    match(input,NOTNULL,FOLLOW_NOTNULL_in_h_expr1732); if (failed) return retval;
@@ -5594,7 +5594,7 @@ public class SQLANTLRParser extends Parser {
             	    }
             	    break;
             	case 2 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:31: IS NULL
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:31: IS NULL
             	    {
             	    IS190=(Token)input.LT(1);
             	    match(input,IS,FOLLOW_IS_in_h_expr1737); if (failed) return retval;
@@ -5612,7 +5612,7 @@ public class SQLANTLRParser extends Parser {
             	    }
             	    break;
             	case 3 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:42: ISNULL
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:42: ISNULL
             	    {
             	    ISNULL192=(Token)input.LT(1);
             	    match(input,ISNULL,FOLLOW_ISNULL_in_h_expr1744); if (failed) return retval;
@@ -5624,7 +5624,7 @@ public class SQLANTLRParser extends Parser {
             	    }
             	    break;
             	case 4 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:52: IS NOT NULL
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:292:52: IS NOT NULL
             	    {
             	    IS193=(Token)input.LT(1);
             	    match(input,IS,FOLLOW_IS_in_h_expr1749); if (failed) return retval;
@@ -5679,7 +5679,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start i_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:1: i_expr : j_expr ( ( PLUS | MINUS ) j_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:1: i_expr : j_expr ( ( PLUS | MINUS ) j_expr )* ;
     public final i_expr_return i_expr() throws RecognitionException {
         i_expr_return retval = new i_expr_return();
         retval.start = input.LT(1);
@@ -5697,8 +5697,8 @@ public class SQLANTLRParser extends Parser {
         Object MINUS198_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:9: ( j_expr ( ( PLUS | MINUS ) j_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:11: j_expr ( ( PLUS | MINUS ) j_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:9: ( j_expr ( ( PLUS | MINUS ) j_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:11: j_expr ( ( PLUS | MINUS ) j_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5707,7 +5707,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, j_expr196.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:18: ( ( PLUS | MINUS ) j_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:18: ( ( PLUS | MINUS ) j_expr )*
             loop51:
             do {
                 int alt51=2;
@@ -5720,9 +5720,9 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt51) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:19: ( PLUS | MINUS ) j_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:19: ( PLUS | MINUS ) j_expr
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:19: ( PLUS | MINUS )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:19: ( PLUS | MINUS )
             	    int alt50=2;
             	    int LA50_0 = input.LA(1);
 
@@ -5741,7 +5741,7 @@ public class SQLANTLRParser extends Parser {
             	    }
             	    switch (alt50) {
             	        case 1 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:20: PLUS
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:20: PLUS
             	            {
             	            PLUS197=(Token)input.LT(1);
             	            match(input,PLUS,FOLLOW_PLUS_in_i_expr1775); if (failed) return retval;
@@ -5753,7 +5753,7 @@ public class SQLANTLRParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:28: MINUS
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:295:28: MINUS
             	            {
             	            MINUS198=(Token)input.LT(1);
             	            match(input,MINUS,FOLLOW_MINUS_in_i_expr1780); if (failed) return retval;
@@ -5807,7 +5807,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start j_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:1: j_expr : k_expr ( ( STAR | DIV | PCT ) k_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:1: j_expr : k_expr ( ( STAR | DIV | PCT ) k_expr )* ;
     public final j_expr_return j_expr() throws RecognitionException {
         j_expr_return retval = new j_expr_return();
         retval.start = input.LT(1);
@@ -5827,8 +5827,8 @@ public class SQLANTLRParser extends Parser {
         Object PCT203_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:10: ( k_expr ( ( STAR | DIV | PCT ) k_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:12: k_expr ( ( STAR | DIV | PCT ) k_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:10: ( k_expr ( ( STAR | DIV | PCT ) k_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:12: k_expr ( ( STAR | DIV | PCT ) k_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5837,7 +5837,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, k_expr200.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:19: ( ( STAR | DIV | PCT ) k_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:19: ( ( STAR | DIV | PCT ) k_expr )*
             loop53:
             do {
                 int alt53=2;
@@ -5850,9 +5850,9 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt53) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:20: ( STAR | DIV | PCT ) k_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:20: ( STAR | DIV | PCT ) k_expr
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:20: ( STAR | DIV | PCT )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:20: ( STAR | DIV | PCT )
             	    int alt52=3;
             	    switch ( input.LA(1) ) {
             	    case STAR:
@@ -5880,7 +5880,7 @@ public class SQLANTLRParser extends Parser {
 
             	    switch (alt52) {
             	        case 1 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:21: STAR
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:21: STAR
             	            {
             	            STAR201=(Token)input.LT(1);
             	            match(input,STAR,FOLLOW_STAR_in_j_expr1806); if (failed) return retval;
@@ -5892,7 +5892,7 @@ public class SQLANTLRParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:29: DIV
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:29: DIV
             	            {
             	            DIV202=(Token)input.LT(1);
             	            match(input,DIV,FOLLOW_DIV_in_j_expr1811); if (failed) return retval;
@@ -5904,7 +5904,7 @@ public class SQLANTLRParser extends Parser {
             	            }
             	            break;
             	        case 3 :
-            	            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:36: PCT
+            	            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:298:36: PCT
             	            {
             	            PCT203=(Token)input.LT(1);
             	            match(input,PCT,FOLLOW_PCT_in_j_expr1816); if (failed) return retval;
@@ -5958,7 +5958,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start k_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:1: k_expr : l_expr ( HAT l_expr )* ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:1: k_expr : l_expr ( HAT l_expr )* ;
     public final k_expr_return k_expr() throws RecognitionException {
         k_expr_return retval = new k_expr_return();
         retval.start = input.LT(1);
@@ -5974,8 +5974,8 @@ public class SQLANTLRParser extends Parser {
         Object HAT206_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:10: ( l_expr ( HAT l_expr )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:12: l_expr ( HAT l_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:10: ( l_expr ( HAT l_expr )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:12: l_expr ( HAT l_expr )*
             {
             root_0 = (Object)adaptor.nil();
 
@@ -5984,7 +5984,7 @@ public class SQLANTLRParser extends Parser {
             _fsp--;
             if (failed) return retval;
             if ( backtracking==0 ) adaptor.addChild(root_0, l_expr205.getTree());
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:19: ( HAT l_expr )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:19: ( HAT l_expr )*
             loop54:
             do {
                 int alt54=2;
@@ -5997,7 +5997,7 @@ public class SQLANTLRParser extends Parser {
 
                 switch (alt54) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:20: HAT l_expr
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:301:20: HAT l_expr
             	    {
             	    HAT206=(Token)input.LT(1);
             	    match(input,HAT,FOLLOW_HAT_in_k_expr1842); if (failed) return retval;
@@ -6045,7 +6045,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start l_expr
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:1: l_expr : ( ( func_expr )=> func_expr -> ^( FUNCTION func_expr ) | qualified_name | '(' a_expr ')' -> ^( EXPR[\"EXPR\"] a_expr ) | ( select_with_parens )=> select_with_parens | EXISTS select_with_parens | ARRAY select_with_parens | factor | QUOTEDSTRING );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:1: l_expr : ( ( func_expr )=> func_expr -> ^( FUNCTION func_expr ) | qualified_name | '(' a_expr ')' -> ^( EXPR[\"EXPR\"] a_expr ) | ( select_with_parens )=> select_with_parens | EXISTS select_with_parens | ARRAY select_with_parens | factor | QUOTEDSTRING );
     public final l_expr_return l_expr() throws RecognitionException {
         l_expr_return retval = new l_expr_return();
         retval.start = input.LT(1);
@@ -6082,7 +6082,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleSubtreeStream stream_a_expr=new RewriteRuleSubtreeStream(adaptor,"rule a_expr");
         RewriteRuleSubtreeStream stream_func_expr=new RewriteRuleSubtreeStream(adaptor,"rule func_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:9: ( ( func_expr )=> func_expr -> ^( FUNCTION func_expr ) | qualified_name | '(' a_expr ')' -> ^( EXPR[\"EXPR\"] a_expr ) | ( select_with_parens )=> select_with_parens | EXISTS select_with_parens | ARRAY select_with_parens | factor | QUOTEDSTRING )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:9: ( ( func_expr )=> func_expr -> ^( FUNCTION func_expr ) | qualified_name | '(' a_expr ')' -> ^( EXPR[\"EXPR\"] a_expr ) | ( select_with_parens )=> select_with_parens | EXISTS select_with_parens | ARRAY select_with_parens | factor | QUOTEDSTRING )
             int alt55=8;
             switch ( input.LA(1) ) {
             case ID:
@@ -6203,7 +6203,7 @@ public class SQLANTLRParser extends Parser {
 
             switch (alt55) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:11: ( func_expr )=> func_expr
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:11: ( func_expr )=> func_expr
                     {
                     pushFollow(FOLLOW_func_expr_in_l_expr1864);
                     func_expr208=func_expr();
@@ -6224,7 +6224,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 304:36: -> ^( FUNCTION func_expr )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:39: ^( FUNCTION func_expr )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:39: ^( FUNCTION func_expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(FUNCTION, "FUNCTION"), root_1);
@@ -6241,7 +6241,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:305:5: qualified_name
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:305:5: qualified_name
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6254,7 +6254,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:306:5: '(' a_expr ')'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:306:5: '(' a_expr ')'
                     {
                     char_literal210=(Token)input.LT(1);
                     match(input,LPAREN,FOLLOW_LPAREN_in_l_expr1884); if (failed) return retval;
@@ -6283,7 +6283,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 306:20: -> ^( EXPR[\"EXPR\"] a_expr )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:306:23: ^( EXPR[\"EXPR\"] a_expr )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:306:23: ^( EXPR[\"EXPR\"] a_expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(EXPR, "EXPR"), root_1);
@@ -6300,7 +6300,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:307:5: ( select_with_parens )=> select_with_parens
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:307:5: ( select_with_parens )=> select_with_parens
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6313,7 +6313,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:308:5: EXISTS select_with_parens
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:308:5: EXISTS select_with_parens
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6332,7 +6332,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:309:5: ARRAY select_with_parens
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:309:5: ARRAY select_with_parens
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6351,7 +6351,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 7 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:310:5: factor
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:310:5: factor
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6364,7 +6364,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 8 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:311:5: QUOTEDSTRING
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:311:5: QUOTEDSTRING
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6402,7 +6402,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start unary_op
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:1: unary_op : ( NOTNULL | ( IS NULL ) | ISNULL | ( IS NOT NULL ) );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:1: unary_op : ( NOTNULL | ( IS NULL ) | ISNULL | ( IS NOT NULL ) );
     public final unary_op_return unary_op() throws RecognitionException {
         unary_op_return retval = new unary_op_return();
         retval.start = input.LT(1);
@@ -6426,7 +6426,7 @@ public class SQLANTLRParser extends Parser {
         Object NULL226_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:11: ( NOTNULL | ( IS NULL ) | ISNULL | ( IS NOT NULL ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:11: ( NOTNULL | ( IS NULL ) | ISNULL | ( IS NOT NULL ) )
             int alt56=4;
             switch ( input.LA(1) ) {
             case NOTNULL:
@@ -6468,7 +6468,7 @@ public class SQLANTLRParser extends Parser {
 
             switch (alt56) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:13: NOTNULL
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:13: NOTNULL
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6482,12 +6482,12 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:23: ( IS NULL )
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:23: ( IS NULL )
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:23: ( IS NULL )
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:24: IS NULL
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:23: ( IS NULL )
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:24: IS NULL
                     {
                     IS221=(Token)input.LT(1);
                     match(input,IS,FOLLOW_IS_in_unary_op1961); if (failed) return retval;
@@ -6508,7 +6508,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:35: ISNULL
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:35: ISNULL
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6522,12 +6522,12 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:44: ( IS NOT NULL )
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:44: ( IS NOT NULL )
                     {
                     root_0 = (Object)adaptor.nil();
 
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:44: ( IS NOT NULL )
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:45: IS NOT NULL
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:44: ( IS NOT NULL )
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:314:45: IS NOT NULL
                     {
                     IS224=(Token)input.LT(1);
                     match(input,IS,FOLLOW_IS_in_unary_op1973); if (failed) return retval;
@@ -6578,7 +6578,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start binary_op
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:317:1: binary_op : ( GE | LE );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:317:1: binary_op : ( GE | LE );
     public final binary_op_return binary_op() throws RecognitionException {
         binary_op_return retval = new binary_op_return();
         retval.start = input.LT(1);
@@ -6590,8 +6590,8 @@ public class SQLANTLRParser extends Parser {
         Object set227_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:317:12: ( GE | LE )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:317:12: ( GE | LE )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
             {
             root_0 = (Object)adaptor.nil();
 
@@ -6634,7 +6634,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start where_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:1: where_clause : ( WHERE a_expr -> ^( WHERE[\"WHERE\"] a_expr ) | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:1: where_clause : ( WHERE a_expr -> ^( WHERE[\"WHERE\"] a_expr ) | );
     public final where_clause_return where_clause() throws RecognitionException {
         where_clause_return retval = new where_clause_return();
         retval.start = input.LT(1);
@@ -6649,7 +6649,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_WHERE=new RewriteRuleTokenStream(adaptor,"token WHERE");
         RewriteRuleSubtreeStream stream_a_expr=new RewriteRuleSubtreeStream(adaptor,"rule a_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:15: ( WHERE a_expr -> ^( WHERE[\"WHERE\"] a_expr ) | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:15: ( WHERE a_expr -> ^( WHERE[\"WHERE\"] a_expr ) | )
             int alt57=2;
             int LA57_0 = input.LA(1);
 
@@ -6668,7 +6668,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt57) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:17: WHERE a_expr
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:17: WHERE a_expr
                     {
                     WHERE228=(Token)input.LT(1);
                     match(input,WHERE,FOLLOW_WHERE_in_where_clause2012); if (failed) return retval;
@@ -6681,7 +6681,7 @@ public class SQLANTLRParser extends Parser {
                     if ( backtracking==0 ) stream_a_expr.add(a_expr229.getTree());
 
                     // AST REWRITE
-                    // elements: WHERE, a_expr
+                    // elements: a_expr, WHERE
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -6693,7 +6693,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 325:30: -> ^( WHERE[\"WHERE\"] a_expr )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:33: ^( WHERE[\"WHERE\"] a_expr )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:325:33: ^( WHERE[\"WHERE\"] a_expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(adaptor.create(WHERE,"WHERE"), root_1);
@@ -6710,7 +6710,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:327:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:327:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6741,7 +6741,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start groupby_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:1: groupby_clause : ( GROUP BY expr_list -> ^( GROUP BY expr_list ) | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:1: groupby_clause : ( GROUP BY expr_list -> ^( GROUP BY expr_list ) | );
     public final groupby_clause_return groupby_clause() throws RecognitionException {
         groupby_clause_return retval = new groupby_clause_return();
         retval.start = input.LT(1);
@@ -6759,7 +6759,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_GROUP=new RewriteRuleTokenStream(adaptor,"token GROUP");
         RewriteRuleSubtreeStream stream_expr_list=new RewriteRuleSubtreeStream(adaptor,"rule expr_list");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:17: ( GROUP BY expr_list -> ^( GROUP BY expr_list ) | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:17: ( GROUP BY expr_list -> ^( GROUP BY expr_list ) | )
             int alt58=2;
             int LA58_0 = input.LA(1);
 
@@ -6778,7 +6778,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt58) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:19: GROUP BY expr_list
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:19: GROUP BY expr_list
                     {
                     GROUP230=(Token)input.LT(1);
                     match(input,GROUP,FOLLOW_GROUP_in_groupby_clause2040); if (failed) return retval;
@@ -6807,7 +6807,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 329:39: -> ^( GROUP BY expr_list )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:42: ^( GROUP BY expr_list )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:329:42: ^( GROUP BY expr_list )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_GROUP.next(), root_1);
@@ -6825,7 +6825,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:331:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:331:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6856,7 +6856,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start having_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:1: having_clause : ( HAVING a_expr -> ^( HAVING a_expr ) | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:1: having_clause : ( HAVING a_expr -> ^( HAVING a_expr ) | );
     public final having_clause_return having_clause() throws RecognitionException {
         having_clause_return retval = new having_clause_return();
         retval.start = input.LT(1);
@@ -6871,7 +6871,7 @@ public class SQLANTLRParser extends Parser {
         RewriteRuleTokenStream stream_HAVING=new RewriteRuleTokenStream(adaptor,"token HAVING");
         RewriteRuleSubtreeStream stream_a_expr=new RewriteRuleSubtreeStream(adaptor,"rule a_expr");
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:16: ( HAVING a_expr -> ^( HAVING a_expr ) | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:16: ( HAVING a_expr -> ^( HAVING a_expr ) | )
             int alt59=2;
             int LA59_0 = input.LA(1);
 
@@ -6890,7 +6890,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt59) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:18: HAVING a_expr
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:18: HAVING a_expr
                     {
                     HAVING233=(Token)input.LT(1);
                     match(input,HAVING,FOLLOW_HAVING_in_having_clause2073); if (failed) return retval;
@@ -6915,7 +6915,7 @@ public class SQLANTLRParser extends Parser {
                     root_0 = (Object)adaptor.nil();
                     // 333:32: -> ^( HAVING a_expr )
                     {
-                        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:35: ^( HAVING a_expr )
+                        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:333:35: ^( HAVING a_expr )
                         {
                         Object root_1 = (Object)adaptor.nil();
                         root_1 = (Object)adaptor.becomeRoot(stream_HAVING.next(), root_1);
@@ -6932,7 +6932,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:335:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:335:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -6963,7 +6963,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start orderby_clause
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:1: orderby_clause : ( ORDER BY ( DESC | ASC )? | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:1: orderby_clause : ( ORDER BY ( DESC | ASC )? | );
     public final orderby_clause_return orderby_clause() throws RecognitionException {
         orderby_clause_return retval = new orderby_clause_return();
         retval.start = input.LT(1);
@@ -6979,7 +6979,7 @@ public class SQLANTLRParser extends Parser {
         Object set237_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:17: ( ORDER BY ( DESC | ASC )? | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:17: ( ORDER BY ( DESC | ASC )? | )
             int alt61=2;
             int LA61_0 = input.LA(1);
 
@@ -6998,7 +6998,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt61) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:19: ORDER BY ( DESC | ASC )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:19: ORDER BY ( DESC | ASC )?
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7014,7 +7014,7 @@ public class SQLANTLRParser extends Parser {
                     BY236_tree = (Object)adaptor.create(BY236);
                     adaptor.addChild(root_0, BY236_tree);
                     }
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:28: ( DESC | ASC )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:337:28: ( DESC | ASC )?
                     int alt60=2;
                     int LA60_0 = input.LA(1);
 
@@ -7023,7 +7023,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt60) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
                             {
                             set237=(Token)input.LT(1);
                             if ( (input.LA(1)>=DESC && input.LA(1)<=ASC) ) {
@@ -7048,7 +7048,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:339:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:339:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7079,7 +7079,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start opt_limit
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:341:1: opt_limit : ( limit | );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:341:1: opt_limit : ( limit | );
     public final opt_limit_return opt_limit() throws RecognitionException {
         opt_limit_return retval = new opt_limit_return();
         retval.start = input.LT(1);
@@ -7091,7 +7091,7 @@ public class SQLANTLRParser extends Parser {
 
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:341:13: ( limit | )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:341:13: ( limit | )
             int alt62=2;
             int LA62_0 = input.LA(1);
 
@@ -7110,7 +7110,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt62) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:341:15: limit
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:341:15: limit
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7123,7 +7123,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:343:3: 
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:343:3: 
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7154,7 +7154,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start limit
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:1: limit : ( LIMIT NUMBER ( OFFSET NUMBER )? | OFFSET NUMBER ( LIMIT NUMBER )? | LIMIT NUMBER ',' NUMBER );
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:1: limit : ( LIMIT NUMBER ( OFFSET NUMBER )? | OFFSET NUMBER ( LIMIT NUMBER )? | LIMIT NUMBER ',' NUMBER );
     public final limit_return limit() throws RecognitionException {
         limit_return retval = new limit_return();
         retval.start = input.LT(1);
@@ -7188,7 +7188,7 @@ public class SQLANTLRParser extends Parser {
         Object NUMBER250_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:9: ( LIMIT NUMBER ( OFFSET NUMBER )? | OFFSET NUMBER ( LIMIT NUMBER )? | LIMIT NUMBER ',' NUMBER )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:9: ( LIMIT NUMBER ( OFFSET NUMBER )? | OFFSET NUMBER ( LIMIT NUMBER )? | LIMIT NUMBER ',' NUMBER )
             int alt65=3;
             int LA65_0 = input.LA(1);
 
@@ -7232,7 +7232,7 @@ public class SQLANTLRParser extends Parser {
             }
             switch (alt65) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:11: LIMIT NUMBER ( OFFSET NUMBER )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:11: LIMIT NUMBER ( OFFSET NUMBER )?
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7248,7 +7248,7 @@ public class SQLANTLRParser extends Parser {
                     NUMBER240_tree = (Object)adaptor.create(NUMBER240);
                     adaptor.addChild(root_0, NUMBER240_tree);
                     }
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:24: ( OFFSET NUMBER )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:24: ( OFFSET NUMBER )?
                     int alt63=2;
                     int LA63_0 = input.LA(1);
 
@@ -7257,7 +7257,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt63) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:25: OFFSET NUMBER
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:345:25: OFFSET NUMBER
                             {
                             OFFSET241=(Token)input.LT(1);
                             match(input,OFFSET,FOLLOW_OFFSET_in_limit2153); if (failed) return retval;
@@ -7281,7 +7281,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:346:5: OFFSET NUMBER ( LIMIT NUMBER )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:346:5: OFFSET NUMBER ( LIMIT NUMBER )?
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7297,7 +7297,7 @@ public class SQLANTLRParser extends Parser {
                     NUMBER244_tree = (Object)adaptor.create(NUMBER244);
                     adaptor.addChild(root_0, NUMBER244_tree);
                     }
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:346:19: ( LIMIT NUMBER )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:346:19: ( LIMIT NUMBER )?
                     int alt64=2;
                     int LA64_0 = input.LA(1);
 
@@ -7306,7 +7306,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     switch (alt64) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:346:20: LIMIT NUMBER
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:346:20: LIMIT NUMBER
                             {
                             LIMIT245=(Token)input.LT(1);
                             match(input,LIMIT,FOLLOW_LIMIT_in_limit2169); if (failed) return retval;
@@ -7330,7 +7330,7 @@ public class SQLANTLRParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:347:5: LIMIT NUMBER ',' NUMBER
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:347:5: LIMIT NUMBER ',' NUMBER
                     {
                     root_0 = (Object)adaptor.nil();
 
@@ -7386,7 +7386,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start id
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:350:1: id : ID ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:350:1: id : ID ;
     public final id_return id() throws RecognitionException {
         id_return retval = new id_return();
         retval.start = input.LT(1);
@@ -7398,8 +7398,8 @@ public class SQLANTLRParser extends Parser {
         Object ID251_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:350:6: ( ID )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:350:8: ID
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:350:6: ( ID )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:350:8: ID
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7435,7 +7435,7 @@ public class SQLANTLRParser extends Parser {
     };
 
     // $ANTLR start factor
-    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:353:1: factor : NUMBER ;
+    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:353:1: factor : NUMBER ;
     public final factor_return factor() throws RecognitionException {
         factor_return retval = new factor_return();
         retval.start = input.LT(1);
@@ -7447,8 +7447,8 @@ public class SQLANTLRParser extends Parser {
         Object NUMBER252_tree=null;
 
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:353:9: ( NUMBER )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:353:11: NUMBER
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:353:9: ( NUMBER )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:353:11: NUMBER
             {
             root_0 = (Object)adaptor.nil();
 
@@ -7480,8 +7480,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred1
     public final void synpred1_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:16: ( AS id )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:17: AS id
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:16: ( AS id )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:133:17: AS id
         {
         match(input,AS,FOLLOW_AS_in_synpred1591); if (failed) return ;
         pushFollow(FOLLOW_id_in_synpred1593);
@@ -7495,8 +7495,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred2
     public final void synpred2_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:5: ( id )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:6: id
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:5: ( id )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:134:6: id
         {
         pushFollow(FOLLOW_id_in_synpred2615);
         id();
@@ -7509,14 +7509,14 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred3
     public final void synpred3_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:14: ( func_expr ( alias_clause )? )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:15: func_expr ( alias_clause )?
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:14: ( func_expr ( alias_clause )? )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:15: func_expr ( alias_clause )?
         {
         pushFollow(FOLLOW_func_expr_in_synpred3982);
         func_expr();
         _fsp--;
         if (failed) return ;
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:25: ( alias_clause )?
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:25: ( alias_clause )?
         int alt66=2;
         int LA66_0 = input.LA(1);
 
@@ -7525,7 +7525,7 @@ public class SQLANTLRParser extends Parser {
         }
         switch (alt66) {
             case 1 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:25: alias_clause
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:199:25: alias_clause
                 {
                 pushFollow(FOLLOW_alias_clause_in_synpred3984);
                 alias_clause();
@@ -7544,8 +7544,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred4
     public final void synpred4_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:5: ( LPAREN inner_select RPAREN ( alias_clause )? )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:6: LPAREN inner_select RPAREN ( alias_clause )?
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:5: ( LPAREN inner_select RPAREN ( alias_clause )? )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:6: LPAREN inner_select RPAREN ( alias_clause )?
         {
         match(input,LPAREN,FOLLOW_LPAREN_in_synpred41031); if (failed) return ;
         pushFollow(FOLLOW_inner_select_in_synpred41033);
@@ -7553,7 +7553,7 @@ public class SQLANTLRParser extends Parser {
         _fsp--;
         if (failed) return ;
         match(input,RPAREN,FOLLOW_RPAREN_in_synpred41035); if (failed) return ;
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:33: ( alias_clause )?
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:33: ( alias_clause )?
         int alt67=2;
         int LA67_0 = input.LA(1);
 
@@ -7562,7 +7562,7 @@ public class SQLANTLRParser extends Parser {
         }
         switch (alt67) {
             case 1 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:33: alias_clause
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:201:33: alias_clause
                 {
                 pushFollow(FOLLOW_alias_clause_in_synpred41037);
                 alias_clause();
@@ -7581,8 +7581,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred5
     public final void synpred5_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:14: ( alias_clause )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:15: alias_clause
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:14: ( alias_clause )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:234:15: alias_clause
         {
         pushFollow(FOLLOW_alias_clause_in_synpred51266);
         alias_clause();
@@ -7595,8 +7595,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred6
     public final void synpred6_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:16: ( id )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:17: id
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:16: ( id )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:238:17: id
         {
         pushFollow(FOLLOW_id_in_synpred61298);
         id();
@@ -7609,8 +7609,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred7
     public final void synpred7_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:11: ( func_expr )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:12: func_expr
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:11: ( func_expr )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:304:12: func_expr
         {
         pushFollow(FOLLOW_func_expr_in_synpred71859);
         func_expr();
@@ -7623,8 +7623,8 @@ public class SQLANTLRParser extends Parser {
 
     // $ANTLR start synpred8
     public final void synpred8_fragment() throws RecognitionException {   
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:307:5: ( select_with_parens )
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:307:6: select_with_parens
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:307:5: ( select_with_parens )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:307:6: select_with_parens
         {
         pushFollow(FOLLOW_select_with_parens_in_synpred81905);
         select_with_parens();

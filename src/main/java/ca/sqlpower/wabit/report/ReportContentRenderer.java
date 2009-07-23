@@ -21,14 +21,20 @@ package ca.sqlpower.wabit.report;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.WabitObject;
+import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.event.PInputEventListener;
 
 /**
  * Interface for providers of rendered (absolute layout) content.
  */
-public interface ReportContentRenderer extends WabitObject {
+public interface ReportContentRenderer extends WabitObject, PInputEventListener {
 	
 	public enum BackgroundColours {
 		LIGHT_PINK(new Color(0xffcccc), "Light Pink"),
@@ -122,7 +128,8 @@ public interface ReportContentRenderer extends WabitObject {
      * to have the properties panel provided by the content renderer itself. However,
      * it has proven to be a bit too much of a violation of the system design to put this
      * Swing stuff into the core classes that implement this interface. So this method
-     * will be removed soon.
+     * will be removed soon. Also pull out processEvent and the {@link PInputEventListener}
+     * interface with this method.
      */
     DataEntryPanel getPropertiesPanel();
 
@@ -134,4 +141,21 @@ public interface ReportContentRenderer extends WabitObject {
 	 * removing a renderer.
 	 */
 	void cleanup();
+
+    /**
+     * This method comes from {@link PInputEventListener} but is documented here
+     * because it is not documented in {@link PInputEventListener}. This method
+     * is used to process key, mouse, mouse wheel, and focus events that occur
+     * in the view. This allows each renderer to change based on user input.
+     * TODO pull this out when the getPropertiesPanel is separated from this
+     * class.
+     * 
+     * @param event
+     *            This is the input event given from some input by the user.
+     * @param type
+     *            This is the type of input event. Valid values come from
+     *            {@link KeyEvent}, {@link MouseEvent}, {@link MouseWheelEvent},
+     *            and {@link FocusEvent}
+     */
+	public void processEvent(PInputEvent event, int type);
 }

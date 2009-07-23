@@ -21,9 +21,16 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.naming.NamingException;
+
+import org.olap4j.OlapConnection;
+
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -32,16 +39,22 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
 
 public class StubWabitSession implements WabitSession {
 	
 	private final WabitSessionContext context;
-	private WabitProject project;
+	private WabitWorkspace workspace;
 	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
+    /**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = new HashMap<Olap4jDataSource, OlapConnectionPool>();
+	
 	public StubWabitSession(WabitSessionContext context) {
 		this.context = context;
-		project = new WabitProject();
+		workspace = new WabitWorkspace();
 	}
 
 	public void addSessionLifecycleListener(
@@ -61,8 +74,8 @@ public class StubWabitSession implements WabitSession {
 		return context;
 	}
 
-	public WabitProject getProject() {
-		return project;
+	public WabitWorkspace getWorkspace() {
+		return workspace;
 	}
 
 	public void removeSessionLifecycleListener(
@@ -107,19 +120,29 @@ public class StubWabitSession implements WabitSession {
         // no op
     }
 
-    public Connection borrowConnection(SPDataSource dataSource) throws SQLObjectException {
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException {
         return getDatabase(dataSource).getConnection();
     }
 
-    public SQLDatabase getDatabase(SPDataSource dataSource) {
+    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
     	if (dataSource == null) return null;
         SQLDatabase db = databases.get(dataSource);
         if (db == null) {
-            dataSource = new SPDataSource(dataSource);
+            dataSource = new JDBCDataSource(dataSource);
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
         }
         return db;
     }
 
+    public OlapConnection createConnection(Olap4jDataSource dataSource)
+            throws SQLException, ClassNotFoundException, NamingException {
+    	if (dataSource == null) return null;
+	    OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+	    if (olapConnectionPool == null) {
+	        olapConnectionPool = new OlapConnectionPool(dataSource, this);
+	        olapConnectionPools.put(dataSource, olapConnectionPool);
+	    }
+	    return olapConnectionPool.getConnection();
+    }
 }

@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g 2008-10-27 12:13:48
+// $ANTLR 3.0.1 /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g 2009-07-23 13:53:16
 
 package ca.sqlpower.wabit.sql.parser;
 
@@ -101,14 +101,14 @@ public class SQLANTLRLexer extends Lexer {
     public SQLANTLRLexer(CharStream input) {
         super(input);
     }
-    public String getGrammarFileName() { return "/Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g"; }
+    public String getGrammarFileName() { return "/Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g"; }
 
     // $ANTLR start PLUS
     public final void mPLUS() throws RecognitionException {
         try {
             int _type = PLUS;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:6:6: ( '+' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:6:8: '+'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:6:6: ( '+' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:6:8: '+'
             {
             match('+'); 
 
@@ -125,8 +125,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mMINUS() throws RecognitionException {
         try {
             int _type = MINUS;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:7:7: ( '-' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:7:9: '-'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:7:7: ( '-' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:7:9: '-'
             {
             match('-'); 
 
@@ -143,8 +143,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mSTAR() throws RecognitionException {
         try {
             int _type = STAR;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:8:6: ( '*' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:8:8: '*'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:8:6: ( '*' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:8:8: '*'
             {
             match('*'); 
 
@@ -161,8 +161,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mDIV() throws RecognitionException {
         try {
             int _type = DIV;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:9:5: ( '/' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:9:7: '/'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:9:5: ( '/' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:9:7: '/'
             {
             match('/'); 
 
@@ -179,8 +179,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mGT() throws RecognitionException {
         try {
             int _type = GT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:10:4: ( '>' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:10:6: '>'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:10:4: ( '>' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:10:6: '>'
             {
             match('>'); 
 
@@ -197,8 +197,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLT() throws RecognitionException {
         try {
             int _type = LT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:11:4: ( '<' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:11:6: '<'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:11:4: ( '<' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:11:6: '<'
             {
             match('<'); 
 
@@ -215,8 +215,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mDOT() throws RecognitionException {
         try {
             int _type = DOT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:12:5: ( '.' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:12:7: '.'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:12:5: ( '.' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:12:7: '.'
             {
             match('.'); 
 
@@ -233,8 +233,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mPCT() throws RecognitionException {
         try {
             int _type = PCT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:13:5: ( '%' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:13:7: '%'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:13:5: ( '%' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:13:7: '%'
             {
             match('%'); 
 
@@ -251,8 +251,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mEQ() throws RecognitionException {
         try {
             int _type = EQ;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:14:4: ( '=' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:14:6: '='
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:14:4: ( '=' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:14:6: '='
             {
             match('='); 
 
@@ -269,8 +269,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mHAT() throws RecognitionException {
         try {
             int _type = HAT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:15:5: ( '^' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:15:7: '^'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:15:5: ( '^' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:15:7: '^'
             {
             match('^'); 
 
@@ -287,8 +287,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mGE() throws RecognitionException {
         try {
             int _type = GE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:16:4: ( '>=' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:16:6: '>='
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:16:4: ( '>=' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:16:6: '>='
             {
             match(">="); 
 
@@ -306,8 +306,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLE() throws RecognitionException {
         try {
             int _type = LE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:17:4: ( '<=' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:17:6: '<='
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:17:4: ( '<=' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:17:6: '<='
             {
             match("<="); 
 
@@ -325,8 +325,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLPAREN() throws RecognitionException {
         try {
             int _type = LPAREN;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:18:8: ( '(' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:18:10: '('
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:18:8: ( '(' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:18:10: '('
             {
             match('('); 
 
@@ -343,8 +343,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mRPAREN() throws RecognitionException {
         try {
             int _type = RPAREN;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:19:8: ( ')' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:19:10: ')'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:19:8: ( ')' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:19:10: ')'
             {
             match(')'); 
 
@@ -361,8 +361,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mT88() throws RecognitionException {
         try {
             int _type = T88;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:20:5: ( ';' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:20:7: ';'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:20:5: ( ';' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:20:7: ';'
             {
             match(';'); 
 
@@ -379,8 +379,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mT89() throws RecognitionException {
         try {
             int _type = T89;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:21:5: ( ',' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:21:7: ','
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:21:5: ( ',' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:21:7: ','
             {
             match(','); 
 
@@ -397,8 +397,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mALL() throws RecognitionException {
         try {
             int _type = ALL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:361:6: ( ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:361:8: ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:361:6: ( ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:361:8: ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='A'||input.LA(1)=='a' ) {
                 input.consume();
@@ -444,8 +444,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mAND() throws RecognitionException {
         try {
             int _type = AND;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:362:6: ( ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:362:8: ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:362:6: ( ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:362:8: ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' )
             {
             if ( input.LA(1)=='A'||input.LA(1)=='a' ) {
                 input.consume();
@@ -491,8 +491,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mARRAY() throws RecognitionException {
         try {
             int _type = ARRAY;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:363:8: ( ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'Y' | 'y' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:363:10: ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'Y' | 'y' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:363:8: ( ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'Y' | 'y' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:363:10: ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'Y' | 'y' )
             {
             if ( input.LA(1)=='A'||input.LA(1)=='a' ) {
                 input.consume();
@@ -558,8 +558,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mAS() throws RecognitionException {
         try {
             int _type = AS;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:364:5: ( ( 'A' | 'a' ) ( 'S' | 's' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:364:7: ( 'A' | 'a' ) ( 'S' | 's' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:364:5: ( ( 'A' | 'a' ) ( 'S' | 's' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:364:7: ( 'A' | 'a' ) ( 'S' | 's' )
             {
             if ( input.LA(1)=='A'||input.LA(1)=='a' ) {
                 input.consume();
@@ -595,8 +595,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mASC() throws RecognitionException {
         try {
             int _type = ASC;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:365:5: ( ( 'A' | 'a' ) ( 'S' | 's' ) ( 'C' | 'c' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:365:7: ( 'A' | 'a' ) ( 'S' | 's' ) ( 'C' | 'c' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:365:5: ( ( 'A' | 'a' ) ( 'S' | 's' ) ( 'C' | 'c' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:365:7: ( 'A' | 'a' ) ( 'S' | 's' ) ( 'C' | 'c' )
             {
             if ( input.LA(1)=='A'||input.LA(1)=='a' ) {
                 input.consume();
@@ -642,8 +642,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mBY() throws RecognitionException {
         try {
             int _type = BY;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:367:9: ( ( 'B' | 'b' ) ( 'Y' | 'y' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:367:11: ( 'B' | 'b' ) ( 'Y' | 'y' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:367:9: ( ( 'B' | 'b' ) ( 'Y' | 'y' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:367:11: ( 'B' | 'b' ) ( 'Y' | 'y' )
             {
             if ( input.LA(1)=='B'||input.LA(1)=='b' ) {
                 input.consume();
@@ -679,8 +679,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mCROSS() throws RecognitionException {
         try {
             int _type = CROSS;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:369:9: ( ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'S' | 's' ) ( 'S' | 's' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:369:11: ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'S' | 's' ) ( 'S' | 's' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:369:9: ( ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'S' | 's' ) ( 'S' | 's' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:369:11: ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'S' | 's' ) ( 'S' | 's' )
             {
             if ( input.LA(1)=='C'||input.LA(1)=='c' ) {
                 input.consume();
@@ -746,8 +746,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mDEFAULT() throws RecognitionException {
         try {
             int _type = DEFAULT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:370:9: ( ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'A' | 'a' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:370:11: ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'A' | 'a' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:370:9: ( ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'A' | 'a' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:370:11: ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'A' | 'a' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='D'||input.LA(1)=='d' ) {
                 input.consume();
@@ -833,8 +833,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mDESC() throws RecognitionException {
         try {
             int _type = DESC;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:371:7: ( ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'C' | 'c' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:371:9: ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'C' | 'c' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:371:7: ( ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'C' | 'c' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:371:9: ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'S' | 's' ) ( 'C' | 'c' )
             {
             if ( input.LA(1)=='D'||input.LA(1)=='d' ) {
                 input.consume();
@@ -890,8 +890,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mDISTINCT() throws RecognitionException {
         try {
             int _type = DISTINCT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:372:9: ( ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:372:11: ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:372:9: ( ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:372:11: ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='D'||input.LA(1)=='d' ) {
                 input.consume();
@@ -987,8 +987,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mEXISTS() throws RecognitionException {
         try {
             int _type = EXISTS;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:373:8: ( ( 'E' | 'e' ) ( 'X' | 'x' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'S' | 's' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:373:10: ( 'E' | 'e' ) ( 'X' | 'x' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'S' | 's' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:373:8: ( ( 'E' | 'e' ) ( 'X' | 'x' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'S' | 's' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:373:10: ( 'E' | 'e' ) ( 'X' | 'x' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'S' | 's' )
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -1064,8 +1064,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mFROM() throws RecognitionException {
         try {
             int _type = FROM;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:376:7: ( ( 'F' | 'f' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'M' | 'm' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:376:9: ( 'F' | 'f' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'M' | 'm' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:376:7: ( ( 'F' | 'f' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'M' | 'm' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:376:9: ( 'F' | 'f' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'M' | 'm' )
             {
             if ( input.LA(1)=='F'||input.LA(1)=='f' ) {
                 input.consume();
@@ -1121,8 +1121,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mFULL() throws RecognitionException {
         try {
             int _type = FULL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:377:9: ( ( 'F' | 'f' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:377:11: ( 'F' | 'f' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:377:9: ( ( 'F' | 'f' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:377:11: ( 'F' | 'f' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='F'||input.LA(1)=='f' ) {
                 input.consume();
@@ -1178,8 +1178,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mGLOBAL() throws RecognitionException {
         try {
             int _type = GLOBAL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:378:8: ( ( 'G' | 'g' ) ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'B' | 'b' ) ( 'A' | 'a' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:378:10: ( 'G' | 'g' ) ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'B' | 'b' ) ( 'A' | 'a' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:378:8: ( ( 'G' | 'g' ) ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'B' | 'b' ) ( 'A' | 'a' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:378:10: ( 'G' | 'g' ) ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'B' | 'b' ) ( 'A' | 'a' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='G'||input.LA(1)=='g' ) {
                 input.consume();
@@ -1255,8 +1255,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mGROUP() throws RecognitionException {
         try {
             int _type = GROUP;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:379:8: ( ( 'G' | 'g' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'P' | 'p' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:379:10: ( 'G' | 'g' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'P' | 'p' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:379:8: ( ( 'G' | 'g' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'P' | 'p' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:379:10: ( 'G' | 'g' ) ( 'R' | 'r' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'P' | 'p' )
             {
             if ( input.LA(1)=='G'||input.LA(1)=='g' ) {
                 input.consume();
@@ -1322,8 +1322,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mHAVING() throws RecognitionException {
         try {
             int _type = HAVING;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:380:9: ( ( 'H' | 'h' ) ( 'A' | 'a' ) ( 'V' | 'v' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:380:11: ( 'H' | 'h' ) ( 'A' | 'a' ) ( 'V' | 'v' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:380:9: ( ( 'H' | 'h' ) ( 'A' | 'a' ) ( 'V' | 'v' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:380:11: ( 'H' | 'h' ) ( 'A' | 'a' ) ( 'V' | 'v' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' )
             {
             if ( input.LA(1)=='H'||input.LA(1)=='h' ) {
                 input.consume();
@@ -1399,8 +1399,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mILIKE() throws RecognitionException {
         try {
             int _type = ILIKE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:381:9: ( ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:381:11: ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:381:9: ( ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:381:11: ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' )
             {
             if ( input.LA(1)=='I'||input.LA(1)=='i' ) {
                 input.consume();
@@ -1466,8 +1466,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mINTO() throws RecognitionException {
         try {
             int _type = INTO;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:382:7: ( ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'O' | 'o' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:382:9: ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'O' | 'o' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:382:7: ( ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'O' | 'o' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:382:9: ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'O' | 'o' )
             {
             if ( input.LA(1)=='I'||input.LA(1)=='i' ) {
                 input.consume();
@@ -1523,8 +1523,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mINNER() throws RecognitionException {
         try {
             int _type = INNER;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:383:9: ( ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'R' | 'r' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:383:11: ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'R' | 'r' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:383:9: ( ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'R' | 'r' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:383:11: ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'R' | 'r' )
             {
             if ( input.LA(1)=='I'||input.LA(1)=='i' ) {
                 input.consume();
@@ -1590,8 +1590,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mIS() throws RecognitionException {
         try {
             int _type = IS;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:384:9: ( ( 'I' | 'i' ) ( 'S' | 's' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:384:11: ( 'I' | 'i' ) ( 'S' | 's' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:384:9: ( ( 'I' | 'i' ) ( 'S' | 's' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:384:11: ( 'I' | 'i' ) ( 'S' | 's' )
             {
             if ( input.LA(1)=='I'||input.LA(1)=='i' ) {
                 input.consume();
@@ -1627,8 +1627,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mISNULL() throws RecognitionException {
         try {
             int _type = ISNULL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:385:9: ( ( 'I' | 'i' ) ( 'S' | 's' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:385:11: ( 'I' | 'i' ) ( 'S' | 's' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:385:9: ( ( 'I' | 'i' ) ( 'S' | 's' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:385:11: ( 'I' | 'i' ) ( 'S' | 's' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='I'||input.LA(1)=='i' ) {
                 input.consume();
@@ -1704,8 +1704,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mJOIN() throws RecognitionException {
         try {
             int _type = JOIN;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:386:9: ( ( 'J' | 'j' ) ( 'O' | 'o' ) ( 'I' | 'i' ) ( 'N' | 'n' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:386:11: ( 'J' | 'j' ) ( 'O' | 'o' ) ( 'I' | 'i' ) ( 'N' | 'n' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:386:9: ( ( 'J' | 'j' ) ( 'O' | 'o' ) ( 'I' | 'i' ) ( 'N' | 'n' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:386:11: ( 'J' | 'j' ) ( 'O' | 'o' ) ( 'I' | 'i' ) ( 'N' | 'n' )
             {
             if ( input.LA(1)=='J'||input.LA(1)=='j' ) {
                 input.consume();
@@ -1761,8 +1761,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLEFT() throws RecognitionException {
         try {
             int _type = LEFT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:389:9: ( ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:389:11: ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:389:9: ( ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:389:11: ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'F' | 'f' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='L'||input.LA(1)=='l' ) {
                 input.consume();
@@ -1818,8 +1818,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLEN() throws RecognitionException {
         try {
             int _type = LEN;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:390:9: ( ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:390:11: ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:390:9: ( ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:390:11: ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' )
             {
             if ( input.LA(1)=='L'||input.LA(1)=='l' ) {
                 input.consume();
@@ -1865,8 +1865,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLIKE() throws RecognitionException {
         try {
             int _type = LIKE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:391:9: ( ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:391:11: ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:391:9: ( ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:391:11: ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'K' | 'k' ) ( 'E' | 'e' )
             {
             if ( input.LA(1)=='L'||input.LA(1)=='l' ) {
                 input.consume();
@@ -1922,8 +1922,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLIMIT() throws RecognitionException {
         try {
             int _type = LIMIT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:392:8: ( ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:392:10: ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:392:8: ( ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:392:10: ( 'L' | 'l' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='L'||input.LA(1)=='l' ) {
                 input.consume();
@@ -1989,8 +1989,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mLOCAL() throws RecognitionException {
         try {
             int _type = LOCAL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:393:7: ( ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:393:9: ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:393:7: ( ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:393:9: ( 'L' | 'l' ) ( 'O' | 'o' ) ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='L'||input.LA(1)=='l' ) {
                 input.consume();
@@ -2056,8 +2056,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mNATURAL() throws RecognitionException {
         try {
             int _type = NATURAL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:397:9: ( ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:397:11: ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:397:9: ( ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:397:11: ( 'N' | 'n' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='N'||input.LA(1)=='n' ) {
                 input.consume();
@@ -2143,8 +2143,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mNEW() throws RecognitionException {
         try {
             int _type = NEW;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:398:9: ( ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'W' | 'w' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:398:11: ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'W' | 'w' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:398:9: ( ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'W' | 'w' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:398:11: ( 'N' | 'n' ) ( 'E' | 'e' ) ( 'W' | 'w' )
             {
             if ( input.LA(1)=='N'||input.LA(1)=='n' ) {
                 input.consume();
@@ -2190,8 +2190,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mNOT() throws RecognitionException {
         try {
             int _type = NOT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:400:9: ( ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:400:11: ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:400:9: ( ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:400:11: ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='N'||input.LA(1)=='n' ) {
                 input.consume();
@@ -2237,8 +2237,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mNOTNULL() throws RecognitionException {
         try {
             int _type = NOTNULL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:401:9: ( ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:401:11: ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:401:9: ( ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:401:11: ( 'N' | 'n' ) ( 'O' | 'o' ) ( 'T' | 't' ) ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='N'||input.LA(1)=='n' ) {
                 input.consume();
@@ -2324,8 +2324,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mNULL() throws RecognitionException {
         try {
             int _type = NULL;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:402:9: ( ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:402:11: ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:402:9: ( ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:402:11: ( 'N' | 'n' ) ( 'U' | 'u' ) ( 'L' | 'l' ) ( 'L' | 'l' )
             {
             if ( input.LA(1)=='N'||input.LA(1)=='n' ) {
                 input.consume();
@@ -2381,8 +2381,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mOFFSET() throws RecognitionException {
         try {
             int _type = OFFSET;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:404:9: ( ( 'O' | 'o' ) ( 'F' | 'f' ) ( 'F' | 'f' ) ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:404:11: ( 'O' | 'o' ) ( 'F' | 'f' ) ( 'F' | 'f' ) ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:404:9: ( ( 'O' | 'o' ) ( 'F' | 'f' ) ( 'F' | 'f' ) ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:404:11: ( 'O' | 'o' ) ( 'F' | 'f' ) ( 'F' | 'f' ) ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2458,8 +2458,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mOLD() throws RecognitionException {
         try {
             int _type = OLD;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:405:9: ( ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:405:11: ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:405:9: ( ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:405:11: ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2505,8 +2505,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mON() throws RecognitionException {
         try {
             int _type = ON;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:406:9: ( ( 'O' | 'o' ) ( 'N' | 'n' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:406:11: ( 'O' | 'o' ) ( 'N' | 'n' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:406:9: ( ( 'O' | 'o' ) ( 'N' | 'n' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:406:11: ( 'O' | 'o' ) ( 'N' | 'n' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2542,8 +2542,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mONLY() throws RecognitionException {
         try {
             int _type = ONLY;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:407:9: ( ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'L' | 'l' ) ( 'Y' | 'y' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:407:11: ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'L' | 'l' ) ( 'Y' | 'y' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:407:9: ( ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'L' | 'l' ) ( 'Y' | 'y' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:407:11: ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'L' | 'l' ) ( 'Y' | 'y' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2599,8 +2599,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mOR() throws RecognitionException {
         try {
             int _type = OR;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:408:9: ( ( 'O' | 'o' ) ( 'R' | 'r' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:408:11: ( 'O' | 'o' ) ( 'R' | 'r' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:408:9: ( ( 'O' | 'o' ) ( 'R' | 'r' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:408:11: ( 'O' | 'o' ) ( 'R' | 'r' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2636,8 +2636,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mORDER() throws RecognitionException {
         try {
             int _type = ORDER;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:409:9: ( ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'R' | 'r' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:409:11: ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'R' | 'r' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:409:9: ( ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'R' | 'r' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:409:11: ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'D' | 'd' ) ( 'E' | 'e' ) ( 'R' | 'r' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2703,8 +2703,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mOUTER() throws RecognitionException {
         try {
             int _type = OUTER;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:410:9: ( ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'R' | 'r' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:410:11: ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'R' | 'r' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:410:9: ( ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'R' | 'r' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:410:11: ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'T' | 't' ) ( 'E' | 'e' ) ( 'R' | 'r' )
             {
             if ( input.LA(1)=='O'||input.LA(1)=='o' ) {
                 input.consume();
@@ -2770,8 +2770,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mRIGHT() throws RecognitionException {
         try {
             int _type = RIGHT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:411:9: ( ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'G' | 'g' ) ( 'H' | 'h' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:411:11: ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'G' | 'g' ) ( 'H' | 'h' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:411:9: ( ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'G' | 'g' ) ( 'H' | 'h' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:411:11: ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'G' | 'g' ) ( 'H' | 'h' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='R'||input.LA(1)=='r' ) {
                 input.consume();
@@ -2837,8 +2837,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mSELECT() throws RecognitionException {
         try {
             int _type = SELECT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:413:9: ( ( 'S' | 's' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'C' | 'c' ) ( 'T' | 't' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:413:11: ( 'S' | 's' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'C' | 'c' ) ( 'T' | 't' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:413:9: ( ( 'S' | 's' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'C' | 'c' ) ( 'T' | 't' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:413:11: ( 'S' | 's' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'C' | 'c' ) ( 'T' | 't' )
             {
             if ( input.LA(1)=='S'||input.LA(1)=='s' ) {
                 input.consume();
@@ -2914,8 +2914,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mSIMILAR() throws RecognitionException {
         try {
             int _type = SIMILAR;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:414:9: ( ( 'S' | 's' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'R' | 'r' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:414:11: ( 'S' | 's' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'R' | 'r' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:414:9: ( ( 'S' | 's' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'R' | 'r' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:414:11: ( 'S' | 's' ) ( 'I' | 'i' ) ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'R' | 'r' )
             {
             if ( input.LA(1)=='S'||input.LA(1)=='s' ) {
                 input.consume();
@@ -3001,8 +3001,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mTABLE() throws RecognitionException {
         try {
             int _type = TABLE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:416:8: ( ( 'T' | 't' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'L' | 'l' ) ( 'E' | 'e' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:416:10: ( 'T' | 't' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'L' | 'l' ) ( 'E' | 'e' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:416:8: ( ( 'T' | 't' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'L' | 'l' ) ( 'E' | 'e' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:416:10: ( 'T' | 't' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'L' | 'l' ) ( 'E' | 'e' )
             {
             if ( input.LA(1)=='T'||input.LA(1)=='t' ) {
                 input.consume();
@@ -3068,8 +3068,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mTEMP() throws RecognitionException {
         try {
             int _type = TEMP;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:417:6: ( ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:417:8: ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:417:6: ( ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:417:8: ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' )
             {
             if ( input.LA(1)=='T'||input.LA(1)=='t' ) {
                 input.consume();
@@ -3125,8 +3125,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mTEMPORARY() throws RecognitionException {
         try {
             int _type = TEMPORARY;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:418:11: ( ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'Y' | 'y' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:418:13: ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'Y' | 'y' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:418:11: ( ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'Y' | 'y' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:418:13: ( 'T' | 't' ) ( 'E' | 'e' ) ( 'M' | 'm' ) ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'Y' | 'y' )
             {
             if ( input.LA(1)=='T'||input.LA(1)=='t' ) {
                 input.consume();
@@ -3232,8 +3232,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mTO() throws RecognitionException {
         try {
             int _type = TO;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:419:9: ( ( 'T' | 't' ) ( 'O' | 'o' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:419:11: ( 'T' | 't' ) ( 'O' | 'o' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:419:9: ( ( 'T' | 't' ) ( 'O' | 'o' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:419:11: ( 'T' | 't' ) ( 'O' | 'o' )
             {
             if ( input.LA(1)=='T'||input.LA(1)=='t' ) {
                 input.consume();
@@ -3269,8 +3269,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mUSING() throws RecognitionException {
         try {
             int _type = USING;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:421:9: ( ( 'U' | 'u' ) ( 'S' | 's' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:421:11: ( 'U' | 'u' ) ( 'S' | 's' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:421:9: ( ( 'U' | 'u' ) ( 'S' | 's' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:421:11: ( 'U' | 'u' ) ( 'S' | 's' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'G' | 'g' )
             {
             if ( input.LA(1)=='U'||input.LA(1)=='u' ) {
                 input.consume();
@@ -3336,8 +3336,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mVALUES() throws RecognitionException {
         try {
             int _type = VALUES;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:422:9: ( ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'U' | 'u' ) ( 'E' | 'e' ) ( 'S' | 's' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:422:11: ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'U' | 'u' ) ( 'E' | 'e' ) ( 'S' | 's' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:422:9: ( ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'U' | 'u' ) ( 'E' | 'e' ) ( 'S' | 's' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:422:11: ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'U' | 'u' ) ( 'E' | 'e' ) ( 'S' | 's' )
             {
             if ( input.LA(1)=='V'||input.LA(1)=='v' ) {
                 input.consume();
@@ -3413,8 +3413,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mVARIADIC() throws RecognitionException {
         try {
             int _type = VARIADIC;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:423:9: ( ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'A' | 'a' ) ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'C' | 'c' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:423:11: ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'A' | 'a' ) ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'C' | 'c' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:423:9: ( ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'A' | 'a' ) ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'C' | 'c' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:423:11: ( 'V' | 'v' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'I' | 'i' ) ( 'A' | 'a' ) ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'C' | 'c' )
             {
             if ( input.LA(1)=='V'||input.LA(1)=='v' ) {
                 input.consume();
@@ -3510,8 +3510,8 @@ public class SQLANTLRLexer extends Lexer {
     public final void mWHERE() throws RecognitionException {
         try {
             int _type = WHERE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:424:8: ( ( 'W' | 'w' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'E' | 'e' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:424:10: ( 'W' | 'w' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'E' | 'e' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:424:8: ( ( 'W' | 'w' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'E' | 'e' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:424:10: ( 'W' | 'w' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'R' | 'r' ) ( 'E' | 'e' )
             {
             if ( input.LA(1)=='W'||input.LA(1)=='w' ) {
                 input.consume();
@@ -3577,10 +3577,10 @@ public class SQLANTLRLexer extends Lexer {
     public final void mWHITESPACE() throws RecognitionException {
         try {
             int _type = WHITESPACE;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:427:12: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:427:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:427:12: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:427:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:427:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:427:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             int cnt1=0;
             loop1:
             do {
@@ -3594,7 +3594,7 @@ public class SQLANTLRLexer extends Lexer {
 
                 switch (alt1) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:
             	    {
             	    if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||(input.LA(1)>='\f' && input.LA(1)<='\r')||input.LA(1)==' ' ) {
             	        input.consume();
@@ -3634,10 +3634,10 @@ public class SQLANTLRLexer extends Lexer {
     public final void mQUOTEDSTRING() throws RecognitionException {
         try {
             int _type = QUOTEDSTRING;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:14: ( ( '\\'' | '$$' ) ( options {greedy=false; } : (~ ( '\\'' | '$$' ) ) )* ( '\\'' | '$$' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:17: ( '\\'' | '$$' ) ( options {greedy=false; } : (~ ( '\\'' | '$$' ) ) )* ( '\\'' | '$$' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:14: ( ( '\\'' | '$$' ) ( options {greedy=false; } : (~ ( '\\'' | '$$' ) ) )* ( '\\'' | '$$' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:17: ( '\\'' | '$$' ) ( options {greedy=false; } : (~ ( '\\'' | '$$' ) ) )* ( '\\'' | '$$' )
             {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:17: ( '\\'' | '$$' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:17: ( '\\'' | '$$' )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -3655,14 +3655,14 @@ public class SQLANTLRLexer extends Lexer {
             }
             switch (alt2) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:18: '\\''
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:18: '\\''
                     {
                     match('\''); 
 
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:25: '$$'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:25: '$$'
                     {
                     match("$$"); 
 
@@ -3672,7 +3672,7 @@ public class SQLANTLRLexer extends Lexer {
 
             }
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:31: ( options {greedy=false; } : (~ ( '\\'' | '$$' ) ) )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:31: ( options {greedy=false; } : (~ ( '\\'' | '$$' ) ) )*
             loop3:
             do {
                 int alt3=2;
@@ -3700,10 +3700,10 @@ public class SQLANTLRLexer extends Lexer {
 
                 switch (alt3) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:58: (~ ( '\\'' | '$$' ) )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:58: (~ ( '\\'' | '$$' ) )
             	    {
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:58: (~ ( '\\'' | '$$' ) )
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:60: ~ ( '\\'' | '$$' )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:58: (~ ( '\\'' | '$$' ) )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:60: ~ ( '\\'' | '$$' )
             	    {
             	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='\uFFFE') ) {
             	        input.consume();
@@ -3727,7 +3727,7 @@ public class SQLANTLRLexer extends Lexer {
                 }
             } while (true);
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:81: ( '\\'' | '$$' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:81: ( '\\'' | '$$' )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -3745,14 +3745,14 @@ public class SQLANTLRLexer extends Lexer {
             }
             switch (alt4) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:82: '\\''
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:82: '\\''
                     {
                     match('\''); 
 
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:89: '$$'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:428:89: '$$'
                     {
                     match("$$"); 
 
@@ -3776,10 +3776,10 @@ public class SQLANTLRLexer extends Lexer {
     public final void mQUOTEID() throws RecognitionException {
         try {
             int _type = QUOTEID;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:9: ( ( '[' ID ']' | '\"' ID '\"' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:11: ( '[' ID ']' | '\"' ID '\"' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:9: ( ( '[' ID ']' | '\"' ID '\"' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:11: ( '[' ID ']' | '\"' ID '\"' )
             {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:11: ( '[' ID ']' | '\"' ID '\"' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:11: ( '[' ID ']' | '\"' ID '\"' )
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -3797,7 +3797,7 @@ public class SQLANTLRLexer extends Lexer {
             }
             switch (alt5) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:12: '[' ID ']'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:12: '[' ID ']'
                     {
                     match('['); 
                     mID(); 
@@ -3806,7 +3806,7 @@ public class SQLANTLRLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:21: '\"' ID '\"'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:429:21: '\"' ID '\"'
                     {
                     match('\"'); 
                     mID(); 
@@ -3831,10 +3831,10 @@ public class SQLANTLRLexer extends Lexer {
     public final void mNUMBER() throws RecognitionException {
         try {
             int _type = NUMBER;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:8: ( ( DIGIT )+ )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:10: ( DIGIT )+
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:8: ( ( DIGIT )+ )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:10: ( DIGIT )+
             {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:10: ( DIGIT )+
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:10: ( DIGIT )+
             int cnt6=0;
             loop6:
             do {
@@ -3848,7 +3848,7 @@ public class SQLANTLRLexer extends Lexer {
 
                 switch (alt6) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:11: DIGIT
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:430:11: DIGIT
             	    {
             	    mDIGIT(); 
 
@@ -3878,11 +3878,11 @@ public class SQLANTLRLexer extends Lexer {
     public final void mID() throws RecognitionException {
         try {
             int _type = ID;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:9: ( LETTER ( LETTER | NUMBER | '_' )* )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:11: LETTER ( LETTER | NUMBER | '_' )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:9: ( LETTER ( LETTER | NUMBER | '_' )* )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:11: LETTER ( LETTER | NUMBER | '_' )*
             {
             mLETTER(); 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:18: ( LETTER | NUMBER | '_' )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:18: ( LETTER | NUMBER | '_' )*
             loop7:
             do {
                 int alt7=4;
@@ -3967,21 +3967,21 @@ public class SQLANTLRLexer extends Lexer {
 
                 switch (alt7) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:20: LETTER
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:20: LETTER
             	    {
             	    mLETTER(); 
 
             	    }
             	    break;
             	case 2 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:29: NUMBER
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:29: NUMBER
             	    {
             	    mNUMBER(); 
 
             	    }
             	    break;
             	case 3 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:38: '_'
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:431:38: '_'
             	    {
             	    match('_'); 
 
@@ -4006,8 +4006,8 @@ public class SQLANTLRLexer extends Lexer {
     // $ANTLR start DIGIT
     public final void mDIGIT() throws RecognitionException {
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:434:16: ( '0' .. '9' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:434:18: '0' .. '9'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:434:16: ( '0' .. '9' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:434:18: '0' .. '9'
             {
             matchRange('0','9'); 
 
@@ -4022,8 +4022,8 @@ public class SQLANTLRLexer extends Lexer {
     // $ANTLR start LETTER
     public final void mLETTER() throws RecognitionException {
         try {
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:435:17: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:435:19: ( 'a' .. 'z' | 'A' .. 'Z' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:435:17: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:435:19: ( 'a' .. 'z' | 'A' .. 'Z' )
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -4048,12 +4048,12 @@ public class SQLANTLRLexer extends Lexer {
     public final void mSL_COMMENT() throws RecognitionException {
         try {
             int _type = SL_COMMENT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:12: ( '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | EOF | '\\r' ( '\\n' )? ) )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:14: '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | EOF | '\\r' ( '\\n' )? )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:12: ( '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | EOF | '\\r' ( '\\n' )? ) )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:14: '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | EOF | '\\r' ( '\\n' )? )
             {
             match("--"); 
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:19: (~ ( '\\n' | '\\r' ) )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:19: (~ ( '\\n' | '\\r' ) )*
             loop8:
             do {
                 int alt8=2;
@@ -4066,7 +4066,7 @@ public class SQLANTLRLexer extends Lexer {
 
                 switch (alt8) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:20: ~ ( '\\n' | '\\r' )
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:20: ~ ( '\\n' | '\\r' )
             	    {
             	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='\t')||(input.LA(1)>='\u000B' && input.LA(1)<='\f')||(input.LA(1)>='\u000E' && input.LA(1)<='\uFFFE') ) {
             	        input.consume();
@@ -4087,7 +4087,7 @@ public class SQLANTLRLexer extends Lexer {
                 }
             } while (true);
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:35: ( '\\n' | EOF | '\\r' ( '\\n' )? )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:35: ( '\\n' | EOF | '\\r' ( '\\n' )? )
             int alt10=3;
             switch ( input.LA(1) ) {
             case '\n':
@@ -4105,24 +4105,24 @@ public class SQLANTLRLexer extends Lexer {
 
             switch (alt10) {
                 case 1 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:36: '\\n'
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:36: '\\n'
                     {
                     match('\n'); 
 
                     }
                     break;
                 case 2 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:42: EOF
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:42: EOF
                     {
                     match(EOF); 
 
                     }
                     break;
                 case 3 :
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:47: '\\r' ( '\\n' )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:47: '\\r' ( '\\n' )?
                     {
                     match('\r'); 
-                    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:51: ( '\\n' )?
+                    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:51: ( '\\n' )?
                     int alt9=2;
                     int LA9_0 = input.LA(1);
 
@@ -4131,7 +4131,7 @@ public class SQLANTLRLexer extends Lexer {
                     }
                     switch (alt9) {
                         case 1 :
-                            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:52: '\\n'
+                            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:438:52: '\\n'
                             {
                             match('\n'); 
 
@@ -4161,12 +4161,12 @@ public class SQLANTLRLexer extends Lexer {
     public final void mML_COMMENT() throws RecognitionException {
         try {
             int _type = ML_COMMENT;
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:17: ( '/*' ( options {greedy=false; } : . )* '*/' )
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:19: '/*' ( options {greedy=false; } : . )* '*/'
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:17: ( '/*' ( options {greedy=false; } : . )* '*/' )
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:19: '/*' ( options {greedy=false; } : . )* '*/'
             {
             match("/*"); 
 
-            // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:24: ( options {greedy=false; } : . )*
+            // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:24: ( options {greedy=false; } : . )*
             loop11:
             do {
                 int alt11=2;
@@ -4191,7 +4191,7 @@ public class SQLANTLRLexer extends Lexer {
 
                 switch (alt11) {
             	case 1 :
-            	    // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:51: .
+            	    // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:439:51: .
             	    {
             	    matchAny(); 
 
@@ -4217,7 +4217,7 @@ public class SQLANTLRLexer extends Lexer {
     // $ANTLR end ML_COMMENT
 
     public void mTokens() throws RecognitionException {
-        // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:8: ( PLUS | MINUS | STAR | DIV | GT | LT | DOT | PCT | EQ | HAT | GE | LE | LPAREN | RPAREN | T88 | T89 | ALL | AND | ARRAY | AS | ASC | BY | CROSS | DEFAULT | DESC | DISTINCT | EXISTS | FROM | FULL | GLOBAL | GROUP | HAVING | ILIKE | INTO | INNER | IS | ISNULL | JOIN | LEFT | LEN | LIKE | LIMIT | LOCAL | NATURAL | NEW | NOT | NOTNULL | NULL | OFFSET | OLD | ON | ONLY | OR | ORDER | OUTER | RIGHT | SELECT | SIMILAR | TABLE | TEMP | TEMPORARY | TO | USING | VALUES | VARIADIC | WHERE | WHITESPACE | QUOTEDSTRING | QUOTEID | NUMBER | ID | SL_COMMENT | ML_COMMENT )
+        // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:8: ( PLUS | MINUS | STAR | DIV | GT | LT | DOT | PCT | EQ | HAT | GE | LE | LPAREN | RPAREN | T88 | T89 | ALL | AND | ARRAY | AS | ASC | BY | CROSS | DEFAULT | DESC | DISTINCT | EXISTS | FROM | FULL | GLOBAL | GROUP | HAVING | ILIKE | INTO | INNER | IS | ISNULL | JOIN | LEFT | LEN | LIKE | LIMIT | LOCAL | NATURAL | NEW | NOT | NOTNULL | NULL | OFFSET | OLD | ON | ONLY | OR | ORDER | OUTER | RIGHT | SELECT | SIMILAR | TABLE | TEMP | TEMPORARY | TO | USING | VALUES | VARIADIC | WHERE | WHITESPACE | QUOTEDSTRING | QUOTEID | NUMBER | ID | SL_COMMENT | ML_COMMENT )
         int alt12=73;
         switch ( input.LA(1) ) {
         case '+':
@@ -6221,511 +6221,511 @@ public class SQLANTLRLexer extends Lexer {
 
         switch (alt12) {
             case 1 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:10: PLUS
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:10: PLUS
                 {
                 mPLUS(); 
 
                 }
                 break;
             case 2 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:15: MINUS
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:15: MINUS
                 {
                 mMINUS(); 
 
                 }
                 break;
             case 3 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:21: STAR
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:21: STAR
                 {
                 mSTAR(); 
 
                 }
                 break;
             case 4 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:26: DIV
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:26: DIV
                 {
                 mDIV(); 
 
                 }
                 break;
             case 5 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:30: GT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:30: GT
                 {
                 mGT(); 
 
                 }
                 break;
             case 6 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:33: LT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:33: LT
                 {
                 mLT(); 
 
                 }
                 break;
             case 7 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:36: DOT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:36: DOT
                 {
                 mDOT(); 
 
                 }
                 break;
             case 8 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:40: PCT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:40: PCT
                 {
                 mPCT(); 
 
                 }
                 break;
             case 9 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:44: EQ
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:44: EQ
                 {
                 mEQ(); 
 
                 }
                 break;
             case 10 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:47: HAT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:47: HAT
                 {
                 mHAT(); 
 
                 }
                 break;
             case 11 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:51: GE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:51: GE
                 {
                 mGE(); 
 
                 }
                 break;
             case 12 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:54: LE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:54: LE
                 {
                 mLE(); 
 
                 }
                 break;
             case 13 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:57: LPAREN
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:57: LPAREN
                 {
                 mLPAREN(); 
 
                 }
                 break;
             case 14 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:64: RPAREN
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:64: RPAREN
                 {
                 mRPAREN(); 
 
                 }
                 break;
             case 15 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:71: T88
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:71: T88
                 {
                 mT88(); 
 
                 }
                 break;
             case 16 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:75: T89
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:75: T89
                 {
                 mT89(); 
 
                 }
                 break;
             case 17 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:79: ALL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:79: ALL
                 {
                 mALL(); 
 
                 }
                 break;
             case 18 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:83: AND
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:83: AND
                 {
                 mAND(); 
 
                 }
                 break;
             case 19 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:87: ARRAY
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:87: ARRAY
                 {
                 mARRAY(); 
 
                 }
                 break;
             case 20 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:93: AS
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:93: AS
                 {
                 mAS(); 
 
                 }
                 break;
             case 21 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:96: ASC
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:96: ASC
                 {
                 mASC(); 
 
                 }
                 break;
             case 22 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:100: BY
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:100: BY
                 {
                 mBY(); 
 
                 }
                 break;
             case 23 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:103: CROSS
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:103: CROSS
                 {
                 mCROSS(); 
 
                 }
                 break;
             case 24 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:109: DEFAULT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:109: DEFAULT
                 {
                 mDEFAULT(); 
 
                 }
                 break;
             case 25 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:117: DESC
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:117: DESC
                 {
                 mDESC(); 
 
                 }
                 break;
             case 26 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:122: DISTINCT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:122: DISTINCT
                 {
                 mDISTINCT(); 
 
                 }
                 break;
             case 27 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:131: EXISTS
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:131: EXISTS
                 {
                 mEXISTS(); 
 
                 }
                 break;
             case 28 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:138: FROM
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:138: FROM
                 {
                 mFROM(); 
 
                 }
                 break;
             case 29 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:143: FULL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:143: FULL
                 {
                 mFULL(); 
 
                 }
                 break;
             case 30 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:148: GLOBAL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:148: GLOBAL
                 {
                 mGLOBAL(); 
 
                 }
                 break;
             case 31 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:155: GROUP
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:155: GROUP
                 {
                 mGROUP(); 
 
                 }
                 break;
             case 32 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:161: HAVING
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:161: HAVING
                 {
                 mHAVING(); 
 
                 }
                 break;
             case 33 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:168: ILIKE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:168: ILIKE
                 {
                 mILIKE(); 
 
                 }
                 break;
             case 34 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:174: INTO
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:174: INTO
                 {
                 mINTO(); 
 
                 }
                 break;
             case 35 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:179: INNER
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:179: INNER
                 {
                 mINNER(); 
 
                 }
                 break;
             case 36 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:185: IS
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:185: IS
                 {
                 mIS(); 
 
                 }
                 break;
             case 37 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:188: ISNULL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:188: ISNULL
                 {
                 mISNULL(); 
 
                 }
                 break;
             case 38 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:195: JOIN
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:195: JOIN
                 {
                 mJOIN(); 
 
                 }
                 break;
             case 39 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:200: LEFT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:200: LEFT
                 {
                 mLEFT(); 
 
                 }
                 break;
             case 40 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:205: LEN
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:205: LEN
                 {
                 mLEN(); 
 
                 }
                 break;
             case 41 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:209: LIKE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:209: LIKE
                 {
                 mLIKE(); 
 
                 }
                 break;
             case 42 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:214: LIMIT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:214: LIMIT
                 {
                 mLIMIT(); 
 
                 }
                 break;
             case 43 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:220: LOCAL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:220: LOCAL
                 {
                 mLOCAL(); 
 
                 }
                 break;
             case 44 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:226: NATURAL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:226: NATURAL
                 {
                 mNATURAL(); 
 
                 }
                 break;
             case 45 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:234: NEW
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:234: NEW
                 {
                 mNEW(); 
 
                 }
                 break;
             case 46 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:238: NOT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:238: NOT
                 {
                 mNOT(); 
 
                 }
                 break;
             case 47 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:242: NOTNULL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:242: NOTNULL
                 {
                 mNOTNULL(); 
 
                 }
                 break;
             case 48 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:250: NULL
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:250: NULL
                 {
                 mNULL(); 
 
                 }
                 break;
             case 49 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:255: OFFSET
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:255: OFFSET
                 {
                 mOFFSET(); 
 
                 }
                 break;
             case 50 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:262: OLD
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:262: OLD
                 {
                 mOLD(); 
 
                 }
                 break;
             case 51 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:266: ON
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:266: ON
                 {
                 mON(); 
 
                 }
                 break;
             case 52 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:269: ONLY
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:269: ONLY
                 {
                 mONLY(); 
 
                 }
                 break;
             case 53 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:274: OR
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:274: OR
                 {
                 mOR(); 
 
                 }
                 break;
             case 54 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:277: ORDER
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:277: ORDER
                 {
                 mORDER(); 
 
                 }
                 break;
             case 55 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:283: OUTER
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:283: OUTER
                 {
                 mOUTER(); 
 
                 }
                 break;
             case 56 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:289: RIGHT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:289: RIGHT
                 {
                 mRIGHT(); 
 
                 }
                 break;
             case 57 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:295: SELECT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:295: SELECT
                 {
                 mSELECT(); 
 
                 }
                 break;
             case 58 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:302: SIMILAR
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:302: SIMILAR
                 {
                 mSIMILAR(); 
 
                 }
                 break;
             case 59 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:310: TABLE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:310: TABLE
                 {
                 mTABLE(); 
 
                 }
                 break;
             case 60 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:316: TEMP
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:316: TEMP
                 {
                 mTEMP(); 
 
                 }
                 break;
             case 61 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:321: TEMPORARY
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:321: TEMPORARY
                 {
                 mTEMPORARY(); 
 
                 }
                 break;
             case 62 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:331: TO
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:331: TO
                 {
                 mTO(); 
 
                 }
                 break;
             case 63 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:334: USING
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:334: USING
                 {
                 mUSING(); 
 
                 }
                 break;
             case 64 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:340: VALUES
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:340: VALUES
                 {
                 mVALUES(); 
 
                 }
                 break;
             case 65 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:347: VARIADIC
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:347: VARIADIC
                 {
                 mVARIADIC(); 
 
                 }
                 break;
             case 66 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:356: WHERE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:356: WHERE
                 {
                 mWHERE(); 
 
                 }
                 break;
             case 67 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:362: WHITESPACE
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:362: WHITESPACE
                 {
                 mWHITESPACE(); 
 
                 }
                 break;
             case 68 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:373: QUOTEDSTRING
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:373: QUOTEDSTRING
                 {
                 mQUOTEDSTRING(); 
 
                 }
                 break;
             case 69 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:386: QUOTEID
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:386: QUOTEID
                 {
                 mQUOTEID(); 
 
                 }
                 break;
             case 70 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:394: NUMBER
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:394: NUMBER
                 {
                 mNUMBER(); 
 
                 }
                 break;
             case 71 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:401: ID
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:401: ID
                 {
                 mID(); 
 
                 }
                 break;
             case 72 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:404: SL_COMMENT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:404: SL_COMMENT
                 {
                 mSL_COMMENT(); 
 
                 }
                 break;
             case 73 :
-                // /Users/jiafu/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:415: ML_COMMENT
+                // /Users/mike/Documents/workspace/wabit/src/main/antlr/ca/sqlpower/wabit/sql/parser/SQLANTLR.g:1:415: ML_COMMENT
                 {
                 mML_COMMENT(); 
 

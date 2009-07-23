@@ -22,30 +22,67 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.tree.TreePath;
+import javax.swing.Action;
+import javax.swing.JTree;
 
-import ca.sqlpower.wabit.WabitProject;
-import ca.sqlpower.wabit.query.QueryCache;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
+/**
+ * A Swing {@link Action} for creating new relational (SQL) queries in a Wabit
+ * workspace.
+ */
 public class NewQueryAction extends AbstractAction {
 	
-    private final WabitProject project;
+    private final WabitWorkspace workspace;
     private final WabitSwingSession session;
+    private final JDBCDataSource ds;
+    private final String newQueryName;
 
+	/**
+	 * Creates a new query with no datasource. Typically, the user would then
+	 * set the datasource of this Query afterwards.
+	 * 
+	 * @param session
+	 *            The {@link WabitSwingSession} containing the workspace that the
+	 *            new query will be added to.
+	 */
     public NewQueryAction(WabitSwingSession session) {
-        super("New Query");
-        this.project = session.getProject();
+        super("New Relational Query");
+        this.newQueryName = "New Relational Query";
+        this.workspace = session.getWorkspace();
         this.session = session;
+        this.ds = null;
     }
 
+	/**
+	 * Creates a new query and sets its datasource to the given datasource.
+	 * 
+	 * @param session
+	 *            The {@link WabitSwingSession} containing the workspace that the
+	 *            new query will be added to.
+	 * @param ds
+	 *            The datasource that the new query will use to start with
+	 */
+    public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
+    	super("New Relational Query on '" + ds.getName() + "'");
+    	this.newQueryName = "New " + ds.getName() + " query";
+    	this.workspace = session.getWorkspace();
+    	this.session = session;
+    	this.ds = ds;
+    }
+    
     public void actionPerformed(ActionEvent e) {
         QueryCache query = new QueryCache(session);
-        query.setName("New Query");
-		project.addQuery(query, session);
-		TreePath path = session.getTree().getPathForRow(session.getTree().getRowCount()-1);
-		session.getTree().setSelectionPath(path);
-		
+        query.setName(newQueryName);
+        if (ds != null) {
+        	query.setDataSource(ds);
+        }
+		workspace.addQuery(query, session);
+		JTree tree = session.getTree();
+		int queryIndex = tree.getModel().getIndexOfChild(workspace, query);
+		tree.setSelectionRow(queryIndex + 1);
     }
-
 }
