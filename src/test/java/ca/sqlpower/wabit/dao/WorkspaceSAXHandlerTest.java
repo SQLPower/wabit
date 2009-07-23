@@ -92,13 +92,13 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         	public WabitSession createSession() {
         		return new StubWabitSession(this);
         	}
-        	
+
         	@Override
         	public UserPrompter createUserPrompter(String question,
         	        UserPromptType responseType, UserPromptOptions optionType,
         	        UserPromptResponse defaultResponseType,
         	        Object defaultResponse, String... buttonNames) {
-                if (responseType == UserPromptType.JDBC_DATA_SOURCE) {
+                if (responseType == UserPromptType.SP_DATA_SOURCE) {
                     return new DefaultUserPrompter(
                             optionType, UserPromptResponse.NEW, replacementDS);
                 } else {

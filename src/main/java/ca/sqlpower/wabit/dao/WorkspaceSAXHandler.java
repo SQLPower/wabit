@@ -296,10 +296,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
         		dsTypes.add(JDBCDataSource.class);
         		dsTypes.add(Olap4jDataSource.class);
+        		//Note: the new prompt here is so that on the server side the user still has the
+        		//option of creating a new datasource
         		UserPrompter prompter = promptFactory.createUserPrompter(
         				"The data source \"" + dsName + "\" does not exist. Please select a replacement."
-        				, UserPromptType.SP_DATA_SOURCE, UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null,
-        				"Select Data Source", "Skip Data Source", "Cancel Load");
+        				, UserPromptType.SP_DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null,
+        				"Select Data Source", "New...", "Skip Data Source", "Cancel Load");
         		UserPromptResponse response = prompter.promptUser();
         		if (response == UserPromptResponse.OK || response == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
