@@ -84,6 +84,7 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;

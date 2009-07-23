@@ -171,9 +171,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), 
 		            													wabitDS.getSPDataSource() instanceof Olap4jDataSource ?
 		            														UserPromptType.OLAP_DATA_SOURCE : UserPromptType.JDBC_DATA_SOURCE, 
-												            			UserPromptOptions.OK_NEW_CANCEL, 
-												            			UserPromptResponse.CANCEL, 
-												            			null, "OK", "Create New", "Cancel");
+		            														UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null,
+		            								        				"Select Data Source", "Skip Data Source", "Cancel");
 		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
 		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
 		        			session.getWorkspace().removeDataSource((WabitDataSource)item);

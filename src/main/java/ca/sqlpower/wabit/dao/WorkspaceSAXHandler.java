@@ -48,8 +48,6 @@ import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
-import org.olap4j.query.QueryAxis;
-import org.olap4j.query.QueryDimension;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -78,10 +76,10 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
-import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
@@ -219,31 +217,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private OlapQuery olapQuery;
 
     /**
-     * This is a {@link QueryAxis} that is currently being loaded into a
-     * {@link org.olap4j.query.Query} object in an {@link OlapQuery}. This may
-     * be null if no query axis is currently being loaded.
-     */
-    private QueryAxis queryAxis;
-
-    /**
-     * This is a {@link QueryDimension} that is currently being loaded into a
-     * {@link QueryAxis} that is currently being loaded into a
-     * {@link org.olap4j.query.Query} object in an {@link OlapQuery}. This may
-     * be null if no query dimension is currently being loaded.
-     */
-    private QueryDimension queryDimension;
-
-    /**
      * This is an Olap4j {@link org.olap4j.query.Query} which is currently being
      * loaded. This may be null.
      */
     private CellSetRenderer cellSetRenderer;
 
     private final UserPrompterFactory promptFactory;
-    
-    private QueryAxis olap4jReportQueryAxis;
-
-    private QueryDimension olap4jReportQueryDimension;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of workspace
@@ -314,15 +293,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	checkMandatory("name", dsName);
         	SPDataSource ds = context.getDataSources().getDataSource(dsName);
         	if (ds == null) {
-        		UserPrompter prompter = promptFactory.createUserPrompter("The data source \"" + dsName + "\" does not exist in the list of known data sources.", UserPromptType.JDBC_DATA_SOURCE, UserPromptOptions.OK_NEW_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, "OK", "Create New...", "Skip Data Source", "Cancel Load");
-        		UserPromptResponse responseType = prompter.promptUser();
-        		if (responseType == UserPromptResponse.OK || responseType == UserPromptResponse.NEW) {
+        		List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
+        		dsTypes.add(JDBCDataSource.class);
+        		dsTypes.add(Olap4jDataSource.class);
+        		UserPrompter prompter = promptFactory.createUserPrompter(
+        				"The data source \"" + dsName + "\" does not exist. Please select a replacement."
+        				, UserPromptType.SP_DATA_SOURCE, UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null,
+        				"Select Data Source", "Skip Data Source", "Cancel Load");
+        		UserPromptResponse response = prompter.promptUser();
+        		if (response == UserPromptResponse.OK || response == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
         			if (!session.getWorkspace().dsAlreadyAdded(ds)) {
         				session.getWorkspace().addDataSource(ds);
         			}
         			oldToNewDSNames.put(dsName, ds.getName());
-        		} else if (responseType == UserPromptResponse.NOT_OK) {
+        		} else if (response == UserPromptResponse.NOT_OK) {
         			ds = null;
         		} else {
         			cancelled = true;
@@ -1000,8 +985,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     if (newDSName != null) {
                         ds = session.getWorkspace().getDataSource(newDSName, Olap4jDataSource.class);
                         if (ds == null) {
-                            logger.debug("Data source " + aval + " is not in the workspace. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
-                            throw new NullPointerException("Data source " + newDSName + " was not found in the workspace.");
+                            logger.debug("Data source " + aval + " is not in the workspace or was not of the correct type. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
+                            throw new NullPointerException("Data source " + newDSName + " was not found in the workspace or was not an Olap4j Datasource.");
                         }
                     }
                     logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());

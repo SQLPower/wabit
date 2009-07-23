@@ -37,8 +37,8 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.swingui.ModalDialogUserPrompter;
 import ca.sqlpower.swingui.RecentMenu;
+import ca.sqlpower.swingui.SwingPopupUserPrompter;
 import ca.sqlpower.swingui.action.ForumAction;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -266,7 +266,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             UserPromptType responseType, UserPromptOptions optionType,
             UserPromptResponse defaultResponseType, Object defaultResponse,
             String... buttonNames) {
-        return new ModalDialogUserPrompter(optionType, defaultResponseType, null, question, buttonNames);
+    	
+    	return SwingPopupUserPrompter.swingPopupUserPrompter(question, responseType, optionType,
+    			defaultResponseType, defaultResponse, null, delegateContext.getDataSources(),
+    			buttonNames);
     }
 
 	
