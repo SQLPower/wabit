@@ -176,6 +176,45 @@ public class QueryPanel implements WabitPanel {
 	 * the new tables being added to the result set.
 	 */
 	private final List<QueryCache> queuedQueryCache;
+
+    /**
+     * This list stores a query string for each queued QueryCache in the
+     * queuedQueryCache list. The queries stored here come from the original
+     * QueryCache and may be different from the query generated from it's copy.
+     * <p>
+     * XXX This is a temporary solution to the problem where a Query and its
+     * copy do not return the same generated query as the depth first search
+     * returns the tables in the from clause in a different order. Because the
+     * original query can change while it is being executed the columns
+     * selected, or other aspects of the query could be different in the
+     * original query when the result set table is returned. This can result in
+     * the query trying to place values in the header of the result table on the
+     * wrong columns. To solve this problem a copy is made of the query to keep
+     * track of the correct header values for each column. The recent problem
+     * that is occurring is the original query, which is passed to the
+     * SQLQueryUIComponents, does not generate the same query string as its
+     * copy. This can cause the addGroupingTableHeaders method to not correctly
+     * match the copy of the QueryCache to its result set table and not add any
+     * headers. This then causes the UI to look like it lost the grouping and
+     * sort order. <br>
+     * A better way to implement this would be on every call to
+     * executeQueryInCache create a copy of the query and pass that copy as a
+     * StatementExecutor to the SQLQueryUIComponents. Then have the
+     * SQLQueryUIComponents store the executor with the table so you can get
+     * back the query copy without storing it in a queue in the query panel.
+     * Passing just the copy to the SQLQueryUIComponents would mean that the
+     * query copy would not be able to change while in the SQLQueryUIComponents
+     * and could be immutable. This may also simplify the addGroupingTableHeaders
+     * method. The problem I'm unsure how to solve is with this approach the
+     * original QueryCache never executes so it's cache becomes stale. If the
+     * cache is stale it will not update when placed on a report and may cause
+     * exceptions if there are fewer columns in the cached result set than
+     * the query. The query copies would have to update the original query's
+     * cached result set correctly or remove the original query's cache
+     * every time a query is executed in the QueryPanel and take a performance
+     * hit when switching to a report layout.
+     */
+	private final List<String> queuedQueryCacheQueries;
 	
 	/**
 	 * This is the tabbed pane that contains the query pen and text editor.
@@ -355,6 +394,7 @@ public class QueryPanel implements WabitPanel {
 		queryController = new QueryController(queryCache.getQuery(), queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
 		queryPen.setZoom(queryCache.getQuery().getZoomLevel());
 		queuedQueryCache = new ArrayList<QueryCache>();
+		queuedQueryCacheQueries = new ArrayList<String>();
 		reportComboBox = queryUIComponents.getDatabaseComboBox();
 		
 		cornerPanel = new JPanel();
@@ -721,18 +761,22 @@ public class QueryPanel implements WabitPanel {
 			for(JTable t : tables)	{
 				QueryCache cache = null;
 				List<QueryCache> removeCacheList = new ArrayList<QueryCache>();
-				for (QueryCache c : queuedQueryCache) {
-				    if (logger.isDebugEnabled()) {
-				        logger.debug("Looking at query " + c.generateQuery() + " to match " + queryUIComponents.getQueryForJTable(t));
-				    }
-					if (c.equals(queryUIComponents.getStatementExecutorForJTable(t))) {
+				List<String> removeQueryStringList = new ArrayList<String>();
+				for (int i = 0; i < queuedQueryCacheQueries.size(); i++) {
+				    String query = queuedQueryCacheQueries.get(i);
+				    QueryCache c = queuedQueryCache.get(i);
+					if (query.equals(queryUIComponents.getQueryForJTable(t))) {
 						cache = c;
 						break;
 					}
 					removeCacheList.add(c);
+					removeQueryStringList.add(query);
 				}
 				for (QueryCache c : removeCacheList) {
 					queuedQueryCache.remove(c);
+				}
+				for (String s : removeQueryStringList) {
+				    queuedQueryCacheQueries.remove(s);
 				}
 				if (cache == null) {
 					// There are no QueryCache objects that define the header for
@@ -798,9 +842,9 @@ public class QueryPanel implements WabitPanel {
 	 * store a copy of the QueryCache in the queued list.
 	 */
 	public synchronized void executeQueryInCache() {
-		final QueryCache cacheCopy = new QueryCache(queryCache);
-        queuedQueryCache.add(cacheCopy);
-		queryUIComponents.executeQuery(cacheCopy);
+		queuedQueryCache.add(new QueryCache(queryCache));
+		queuedQueryCacheQueries.add(queryCache.generateQuery());
+		queryUIComponents.executeQuery(queryCache);
 		columnNameLabel.setIcon(THROBBER);
 		for (JTable table : queryUIComponents.getResultTables()) {
 			table.setBackground(REFRESH_GREY);
