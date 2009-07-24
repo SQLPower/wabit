@@ -54,6 +54,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
+import org.olap4j.Cell;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.CellSetAxisMetaData;
@@ -443,19 +444,18 @@ public class CellSetRenderer extends AbstractWabitObject implements
             }
             int colPosition = 0;
             for (int col = 0; col < columnsAxis.getPositionCount(); col++) {
-                String formattedValue;
-                if (bodyFormat != null) {
-                    try {
-                        formattedValue = bodyFormat.format(getCellSet().getCell(
-                                columnsAxis.getPositions().get(col),
-                                rowsAxis.getPositions().get(row)).getDoubleValue());
-                    } catch (OlapException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else {
-                    formattedValue = getCellSet().getCell(
-                            columnsAxis.getPositions().get(col),
-                            rowsAxis.getPositions().get(row)).getFormattedValue();
+            	String formattedValue;
+            	try {
+            		Cell cell = getCellSet().getCell(
+            				columnsAxis.getPositions().get(col),
+            				rowsAxis.getPositions().get(row));
+					if (bodyFormat != null && cell.getValue() != null) {
+            			formattedValue = bodyFormat.format(cell.getDoubleValue());
+            		} else {
+            			formattedValue = cell.getFormattedValue();
+            		}
+            	} catch (OlapException e) {
+            		throw new RuntimeException(e);
                 }
                 
                 double alignmentShift = 0;
