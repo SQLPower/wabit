@@ -377,7 +377,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         			getHeaderFont());
         double rowHeaderWidth = rowHeaderComponent.getPreferredSize().getWidth();
         Color oldForeground = g.getColor();
-        int[] columnWidthList = getDesiredColumnWidths(g, tableAsModel);
+        int[] columnWidthList = getDesiredColumnWidths(g, tableModel);
         
         // Actually print
         int colHeaderSumHeight = printColumnHeaders(g, contentBox, printing,
@@ -392,7 +392,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         return shouldContinue;
     }
 
-	private int[] getDesiredColumnWidths(Graphics2D g, final JTable tableAsModel) {
+	private int[] getDesiredColumnWidths(Graphics2D g, final CellSetTableModel tableAsModel) {
 		//get all the headers widths
         g.setFont(getHeaderFont());
 		CellSetAxis cellAxis = getCellSet().getAxes().get(Axis.COLUMNS.axisOrdinal());
@@ -419,6 +419,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
         for (int row = 0; row < tableAsModel.getRowCount(); row++) {
         	for (int col = 0; col < tableAsModel.getColumnCount(); col++) {
         		String columnString = (String) tableAsModel.getValueAt(row, col);
+        		if (bodyFormat != null && tableAsModel.getObjectValueAt(row, col) != null) {
+        			columnString = bodyFormat.format(tableAsModel.getDoubleValueAt(row, col));
+        		}
         		int colWidth = (int) getBodyFont().getStringBounds(columnString, g.getFontRenderContext()).getWidth();
         		columnWidthList[col] = Math.max(columnWidthList[col], colWidth + PADDING);
         	}
