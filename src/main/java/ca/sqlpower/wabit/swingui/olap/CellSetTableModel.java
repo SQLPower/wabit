@@ -24,6 +24,7 @@ import javax.swing.table.TableModel;
 
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 public class CellSetTableModel implements TableModel {
@@ -73,6 +74,22 @@ public class CellSetTableModel implements TableModel {
         return cellSet.getCell(
                 columnsAxis.getPositions().get(columnIndex),
                 rowsAxis.getPositions().get(rowIndex)).getFormattedValue();
+    }
+    
+    public double getDoubleValueAt(int rowIndex, int columnIndex) {
+    	try {
+			return cellSet.getCell(
+			        columnsAxis.getPositions().get(columnIndex),
+			        rowsAxis.getPositions().get(rowIndex)).getDoubleValue();
+		} catch (OlapException e) {
+			throw new RuntimeException(e);
+		}
+    }
+    
+    public Object getObjectValueAt(int rowIndex, int columnIndex) {
+    	return cellSet.getCell(
+    			columnsAxis.getPositions().get(columnIndex),
+    			rowsAxis.getPositions().get(rowIndex)).getValue();
     }
 
     public boolean isCellEditable(int rowIndex, int columnIndex) {
