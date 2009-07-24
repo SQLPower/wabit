@@ -292,6 +292,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 */
     private final PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals("name")) {
+				setName("Result Set: " + query.getName());
+			}
 			firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
 		}
 	};
@@ -318,13 +321,18 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
     	query.removePropertyChangeListener(queryChangeListener);
     }
-    
-    /**
-     * This will execute the query contained in this result set and
-     * set the result set to be a new result set.
-     * <p>
-     * Package private for testing.
-     */
+
+	/**
+	 * This will execute the query contained in this result set and set the
+	 * result set to be a new result set.
+	 * <p>
+	 * NOTE: This method should not contain any method calls that could fire
+	 * events on the result set renderer. Firing a property change event can
+	 * cause the content box to update and cause this class to call
+	 * {@link #clearResultSetLayout()} causing the result set to be nulled out.
+	 * <p>
+	 * Package private for testing.
+	 */
 	void executeQuery() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
@@ -343,7 +351,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         } catch (Exception ex) {
             executeException = ex;
         }
-        setName("Result Set: " + query.getName());
         
         if (logger.isDebugEnabled()) {
 			logger.debug("Finished fetching results for query " + query.generateQuery());
