@@ -23,12 +23,14 @@ import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -145,4 +147,14 @@ public class StubWabitSession implements WabitSession {
 	    }
 	    return olapConnectionPool.getConnection();
     }
+
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

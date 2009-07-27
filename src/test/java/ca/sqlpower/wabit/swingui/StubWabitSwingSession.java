@@ -36,8 +36,10 @@ import javax.swing.JTree;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -202,4 +204,14 @@ public class StubWabitSwingSession implements WabitSwingSession {
         // TODO Auto-generated method stub
         return null;
     }
+
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

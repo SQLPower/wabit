@@ -25,6 +25,7 @@ import java.util.prefs.Preferences;
 import javax.jmdns.JmDNS;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
@@ -96,5 +97,14 @@ public class StubWabitSessionContext implements WabitSessionContext {
             String... buttonNames) {
         return null;
     }
+
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		return null;
+	}
 
 }

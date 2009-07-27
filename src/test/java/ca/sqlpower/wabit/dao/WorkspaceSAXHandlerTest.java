@@ -22,11 +22,13 @@ package ca.sqlpower.wabit.dao;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.List;
 
 import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
@@ -98,14 +100,21 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         	        UserPromptType responseType, UserPromptOptions optionType,
         	        UserPromptResponse defaultResponseType,
         	        Object defaultResponse, String... buttonNames) {
-                if (responseType == UserPromptType.SP_DATA_SOURCE) {
-                    return new DefaultUserPrompter(
-                            optionType, UserPromptResponse.NEW, replacementDS);
-                } else {
-                    return super.createUserPrompter(
-                            question, responseType, optionType, defaultResponseType,
-                            defaultResponse, buttonNames);
-                }
+                return super.createUserPrompter(
+                        question, responseType, optionType, defaultResponseType,
+                        defaultResponse, buttonNames);
+        	}
+        	
+        	@Override
+        	public UserPrompter createDatabaseUserPrompter(String question,
+        			List<Class<? extends SPDataSource>> dsTypes,
+        			UserPromptOptions optionType,
+        			UserPromptResponse defaultResponseType,
+        			Object defaultResponse,
+        			DataSourceCollection<SPDataSource> dsCollection,
+        			String... buttonNames) {
+        		return new DefaultUserPrompter(
+                        optionType, UserPromptResponse.NEW, replacementDS);
         	}
         };
         

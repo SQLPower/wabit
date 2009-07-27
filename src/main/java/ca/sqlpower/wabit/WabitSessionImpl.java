@@ -32,6 +32,7 @@ import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -170,6 +171,17 @@ public class WabitSessionImpl implements WabitSession {
 	        olapConnectionPools.put(dataSource, olapConnectionPool);
 	    }
 	    return olapConnectionPool.getConnection();
+	}
+
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		DefaultUserPrompterFactory dupf = new DefaultUserPrompterFactory();
+		return dupf.createDatabaseUserPrompter(question, dsTypes, optionType, defaultResponseType, 
+				defaultResponse, dsCollection, buttonNames);
 	}
 
 }

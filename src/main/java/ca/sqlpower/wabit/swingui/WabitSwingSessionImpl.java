@@ -76,6 +76,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -307,7 +308,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         
         //Temporary upfMissingLoadedDB factory that is not parented in case there is no frame at current.
         //This should be replaced in the buildUI with a properly parented prompter factory.
-        upfMissingLoadedDB = new SwingUIUserPrompterFactory(null, sessionContext.getDataSources());
+        upfMissingLoadedDB = new SwingUIUserPrompterFactory(null);
 		
         frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + sessionContext.getName());
 	}
@@ -338,7 +339,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				new ArrayList<Action>(), new ArrayList<JComponent>(), frame, false, newDSTypes);
 		dbConnectionManager.setDbIcon(DB_ICON);
 		
-		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame, sessionContext.getDataSources());
+		upfMissingLoadedDB = new SwingUIUserPrompterFactory(frame);
         
         // this will be the frame's content pane
 		JPanel cp = new JPanel(new BorderLayout());
@@ -876,4 +877,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
         return olapConnectionPool.getConnection();
     }
+
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		return upfMissingLoadedDB.createDatabaseUserPrompter(question, dsTypes, optionType, defaultResponseType,
+				defaultResponse, dsCollection, buttonNames);
+	}
 }

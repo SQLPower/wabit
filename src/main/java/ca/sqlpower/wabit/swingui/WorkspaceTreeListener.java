@@ -44,7 +44,6 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -167,12 +166,13 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			            		}
 			            	}
 		            	}
-		            } else if(response == 1) {
-		            	UserPrompter dbPrompter = session.createUserPrompter("Replacing " + wabitDS.getName(), 
-		            													wabitDS.getSPDataSource() instanceof Olap4jDataSource ?
-		            														UserPromptType.OLAP_DATA_SOURCE : UserPromptType.JDBC_DATA_SOURCE, 
-		            														UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null,
-		            								        				"Select Data Source", "Skip Data Source", "Cancel");
+		            } else if (response == 1) {
+		            	List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
+		            	dsTypes.add(Olap4jDataSource.class);
+		            	dsTypes.add(JDBCDataSource.class);
+		            	UserPrompter dbPrompter = session.createDatabaseUserPrompter("Replacing " + wabitDS.getName(), dsTypes,
+		            			UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, session.getContext().getDataSources(), 
+		            			"Select Data Source", "Skip Data Source", "Cancel");
 		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
 		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
 		        			session.getWorkspace().removeDataSource((WabitDataSource)item);

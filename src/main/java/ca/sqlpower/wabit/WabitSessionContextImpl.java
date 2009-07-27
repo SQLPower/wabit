@@ -310,4 +310,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             String... buttonNames) {
         return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
     }
+
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
+	}
 }

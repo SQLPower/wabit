@@ -29,6 +29,7 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
@@ -37,7 +38,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
  * The basic interface for a Wabit session. This interface provides all the
  * UI-independent state and behaviour of a Wabit session. 
  */
-public interface WabitSession extends SQLDatabaseMapping, OlapConnectionMapping {
+public interface WabitSession extends SQLDatabaseMapping, OlapConnectionMapping, UserPrompterFactory {
 
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l);
 
@@ -64,48 +65,48 @@ public interface WabitSession extends SQLDatabaseMapping, OlapConnectionMapping 
 	 * Returns the workspace associated with this session.
 	 */
 	public WabitWorkspace getWorkspace();
-
-	/**
-	 * This will create a UserPrompter to let users decide the given question.
-	 * Questions can be yes/no questions if the response type is
-	 * {@link UserPromptType#BOOLEAN}, a question about data sources letting the
-	 * user create or select a database if the response type is
-	 * {@link UserPromptType#DATA_SOURCE}, or a question about files, allowing
-	 * the user to select or create a file if the response type is
-	 * {@link UserPromptType#FILE}.
-	 * 
-	 * @param question
-	 *            The question the user is being asked. This can be a template
-	 *            with format arguments given in the promptUser of the
-	 *            UserPrompter.
-	 * @param okText
-	 *            The text for the ok button defined by the question and the
-	 *            type of response expected.
-	 * @param newText
-	 *            The text for the new button defined by the question and the
-	 *            type of response. This action should create a new instance of
-	 *            the response type if this option is selected. This is not used
-	 *            for boolean type prompters.
-	 * @param notOkText
-	 *            The text for the not ok button. This button should define the
-	 *            current question should not be done but does not mean to
-	 *            cancel the entire operation if the question is only about part
-	 *            of the action which created this prompt.
-	 * @param cancelText
-	 *            The text for the cancel button. This button should stop the
-	 *            action this prompter is asking about and undo what the action
-	 *            was doing.
-	 * @param responseType
-	 *            The type of response the UserPrompter should be returning.
-	 *            This depends on what the question is asking about.
-	 * @param defaultResponseType
-	 *            The default response type to be selected by the user.
-	 * @param defaultResponse
-	 *            The default response to be given if the default response is
-	 *            used.
-	 */
-	public UserPrompter createUserPrompter(String question, UserPromptType responseType, UserPromptOptions optionType,
-			UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames);
+//
+//	/**
+//	 * This will create a UserPrompter to let users decide the given question.
+//	 * Questions can be yes/no questions if the response type is
+//	 * {@link UserPromptType#BOOLEAN}, a question about data sources letting the
+//	 * user create or select a database if the response type is
+//	 * {@link UserPromptType#DATA_SOURCE}, or a question about files, allowing
+//	 * the user to select or create a file if the response type is
+//	 * {@link UserPromptType#FILE}.
+//	 * 
+//	 * @param question
+//	 *            The question the user is being asked. This can be a template
+//	 *            with format arguments given in the promptUser of the
+//	 *            UserPrompter.
+//	 * @param okText
+//	 *            The text for the ok button defined by the question and the
+//	 *            type of response expected.
+//	 * @param newText
+//	 *            The text for the new button defined by the question and the
+//	 *            type of response. This action should create a new instance of
+//	 *            the response type if this option is selected. This is not used
+//	 *            for boolean type prompters.
+//	 * @param notOkText
+//	 *            The text for the not ok button. This button should define the
+//	 *            current question should not be done but does not mean to
+//	 *            cancel the entire operation if the question is only about part
+//	 *            of the action which created this prompt.
+//	 * @param cancelText
+//	 *            The text for the cancel button. This button should stop the
+//	 *            action this prompter is asking about and undo what the action
+//	 *            was doing.
+//	 * @param responseType
+//	 *            The type of response the UserPrompter should be returning.
+//	 *            This depends on what the question is asking about.
+//	 * @param defaultResponseType
+//	 *            The default response type to be selected by the user.
+//	 * @param defaultResponse
+//	 *            The default response to be given if the default response is
+//	 *            used.
+//	 */
+//	public UserPrompter createUserPrompter(String question, UserPromptType responseType, UserPromptOptions optionType,
+//			UserPromptResponse defaultResponseType, Object defaultResponse, String ... buttonNames);
 	
 	/**
 	 * Returns the number of rows that should be retrieved from the database for

@@ -31,14 +31,16 @@ import javax.jmdns.JmDNS;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
-import ca.sqlpower.swingui.SwingPopupUserPrompter;
+import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.action.ForumAction;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -63,6 +65,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * "core" operations to.
      */
     private final WabitSessionContext delegateContext;
+    
+    private final SwingUIUserPrompterFactory upf = new SwingUIUserPrompterFactory(null);
     
     /**
      * This is a preference that stores if the app should start up on the welcome screen
@@ -262,15 +266,23 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		return delegateContext.getName();
 	}
 
-    public UserPrompter createUserPrompter(String question,
-            UserPromptType responseType, UserPromptOptions optionType,
-            UserPromptResponse defaultResponseType, Object defaultResponse,
-            String... buttonNames) {
-    	
-    	return SwingPopupUserPrompter.swingPopupUserPrompter(question, responseType, optionType,
-    			defaultResponseType, defaultResponse, null, delegateContext.getDataSources(),
-    			buttonNames);
-    }
+	public UserPrompter createDatabaseUserPrompter(String question,
+			List<Class<? extends SPDataSource>> dsTypes,
+			UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			DataSourceCollection<SPDataSource> dsCollection,
+			String... buttonNames) {
+		return upf.createDatabaseUserPrompter(question, dsTypes, optionType, defaultResponseType,
+				defaultResponse, dsCollection, buttonNames);
+	}
+
+	public UserPrompter createUserPrompter(String question,
+			UserPromptType responseType, UserPromptOptions optionType,
+			UserPromptResponse defaultResponseType, Object defaultResponse,
+			String... buttonNames) {
+		return upf.createUserPrompter(question, responseType, optionType, defaultResponseType,
+				defaultResponse, buttonNames);
+	}
 
 	
 }
