@@ -640,10 +640,7 @@ public class OlapQuery extends AbstractWabitObject {
         logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + " in ordinal " + ordinal);
         if (!qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
-			// qa.addDimension(qd);
-			// This way doesn't fire events like addDimension does, but I see
-			// currently no other way to add a dimension at a given index
-            qa.getDimensions().add(ordinal, qd);
+        	qa.addDimension(ordinal, qd);
         } else {
         	int index = qa.getDimensions().indexOf(qd);
         	if (index >= 0) {

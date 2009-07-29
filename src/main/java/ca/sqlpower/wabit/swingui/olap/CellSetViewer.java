@@ -29,6 +29,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -71,11 +72,6 @@ public class CellSetViewer {
      */
     private final boolean allowMemberModification;
 
-    /**
-     * This is the row header placed on the current table.
-     */
-    private CellSetTableHeaderComponent rowHeader;
-    
 	/**
 	 * Creates a CellSetViewer on the given {@link OlapQuery} and by default
 	 * allows Member modification
@@ -120,9 +116,11 @@ public class CellSetViewer {
         
         table.setModel(new CellSetTableModel(cellSet));
         setCellSet(cellSet);
-        rowHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.ROWS, table);
+        CellSetTableHeaderComponent rowHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.ROWS, table);
+        rowHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 1));
         
         final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.COLUMNS, table);
+        columnHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.WHITE));
         
         if (!allowMemberModification) {
             for (HierarchyComponent hierarchy : rowHeader.getHierarchies()) {
@@ -143,8 +141,12 @@ public class CellSetViewer {
             }
         }
        
+        CellSetTableCornerComponent corner = new CellSetTableCornerComponent(rowHeader.getHierarchies());
+        corner.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.WHITE));
+
         scrollPane.setViewportView(table);
     	scrollPane.setRowHeaderView(rowHeader);
+		scrollPane.setCorner(JScrollPane.UPPER_LEADING_CORNER, corner);
     	scrollPane.setColumnHeaderView(columnHeader);
     	TableCellRenderer defaultRenderer = new TableCellRenderer() {
     		public Component getTableCellRendererComponent(JTable table,
@@ -181,6 +183,7 @@ public class CellSetViewer {
 		// is called afterwards, it removes the column header that was just
 		// added, resulting in a missing column header.
         scrollPane.setViewportView(messageLabel);
+        scrollPane.setCorner(JScrollPane.UPPER_LEADING_CORNER, null);
         
         CellSetTableHeaderComponent rowHeader;
         try {
@@ -201,25 +204,12 @@ public class CellSetViewer {
         }
 	}
 	
-	/**
-	 * This method will show a message without defining the row and column headers. This
-	 * is useful for exceptions among other messages.
-	 */
-	public void showMessage(String message) {
-	    messageLabel.setText(message);
-	    scrollPane.setViewportView(messageLabel);
-	}
-    
     public JComponent getViewComponent() {
         return viewerComponent;
     }
     
     public JTable getTable() {
         return table;
-    }
-    
-    public CellSetTableHeaderComponent getRowHeader() {
-        return rowHeader;
     }
     
     public JScrollPane getScrollPane() {

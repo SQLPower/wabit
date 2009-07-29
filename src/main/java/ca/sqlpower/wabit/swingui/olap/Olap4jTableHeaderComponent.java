@@ -149,7 +149,7 @@ public class Olap4jTableHeaderComponent extends JComponent {
                         labelText = positionText;
                     }
                     JLabel label = new JLabel(labelText);
-                    label.setBackground(ColourScheme.BACKGROUND_COLOURS[lg.getOrdinal()]);
+                    label.setBackground(ColourScheme.HEADER_COLOURS[lg.getOrdinal()]);
                     label.setOpaque(true);
                     add(label, cc.xy(column + 1, position + 1));
                     

@@ -404,7 +404,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 							cellSetAxis, cellSetAxis.getAxisMetaData().getHierarchies().get(i),
 							i, table.getColumnModel());
 				hierarchyComponent.setBackground(
-						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
+						ColourScheme.HEADER_COLOURS[i % ColourScheme.HEADER_COLOURS.length]);
 				hierarchies.add(hierarchyComponent);
 				add(hierarchyComponent);
 			}
@@ -493,7 +493,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	    		Hierarchy hierarchy = hierarchies.get(i);
 	    		HierarchyComponent hierarchyComponent = new HierarchyComponent(hierarchy, i);
 				hierarchyComponent.setBackground(
-						ColourScheme.BACKGROUND_COLOURS[i % ColourScheme.BACKGROUND_COLOURS.length]);
+						ColourScheme.HEADER_COLOURS[i % ColourScheme.HEADER_COLOURS.length]);
 	    		add(hierarchyComponent);
 	    	}
 	    	defaultBorder = DEFAULT_HIERARCHYCOMP_BORDER;
@@ -752,13 +752,13 @@ public class CellSetTableHeaderComponent extends JComponent {
             Graphics2D g2 = (Graphics2D) getGraphics();
             g2.setFont(getFont());
             FontMetrics fm = g2.getFontMetrics();
-            int colsRowHeight = fm.getHeight();
+            int colsRowHeight = Math.max(fm.getHeight(), EXPANDED_TREE_ICON.getIconHeight());
             int y = 0;
 
             if (axis == null) {
             	LayoutItem li = new LayoutItem();
             	Rectangle2D stringBounds = fm.getStringBounds(hierarchy.getName(), g2);
-            	li.bounds = new Rectangle2D.Double(0, 0, stringBounds.getWidth(), stringBounds.getHeight());
+            	li.bounds = new Rectangle2D.Double(0, 0, stringBounds.getWidth() + OlapIcons.HIERARCHY_ICON.getIconWidth(), stringBounds.getHeight());
             	try {
             		li.member = hierarchy.getDefaultMember();
             	} catch (OlapException ex) {
@@ -812,12 +812,12 @@ public class CellSetTableHeaderComponent extends JComponent {
 	                		double height = Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight());
 							double width = stringBounds.getWidth() + Math.max(height, EXPANDED_TREE_ICON.getIconWidth());
 	                		li.bounds = new Rectangle2D.Double(
-			                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
+			                        columnPositions[position.getOrdinal()], (memberDepth + 1) * colsRowHeight,
 			                        width, 
 			                        height);
 	                	} else {
 		                	li.bounds = new Rectangle2D.Double(
-			                        columnPositions[position.getOrdinal()], memberDepth * colsRowHeight,
+			                        columnPositions[position.getOrdinal()], (memberDepth + 1) * colsRowHeight,
 			                        stringBounds.getWidth(), stringBounds.getHeight());
 	                	}
 	                	y += colsRowHeight;
@@ -888,6 +888,22 @@ public class CellSetTableHeaderComponent extends JComponent {
             
             FontMetrics fm = g2.getFontMetrics();
             int ascent = fm.getAscent();
+            
+            if (axis != null && axis.getAxisOrdinal() == Axis.COLUMNS) {
+            	OlapIcons.DIMENSION_ICON.paintIcon(this, g2, 0, 0);
+            	Font oldFont = g2.getFont();
+            	Font italicFont = oldFont.deriveFont(Font.ITALIC);
+            	Color oldColor = g2.getColor();
+            	try {
+            		g2.setFont(italicFont);
+            		g2.drawString(getHierarchy().getDimension().getName(), OlapIcons.DIMENSION_ICON.getIconWidth(), ascent);
+            		g2.setColor(Color.WHITE);
+            		g2.drawLine(0, fm.getHeight(), getWidth(), fm.getHeight());
+            	} finally {
+            		g2.setFont(oldFont);
+            		g2.setColor(oldColor);
+            	}
+            }
             
             LayoutItem previousLabel = null;
             
@@ -963,6 +979,13 @@ public class CellSetTableHeaderComponent extends JComponent {
         public List<LayoutItem> getLayoutItems() {
             return Collections.unmodifiableList(layoutItems);
         }
+        
+        /**
+		 * The Hierarchy this component represents.
+         */
+		public Hierarchy getHierarchy() {
+			return hierarchy;
+		}
     }
     
     public Dimension getMemberSize(int columnIndex) {

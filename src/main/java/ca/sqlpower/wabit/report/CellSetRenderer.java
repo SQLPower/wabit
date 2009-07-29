@@ -498,7 +498,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         colourSchemeNum = 0;
         for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
-            g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
+            g.setColor(ColourScheme.HEADER_COLOURS[colourSchemeNum]);
             g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
             g.setColor(oldForeground);
             Member lastMemberDisplayed = null;
@@ -555,7 +555,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
             	maxDepth = Math.max((layoutItem.getMember().getDepth() - parentDepth[hierarchyComponentIndex]) + 1, maxDepth);
             }
             
-            g.setColor(ColourScheme.BACKGROUND_COLOURS[colourSchemeNum]);
+            g.setColor(ColourScheme.HEADER_COLOURS[colourSchemeNum]);
             int hierarchyHeight = (int) maxDepth * (headerFontHeight);
 			g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) contentBox.getWidth(), hierarchyHeight);
             g.setColor(oldForeground);
