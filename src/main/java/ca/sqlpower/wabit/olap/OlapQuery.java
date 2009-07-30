@@ -549,8 +549,9 @@ public class OlapQuery extends AbstractWabitObject {
      * @param member The member whose drilldown state to toggle. Must not be null.
      * @throws QueryInitializationException 
      * @throws OlapException if the list of child members can't be retrieved
+     * @return Returns true if the query was expanded
      */
-    public void toggleMember(Member member) throws QueryInitializationException {
+    public boolean toggleMember(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
         QueryDimension qd = getMDXQuery().getDimension(d.getName());
         boolean wasExpanded = false;
@@ -568,6 +569,7 @@ public class OlapQuery extends AbstractWabitObject {
         if (!wasExpanded) {
             qd.include(Operator.CHILDREN, member);
         }
+        return wasExpanded;
     }
  
     /**

@@ -181,7 +181,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         olapQuery.addPropertyChangeListener(nameListener);
     }
     
-    private void init() {
+    public void init() {
         if (this.initDone) return;
         try {
         	if (modifiedOlapQuery == null) {
@@ -705,6 +705,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public CellSet getCellSet() {
+    	init();
         return cellSet;
     }
 
