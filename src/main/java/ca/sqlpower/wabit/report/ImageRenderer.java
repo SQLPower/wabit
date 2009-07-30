@@ -104,7 +104,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing) {
-		g.drawImage(image, 0, 0, null);
+		g.drawImage(image, 0, 0, (int) contentBox.getWidth(), (int) contentBox.getHeight(), null);
 		return false;
 	}
 
