@@ -46,6 +46,7 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
+import ca.sqlpower.wabit.ServerListListener;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
@@ -282,6 +283,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			String... buttonNames) {
 		return upf.createUserPrompter(question, responseType, optionType, defaultResponseType,
 				defaultResponse, buttonNames);
+	}
+
+	public void addServerListListener(ServerListListener l) {
+		delegateContext.addServerListListener(l);
+	}
+
+	public void removeServerListListener(ServerListListener l) {
+		delegateContext.removeServerListListener(l);
 	}
 
 	

@@ -83,6 +83,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * This prefs node stores context specific prefs. At current this is the pl.ini location.
      */
     protected final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
+    
+    /**
+     * These listeners will be notified when server information is added or removed from the context.
+     */
+    private final List<ServerListListener> serverListeners = new ArrayList<ServerListListener>();
 	
 	/**
 	 * Creates a new Wabit session context.
@@ -251,6 +256,9 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         thisServer.put("serverAddress", serverInfo.getServerAddress());
         thisServer.putInt("port", serverInfo.getPort());
         thisServer.put("path", serverInfo.getPath());
+        for (int i = serverListeners.size() - 1; i >= 0; i--) {
+        	serverListeners.get(i).serverAdded(new ServerListEvent(serverInfo));
+        }
     }
 
     public void removeServer(WabitServerInfo serverInfo) {
@@ -261,6 +269,19 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         } catch (BackingStoreException ex) {
             throw new RuntimeException("Failed to remove server from list", ex);
         }
+        for (int i = serverListeners.size() - 1; i >= 0; i--) {
+        	serverListeners.get(i).serverAdded(new ServerListEvent(serverInfo));
+        }
+    }
+    
+    public void addServerListListener(ServerListListener l) {
+    	if (l != null) {
+    		serverListeners.add(l);
+    	}
+    }
+    
+    public void removeServerListListener(ServerListListener l) {
+    	serverListeners.remove(l);
     }
 
     private List<WabitServerInfo> readServersFromPrefs() throws BackingStoreException {

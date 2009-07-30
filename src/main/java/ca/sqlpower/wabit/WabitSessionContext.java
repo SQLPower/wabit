@@ -146,4 +146,16 @@ public interface WabitSessionContext extends UserPrompterFactory {
 	 * then return the server's name, returns "Local" otherwise.
 	 */
 	String getName();
+
+	/**
+	 * This listener will be notified when server information is added or
+	 * removed from the server list.
+	 */
+	public void addServerListListener(ServerListListener l);
+
+	/**
+	 * This listener will stop being notified when server information is added
+	 * or removed from the server list.
+	 */
+	public void removeServerListListener(ServerListListener l);
 }

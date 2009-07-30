@@ -107,4 +107,14 @@ public class StubWabitSessionContext implements WabitSessionContext {
 		return null;
 	}
 
+	public void addServerListListener(ServerListListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void removeServerListListener(ServerListListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

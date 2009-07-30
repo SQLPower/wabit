@@ -41,6 +41,8 @@ import org.apache.log4j.Logger;
 import com.jgoodies.forms.factories.ButtonBarFactory;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.ServerListEvent;
+import ca.sqlpower.wabit.ServerListListener;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.enterprise.ServerInfoManager;
@@ -138,6 +140,19 @@ public class ServerListMenu extends JMenu {
         	context.getJmDNS().addServiceListener(
                 WabitSessionContext.WABIT_ENTERPRISE_SERVER_MDNS_TYPE, serviceListener);
         }
+        //XXX This listener should be removed from the context when the session is closed
+        //XXX and the list goes away. We are changing this list to be in the context in
+        //XXX the UI remake which will make this change unnecessary then.
+        context.addServerListListener(new ServerListListener() {
+		
+			public void serverRemoved(ServerListEvent e) {
+				SwingUtilities.invokeLater(refillMenu);
+			}
+		
+			public void serverAdded(ServerListEvent e) {
+				SwingUtilities.invokeLater(refillMenu);
+			}
+		});
     }
     
     private final Runnable refillMenu = new Runnable() {
