@@ -727,7 +727,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         int sectionStartRow = 1;
         int sectionEndRow = 1;
         List<BigDecimal> sectionTotals = new ArrayList<BigDecimal>();
-        List<Object> sectionKey = null;
+        List<Object> sectionKey = new ArrayList<Object>();
         
         while (rs.next()) {
             
