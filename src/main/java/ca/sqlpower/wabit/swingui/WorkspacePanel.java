@@ -146,10 +146,12 @@ public class WorkspacePanel implements WabitPanel {
 	 */
 	private final JScrollPane scrollPane;
 	private final WabitSwingSession session;
+	private final WabitSwingSessionContext context;
 	
 	public WorkspacePanel(WabitSwingSession session) {
 		logger.debug("Creating new workspace panel for " + session);
 		this.session = session;
+		context = (WabitSwingSessionContext) session.getContext();
 		scrollPane = new JScrollPane(buildUI());
 	}
 	
@@ -160,7 +162,7 @@ public class WorkspacePanel implements WabitPanel {
 		JPanel logoPanel = LogoLayout.generateLogoPanel();
 		builder.add(logoPanel, cc.xyw(1, 1, 3));
 
-        final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session, session.getFrame());
+        final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session, context.getFrame());
         
 		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
 		JPanel builderPanel = builder.getPanel();
@@ -179,6 +181,7 @@ public class WorkspacePanel implements WabitPanel {
 	 * @return
 	 */
 	public static DatabaseConnectionManager createDBConnectionManager(final WabitSwingSession session, Window owner) {
+	    final WabitSwingSessionContext context = (WabitSwingSessionContext) session.getContext();
 		List<JComponent> componentList = new ArrayList<JComponent>();
         DefaultFormBuilder startPanel = new DefaultFormBuilder(new FormLayout("fill:pref", "pref, pref"));
         final JLabel startImageLabel = new JLabel(UP_START_ICON);
@@ -192,9 +195,9 @@ public class WorkspacePanel implements WabitPanel {
         List<Class<? extends SPDataSource>> newDSTypes = new ArrayList<Class<? extends SPDataSource>>();
         newDSTypes.add(JDBCDataSource.class);
         newDSTypes.add(Olap4jDataSource.class);
-		final DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager(session.getContext().getDataSources(), 
+		final DatabaseConnectionManager dbConnectionManager = new DatabaseConnectionManager(session.getDataSources(), 
 				new DefaultDataSourceDialogFactory(), 
-				new DefaultDataSourceTypeDialogFactory(session.getContext().getDataSources()),
+				new DefaultDataSourceTypeDialogFactory(session.getDataSources()),
 				new ArrayList<Action>(), componentList, owner, false, newDSTypes);
 		dbConnectionManager.setDbIcon(DB_ICON);
 		
@@ -208,7 +211,7 @@ public class WorkspacePanel implements WabitPanel {
 					startImageLabel.setIcon(SELECT_START_ICON);
                                         if (ds == null) {
                                             JOptionPane.showMessageDialog(
-                                                    session.getFrame(),
+                                                    context.getFrame(),
                                                     "Please select a data source before pressing 'Start'",
                                                     "Please select a data source",
                                                     JOptionPane.WARNING_MESSAGE);
@@ -219,7 +222,7 @@ public class WorkspacePanel implements WabitPanel {
 					startImageLabel.setIcon(OVER_START_ICON);
                                         if (ds == null) {
                                             JOptionPane.showMessageDialog(
-                                                    session.getFrame(),
+                                                    context.getFrame(),
                                                     "Please select a data source before pressing 'Start'",
                                                     "Please select a data source",
                                                     JOptionPane.WARNING_MESSAGE);
@@ -292,6 +295,7 @@ public class WorkspacePanel implements WabitPanel {
 	 * to the workspace.
 	 */
 	public static void addJDBCDataSource(JDBCDataSource ds, WabitSwingSession session) {
+	    final WabitSwingSessionContext context = (WabitSwingSessionContext) session.getContext();
 		if (ds == null) {
 			return;
 		}
@@ -299,7 +303,7 @@ public class WorkspacePanel implements WabitPanel {
 		try {
 			con = ds.createConnection();
 		} catch (SQLException e) {
-			SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
+			SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
 			return;
 		} finally {
 			if (con != null) {
@@ -313,7 +317,7 @@ public class WorkspacePanel implements WabitPanel {
 		if (!session.getWorkspace().dsAlreadyAdded(ds)) {
 			session.getWorkspace().addDataSource(ds);
 		}
-		QueryCache query = new QueryCache(session);
+		QueryCache query = new QueryCache(session.getContext());
 		query.setName("New " + ds.getName() + " query");
 		query.setDataSource(ds);
 		session.getWorkspace().addQuery(query, session);
@@ -324,6 +328,7 @@ public class WorkspacePanel implements WabitPanel {
      * connection to the workspace.
      */
 	public static void addOlap4jDataSource(Olap4jDataSource ds, WabitSwingSession session) {
+	    final WabitSwingSessionContext context = (WabitSwingSessionContext) session.getContext();
 	    if (ds == null) {
             return;
         }
@@ -335,7 +340,7 @@ public class WorkspacePanel implements WabitPanel {
             try {
                 con = ds.getDataSource().createConnection();
             } catch (SQLException e) {
-                SPSUtils.showExceptionDialogNoReport(session.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
+                SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Could not create a connection to " + ds.getName() + ". Please check the connection information.", e);
                 return;
             } finally {
                 if (con != null) {
@@ -352,7 +357,7 @@ public class WorkspacePanel implements WabitPanel {
             session.getWorkspace().addDataSource(ds);
         }
         
-        OlapQuery newQuery = new OlapQuery(session);
+        OlapQuery newQuery = new OlapQuery(session.getContext());
         newQuery.setOlapDataSource(ds);
         newQuery.setName("New " + ds.getName() + " query");
         session.getWorkspace().addOlapQuery(newQuery);

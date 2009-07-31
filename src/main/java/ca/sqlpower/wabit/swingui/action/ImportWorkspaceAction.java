@@ -36,32 +36,30 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This will import all the items from one workspace into an existing workspace.
  */
 public class ImportWorkspaceAction extends AbstractAction {
 
+	private final WabitSwingSessionContext context;
 
-	/**
-	 * This session contains the workspace we will be loading into.
-	 * This session will also be used to parent dialogs from this action to.
-	 */
-	private final WabitSwingSessionImpl session;
-
-	public ImportWorkspaceAction(WabitSwingSessionImpl session) {
+	public ImportWorkspaceAction(WabitSwingSessionContext context) {
 		super("Import...");
-		this.session = session;
+		this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser(session.getCurrentFile());
+	    WabitSwingSession session = context.getActiveSession();
+	    
+		JFileChooser fc = new JFileChooser(context.getCurrentFile());
 		fc.setDialogTitle("Select the file to import from.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
 		File importFile = null;
-		int fcChoice = fc.showOpenDialog(session.getFrame());
+		int fcChoice = fc.showOpenDialog(context.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
 		    return;
@@ -74,7 +72,7 @@ public class ImportWorkspaceAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(session.getContext(), in);
+		OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in);
 		List<WabitSession> sessions = workspaceLoader.openWorkspaces();
 		for (WabitSession sess : sessions) {
 			List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>(sess.getWorkspace().getDataSources());

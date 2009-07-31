@@ -27,11 +27,17 @@ import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.swingui.action.OpenServerWorkspaceAction;
 
 public class OpenOnServerMenu extends JMenu {
@@ -39,11 +45,13 @@ public class OpenOnServerMenu extends JMenu {
     private static final Logger logger = Logger.getLogger(OpenOnServerMenu.class);
     private final WabitServerInfo serviceInfo;
     private final Component dialogOwner;
+    private final WabitSessionContext context;
     
-    public OpenOnServerMenu(Component dialogOwner, WabitServerInfo si) {
+    public OpenOnServerMenu(Component dialogOwner, WabitServerInfo si, WabitSessionContext context) {
         super(WabitUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
+        this.context = context;
         refresh();
     }
     
@@ -61,9 +69,11 @@ public class OpenOnServerMenu extends JMenu {
         logger.debug("Refreshing workspace list...");
         removeAll();
         try {
-            WabitServerSessionContext ctx = WabitServerSessionContext.getInstance(serviceInfo);
-            for (String workspaceName : ctx.getWorkspaceNames()) {
-                add(new OpenServerWorkspaceAction(dialogOwner, serviceInfo, workspaceName));
+            HttpParams params = new BasicHttpParams();
+            HttpConnectionParams.setConnectionTimeout(params, 2000);
+            HttpClient httpClient = new DefaultHttpClient(params);
+            for (String workspaceName : WabitServerSession.getWorkspaceNames(httpClient, serviceInfo)) {
+                add(new OpenServerWorkspaceAction(dialogOwner, serviceInfo, workspaceName, context));
             }
         } catch (Exception ex) {
             JMenuItem mi = new JMenuItem("Error getting workspace names: " + ex);

@@ -31,6 +31,7 @@ import java.awt.print.PrinterJob;
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
@@ -40,6 +41,7 @@ import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class PrintAction extends AbstractAction {
 	
@@ -86,10 +88,12 @@ public class PrintAction extends AbstractAction {
     private final Layout layout;
     private final Component dialogOwner;
 	private final WabitSwingSession session;
+	private final JFrame parentFrame;
 
     public PrintAction(Layout layout, Component dialogOwner, WabitSwingSession session) {
         super("Print...", ICON);
 		this.session = session;
+		parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
         putValue(SHORT_DESCRIPTION, "Print Report");
         this.layout = layout;
         this.dialogOwner = dialogOwner;
@@ -106,7 +110,7 @@ public class PrintAction extends AbstractAction {
         if (ok) {
         	
         	final JPanel glassPane = new JPanel();
-            session.getFrame().setGlassPane(glassPane);
+        	parentFrame.setGlassPane(glassPane);
             glassPane.setVisible(true);
             glassPane.setFocusable(true);
             glassPane.setOpaque(false);
@@ -150,7 +154,7 @@ public class PrintAction extends AbstractAction {
 			});
             
 			ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Printing " + layout.getName(), "", 0, 1);
-        	final PrintWorker worker = new PrintWorker(session, job, layout);
+        	final PrintWorker worker = new PrintWorker(((WabitSwingSessionContext) session.getContext()), job, layout);
             monitor.setMillisToPopup(0);
 			ProgressWatcher watcher = new ProgressWatcher(monitor, worker) {
 				@Override
@@ -159,7 +163,7 @@ public class PrintAction extends AbstractAction {
 					if (worker.isFinished() || worker.isCancelled()) {
 						JPanel glassPane = new JPanel();
 						glassPane.setOpaque(false);
-						session.getFrame().setGlassPane(glassPane);
+						parentFrame.setGlassPane(glassPane);
 					}
 				}
 			};

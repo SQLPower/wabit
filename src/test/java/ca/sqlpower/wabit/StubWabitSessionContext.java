@@ -19,13 +19,22 @@
 
 package ca.sqlpower.wabit;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
+import javax.naming.NamingException;
+
+import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
@@ -95,6 +104,48 @@ public class StubWabitSessionContext implements WabitSessionContext {
             UserPromptType responseType, UserPromptOptions optionType,
             UserPromptResponse defaultResponseType, Object defaultResponse,
             String... buttonNames) {
+        return null;
+    }
+
+    public Connection borrowConnection(JDBCDataSource dataSource)
+            throws SQLObjectException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public WabitSession createServerSession(WabitServerInfo serverInfo) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public int getRowLimit() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public List<WabitSession> getSessions() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public boolean isLoading() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public void setLoading(boolean loading) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public SQLDatabase getDatabase(JDBCDataSource ds) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public OlapConnection createConnection(Olap4jDataSource dataSource)
+            throws SQLException, ClassNotFoundException, NamingException {
+        // TODO Auto-generated method stub
         return null;
     }
 

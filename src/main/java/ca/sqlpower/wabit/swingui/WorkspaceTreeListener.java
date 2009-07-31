@@ -73,9 +73,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
     public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
 	
 	private final WabitSwingSession session;
+	private final WabitSwingSessionContext context;
 
 	public WorkspaceTreeListener(WabitSwingSession session) {
 		this.session = session;
+		context = (WabitSwingSessionContext) session.getContext();
 	}
 
 	@Override
@@ -127,7 +129,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		public void actionPerformed(ActionEvent e) {
 			
 			if(item instanceof QueryCache) {
-				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
+				int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
 					final QueryCache query = (QueryCache)item;
@@ -138,7 +140,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				}
 			} else if (item instanceof WabitDataSource) {
 				WabitDataSource wabitDS = (WabitDataSource) item;
-				int response = JOptionPane.showOptionDialog(session.getFrame(),
+				int response = JOptionPane.showOptionDialog(context.getFrame(),
 							"Are you sure you want to delete the data source " + wabitDS.getName() + ", its queries,\n and all report content boxes associated with the data source?", 
 							"Delete Data Source", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
 		                    new Object[] {"Delete All", "Replace", "Cancel"}, null);
@@ -170,7 +172,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		            	List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
 		            	dsTypes.add(Olap4jDataSource.class);
 		            	dsTypes.add(JDBCDataSource.class);
-		            	UserPrompter dbPrompter = session.createDatabaseUserPrompter("Replacing " + wabitDS.getName(), dsTypes,
+		            	UserPrompter dbPrompter = session.getContext().createDatabaseUserPrompter("Replacing " + wabitDS.getName(), dsTypes,
 		            			UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, session.getContext().getDataSources(), 
 		            			"Select Data Source", "Skip Data Source", "Cancel");
 		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
@@ -207,7 +209,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		    } else if (item instanceof Layout) {
 				session.getWorkspace().removeLayout((Layout)item);
 		    } else if (item instanceof OlapQuery) {
-				int response = JOptionPane.showOptionDialog(session.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
+				int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
 				if(response == 0) {
 					final OlapQuery query = (OlapQuery)item;
@@ -266,7 +268,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		menu.add(new AbstractAction("Database Connection Manager...") {
 
 			public void actionPerformed(ActionEvent e) {
-				session.getDbConnectionManager().showDialog(session.getFrame());
+				session.getDbConnectionManager().showDialog(context.getFrame());
 			}
 		});
 
@@ -341,7 +343,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
         	}
         	dbcsMenu.add(newMenuItem);
         }
-        SPSUtils.breakLongMenu(session.getFrame(), dbcsMenu);
+        SPSUtils.breakLongMenu(context.getFrame(), dbcsMenu);
         
         return dbcsMenu;
 	}

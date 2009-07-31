@@ -57,24 +57,26 @@ import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.SaveOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
-import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 import ca.sqlpower.xml.XMLHelper;
 
 import com.sun.mail.util.BASE64EncoderStream;
@@ -220,9 +222,9 @@ public class WorkspaceXMLDAO {
 	private final XMLHelper xml;
 
 	/**
-	 * The workspace this DAO will write to a file.
+	 * This is the context that contains objects that require saving.
 	 */
-	private final WabitWorkspace workspace;
+	private final WabitSessionContext context;
 
     private final Comparator<WabitObject> wabitObjectComparator = new WabitObjectComparator();
 	
@@ -230,8 +232,8 @@ public class WorkspaceXMLDAO {
 	 * This will construct a XML DAO to save the entire workspace or parts of 
 	 * the workspace to be loaded in later.
 	 */
-	public WorkspaceXMLDAO(OutputStream out, WabitWorkspace workspace) {
-		this.workspace = workspace;
+	public WorkspaceXMLDAO(OutputStream out, WabitSessionContext context) {
+	    this.context = context;
 		try {
             this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, "UTF-8")));
         } catch (UnsupportedEncodingException e) {
@@ -241,49 +243,92 @@ public class WorkspaceXMLDAO {
 	}
 	
 	public void save() {
-		save(workspace);
+	    List<WabitWorkspace> workspaces = new ArrayList<WabitWorkspace>();
+	    for (WabitSession session : context.getSessions()) {
+	        workspaces.add(session.getWorkspace());
+	    }
+		save(workspaces);
 	}
-	
-	public void save(WabitObject objectToSave) {
+
+    /**
+     * This method is used to export parts of Wabit as well as save the entire
+     * set of workspaces.
+     * 
+     * @param objectToSave
+     *            The object that is to save. If this is an object in a
+     *            workspace all of the necessary data sources and other
+     *            WabitObjects will be saved with it.
+     */
+	public void save(List<? extends WabitObject> objectToSave) {
 		xml.println(out, "<?xml version='1.0' encoding='UTF-8'?>");
 		xml.println(out, "");
 		xml.println(out, "<wabit export-format=\"" + FILE_VERSION + "\" wabit-app-version=\"" + WabitVersion.VERSION + "\">");
 		xml.indent++;
-
-		xml.print(out, "<project");
-		printAttribute("name", workspace.getName());
-		printAttribute("editorPanelModel", workspace.getEditorPanelModel().getUUID());
-		xml.niprintln(out, ">");
-		xml.indent++;
 		
-		DepthFirstSearch<WabitObject, ProjectGraphModelEdge> dfs = new DepthFirstSearch<WabitObject, ProjectGraphModelEdge>();
-		dfs.performSearch(new ProjectGraphModel(objectToSave));
-		List<WabitObject> dependenciesToSave = dfs.getFinishOrder();
-		Collections.sort(dependenciesToSave, wabitObjectComparator);
-
-		List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>();
-		for (WabitObject wabitObject : dependenciesToSave) {
-		    if (wabitObject instanceof WabitDataSource) {
-		        dataSources.add((WabitDataSource) wabitObject);
+		Map<WabitWorkspace, List<WabitObject>> workspaceToDependencies = new HashMap<WabitWorkspace, List<WabitObject>>();
+		
+		for (WabitObject savingObject : objectToSave) {
+		    WabitObject parentWorkspace = savingObject;
+		    while (!(parentWorkspace instanceof WabitWorkspace)) {
+		        parentWorkspace = parentWorkspace.getParent();
+		    }
+		    
+		    List<WabitObject> workspaceDependencies = workspaceToDependencies.get(parentWorkspace);
+		    if (workspaceDependencies == null) {
+		        workspaceDependencies = new ArrayList<WabitObject>();
+		        workspaceToDependencies.put((WabitWorkspace) parentWorkspace, workspaceDependencies);
+		    }
+		    
+		    DepthFirstSearch<WabitObject, ProjectGraphModelEdge> dfs = new DepthFirstSearch<WabitObject, ProjectGraphModelEdge>();
+		    dfs.performSearch(new ProjectGraphModel(savingObject));
+		    List<WabitObject> dependenciesToSave = dfs.getFinishOrder();
+		    for (WabitObject object : dependenciesToSave) {
+		        if (!workspaceDependencies.contains(object)) {
+		            workspaceDependencies.add(object);
+		        }
 		    }
 		}
 		
-		saveDataSources(dataSources);
-		
-		for (WabitObject wabitObject : dependenciesToSave) {
-            if (wabitObject instanceof QueryCache) {
-                saveQueryCache(((QueryCache) wabitObject).getQuery());
-            } else if (wabitObject instanceof OlapQuery) {
-                saveOlapQuery((OlapQuery) wabitObject);
-            } else if (wabitObject instanceof Layout) {
-                saveLayout((Layout) wabitObject);
-            } else {
-                logger.info("Not saving wabit object " + wabitObject.getName() + " of type " + wabitObject.getClass() + " as it should be saved elsewhere.");
-            }
-        }
-		
-		xml.indent--;
-		xml.println(out, "</project>");
+		for (List<WabitObject> dependenciesToSave : workspaceToDependencies.values()) {
+		    Collections.sort(dependenciesToSave, wabitObjectComparator);
+		}
+
+		for (Map.Entry<WabitWorkspace, List<WabitObject>> entry : workspaceToDependencies.entrySet()) {
+		    WabitWorkspace workspace = entry.getKey();
+		    List<WabitObject> dependenciesToSave = entry.getValue();
+		    xml.print(out, "<project");
+		    printAttribute("name", workspace.getName());
+		    if (workspace.getEditorPanelModel() != null) {
+		        printAttribute("editorPanelModel", workspace.getEditorPanelModel().getUUID());
+		    }
+		    xml.niprintln(out, ">");
+		    xml.indent++;
+
+
+		    List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>();
+		    for (WabitObject wabitObject : dependenciesToSave) {
+		        if (wabitObject instanceof WabitDataSource) {
+		            dataSources.add((WabitDataSource) wabitObject);
+		        }
+		    }
+
+		    saveDataSources(dataSources);
+
+		    for (WabitObject wabitObject : dependenciesToSave) {
+		        if (wabitObject instanceof QueryCache) {
+		            saveQueryCache(((QueryCache) wabitObject).getQuery());
+		        } else if (wabitObject instanceof OlapQuery) {
+		            saveOlapQuery((OlapQuery) wabitObject);
+		        } else if (wabitObject instanceof Layout) {
+		            saveLayout((Layout) wabitObject);
+		        } else {
+		            logger.info("Not saving wabit object " + wabitObject.getName() + " of type " + wabitObject.getClass() + " as it should be saved elsewhere.");
+		        }
+		    }
+
+		    xml.indent--;
+		    xml.println(out, "</project>");
+		}
 		
 		xml.indent--;
 		xml.println(out, "</wabit>");

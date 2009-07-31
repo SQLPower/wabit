@@ -32,7 +32,9 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 
 public class QueryCacheTest extends TestCase {
 	
@@ -66,7 +68,7 @@ public class QueryCacheTest extends TestCase {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		queryCache = new QueryCache(new StubWabitSwingSession());
+		queryCache = new QueryCache(new StubWabitSessionContext());
 	}
 	
 	public void testAliasListener() throws Exception {
@@ -85,6 +87,7 @@ public class QueryCacheTest extends TestCase {
 	 * when a new row is added.
 	 */
 	public void testQueryFiresRSChange() throws Exception {
+	    
 		PlDotIni plIni = new PlDotIni();
 		plIni.read(new File("src/test/java/pl.regression.ini"));
 		JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
@@ -95,6 +98,13 @@ public class QueryCacheTest extends TestCase {
 		stmt.execute("insert into rsTest (col1, col2) values ('bye', 'line2')");
 		stmt.close();
 		con.close();
+		
+		QueryCache queryCache = new QueryCache(new StubWabitSessionContext() {
+		    @Override
+		    public SQLDatabase getDatabase(JDBCDataSource ds) {
+		        return new SQLDatabase(ds);
+		    }
+		});
 		
 		CountingRowSetChangeListener listener = new CountingRowSetChangeListener();
 		queryCache.addRowSetChangeListener(listener);

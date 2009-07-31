@@ -74,6 +74,7 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -223,6 +224,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private CellSetRenderer cellSetRenderer;
 
     private final UserPrompterFactory promptFactory;
+    
+    /**
+     * This server info is set if the workspace is being loaded from a server.
+     * This lets the context create an appropriate server session from the
+     * server information. If this is null the session and workspace being
+     * loaded is a local session and workspace.
+     */
+    private WabitServerInfo serverInfo = null;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of workspace
@@ -237,6 +246,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		sessions = new ArrayList<WabitSession>();
 		oldToNewDSNames = new HashMap<String, String>();
 		cancelled = false;
+	}
+	
+	public WorkspaceSAXHandler(WabitSessionContext context, WabitServerInfo serverInfo) {
+	    this(context);
+	    this.serverInfo = serverInfo;
 	}
 	
 	@Override
@@ -272,9 +286,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		    }
 		    // TODO warn if file is newer than expected
 
+		    context.setLoading(true);
         } else if (name.equals("project")) {
-        	session = context.createSession();
-        	session.setLoading(true);
+            if (serverInfo == null) {
+                session = context.createSession();
+            } else {
+                session = context.createServerSession(serverInfo);
+            }
         	sessions.add(session);
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -323,8 +341,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("query")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
-        	cache = new QueryCache(uuid, session);
-        	session.getWorkspace().addQuery(cache, session);
+        	cache = new QueryCache(uuid, session.getContext());
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -358,6 +375,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}
         	}
+        	session.getWorkspace().addQuery(cache, session);
         } else if (name.equals("constants")) {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
@@ -968,7 +986,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private void loadOlapQuery(Attributes attributes) throws SAXException {
         String uuid = attributes.getValue("uuid");
         checkMandatory("uuid", uuid);
-        olapQuery = new OlapQuery(uuid, session);
+        olapQuery = new OlapQuery(uuid, session.getContext());
         if (cellSetRenderer == null) {
         	session.getWorkspace().addOlapQuery(olapQuery);
         } else {
@@ -1138,7 +1156,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		throws SAXException {
     	if (cancelled) return;
     	
-    	if (name.equals("project")) {
+    	if (name.equals("wabit")) {
+    	    context.setLoading(false);
+    	} else if (name.equals("project")) {
     	    WabitObject initialView = session.getWorkspace();
     		for (WabitObject obj : session.getWorkspace().getChildren()) {
     			if (obj.getUUID().equals(currentEditorPanelModel)) {
@@ -1147,7 +1167,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     			}
     		}
     		session.getWorkspace().setEditorPanelModel(initialView);
-    		session.setLoading(false);
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());

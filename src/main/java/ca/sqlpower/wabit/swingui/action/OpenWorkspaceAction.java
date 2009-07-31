@@ -32,11 +32,9 @@ import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
-import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
@@ -51,24 +49,18 @@ public class OpenWorkspaceAction extends AbstractAction {
 	 */
 	private final WabitSwingSessionContext context;
 	
-	/**
-	 * This session will be used to parent dialogs from this action to.
-	 */
-	private final WabitSwingSession session;
-
-	public OpenWorkspaceAction(WabitSwingSession session, WabitSwingSessionContext context) {
+	public OpenWorkspaceAction(WabitSwingSessionContext context) {
 		super("Open Workspace...", new ImageIcon(OpenWorkspaceAction.class.getClassLoader().getResource("icons/wabit_load.png")));
-		this.session = session;
 		this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser(session.getCurrentFile());
+		JFileChooser fc = new JFileChooser(context.getCurrentFile());
 		fc.setDialogTitle("Select the file to load from.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
 		File importFile = null;
-		int fcChoice = fc.showOpenDialog(session.getFrame());
+		int fcChoice = fc.showOpenDialog(context.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
 		    return;
@@ -89,10 +81,8 @@ public class OpenWorkspaceAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		List<WabitSession> sessions = loadFile(in, context);
-		for (WabitSession session : sessions) {
-			((WabitSwingSession)session).setCurrentFile(importFile);
-		}
+		loadFile(in, context);
+		context.setCurrentFile(importFile);
 		context.putRecentFileName(importFile.getAbsolutePath());
 	}
 
@@ -109,14 +99,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 		try {
 			OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in);
 			List<WabitSession> sessions = workspaceLoader.openWorkspaces();
-			for (WabitSession session : sessions) {
-				try {
-					((WabitSwingSession)session).buildUI();
-					((WabitSwingSession)session).setEditorPanel(session.getWorkspace().getEditorPanelModel());
-				} catch (SQLObjectException e1) {
-					throw new RuntimeException(e1);
-				}
-			}
+			context.setEditorPanel();
 			return sessions;
 		} finally {
 			try {

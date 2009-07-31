@@ -20,29 +20,14 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.beans.PropertyChangeListener;
-import java.io.File;
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import javax.naming.NamingException;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JSpinner;
 import javax.swing.JTree;
-
-import org.apache.log4j.Logger;
-import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
@@ -51,10 +36,10 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
-import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
 /**
  * This stubbed swing session does nothing for all of its methods.
@@ -65,8 +50,6 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	private WabitWorkspace workspace;
 	private WabitSession delegateSession;
 	
-	private final List<SPSwingWorker> workers = new ArrayList<SPSwingWorker>();
-	
 	public StubWabitSwingSession() {
 		workspace = new WabitWorkspace();
 		delegateSession = new StubWabitSession(context);
@@ -74,18 +57,6 @@ public class StubWabitSwingSession implements WabitSwingSession {
 
 	public WabitSessionContext getContext() {
 		return context;
-	}
-
-	public void registerSwingWorker(SPSwingWorker worker) {
-		workers.add(worker);
-	}
-
-	public void removeSwingWorker(SPSwingWorker worker) {
-		workers.remove(worker);
-	}
-	
-	public List<SPSwingWorker> getWorkers() {
-		return Collections.unmodifiableList(workers);
 	}
 
 	public void addSessionLifecycleListener(
@@ -103,53 +74,13 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		//Do nothing
 	}
 
-	public Logger getUserInformationLogger() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
 	public WabitWorkspace getWorkspace() {
 		return workspace;
 	}
 	
-	public JMenu createDataSourcesMenu() {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
-	public JFrame getFrame() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public boolean setEditorPanel(WabitObject entryPanelModel) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public void buildUI() throws SQLObjectException {
-		// TODO Auto-generated method stub
-		
-	}
-
-    public JTree getTree() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 	public DatabaseConnectionManager getDbConnectionManager() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	public File getCurrentFile() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void setCurrentFile(File file) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	public UserPrompter createUserPrompter(String question, UserPromptType responseType,
@@ -159,17 +90,9 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		return null;
 	}
 
-	public JSpinner getRowLimitSpinner() {
-		return new JSpinner();
-	}
-
 	public void addPropertyChangeListener(PropertyChangeListener l) {
 		// TODO Auto-generated method stub
 		
-	}
-
-	public int getRowLimit() {
-		return 100;
 	}
 
 	public void removePropertyChangeListener(PropertyChangeListener l) {
@@ -177,30 +100,20 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		
 	}
 
-	public void setRowLimit(int newLimit) {
-		// TODO Auto-generated method stub
-		
-	}
-
-    public boolean isLoading() {
-        return false;
-    }
-
-    public void setLoading(boolean loading) {
-        // no-op
-    }
-
     public Connection borrowConnection(JDBCDataSource dataSource) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
-    	return delegateSession.getDatabase(dataSource);
+    public JTree getTree() {
+        return new JTree();
     }
 
-    public OlapConnection createConnection(Olap4jDataSource dataSource)
-            throws SQLException, ClassNotFoundException, NamingException {
+    public WorkspaceTreeModel getWorkspaceTreeModel() {
+        return new WorkspaceTreeModel(workspace);
+    }
+
+    public DataSourceCollection<SPDataSource> getDataSources() {
         // TODO Auto-generated method stub
         return null;
     }

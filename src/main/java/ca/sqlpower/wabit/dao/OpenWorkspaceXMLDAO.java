@@ -25,6 +25,8 @@ import java.util.List;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 
@@ -32,6 +34,8 @@ import ca.sqlpower.wabit.WabitSessionContext;
  * This DAO will load workspaces to a context from a given input stream.
  */
 public class OpenWorkspaceXMLDAO {
+
+    private static final Logger logger = Logger.getLogger(OpenWorkspaceXMLDAO.class);
 
 	/**
 	 * This context will have new sessions added to it for each workspace
@@ -61,9 +65,14 @@ public class OpenWorkspaceXMLDAO {
 			parser.parse(in, saxHandler);
 			return saxHandler.getSessions();
 		} catch (Exception e) {
-			for (WabitSession session : saxHandler.getSessions()) {
-				context.deregisterChildSession(session);
-			}
+		    try {
+		        for (WabitSession session : saxHandler.getSessions()) {
+		            context.deregisterChildSession(session);
+		        }
+		    } catch (Exception ex) {
+		        //Logging this exception as it is hiding the underlying exception.
+		        logger.error(ex);
+		    }
 			throw new RuntimeException(e);
 		}
 	}

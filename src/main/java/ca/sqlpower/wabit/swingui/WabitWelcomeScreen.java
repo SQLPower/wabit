@@ -30,6 +30,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -83,6 +84,11 @@ public class WabitWelcomeScreen {
 	 * it to not terminate.
 	 */
 	private boolean terminate = true;
+
+	/**
+	 * This panel contains all of the welcome screen buttons and images.
+	 */
+    private JPanel mainPanel;
 	
 	public WabitWelcomeScreen(WabitSwingSessionContext context) {
 		this.context = context;
@@ -191,11 +197,11 @@ public class WabitWelcomeScreen {
 		});
 		bottomPanelBuilder.append(quitButton);
 		
-		JPanel mainPanel = new JPanel(new BorderLayout());
+		mainPanel = new JPanel(new BorderLayout());
 		mainPanel.add(builder.getPanel(), BorderLayout.CENTER);
 		mainPanel.add(bottomPanelBuilder.getPanel(), BorderLayout.SOUTH);
 		
-		frame.setIconImage(WabitSwingSessionImpl.FRAME_ICON.getImage());
+		frame.setIconImage(WabitSwingSessionContextImpl.FRAME_ICON.getImage());
 		frame.setTitle("Wabit");
 		frame.add(mainPanel);
 	}
@@ -220,6 +226,31 @@ public class WabitWelcomeScreen {
 		frame.setLocation((int) (toolkit.getScreenSize().getWidth() / 2 - frame.getWidth() / 2), (int) (toolkit.getScreenSize().getHeight() / 2 - frame.getHeight() / 2));
 		frame.setVisible(true);
 		terminate = true;
+	}
+	
+	public WabitPanel getPanel() {
+	    return new WabitPanel(){
+        
+            public boolean hasUnsavedChanges() {
+                return false;
+            }
+        
+            public JComponent getPanel() {
+                return mainPanel;
+            }
+        
+            public void discardChanges() {
+                //do nothing
+            }
+        
+            public boolean applyChanges() {
+                return true;
+            }
+        
+            public void maximizeEditor() {
+                //do nothing
+            }
+        };
 	}
 	
 }

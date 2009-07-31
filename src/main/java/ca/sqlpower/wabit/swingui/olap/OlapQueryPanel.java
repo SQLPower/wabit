@@ -97,6 +97,7 @@ import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 
@@ -265,6 +266,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.parentComponent = parentComponent;
         this.query = query;
         this.session = session;
+        final JFrame parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
         cellSetViewer = new CellSetViewer(query);
         
         this.undoManager  = new UndoManager();
@@ -280,7 +282,7 @@ public class OlapQueryPanel implements WabitPanel {
         try {
             setCurrentCube(query.getCurrentCube());
         } catch (SQLException e2) {
-            JOptionPane.showMessageDialog(session.getFrame(), "The cube in the query " + query.getName() + " could not be accessed from the connection " + query.getOlapDataSource().getName(), "Cannot access cube", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(parentFrame, "The cube in the query " + query.getName() + " could not be accessed from the connection " + query.getOlapDataSource().getName(), "Cannot access cube", JOptionPane.WARNING_MESSAGE);
         } 
         
         resetQueryButton = new JButton();
@@ -344,7 +346,7 @@ public class OlapQueryPanel implements WabitPanel {
                         row++;
                     }
                     
-                    popupChooseCube(session.getFrame(), cubeChooserButton, tree);
+                    popupChooseCube(parentFrame, cubeChooserButton, tree);
                 } finally {
                     cubeChooserButton.setEnabled(true);
                 }        

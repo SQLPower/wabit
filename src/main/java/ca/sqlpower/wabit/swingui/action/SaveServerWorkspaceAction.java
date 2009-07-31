@@ -35,14 +35,21 @@ import javax.swing.JTextField;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -53,15 +60,15 @@ import com.jgoodies.forms.layout.FormLayout;
 public class SaveServerWorkspaceAction extends AbstractAction {
 
     private final WabitServerInfo si;
-    private final WabitServerSessionContext context;
+    private final WabitSwingSessionContext context;
     private final Component dialogOwner;
     private final WabitWorkspace workspace;
 
-    public SaveServerWorkspaceAction(WabitServerInfo si, Component dialogOwner, WabitWorkspace workspace) throws IOException, SQLObjectException {
+    public SaveServerWorkspaceAction(WabitServerInfo si, Component dialogOwner, WabitWorkspace workspace, WabitSwingSessionContext context) throws IOException, SQLObjectException {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.si = si;
         this.workspace = workspace;
-        context = WabitServerSessionContext.getInstance(si);
+        this.context = context;
         this.dialogOwner = dialogOwner;
     }
     
@@ -85,11 +92,16 @@ public class SaveServerWorkspaceAction extends AbstractAction {
         private final JPanel panel;
         private JTextField fileNameField;
         private JList existingFileList;
+        private HttpClient httpClient;
 
         SaveOnServerPanel() throws IOException, URISyntaxException {
+            HttpParams params = new BasicHttpParams();
+            HttpConnectionParams.setConnectionTimeout(params, 2000);
+            httpClient = new DefaultHttpClient(params);
+            
             DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
             fileNameField = new JTextField(workspace.getName());
-            existingFileList = new JList(context.getWorkspaceNames().toArray(new String[0]));
+            existingFileList = new JList(WabitServerSession.getWorkspaceNames(httpClient, si).toArray(new String[0]));
             existingFileList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
                 public void valueChanged(ListSelectionEvent e) {
                     fileNameField.setText((String) existingFileList.getSelectedValue());
@@ -110,7 +122,7 @@ public class SaveServerWorkspaceAction extends AbstractAction {
             workspace.setName(fileNameField.getText());
             // TODO prompt about overwrite
             try {
-                context.saveWorkspace(workspace);
+                WabitServerSession.saveWorkspace(httpClient, si, context, workspace);
                 return true;
             } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(dialogOwner, "Save to server failed", ex);

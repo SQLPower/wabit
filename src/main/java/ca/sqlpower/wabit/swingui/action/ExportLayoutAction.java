@@ -28,14 +28,18 @@ import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
+import com.rc.retroweaver.runtime.Collections;
+
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class ExportLayoutAction extends AbstractAction {
 
 	private final WabitSwingSession session;
+	private final WabitSwingSessionContext context;
 	private final Layout layout;
 
 	public ExportLayoutAction(WabitSwingSession session, Layout layout) {
@@ -43,15 +47,16 @@ public class ExportLayoutAction extends AbstractAction {
 		putValue(SHORT_DESCRIPTION, "Export layout to Wabit file");
 		this.session = session;
 		this.layout = layout;
-		
+		context = (WabitSwingSessionContext) session.getContext();
 	}
 
-	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser(session.getCurrentFile());
+	@SuppressWarnings("unchecked")
+    public void actionPerformed(ActionEvent e) {
+		JFileChooser fc = new JFileChooser(context.getCurrentFile());
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
-		int fcChoice = fc.showSaveDialog(session.getFrame());
+		int fcChoice = fc.showSaveDialog(context.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
 		    return;
@@ -69,9 +74,9 @@ public class ExportLayoutAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getContext());
 		
-		workspaceSaver.save(layout);
+		workspaceSaver.save(Collections.singletonList(layout));
 
 	}
 }

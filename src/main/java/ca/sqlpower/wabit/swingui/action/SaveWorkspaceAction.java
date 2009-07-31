@@ -20,14 +20,15 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
@@ -37,16 +38,15 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
  */
 public class SaveWorkspaceAction extends AbstractAction {
 	
-	private final WabitSwingSession session;
+    private final WabitSwingSessionContext context;
 
-	public SaveWorkspaceAction(WabitSwingSession session) {
-		super("Save Workspace", new ImageIcon(SaveWorkspaceAction.class.getClassLoader().getResource("icons/wabit_save.png")));
-		this.session = session;
-		
+	public SaveWorkspaceAction(WabitSwingSessionContext context) {
+		super("Save All Workspaces", new ImageIcon(SaveWorkspaceAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+        this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		save(session);
+		save(context);
 	}
 
 	/**
@@ -57,19 +57,28 @@ public class SaveWorkspaceAction extends AbstractAction {
 	 *            The session to be saved
 	 * @return If the save was successful or not
 	 */
-	public static boolean save(WabitSwingSession session) {
-		if (session.getCurrentFile() != null) {
+	public static boolean save(WabitSwingSessionContext context) {
+		File currentFile = context.getCurrentFile();
+        if (currentFile != null) {
 			WorkspaceXMLDAO workspaceSaver;
+			int lastIndexOfDecimal = currentFile.getName().lastIndexOf(".");
+	        if (lastIndexOfDecimal < 0 || !currentFile.getName().substring(lastIndexOfDecimal).equals(SaveWorkspaceAsAction.WABIT_FILE_EXTENSION)) {
+	            currentFile = new File(currentFile.getAbsoluteFile() + SaveWorkspaceAsAction.WABIT_FILE_EXTENSION);
+	        }
 			try {
-				workspaceSaver = new WorkspaceXMLDAO(new FileOutputStream(session.getCurrentFile()), session.getWorkspace());
+			    final FileOutputStream out = new FileOutputStream(currentFile);
+			    workspaceSaver = new WorkspaceXMLDAO(out, context);
+			    out.close();
 			} catch (FileNotFoundException e1) {
-				throw new RuntimeException(e1);
+			    throw new RuntimeException(e1);
+			} catch (IOException e) {
+			    throw new RuntimeException(e);
 			}
 			workspaceSaver.save();
-			((WabitSwingSessionContext) session.getContext()).putRecentFileName(session.getCurrentFile().getAbsolutePath());
+			context.putRecentFileName(currentFile.getAbsolutePath());
 			return true;
 		} else {
-			return new SaveWorkspaceAsAction(session).save();
+			return new SaveWorkspaceAsAction(context).save();
 		}
 	}
 

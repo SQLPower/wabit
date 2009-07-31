@@ -126,7 +126,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         		newValue = new StringItem("Newer String Item");
         	}
         } else if (valueType.equals(OlapQuery.class)) {
-        	newValue = new OlapQuery(new StubWabitSession(new StubWabitSessionContext()));
+        	newValue = new OlapQuery(new StubWabitSessionContext());
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

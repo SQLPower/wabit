@@ -124,7 +124,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      */
     public void testAddChildren() throws Exception {
         WabitObject wo = getObjectUnderTest();
-        
+
         CountingWabitChildListener listener = new CountingWabitChildListener();
         wo.addChildListener(listener);
         

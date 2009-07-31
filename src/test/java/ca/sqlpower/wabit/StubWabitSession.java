@@ -142,10 +142,15 @@ public class StubWabitSession implements WabitSession {
     	if (dataSource == null) return null;
 	    OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
 	    if (olapConnectionPool == null) {
-	        olapConnectionPool = new OlapConnectionPool(dataSource, this);
+	        olapConnectionPool = new OlapConnectionPool(dataSource, context);
 	        olapConnectionPools.put(dataSource, olapConnectionPool);
 	    }
 	    return olapConnectionPool.getConnection();
+    }
+
+    public DataSourceCollection<SPDataSource> getDataSources() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 	public UserPrompter createDatabaseUserPrompter(String question,

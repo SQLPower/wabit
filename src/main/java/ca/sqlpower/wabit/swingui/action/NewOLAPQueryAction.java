@@ -55,7 +55,7 @@ public class NewOLAPQueryAction extends AbstractAction {
 	}
 	
 	public void actionPerformed(ActionEvent e) {
-		OlapQuery newQuery = new OlapQuery(session);
+		OlapQuery newQuery = new OlapQuery(session.getContext());
 	    newQuery.setOlapDataSource(ds);
 	    newQuery.setName(newQueryName);
 	    session.getWorkspace().addOlapQuery(newQuery);

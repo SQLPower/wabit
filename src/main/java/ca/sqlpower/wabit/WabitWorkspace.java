@@ -141,7 +141,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         int index = queries.size();
         queries.add(index, query);
         query.setParent(this);
-        query.setDBMapping(session);
+        query.setDBMapping(session.getContext());
         session.addPropertyChangeListener(query.getRowLimitChangeListener());
         fireChildAdded(QueryCache.class, query, index);
         setEditorPanelModel(query);

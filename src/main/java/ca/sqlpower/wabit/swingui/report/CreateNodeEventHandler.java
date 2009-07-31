@@ -19,14 +19,17 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
-import ca.sqlpower.wabit.report.ContentBox;
+import javax.swing.JFrame;
+
 import ca.sqlpower.wabit.report.ChartRenderer;
+import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.MouseState.MouseStates;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -35,10 +38,13 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 
 	private final WabitSwingSession session;
 
+	private final JFrame parentFrame;
+	
 	private final ReportLayoutPanel panel;
 
 	public CreateNodeEventHandler(WabitSwingSession session, ReportLayoutPanel panel) {
 		this.session = session;
+		parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
 		this.panel = panel;
 	}
 
@@ -53,7 +59,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			ContentBox contentBox = new ContentBox();
 			Label label = new Label(panel.getReport(), "New Content Box");
 			contentBox.setContentRenderer(label);
-			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
+			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
 			Page page = panel.getReport().getPage();
 			newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
 			panel.getPageNode().addChild(newCBNode);
@@ -67,9 +73,9 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			panel.getPageNode().addChild(new GuideNode(tmpGuide));
 		} else if (panel.getMouseState().equals(MouseStates.CREATE_IMAGE)) {
 			ContentBox contentBox = new ContentBox();
-			ImageRenderer image = new ImageRenderer(contentBox, session.getFrame(), true);
+			ImageRenderer image = new ImageRenderer(contentBox, parentFrame, true);
 			contentBox.setContentRenderer(image);
-			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
+			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
 			newCBNode.setX(event.getPosition().getX());
 			newCBNode.setY(event.getPosition().getY());
 			panel.getPageNode().addChild(newCBNode);
@@ -77,7 +83,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			ContentBox contentBox = new ContentBox();
 			ChartRenderer graph = new ChartRenderer(contentBox, session.getWorkspace());
 			contentBox.setContentRenderer(graph);
-			ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(), contentBox);
+			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
 			newCBNode.setX(event.getPosition().getX());
 			newCBNode.setY(event.getPosition().getY());
 			panel.getPageNode().addChild(newCBNode);

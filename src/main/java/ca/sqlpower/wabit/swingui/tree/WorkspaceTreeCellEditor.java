@@ -32,7 +32,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Page;
 
 /**

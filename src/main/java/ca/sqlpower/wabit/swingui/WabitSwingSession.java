@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * Copyright (c) 2009, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -19,57 +19,34 @@
 
 package ca.sqlpower.wabit.swingui;
 
-
-import java.io.File;
-
-import javax.swing.JFrame;
-import javax.swing.JSpinner;
 import javax.swing.JTree;
 
-import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
-public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
-	
-    JFrame getFrame();
+/**
+ * This defines UI components that are needed for each session. These
+ * UI pieces can be used to display or modify information in the session
+ * and its workspace.
+ */
+public interface WabitSwingSession extends WabitSession {
 
-	/**
-	 * Sets the panel that allows editing of the current selection in the tree.
-	 * A new panel will be created based on the type of model passed into this method
-	 * if the user has no changes or wants to discard the current changes.
-	 * 
-	 * @return False if the previous editor was not correctly saved and the old
-	 * component needs to be displayed. True otherwise.
-	 */
-	boolean setEditorPanel(WabitObject entryPanelModel);
-	
-	/**
-	 *  Builds and displays the GUI.
-	 * @throws SQLObjectException 
-	 */
-	void buildUI() throws SQLObjectException;
-	
-	JTree getTree();
-	
-	DatabaseConnectionManager getDbConnectionManager();
-	
-	/**
-	 * Set the file that the session was most recently loaded from or saved to.
-	 */
-	void setCurrentFile(File file);
-	
-	/**
-	 * Get the file that the session was most recently loaded from or saved to.
-	 */
-	File getCurrentFile();
-	
-	/**
-	 * Returns the row limit component that affects all cached result sets.
-	 * @return
-	 */
-	JSpinner getRowLimitSpinner();
+    /**
+     * Returns the JTree that describes the given session.
+     */
+    JTree getTree();
 
+    /**
+     * Returns the tree model that is used to define the JTree in
+     * {@link #getTree()}.
+     */
+    WorkspaceTreeModel getWorkspaceTreeModel();
+    
+    /**
+     * Returns a connection manager that will allow users to alter
+     * the connections in this session.
+     */
+    DatabaseConnectionManager getDbConnectionManager();
+    
 }

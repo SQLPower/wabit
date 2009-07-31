@@ -226,6 +226,8 @@ public class QueryPanel implements WabitPanel {
 
 	private final WabitSwingSession session;
 	
+	private final WabitSwingSessionContext context;
+	
 	/**
 	 * The tree on the right-hand side that you drag tables into the query pen from.
 	 */
@@ -372,6 +374,7 @@ public class QueryPanel implements WabitPanel {
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
 		this.session = session;
+		context = (WabitSwingSessionContext) session.getContext();
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		queryCache = cache;
 		
@@ -388,8 +391,10 @@ public class QueryPanel implements WabitPanel {
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
 		
-		queryUIComponents = new SQLQueryUIComponents(session, new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), session, mainSplitPane, queryCache);
-		queryUIComponents.setRowLimitSpinner(session.getRowLimitSpinner());
+		queryUIComponents = new SQLQueryUIComponents(context, 
+		        new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), 
+		        context, mainSplitPane, queryCache);
+		queryUIComponents.setRowLimitSpinner(context.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
 		queryController = new QueryController(queryCache.getQuery(), queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
 		queryPen.setZoom(queryCache.getQuery().getZoomLevel());
@@ -426,7 +431,7 @@ public class QueryPanel implements WabitPanel {
 					if(reportComboBox.getSelectedItem() != null) {
 					    // FIXME the session (or session context) should be maintaining a map of data
 					    // sources to SQLDatabase instances. Each SQLDatabase instance has its own connection pool! 
-						rootNode.addChild(QueryPanel.this.session.getDatabase((JDBCDataSource) reportComboBox.getSelectedItem()));
+						rootNode.addChild(context.getDatabase((JDBCDataSource) reportComboBox.getSelectedItem()));
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 						dragTree.setModel(tempTreeModel);
 						dragTree.setVisible(true);
@@ -600,7 +605,7 @@ public class QueryPanel implements WabitPanel {
 		queryToolBar.add(exportSQL);
 		queryToolBar.addSeparator();
 		queryToolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
-		queryToolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
+		queryToolBar.add(new ShowQueryPropertiesAction(queryCache, context.getFrame()));
 		
 		JToolBar wabitBar = new JToolBar();
 		wabitBar.setFloatable(false);
@@ -732,7 +737,7 @@ public class QueryPanel implements WabitPanel {
 	    toolBar.addSeparator();
 	        
 	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
-	    toolBar.add(new ShowQueryPropertiesAction(queryCache, session.getFrame()));
+	    toolBar.add(new ShowQueryPropertiesAction(queryCache, context.getFrame()));
 	    
 	    return toolBar;
 	}

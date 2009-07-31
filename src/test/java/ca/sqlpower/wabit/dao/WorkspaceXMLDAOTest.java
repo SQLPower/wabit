@@ -51,12 +51,13 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.Layout;
 
 public class WorkspaceXMLDAOTest extends TestCase {
@@ -137,7 +138,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
 							newVal = new Point2D.Double(((Point2D) oldVal).getX(), ((Point2D) oldVal).getY());
 						}
 					} else if (property.getPropertyType() == WabitObject.class) {
-						newVal = new QueryCache(new StubWabitSession(new StubWabitSessionContext()));
+						newVal = new QueryCache(new StubWabitSessionContext());
 					} else if (property.getPropertyType() == SQLDatabase.class) {
 						newVal = new SQLDatabase();
 					} else if (property.getPropertyType() == SQLGroupFunction.class) {
@@ -225,8 +226,14 @@ public class WorkspaceXMLDAOTest extends TestCase {
         
         context = new StubWabitSessionContext() {
             @Override
-            public DataSourceCollection getDataSources() {
+            public DataSourceCollection<SPDataSource> getDataSources() {
                 return plIni;
+            }
+            
+            @Override
+            public SQLDatabase getDatabase(JDBCDataSource ds) {
+                if (ds == db.getDataSource()) return db;
+                return null;
             }
             
         };
@@ -243,13 +250,14 @@ public class WorkspaceXMLDAOTest extends TestCase {
 	}
 	
 	public void testSaveAndLoad() throws Exception {
-		WabitWorkspace p = new WabitWorkspace();
+	    final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
+	    final WabitSession session = beforeSaveContext.createSession();
+		WabitWorkspace p = session.getWorkspace();
 		p.setName("Workspace");
 		setAllSetters(p, getPropertiesToIgnore());
 		p.addDataSource(db.getDataSource());
 
-		final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
-		QueryCache query = new QueryCache(session);
+		QueryCache query = new QueryCache(beforeSaveContext);
 		p.addQuery(query, session);
 		setAllSetters(query.getQuery(), getPropertiesToIgnore());
 		query.setDataSource(db.getDataSource());
@@ -275,7 +283,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
 // ========================= Now the save and load =========================
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, p);
+		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, beforeSaveContext);
 		saveDAO.save();
         System.out.println(out.toString("utf-8"));
         
@@ -320,7 +328,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
         
         assertEquals(p.getLayouts().size(), loadedSession.getWorkspace().getLayouts().size());
         for (Layout l : p.getLayouts()) {
-        	
+        	//XXX Need to finish testing layouts
         }
         
 	}

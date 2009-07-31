@@ -19,13 +19,17 @@
 
 package ca.sqlpower.wabit;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
@@ -42,7 +46,7 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  * questions and warnings that arise during application startup as well as when
  * in the process of opening a Wabit workspace file.
  */
-public interface WabitSessionContext extends UserPrompterFactory {
+public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMapping, OlapConnectionMapping {
 
     /**
      * The service type to look for when discovering enterprise servers on the
@@ -73,15 +77,26 @@ public interface WabitSessionContext extends UserPrompterFactory {
 	boolean isMacOSX();
 	
 	/**
-	 * This will create an appropriate session for the current context and will
+	 * This will create an appropriate local session for the current context and will
 	 * register the session with the context.
 	 */
 	WabitSession createSession();
 	
 	/**
+     * This will create an appropriate server session for the current context and will
+     * register the session with the context.
+     */
+    WabitSession createServerSession(WabitServerInfo serverInfo);
+	
+	/**
 	 * Returns the number of active sessions in the context.
 	 */
 	int getSessionCount();
+	
+	/**
+	 * Returns an unmodifiable list of the active sessions in the context.
+	 */
+	List<WabitSession> getSessions();
 
 	/**
 	 * Returns this context's JmDNS client instance.
@@ -146,6 +161,50 @@ public interface WabitSessionContext extends UserPrompterFactory {
 	 * then return the server's name, returns "Local" otherwise.
 	 */
 	String getName();
+	
+    /**
+     * Borrows a connection to the given data source from this session's
+     * connection pool. You must call {@link Connection#close()} on the returned
+     * object as soon as you are finished with it.
+     * <p>
+     * Design note: Equivalent to {@link #getDatabase(SPDataSource)}
+     * .getConnection(). Normally we discourage adding convenience methods to an
+     * interface, and this is indeed a convenience method on an interface. The
+     * reason for this method is to reinforce the idea that connections to data
+     * sources must be obtained via the SQLDatabase object held in the session.
+     * 
+     * @param dataSource
+     *            The data source this connection comes from.
+     * @return A connection to the given data source, which has been obtained
+     *         from a connection pool that this session owns.
+     * @throws SQLObjectException
+     *             if it is not currently possible to connect to the given data
+     *             source. This could be due to the remote database being
+     *             unavailable, or an incorrect username or password, a missing
+     *             JDBC driver, or many other things.
+     */
+    public Connection borrowConnection(JDBCDataSource dataSource) throws SQLObjectException;
+    
+    /**
+     * Tells whether or not this session is currently being configured by a DAO.
+     * It's not normally necessary to know this from outside the session, but
+     * this method had to be public because it's part of the interface.
+     */
+    public boolean isLoading();
+
+    /**
+     * The DAO can tell this session that it's currently being configured based
+     * on a workspace file being loaded. When this is the case, certain things
+     * (such as GUI updates) will not be performed. If you're not a DAO, it's
+     * not necessary or desirable for you to call this method!
+     */
+    public void setLoading(boolean loading);
+    
+    /**
+     * Returns the number of rows that should be retrieved from the database for
+     * any result set.
+     */
+    int getRowLimit();
 
 	/**
 	 * This listener will be notified when server information is added or

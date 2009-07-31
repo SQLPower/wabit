@@ -84,7 +84,7 @@ public class ServerListMenu extends JMenu {
             popup.add(mi);
         } else {
             for (WabitServerInfo si : servers) {
-                popup.add(new OpenOnServerMenu(dialogOwner, si));
+                popup.add(new OpenOnServerMenu(dialogOwner, si, context));
             }
         }
         return popup;

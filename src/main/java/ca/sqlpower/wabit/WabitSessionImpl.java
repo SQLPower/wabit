@@ -21,23 +21,16 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.NamingException;
-
-import org.olap4j.OlapConnection;
-
 import ca.sqlpower.sql.DataSourceCollection;
-import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
@@ -56,8 +49,6 @@ public class WabitSessionImpl implements WabitSession {
 	
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
-	private boolean loading;
-	
 	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
 	
@@ -74,7 +65,6 @@ public class WabitSessionImpl implements WabitSession {
     public WabitSessionImpl(WabitSessionContext context) {
     	this.sessionContext = context;
     	workspace = new WabitWorkspace();
-		sessionContext.registerChildSession(this);
     }
     
 	public void addPropertyChangeListener(PropertyChangeListener l) {
@@ -86,19 +76,12 @@ public class WabitSessionImpl implements WabitSession {
 		lifecycleListeners.add(l);
 	}
 
-	public Connection borrowConnection(JDBCDataSource dataSource)
-			throws SQLObjectException {
-		return getDatabase(dataSource).getConnection();
-	}
-
 	public boolean close() {
     	SessionLifecycleEvent<WabitSession> lifecycleEvent =
     		new SessionLifecycleEvent<WabitSession>(this);
     	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
     		lifecycleListeners.get(i).sessionClosing(lifecycleEvent);
     	}
-    	
-    	sessionContext.deregisterChildSession(this);
     	
     	for (SQLDatabase db : databases.values()) {
     	    db.disconnect();
@@ -131,24 +114,6 @@ public class WabitSessionImpl implements WabitSession {
 		return workspace;
 	}
 
-	public int getRowLimit() {
-		return 0;
-	}
-
-	public SQLDatabase getDatabase(JDBCDataSource dataSource) {
-		SQLDatabase db = databases.get(dataSource);
-        if (db == null) {
-            dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
-            db = new SQLDatabase(dataSource);
-            databases.put(dataSource, db);
-        }
-        return db;
-	}
-
-	public boolean isLoading() {
-		return loading;
-	}
-
 	public void removePropertyChangeListener(PropertyChangeListener l) {
 		pcs.removePropertyChangeListener(l);
 	}
@@ -158,30 +123,8 @@ public class WabitSessionImpl implements WabitSession {
 		lifecycleListeners.remove(l);
 	}
 
-	public void setLoading(boolean loading) {
-		this.loading = loading;
-	}
+    public DataSourceCollection<SPDataSource> getDataSources() {
+        return sessionContext.getDataSources();
+    }
 	
-	public OlapConnection createConnection(Olap4jDataSource dataSource) 
-	throws SQLException, ClassNotFoundException, NamingException {
-	    if (dataSource == null) return null;
-	    OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
-	    if (olapConnectionPool == null) {
-	        olapConnectionPool = new OlapConnectionPool(dataSource, this);
-	        olapConnectionPools.put(dataSource, olapConnectionPool);
-	    }
-	    return olapConnectionPool.getConnection();
-	}
-
-	public UserPrompter createDatabaseUserPrompter(String question,
-			List<Class<? extends SPDataSource>> dsTypes,
-			UserPromptOptions optionType,
-			UserPromptResponse defaultResponseType, Object defaultResponse,
-			DataSourceCollection<SPDataSource> dsCollection,
-			String... buttonNames) {
-		DefaultUserPrompterFactory dupf = new DefaultUserPrompterFactory();
-		return dupf.createDatabaseUserPrompter(question, dsTypes, optionType, defaultResponseType, 
-				defaultResponse, dsCollection, buttonNames);
-	}
-
 }

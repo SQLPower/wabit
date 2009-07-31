@@ -20,13 +20,18 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
+import java.io.File;
 
+import javax.swing.JFrame;
 import javax.swing.JMenu;
+import javax.swing.JSpinner;
 
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
+import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSessionContext;
 
-public interface WabitSwingSessionContext extends WabitSessionContext {
+public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSessionContext {
 
     /**
      * Creates a menu that keeps track of the last few opened and saved workspace
@@ -44,8 +49,6 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
      */
     JMenu createServerListMenu(Component dialogOwner, String name, ServerListMenuItemFactory itemFactory);
 
-	WabitWelcomeScreen getWelcomeScreen();
-
 	/**
 	 * Sets the most recent file to be saved or loaded into the session. The
 	 * session tracks recent files for uses like a recent menu and to decide if
@@ -61,5 +64,54 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
 	 * if the most recent workspace in the recent menu should be loaded and displayed.
 	 */
 	boolean startOnWelcomeScreen();
+	
+	/**
+	 * Returns the JFrame that displays the context.
+	 */
+	JFrame getFrame();
+
+    /**
+     * Sets the panel that allows editing of the current selection in the tree.
+     * A new panel will be created based on the type of model the active
+     * session's currently editing if the user has no changes or wants to
+     * discard the current changes.
+     * 
+     * @return False if the previous editor was not correctly saved and the old
+     *         component needs to be displayed. True otherwise.
+     */
+    boolean setEditorPanel();
+    
+    /**
+     *  Builds and displays the GUI.
+     * @throws SQLObjectException 
+     */
+    void buildUI() throws SQLObjectException;
+    
+    /**
+     * Set the file that the session was most recently loaded from or saved to.
+     */
+    void setCurrentFile(File file);
+    
+    /**
+     * Get the file that the session was most recently loaded from or saved to.
+     */
+    File getCurrentFile();
+    
+    /**
+     * Returns the row limit component that affects all cached result sets.
+     * @return
+     */
+    JSpinner getRowLimitSpinner();
+    
+    /**
+     * Sets the active session that is being viewed or modified. Some events
+     * that depend on a session will act on the active session.
+     */
+    void setActiveSession(WabitSwingSession session);
+    
+    /**
+     * Returns the session that the user is currently viewing or editing.
+     */
+    WabitSwingSession getActiveSession();
 
 }

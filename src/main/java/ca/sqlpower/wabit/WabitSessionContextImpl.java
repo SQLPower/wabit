@@ -21,27 +21,42 @@ package ca.sqlpower.wabit;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
+import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
+import org.olap4j.OlapConnection;
 
 import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
+import ca.sqlpower.swingui.event.SessionLifecycleEvent;
+import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
+
+import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This is the canonical headless implementation of WabitSessionContext
@@ -80,9 +95,40 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     private String plDotIniPath;
     
     /**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = 
+        new HashMap<Olap4jDataSource, OlapConnectionPool>();
+    
+    /**
+     * The database instances we've created due to calls to {@link #getDatabase(SPDataSource)}.
+     */
+    private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
+    
+    /**
      * This prefs node stores context specific prefs. At current this is the pl.ini location.
      */
     protected final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
+    
+    /**
+     * This flag will be true if the context is in the process of loading from a
+     * file. During loading some operations may be different because the frame
+     * has not been realized.
+     * 
+     * @see #isLoading()
+     */
+    private boolean loading;
+    
+    /**
+     * This lifecycle listener will remove the session's tree from the tabbed
+     * pane when the session is removed.
+     */
+    private final SessionLifecycleListener<WabitSession> sessionLifecycleListener = new SessionLifecycleListener<WabitSession>() {
+    
+        public void sessionClosing(SessionLifecycleEvent<WabitSession> e) {
+            deregisterChildSession(e.getSource());
+        }
+    };
     
     /**
      * These listeners will be notified when server information is added or removed from the context.
@@ -135,6 +181,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	public void registerChildSession(WabitSession child) {
 		childSessions.add(child);
+		child.addSessionLifecycleListener(sessionLifecycleListener);
 	}
 	
 	/**
@@ -175,6 +222,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 */
 	public void deregisterChildSession(WabitSession child) {
 		childSessions.remove(child);
+		child.removeSessionLifecycleListener(sessionLifecycleListener);
 		
 		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
 		if (childSessions.isEmpty() && getDataSources() != null && getPlDotIniPath() != null) {
@@ -199,12 +247,17 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		return MAC_OS_X ; 
 	}
 
-	/**
-	 * This does not create a session as there is no current core session implementation.
-	 */
 	public WabitSession createSession() {
-		return new WabitSessionImpl(this);
+		final WabitSessionImpl session = new WabitSessionImpl(this);
+		registerChildSession(session);
+        return session;
 	}
+	
+	public WabitSession createServerSession(WabitServerInfo serverInfo) {
+        final WabitSession session = new WabitServerSession(serverInfo, this);
+        registerChildSession(session);
+        return session;
+    }
 
 	protected void setPlDotIniPath(String plDotIniPath) {
 		this.plDotIniPath = plDotIniPath;
@@ -331,13 +384,58 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             String... buttonNames) {
         return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
     }
+    
+    @SuppressWarnings("unchecked")
+    public List<WabitSession> getSessions() {
+        return Collections.unmodifiableList(childSessions);
+    }
 
-	public UserPrompter createDatabaseUserPrompter(String question,
-			List<Class<? extends SPDataSource>> dsTypes,
-			UserPromptOptions optionType,
-			UserPromptResponse defaultResponseType, Object defaultResponse,
-			DataSourceCollection<SPDataSource> dsCollection,
-			String... buttonNames) {
-		return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
-	}
+    public Connection borrowConnection(JDBCDataSource dataSource)
+            throws SQLObjectException {
+        return getDatabase(dataSource).getConnection();
+    }
+
+    public int getRowLimit() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public boolean isLoading() {
+        return loading;
+    }
+    
+    public void setLoading(boolean loading) {
+        this.loading = loading;
+    }
+
+    public SQLDatabase getDatabase(JDBCDataSource dataSource) {
+        SQLDatabase db = databases.get(dataSource);
+        if (db == null) {
+            dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
+            db = new SQLDatabase(dataSource);
+            databases.put(dataSource, db);
+        }
+        return db;
+    }
+
+    public OlapConnection createConnection(Olap4jDataSource dataSource) 
+    throws SQLException, ClassNotFoundException, NamingException {
+        if (dataSource == null) return null;
+        OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+        if (olapConnectionPool == null) {
+            olapConnectionPool = new OlapConnectionPool(dataSource, this);
+            olapConnectionPools.put(dataSource, olapConnectionPool);
+        }
+        return olapConnectionPool.getConnection();
+    }
+    
+    public UserPrompter createDatabaseUserPrompter(String question,
+            List<Class<? extends SPDataSource>> dsTypes,
+            UserPromptOptions optionType,
+            UserPromptResponse defaultResponseType, Object defaultResponse,
+            DataSourceCollection<SPDataSource> dsCollection,
+            String... buttonNames) {
+        return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
+    }
+
 }

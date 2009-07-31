@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.Collections;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -32,6 +33,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This action will export a given query to a file that
@@ -40,21 +42,23 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 public class ExportQueryAction extends AbstractAction {
 
 	private final WabitSwingSession session;
+	private final WabitSwingSessionContext context;
 	private final QueryCache query;
 
 	public ExportQueryAction(WabitSwingSession session, QueryCache query) {
 		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabit-exportQuery.png")));
 		this.session = session;
+		context = (WabitSwingSessionContext) session.getContext();
 		this.query = query;
 		
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser(session.getCurrentFile());
+		JFileChooser fc = new JFileChooser(context.getCurrentFile());
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
-		int fcChoice = fc.showSaveDialog(session.getFrame());
+		int fcChoice = fc.showSaveDialog(context.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
 		    return;
@@ -72,9 +76,9 @@ public class ExportQueryAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getContext());
 		
-		workspaceSaver.save(query);
+		workspaceSaver.save(Collections.singletonList(query));
 
 	}
 

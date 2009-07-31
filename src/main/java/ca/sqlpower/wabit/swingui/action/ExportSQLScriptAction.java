@@ -35,6 +35,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * This action will export the given query as a SQL Script file when it is executed.
@@ -46,20 +47,20 @@ public class ExportSQLScriptAction extends AbstractAction {
 
 	private final QueryCache query;
 	
-	private final WabitSwingSession session;
+	private final WabitSwingSessionContext context;
 
 	public ExportSQLScriptAction(WabitSwingSession session, QueryCache query) {
 		super("", new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/wabit_exportSQL.png")));
-		this.session = session;
 		this.query = query;
+		context = (WabitSwingSessionContext) session.getContext();
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser chooser = new JFileChooser(session.getCurrentFile());
+		JFileChooser chooser = new JFileChooser(context.getCurrentFile());
 		chooser.setDialogTitle("Select the file to save to.");
 		chooser.addChoosableFileFilter(SPSUtils.SQL_FILE_FILTER);
 		
-		int retval = chooser.showSaveDialog(session.getFrame());
+		int retval = chooser.showSaveDialog(context.getFrame());
 		if (retval != JFileChooser.APPROVE_OPTION) {
 			return;
 		}

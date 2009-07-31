@@ -34,13 +34,13 @@ import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 public class WorkspaceSAXHandlerTest extends TestCase {
 
@@ -66,17 +66,18 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 	public void testMissingDSIsReplaced() throws Exception {
 		JDBCDataSource newDS = new JDBCDataSource(db.getDataSource());
 		newDS.setName("Missing DS is replaced");
-		WabitWorkspace p = new WabitWorkspace();
+		final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
+		final WabitSession session = beforeSaveContext.createSession();
+		WabitWorkspace p = session.getWorkspace();
 		p.setName("Workspace");
 		p.addDataSource(newDS);
 
-		final StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
-		QueryCache query = new QueryCache(session);
+		QueryCache query = new QueryCache(beforeSaveContext);
 		p.addQuery(query, session);
 		query.setDataSource(newDS);
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, p);
+		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, beforeSaveContext);
 		saveDAO.save();
 		System.out.println(out.toString("utf-8"));
         
@@ -100,9 +101,15 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         	        UserPromptType responseType, UserPromptOptions optionType,
         	        UserPromptResponse defaultResponseType,
         	        Object defaultResponse, String... buttonNames) {
-                return super.createUserPrompter(
-                        question, responseType, optionType, defaultResponseType,
-                        defaultResponse, buttonNames);
+                    return new DefaultUserPrompter(optionType, defaultResponseType,
+                            defaultResponse);
+        	}
+        	
+        	@Override
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        	    if (ds == db.getDataSource()) return db;
+        	    if (ds == replacementDS) return new SQLDatabase(replacementDS);
+        	    return null;
         	}
         	
         	@Override
@@ -120,7 +127,9 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         
         OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in);
 	
-        WabitSession loadedSession = loadDAO.openWorkspaces().get(0);
+        final List<WabitSession> loadedWorkspaces = loadDAO.openWorkspaces();
+        assertEquals(1, loadedWorkspaces.size());
+        WabitSession loadedSession = loadedWorkspaces.get(0);
         assertEquals(1, loadedSession.getWorkspace().getQueries().size());
         QueryCache loadedQuery = (QueryCache) loadedSession.getWorkspace().getQueries().get(0);
         assertEquals(replacementDS, loadedQuery.getQuery().getDatabase().getDataSource());

@@ -25,29 +25,28 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSessionContext;
 import ca.sqlpower.wabit.swingui.NewWorkspaceScreen;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class NewServerWorkspaceAction extends AbstractAction {
 
     private final Component dialogOwner;
     private final WabitServerInfo si;
+    private final WabitSwingSessionContext context;
 
-    public NewServerWorkspaceAction(Component dialogOwner, WabitServerInfo si) {
+    public NewServerWorkspaceAction(Component dialogOwner, WabitServerInfo si, WabitSwingSessionContext context) {
         super(WabitUtils.serviceInfoSummary(si) + "...");
         this.dialogOwner = dialogOwner;
         this.si = si;
+        this.context = context;
     }
     
     public void actionPerformed(ActionEvent e) {
         try {
-            WabitSessionContext serverCtx = WabitServerSessionContext.getInstance(si);
-            NewWorkspaceScreen newWorkspace = new NewWorkspaceScreen(
-                    new WabitSwingSessionContextImpl(serverCtx, false));
+            context.createServerSession(si);
+            NewWorkspaceScreen newWorkspace = new NewWorkspaceScreen(context, si);
             newWorkspace.showFrame();
         } catch (Exception ex) {
             SPSUtils.showExceptionDialogNoReport(dialogOwner, "Couldn't create new workspace on server", ex);

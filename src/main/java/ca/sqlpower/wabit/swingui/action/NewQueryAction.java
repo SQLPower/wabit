@@ -75,7 +75,7 @@ public class NewQueryAction extends AbstractAction {
     }
     
     public void actionPerformed(ActionEvent e) {
-        QueryCache query = new QueryCache(session);
+        QueryCache query = new QueryCache(session.getContext());
         query.setName(newQueryName);
         if (ds != null) {
         	query.setDataSource(ds);

@@ -55,6 +55,7 @@ import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -85,6 +86,7 @@ import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
 import edu.umd.cs.piccolo.PCamera;
@@ -171,7 +173,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        ContentBox contentBox = new ContentBox();
 			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
 			        contentBox.setContentRenderer(rsRenderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
 			                contentBox);
 			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
 			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
@@ -182,7 +184,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        ContentBox contentBox = new ContentBox();
 			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
 			        contentBox.setContentRenderer(renderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(session.getFrame(),
+			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
                             contentBox);
                     newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
                             (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
@@ -248,6 +250,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	};
 	
 	private final WabitSwingSession session;
+	private final JFrame parentFrame;
 	
 	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
 		public void actionPerformed(ActionEvent e) {
@@ -284,6 +287,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	
     public ReportLayoutPanel(WabitSwingSession session, Layout report) {
         this.session = session;
+        parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
 		this.report = report;
 		canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);

@@ -23,7 +23,7 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
@@ -32,8 +32,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
-import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -55,7 +54,7 @@ public class NewWorkspaceScreen {
 	/**
 	 * The frame displaying data source choices to the user.
 	 */
-	private final JFrame frame;
+	private final JDialog dialog;
 	
 	/**
 	 * A flag tracking if a data source was added to the workspace. Used
@@ -74,37 +73,47 @@ public class NewWorkspaceScreen {
 	    
 	    public void databaseAdded(DatabaseListChangeEvent e) {
 	        logger.debug("Added data source " + e.getDataSource().getName());
-	        try {
-	            session.buildUI();
-	        } catch (SQLObjectException e1) {
-	            throw new SQLObjectRuntimeException(e1);
-	        }
 	        databaseAdded = true;
-	        frame.dispose();
+	        dialog.dispose();
 	    }
 	};
+
+    private final WabitSwingSessionContext context;
 	
 	public NewWorkspaceScreen(final WabitSwingSessionContext context) {
-		session = new WabitSwingSessionImpl(context);
+		this.context = context;
+        session = new WabitSwingSessionImpl(context);
 		
         session.getWorkspace().addDatabaseListChangeListener(workspaceDataSourceListener);
 		
-		frame = new JFrame();
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				if (!databaseAdded) {
-					context.deregisterChildSession(session);
-				}
-				session.getWorkspace().removeDatabaseListChangeListener(workspaceDataSourceListener);
-			}
-		});
+		dialog = new JDialog(context.getFrame());
 		
 		buildUI();
 	}
 	
+	public NewWorkspaceScreen(WabitSwingSessionContext context, WabitServerInfo serverInfo) {
+	    this.context = context;
+        session = new WabitSwingSessionImpl(serverInfo, context);
+        
+        session.getWorkspace().addDatabaseListChangeListener(workspaceDataSourceListener);
+        
+        dialog = new JDialog(context.getFrame());
+        
+        buildUI();
+	}
+	
 	private void buildUI() {
+	    dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	    dialog.addWindowListener(new WindowAdapter() {
+	        @Override
+	        public void windowClosed(WindowEvent e) {
+	            if (databaseAdded) {
+	                context.registerChildSession(session);
+	            }
+	            session.getWorkspace().removeDatabaseListChangeListener(workspaceDataSourceListener);
+	        }
+	    });
+	    
 		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
 		final JLabel selectDSLabel = new JLabel("Select a data source for your new workspace.");
 		selectDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -114,22 +123,21 @@ public class NewWorkspaceScreen {
 		additionalDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		builder.append(additionalDSLabel);
 		builder.nextLine();
-		builder.append(WorkspacePanel.createDBConnectionManager(session, frame).getPanel());
+		builder.append(WorkspacePanel.createDBConnectionManager(session, dialog).getPanel());
 		
-		frame.setIconImage(WabitSwingSessionImpl.FRAME_ICON.getImage());
-		frame.add(builder.getPanel());
+		dialog.add(builder.getPanel());
 	}
 	
-	public JFrame getFrame() {
-		return frame;
+	public JDialog getDialog() {
+		return dialog;
 	}
 	
 	public void showFrame() {
-		frame.pack();
+		dialog.pack();
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		frame.setLocation((int) (toolkit.getScreenSize().getWidth() / 2 - frame.getWidth() / 2), 
-		        (int) (toolkit.getScreenSize().getHeight() / 2 - frame.getHeight() / 2));
-		frame.setVisible(true);
+		dialog.setLocation((int) (toolkit.getScreenSize().getWidth() / 2 - dialog.getWidth() / 2), 
+		        (int) (toolkit.getScreenSize().getHeight() / 2 - dialog.getHeight() / 2));
+		dialog.setVisible(true);
 	}
 
 }

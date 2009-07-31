@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -30,7 +31,6 @@ import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
@@ -39,14 +39,11 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 public class SaveWorkspaceAsAction extends AbstractAction {
 
 	public static final String WABIT_FILE_EXTENSION = ".wabit";
-	/**
-	 * The workspace in this session will be saved to a file.
-	 */
-	private final WabitSwingSession session;
+    private final WabitSwingSessionContext context;
 
-	public SaveWorkspaceAsAction(WabitSwingSession session) {
-		super("Save Workspace As...", new ImageIcon(SaveWorkspaceAsAction.class.getClassLoader().getResource("icons/wabit_save.png")));
-		this.session = session;
+	public SaveWorkspaceAsAction(WabitSwingSessionContext context) {
+		super("Save All Workspaces To...", new ImageIcon(SaveWorkspaceAsAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+        this.context = context;
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -58,35 +55,38 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 	 * saved. Returns false if the file was not saved or cancelled.
 	 */
 	public boolean save() {
-		JFileChooser fc = new JFileChooser(session.getCurrentFile());
-		fc.setDialogTitle("Select the file to save to.");
+		JFileChooser fc = new JFileChooser(context.getCurrentFile());
+		fc.setDialogTitle("Select the directory to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
-		int fcChoice = fc.showSaveDialog(session.getFrame());
+		int fcChoice = fc.showSaveDialog(context.getFrame());
 
 		if (fcChoice != JFileChooser.APPROVE_OPTION) {
 		    return false;
 		}
 		
-		FileOutputStream out = null;
 		File selectedFile = fc.getSelectedFile();
-		try {
-
-			if (!selectedFile.getPath().endsWith(WABIT_FILE_EXTENSION)) { //$NON-NLS-1$
-				selectedFile = new File(selectedFile.getPath()+WABIT_FILE_EXTENSION); //$NON-NLS-1$
-            }
-			
-			out = new FileOutputStream(selectedFile);
-		} catch (FileNotFoundException e1) {
-			throw new RuntimeException(e1);
+		FileOutputStream out = null;
+		int lastIndexOfDecimal = selectedFile.getName().lastIndexOf(".");
+		if (lastIndexOfDecimal < 0 || !selectedFile.getName().substring(lastIndexOfDecimal).equals(WABIT_FILE_EXTENSION)) {
+		    selectedFile = new File(selectedFile.getAbsoluteFile() + WABIT_FILE_EXTENSION);
 		}
-		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getWorkspace());
-		
+		try {
+		    out = new FileOutputStream(selectedFile);
+		} catch (FileNotFoundException e1) {
+		    throw new RuntimeException(e1);
+		}
+		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, context);
 		workspaceSaver.save();
+		try {
+		    out.close();
+		} catch (IOException e) {
+		    throw new RuntimeException(e);
+		}
 		
-		this.session.setCurrentFile(selectedFile);
+		this.context.setCurrentFile(selectedFile);
 		
-		((WabitSwingSessionContext) session.getContext()).putRecentFileName(selectedFile.getAbsolutePath());
+		context.putRecentFileName(selectedFile.getAbsolutePath());
 		
 		return true;
 	}

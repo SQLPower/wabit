@@ -35,6 +35,7 @@ import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
@@ -43,6 +44,7 @@ import javax.swing.SwingUtilities;
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class PDFAction extends AbstractAction {
 
@@ -60,10 +62,13 @@ public class PDFAction extends AbstractAction {
     private final Component dialogOwner;
 
 	private final WabitSwingSession session;
+	
+	private final JFrame parentFrame;
 
     public PDFAction(WabitSwingSession session, Component dialogOwner, Layout layout) {
         super("Create PDF...", ICON);
 		this.session = session;
+		parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
         putValue(SHORT_DESCRIPTION, "Export report as PDF");
         this.dialogOwner = dialogOwner;
         this.layout = layout;
@@ -113,7 +118,7 @@ public class PDFAction extends AbstractAction {
             } while (promptAgain);
 
             final JPanel glassPane = new JPanel();
-            session.getFrame().setGlassPane(glassPane);
+            parentFrame.setGlassPane(glassPane);
             glassPane.setVisible(true);
             glassPane.setFocusable(true);
             glassPane.setOpaque(false);
@@ -155,7 +160,7 @@ public class PDFAction extends AbstractAction {
 					e.consume();
 				}
 			});
-            final LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(session, targetFile, layout, dialogOwner);
+            final LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(((WabitSwingSessionContext) session.getContext()), targetFile, layout, dialogOwner);
             ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, pdfWorker.getJobSize());
             monitor.setMillisToPopup(0);
 			ProgressWatcher watcher = new ProgressWatcher(monitor, pdfWorker) {
@@ -165,7 +170,7 @@ public class PDFAction extends AbstractAction {
 					if (pdfWorker.isFinished() || pdfWorker.isCancelled()) {
 						JPanel glassPane = new JPanel();
 						glassPane.setOpaque(false);
-						session.getFrame().setGlassPane(glassPane);
+						parentFrame.setGlassPane(glassPane);
 					}
 				}
 			};
