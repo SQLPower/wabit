@@ -30,7 +30,6 @@ import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -174,15 +173,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-24px.png")), 
             "Go to Wabit support forum");
     
-	/**
-	 * Set to true if the {@link #close()} method has been called at least once.
-	 * Otherwise, it should be set to false. It is currently used to prevent
-	 * {@link #deregisterChildSession(WabitSession)} from overriding the
-	 * {@link #PREFS_START_ON_WELCOME_SCREEN} preference value that
-	 * {@link #close()} writes.
-	 */
-	private boolean closing = false;
-	
 	/**
 	 * This is the prefs for the entire context.
 	 */
@@ -746,11 +736,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         frame.dispose();
 
-        closing = true;
         getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, getSessionCount() == 0);
         logger.debug("Wrote " + (getSessionCount() == 0) + " in close() to " 
                 + PREFS_START_ON_WELCOME_SCREEN + " preference");
         delegateContext.close();
+        
     }
     
     /* docs inherited from interface */
@@ -900,7 +890,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * 
      * @throws Exception if startup fails
      */
-    public static void  main(final String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -927,23 +917,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                         importFile = context.createRecentMenu().getMostRecentFile();
                     }
                     
+                    
                     if (importFile != null) {
-                        try {
-                            final FilenameFilter filter = new FilenameFilter() {
-                                public boolean accept(File dir, String name) {
-                                    if (name.matches(".*.wabit")) {
-                                        return true;
-                                    }
-                                    return false;
-                                }
-                            };
-                            for (File workspaceFile : importFile.listFiles(filter)) {
-                                OpenWorkspaceAction.loadFile(importFile, context);
-                            }
-                        } catch (Throwable e) {
-                            //if the workspaces error on loading show the context window so users
-                            //have a way to navigate.
-                        }
+                    	OpenWorkspaceAction.loadFile(importFile, context);
                     }
                     context.setEditorPanel();
                 } catch (Exception ex) {
