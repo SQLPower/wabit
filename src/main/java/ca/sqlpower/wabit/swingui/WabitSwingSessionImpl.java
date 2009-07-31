@@ -62,8 +62,7 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
 
 /**
- * The Main Window for the Wabit Application; contains a main() method that is
- * the conventional way to start the application running.
+ * The Main Window for the Wabit Application.
  */
 public class WabitSwingSessionImpl implements WabitSwingSession {
     
