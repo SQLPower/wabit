@@ -97,6 +97,7 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
+import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
@@ -480,6 +481,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         openDemoMenuItem.setText("Open Demo Workspace");
         openDemoMenuItem.setIcon(OPEN_DEMO_ICON);
         fileMenu.add(openDemoMenuItem);
+        
+        fileMenu.addSeparator();
+        fileMenu.add(new ImportWorkspaceAction(this));
         
         fileMenu.addSeparator();
         fileMenu.add(new SaveWorkspaceAction(this));

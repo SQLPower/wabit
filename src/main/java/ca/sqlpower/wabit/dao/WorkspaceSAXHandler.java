@@ -108,6 +108,13 @@ import com.sun.mail.util.BASE64DecoderStream;
 public class WorkspaceSAXHandler extends DefaultHandler {
 	
 	private static final Logger logger = Logger.getLogger(WorkspaceSAXHandler.class);
+	
+	/**
+	 * This session stores the session that the workspace file is being loaded into. If
+	 * there is no import session then new sessions will be made for each workspace in
+	 * the file.
+	 */
+	private WabitSession importSession = null;
 
 	/**
 	 * This list will store all of the sessions loaded by this SAX handler.
@@ -248,6 +255,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		cancelled = false;
 	}
 	
+	/**
+	 * Creates a SAX handler which can import a workspace file into the given session.
+	 */
+	public WorkspaceSAXHandler(WabitSessionContext context, WabitSession importSession) {
+	    this(context);
+	    this.importSession = importSession;
+	}
+	
 	public WorkspaceSAXHandler(WabitSessionContext context, WabitServerInfo serverInfo) {
 	    this(context);
 	    this.serverInfo = serverInfo;
@@ -288,24 +303,28 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
 		    context.setLoading(true);
         } else if (name.equals("project")) {
-            if (serverInfo == null) {
-                session = context.createSession();
+            if (importSession != null) {
+                session = importSession;
             } else {
-                session = context.createServerSession(serverInfo);
+                if (serverInfo == null) {
+                    session = context.createSession();
+                } else {
+                    session = context.createServerSession(serverInfo);
+                }
+                sessions.add(session);
+                for (int i = 0; i < attributes.getLength(); i++) {
+                    String aname = attributes.getQName(i);
+                    String aval = attributes.getValue(i);
+
+                    if (aname.equals("name")) {
+                        session.getWorkspace().setName(aval);
+                    } else if (aname.equals("editorPanelModel")) {
+                        currentEditorPanelModel = aval;
+                    } else {
+                        logger.warn("Unexpected attribute of <project>: " + aname + "=" + aval);
+                    }
+                }
             }
-        	sessions.add(session);
-        	for (int i = 0; i < attributes.getLength(); i++) {
-        		String aname = attributes.getQName(i);
-        		String aval = attributes.getValue(i);
-        		
-        		if (aname.equals("name")) {
-        			session.getWorkspace().setName(aval);
-        		} else if (aname.equals("editorPanelModel")) {
-        			currentEditorPanelModel = aval;
-        		} else {
-        			logger.warn("Unexpected attribute of <project>: " + aname + "=" + aval);
-        		}
-        	}
         } else if (name.equals("data-source")) {
         	String dsName = attributes.getValue("name");
         	checkMandatory("name", dsName);
@@ -335,7 +354,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			cancelled = true;
         			context.deregisterChildSession(session);
         		}
-        	} else {
+        	} else if (!session.getWorkspace().dsAlreadyAdded(ds)) {
         		session.getWorkspace().addDataSource(ds);
         	}
         } else if (name.equals("query")) {

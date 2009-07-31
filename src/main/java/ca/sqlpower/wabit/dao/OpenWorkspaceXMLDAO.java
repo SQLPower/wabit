@@ -76,5 +76,20 @@ public class OpenWorkspaceXMLDAO {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	/**
+     * Calling this method will import all of the workspaces from the input stream
+     * into the session given.
+     */
+    public void importWorkspaces(WabitSession session) {
+        SAXParser parser;
+        WorkspaceSAXHandler saxHandler = new WorkspaceSAXHandler(context, session);
+        try {
+            parser = SAXParserFactory.newInstance().newSAXParser();
+            parser.parse(in, saxHandler);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

@@ -24,18 +24,12 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
@@ -73,30 +67,7 @@ public class ImportWorkspaceAction extends AbstractAction {
 			throw new RuntimeException(e1);
 		}
 		OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in);
-		List<WabitSession> sessions = workspaceLoader.openWorkspaces();
-		for (WabitSession sess : sessions) {
-			List<WabitDataSource> dataSources = new ArrayList<WabitDataSource>(sess.getWorkspace().getDataSources());
-			for (int i = dataSources.size() - 1; i >= 0; i--) {
-				sess.getWorkspace().removeDataSource(dataSources.get(i));
-				if (!(session.getWorkspace().getDataSources().contains(dataSources.get(i)))) {
-					session.getWorkspace().addDataSource(dataSources.get(i));
-				}
-			}
-			
-			List<QueryCache> queries = new ArrayList<QueryCache>(sess.getWorkspace().getQueries());
-			for (int i = queries.size() - 1; i >= 0; i--) {
-				sess.getWorkspace().removeQuery(queries.get(i), sess);
-				session.getWorkspace().addQuery(queries.get(i), session);
-			}
-			List<Layout> layouts = new ArrayList<Layout>(sess.getWorkspace().getLayouts());
-			for (int i = layouts.size() - 1; i >= 0; i--) {
-				sess.getWorkspace().removeLayout(layouts.get(i));
-				session.getWorkspace().addLayout(layouts.get(i));
-			}
-			
-			sess.getContext().deregisterChildSession(sess);
-			
-		}
+		workspaceLoader.importWorkspaces(session);
 	}
 
 }
