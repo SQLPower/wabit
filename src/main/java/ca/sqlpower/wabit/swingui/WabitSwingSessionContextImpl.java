@@ -901,8 +901,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * @throws Exception if startup fails
      */
     public static void  main(final String[] args) throws Exception {
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -916,6 +914,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                     WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
                     WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
                     
+                    if (coreContext.isMacOSX()) {
+                    	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
+                    	System.setProperty("apple.laf.useScreenMenuBar", "true");
+                    }
                     final File importFile;
                     if (args.length > 0) {
                         importFile = new File(args[0]);
@@ -924,8 +926,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                     } else {
                         importFile = context.createRecentMenu().getMostRecentFile();
                     }
-                    
-                    WabitSwingSessionImpl wss;
                     
                     if (importFile != null) {
                         try {
