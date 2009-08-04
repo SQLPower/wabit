@@ -905,11 +905,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
             public void run() {
                 try {
-                    WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
-                    WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
-                    
                 	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
                 	System.setProperty("apple.laf.useScreenMenuBar", "true");
+
+                	WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
+                    WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
+                    
                     final File importFile;
                     if (args.length > 0) {
                         importFile = new File(args[0]);
