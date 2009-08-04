@@ -95,6 +95,13 @@ import ca.sqlpower.wabit.swingui.olap.action.RemoveHierarchyAction;
 public class CellSetTableHeaderComponent extends JComponent {
 
 	/**
+	 * A constant for the size of padding to be added to the left and right
+	 * sides of a layout item, and in particular between a layout item's text
+	 * and the edge of a HierarchyComponent.
+	 */
+	private static final int LAYOUT_ITEM_PADDING = 5;
+	
+	/**
 	 * This is the border we give to all hierarchy components we create. The
 	 * drag and drop feedback mechanism will temporarily alter the borders of
 	 * components when they're being dragged over, but it will set the borders
@@ -758,7 +765,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             if (axis == null) {
             	LayoutItem li = new LayoutItem();
             	Rectangle2D stringBounds = fm.getStringBounds(hierarchy.getName(), g2);
-            	li.bounds = new Rectangle2D.Double(0, 0, stringBounds.getWidth() + OlapIcons.HIERARCHY_ICON.getIconWidth(), stringBounds.getHeight());
+            	li.bounds = new Rectangle2D.Double(0, 0, stringBounds.getWidth() + OlapIcons.HIERARCHY_ICON.getIconWidth() + LAYOUT_ITEM_PADDING, stringBounds.getHeight());
             	try {
             		li.member = hierarchy.getDefaultMember();
             	} catch (OlapException ex) {
@@ -796,7 +803,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	                if (axis.getAxisOrdinal() == Axis.ROWS) {
 	                	if (member.getChildMemberCount() > 0) {
 	                		double height = Math.max(stringBounds.getHeight(), EXPANDED_TREE_ICON.getIconHeight());
-							double width = stringBounds.getWidth() + Math.max(height, EXPANDED_TREE_ICON.getIconWidth());
+							double width = stringBounds.getWidth() + Math.max(height, EXPANDED_TREE_ICON.getIconWidth()) + LAYOUT_ITEM_PADDING;
 							li.bounds = new Rectangle2D.Double(
 			                        memberDepth * indentAmount, y,
 			                        width,
@@ -804,7 +811,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	                	} else {
 			                li.bounds = new Rectangle2D.Double(
 			                        memberDepth * indentAmount, y,
-			                        stringBounds.getWidth(), stringBounds.getHeight());
+			                        stringBounds.getWidth() + (LAYOUT_ITEM_PADDING * 2), stringBounds.getHeight());
 	                	}
 		                y += rowHeight;
 	                } else if (axis.getAxisOrdinal() == Axis.COLUMNS) {
@@ -945,7 +952,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             			icon.paintIcon(this, g2, x, y);
             			g2.drawString(li.text, (int) (li.bounds.getX() + Math.max(icon.getIconWidth(), li.getBounds().getHeight())), ((int) li.bounds.getY()) + ascent);
             		} else {
-            			g2.drawString(li.text, (int) li.bounds.getX(), ((int) li.bounds.getY()) + ascent);
+            			g2.drawString(li.text, (int) li.bounds.getX() + LAYOUT_ITEM_PADDING, ((int) li.bounds.getY()) + ascent);
             		}
             		
             		if (li.member == selectedMember) {
