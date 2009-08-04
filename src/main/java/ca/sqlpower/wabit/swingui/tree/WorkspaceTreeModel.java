@@ -39,12 +39,15 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
@@ -59,12 +62,98 @@ public class WorkspaceTreeModel implements TreeModel {
 
     private static final Logger logger = Logger.getLogger(WorkspaceTreeModel.class);
     
+    private static enum FolderType {
+    	CONNECTIONS,
+    	QUERIES,
+    	REPORTS
+    	//TODO implement images and charts folders.... maybe olap cubes
+    }
+    
+    public static FolderType getProperFolderParent(WabitObject object) {
+    	if (object instanceof WabitDataSource) {
+    		return FolderType.CONNECTIONS;
+    	} else if (object instanceof QueryCache || object instanceof OlapQuery) {
+    		return FolderType.QUERIES; 
+    	} else if (object instanceof Layout) {
+    		return FolderType.REPORTS;
+    	}
+    	throw new UnsupportedOperationException("Trying to find the parent folder of object of type: " + object.getChildren().toString());
+    }
+    
+    public class FolderNode {
+    	private WabitWorkspace parent;
+    	private FolderType folderType;
+    	
+    	
+    	public FolderNode(WabitWorkspace parent, FolderType folderType) {
+    		this.parent = parent;
+    		this.folderType = folderType;
+		}
+    	
+    	public WabitWorkspace getParent() {
+			return parent;
+		}
+    	
+		public FolderType getFolderType() {
+			return folderType;
+		}
+
+		public boolean allowsChildren() {
+			return true;
+		}
+
+
+		public List<? extends WabitObject> getChildren() {
+			List<WabitObject> childList = new ArrayList<WabitObject>();
+			switch (folderType) {
+			case CONNECTIONS:
+				childList.addAll(workspace.getDataSources());
+				break;
+			case QUERIES:
+				childList.addAll(workspace.getQueries());
+				childList.addAll(workspace.getOlapQueries());
+				break;
+			case REPORTS:
+				childList.addAll(workspace.getLayouts());
+				break;
+			}
+			return childList;
+		}
+		
+		@Override
+		public String toString() {
+			String name = null;
+			switch (folderType) {
+			case CONNECTIONS:
+				name = "Connections";
+				break;
+			case QUERIES:
+				name = "Queries";
+				break;
+			case REPORTS:
+				name = "Reports";
+				break;
+			}
+			return name;
+		}
+
+		public int childPositionOffset(Class<? extends WabitObject> childType) {
+			return 0;
+		}
+    }
+    
     private final WabitWorkspace workspace;
+    
+    private final List<FolderNode> folderList;
 
     private WabitTreeModelEventAdapter listener;
     
     public WorkspaceTreeModel(WabitWorkspace workspace) {
         this.workspace = workspace;
+        this.folderList = new ArrayList<FolderNode>();
+        folderList.add(new FolderNode(workspace, FolderType.CONNECTIONS));
+        folderList.add(new FolderNode(workspace, FolderType.QUERIES));
+        folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
         WabitUtils.listenToHierarchy(workspace, listener, listener);
     }
@@ -72,24 +161,48 @@ public class WorkspaceTreeModel implements TreeModel {
     public Object getRoot() {
         return workspace;
     }
-
-    public Object getChild(Object parent, int index) {
-        return ((WabitObject) parent).getChildren().get(index);
+    
+    public Object getChild(Object parentObject, int index) {
+		if (parentObject instanceof WabitWorkspace) {
+			return folderList.get(index);
+    	}  else if (parentObject instanceof FolderNode) {
+    		return ((FolderNode) parentObject).getChildren().get(index);
+    	} else {
+			WabitObject wabitObject = (WabitObject) parentObject;
+			return wabitObject.getChildren().get(index);
+    	}
     }
-
+    
     public int getChildCount(Object parent) {
-        return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
+    	if (parent instanceof WabitWorkspace) {
+    		return folderList.size();
+    	} else if (parent instanceof FolderNode) {
+    		return ((FolderNode) parent).getChildren().size();
+    	} else {
+    		return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
+    	}
     }
-
+    
     public int getIndexOfChild(Object parent, Object child) {
-        WabitObject wo = (WabitObject) parent;
-        List<? extends WabitObject> children = wo.getChildren();
-        return children.indexOf(child);
+    	if (parent instanceof WabitWorkspace) {
+    		return folderList.indexOf(child);
+    	} else if (parent instanceof FolderNode) {
+    		return ((FolderNode) parent).getChildren().indexOf(child);
+    	} else {
+	        WabitObject wo = (WabitObject) parent;
+	        List<? extends WabitObject> children = wo.getChildren();
+	        return children.indexOf(child);
+    	}
     }
 
     public boolean isLeaf(Object node) {
-    	boolean retval = !((WabitObject) node).allowsChildren();
-        return retval;
+    	boolean retval;
+    	if (node instanceof FolderNode) {
+    		retval = !(((FolderNode) node).allowsChildren());
+    	} else {
+    		retval = !((WabitObject) node).allowsChildren();
+    	}
+		return retval;
     }
 
     public void valueForPathChanged(TreePath path, Object newValue) {
@@ -164,7 +277,7 @@ public class WorkspaceTreeModel implements TreeModel {
 				    throw new NullPointerException("Parent of non-root node " + node + " was null!");
 				}
 				int indexOfChild = getIndexOfChild(parent, node);
-				e = new TreeModelEvent(this, pathToNode(parent),
+				e = new TreeModelEvent(this, createTreePathForObject(node),
 						new int[] { indexOfChild }, new Object[] { node });
 			}
 			fireTreeNodesChanged(e);
@@ -172,46 +285,73 @@ public class WorkspaceTreeModel implements TreeModel {
 
 		public void wabitChildAdded(WabitChildEvent e) {
 		    WabitUtils.listenToHierarchy(e.getChild(), this, this);
-			TreeModelEvent treeEvent = new TreeModelEvent(this, pathToNode(e
-					.getSource()), new int[] { e.getIndex() }, new Object[] { e
-					.getChild() });
+		    TreePath treePath = createTreePathForObject(e.getChild());
+		    
+			int index = getCorrectIndex(e);
+			
+		    TreeModelEvent treeEvent = new TreeModelEvent(this, treePath.getParentPath(), 
+		    		new int[] {index},
+		    		new Object[] {e.getChild()});
 			fireTreeNodesInserted(treeEvent);
 		}
 
+
+
 		public void wabitChildRemoved(WabitChildEvent e) {
             WabitUtils.unlistenToHierarchy(e.getChild(), this, this);
-			TreeModelEvent treeEvent = new TreeModelEvent(this, pathToNode(e
-					.getSource()), new int[] { e.getIndex() }, new Object[] { e
-					.getChild() });
+		    TreePath treePath = createTreePathForObject(e.getChild());
+		    
+			int index = getCorrectIndex(e);
+//			if (treePath.getParentPath() != null) {
+//				treePath = treePath.getParentPath();
+//			}
+			TreeModelEvent treeEvent = new TreeModelEvent(this, treePath.getParentPath(),
+					new int[] { index }, new Object[] { e.getChild() });
 			fireTreeNodesRemoved(treeEvent);
 		}
-    	
-	    private TreePath pathToNode(WabitObject o) {
-	        List<WabitObject> path = new ArrayList<WabitObject>();
-	        while (o != null) {
-	            path.add(0, o);
-	            if (o == getRoot()) break;
-	            o = o.getParent();
-	        }
-	        if (path.get(0) != getRoot()) {
-	            // note: if you get this exception, it's probably because the item
-	            // at the beginning of the path needs its parent reference set, but
-	            // it might also be because one of the other items in the path points
-	            // to a node that's in a different tree. So check into both possibilities!
-	            throw new IllegalStateException("Parent pointer is missing at " + path.get(0));
-	        }
-	        return new TreePath(path.toArray());
-	    }
+
+		/**
+		 * This method will get the correct 
+		 * @param e
+		 * 		This is the 
+		 * @param backupIndex
+		 * @return
+		 */
+		private int getCorrectIndex(WabitChildEvent e) {
+			int index = 0;
+			WabitObject wabitObject = e.getChild();
+
+			index += e.getIndex();
+			if (wabitObject instanceof WabitDataSource) return index;
+			
+			index -= (workspace.getConnections().size());
+			
+			if (wabitObject instanceof OlapQuery || wabitObject instanceof QueryCache) return index;
+			
+			index -= (workspace.getQueries().size()) + (workspace.getOlapQueries().size());
+			
+			if (wabitObject instanceof Layout) return index;
+			
+			return e.getIndex();
+		}
     }
     
     public TreePath createTreePathForObject(WabitObject obj) {
-    	WabitObject pathObject = obj;
-    	List<WabitObject> path = new ArrayList<WabitObject>();
-    	while (pathObject.getParent() != null) {
-    		path.add(0, pathObject);
-    		pathObject = pathObject.getParent();
+    	List<Object> path = new ArrayList<Object>();
+    	path.add(0, obj);
+    	while (obj.getParent() != null && obj != getRoot()) {
+    		if (obj.getParent() == getRoot()) {
+            	//this will be where the folders are
+            	FolderType folderType = getProperFolderParent(obj);
+            	for (FolderNode folder : folderList) {
+            		if (folderType == folder.getFolderType()) {
+            			path.add(0, folder);
+            		}
+            	}
+            }
+            obj = obj.getParent();
+            path.add(0, obj);
     	}
-    	path.add(0, pathObject);
     	return new TreePath(path.toArray());
     }
     

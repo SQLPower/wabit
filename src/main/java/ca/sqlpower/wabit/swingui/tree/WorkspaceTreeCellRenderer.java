@@ -45,6 +45,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 	
@@ -121,6 +122,9 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(OLAP_QUERY_ICON);
             }
 
+        } else if (value instanceof FolderNode) {
+        	FolderNode folder = ((FolderNode) value);
+        	r.setText(folder.toString());
         }
         return r;
     }

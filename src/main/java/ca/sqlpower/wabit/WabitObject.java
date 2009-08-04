@@ -21,7 +21,6 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.util.List;
-import java.util.UUID;
 
 public interface WabitObject {
 

@@ -277,8 +277,8 @@ public class Page extends AbstractWabitObject {
         int index = contentBoxes.indexOf(removeme);
         if (index != -1) {
         	contentBoxes.remove(removeme);
-        	removeme.setParent(null);
         	fireChildRemoved(ContentBox.class, removeme, index);
+        	removeme.setParent(null);
     	}
     }
     /**
