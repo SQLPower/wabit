@@ -168,4 +168,14 @@ public class StubWabitSessionContext implements WabitSessionContext {
 		
 	}
 
+    public WabitSession getActiveSession() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void setActiveSession(WabitSession session) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.sql.Connection;
 import java.util.List;
 
@@ -127,4 +128,14 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    public File getCurrentFile() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void setCurrentFile(File file) {
+        // TODO Auto-generated method stub
+        
+    }
 }
