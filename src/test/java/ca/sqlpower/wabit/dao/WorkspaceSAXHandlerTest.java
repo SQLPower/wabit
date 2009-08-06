@@ -68,6 +68,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 		newDS.setName("Missing DS is replaced");
 		final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
 		final WabitSession session = beforeSaveContext.createSession();
+		beforeSaveContext.setActiveSession(session);
 		WabitWorkspace p = session.getWorkspace();
 		p.setName("Workspace");
 		p.addDataSource(newDS);
@@ -78,7 +79,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, beforeSaveContext);
-		saveDAO.save();
+		saveDAO.saveActiveWorkspace();
 		System.out.println(out.toString("utf-8"));
         
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());

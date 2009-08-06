@@ -120,6 +120,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     private boolean loading;
     
     /**
+     * This is the current session that is being changed by the user.
+     */
+    private WabitSession activeSession;
+    
+    /**
      * This lifecycle listener will remove the session's tree from the tabbed
      * pane when the session is removed.
      */
@@ -436,6 +441,14 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             DataSourceCollection<SPDataSource> dsCollection,
             String... buttonNames) {
         return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
+    }
+    
+    public WabitSession getActiveSession() {
+        return activeSession;
+    }
+
+    public void setActiveSession(WabitSession activeSession) {
+        this.activeSession = activeSession;
     }
 
 }

@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
-import java.io.File;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -60,12 +59,6 @@ public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSess
 	void putRecentFileName(String fileName);
 	
 	/**
-	 * Returns true if Wabit should open on the welcome screen. Returns false
-	 * if the most recent workspace in the recent menu should be loaded and displayed.
-	 */
-	boolean startOnWelcomeScreen();
-	
-	/**
 	 * Returns the JFrame that displays the context.
 	 */
 	JFrame getFrame();
@@ -88,30 +81,17 @@ public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSess
     void buildUI() throws SQLObjectException;
     
     /**
-     * Set the file that the session was most recently loaded from or saved to.
-     */
-    void setCurrentFile(File file);
-    
-    /**
-     * Get the file that the session was most recently loaded from or saved to.
-     */
-    File getCurrentFile();
-    
-    /**
      * Returns the row limit component that affects all cached result sets.
      * @return
      */
     JSpinner getRowLimitSpinner();
     
     /**
-     * Sets the active session that is being viewed or modified. Some events
-     * that depend on a session will act on the active session.
+     * Sets the status message at the bottom of the window.
+     * @param msg
      */
-    void setActiveSession(WabitSwingSession session);
+    public void setStatusMessage (String msg);
     
-    /**
-     * Returns the session that the user is currently viewing or editing.
-     */
-    WabitSwingSession getActiveSession();
-
+    public WabitSwingSession getActiveSwingSession();
+    
 }

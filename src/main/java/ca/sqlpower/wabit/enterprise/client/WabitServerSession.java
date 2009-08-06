@@ -165,7 +165,7 @@ public class WabitServerSession extends WabitSessionImpl {
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, context);
-        dao.save();
+        dao.saveActiveWorkspace();
         out.close(); // has no effect, but feels sensible :)
         
         HttpPost request = new HttpPost(getServerURI(serviceInfo, "workspace/" + workspace.getName()));

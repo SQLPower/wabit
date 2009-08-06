@@ -60,7 +60,6 @@ import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -245,12 +244,8 @@ public class WorkspaceXMLDAO {
 		xml = new XMLHelper();
 	}
 	
-	public void save() {
-	    List<WabitWorkspace> workspaces = new ArrayList<WabitWorkspace>();
-	    for (WabitSession session : context.getSessions()) {
-	        workspaces.add(session.getWorkspace());
-	    }
-		save(workspaces);
+	public void saveActiveWorkspace() {
+		save(Collections.singletonList(context.getActiveSession().getWorkspace()));
 	}
 
     /**

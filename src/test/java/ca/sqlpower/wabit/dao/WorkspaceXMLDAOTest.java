@@ -252,6 +252,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
 	public void testSaveAndLoad() throws Exception {
 	    final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
 	    final WabitSession session = beforeSaveContext.createSession();
+	    beforeSaveContext.setActiveSession(session);
 		WabitWorkspace p = session.getWorkspace();
 		p.setName("Workspace");
 		setAllSetters(p, getPropertiesToIgnore());
@@ -284,7 +285,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		WorkspaceXMLDAO saveDAO = new WorkspaceXMLDAO(out, beforeSaveContext);
-		saveDAO.save();
+		saveDAO.saveActiveWorkspace();
         System.out.println(out.toString("utf-8"));
         
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());

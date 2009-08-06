@@ -34,6 +34,7 @@ import javax.swing.JFileChooser;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 
@@ -55,7 +56,11 @@ public class OpenWorkspaceAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		JFileChooser fc = new JFileChooser(context.getCurrentFile());
+	    File defaultFile = null;
+        if (context.getActiveSession() != null) {
+            defaultFile = context.getActiveSwingSession().getCurrentFile();
+        }
+		JFileChooser fc = new JFileChooser(defaultFile);
 		fc.setDialogTitle("Select the file to load from.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
@@ -81,8 +86,10 @@ public class OpenWorkspaceAction extends AbstractAction {
 		} catch (FileNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		loadFile(in, context);
-		context.setCurrentFile(importFile);
+		List<WabitSession> loadFile = loadFile(in, context);
+		for (WabitSession session : loadFile) {
+		    ((WabitSwingSession) session).setCurrentFile(importFile);
+		}
 		context.putRecentFileName(importFile.getAbsolutePath());
 	}
 

@@ -46,9 +46,13 @@ public class ImportWorkspaceAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-	    WabitSwingSession session = context.getActiveSession();
+	    WabitSwingSession session = context.getActiveSwingSession();
 	    
-		JFileChooser fc = new JFileChooser(context.getCurrentFile());
+	    File defaultFile = null;
+        if (context.getActiveSession() != null) {
+            defaultFile = context.getActiveSwingSession().getCurrentFile();
+        }
+		JFileChooser fc = new JFileChooser(defaultFile);
 		fc.setDialogTitle("Select the file to import from.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		

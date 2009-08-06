@@ -217,4 +217,15 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
 	 * or removed from the server list.
 	 */
 	public void removeServerListListener(ServerListListener l);
+	
+    /**
+     * Sets the active session that is being viewed or modified. Some events
+     * that depend on a session will act on the active session.
+     */
+    void setActiveSession(WabitSession session);
+    
+    /**
+     * Returns the session that the user is currently viewing or editing.
+     */
+    WabitSession getActiveSession();
 }

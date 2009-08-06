@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,6 +101,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * The model behind the workspace tree on the left side of Wabit.
 	 */
 	private WorkspaceTreeModel workspaceTreeModel;
+	
+    /**
+     * This is the most recent file loaded in this context or the last
+     * file that the context was saved to. This will be null if no file has
+     * been loaded or the workspaces has not been saved yet.
+     */
+    private File currentFile = null;
 	
     /**
      * This listener is attached to the active session's workspace and will
@@ -300,4 +308,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return upfMissingLoadedDB.createDatabaseUserPrompter(question, dsTypes, optionType, defaultResponseType,
 				defaultResponse, dsCollection, buttonNames);
 	}
+	
+    public File getCurrentFile() {
+        return currentFile;
+    }
+
+    public void setCurrentFile(File file) {
+        currentFile = file;       
+    }
 }

@@ -41,7 +41,7 @@ public class SaveWorkspaceAction extends AbstractAction {
     private final WabitSwingSessionContext context;
 
 	public SaveWorkspaceAction(WabitSwingSessionContext context) {
-		super("Save All Workspaces", new ImageIcon(SaveWorkspaceAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+		super("Save Workspace", new ImageIcon(SaveWorkspaceAction.class.getClassLoader().getResource("icons/wabit_save.png")));
         this.context = context;
 	}
 
@@ -58,7 +58,9 @@ public class SaveWorkspaceAction extends AbstractAction {
 	 * @return If the save was successful or not
 	 */
 	public static boolean save(WabitSwingSessionContext context) {
-		File currentFile = context.getCurrentFile();
+	    if (context.getActiveSession() == null) return false;
+	    
+		File currentFile = context.getActiveSwingSession().getCurrentFile();
         if (currentFile != null) {
 			WorkspaceXMLDAO workspaceSaver;
 			int lastIndexOfDecimal = currentFile.getName().lastIndexOf(".");
@@ -74,8 +76,10 @@ public class SaveWorkspaceAction extends AbstractAction {
 			} catch (IOException e) {
 			    throw new RuntimeException(e);
 			}
-			workspaceSaver.save();
+			workspaceSaver.saveActiveWorkspace();
 			context.putRecentFileName(currentFile.getAbsolutePath());
+			context.setStatusMessage("Saved " + context.getActiveSession().getWorkspace().getName() + " to " +
+			        currentFile.getName());
 			return true;
 		} else {
 			return new SaveWorkspaceAsAction(context).save();

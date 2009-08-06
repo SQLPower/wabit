@@ -37,12 +37,15 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
  * This will save a given workspace to a user specified file.
  */
 public class SaveWorkspaceAsAction extends AbstractAction {
+    
+    private static final ImageIcon SAVE_WABIT_ICON = 
+        new ImageIcon(SaveWorkspaceAsAction.class.getClassLoader().getResource("icons/wabit_save.png"));
 
 	public static final String WABIT_FILE_EXTENSION = ".wabit";
     private final WabitSwingSessionContext context;
 
 	public SaveWorkspaceAsAction(WabitSwingSessionContext context) {
-		super("Save All Workspaces To...", new ImageIcon(SaveWorkspaceAsAction.class.getClassLoader().getResource("icons/wabit_save.png")));
+		super("Save Workspace To...", SAVE_WABIT_ICON);
         this.context = context;
 	}
 
@@ -55,7 +58,9 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 	 * saved. Returns false if the file was not saved or cancelled.
 	 */
 	public boolean save() {
-		JFileChooser fc = new JFileChooser(context.getCurrentFile());
+	    if (context.getActiveSession() == null) return false;
+	    
+		JFileChooser fc = new JFileChooser(context.getActiveSwingSession().getCurrentFile());
 		fc.setDialogTitle("Select the directory to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
@@ -77,16 +82,18 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 		    throw new RuntimeException(e1);
 		}
 		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, context);
-		workspaceSaver.save();
+		workspaceSaver.saveActiveWorkspace();
 		try {
 		    out.close();
 		} catch (IOException e) {
 		    throw new RuntimeException(e);
 		}
 		
-		this.context.setCurrentFile(selectedFile);
+		this.context.getActiveSwingSession().setCurrentFile(selectedFile);
 		
 		context.putRecentFileName(selectedFile.getAbsolutePath());
+		context.setStatusMessage("Saved " + context.getActiveSession().getWorkspace().getName() + " to " +
+		        selectedFile.getName());
 		
 		return true;
 	}

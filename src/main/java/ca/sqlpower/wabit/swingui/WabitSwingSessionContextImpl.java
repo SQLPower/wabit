@@ -169,10 +169,13 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private final SwingUIUserPrompterFactory upf = new SwingUIUserPrompterFactory(null);
     
     /**
-     * This is a preference that stores if the app should start up on the welcome screen
-     * or it should start on the last loaded/saved workspace. 
+     * This is a preference that stores the absolute file location of each file that should
+     * be started when Wabit starts up. To get the files that need to be opened when Wabit
+     * starts append a number to the end of this string, starting at 0, until the pref is null.
+     * Each file stored in the prefs should be loaded and if an exception occurs stop loading.
+     * If no files are listed the welcome screen should appear.
      */
-    private static final String PREFS_START_ON_WELCOME_SCREEN = "START_ON_WELCOME_SCREEN";
+    private static final String PREFS_OPEN_WORKSPACES = "OPEN_WORKSPACES";
     
     public static final ForumAction FORUM_ACTION = new ForumAction(
             new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/wabit-24px.png")), 
@@ -216,11 +219,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private JTabbedPane treeTabbedPane;
     
     /**
-     * This is the current session that is being changed by the user.
-     */
-    private WabitSwingSession activeSession;
-    
-    /**
      * This is the limit of all result sets in Wabit. Changing this spinner
      * will cause cached result sets to be flushed.
      */
@@ -237,13 +235,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    /**
-     * This is the most recent file loaded in this context or the last
-     * file that the context was saved to. This will be null if no file has
-     * been loaded or the workspaces has not been saved yet.
-     */
-    private File currentFile = null;
-    
     /**
      * The list of all currently-registered background tasks.
      */
@@ -336,13 +327,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	    delegateContext.deregisterChildSession(child);
 	    
 	    treeTabbedPane.removeTabAt(getSessions().indexOf(child));
-	    // TODO: Re-enabled this fix for the open most recent project
-	    // after the bug where the wrong recent project is opened is fixed.
-//		if (getSessionCount() == 0 && !closing) {
-	    if (getSessionCount() == 0) {
-			logger.debug("Wrote true in deregisterChildSession() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
-			getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, true);
-		}
 	}
 	
 	/**
@@ -495,7 +479,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.add(createServerListMenu(frame, "Save Workspace on Server", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 try {
-                    return new JMenuItem(new SaveServerWorkspaceAction(serviceInfo, dialogOwner, activeSession.getWorkspace(), WabitSwingSessionContextImpl.this));
+                    return new JMenuItem(new SaveServerWorkspaceAction(serviceInfo, dialogOwner, getActiveSession().getWorkspace(), WabitSwingSessionContextImpl.this));
                 } catch (Exception e) {
                     JMenuItem menuItem = new JMenuItem(e.toString());
                     menuItem.setEnabled(false);
@@ -513,7 +497,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         JMenuItem databaseConnectionManager = new JMenuItem(new AbstractAction("Database Connection Manager...") {
             public void actionPerformed(ActionEvent e) {
-                 ((WabitSwingSession) activeSession).getDbConnectionManager().showDialog(getFrame());
+                getActiveSwingSession().getDbConnectionManager().showDialog(getFrame());
             }
         });
         fileMenu.add(databaseConnectionManager);
@@ -595,8 +579,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
         
         WabitObject entryPanelModel = null;
-        if (activeSession != null) {
-            entryPanelModel = activeSession.getWorkspace().getEditorPanelModel();
+        if (getActiveSession() != null) {
+            entryPanelModel = getActiveSession().getWorkspace().getEditorPanelModel();
         }
         
         currentEditorPanel = createEditorPanel(entryPanelModel);
@@ -623,10 +607,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * the panel to edit the model object given.
      */
     private WabitPanel createEditorPanel(WabitObject entryPanelModel) {
-        if (activeSession == null) {
+        if (getActiveSession() == null) {
             currentEditorPanel = welcomeScreen.getPanel();
         } else if (entryPanelModel instanceof QueryCache) {
-            QueryPanel queryPanel = new QueryPanel(activeSession, (QueryCache) entryPanelModel);
+            QueryPanel queryPanel = new QueryPanel(getActiveSwingSession(), (QueryCache) entryPanelModel);
             if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
                 String[] dividerLocations = prefs.get(QUERY_DIVIDER_LOCATON, null).split(",");
                 queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
@@ -634,19 +618,19 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
             currentEditorPanel = queryPanel;
         } else if (entryPanelModel instanceof OlapQuery) {
-            OlapQueryPanel panel = new OlapQueryPanel(activeSession, wabitPane, (OlapQuery) entryPanelModel);
+            OlapQueryPanel panel = new OlapQueryPanel(getActiveSwingSession(), wabitPane, (OlapQuery) entryPanelModel);
             currentEditorPanel = panel;
         } else if (entryPanelModel instanceof WabitImage) {
             WabitImagePanel panel = new WabitImagePanel((WabitImage) entryPanelModel, this);
             currentEditorPanel = panel;
         } else if (entryPanelModel instanceof Layout) {
-            ReportLayoutPanel rlPanel = new ReportLayoutPanel(activeSession, (Layout) entryPanelModel);
+            ReportLayoutPanel rlPanel = new ReportLayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
             if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {
                 rlPanel.getSplitPane().setDividerLocation(Integer.parseInt(prefs.get(LAYOUT_DIVIDER_LOCATION, null)));
             }
             currentEditorPanel = rlPanel;
         } else if (entryPanelModel instanceof WabitWorkspace) {
-            currentEditorPanel = new WorkspacePanel(activeSession);
+            currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
         } else {
             if (entryPanelModel instanceof WabitObject && ((WabitObject) entryPanelModel).getParent() != null) {
                 currentEditorPanel = createEditorPanel(((WabitObject) entryPanelModel).getParent()); 
@@ -697,13 +681,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
 	public void putRecentFileName(String fileName) {
 		createRecentMenu().putRecentFileName(fileName);
-		getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
-		logger.debug("Wrote false in putRecentFileName() to " + PREFS_START_ON_WELCOME_SCREEN + " preference");
-	}
-
-	public boolean startOnWelcomeScreen() {
-		logger.debug("Got " + (getSessionCount() == 0) + " from " + PREFS_START_ON_WELCOME_SCREEN + " preference");
-		return getPrefs().getBoolean(PREFS_START_ON_WELCOME_SCREEN, false);
 	}
 
     public void close() {
@@ -747,9 +724,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         frame.dispose();
 
-        getPrefs().putBoolean(PREFS_START_ON_WELCOME_SCREEN, getSessionCount() == 0);
-        logger.debug("Wrote " + (getSessionCount() == 0) + " in close() to " 
-                + PREFS_START_ON_WELCOME_SCREEN + " preference");
+        for (int i = 0; i < getSessionCount(); i++) {
+            getPrefs().put(PREFS_OPEN_WORKSPACES + i, 
+                    ((WabitSwingSession) getSessions().get(i)).getCurrentFile().getAbsolutePath());
+        }
+        
         delegateContext.close();
         
     }
@@ -845,24 +824,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				defaultResponse, dsCollection, buttonNames);
 	}
 
-    public File getCurrentFile() {
-        return currentFile;
+    public WabitSession getActiveSession() {
+        return delegateContext.getActiveSession();
+    }
+    
+    public WabitSwingSession getActiveSwingSession() {
+        return (WabitSwingSession) delegateContext.getActiveSession();
     }
 
-    public void setCurrentFile(File file) {
-        File oldDirectory = currentFile;
-        currentFile = file;       
-        pcs.firePropertyChange("currentDirectory", oldDirectory, currentFile);
-    }
-
-    public WabitSwingSession getActiveSession() {
-        return activeSession;
-    }
-
-    public void setActiveSession(WabitSwingSession activeSession) {
-        WabitSwingSession oldSession = this.activeSession;
-        this.activeSession = activeSession;
-        pcs.firePropertyChange("activeSession", oldSession, activeSession);
+    public void setActiveSession(WabitSession activeSession) {
+        delegateContext.setActiveSession(activeSession);
     }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {
@@ -918,18 +889,23 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 	WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
                     WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
                     
-                    final File importFile;
+                    final List<File> importFile = new ArrayList<File>();
                     if (args.length > 0) {
-                        importFile = new File(args[0]);
-                    } else if (context.startOnWelcomeScreen()) {
-                        importFile = null;
+                        importFile.add(new File(args[0]));
                     } else {
-                        importFile = context.createRecentMenu().getMostRecentFile();
+                        int i = 0;
+                        while (context.getPrefs().get(PREFS_OPEN_WORKSPACES + i, null) != null) {
+                            String uri = context.getPrefs().get(PREFS_OPEN_WORKSPACES + i, null);
+                            File newFile = new File(uri);
+                            importFile.add(newFile);
+                            i++;
+                        }
                     }
                     
-                    
-                    if (importFile != null) {
-                    	OpenWorkspaceAction.loadFile(importFile, context);
+                    for (File file : importFile) {
+                        if (file != null) {
+                            OpenWorkspaceAction.loadFile(file, context);
+                        }
                     }
                     context.setEditorPanel();
                 } catch (Exception ex) {
