@@ -54,7 +54,6 @@ public class SlicerPanel extends JPanel {
 		String slicerText = "Ugly Slicer Panel :)";
 		textArea = new JTextArea(slicerText);
 		textArea.setVisible(true);
-		add(textArea);
 		updatePanel();
 		repaint();
 		setDropTarget(new DropTarget(this, slicerPanelDropTargetListener));
@@ -68,7 +67,6 @@ public class SlicerPanel extends JPanel {
 			JLabel item = new JLabel(slicerMember.getName());
 			item.setBorder(BorderFactory.createEtchedBorder());
 			add(item);
-
 		}
 	}
 	

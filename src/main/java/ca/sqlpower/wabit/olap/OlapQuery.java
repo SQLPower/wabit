@@ -485,7 +485,9 @@ public class OlapQuery extends AbstractWabitObject {
 
         			// Not optimal to do this for every selection, but we're not recording
         			// the hierarchy with the <dimension> element.
-        			hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
+        			if (queryAxis.getLocation() != Axis.FILTER) {
+        				hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
+        			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-exclusion")) {
         			String operation = entry.get("operator");
         			Member actualMember = findMember(entry, getCurrentCube());
@@ -493,7 +495,9 @@ public class OlapQuery extends AbstractWabitObject {
 
         			// Not optimal to do this for every selection, but we're not recording
         			// the hierarchy with the <dimension> element.
-        			hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
+        			if (queryAxis.getLocation() != Axis.FILTER) {
+        				hierarchiesInUse.put(queryDimension, actualMember.getHierarchy());
+        			}
         		} else if (this.rootNodes.get(cpt).startsWith("/")) {
         			// we can safely ignore end tags here.
         		} else {
@@ -680,12 +684,21 @@ public class OlapQuery extends AbstractWabitObject {
         		qa.getDimensions().add(ordinal, qd);
         	}
         }
-        hierarchiesInUse.put(qd, member.getHierarchy());
         
         
         //The filter axis does not support multiple members
         if (qa.getLocation() == Axis.FILTER) {
         	qd.clearInclusions();
+        	hierarchiesInUse.remove(qd);
+        } else {
+        	hierarchiesInUse.put(qd, member.getHierarchy());
+        	if (slicerMember != null){
+        		String oldDimensionName = slicerMember.getDimension().getName();
+        		QueryDimension oldQueryDimension = mdxQuery.getDimension(oldDimensionName);
+        		if (oldQueryDimension == qd) {
+        			slicerMember = null;
+        		}
+        	}
         }
         
         if (!isIncluded(member)) {
@@ -698,7 +711,6 @@ public class OlapQuery extends AbstractWabitObject {
         		String oldDimensionName = slicerMember.getDimension().getName();
         		QueryDimension oldQueryDimension = mdxQuery.getDimension(oldDimensionName);
         		if (oldQueryDimension != qd) {
-        			hierarchiesInUse.remove(oldQueryDimension);
         			oldQueryDimension.clearInclusions();
         		}
         	}
