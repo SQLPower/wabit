@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.dao;
 
 import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -43,6 +45,7 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.graph.DepthFirstSearch;
@@ -61,6 +64,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.SaveOLAP4jQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -78,8 +82,6 @@ import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 import ca.sqlpower.xml.XMLHelper;
-
-import com.sun.mail.util.BASE64EncoderStream;
 
 public class WorkspaceXMLDAO {
 	
@@ -101,10 +103,11 @@ public class WorkspaceXMLDAO {
      *  <dt>1.1.0 <dd>OLAP query syntax has changed, both inside the datasources definition and the report.
      *  <dt>1.1.1 <dd>OLAP query syntax has changed for reports, -report tag was removed.
      *  <dt>1.1.2 <dd>Added exclusions when saving an OLAP query
+     *  <dt>1.1.3 <dd>Changed how images are being saved. There is now a wabit-image section for each {@link WabitImage}.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 1, 2); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 1, 3); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
@@ -321,6 +324,8 @@ public class WorkspaceXMLDAO {
 		            saveOlapQuery((OlapQuery) wabitObject);
 		        } else if (wabitObject instanceof Layout) {
 		            saveLayout((Layout) wabitObject);
+		        } else if (wabitObject instanceof WabitImage) {
+		            saveWabitImage((WabitImage) wabitObject);
 		        } else {
 		            logger.info("Not saving wabit object " + wabitObject.getName() + " of type " + wabitObject.getClass() + " as it should be saved elsewhere.");
 		        }
@@ -457,25 +462,10 @@ public class WorkspaceXMLDAO {
 						ImageRenderer imgRenderer = (ImageRenderer) box.getContentRenderer();
 						xml.print(out, "<image-renderer");
 						printAttribute("name", imgRenderer.getName());
-						xml.niprint(out, ">");
-						BufferedImage image = imgRenderer.getImage();
-						if (image != null) {
-							try {
-								out.flush();
-								ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-								ImageIO.write(image, "PNG", byteStream);
-								byte[] byteArray = BASE64EncoderStream.encode(byteStream.toByteArray());
-								char[] charArray = new char[byteArray.length];
-								for (int i = 0; i < byteArray.length; i++) {
-									charArray[i] = (char)byteArray[i];
-								}
-								logger.debug("Encoded length is " + byteArray.length);
-								logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
-								out.write(charArray);
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
+						if (imgRenderer.getImage() != null) {
+						    printAttribute("wabit-image-uuid", imgRenderer.getImage().getUUID());
 						}
+						xml.niprint(out, ">");
 						out.println("</image-renderer>");
 						
 					} else if (box.getContentRenderer() instanceof ChartRenderer) {
@@ -580,6 +570,47 @@ public class WorkspaceXMLDAO {
 		
 		xml.indent--;
 		xml.println(out, "</layout>");
+	}
+	
+	private void saveWabitImage(WabitImage wabitImage) {
+	    xml.print(out, "<wabit-image");
+        printAttribute("name", wabitImage.getName());
+        printAttribute("uuid", wabitImage.getUUID());
+        xml.niprint(out, ">");
+        xml.indent++;
+	    
+	    final Image wabitInnerImage = wabitImage.getImage();
+        BufferedImage image;
+        if (wabitInnerImage instanceof BufferedImage) {
+            image = (BufferedImage) wabitInnerImage;
+        } else {
+            image = new BufferedImage(wabitInnerImage.getWidth(null), 
+                    wabitInnerImage.getHeight(null), BufferedImage.TYPE_INT_ARGB); 
+            final Graphics2D g = image.createGraphics();
+            g.drawImage(wabitInnerImage, 0, 0, null);
+            g.dispose();
+        }
+        if (image != null) {
+            try {
+                out.flush();
+                ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                ImageIO.write(image, "PNG", byteStream);
+                byte[] byteArray = new Base64().encode(byteStream.toByteArray());
+                logger.debug("Encoded length is " + byteArray.length);
+                logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
+                for (int i = 0; i < byteArray.length; i++) {
+                    out.write((char)byteArray[i]);
+                    if (i % 60 == 59) {
+                        out.write("\n");
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        xml.indent--;
+        xml.println(out, "</wabit-image>");
 	}
 	
     /**

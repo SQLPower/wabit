@@ -39,6 +39,7 @@ import java.util.Stack;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
@@ -75,6 +76,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -99,8 +101,6 @@ import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
-
-import com.sun.mail.util.BASE64DecoderStream;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.
@@ -239,6 +239,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * loaded is a local session and workspace.
      */
     private WabitServerInfo serverInfo = null;
+
+    /**
+     * This is the current WabitImage being loaded.
+     */
+    private WabitImage currentWabitImage;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of workspace
@@ -590,6 +595,22 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("olap-cube") || name.equals("olap4j-query") || name.equals("olap4j-axis")
         		|| name.equals("olap4j-dimension") || name.equals("olap4j-selection") || name.equals("olap4j-exclusion")) {
             olapQuery.appendElement(name, attributes);
+        } else if (name.equals("wabit-image")) {
+            String wabitImageName = attributes.getValue("name");
+            String wabitImageUUID = attributes.getValue("uuid");
+            currentWabitImage = new WabitImage(wabitImageUUID);
+            currentWabitImage.setName(wabitImageName);
+            session.getWorkspace().addImage(currentWabitImage);
+            for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("name")) {
+                    //already loaded
+                } else {
+                    logger.warn("Unexpected attribute of <wabit-image>: " + aname + "=" + aval);
+                }
+            }
+            byteStream = new ByteArrayOutputStream();
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
@@ -689,13 +710,24 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
          	}
         } else if (name.equals("image-renderer")) {
-        	imageRenderer = new ImageRenderer(contentBox, null, false);
+        	imageRenderer = new ImageRenderer(session.getWorkspace(), false);
         	contentBox.setContentRenderer(imageRenderer);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
         		if (aname.equals("name")) {
         			imageRenderer.setName(aval);
+        		} else if (aname.equals("wabit-image-uuid")) {
+        		    for (WabitImage image : session.getWorkspace().getImages()) {
+        		        if (image.getUUID().equals(aval)) {
+        		            imageRenderer.setImage(image);
+        		            break;
+        		        }
+        		    }
+        		    if (imageRenderer.getImage() == null) {
+        		        throw new IllegalStateException("Could not load the workspace as the report " + layout.getName() 
+        		                + " is missing the image " + aval);
+        		    }
         		} else {
         			logger.warn("Unexpected attribute of <image-renderer>: " + aname + "=" + aval);
         		}
@@ -1201,16 +1233,32 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		newRSRenderer.setBorderType(rsRenderer.getBorderType());
     		contentBox.setContentRenderer(newRSRenderer);
     	} else if (name.equals("image-renderer")) {
-    		byte[] byteArray = BASE64DecoderStream.decode(byteStream.toByteArray());
-    		logger.debug("Decoding byte stream: Stream has " + byteStream.toString().length() + " and array has " + Arrays.toString(byteArray));
-    		try {
-				BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));				
-				imageRenderer.setImage(img);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+    	    //This was loading an image for 1.1.2 and older.
+    		byte[] byteArray = new Base64().decode(byteStream.toByteArray());
+    		if (byteArray.length > 0) {
+    		    logger.debug("Decoding byte stream: Stream has " + byteStream.toString().length() + " and array has " + Arrays.toString(byteArray));
+    		    try {
+    		        BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));
+    		        WabitImage wabitImage = new WabitImage();
+    		        wabitImage.setImage(img);
+    		        wabitImage.setName(imageRenderer.getName());
+    		        session.getWorkspace().addImage(wabitImage);
+    		        imageRenderer.setImage(wabitImage);
+    		    } catch (IOException e) {
+    		        throw new RuntimeException(e);
+    		    }
+    		}
 			imageRenderer = null;
-    	} else if (name.equals("olap-cube")
+    	} else if (name.equals("wabit-image")) {
+            byte[] byteArray = new Base64().decode(byteStream.toByteArray());
+            try {
+                BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));
+                currentWabitImage.setImage(img);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            currentWabitImage = null;
+        } else if (name.equals("olap-cube")
     	        || name.equals("olap4j-query")
     	        || name.equals("olap4j-axis") 
     	        || name.equals("olap4j-dimension")
@@ -1225,10 +1273,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     @Override
     public void characters(char[] ch, int start, int length)
     		throws SAXException {
-    	if (imageRenderer != null) {
+    	if (imageRenderer != null || currentWabitImage != null) {
     		logger.debug("Starting characters at " + start + " and ending at " + length);
     		for (int i = start; i < start+length; i++) {
-    			byteStream.write((byte)ch[i]);
+    		    byteStream.write((byte)ch[i]);
     		}
     		logger.debug("Byte stream has " + byteStream.toString());
     	}

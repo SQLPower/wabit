@@ -29,13 +29,13 @@ import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 
 /**
  * This action will load in workspaces from a user selected file to a given
@@ -50,7 +50,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	private final WabitSwingSessionContext context;
 	
 	public OpenWorkspaceAction(WabitSwingSessionContext context) {
-		super("Open Workspace...", new ImageIcon(OpenWorkspaceAction.class.getClassLoader().getResource("icons/wabit_load.png")));
+		super("Open Workspace...", WabitSwingSessionContextImpl.OPEN_WABIT_ICON);
 		this.context = context;
 	}
 

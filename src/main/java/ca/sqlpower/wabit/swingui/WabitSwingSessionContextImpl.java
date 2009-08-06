@@ -93,6 +93,7 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
@@ -129,6 +130,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private static final Icon OPEN_DEMO_ICON = new ImageIcon(
             WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
+    
+    public static final Icon OPEN_WABIT_ICON = new ImageIcon(
+            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/wabit_load.png"));
     
     private static final int DEFAULT_DIVIDER_LOC = 50;
     
@@ -631,6 +635,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             currentEditorPanel = queryPanel;
         } else if (entryPanelModel instanceof OlapQuery) {
             OlapQueryPanel panel = new OlapQueryPanel(activeSession, wabitPane, (OlapQuery) entryPanelModel);
+            currentEditorPanel = panel;
+        } else if (entryPanelModel instanceof WabitImage) {
+            WabitImagePanel panel = new WabitImagePanel((WabitImage) entryPanelModel, this);
             currentEditorPanel = panel;
         } else if (entryPanelModel instanceof Layout) {
             ReportLayoutPanel rlPanel = new ReportLayoutPanel(activeSession, (Layout) entryPanelModel);

@@ -23,7 +23,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -41,6 +44,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,9 +80,11 @@ import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
@@ -106,7 +112,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_fit16.png"));
-    private static final Icon CREATE_IMAGE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/image_add.png"));
     private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/chart_bar_add.png"));
     private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
     private static final ImageIcon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge_1.png")); //originally said throbber-badge.gif, that icon doesn't exist. I think this is what we need...
@@ -167,9 +172,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				throw new RuntimeException(e);
 			}
 			
-			for (WabitObject query : queries) {
-			    if (query instanceof QueryCache) {
-			        QueryCache queryCache = (QueryCache) query;
+			for (WabitObject wabitObject : queries) {
+			    if (wabitObject instanceof QueryCache) {
+			        QueryCache queryCache = (QueryCache) wabitObject;
 			        ContentBox contentBox = new ContentBox();
 			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
 			        contentBox.setContentRenderer(rsRenderer);
@@ -179,8 +184,8 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
 			                pageNode.getHeight() / 10);
 			        pageNode.addChild(newCBNode);
-			    } else if (query instanceof OlapQuery) {
-			        OlapQuery olapQuery = (OlapQuery) query;
+			    } else if (wabitObject instanceof OlapQuery) {
+			        OlapQuery olapQuery = (OlapQuery) wabitObject;
 			        ContentBox contentBox = new ContentBox();
 			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
 			        contentBox.setContentRenderer(renderer);
@@ -190,8 +195,19 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
                             (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
                             pageNode.getHeight() / 10);
                     pageNode.addChild(newCBNode);
+			    } else if (wabitObject instanceof WabitImage) {
+			        WabitImage image = (WabitImage) wabitObject;
+			        ContentBox contentBox = new ContentBox();
+			        ImageRenderer renderer = new ImageRenderer(session.getWorkspace(), false);
+			        renderer.setImage(image);
+			        renderer.setName(image.getName());
+			        contentBox.setContentRenderer(renderer);
+			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
+			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+			                image.getImage().getWidth(null), image.getImage().getHeight(null));
+			        pageNode.addChild(newCBNode);
 			    } else {
-			        throw new IllegalStateException("Unknown query dragged into the report layout. Object was " + query.getClass());
+			        throw new IllegalStateException("Unknown query dragged into the report layout. Object was " + wabitObject.getClass());
 			    }
 			}
 			
@@ -230,21 +246,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	private final AbstractAction addContentBoxAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_BOX);
-			cursorManager.placeModeStarted();
-		}
-	};
-	
-	private final AbstractAction addImageBoxAction = new AbstractAction("",  ReportLayoutPanel.CREATE_IMAGE_ICON){
-		public void actionPerformed(ActionEvent e) {
-			setMouseState(MouseStates.CREATE_IMAGE);
-			cursorManager.placeModeStarted();
-		}
-	};
-	
-	//XXX This should be removed and references to it be replaced by addImageBoxAction
-	private final AbstractAction addImageAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
-		public void actionPerformed(ActionEvent e) {
-			setMouseState(MouseStates.CREATE_IMAGE);
 			cursorManager.placeModeStarted();
 		}
 	};
@@ -323,11 +324,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
 		inputMap.put(KeyStroke.getKeyStroke('b'), addContentBoxAction.getClass());
 		
-		canvas.getActionMap().put(addImageAction.getClass(), addImageAction);
-		inputMap.put(KeyStroke.getKeyStroke('i'), addImageAction.getClass());
-		
 		addContentBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
-		addImageBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add image");
 		addGraphBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add chart");
 		addHorizontalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add horizontal guide");
 		addVerticalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add vertical guide");
@@ -372,7 +369,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.add(zoomPanel);
         toolbar.addSeparator();
         toolbar.add(addContentBoxAction);
-        toolbar.add(addImageBoxAction);
         toolbar.add(addGraphBoxAction);
         toolbar.add(addHorizontalGuideAction);
         toolbar.add(addVerticalGuideAction);
@@ -401,7 +397,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         mainSplitPane.setResizeWeight(1);
         mainSplitPane.add(leftPanel, JSplitPane.LEFT);
         
-        final JList queryList = new JList(new QueryListModel(session.getWorkspace()));
+        final JList queryList = new JList(new DraggableWabitObjectListModel(session.getWorkspace()));
         queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         queryList.setCellRenderer(new DefaultListCellRenderer() {
         	@Override
@@ -422,6 +418,23 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				    }
 				} else if (value instanceof OlapQuery) {
 				    ((JLabel) c).setIcon(OLAP_QUERY_ICON);
+				} else if (value instanceof WabitImage) {
+				    final Image wabitImage = ((WabitImage) value).getImage();
+				    if (wabitImage != null) {
+				        JLabel label = ((JLabel) c);
+				        final int width = QUERY_DB.getIconWidth();
+				        final int height = QUERY_DB.getIconHeight();
+				        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+				        Graphics2D g = image.createGraphics();
+				        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+				                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+				        g.drawImage(wabitImage, 0, 0, width, height, new Color(0xffffffff, true), null);
+				        g.dispose();
+
+				        final ImageIcon icon = new ImageIcon(image);
+				        label.setIcon(icon);
+				    }
 				}
 				return c;
 			}

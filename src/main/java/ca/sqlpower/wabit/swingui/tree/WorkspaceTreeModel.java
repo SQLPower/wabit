@@ -39,7 +39,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
@@ -47,6 +46,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -65,6 +65,7 @@ public class WorkspaceTreeModel implements TreeModel {
     private static enum FolderType {
     	CONNECTIONS,
     	QUERIES,
+    	IMAGES,
     	REPORTS
     	//TODO implement images and charts folders.... maybe olap cubes
     }
@@ -74,10 +75,12 @@ public class WorkspaceTreeModel implements TreeModel {
     		return FolderType.CONNECTIONS;
     	} else if (object instanceof QueryCache || object instanceof OlapQuery) {
     		return FolderType.QUERIES; 
+    	} else if (object instanceof WabitImage) {
+    	    return FolderType.IMAGES;
     	} else if (object instanceof Layout) {
     		return FolderType.REPORTS;
     	}
-    	throw new UnsupportedOperationException("Trying to find the parent folder of object of type: " + object.getChildren().toString());
+    	throw new UnsupportedOperationException("Trying to find the parent folder of object of type: " + object.getClass());
     }
     
     public class FolderNode {
@@ -113,6 +116,9 @@ public class WorkspaceTreeModel implements TreeModel {
 				childList.addAll(workspace.getQueries());
 				childList.addAll(workspace.getOlapQueries());
 				break;
+			case IMAGES:
+			    childList.addAll(workspace.getImages());
+			    break;
 			case REPORTS:
 				childList.addAll(workspace.getLayouts());
 				break;
@@ -130,6 +136,9 @@ public class WorkspaceTreeModel implements TreeModel {
 			case QUERIES:
 				name = "Queries";
 				break;
+			case IMAGES:
+			    name = "Images";
+			    break;
 			case REPORTS:
 				name = "Reports";
 				break;
@@ -153,6 +162,7 @@ public class WorkspaceTreeModel implements TreeModel {
         this.folderList = new ArrayList<FolderNode>();
         folderList.add(new FolderNode(workspace, FolderType.CONNECTIONS));
         folderList.add(new FolderNode(workspace, FolderType.QUERIES));
+        folderList.add(new FolderNode(workspace, FolderType.IMAGES));
         folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
         WabitUtils.listenToHierarchy(workspace, listener, listener);
@@ -329,6 +339,10 @@ public class WorkspaceTreeModel implements TreeModel {
 			if (wabitObject instanceof OlapQuery || wabitObject instanceof QueryCache) return index;
 			
 			index -= (workspace.getQueries().size()) + (workspace.getOlapQueries().size());
+			
+			if (wabitObject instanceof WabitImage) return index;
+			
+			index -= (workspace.getImages().size());
 			
 			if (wabitObject instanceof Layout) return index;
 			

@@ -47,14 +47,17 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
+import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
@@ -218,13 +221,43 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				} else {
 					return;
 				}
+		    } else if (item instanceof WabitImage) {
+		        int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this image, " +
+		        		"you will be deleting layout parts dependent on it\n" +
+                        "Do you want to proceed with deleting?", "Delete Image", 
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, 
+                        new Object[] {"Ok", "Cancel"}, null);
+                if(response == 0) {
+                    final WabitImage image = (WabitImage) item;
+                    session.getWorkspace().removeImage(image);
+                    removeLayoutPartsDependentOnImage(image);
+                } else {
+                    return;
+                }
 			} else {
 				logger.debug("This shoudl not Happen");
+				throw new IllegalStateException("Trying to delete a workspace tree object that " +
+						"is unknown. Object is " + item + " and type is " + item.getClass() + ".");
 			}
 			
 		}
 
-		/**
+        /**
+         * Removes any content boxes dependent on the image passed to the method.
+         */
+		private void removeLayoutPartsDependentOnImage(WabitImage image) {
+		    for (Layout layout : session.getWorkspace().getLayouts()) {
+                List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
+                for (ContentBox cb : cbList) {
+                    if (cb.getContentRenderer() instanceof ImageRenderer && ((ImageRenderer) cb.getContentRenderer()).getImage() == image) {
+                        int layoutIndex = session.getWorkspace().getLayouts().indexOf(layout);
+                        session.getWorkspace().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
+                    }
+                }
+            }
+        }
+
+        /**
 		 * Removes any content boxes dependent on the query passed to the method
 		 * @param query
 		 */
@@ -292,6 +325,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			}
 		}
 		
+		menu.add(new NewImageAction(session));
+		
 		menu.add(new NewLayoutAction(session));
 		
 		if (lastPathComponent != null) {
@@ -308,7 +343,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			menu.add(new EditCellAction(tree));
 		}
 		if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof WabitDataSource
-				|| lastPathComponent instanceof Layout || lastPathComponent instanceof OlapQuery) {
+				|| lastPathComponent instanceof Layout || lastPathComponent instanceof OlapQuery
+				|| lastPathComponent instanceof WabitImage) {
 			menu.add(new DeleteFromTreeAction(lastPathComponent));
 		}
 		

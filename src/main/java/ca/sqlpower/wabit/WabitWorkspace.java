@@ -38,6 +38,7 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 
@@ -75,6 +76,11 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private final List<Layout> layouts = new ArrayList<Layout>();
     
     /**
+     * The images in this workspace.
+     */
+    private final List<WabitImage> images = new ArrayList<WabitImage>();
+    
+    /**
      * TODO: These listeners are never fired at current as they are only used for
      * DS Type undo events in the library currently. These listeners are unused
      * until the workspace supports changing DS Types or other undoable edits are
@@ -98,6 +104,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         allChildren.addAll(dataSources);
         allChildren.addAll(queries);
         allChildren.addAll(olapQueries);
+        allChildren.addAll(images);
         allChildren.addAll(layouts);
         return allChildren;
     }
@@ -185,6 +192,32 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	}
     }
     
+    public void addImage(WabitImage image) {
+        int index = images.size();
+        images.add(index, image);
+        image.setParent(this);
+        fireChildAdded(WabitImage.class, image, index);
+        setEditorPanelModel(image);
+    }
+    
+    public boolean removeImage(WabitImage image) {
+        int index = images.indexOf(image);
+        if (index != -1) {
+            images.remove(image);
+            fireChildRemoved(WabitImage.class, image, index);
+            if (editorPanelModel == image) {
+                setEditorPanelModel(this);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public List<WabitImage> getImages() {
+        return Collections.unmodifiableList(images);
+    }
+    
     public int childPositionOffset(Class<? extends WabitObject> childType) {
         int offset = 0;
 
@@ -197,6 +230,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         
         if (childType == OlapQuery.class) return offset;
         offset += olapQueries.size();
+        
+        if (childType == WabitImage.class) return offset;
+        offset += images.size();
         
         if (childType == Layout.class) return offset;
         

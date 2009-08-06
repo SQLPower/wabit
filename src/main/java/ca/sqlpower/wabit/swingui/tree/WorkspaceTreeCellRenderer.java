@@ -19,7 +19,12 @@
 
 package ca.sqlpower.wabit.swingui.tree;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +45,7 @@ import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -120,6 +126,22 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             	}
             } else if (wo instanceof OlapQuery) {
                 r.setIcon(OLAP_QUERY_ICON);
+            } else if (wo instanceof WabitImage) {
+                final Image wabitImage = ((WabitImage) wo).getImage();
+                if (wabitImage != null) {
+                    final int width = r.getIcon().getIconWidth();
+                    final int height = r.getIcon().getIconHeight();
+                    final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+                    Graphics2D g = image.createGraphics();
+                    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+                            RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g.drawImage(wabitImage, 0, 0, width, height, new Color(0xffffffff, true), null);
+                    g.dispose();
+                
+                    final ImageIcon icon = new ImageIcon(image);
+                    r.setIcon(icon);
+                }
             }
 
         } else if (value instanceof FolderNode) {

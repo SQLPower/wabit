@@ -19,22 +19,29 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.imageio.ImageIO;
-import javax.swing.JFileChooser;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.image.WabitImage;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
 /**
@@ -45,16 +52,63 @@ public class ImageRenderer extends AbstractWabitObject implements
 	
 	private static final Logger logger = Logger.getLogger(ImageRenderer.class);
 	
-	private BufferedImage image;
-	private final ContentBox parent;
+	private class ImageEntryPanel implements DataEntryPanel {
+    
+	    private final JPanel panel;
+        private JList imageList;
+        private int startingImageIndex;
+        private ListCellRenderer oldCellRenderer;
+	    
+	    public ImageEntryPanel(WabitWorkspace workspace, WabitImage startingImage) {
+	        panel = new JPanel(new BorderLayout());
+	        imageList = new JList(workspace.getImages().toArray());
+	        
+	        oldCellRenderer = imageList.getCellRenderer();
+	        imageList.setCellRenderer(new ListCellRenderer() {
+            
+                public Component getListCellRendererComponent(JList list, Object value,
+                        int index, boolean isSelected, boolean cellHasFocus) {
+                    Component comp = 
+                        oldCellRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    if (comp instanceof JLabel) {
+                        ((JLabel) comp).setText(((WabitObject) value).getName());
+                    }
+                    return comp;
+                }
+            });
+	        startingImageIndex = workspace.getImages().indexOf(startingImage);
+            imageList.setSelectedIndex(startingImageIndex);
+            imageList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            panel.add(new JLabel("Select the desired image below"), BorderLayout.NORTH);
+	        panel.add(new JScrollPane(imageList), BorderLayout.CENTER);
+	        logger.debug("Created the image entry panel.");
+	    }
+	    
+        public boolean hasUnsavedChanges() {
+            return !(startingImageIndex == imageList.getSelectedIndex());
+        }
+    
+        public JComponent getPanel() {
+            return panel;
+        }
+    
+        public void discardChanges() {
+            //no-op
+        }
+    
+        public boolean applyChanges() {
+            setImage((WabitImage) imageList.getSelectedValue());
+            return true;
+        }
+    };
+	
+	private WabitImage image;
 
-	private final Component parentComponent;
-	
 	private String filename;
+    private final WabitWorkspace workspace;
 	
-	public ImageRenderer(ContentBox parent, Component parentComponent, boolean showSelectOnCreation) {
-		this.parent = parent;
-		this.parentComponent = parentComponent;
+	public ImageRenderer(WabitWorkspace workspace, boolean showSelectOnCreation) {
+        this.workspace = workspace;
 		if (showSelectOnCreation) {
 			getPropertiesPanel();
 		}
@@ -69,42 +123,12 @@ public class ImageRenderer extends AbstractWabitObject implements
 	}
 
 	public DataEntryPanel getPropertiesPanel() {
-		String oldFileName = null;
-		if (getName() != null) {
-			oldFileName = getName();
-		}
-		JFileChooser imageChooser = new JFileChooser();
-		int retVal = imageChooser.showOpenDialog(parentComponent);
-		if (retVal == JFileChooser.APPROVE_OPTION) {
-			logger.debug("Chosen file is " + imageChooser.getSelectedFile().getAbsolutePath());
-			try {
-				image = ImageIO.read(imageChooser.getSelectedFile());
-				filename = imageChooser.getSelectedFile().getAbsolutePath();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-			setName("Image: " + imageChooser.getSelectedFile().getName());
-			// If name for the content box has not been changed to something
-			// user-defined, we change it everytime a
-			// different image is selected
-			if (parent.getName() != null && oldFileName != null	&& (parent.getName().contains(oldFileName))) {
-				parent.getParent().setUniqueName(parent,
-						parent.getName().replace(oldFileName, getName()));
-			}
-			parent.setWidth(image.getWidth(parentComponent));
-			parent.setHeight(image.getHeight(parentComponent));
-		} else if (image == null) {
-			//Giving the content box some size to let the user click on it.
-			parent.setWidth(100);
-			parent.setHeight(100);
-			setName("Image: not defined");
-		}
-		return null;
+	    return new ImageEntryPanel(workspace, getImage());
 	}
 
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing) {
-		g.drawImage(image, 0, 0, (int) contentBox.getWidth(), (int) contentBox.getHeight(), null);
+		g.drawImage(image.getImage(), 0, 0, (int) contentBox.getWidth(), (int) contentBox.getHeight(), null);
 		return false;
 	}
 
@@ -124,7 +148,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 		return Collections.emptyList();
 	}
 	
-	public BufferedImage getImage() {
+	public WabitImage getImage() {
 		return image;
 	}
 	
@@ -132,8 +156,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 		return filename;
 	}
 
-	public void setImage(BufferedImage image) {
+	public void setImage(WabitImage image) {
+	    WabitImage oldImage = this.image;
 		this.image = image;
+		firePropertyChange("image", oldImage, image);
 	}
 
     public void processEvent(PInputEvent event, int type) {
@@ -141,7 +167,8 @@ public class ImageRenderer extends AbstractWabitObject implements
     }
 
     public List<WabitObject> getDependencies() {
-        return Collections.emptyList();
+        if (getImage() == null) return Collections.emptyList();
+        return new ArrayList<WabitObject>(Collections.singleton(getImage()));
     }
 
 }

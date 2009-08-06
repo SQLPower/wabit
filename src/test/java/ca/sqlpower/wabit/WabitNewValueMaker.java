@@ -33,6 +33,7 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
@@ -127,6 +128,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	}
         } else if (valueType.equals(OlapQuery.class)) {
         	newValue = new OlapQuery(new StubWabitSessionContext());
+        } else if (valueType.equals(WabitImage.class)) {
+            newValue = new WabitImage();
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
