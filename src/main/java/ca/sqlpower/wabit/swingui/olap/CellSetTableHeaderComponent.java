@@ -52,6 +52,7 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -94,6 +95,57 @@ import ca.sqlpower.wabit.swingui.olap.action.RemoveHierarchyAction;
  */
 public class CellSetTableHeaderComponent extends JComponent {
 
+	public class CellSetTableCornerComponent extends JComponent {
+		
+		private List<Dimension> preferredSizes = new ArrayList<Dimension>();
+		
+		/**
+		 * Only the containing CellSetTableHeaderComponent instance will
+		 * instantiate the corner component. Use
+		 * {@link CellSetTableHeaderComponent#getCornerComponent()} to get the
+		 * corner component reference
+		 */
+		private CellSetTableCornerComponent() {
+			//do nothing
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g) {
+			Graphics2D g2 = (Graphics2D) g;
+	        super.paintComponent(g2);
+	        
+	        FontMetrics fm = g2.getFontMetrics();
+	        Font oldFont = g2.getFont();
+	        Font italicFont = oldFont.deriveFont(Font.ITALIC);
+	        Color oldColor = g2.getColor();
+	        
+	        g2.setColor(ColourScheme.HEADER_COLOURS[3]);
+	        g2.fillRect(0, 0, getWidth(), getHeight());
+	        
+	        try {
+	        	g2.setFont(italicFont);
+		        int x = 0;
+				ImageIcon dimensionIcon = OlapIcons.DIMENSION_ICON;
+		        
+				for (HierarchyComponent h: hierarchies) {
+					String hierarchyName = h.getHierarchy().getDimension().getName();
+					g2.setColor(h.getBackground());
+					g2.fillRect(x, getHeight() - Math.max(fm.getHeight(), dimensionIcon.getIconHeight()), 
+							Math.max(h.getWidth(), dimensionIcon.getIconWidth() + (int) fm.getStringBounds(hierarchyName, g2).getWidth()), Math.max(fm.getHeight(), dimensionIcon.getIconHeight()));
+					g2.setColor(oldColor);
+					dimensionIcon.paintIcon(this, g2, x, getHeight() - dimensionIcon.getIconHeight());
+	        		g2.drawString(hierarchyName, x + dimensionIcon.getIconWidth(), getHeight() - fm.getDescent());
+	        		x += Math.max(h.getWidth(), dimensionIcon.getIconWidth() + (int) fm.getStringBounds(hierarchyName, g2).getWidth());
+				}
+	        } finally {
+	        	g2.setFont(oldFont);
+	        	g2.setColor(oldColor);
+	        }
+		}
+	}
+	
+	private CellSetTableCornerComponent cornerComponent;
+	
 	/**
 	 * A constant for the size of padding to be added to the left and right
 	 * sides of a layout item, and in particular between a layout item's text
@@ -396,6 +448,10 @@ public class CellSetTableHeaderComponent extends JComponent {
     	int hierarchyCount = axisMetaData.getHierarchies().size();
 
     	if (axis == Axis.ROWS) {
+    		cornerComponent = new CellSetTableCornerComponent();
+    		for (int i = 0; i < hierarchyCount; i++) {
+    			cornerComponent.preferredSizes.add(new Dimension(0, 0));
+    		}
     		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
     	} else if (axis == Axis.COLUMNS) {
     		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -775,7 +831,14 @@ public class CellSetTableHeaderComponent extends JComponent {
             	preferredSizes.add(new Dimension((int)li.bounds.getWidth(), (int)li.bounds.getHeight()));
             	layoutItems.add(li);
             } else {
-            
+            	if (axis.getAxisOrdinal() == Axis.ROWS) {
+            		Rectangle2D stringBounds = fm.getStringBounds(hierarchy.getName(), g2);
+            		Dimension d = cornerComponent.preferredSizes.get(hierarchyOrdinal);
+            		d.setSize(OlapIcons.HIERARCHY_ICON.getIconWidth() + (int)stringBounds.getWidth() 
+            				+ CellSetTableHeaderComponent.LAYOUT_ITEM_PADDING, 
+            				(int)stringBounds.getHeight());
+            	}
+            	
 	            int[] columnPositions = getColumnPositions();
 	            for (int i = 0; i < axis.getPositionCount(); i++) {
 	            	preferredSizes.add(new Dimension(0, 0));
@@ -880,6 +943,9 @@ public class CellSetTableHeaderComponent extends JComponent {
         public Dimension getPreferredSize() {
             createLayout();
             Dimension ps = new Dimension();
+            if (axis != null && axis.getAxisOrdinal() == Axis.ROWS) {
+            	ps.width = cornerComponent.preferredSizes.get(hierarchyOrdinal).width;
+            }
             for (LayoutItem li : getLayoutItems()) {
                 ps.width = (int) Math.max(li.bounds.getX() + li.bounds.getWidth(), ps.width);
                 ps.height = (int) Math.max(li.bounds.getY() + li.bounds.getHeight(), ps.height);
@@ -1025,5 +1091,12 @@ public class CellSetTableHeaderComponent extends JComponent {
     public void setRowHeight(float rowHeight) {
 		this.rowHeight = rowHeight;
 		revalidate();
+	}
+
+	public CellSetTableCornerComponent getCornerComponent() {
+		if (cornerComponent == null) {
+			cornerComponent = new CellSetTableCornerComponent();
+		}
+		return cornerComponent;
 	}
 }

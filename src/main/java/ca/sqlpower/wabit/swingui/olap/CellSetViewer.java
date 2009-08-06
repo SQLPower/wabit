@@ -47,6 +47,7 @@ import org.olap4j.query.RectangularCellSetFormatter;
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.CellSetTableCornerComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 
 public class CellSetViewer {
@@ -141,7 +142,7 @@ public class CellSetViewer {
             }
         }
        
-        CellSetTableCornerComponent corner = new CellSetTableCornerComponent(rowHeader.getHierarchies());
+        CellSetTableCornerComponent corner = rowHeader.getCornerComponent();
         corner.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.WHITE));
 
         scrollPane.setViewportView(table);
