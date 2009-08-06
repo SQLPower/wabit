@@ -103,6 +103,7 @@ public class CellSetViewer {
     	viewerComponent.setPreferredSize(new Dimension(640, 480));
     	slicerScrollPane = new JScrollPane();
     	slicerScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    	slicerScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         table = new JTable();
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
@@ -219,7 +220,9 @@ public class CellSetViewer {
             logger.error("Exception while creating row header.", e);
         }
         
-        slicerScrollPane.setViewportView(new SlicerPanel(query));
+        SlicerPanel slicerPanel = new SlicerPanel(query);
+        slicerScrollPane.setPreferredSize(new Dimension(slicerScrollPane.getPreferredSize().height + 10, slicerPanel.getPreferredSize().height + 10));
+		slicerScrollPane.setViewportView(slicerPanel);
 	}
 	
     public JComponent getViewComponent() {

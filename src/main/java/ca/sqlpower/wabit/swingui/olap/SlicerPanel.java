@@ -28,34 +28,39 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
+import javax.swing.border.Border;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
+
+import com.lowagie.text.Font;
 
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class SlicerPanel extends JPanel {
-	private final JTextArea textArea;
 	private final SlicerPanelDropTargetListener slicerPanelDropTargetListener = new SlicerPanelDropTargetListener();
 	private final OlapQuery olapQuery;
 	private final String slicerText = "Drag Dimensions, Hierarchies, Measures, and Members here";
+	private JPanel item;
+	private static final Border DEFAULT_BORDER = BorderFactory.createEtchedBorder();
+	private static final Border DRAG_OVER_BORDER = BorderFactory.createLineBorder(Color.BLACK, 5);
 	
     private static final Logger logger = Logger.getLogger(SlicerPanel.class);
 	
 	public SlicerPanel(OlapQuery olapQuery) {
 		super();
 		this.olapQuery = olapQuery;
-		textArea = new JTextArea(slicerText);
-		textArea.setVisible(true);
 		updatePanel();
 		repaint();
 		setDropTarget(new DropTarget(this, slicerPanelDropTargetListener));
@@ -65,12 +70,51 @@ public class SlicerPanel extends JPanel {
 		removeAll();
 		Member slicerMember = olapQuery.getSlicerMember();
 		if (slicerMember != null) {
-			JLabel item = new JLabel(slicerMember.getName());
-			item.setBorder(BorderFactory.createEtchedBorder());
+			item = new JPanel();
+			
+			JLabel axisTitle = new JLabel("Filter: ");
+			item.add(axisTitle);
+			if (slicerMember instanceof Measure) {
+
+				if (slicerMember instanceof Measure) {
+					item.add(new JLabel(OlapIcons.MEASURE_ICON));
+				}
+				item.add(new JLabel(slicerMember.getName()));
+
+			} else {
+				String point = " > ";
+				item.add(new JLabel(OlapIcons.DIMENSION_ICON));
+				item.add(new JLabel(slicerMember.getDimension().getName() + point));
+
+				item.add(new JLabel(OlapIcons.HIERARCHY_ICON));
+				item.add(new JLabel(slicerMember.getHierarchy().getName() + point));
+
+				item.add(new JLabel(OlapIcons.LEVEL_ICON));
+				item.add(new JLabel(slicerMember.getLevel().getName() + point));
+
+				List<JLabel> labels = new ArrayList<JLabel>();
+				point = "";
+				while (slicerMember != null) {
+					labels.add(0, new JLabel(slicerMember.getName() + point));
+
+					if (slicerMember instanceof Measure) {
+						labels.add(0, new JLabel(OlapIcons.MEASURE_ICON));
+					}
+
+					slicerMember = slicerMember.getParentMember();
+					point = " > ";
+				}
+				for (JLabel label : labels) {
+					item.add(label);
+				}
+			}
+			
+			item.setBorder(DEFAULT_BORDER);
+			item.setVisible(true);
 			add(item);
-			setBackground(ColourScheme.HEADER_COLOURS[0]);
+			item.setBackground(Color.WHITE);
 		} else {
-			add(textArea);
+			add(new JLabel(slicerText));
 			setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
 			setBackground(Color.WHITE);
 			CellSetTableHeaderComponent.addGreyedButtonsToPanel(this);
@@ -85,11 +129,24 @@ public class SlicerPanel extends JPanel {
 		}
 
 		public void dragExit(DropTargetEvent dte) {
-			//Don't care
+			resetUI();
+		}
+		
+		private void resetUI() {
+			if (item == null) {
+				SlicerPanel.this.setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
+			} else {
+				item.setBorder(DEFAULT_BORDER);
+			}
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
 			if (canImport(SlicerPanel.this, dtde.getCurrentDataFlavors())) {
+				if (item == null) {
+					SlicerPanel.this.setBorder(DRAG_OVER_BORDER);
+				} else {
+					item.setBorder(DRAG_OVER_BORDER);
+				}
 				dtde.acceptDrag(dtde.getDropAction());
 			} else {
 				dtde.rejectDrag();
@@ -137,16 +194,18 @@ public class SlicerPanel extends JPanel {
 
                     	olapQuery.addToAxis(0, m, Axis.FILTER);
                     }
+        			resetUI();
                     return true;
 
                 } catch (Exception e) {
                     // note: exceptions thrown here get eaten by the DnD system
+        			resetUI();
                     throw new RuntimeException(e);
                 }
             }
             return false;
         }
-
+        
 		public void dropActionChanged(DropTargetDragEvent dtde) {
 			//we don't care?
 		}
