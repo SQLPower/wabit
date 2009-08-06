@@ -725,8 +725,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         frame.dispose();
 
         for (int i = 0; i < getSessionCount(); i++) {
-            getPrefs().put(PREFS_OPEN_WORKSPACES + i, 
-                    ((WabitSwingSession) getSessions().get(i)).getCurrentFile().getAbsolutePath());
+        	
+            File currentFile = ((WabitSwingSession) getSessions().get(i)).getCurrentFile();
+            if (currentFile == null) continue;
+			getPrefs().put(PREFS_OPEN_WORKSPACES + i, 
+                    currentFile.getAbsolutePath());
         }
         
         delegateContext.close();
