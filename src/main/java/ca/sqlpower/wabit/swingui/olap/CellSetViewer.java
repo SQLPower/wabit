@@ -35,6 +35,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -60,6 +62,7 @@ public class CellSetViewer {
     private final JScrollPane scrollPane;
     private final JLabel messageLabel = new JLabel("", JLabel.CENTER);
     private int minColumnWidth = 5;
+    
 
     /**
      * This is the cell set most recently displayed in this viewer. This will be
@@ -72,6 +75,9 @@ public class CellSetViewer {
      * when clicking on the headers will be removed.
      */
     private final boolean allowMemberModification;
+    
+    
+    private final JScrollPane slicerScrollPane;
 
 	/**
 	 * Creates a CellSetViewer on the given {@link OlapQuery} and by default
@@ -99,7 +105,11 @@ public class CellSetViewer {
         scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);
         showMessage(query, "No query defined");
-        viewerComponent.add(scrollPane);
+        viewerComponent.add(scrollPane, BorderLayout.CENTER);
+        
+        slicerScrollPane = new JScrollPane();
+        slicerScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        viewerComponent.add(slicerScrollPane, BorderLayout.SOUTH);
     }
 
     public void showCellSet(OlapQuery query, CellSet cellSet) {
@@ -123,6 +133,11 @@ public class CellSetViewer {
         final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.COLUMNS, table);
         columnHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.WHITE));
         
+        SlicerPanel slicerPanel = new SlicerPanel(query);
+        slicerPanel.setVisible(true);
+        slicerPanel.setMinimumSize(new Dimension(100, 100));
+        slicerScrollPane.setViewportView(slicerPanel);
+        
         if (!allowMemberModification) {
             for (HierarchyComponent hierarchy : rowHeader.getHierarchies()) {
                 for (MouseListener l : hierarchy.getMouseListeners()) {
@@ -144,10 +159,11 @@ public class CellSetViewer {
        
         CellSetTableCornerComponent corner = rowHeader.getCornerComponent();
         corner.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.WHITE));
-
+        
         scrollPane.setViewportView(table);
     	scrollPane.setRowHeaderView(rowHeader);
 		scrollPane.setCorner(JScrollPane.UPPER_LEADING_CORNER, corner);
+		
     	scrollPane.setColumnHeaderView(columnHeader);
     	TableCellRenderer defaultRenderer = new TableCellRenderer() {
     		public Component getTableCellRendererComponent(JTable table,

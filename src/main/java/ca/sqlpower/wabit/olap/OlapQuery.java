@@ -35,6 +35,7 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
+import org.olap4j.CellSetAxis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.mdx.ParseTreeWriter;
@@ -52,7 +53,6 @@ import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
-import org.olap4j.query.QueryDimension.SortOrder;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 
@@ -75,6 +75,13 @@ public class OlapQuery extends AbstractWabitObject {
      * This is the query name given to all Olap4j queries in this class.
      */
     private static final String OLAP4J_QUERY_NAME = "GUI Query";
+    
+    /**
+     * This is the member to filter by, since mondrian does not support compound
+     * slicers this variable is needed to assure that our user is unable to add
+     * more than one member to their slicer axis
+     */
+    private Member slicerMember = null;
     
     /**
      * This will create a copy of the query.
@@ -305,6 +312,7 @@ public class OlapQuery extends AbstractWabitObject {
 	 * @throws SQLException 
 	 */
     public void reset() throws SQLException {
+    	slicerMember = null;
         try {
 			setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
 		} catch (Exception e) {
@@ -352,6 +360,16 @@ public class OlapQuery extends AbstractWabitObject {
      */
     public Olap4jDataSource getOlapDataSource() {
         return olapDataSource;
+    }
+    
+    /**
+     * This method returns the single slicer member, since Olap4j does not track
+     * whether or not you have more than one member in your slicer and since
+     * mondrian does not support compound slicers we will use this variable to
+     * make sure that the user does not add more than one member to their slicer
+     */
+    public Member getSlicerMember() {
+    	return slicerMember;
     }
 
     /**
@@ -454,6 +472,16 @@ public class OlapQuery extends AbstractWabitObject {
         			    throw new QueryInitializationException("Could not find member " + entry.get("unique-member-name") + " in the cube" + (getCurrentCube() != null?" " + getCurrentCube().getName():"") + ".");
         			}
         			queryDimension.include(Operator.valueOf(operation), actualMember);
+        			
+        			//this is to make sure that the user does not add
+        			if (queryAxis.getLocation() == Axis.FILTER) {
+        				if (slicerMember != null) {
+        					throw new QueryInitializationException("Could not initialize query " + getName() + 
+        							" because it tried to initialize with a compound slicer and compound " +
+        							"slicers are not yet supported.");
+        				}
+        				slicerMember = actualMember;
+        			}
 
         			// Not optimal to do this for every selection, but we're not recording
         			// the hierarchy with the <dimension> element.
@@ -611,7 +639,6 @@ public class OlapQuery extends AbstractWabitObject {
      * @throws QueryInitializationException 
      */
     public String getMdxText() throws QueryInitializationException {
-        // TODO synchronization
         StringWriter sw = new StringWriter();
         ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
         
@@ -654,9 +681,30 @@ public class OlapQuery extends AbstractWabitObject {
         	}
         }
         hierarchiesInUse.put(qd, member.getHierarchy());
+        
+        
+        //The filter axis does not support multiple members
+        if (qa.getLocation() == Axis.FILTER) {
+        	qd.clearInclusions();
+        }
+        
         if (!isIncluded(member)) {
         	qd.include(Operator.MEMBER, member);
         }
+        
+        //The filter axis does not support multiple members
+        if (qa.getLocation() == Axis.FILTER ) {
+        	if (slicerMember != null) {
+        		String oldDimensionName = slicerMember.getDimension().getName();
+        		QueryDimension oldQueryDimension = mdxQuery.getDimension(oldDimensionName);
+        		if (oldQueryDimension != qd) {
+        			hierarchiesInUse.remove(oldQueryDimension);
+        			oldQueryDimension.clearInclusions();
+        		}
+        	}
+        	slicerMember = member;
+        }
+
         Type memberType = member.getMemberType();
         logger.debug("memberType = " + memberType);
 		if (!(member instanceof Measure)) {
