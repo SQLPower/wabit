@@ -719,7 +719,7 @@ public class OlapQuery extends AbstractWabitObject {
 
         Type memberType = member.getMemberType();
         logger.debug("memberType = " + memberType);
-		if (!(member instanceof Measure)) {
+		if (!(member instanceof Measure) && qa.getLocation() != Axis.FILTER) {
 			qd.setHierarchizeMode(HierarchizeMode.PRE);
         }
     	execute();

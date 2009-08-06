@@ -46,6 +46,7 @@ import org.olap4j.CellSet;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.query.RectangularCellSetFormatter;
 
+import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
@@ -100,15 +101,14 @@ public class CellSetViewer {
     public CellSetViewer(OlapQuery query, boolean allowMemberModification) {
     	this.allowMemberModification = allowMemberModification;
     	viewerComponent.setPreferredSize(new Dimension(640, 480));
+    	slicerScrollPane = new JScrollPane();
+    	slicerScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         table = new JTable();
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);
         showMessage(query, "No query defined");
         viewerComponent.add(scrollPane, BorderLayout.CENTER);
-        
-        slicerScrollPane = new JScrollPane();
-        slicerScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         viewerComponent.add(slicerScrollPane, BorderLayout.SOUTH);
     }
 
@@ -135,7 +135,6 @@ public class CellSetViewer {
         
         SlicerPanel slicerPanel = new SlicerPanel(query);
         slicerPanel.setVisible(true);
-        slicerPanel.setMinimumSize(new Dimension(100, 100));
         slicerScrollPane.setViewportView(slicerPanel);
         
         if (!allowMemberModification) {
@@ -219,6 +218,8 @@ public class CellSetViewer {
             messageLabel.setText(e.getMessage());
             logger.error("Exception while creating row header.", e);
         }
+        
+        slicerScrollPane.setViewportView(new SlicerPanel(query));
 	}
 	
     public JComponent getViewComponent() {

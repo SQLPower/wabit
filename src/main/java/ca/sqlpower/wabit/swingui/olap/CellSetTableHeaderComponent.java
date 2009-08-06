@@ -167,7 +167,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * using a rounded, dashed box to indicate areas where you can drag and drop
 	 * stuff into.
 	 */
-	private static final Border ROUNDED_DASHED_BORDER = new AbstractBorder() {
+	public static final Border ROUNDED_DASHED_BORDER = new AbstractBorder() {
 		private final BasicStroke DASHED_STROKE = new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
 	            BasicStroke.JOIN_BEVEL, 1.0f, new float[] { 7.0f, 7.0f }, 0.0f);
 		
@@ -495,16 +495,20 @@ public class CellSetTableHeaderComponent extends JComponent {
     	label = new JLabel("Measures, and Members here", SwingConstants.CENTER);
     	panel.add(label);
     	
-    	JPanel iconPanel = new JPanel();
+    	addGreyedButtonsToPanel(panel);
+    	
+    	panel.setBorder(defaultBorder);
+    	add(panel, BorderLayout.CENTER);
+    }
+
+	public static void addGreyedButtonsToPanel(JPanel panel) {
+		JPanel iconPanel = new JPanel();
     	iconPanel.setOpaque(false);
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.DIMENSION_ICON, Color.LIGHT_GRAY, 0.9f)));
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.HIERARCHY_ICON, Color.LIGHT_GRAY, 0.9f)));
     	iconPanel.add(new JLabel(new ColoredIcon(OlapIcons.MEASURE_ICON, Color.LIGHT_GRAY, 0.9f)));
     	panel.add(iconPanel);
-    	
-    	panel.setBorder(defaultBorder);
-    	add(panel, BorderLayout.CENTER);
-    }
+	}
 
 	/**
 	 * Creates a CellSetTableRowHeaderComponent without a given CellSet. This is

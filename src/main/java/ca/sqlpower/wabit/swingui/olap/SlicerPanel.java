@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -39,19 +40,20 @@ import org.olap4j.Axis;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Member;
 
+import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.olap.OlapQuery;
 
 public class SlicerPanel extends JPanel {
 	private final JTextArea textArea;
 	private final SlicerPanelDropTargetListener slicerPanelDropTargetListener = new SlicerPanelDropTargetListener();
 	private final OlapQuery olapQuery;
+	private final String slicerText = "Drag Dimensions, Hierarchies, Measures, and Members here";
 	
     private static final Logger logger = Logger.getLogger(SlicerPanel.class);
 	
 	public SlicerPanel(OlapQuery olapQuery) {
 		super();
 		this.olapQuery = olapQuery;
-		String slicerText = "Ugly Slicer Panel :)";
 		textArea = new JTextArea(slicerText);
 		textArea.setVisible(true);
 		updatePanel();
@@ -61,12 +63,17 @@ public class SlicerPanel extends JPanel {
 	
 	private void updatePanel() {
 		removeAll();
-		add(textArea);
 		Member slicerMember = olapQuery.getSlicerMember();
 		if (slicerMember != null) {
 			JLabel item = new JLabel(slicerMember.getName());
 			item.setBorder(BorderFactory.createEtchedBorder());
 			add(item);
+			setBackground(ColourScheme.HEADER_COLOURS[0]);
+		} else {
+			add(textArea);
+			setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
+			setBackground(Color.WHITE);
+			CellSetTableHeaderComponent.addGreyedButtonsToPanel(this);
 		}
 	}
 	
