@@ -31,6 +31,7 @@ import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Stroke;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DropTarget;
@@ -38,6 +39,7 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -176,10 +178,15 @@ public class CellSetTableHeaderComponent extends JComponent {
 				int width, int height) {
 			Color oldColour = g.getColor();
 			g.setColor(new Color(221, 221, 221));
+			Stroke oldStroke = null;
 			if (g instanceof Graphics2D) {
+				oldStroke = ((Graphics2D) g).getStroke();
 				((Graphics2D) g).setStroke(DASHED_STROKE);
 			}
 			g.drawRoundRect(x + 5 , y + 5 , width-11, height-11, 20, 20);
+			if (g instanceof Graphics2D) {
+				((Graphics2D) g).setStroke(oldStroke);
+			}
 			g.setColor(oldColour);
 		}
 		
@@ -460,11 +467,12 @@ public class CellSetTableHeaderComponent extends JComponent {
     				"Only rows and columns axes are supported, but I got " + axis);
     	}
 
-		if (hierarchyCount > 0) {
+		if (hierarchyCount > 0 && cellSetAxis.getPositionCount() > 0) {
 			for (int i = 0; i < hierarchyCount; i++) {
+				Hierarchy hierarchy = cellSetAxis.getAxisMetaData().getHierarchies().get(i);
 				HierarchyComponent hierarchyComponent =
 					new HierarchyComponent(
-							cellSetAxis, cellSetAxis.getAxisMetaData().getHierarchies().get(i),
+							cellSetAxis, hierarchy,
 							i, table.getColumnModel());
 				hierarchyComponent.setBackground(
 						ColourScheme.HEADER_COLOURS[i % ColourScheme.HEADER_COLOURS.length]);
@@ -472,11 +480,14 @@ public class CellSetTableHeaderComponent extends JComponent {
 				add(hierarchyComponent);
 			}
 			defaultBorder = DEFAULT_HIERARCHYCOMP_BORDER;
+		} else if (cellSetAxis.getPositionCount() == 0) {
+			defaultBorder = ROUNDED_DASHED_BORDER;
+		    setLabelAsEmptyNoPositions(cellSetAxis.getAxisMetaData().getHierarchies());
 		} else {
 			// Currently defaultBorder needs to be set before calling
 			// setLabelAsEmpty() because it uses defaultborder
 			defaultBorder = ROUNDED_DASHED_BORDER;
-		    setLabelAsEmpty();
+		    setLabelAsEmptyNoHierarchies();
 		}
 		setBorder(defaultBorder);
     }
@@ -485,7 +496,7 @@ public class CellSetTableHeaderComponent extends JComponent {
      * This method will set the header component to have the default message if
      * there are no hierarchies in this axis.
      */
-    private void setLabelAsEmpty() {
+    private void setLabelAsEmptyNoHierarchies() {
     	setLayout(new BorderLayout());
     	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%, ins 20", "align center", ""));
     	panel.setBackground(Color.WHITE);
@@ -496,6 +507,45 @@ public class CellSetTableHeaderComponent extends JComponent {
     	panel.add(label);
     	
     	addGreyedButtonsToPanel(panel);
+    	
+    	panel.setBorder(defaultBorder);
+    	add(panel, BorderLayout.CENTER);
+    }
+    
+	/**
+	 * This method will set the header component to have a default message if
+	 * the axis contains no positions (due to all members being omitted or
+	 * excluded)
+	 * 
+	 * @param hierarchies
+	 *            A list of Hierarchies used to clear all exclusions if necessary
+	 */
+    private void setLabelAsEmptyNoPositions(final List<Hierarchy> hierarchies) {
+    	setLayout(new BorderLayout());
+    	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%, ins 20", "align center", ""));
+    	panel.setBackground(Color.WHITE);
+    	
+    	JLabel label = new JLabel("No members in this axis");
+    	panel.add(label);
+    	label = new JLabel("Try unchecking 'Omit Empty Rows' or clicking ");
+    	panel.add(label);
+    	label = new JLabel("<html><a href=\"\">here to Clear All Exceptions</a></html>");
+    	label.addMouseListener(new MouseAdapter() {
+    		@Override
+    		public void mousePressed(MouseEvent e) {
+    			for (Hierarchy h: hierarchies) {
+    				try {
+    					query.clearExclusions(h);
+    					query.execute();
+    				} catch (QueryInitializationException ex) {
+    					throw new RuntimeException("Error while clearing all exclusions", ex);
+    				} catch (OlapException ex) {
+    					throw new RuntimeException("Error while clearing all exclusions", ex);
+    				}
+    			}
+    		}
+    	});
+    	panel.add(label);
     	
     	panel.setBorder(defaultBorder);
     	add(panel, BorderLayout.CENTER);
@@ -554,7 +604,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     		// Currently defaultBorder needs to be set before calling
 			// setLabelAsEmpty() because it uses defaultborder
     		defaultBorder = ROUNDED_DASHED_BORDER;
-    	    setLabelAsEmpty();
+    	    setLabelAsEmptyNoHierarchies();
     	} else {
 	    	for (int i = 0; i < hierarchiesSize; i++) {
 	    		Hierarchy hierarchy = hierarchies.get(i);
