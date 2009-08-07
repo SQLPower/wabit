@@ -673,7 +673,6 @@ public class CellSetTableHeaderComponent extends JComponent {
 					if (clickedOnMember != null && 
 							!(clickedOnMember instanceof Measure)) {
 					    popUpMenu.addSeparator();
-					    //TODO put these menu items back in when implementing exclusions, this is taken out for the 0.9.7 release
 					    popUpMenu.add(new ExcludeMemberAction(
 					            query,
 					            clickedOnMember,

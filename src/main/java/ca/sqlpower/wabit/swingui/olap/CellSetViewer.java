@@ -35,7 +35,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JToolBar;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -46,7 +45,6 @@ import org.olap4j.CellSet;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.query.RectangularCellSetFormatter;
 
-import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;

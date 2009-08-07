@@ -28,21 +28,30 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.border.Border;
 
 import org.olap4j.Axis;
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * This is the slicer panel which shows at the bottom of the cell set viewer
@@ -53,6 +62,11 @@ public class SlicerPanel extends JPanel {
 	 */
 	private final SlicerPanelDropTargetListener slicerPanelDropTargetListener = new SlicerPanelDropTargetListener();
 	
+	/**
+	 * Mouse handler for the panel, lets the user right click
+	 */
+	private final MouseHandler mouseHandler = new MouseHandler();
+
 	/**
 	 * This is the query being sliced
 	 */
@@ -78,6 +92,7 @@ public class SlicerPanel extends JPanel {
 		updatePanel();
 		repaint();
 		setDropTarget(new DropTarget(this, slicerPanelDropTargetListener));
+		this.addMouseListener(mouseHandler);
 	}
 	
 	/**
@@ -235,6 +250,60 @@ public class SlicerPanel extends JPanel {
 			//we don't care?
 		}
 		
+	}
+
+	private class MouseHandler implements MouseListener {
+
+		public void mouseMoved(MouseEvent e) {
+			//Do nothing
+		}
+
+		public void mouseClicked(MouseEvent e) {
+			// hey you: don't implement "click" behaviour here. Use mousePressed() or mouseReleased().
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			//don't care				
+		}
+
+		public void mouseExited(MouseEvent e) {
+			//don't care				
+		}
+
+		public void mousePressed(MouseEvent e) {
+			maybeShowPopup(e, true);
+
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			maybeShowPopup(e, false);
+
+		}
+	}
+
+	private void maybeShowPopup(MouseEvent e, boolean isMousePressed) {
+		final Member slicerMember = olapQuery.getSlicerMember();
+		if (slicerMember != null && e.isPopupTrigger()) {
+			JPopupMenu popUpMenu = new JPopupMenu();
+			JMenuItem removeItem = new JMenuItem(new AbstractAction() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+						olapQuery.removeHierarchy(slicerMember.getHierarchy(), Axis.FILTER);
+						olapQuery.execute();
+					} catch (QueryInitializationException e1) {
+						SPSUtils.showExceptionDialogNoReport(SlicerPanel.this, "Error occured while initializing " +
+								"the query to remove the item on the filter axis.", e1);
+					} catch (OlapException e2) {
+						SPSUtils.showExceptionDialogNoReport(SlicerPanel.this, "Error occured " +
+								"while removing the filter.", e2);					
+					}
+				}
+			});
+			removeItem.setText("Remove filter");
+			popUpMenu.add(removeItem);
+			Point mousePoint = e.getPoint();
+			popUpMenu.show(SlicerPanel.this, mousePoint.x, mousePoint.y);
+		}
 	}
  
 }

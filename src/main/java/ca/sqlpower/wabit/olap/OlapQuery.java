@@ -241,11 +241,17 @@ public class OlapQuery extends AbstractWabitObject {
 	public void removeHierarchy(Hierarchy hierarchy, Axis axis) throws QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(hierarchy.getDimension().getName());
+        
         if (qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
         	qd.clearExclusions();
-            qa.removeDimension(qd);
-            hierarchiesInUse.remove(qd);
+        	qa.removeDimension(qd);
+        	
+        	if (axis != Axis.FILTER) {
+        		hierarchiesInUse.remove(qd);
+        	} else {
+        		slicerMember = null;
+        	}
         }
     }
     
@@ -686,8 +692,8 @@ public class OlapQuery extends AbstractWabitObject {
         }
         
         
-        //The filter axis does not support multiple members
         if (qa.getLocation() == Axis.FILTER) {
+        	//The filter axis does not support multiple members
         	qd.clearInclusions();
         	if (slicerMember != null) {
         		String oldDimensionName = slicerMember.getDimension().getName();
