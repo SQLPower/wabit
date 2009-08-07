@@ -28,6 +28,16 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
 public class ColumnInfo extends AbstractWabitObject{
+    
+    /**
+     * Defines if the column is a grouping, break
+     * or neither.
+     */
+    public enum GroupAndBreak {
+        GROUP,
+        BREAK,
+        NONE
+    }
 
 	/**
 	 * The item this column information is describing.
@@ -43,7 +53,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String HORIZONAL_ALIGNMENT_CHANGED = "horizontalAlignment";
 	public static final String COLUMN_INFO_ITEM_CHANGED = "columnInfoItem";
 	public static final String WIDTH_CHANGED = "width";
-	private static final String WILL_BREAK_CHANGED = "willBreak";
+	private static final String WILL_GROUP_OR_BREAK_CHANGED = "willGroupOrBreak";
 	private static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
 	private static final String COLUMN_ALIAS = "columnAlias";
 	
@@ -57,9 +67,9 @@ public class ColumnInfo extends AbstractWabitObject{
 	
 	/**
 	 * Defines if the column described by this information
-	 * should have a break after every value change.
+	 * should have a break or group after every value change.
 	 */
-	private boolean willBreak = false;
+	private GroupAndBreak willGroupOrBreak = GroupAndBreak.NONE;
 	
 	/**
 	 * defines if this column should be totaled before each new break. Only
@@ -75,7 +85,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	 * if two or more columns have the same name. 
 	 */
 	private String columnAlias;
-
+	
 	public ColumnInfo(Item item, String label) {
 		setColumnInfoItem(item);
 		setName(label);
@@ -145,13 +155,13 @@ public class ColumnInfo extends AbstractWabitObject{
 		return Collections.emptyList();
 	}
 
-	public boolean getWillBreak() {
-		return willBreak;
+	public GroupAndBreak getWillGroupOrBreak() {
+		return willGroupOrBreak;
 	}
 
-	public void setWillBreak(boolean willBreak) {
-		firePropertyChange(WILL_BREAK_CHANGED, this.willBreak, willBreak);
-		this.willBreak = willBreak;
+	public void setWillGroupOrBreak(GroupAndBreak willGroupOrBreak) {
+		firePropertyChange(WILL_GROUP_OR_BREAK_CHANGED, this.willGroupOrBreak, willGroupOrBreak);
+		this.willGroupOrBreak = willGroupOrBreak;
 	}
 
 	public boolean getWillSubtotal() {
@@ -175,5 +185,6 @@ public class ColumnInfo extends AbstractWabitObject{
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
     }
+
 }
 

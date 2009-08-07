@@ -24,7 +24,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
@@ -57,6 +56,7 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -78,9 +78,9 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.report.resultset.Position;
+import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
-import ca.sqlpower.wabit.report.resultset.Section;
+import ca.sqlpower.wabit.report.resultset.ResultSetCell;
 import ca.sqlpower.wabit.swingui.Icons;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -175,20 +175,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	VERTICAL,
     	HORIZONTAL
     }
-    
+
     /**
      * This list contains an in-order list of positions per page. Each entry in
      * the outer list represents one page. The values in the inner list
-     * represents the {@link Section}s in each page where each section in a page
-     * may not be the entire section as defined by a {@link Position}. This will
-     * be null if a change has occurred and requires the positions to be
-     * recreated from the {@link ResultSetRenderer#createResultSetLayout()}
+     * represents the {@link ResultSetCell}s in each page. This will be null if
+     * a change has occurred and requires the positions to be recreated from the
+     * {@link ReportPositionRenderer#createResultSetLayout(Graphics2D, ResultSet, List, ContentBox, boolean)}
      * method. This is wrapped by a ThreadLocal to give each printing thread and
-     * the UI thread different copies of the page positions. This is required
-     * as the printing will render a result set without a limit while the screen
+     * the UI thread different copies of the page positions. This is required as
+     * the printing will render a result set without a limit while the screen
      * does have a limit to it.
      */
-    private final ThreadLocal<List<List<Position>>> pagePositions = new ThreadLocal<List<List<Position>>>();
+    private final ThreadLocal<List<List<ResultSetCell>>> pageCells = new ThreadLocal<List<List<ResultSetCell>>>();
     
     /**
      * This decides if the grand totals will be printed at the end of a result
@@ -298,7 +297,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
 		}
 	};
-    
+
     public ResultSetRenderer(QueryCache query) {
     	this(query, new ArrayList<ColumnInfo>());
     	setName("Result Set: " + query.getName());
@@ -564,7 +563,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	
     	RowComparator comparator = new RowComparator();
     	for (int i = 0; i < getColumnInfoList().size(); i++) {
-    	    if (getColumnInfoList().get(i).getWillBreak()) {
+    	    if (!getColumnInfoList().get(i).getWillGroupOrBreak().equals(GroupAndBreak.NONE)) {
     	        comparator.addSortColumn(i + 1, true);
     	    }
     	}
@@ -579,72 +578,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             throw new RuntimeException(e);
         }
 
-        if (pageIndex >= pagePositions.get().size()) {
-            logger.warn("Trying to print page " + pageIndex + " but only " + pagePositions.get().size() + " pages exist.");
+        if (pageIndex >= pageCells.get().size()) {
+            logger.warn("Trying to print page " + pageIndex + " but only " + pageCells.get().size() + " pages exist.");
             return false;
         }
         
         Graphics2D g2 = (Graphics2D) g.create();
-        List<Position> currentPagePositions = pagePositions.get().get(pageIndex);
-        List<Position.PositionType> positionTypes = Arrays.asList(Position.PositionType.values());
-        for (Position position : currentPagePositions) {
-            final ReportPositionRenderer reportPositionRenderer = position.getReportPositionRenderer();
-            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.SECTION_HEADER)
-                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.SECTION_HEADER)) {
-                Dimension dim = reportPositionRenderer.renderSectionHeader(g2, position.getSection().getSectionHeader(), getColumnInfoList(), position.getSection());
-                g2.translate(0, dim.getHeight());
-            }
-            
-            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.COLUMN_HEADER)
-                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.COLUMN_HEADER)) {
-                Dimension dim = reportPositionRenderer.renderColumnHeader(g2, columnInfo, position.getSection());
-                g2.translate(0, dim.getHeight());
-            }
-            
-            Graphics2D verticalBorderG = (Graphics2D) g2.create();
-            int sectionHeight = 0;
-            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.ROW)
-                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.ROW)) {
-                int startingRow = position.getSection().getStartRow();
-                if (position.getStartingRow() != null) {
-                    startingRow = position.getStartingRow();
-                }
-                int endingRow = position.getSection().getEndRow();
-                if (position.getEndingRow() != null) {
-                    endingRow = position.getEndingRow();
-                }
-                for (int row = startingRow; row <= endingRow; row++) {
-                    Dimension dim;
-                    try {
-                        rs.absolute(row);
-                        dim = reportPositionRenderer.renderRow(g2, rs, columnInfo, position.getSection());
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                    g2.translate(0, dim.getHeight());
-                    if (borderType == BorderStyles.HORIZONTAL || borderType == BorderStyles.INSIDE
-                            || borderType == BorderStyles.FULL) {
-                        g2.drawLine(0, 0, (int) contentBox.getWidth() - 1, 0);
-                    }
-                    sectionHeight += dim.getHeight();
-                }
-            }
-            if (borderType == BorderStyles.VERTICAL || borderType == BorderStyles.INSIDE 
-                    || borderType == BorderStyles.FULL) {
-                int x = 0;
-                for (int col = 0; col < columnInfo.size() - 1; col++) {
-                    if (columnInfo.get(col).getWillBreak()) continue;
-                    Insets padding = reportPositionRenderer.getPadding(columnInfo.get(col));
-                    x += padding.left + columnInfo.get(col).getWidth() + padding.right;
-                    verticalBorderG.drawLine(x, 0, x, sectionHeight);
-                }
-            }
-            
-            if (positionTypes.indexOf(position.getFirstPositionType()) <= positionTypes.indexOf(Position.PositionType.TOTALS)
-                    && positionTypes.indexOf(position.getLastPositionType()) >= positionTypes.indexOf(Position.PositionType.TOTALS)) {
-                Dimension dim = reportPositionRenderer.renderTotals(g2, position.getSection().getTotals(), columnInfo, position.getSection());
-                g2.translate(0, dim.getHeight());
-            }
+        List<ResultSetCell> currentPagePositions = pageCells.get().get(pageIndex);
+        for (ResultSetCell position : currentPagePositions) {
+            position.paint(g2);
         }
         
         if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
@@ -657,7 +599,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         }
         
         //TODO come up with a better way to clear the result sets, probably at the same time the page positions are cleared to get fresh data.
-        final boolean isLastPage = pagePositions.get().size() - 1 == pageIndex;
+        final boolean isLastPage = pageCells.get().size() - 1 == pageIndex;
         if (isLastPage) {
             if (printing) {
                 printingResultSet = null;
@@ -673,7 +615,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * the need to redefine the layout of the result set. 
      */
     private void clearResultSetLayout() {
-        pagePositions.set(null);
+        pageCells.set(null);
         printingResultSet = null;
         paintingRS = null;
     }
@@ -708,185 +650,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      *            avoid sections that are identified by the same section.
      */
     void createResultSetLayout(Graphics2D g, ResultSet rs) throws SQLException {
-        if (pagePositions.get() != null) return; 
-        
-        List<Section> sectionList = new ArrayList<Section>();
-        pagePositions.set(new ArrayList<List<Position>>());
-        List<BigDecimal> grandTotals = new ArrayList<BigDecimal>();
-        for (ColumnInfo ci : getColumnInfoList()) {
-            if (ci.getDataType() == DataType.NUMERIC) {
-                grandTotals.add(BigDecimal.ZERO);
-            } else {
-                grandTotals.add(null);
-            }
-        }
+        if (pageCells.get() != null) return; 
         
         final ReportPositionRenderer reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, (int) getParent().getWidth(), nullString);
-        rs.beforeFirst();
         
-        int sectionStartRow = 1;
-        int sectionEndRow = 1;
-        List<BigDecimal> sectionTotals = new ArrayList<BigDecimal>();
-        List<Object> sectionKey = new ArrayList<Object>();
-        
-        while (rs.next()) {
-            
-            List<Object> newSectionKey = new ArrayList<Object>();
-            for (ColumnInfo ci : getColumnInfoList()) {
-                if (ci.getWillBreak()) {
-                    newSectionKey.add(rs.getObject(getColumnInfoList().indexOf(ci) + 1));
-                } else {
-                    newSectionKey.add(null);
-                }
-            }
-            
-            if (!rs.isFirst()) {
-                if (sectionKey == null) throw new IllegalStateException("The initial section key was undefined! Cannot start laying out the result set.");
-                if (!newSectionKey.equals(sectionKey)) {
-                    Section newSection = new Section(sectionStartRow, sectionEndRow - 1, sectionTotals, sectionKey);
-                    sectionList.add(newSection);
-                    
-                    sectionKey = newSectionKey;
-                    sectionStartRow = sectionEndRow;
-                    sectionTotals = new ArrayList<BigDecimal>();
-                    for (ColumnInfo ci : getColumnInfoList()) {
-                        if (ci.getWillSubtotal()) {
-                            sectionTotals.add(new BigDecimal(0));
-                        } else {
-                            sectionTotals.add(null);
-                        }
-                    }
-                }
-            } else {
-                sectionKey = newSectionKey;
-                for (ColumnInfo ci : getColumnInfoList()) {
-                    if (ci.getWillSubtotal()) {
-                        sectionTotals.add(new BigDecimal(0));
-                    } else {
-                        sectionTotals.add(null);
-                    }
-                }
-            }
-            
-            for (ColumnInfo ci : getColumnInfoList()) {
-                final int colIndex = getColumnInfoList().indexOf(ci);
-                if (ci.getWillSubtotal()) {
-                    BigDecimal total = sectionTotals.get(colIndex);
-                    total = total.add(rs.getBigDecimal(colIndex + 1));
-                    sectionTotals.set(colIndex, total);
-                }
-                if (ci.getDataType() == DataType.NUMERIC) {
-                    BigDecimal total = grandTotals.get(colIndex);
-                    BigDecimal cellValue = rs.getBigDecimal(colIndex + 1);
-                    if (cellValue == null) {
-                        cellValue = BigDecimal.valueOf(0);
-                    }
-                    total = total.add(cellValue);
-                    grandTotals.set(colIndex, total);
-                }
-                
-            }
-            
-            sectionEndRow++;
-        }
-        sectionList.add(new Section(sectionStartRow, sectionEndRow - 1, sectionTotals, sectionKey));
-        if (isPrintingGrandTotals) {
-            sectionList.add(new Section(grandTotals));
-        }
-        
-        //The way the Position objects are created here are tied to how
-        //renderSuccess works. If renderSuccess changes such that the
-        //header order or arrangement changes this section will need to be changed
-        //as well.
-        
-        int y = 0;
-        List<Position> onePagePositions = new ArrayList<Position>();
-        Position.PositionType startingPositionType;
-        Integer startingPositionRow;
-        Position.PositionType endingPositionType;
-        Integer endingPositionRow;
-        
-        //TODO refactor parts of this loop into a helper method
-        for (Section section : sectionList) {
-            startingPositionRow = null;
-            endingPositionRow = null;
-            startingPositionType = Position.PositionType.SECTION_HEADER;
-            endingPositionType = Position.PositionType.SECTION_HEADER;
-            
-            Dimension headerDimension = reportPositionRenderer.renderSectionHeader(g, section.getSectionHeader(), getColumnInfoList(), section);
-            if (headerDimension.height > getParent().getHeight()) {
-                pagePositions.set(new ArrayList<List<Position>>());
-                return;
-            }
-            if (y + headerDimension.getHeight() > getParent().getHeight()) {
-                pagePositions.get().add(onePagePositions);
-                onePagePositions = new ArrayList<Position>();
-                y = 0;
-            }
-            
-            y += headerDimension.getHeight();
-            
-            Dimension columnHeaderDimension = reportPositionRenderer.renderColumnHeader(g, columnInfo, section);
-            if (columnHeaderDimension.height > getParent().getHeight()) {
-                pagePositions.set(new ArrayList<List<Position>>());
-                return;
-            }
-            if (y + columnHeaderDimension.getHeight() > getParent().getHeight()) {
-                onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow, reportPositionRenderer));
-                pagePositions.get().add(onePagePositions);
-                onePagePositions = new ArrayList<Position>();
-                startingPositionType = Position.PositionType.COLUMN_HEADER;
-                y = 0;
-            }
-            endingPositionType = Position.PositionType.COLUMN_HEADER;
-            
-            y += columnHeaderDimension.getHeight();
-            
-            for (int row = section.getStartRow(); row <= section.getEndRow(); row++) {
-                rs.absolute(row);
-                Dimension rowDimension = reportPositionRenderer.renderRow(g, rs, columnInfo, section);
-                if (rowDimension.height > getParent().getHeight()) {
-                    pagePositions.set(new ArrayList<List<Position>>());
-                    return;
-                }
-                if (y + rowDimension.getHeight() > getParent().getHeight()) {
-                    onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow, reportPositionRenderer));
-                    pagePositions.get().add(onePagePositions);
-                    onePagePositions = new ArrayList<Position>();
-                    startingPositionType = Position.PositionType.ROW;
-                    startingPositionRow = Integer.valueOf(row);
-                    y = 0;
-                }
-                endingPositionType = Position.PositionType.ROW;
-                endingPositionRow = Integer.valueOf(row);
-                
-                y += rowDimension.getHeight();
-            }
-            
-            Dimension totalsDimension = reportPositionRenderer.renderTotals(g, section.getTotals(), columnInfo, section);
-            if (totalsDimension.getHeight() >  getParent().getHeight()) {
-                pagePositions.set(new ArrayList<List<Position>>());
-                return;
-            }
-            if (y + totalsDimension.getHeight() > getParent().getHeight()) {
-                onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow, reportPositionRenderer));
-                pagePositions.get().add(onePagePositions);
-                onePagePositions = new ArrayList<Position>();
-                startingPositionType = Position.PositionType.TOTALS;
-                endingPositionRow = null;
-                y = 0;
-            }
-            endingPositionType = Position.PositionType.TOTALS;
-            
-            y += totalsDimension.getHeight();
-            
-            onePagePositions.add(new Position(section, startingPositionType, startingPositionRow, endingPositionType, endingPositionRow, reportPositionRenderer));
-        }
-        pagePositions.get().add(onePagePositions);
-        
-        logger.debug("The result set will print across " + pagePositions.get().size() + " pages.");
+        List<List<ResultSetCell>> createResultSetLayout = reportPositionRenderer.createResultSetLayout(
+                g, rs, getColumnInfoList(), getParent(), isPrintingGrandTotals);
+        pageCells.set(createResultSetLayout);
     }
-
+    
     /**
      * This is a helper method for printing. If a column is found to have an
      * invalid width (ie: less than 0) its width will be redefined to be the
@@ -1044,7 +816,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         fb.appendRow("fill:pref");
         Box box = Box.createVerticalBox();
         final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
-        final FormLayout columnLayout = new FormLayout("min(pref; 100dlu):grow, 5dlu, min(pref; 100dlu):grow, 5dlu, pref:grow, 5dlu, pref:grow", "pref, pref");
+        final FormLayout columnLayout = new FormLayout(
+                "min(pref; 100dlu):grow, 5dlu, min(pref; 100dlu):grow, 5dlu, pref:grow, 5dlu, pref:grow", 
+                "pref, pref, pref, pref");
         for (ColumnInfo ci : columnInfo) {
             DataEntryPanel columnPropsPanel = createColumnPropsPanel(columnLayout, ci);
             columnPanels.add(columnPropsPanel);
@@ -1122,6 +896,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         alignmentBox.add(rightAlign);
         alignmentBox.add(Box.createHorizontalGlue());
         fb.append(alignmentBox);
+        fb.append(new JLabel("Breaking and Grouping"));
         
         fb.nextLine();
         
@@ -1158,14 +933,36 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 				setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
 			}
 		});
-        final JCheckBox breakCheckbox = new JCheckBox("Break on Column");
+        final ButtonGroup breakAndGroupButtons = new ButtonGroup();
+        final JRadioButton noBreakOrGroupButton = new JRadioButton("None");
+        breakAndGroupButtons.add(noBreakOrGroupButton);
+        final JRadioButton breakRadioButton = new JRadioButton("Break Into Sections");
+        breakAndGroupButtons.add(breakRadioButton);
         final JCheckBox subtotalCheckbox = new JCheckBox("Subtotal");
-        fb.append(breakCheckbox);
-        breakCheckbox.setSelected(ci.getWillBreak());
         if (ci.getDataType().equals(DataType.NUMERIC)) {
         	fb.append(subtotalCheckbox);
         	subtotalCheckbox.setSelected(ci.getWillSubtotal());
+        } else {
+            fb.append("");
         }
+        
+        final JRadioButton groupRadioButton = new JRadioButton("Group (Suppress Repeating Values)");
+        breakAndGroupButtons.add(groupRadioButton);
+        if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
+            groupRadioButton.setSelected(true);
+        } else if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+            breakRadioButton.setSelected(true);
+        } else {
+            noBreakOrGroupButton.setSelected(true);
+        }
+        
+        fb.append(noBreakOrGroupButton);
+        fb.nextLine();
+        fb.append(new JLabel(), 5);
+        fb.append(breakRadioButton);
+        fb.nextLine();
+        fb.append(new JLabel(), 5);
+        fb.append(groupRadioButton);
         
         final JPanel panel = fb.getPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 3, 3, 5));
@@ -1192,8 +989,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                 	ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
                 }
                 ci.setWidth((Integer) widthSpinner.getValue());
-                
-                ci.setWillBreak(breakCheckbox.isSelected());
+
+                if (groupRadioButton.isSelected()) {
+                    ci.setWillGroupOrBreak(GroupAndBreak.GROUP);
+                } else if (breakRadioButton.isSelected()) {
+                    ci.setWillGroupOrBreak(GroupAndBreak.BREAK);
+                } else {
+                    ci.setWillGroupOrBreak(GroupAndBreak.NONE);
+                }
                 ci.setWillSubtotal(subtotalCheckbox.isSelected());
                 
                 clearResultSetLayout();
@@ -1276,17 +1079,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     }
 
     /**
-     * Package private for testing.
+     * This method should ONLY be needed for testing.
      */
-    List<Section> findSections() {
-        List<Section> sectionList = new ArrayList<Section>();
-        for (List<Position> positionList : pagePositions.get()) {
-            for (Position position : positionList) {
-                if (!sectionList.contains(position.getSection())) {
-                    sectionList.add(position.getSection());
-                }
-            }
-        }
-        return Collections.unmodifiableList(sectionList);
+    List<List<ResultSetCell>> findCells() {
+        return Collections.unmodifiableList(pageCells.get());
     }
 }

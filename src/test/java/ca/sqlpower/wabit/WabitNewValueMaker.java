@@ -42,6 +42,7 @@ import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
+import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
@@ -130,6 +131,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = new OlapQuery(new StubWabitSessionContext());
         } else if (valueType.equals(WabitImage.class)) {
             newValue = new WabitImage();
+        } else if (valueType.equals(GroupAndBreak.class)) {
+            if (oldVal.equals(GroupAndBreak.GROUP)) {
+                newValue = GroupAndBreak.BREAK;
+            } else {
+                newValue = GroupAndBreak.GROUP;
+            }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
