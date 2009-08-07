@@ -211,9 +211,9 @@ public class ReportPositionRenderer {
 
             
             //create a row of values, decide if we need to hide grouped columns
-            List<ResultSetCell> rowCells = renderRow(g, rs, columnInfoList, yPosition);
-            yPosition = addCells(rowCells, cellsGroupedPerPage, contentBox, yPosition, currentSectionHeaders,
-                    currentColumnHeaders);
+            List<ResultSetCell> rowCells = renderRow(g, rs, columnInfoList, yPosition, false);
+            yPosition = addRowCells(rowCells, cellsGroupedPerPage, contentBox, yPosition, currentSectionHeaders,
+                    currentColumnHeaders, g, rs, columnInfoList);
             
             //add to totals
             for (ColumnInfo ci : columnInfoList) {
@@ -372,7 +372,31 @@ public class ReportPositionRenderer {
      */
     private int addCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
             ContentBox contentBox, int yPosition) {
-        return addCells(cells, cellsGroupedPerPage, contentBox, yPosition, null, null);
+        int maxY = 0;
+        for (ResultSetCell columnHeaderCell : cells) {
+            maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
+        }
+        yPosition += maxY;
+        
+        if (yPosition < contentBox.getHeight()) {
+            cellsGroupedPerPage.get(currentPage).addAll(cells);
+        } else {
+            yPosition = 0;
+            cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
+            currentPage++;
+            
+            for (ResultSetCell movingCell : cells) {
+                movingCell.moveCell(new Point(movingCell.getBounds().x, yPosition));
+            }
+            maxY = 0;
+            for (ResultSetCell columnHeaderCell : cells) {
+                maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
+            }
+            yPosition += maxY;
+            cellsGroupedPerPage.get(currentPage).addAll(cells);
+        }
+        
+        return yPosition;
     }
 
     /**
@@ -406,8 +430,9 @@ public class ReportPositionRenderer {
      * @return The new y position that defines where new cells can be placed
      *         below
      */
-    private int addCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
-            ContentBox contentBox, int yPosition, List<ResultSetCell> sectionHeaders, List<ResultSetCell> columnHeaders) {
+    private int addRowCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
+            ContentBox contentBox, int yPosition, List<ResultSetCell> sectionHeaders, List<ResultSetCell> columnHeaders,
+            Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation) throws SQLException {
         int maxY = 0;
         for (ResultSetCell columnHeaderCell : cells) {
             maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
@@ -440,9 +465,7 @@ public class ReportPositionRenderer {
                 yPosition = addCells(copiedHeaders, cellsGroupedPerPage, contentBox, yPosition);
             }
             
-            for (ResultSetCell movingCell : cells) {
-                movingCell.moveCell(new Point(movingCell.getBounds().x, yPosition));
-            }
+            cells = renderRow(g, rs, columnInformation, yPosition, true);
             maxY = 0;
             for (ResultSetCell columnHeaderCell : cells) {
                 maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
@@ -470,9 +493,12 @@ public class ReportPositionRenderer {
      *            This defines properties of the columns in the result set. This
      *            will define formatting, spacing, alignment, and other values
      *            specific to each column.
+     * @param showGroupsAsRepeat
+     *            If true cells that would be blank as they are repeated values
+     *            will appear but marked as a continued value.
      */
     public List<ResultSetCell> renderRow(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation, 
-            int yPosition) throws SQLException {
+            int yPosition, boolean showGroupsAsRepeat) throws SQLException {
         
         if (rs.getMetaData().getColumnCount() != columnInformation.size()) 
             throw new IllegalArgumentException("The column information for rendering a row was " +
@@ -502,12 +528,18 @@ public class ReportPositionRenderer {
             
             y += padding.bottom;
             
+            Font cellFont = bodyFont;
             if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
                 boolean prevExists = rs.previous();
                 if (prevExists &&
                         ((rs.getObject(col + 1) != null && rs.getObject(col + 1).equals(value)) ||
                         (rs.getObject(col + 1) == null && value == null))) {
-                    formattedValue = "";
+                    if (showGroupsAsRepeat) {
+                        formattedValue = "(" + formattedValue + ")";
+                        cellFont = toggleItalicness(cellFont);
+                    } else {
+                        formattedValue = "";
+                    }
                 }
                 rs.next();
             }
@@ -529,7 +561,7 @@ public class ReportPositionRenderer {
                 }
             }
             
-            rowCells.add(new ResultSetCell(formattedValue, bodyFont,
+            rowCells.add(new ResultSetCell(formattedValue, cellFont,
                     new Rectangle(x, yPosition, ci.getWidth(), y),
                     padding, ci.getHorizontalAlignment(),
                     borders));
@@ -538,6 +570,15 @@ public class ReportPositionRenderer {
         }
         
         return rowCells;
+    }
+
+    private Font toggleItalicness(Font cellFont) {
+        if (cellFont.isItalic()) {
+            cellFont = cellFont.deriveFont(cellFont.getStyle() & ~Font.ITALIC);
+        } else {
+            cellFont = cellFont.deriveFont(cellFont.getStyle() | Font.ITALIC);
+        }
+        return cellFont;
     }
 
     /**
