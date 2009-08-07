@@ -37,27 +37,41 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
-import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
-import com.lowagie.text.Font;
-
-import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.olap.OlapQuery;
 
+/**
+ * This is the slicer panel which shows at the bottom of the cell set viewer
+ */
 public class SlicerPanel extends JPanel {
+	/**
+	 * This listens for drops on the panel and handles them
+	 */
 	private final SlicerPanelDropTargetListener slicerPanelDropTargetListener = new SlicerPanelDropTargetListener();
+	
+	/**
+	 * This is the query being sliced
+	 */
 	private final OlapQuery olapQuery;
+	
 	private final String slicerText = "Drag Dimensions, Hierarchies, Measures, and Members here";
-	private JPanel item;
+	
+	/**
+	 * This is the panel within the main bottom component of the {@link CellSetViewer}
+	 * it shows the user which member is in the filter
+	 */
+	private JPanel slicerDisplay;
+	
 	private static final Border DEFAULT_BORDER = BorderFactory.createEtchedBorder();
 	private static final Border DRAG_OVER_BORDER = BorderFactory.createLineBorder(Color.BLACK, 5);
 	
-    private static final Logger logger = Logger.getLogger(SlicerPanel.class);
-	
+	/**
+	 * This panel is the slicer panel which shows at the bottom of the cell set viewer.
+	 */
 	public SlicerPanel(OlapQuery olapQuery) {
 		super();
 		this.olapQuery = olapQuery;
@@ -66,31 +80,34 @@ public class SlicerPanel extends JPanel {
 		setDropTarget(new DropTarget(this, slicerPanelDropTargetListener));
 	}
 	
+	/**
+	 * This method updates the view and sets up the panel
+	 */
 	private void updatePanel() {
 		removeAll();
 		Member slicerMember = olapQuery.getSlicerMember();
 		if (slicerMember != null) {
-			item = new JPanel();
+			slicerDisplay = new JPanel();
 			
 			JLabel axisTitle = new JLabel("Filter: ");
-			item.add(axisTitle);
+			slicerDisplay.add(axisTitle);
 			if (slicerMember instanceof Measure) {
 
 				if (slicerMember instanceof Measure) {
-					item.add(new JLabel(OlapIcons.MEASURE_ICON));
+					slicerDisplay.add(new JLabel(OlapIcons.MEASURE_ICON));
 				}
-				item.add(new JLabel(slicerMember.getName()));
+				slicerDisplay.add(new JLabel(slicerMember.getName()));
 
 			} else {
 				String point = " > ";
-				item.add(new JLabel(OlapIcons.DIMENSION_ICON));
-				item.add(new JLabel(slicerMember.getDimension().getName() + point));
+				slicerDisplay.add(new JLabel(OlapIcons.DIMENSION_ICON));
+				slicerDisplay.add(new JLabel(slicerMember.getDimension().getName() + point));
 
-				item.add(new JLabel(OlapIcons.HIERARCHY_ICON));
-				item.add(new JLabel(slicerMember.getHierarchy().getName() + point));
+				slicerDisplay.add(new JLabel(OlapIcons.HIERARCHY_ICON));
+				slicerDisplay.add(new JLabel(slicerMember.getHierarchy().getName() + point));
 
-				item.add(new JLabel(OlapIcons.LEVEL_ICON));
-				item.add(new JLabel(slicerMember.getLevel().getName() + point));
+				slicerDisplay.add(new JLabel(OlapIcons.LEVEL_ICON));
+				slicerDisplay.add(new JLabel(slicerMember.getLevel().getName() + point));
 
 				List<JLabel> labels = new ArrayList<JLabel>();
 				point = "";
@@ -105,14 +122,14 @@ public class SlicerPanel extends JPanel {
 					point = " > ";
 				}
 				for (JLabel label : labels) {
-					item.add(label);
+					slicerDisplay.add(label);
 				}
 			}
 			
-			item.setBorder(DEFAULT_BORDER);
-			item.setVisible(true);
-			add(item);
-			item.setBackground(Color.WHITE);
+			slicerDisplay.setBorder(DEFAULT_BORDER);
+			slicerDisplay.setVisible(true);
+			add(slicerDisplay);
+			slicerDisplay.setBackground(Color.WHITE);
 		} else {
 			add(new JLabel(slicerText));
 			setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
@@ -122,7 +139,12 @@ public class SlicerPanel extends JPanel {
 	}
 	
 	
-	class SlicerPanelDropTargetListener implements DropTargetListener {
+	/**
+	 * This {@link DropTargetListener} does everything to do with the drag and drop
+	 * onto the slicer axis. 
+	 *
+	 */
+	private class SlicerPanelDropTargetListener implements DropTargetListener {
 
 		public void dragEnter(DropTargetDragEvent dtde) {
 			//Don't Care
@@ -132,20 +154,23 @@ public class SlicerPanel extends JPanel {
 			resetUI();
 		}
 		
+		/**
+		 * This method resets the border properly after a drag has been completed
+		 */
 		private void resetUI() {
-			if (item == null) {
+			if (slicerDisplay == null) {
 				SlicerPanel.this.setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
 			} else {
-				item.setBorder(DEFAULT_BORDER);
+				slicerDisplay.setBorder(DEFAULT_BORDER);
 			}
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
 			if (canImport(SlicerPanel.this, dtde.getCurrentDataFlavors())) {
-				if (item == null) {
+				if (slicerDisplay == null) {
 					SlicerPanel.this.setBorder(DRAG_OVER_BORDER);
 				} else {
-					item.setBorder(DRAG_OVER_BORDER);
+					slicerDisplay.setBorder(DRAG_OVER_BORDER);
 				}
 				dtde.acceptDrag(dtde.getDropAction());
 			} else {
@@ -201,7 +226,6 @@ public class SlicerPanel extends JPanel {
                 } catch (Exception e) {
                     // note: exceptions thrown here get eaten by the DnD system
         			resetUI();
-                    throw new RuntimeException(e);
                 }
             }
             return false;
