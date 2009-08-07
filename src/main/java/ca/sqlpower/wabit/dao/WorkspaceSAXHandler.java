@@ -91,6 +91,7 @@ import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
 import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
 import ca.sqlpower.wabit.report.ChartRenderer.LegendPosition;
+import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
@@ -873,7 +874,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		} else if (aname.equals("data-type")) {
         			colInfo.setDataType(DataType.valueOf(aval));
         		} else if (aname.equals("break-on-column")) {
-        			colInfo.setWillBreak(Boolean.parseBoolean(aval));
+        		    if (Boolean.parseBoolean(aval)) {
+        		        colInfo.setWillGroupOrBreak(GroupAndBreak.GROUP);
+        		    } else {
+        		        colInfo.setWillGroupOrBreak(GroupAndBreak.NONE);
+        		    }
+        		} else if (aname.equals("group-or-break")) {
+        		    colInfo.setWillGroupOrBreak(GroupAndBreak.valueOf(aval));
         		} else if (aname.equals("will-subtotal")) {
         			colInfo.setWillSubtotal(Boolean.parseBoolean(aval));
         		}else {

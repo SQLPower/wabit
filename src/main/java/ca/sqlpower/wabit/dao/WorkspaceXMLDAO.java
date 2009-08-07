@@ -384,7 +384,7 @@ public class WorkspaceXMLDAO {
 							printAttribute("column-alias", ci.getColumnAlias());
 							printAttribute("horizontal-align", ci.getHorizontalAlignment().name());
 							printAttribute("data-type", ci.getDataType().name());
-							printAttribute("break-on-column", Boolean.toString(ci.getWillBreak()));
+							printAttribute("group-or-break", ci.getWillGroupOrBreak().name());
 							printAttribute("will-subtotal", Boolean.toString(ci.getWillSubtotal()));
 							xml.niprintln(out, ">");
 							xml.indent++;

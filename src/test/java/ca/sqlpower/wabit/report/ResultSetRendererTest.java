@@ -40,7 +40,10 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.report.resultset.Section;
+import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
+import ca.sqlpower.wabit.report.resultset.ResultSetCell;
+
+import com.lowagie.text.Section;
 
 public class ResultSetRendererTest extends AbstractWabitObjectTest {
 
@@ -104,6 +107,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
             stmt.execute("insert into subtotal_table (break_col, subtotal_values) values ('fib', 3)");
             stmt.execute("insert into subtotal_table (break_col, subtotal_values) values ('fib', 5)");
             stmt.execute("insert into subtotal_table (break_col, subtotal_values) values ('fib', 8)");
+            stmt.execute("insert into subtotal_table (break_col, subtotal_values) values ('fib', 13)");
         } finally {
             if (stmt != null) stmt.close();
             if (con != null) con.close();
@@ -120,35 +124,36 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         renderer.setParent(cb);
         renderer.executeQuery();
         assertEquals(2, renderer.getColumnInfoList().size());
-        renderer.getColumnInfoList().get(0).setWillBreak(true);
+        renderer.getColumnInfoList().get(0).setWillGroupOrBreak(GroupAndBreak.GROUP);
         renderer.getColumnInfoList().get(1).setWillSubtotal(true);
         Font font = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()[0];
         renderer.setHeaderFont(font);
         renderer.setBodyFont(font);
         renderer.createResultSetLayout((Graphics2D) graphics, cache.getCachedRowSet());
-        List<Section> sections = renderer.findSections();
-        assertEquals(3, sections.size());
+        List<List<ResultSetCell>> layoutCells = renderer.findCells();
         
-        Map<List<Object>, BigDecimal> sectionKeyToSubTotal = new HashMap<List<Object>, BigDecimal>();
-        List<Object> sectionKey = new ArrayList<Object>();
-        sectionKey.add("a");
-        sectionKey.add(null);
-        BigDecimal subtotal = BigDecimal.valueOf(60);
-        sectionKeyToSubTotal.put(sectionKey, subtotal);
-        sectionKey = new ArrayList<Object>();
-        sectionKey.add("b");
-        sectionKey.add(null);
-        subtotal = BigDecimal.valueOf(36);
-        sectionKeyToSubTotal.put(sectionKey, subtotal);
-        sectionKey = new ArrayList<Object>();
-        sectionKey.add("fib");
-        sectionKey.add(null);
-        subtotal = BigDecimal.valueOf(20);
-        sectionKeyToSubTotal.put(sectionKey, subtotal);
-        for (Section section : sections) {
-            System.out.println(section.getSectionHeader());
-            BigDecimal sectionSubtotal = sectionKeyToSubTotal.get(section.getSectionHeader());
-            assertEquals(sectionSubtotal, section.getTotals().get(1));
+        boolean foundATotal = false;
+        boolean foundBTotal = false;
+        boolean foundFibTotal = false;
+        for (List<ResultSetCell> cells : layoutCells) {
+            for (ResultSetCell cell : cells) {
+                if (cell.getText().equals("60")) {
+                    foundATotal = true;
+                } else if (cell.getText().equals("36")) {
+                    foundBTotal = true;
+                } else if (cell.getText().equals("33")) {
+                    foundFibTotal = true;
+                }
+            }
+        }
+        if (!foundATotal) {
+            fail("Could not find the correct subtotal cell for the A column. The cell should contain the value 60");
+        } 
+        if (!foundBTotal) {
+            fail("Could not find the correct subtotal cell for the B column. The cell should contain the value 36");
+        } 
+        if (!foundFibTotal) {
+            fail("Could not find the correct subtotal cell for the Fib column. The cell should contain the value 33");
         }
         
         con = null;

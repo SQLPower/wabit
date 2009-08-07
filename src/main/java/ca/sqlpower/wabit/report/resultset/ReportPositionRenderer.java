@@ -19,36 +19,46 @@
 
 package ca.sqlpower.wabit.report.resultset;
 
-import java.awt.BasicStroke;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.Stroke;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.wabit.report.ColumnInfo;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.DataType;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
-import ca.sqlpower.wabit.report.resultset.Section.TotalRenderStyle;
+import ca.sqlpower.wabit.report.resultset.ResultSetCell.BorderType;
+
+import com.rc.retroweaver.runtime.Collections;
 
 /**
- * This class renders the different parts of each result set. The rendering is
- * done at the origin of the graphics object and transformations should be used
- * on the graphics object to properly place the parts.
- * <p>
- * The size of the content box may be useful at some point to define available width
- * if centering is desired.
+ * This class renders the result set. A new renderer should be created each time
+ * a new layout is required.
  */
 public class ReportPositionRenderer {
     
     private static final Logger logger = Logger.getLogger(ReportPositionRenderer.class);
+
+    /**
+     * This is extra padding added on to cells where extra space is desired for border/separator lines.
+     */
+    public static final int BORDER_LINE_SIZE = 2;
     
     private final Font headerFont;
     
@@ -63,6 +73,31 @@ public class ReportPositionRenderer {
     private final int availableWidth;
     
     private final String nullString;
+
+    /**
+     * This is the current page being created by
+     * {@link #createResultSetLayout(Graphics2D, ResultSet, List, ContentBox, boolean)}.
+     * Since the layout can only be done once this will only increment.
+     */
+    private int currentPage;
+    
+    /**
+     * This boolean is used to enforce that the layout of a report position renderer can only
+     * be done once.
+     */
+    private boolean hasLayoutStarted = false;
+    
+    /**
+     * If true the section header will be added to the top of each new page even if
+     * the section hasn't changed.
+     */
+    private boolean addSectionHeaderToNewPage = true;
+
+    /**
+     * If true the column headers will be added to the top of each new page even if
+     * the section hasn't changed.
+     */
+    private boolean addColumnHeaderToNewPage = true;
     
     public ReportPositionRenderer(Font headerFont, Font bodyFont, BorderStyles borderType, int availableWidth, String nullString) {
         this.headerFont = headerFont;
@@ -71,6 +106,353 @@ public class ReportPositionRenderer {
         this.availableWidth = availableWidth;
         this.nullString = nullString;
     }
+    
+    /**
+     * This method does all of the layout of each section of a result set. This
+     * should be executed any time a part of the result set renderer changes. If
+     * all of the properties that defines a layout are set this method will
+     * return immediately. This includes but is not limited to: font changes,
+     * break changes, new columns being sub-totaled, different graphics in use
+     * such as printing vs painting, and changes to the query.
+     * 
+     * @param g
+     *            This should be a graphics object that is the same as the
+     *            graphics the result set will be rendered into. If this
+     *            graphics object is different the components may be laid out in
+     *            a way that will have text clipped by the bounding
+     *            {@link ContentBox}.
+     * @param rs
+     *            This result set will be iterated over to lay out the result
+     *            set. If the result set pointer should not be changed a copy of
+     *            the result set, using a CachedRowSet or calling createShared
+     *            on a {@link CachedRowSet} should be passed instead. The result
+     *            set should also be sorted by the columns defined as breaks to
+     *            avoid sections that are identified by the same section.
+     */
+    @SuppressWarnings("unchecked")
+    public List<List<ResultSetCell>> createResultSetLayout(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInfoList,
+            ContentBox contentBox, boolean isPrintingGrandTotals) throws SQLException {
+        if (hasLayoutStarted) throw new IllegalStateException("The layout of a report position renderer should only " +
+        		"be done once per renderer. Create a new renderer if a new layout is needed");
+        hasLayoutStarted = true;
+        
+        rs.beforeFirst();
+        
+        List<BigDecimal> grandTotals = new ArrayList<BigDecimal>();
+        for (ColumnInfo ci : columnInfoList) {
+            if (ci.getDataType() == DataType.NUMERIC) {
+                grandTotals.add(BigDecimal.ZERO);
+            } else {
+                grandTotals.add(null);
+            }
+        }
+        
+        List<BigDecimal> sectionTotals = new ArrayList<BigDecimal>();
+        sectionTotals = new ArrayList<BigDecimal>();
+        for (ColumnInfo ci : columnInfoList) {
+            if (ci.getWillSubtotal()) {
+                sectionTotals.add(BigDecimal.ZERO);
+            } else {
+                sectionTotals.add(null);
+            }
+        }
+        
+        Map<Integer, List<BigDecimal>> groupingTotalMap = new HashMap<Integer, List<BigDecimal>>();
+        for (int i = 0; i < columnInfoList.size(); i++) {
+            if (columnInfoList.get(i).getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
+                List<BigDecimal> groupingTotals = new ArrayList<BigDecimal>();
+                for (ColumnInfo ci : columnInfoList) {
+                    if (ci.getWillSubtotal()) {
+                        groupingTotals.add(BigDecimal.ZERO);
+                    } else {
+                        groupingTotals.add(null);
+                    }
+                }
+                groupingTotalMap.put(Integer.valueOf(i), groupingTotals);
+            }
+        }
+        
+        int yPosition = 0;
+        List<Object> sectionKey = null;
+        
+        List<List<ResultSetCell>> cellsGroupedPerPage = new ArrayList<List<ResultSetCell>>();
+        
+        currentPage = 0;
+        cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
+        
+        List<ResultSetCell> currentSectionHeaders = null;
+        List<ResultSetCell> currentColumnHeaders = null;
+        
+        //for each result set entry
+        while (rs.next()) {
+        
+            //if new break header is needed create it
+            //if new column header is needed create it
+            List<Object> newSectionKey = createRowSectionKey(rs, columnInfoList);
+            
+            if (!rs.isFirst() && sectionKey == null) 
+                throw new IllegalStateException("The initial section key was undefined! " +
+                        "Cannot start laying out the result set.");
+            if (!rs.isFirst() && !newSectionKey.equals(sectionKey)
+                    || rs.isFirst()) {
+                sectionKey = newSectionKey;
+                
+                ResultSetCell cell = renderSectionHeader(
+                        g, newSectionKey, columnInfoList, yPosition);
+                final List<ResultSetCell> headerCells = Collections.singletonList(cell);
+                currentSectionHeaders = headerCells;
+                yPosition = addCells(headerCells, cellsGroupedPerPage, contentBox, yPosition);
+                
+                List<ResultSetCell> cells = renderColumnHeader(g, columnInfoList, yPosition);
+                currentColumnHeaders = cells;
+                yPosition = addCells(cells, cellsGroupedPerPage, contentBox, yPosition);
+                
+            }
+
+            
+            //create a row of values, decide if we need to hide grouped columns
+            List<ResultSetCell> rowCells = renderRow(g, rs, columnInfoList, yPosition);
+            yPosition = addCells(rowCells, cellsGroupedPerPage, contentBox, yPosition, currentSectionHeaders,
+                    currentColumnHeaders);
+            
+            //add to totals
+            for (ColumnInfo ci : columnInfoList) {
+                final int colIndex = columnInfoList.indexOf(ci);
+                if (ci.getWillSubtotal()) {
+                    final BigDecimal valueToAdd = rs.getBigDecimal(colIndex + 1);
+                    BigDecimal total = sectionTotals.get(colIndex);
+                    total = total.add(valueToAdd);
+                    sectionTotals.set(colIndex, total);
+                    
+                    for (List<BigDecimal> subtotals : groupingTotalMap.values()) {
+                        BigDecimal groupTotal = subtotals.get(colIndex);
+                        groupTotal = groupTotal.add(valueToAdd);
+                        subtotals.set(colIndex, groupTotal);
+                    }
+                }
+                if (ci.getDataType() == DataType.NUMERIC) {
+                    final BigDecimal valueToAdd = rs.getBigDecimal(colIndex + 1);
+                    BigDecimal total = grandTotals.get(colIndex);
+                    BigDecimal cellValue = valueToAdd;
+                    if (cellValue == null) {
+                        cellValue = BigDecimal.valueOf(0);
+                    }
+                    total = total.add(cellValue);
+                    grandTotals.set(colIndex, total);
+                }
+            }
+
+            //decide if we need to print subtotals for breaks
+            boolean hasNext = rs.next();
+            List<Object> nextSectionKey = null;
+            if (hasNext) {
+                nextSectionKey = createRowSectionKey(rs, columnInfoList);
+            }
+            List<Object> nextRowValues = new ArrayList<Object>();
+            if (hasNext) {
+                for (int i = 0; i < columnInfoList.size(); i++) {
+                    nextRowValues.add(rs.getObject(i + 1));
+                }
+            }
+            rs.previous();
+
+            if (!hasNext || !nextSectionKey.equals(sectionKey)) { //look for breaks
+                for (int i = columnInfoList.size() - 1; i >= 0; i--) {
+                    if (groupingTotalMap.get(i) != null) {
+                        List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
+                        String groupingText = " " + rs.getString(i + 1);
+                        List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
+                                groupingText, i, yPosition);
+                        yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
+
+                        for (int j = 0; j < groupingTotals.size(); j++) {
+                            if (groupingTotals.get(j) != null) {
+                                groupingTotals.set(j, BigDecimal.ZERO);
+                            }
+                        }
+                    }
+                }
+                
+                StringBuffer sectionKeyText = new StringBuffer();
+                for (int i = 0; i < sectionKey.size(); i++) {
+                    Object value = sectionKey.get(i);
+                    if (value != null) {
+                        if (sectionKeyText.length() > 0) {
+                            sectionKeyText.append(";");
+                        }
+                        sectionKeyText.append(" " + columnInfoList.get(i).getName() + ": " + value);
+                    }
+                }
+                List<ResultSetCell> breakTotals = renderTotals(g, sectionTotals, columnInfoList, false,
+                        sectionKeyText.toString(), 0, yPosition);
+                yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
+                
+                sectionTotals = new ArrayList<BigDecimal>();
+                for (ColumnInfo ci : columnInfoList) {
+                    if (ci.getWillSubtotal()) {
+                        sectionTotals.add(BigDecimal.ZERO);
+                    } else {
+                        sectionTotals.add(null);
+                    }
+                }
+                
+                yPosition += BORDER_LINE_SIZE;
+            } else if (hasNext) { //look for grouping changes
+                
+                for (int i = columnInfoList.size() - 1; i >= 0; i--) {
+                    Object oldValue = rs.getObject(i + 1);
+                    Object nextValue = nextRowValues.get(i);
+                    if (groupingTotalMap.get(i) != null && !oldValue.equals(nextValue)) {
+                        List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
+                        String groupingText = " " + rs.getString(i + 1);
+                        List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
+                                groupingText, i, yPosition);
+                        yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
+
+                        for (int j = 0; j < groupingTotals.size(); j++) {
+                            if (groupingTotals.get(j) != null) {
+                                groupingTotals.set(j, BigDecimal.ZERO);
+                            }
+                        }
+                    }
+                }
+            }
+        
+        }
+        
+        if (isPrintingGrandTotals) {
+            List<ResultSetCell> renderTotals = renderTotals(
+                    g, grandTotals, columnInfoList, true, "", 0, yPosition);
+            addCells(renderTotals, cellsGroupedPerPage, contentBox, yPosition);
+        }
+        
+        return cellsGroupedPerPage;
+    }
+
+    /**
+     * This helper method for {@link #createResultSetLayout(Graphics2D, ResultSet, List, ContentBox, boolean)}
+     * will return a list of objects that defines a new section of the result set when laid out.
+     * The list contains one value per column in the result set where each value could be the value
+     * in that column in the current row if it is part of the section header or null if it is not
+     * part of the section header.
+     */
+    private List<Object> createRowSectionKey(ResultSet rs,
+            List<ColumnInfo> columnInfoList) throws SQLException {
+        List<Object> newSectionKey = new ArrayList<Object>();
+        for (ColumnInfo ci : columnInfoList) {
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+                newSectionKey.add(rs.getObject(columnInfoList.indexOf(ci) + 1));
+            } else {
+                newSectionKey.add(null);
+            }
+        }
+        return newSectionKey;
+    }
+    
+    /**
+     * This is a helper method for
+     * {@link #createResultSetLayout(Graphics2D, ResultSet)}. This will add the
+     * cells to the current or next page of the cellsGroupedPerPage as well as
+     * increment the yPosition and possibly the current page count.
+     * 
+     * @param cells
+     *            The {@link ResultSetCell}s to add to the pages
+     * @param cellsGroupedPerPage
+     *            The list of pages that contain cells. This value will be
+     *            modified to contain the given cells in the current or next
+     *            page.
+     * @param contentBox
+     *            The content box the {@link ResultSetRenderer} is contained in
+     *            to get visible dimesnsions.
+     * @param yPosition
+     *            The current y position that can be used to layout cells. The
+     *            space above this position contains cells already.
+     * @return The new y position that defines where new cells can be placed
+     *         below
+     */
+    private int addCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
+            ContentBox contentBox, int yPosition) {
+        return addCells(cells, cellsGroupedPerPage, contentBox, yPosition, null, null);
+    }
+
+    /**
+     * This is a helper method for
+     * {@link #createResultSetLayout(Graphics2D, ResultSet)}. This will add the
+     * cells to the current or next page of the cellsGroupedPerPage as well as
+     * increment the yPosition and possibly the current page count.
+     * 
+     * @param cells
+     *            The {@link ResultSetCell}s to add to the pages
+     * @param cellsGroupedPerPage
+     *            The list of pages that contain cells. This value will be
+     *            modified to contain the given cells in the current or next
+     *            page.
+     * @param contentBox
+     *            The content box the {@link ResultSetRenderer} is contained in
+     *            to get visible dimesnsions.
+     * @param yPosition
+     *            The current y position that can be used to layout cells. The
+     *            space above this position contains cells already.
+     * @param sectionHeaders
+     *            The cells that represent the section header. If the cells
+     *            given are placed on a new page these headers may be copied and
+     *            repeated on the next page as well. If this is null header
+     *            sections will not be repeated on new pages.
+     * @param columnHeaders
+     *            The cells that represent the column header. If the cells given
+     *            are placed on a new page these headers may be copied and
+     *            repeated on the next page as well. If this is null column
+     *            headers will not be repeated on new pages.
+     * @return The new y position that defines where new cells can be placed
+     *         below
+     */
+    private int addCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
+            ContentBox contentBox, int yPosition, List<ResultSetCell> sectionHeaders, List<ResultSetCell> columnHeaders) {
+        int maxY = 0;
+        for (ResultSetCell columnHeaderCell : cells) {
+            maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
+        }
+        yPosition += maxY;
+        
+        if (yPosition < contentBox.getHeight()) {
+            cellsGroupedPerPage.get(currentPage).addAll(cells);
+        } else {
+            yPosition = 0;
+            cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
+            currentPage++;
+            
+            if (addSectionHeaderToNewPage && sectionHeaders != null) {
+                List<ResultSetCell> copiedHeaders = new ArrayList<ResultSetCell>();
+                for (ResultSetCell cellToCopy : sectionHeaders) {
+                    ResultSetCell newCell = new ResultSetCell(cellToCopy);
+                    newCell.moveCell(new Point(newCell.getBounds().x, yPosition));
+                    copiedHeaders.add(newCell);
+                }
+                yPosition = addCells(copiedHeaders, cellsGroupedPerPage, contentBox, yPosition);
+            }
+            if (addColumnHeaderToNewPage && columnHeaders != null) {
+                List<ResultSetCell> copiedHeaders = new ArrayList<ResultSetCell>();
+                for (ResultSetCell cellToCopy : columnHeaders) {
+                    ResultSetCell newCell = new ResultSetCell(cellToCopy);
+                    newCell.moveCell(new Point(newCell.getBounds().x, yPosition));
+                    copiedHeaders.add(newCell);
+                }
+                yPosition = addCells(copiedHeaders, cellsGroupedPerPage, contentBox, yPosition);
+            }
+            
+            for (ResultSetCell movingCell : cells) {
+                movingCell.moveCell(new Point(movingCell.getBounds().x, yPosition));
+            }
+            maxY = 0;
+            for (ResultSetCell columnHeaderCell : cells) {
+                maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
+            }
+            yPosition += maxY;
+            cellsGroupedPerPage.get(currentPage).addAll(cells);
+        }
+        
+        return yPosition;
+    }
 
     /**
      * This renders the current row of the result set given based on the
@@ -78,33 +460,35 @@ public class ReportPositionRenderer {
      * cursor position in the result set.
      * 
      * @param g
-     *            The graphics to render the row into. This will also be
-     *            used to define the dimension of the row.
+     *            The graphics to use to determine dimension information.
      * @param rs
-     *            The result set whose current row will be rendered into the
-     *            graphics. The cursor will not be modified in this result
-     *            set. The row the cursor is at will be the row rendered.
+     *            The result set whose current row will be used to create
+     *            {@link ResultSetCell}s. The cursor will not be modified in
+     *            this result set. The row the cursor is at will be the row
+     *            rendered.
      * @param columnInformation
-     *            This defines properties of the columns in the result set.
-     *            This will define formatting, spacing, alignment, and other
-     *            values specific to each column.
+     *            This defines properties of the columns in the result set. This
+     *            will define formatting, spacing, alignment, and other values
+     *            specific to each column.
      */
-    public Dimension renderRow(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation, Section section) throws SQLException {
-        if (!section.isShowingRows()) return new Dimension(0, 0);
+    public List<ResultSetCell> renderRow(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation, 
+            int yPosition) throws SQLException {
         
-        if (rs.getMetaData().getColumnCount() != columnInformation.size()) throw new IllegalArgumentException("The column information for rendering a row was missing columns for the given result set");
+        if (rs.getMetaData().getColumnCount() != columnInformation.size()) 
+            throw new IllegalArgumentException("The column information for rendering a row was " +
+            		"missing columns for the given result set");
+        
+        List<ResultSetCell> rowCells = new ArrayList<ResultSetCell>();
         
         FontMetrics fm = g.getFontMetrics(bodyFont);
         g.setFont(bodyFont);
         int x = 0;
-        int maxY = 0;
         for (int col = 0; col < columnInformation.size(); col++) {
             int y = fm.getHeight();
             ColumnInfo ci = columnInformation.get(col);
-            if (ci.getWillBreak()) continue;
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
             
             Insets padding = getPadding(ci);
-            x += padding.left;
             y += padding.top;
             
             Object value = rs.getObject(col + 1);
@@ -116,40 +500,52 @@ public class ReportPositionRenderer {
                 formattedValue = replaceNull(rs.getString(col + 1));
             }
             
-            int offset = ci.getHorizontalAlignment().computeStartX(
-                    ci.getWidth(), fm.stringWidth(formattedValue));
-            double stringLength = fm.getStringBounds(formattedValue, g).getWidth();
-            if (stringLength > ci.getWidth()) {
-                String ellipse = "...";
-                double ellipseLength = fm.getStringBounds(ellipse, g).getWidth();
-                int charLimit = 0;
-                while (fm.getStringBounds(formattedValue, 0, charLimit, g).getWidth() < ci.getWidth() - ellipseLength) {
-                    charLimit++;
-                }
-                if (charLimit > 0) {
-                    charLimit--;
-                }
-                formattedValue = formattedValue.substring(0, charLimit) + ellipse;
-            }
-            g.drawString(formattedValue, x + offset, fm.getHeight()); // TODO clip and/or line wrap and/or warn
-            x += ci.getWidth();
-            
-            x += padding.right;
             y += padding.bottom;
             
-            maxY = Math.max(maxY, y);
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
+                boolean prevExists = rs.previous();
+                if (prevExists &&
+                        ((rs.getObject(col + 1) != null && rs.getObject(col + 1).equals(value)) ||
+                        (rs.getObject(col + 1) == null && value == null))) {
+                    formattedValue = "";
+                }
+                rs.next();
+            }
+            
+            List<BorderType> borders = new ArrayList<BorderType>();
+            if (borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL || 
+                    borderType == BorderStyles.HORIZONTAL) {
+                borders.add(BorderType.BOTTOM);
+                borders.add(BorderType.TOP);
+            }
+            
+            if ((borderType == BorderStyles.INSIDE || borderType == BorderStyles.FULL || 
+                    borderType == BorderStyles.VERTICAL)) {
+                if (col != 0) {
+                    borders.add(BorderType.LEFT);
+                }
+                if (col != columnInformation.size() - 1) {
+                    borders.add(BorderType.RIGHT);
+                }
+            }
+            
+            rowCells.add(new ResultSetCell(formattedValue, bodyFont,
+                    new Rectangle(x, yPosition, ci.getWidth(), y),
+                    padding, ci.getHorizontalAlignment(),
+                    borders));
+            
+            x += ci.getWidth();
         }
         
-        return new Dimension(x, maxY);
+        return rowCells;
     }
 
     /**
      * This renders each section header above the column headers.
      * 
      * @param g
-     *            The graphics to render the headers on. Also used to define the
-     *            dimension returned which represents the amount of space the
-     *            header takes up on the graphics object.
+     *            Used to define dimension information when defining sizes of
+     *            the {@link ResultSetCell}.
      * @param sectionHeader
      *            These objects define a unique section. Each column in the
      *            result set should have an entry in this list. If the column is
@@ -159,14 +555,9 @@ public class ReportPositionRenderer {
      * @param colInfo
      *            The column information describing the columns of the result
      *            set.
-     * @param section
-     *            The section that is being displayed.
-     * @return A dimension that describes how much space the header took up in
-     *         the graphics object.
      */
-    public Dimension renderSectionHeader(Graphics2D g, List<Object> sectionHeader, List<ColumnInfo> colInfo, Section section) {
-        if (!section.isShowingSectionHeader()) return new Dimension(0, 0);
-        
+    public ResultSetCell renderSectionHeader(Graphics2D g, List<Object> sectionHeader, 
+            List<ColumnInfo> colInfo, int yPosition) {
         StringBuffer headerBuffer = new StringBuffer();
         for (Object headerObject : sectionHeader) {
             if (headerObject != null) {
@@ -183,56 +574,55 @@ public class ReportPositionRenderer {
         FontMetrics fm = g.getFontMetrics(headerFont);
         int tableWidth = 0;
         for (ColumnInfo ci : colInfo) {
-            if (!ci.getWillBreak()) {
+            if (!ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
                 tableWidth += ci.getWidth();
             }
         }
-        int offset;
         int maxWidth = Math.min(tableWidth, availableWidth);
-        int textWidth = fm.stringWidth(header);
-        if (textWidth < maxWidth) {
-            offset = (maxWidth - textWidth) / 2;
-        } else {
-            offset = 0;
-        }
+        
+        Insets padding = getPadding(null);
         
         if (header.trim().length() == 0) {
-            return new Dimension(0, 0);
+            return new ResultSetCell("", headerFont, new Rectangle(0, 0), new Insets(0, 0, 0, 0), 
+                    HorizontalAlignment.LEFT, new ArrayList<BorderType>());
         }
-        g.setFont(headerFont);
-        g.drawString(header, offset, fm.getHeight());
-        return new Dimension(fm.stringWidth(header), fm.getHeight());
+        List<BorderType> borders = new ArrayList<BorderType>();
+        borders.add(BorderType.BOTTOM);
+        int height = fm.getHeight() + padding.top + padding.bottom;
+        height += BORDER_LINE_SIZE;
+        return new ResultSetCell(header, headerFont,
+                new Rectangle(0, yPosition, maxWidth, height), 
+                padding, HorizontalAlignment.CENTER, borders);
     }
     
-    public Dimension renderColumnHeader(Graphics2D g, List<ColumnInfo> colInfo, Section section) {
-        if (!section.isShowingColumnHeader()) return new Dimension(0, 0);
+    /**
+     * Creates new {@link ResultSetCell}s for each column header.
+     */
+    public List<ResultSetCell> renderColumnHeader(Graphics2D g, List<ColumnInfo> colInfo, int yPosition) {
+        List<ResultSetCell> headerCells = new ArrayList<ResultSetCell>();
         
         int x = 0;
         FontMetrics fm = g.getFontMetrics(headerFont);
         g.setFont(headerFont);
-        int maxY = 0;
         for (int col = 0; col < colInfo.size(); col++) {
             int y = 0;
             ColumnInfo ci = colInfo.get(col);
-            if (ci.getWillBreak()) continue;
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
             
             Insets padding = getPadding(ci);
-            x += padding.left;
             y += padding.top;
+            y += fm.getHeight();
             
             final String colHeaderName = replaceNull(ci.getName());
-            int offset = ci.getHorizontalAlignment().computeStartX(
-                    ci.getWidth(), fm.stringWidth(colHeaderName));
-            g.drawString(colHeaderName, x + offset, fm.getHeight());
-            x += ci.getWidth();
-            x += padding.right;
             y += padding.bottom;
-            maxY = Math.max(maxY, y);
+            ResultSetCell newCell = new ResultSetCell(colHeaderName, headerFont,
+                    new Rectangle(x, yPosition, ci.getWidth(), y), padding, 
+                    ci.getHorizontalAlignment(), new ArrayList<BorderType>());
+            headerCells.add(newCell);
+            x += ci.getWidth();
         }
         
-        maxY += fm.getHeight() + fm.getHeight()/2;
-        g.drawLine(0, maxY, availableWidth, maxY);
-        return new Dimension(x, maxY);
+        return headerCells;
     }
 
     /**
@@ -240,23 +630,19 @@ public class ReportPositionRenderer {
      * be tracking totals for a subtotal or totals for a grand total.
      * 
      * @param g
-     *            The graphics to draw the totals on. This will also be used to
-     *            define the dimension returned.
+     *            Used to define size dimensions of the {@link ResultSetCell}.
      * @param totalsRow
      *            A list of totals for each column. If the column has no totals
      *            the entry in the list should be null.
      * @param colInfo
      *            A list of column information for each column in the result
      *            set.
-     * @param section
-     *            A section that contains totals to be rendered for the section
-     *            of the result set the object represents.
-     * @return A dimension defining the space the row took to render in the
-     *         graphics object.
      */
-    public Dimension renderTotals(Graphics2D g, List<BigDecimal> totalsRow, List<ColumnInfo> colInfo, Section section) {
+    public List<ResultSetCell> renderTotals(Graphics2D g, List<BigDecimal> totalsRow, List<ColumnInfo> colInfo,
+            boolean isGrandTotal, String breakText, int breakTextPosition, int yPosition) {
+        List<ResultSetCell> newCells = new ArrayList<ResultSetCell>();
+        
         int localX = 0;
-        final int subtotalLineYShift = 2; //Shifting the subtotal line slightly down to make it look nicer.
         
         boolean hasTotals = false;
         for (BigDecimal total : totalsRow) {
@@ -265,138 +651,73 @@ public class ReportPositionRenderer {
             }
         }
         if (!hasTotals) {
-            return new Dimension(0, 0);
+            return newCells;
         }
         
-        if (section.getTotalRenderStyle() == TotalRenderStyle.SUBTOTAL) {
-
-            FontMetrics bodyFM = g.getFontMetrics(bodyFont);
-            FontMetrics headerFM = g.getFontMetrics(headerFont);
-
-            final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
-
-            g.setFont(headerFont);
-            g.drawString("Subtotal", ResultSetRenderer.BORDER_INDENT, rowHeight);
-            g.setFont(bodyFont);
-
-            int maxY = 0;
-            for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
-                int y = rowHeight;
-                ColumnInfo ci = colInfo.get(subCol);
-                if (ci.getWillBreak()) continue;
-                
-                Insets padding = getPadding(ci);
-                localX += padding.left;
-                y += padding.top;
-                BigDecimal subtotal = totalsRow.get(subCol);
-                if (subtotal != null) {
-                    String formattedValue;
-                    if (ci.getFormat() != null) {
-                        formattedValue = ci.getFormat().format(subtotal);
-                    } else {
-                        formattedValue = subtotal.toString();
-                    }
-                    int offset = ci.getHorizontalAlignment().computeStartX(
-                            ci.getWidth(), bodyFM.stringWidth(formattedValue));
-                    Stroke oldStroke = g.getStroke();
-
-                    //Thinning the stroke for the subtotal line for looks. We can't get the
-                    //line width from a regular stroke so if the stroke is somehow different
-                    //from a BasicStroke we will just log the warning. (For cases where the
-                    //platform may make the Stroke significantly different.)
-                    if (g.getStroke() instanceof BasicStroke) {
-                        BasicStroke currentStroke = ((BasicStroke) g.getStroke());
-                        BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
-                                currentStroke.getEndCap(), currentStroke.getLineJoin(), 
-                                currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
-                                currentStroke.getDashPhase());
-                        g.setStroke(newStroke);
-                    } else {
-                        logger.warn("The stroke was of type " + g.getStroke().getClass() 
-                                + " when drawing the totals line. We only change BasicStroke lines.");
-                    }
-                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, 
-                            localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
-                    g.setStroke(oldStroke);
-
-                    g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
-                }
-                localX += ci.getWidth();
-                localX += padding.right;
-                y += padding.bottom;
-                maxY = Math.max(maxY, y);
-            }
-            maxY += rowHeight / 2;
-            return new Dimension(localX, maxY);
-        } else if (section.getTotalRenderStyle() == TotalRenderStyle.GRAND_TOTAL) {
-
-            Font boldBodyFont = bodyFont.deriveFont(Font.BOLD);
-            FontMetrics bodyFM = g.getFontMetrics(boldBodyFont);
-            FontMetrics headerFM = g.getFontMetrics(headerFont);
-
-            final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
-
-            g.setFont(headerFont);
-            g.drawString("Grand Total", ResultSetRenderer.BORDER_INDENT, rowHeight);
-            g.setFont(boldBodyFont);
-
-            int maxY = 0;
-            for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
-                int y = rowHeight;
-                ColumnInfo ci = colInfo.get(subCol);
-                if (ci.getWillBreak()) continue;
-                
-                Insets padding = getPadding(ci);
-                localX += padding.left;
-                y += padding.top;
-                
-                BigDecimal subtotal = totalsRow.get(subCol);
-                if (subtotal != null) {
-                    String formattedValue;
-                    if (ci.getFormat() != null) {
-                        formattedValue = ci.getFormat().format(subtotal);
-                    } else {
-                        formattedValue = subtotal.toString();
-                    }
-                    int offset = ci.getHorizontalAlignment().computeStartX(
-                            ci.getWidth(), bodyFM.stringWidth(formattedValue));
-                    Stroke oldStroke = g.getStroke();
-
-                    //Thinning the stroke for the subtotal line for looks. We can't get the
-                    //line width from a regular stroke so if the stroke is somehow different
-                    //from a BasicStroke we will just log the warning. (For cases where the
-                    //platform may make the Stroke significantly different.)
-                    if (g.getStroke() instanceof BasicStroke) {
-                        BasicStroke currentStroke = ((BasicStroke) g.getStroke());
-                        BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
-                                currentStroke.getEndCap(), currentStroke.getLineJoin(), 
-                                currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
-                                currentStroke.getDashPhase());
-                        g.setStroke(newStroke);
-                    } else {
-                        logger.warn("The stroke was of type " + g.getStroke().getClass() 
-                                + " when drawing the totals line. We only change BasicStroke lines.");
-                    }
-                    g.drawLine(localX, y - rowHeight + subtotalLineYShift, 
-                            localX + ci.getWidth(), y - rowHeight + subtotalLineYShift);
-                    g.drawLine(localX, y - rowHeight + subtotalLineYShift + 2, 
-                            localX + ci.getWidth(), y - rowHeight + subtotalLineYShift + 2);
-                    g.setStroke(oldStroke);
-
-                    g.drawString(formattedValue, localX + offset, y); // TODO clip and/or line wrap and/or warn
-                }
-                localX += ci.getWidth();
-                localX += padding.right;
-                y += padding.bottom;
-                
-                maxY = Math.max(maxY, y);
-            }
-            maxY += rowHeight / 2;
-            return new Dimension(localX, maxY);
+        Font boldBodyFont = bodyFont.deriveFont(Font.BOLD);
+        FontMetrics bodyFM = g.getFontMetrics(boldBodyFont);
+        FontMetrics headerFM = g.getFontMetrics(headerFont);
+        
+        final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
+        
+        String text;
+        if (isGrandTotal) {
+            text = "Grand Total";
         } else {
-            throw new IllegalStateException("The totals of the section " + section.getSectionHeader() 
-                    + " are being displayed in the style " + section.getTotalRenderStyle() + " which is unknown.");
+            text = "Total: " + breakText;
         }
+        
+        int totalTextX = 0;
+        for (int i = 0; i < breakTextPosition; i++) {
+            if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+                totalTextX += colInfo.get(i).getWidth();
+            }
+        }
+        Insets textInsets = getPadding(null);
+        final int width = (int) headerFM.getStringBounds(text, g).getWidth() + 1 + textInsets.left + textInsets.right;
+        int height = headerFM.getHeight() + textInsets.top + textInsets.bottom;
+        height += headerFM.getHeight() / 2;
+        if (isGrandTotal) {
+            height += 2 * BORDER_LINE_SIZE;
+        }
+        ResultSetCell textCell = new ResultSetCell(text, headerFont, 
+                new Rectangle(totalTextX, yPosition, width, height),
+                textInsets, HorizontalAlignment.LEFT, new ArrayList<BorderType>());
+        newCells.add(textCell);
+        
+        for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
+            int y = rowHeight;
+            ColumnInfo ci = colInfo.get(subCol);
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
+
+            Insets padding = getPadding(ci);
+            y += padding.top;
+            BigDecimal subtotal = totalsRow.get(subCol);
+            y += padding.bottom;
+            if (subtotal != null) {
+                String formattedValue;
+                if (ci.getFormat() != null) {
+                    formattedValue = ci.getFormat().format(subtotal);
+                } else {
+                    formattedValue = subtotal.toString();
+                }
+                
+                List<BorderType> grandTotalBorders = new ArrayList<BorderType>();
+                if (isGrandTotal) {
+                    grandTotalBorders.add(BorderType.TOP);
+                    grandTotalBorders.add(BorderType.TOP);
+                    y += 2 * BORDER_LINE_SIZE;
+                }
+                
+                ResultSetCell totalCell = new ResultSetCell(formattedValue, boldBodyFont, 
+                        new Rectangle(localX, yPosition, ci.getWidth(), y), 
+                        padding, ci.getHorizontalAlignment(),
+                        grandTotalBorders);
+                newCells.add(totalCell);
+            }
+            localX += ci.getWidth();
+        }
+        return newCells;
     }
     
     /**
@@ -413,17 +734,9 @@ public class ReportPositionRenderer {
     /**
      * This method will return the insets of each cell based on the border type
      * being used.
-     * 
-     * @param borderType
-     *            The type of border that will be rendered around the result set
-     *            cells.
-     * @param column
-     *            The column that the cell being rendered is in.
-     * @param columnCount
-     *            The number of columns in the result set being rendered.
      */
     public Insets getPadding(ColumnInfo ci) {
-        if (ci.getWillBreak()) return new Insets(0, 0, 0, 0);
+        if (ci != null && ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) return new Insets(0, 0, 0, 0);
         Insets insets = new Insets(1, 1, 1, 1);
         if (borderType == BorderStyles.VERTICAL) {
             insets.left += ResultSetRenderer.BORDER_INDENT;
