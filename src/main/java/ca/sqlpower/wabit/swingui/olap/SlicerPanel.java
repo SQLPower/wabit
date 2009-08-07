@@ -170,6 +170,7 @@ public class SlicerPanel extends JPanel {
 						dtde.getLocation());
 				dtde.dropComplete(success);
 			}
+			resetUI();
 		}
 		
         public boolean importData(Transferable t, Point p) {
