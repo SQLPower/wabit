@@ -693,8 +693,9 @@ public class OlapQuery extends AbstractWabitObject {
         		String oldDimensionName = slicerMember.getDimension().getName();
         		QueryDimension oldQueryDimension = mdxQuery.getDimension(oldDimensionName);
         		QueryAxis oldAxis = oldQueryDimension.getAxis();
-        		oldAxis.removeDimension(oldQueryDimension);
-        		
+        		if (oldAxis != null && oldAxis.getDimensions().indexOf(oldQueryDimension) >= 0) {
+        			oldAxis.removeDimension(oldQueryDimension);
+        		}
         	}
         	hierarchiesInUse.remove(qd);
         } else {
