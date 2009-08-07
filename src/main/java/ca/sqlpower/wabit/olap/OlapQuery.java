@@ -35,7 +35,6 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
-import org.olap4j.CellSetAxis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.mdx.ParseTreeWriter;
@@ -313,6 +312,7 @@ public class OlapQuery extends AbstractWabitObject {
 	 */
     public void reset() throws SQLException {
     	slicerMember = null;
+    	hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
         try {
 			setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
 		} catch (Exception e) {
@@ -689,6 +689,13 @@ public class OlapQuery extends AbstractWabitObject {
         //The filter axis does not support multiple members
         if (qa.getLocation() == Axis.FILTER) {
         	qd.clearInclusions();
+        	if (slicerMember != null) {
+        		String oldDimensionName = slicerMember.getDimension().getName();
+        		QueryDimension oldQueryDimension = mdxQuery.getDimension(oldDimensionName);
+        		QueryAxis oldAxis = oldQueryDimension.getAxis();
+        		oldAxis.removeDimension(oldQueryDimension);
+        		
+        	}
         	hierarchiesInUse.remove(qd);
         } else {
         	hierarchiesInUse.put(qd, member.getHierarchy());
@@ -739,7 +746,7 @@ public class OlapQuery extends AbstractWabitObject {
      * QueryDimension class, we'll maintain this mapping here to associate
      * Dimensions with Hierarchies.
      */
-    private final Map<QueryDimension, Hierarchy> hierarchiesInUse =
+    private Map<QueryDimension, Hierarchy> hierarchiesInUse =
         new HashMap<QueryDimension, Hierarchy>();
     
     private List<Hierarchy> getHierarchies(Axis axis) throws QueryInitializationException {
