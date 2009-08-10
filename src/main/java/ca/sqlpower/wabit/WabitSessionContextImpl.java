@@ -173,10 +173,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			jmdns = null;
 		}
 		
-        setPlDotIniPath(prefs.get(PREFS_PL_INI_PATH, null));
-        logger.debug("pl.ini is at " + getPlDotIniPath());
-        
-        setPlDotIniPath(ArchitectUtils.checkForValidPlDotIni(getPlDotIniPath(), "Wabit"));
+        setPlDotIniPath(ArchitectUtils.checkForValidPlDotIni(prefs.get(PREFS_PL_INI_PATH, null), "Wabit"));
         
         try {
             manuallyConfiguredServers.addAll(readServersFromPrefs());
@@ -234,11 +231,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public void deregisterChildSession(WabitSession child) {
 		childSessions.remove(child);
 		child.removeSessionLifecycleListener(sessionLifecycleListener);
-		
 		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
 		if (childSessions.isEmpty() && getDataSources() != null && getPlDotIniPath() != null) {
-			logger.debug("Saving pl.ini");
-	        prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
 			try {
 				getDataSources().write(new File(getPlDotIniPath()));
 	        } catch (IOException e) {
@@ -283,6 +277,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	}
 
 	public void close() {
+		prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
 		if (jmdns != null) {
 			jmdns.close();
 		}	
