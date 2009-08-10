@@ -43,6 +43,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 
@@ -267,7 +268,7 @@ public class WabitWelcomeScreen {
             }
 
 			public String getTitle() {
-				return "";
+				return "Wabit " + WabitVersion.VERSION;
 			}
         };
 	}
