@@ -33,4 +33,11 @@ public interface WabitPanel extends DataEntryPanel {
 	 * This will maximize or unmaximize the editor panel.
 	 */
 	void maximizeEditor();
+
+	/**
+	 * Returns a suitable string that can be used in the title of a containing
+	 * window or frame. Usually describes what the panel contains. (ex.
+	 * "Query Editor" or "Report Editor")
+	 */
+	String getTitle();
 }

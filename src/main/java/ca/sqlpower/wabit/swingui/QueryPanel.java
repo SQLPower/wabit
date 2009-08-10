@@ -929,4 +929,8 @@ public class QueryPanel implements WabitPanel {
 		return queryUIComponents;
 	}
 
+
+	public String getTitle() {
+		return "Query Editor - " + queryCache.getName();
+	}
 }

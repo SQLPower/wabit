@@ -543,4 +543,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		}
 	}
 	
+	public String getTitle() {
+		return "Report Editor - " + report.getName();
+	}
 }

@@ -252,4 +252,7 @@ public class WabitImagePanel implements WabitPanel {
         return false;
     }
 
+    public String getTitle() {
+		return "Image Viewer - " + image.getName();
+	}
 }

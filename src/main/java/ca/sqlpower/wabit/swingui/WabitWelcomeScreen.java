@@ -265,6 +265,10 @@ public class WabitWelcomeScreen {
             public void maximizeEditor() {
                 //do nothing
             }
+
+			public String getTitle() {
+				return "";
+			}
         };
 	}
 	

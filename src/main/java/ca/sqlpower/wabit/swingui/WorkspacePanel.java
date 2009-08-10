@@ -384,4 +384,7 @@ public class WorkspacePanel implements WabitPanel {
 		//Do nothing, the workspace panel is always maximized.
 	}
 
+	public String getTitle() {
+		return "Workspace - " + session.getWorkspace().getName();
+	}
 }

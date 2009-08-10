@@ -599,6 +599,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
         wabitPane.setDividerLocation(dividerLoc);
+        frame.setTitle(currentEditorPanel.getTitle());
         // The execute query currently needs to be done after the panel is added
         // to the split pane, because it requires a Graphics2D object to get a
         // FontMetrics to use to calculate optimal column widths in the

@@ -715,4 +715,8 @@ public class OlapQueryPanel implements WabitPanel {
             glassPane.removeMouseListener(clickListener);
         }
     }
+    
+    public String getTitle() {
+		return "OLAP Query Editor - " + query.getName();
+	}
 }
