@@ -26,25 +26,36 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
+import ca.sqlpower.wabit.swingui.OpenProgressWindow;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+
+import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This action will load in workspaces from a user selected file to a given
  * context.
  */
 public class OpenWorkspaceAction extends AbstractAction {
-
+    
+    private static final Logger logger = Logger.getLogger(OpenWorkspaceAction.class);
+    
 	/**
 	 * This is the context within Wabit that will have the workspaces
 	 * loaded into.
@@ -85,43 +96,192 @@ public class OpenWorkspaceAction extends AbstractAction {
 	/**
 	 * This will load a Wabit workspace file in a new session in the given context.
 	 */
-	public static void loadFile(File importFile, WabitSwingSessionContext context) throws FileNotFoundException {
-		BufferedInputStream in = null;
-		in = new BufferedInputStream(new FileInputStream(importFile));
-		List<WabitSession> loadFile = loadFile(in, context);
-		try {
-            in.close();
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
-		for (WabitSession session : loadFile) {
-		    ((WabitSwingSession) session).setCurrentFile(importFile);
-		}
-		context.putRecentFileName(importFile.getAbsolutePath());
+	@SuppressWarnings("unchecked")
+    public static void loadFile(final File importFile, final WabitSwingSessionContext context) throws FileNotFoundException {
+	    loadFiles(Collections.singletonList(importFile), context);
+	}
+	
+	public static void loadFiles(final List<File> importFiles, final WabitSwingSessionContext context) 
+	        throws FileNotFoundException {
+	    final List<InputStream> ins = new ArrayList<InputStream>();
+	    final Map<File, OpenWorkspaceXMLDAO> workspaceLoaders = new HashMap<File, OpenWorkspaceXMLDAO>();
+	    for (File importFile : importFiles) {
+	        BufferedInputStream in = new BufferedInputStream(new FileInputStream(importFile));
+	        OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
+	        ins.add(in);
+	        workspaceLoaders.put(importFile, workspaceLoader);
+	    }
+		
+		SPSwingWorker worker = new SPSwingWorker(context) {
+		    
+		    private OpenWorkspaceXMLDAO currentDAO;
+
+            @Override
+            public void doStuff() throws Exception {
+                for (Map.Entry<File, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
+                    currentDAO = entry.getValue();
+                    List<WabitSession> loadFile = entry.getValue().openWorkspaces();
+                    context.setEditorPanel();
+                    for (WabitSession session : loadFile) {
+                        ((WabitSwingSession) session).setCurrentFile(entry.getKey());
+                    }
+                    context.putRecentFileName(entry.getKey().getAbsolutePath());
+                }
+            }
+            
+            @Override
+            public void cleanup() throws Exception {
+                if (getDoStuffException()!= null) {
+                    throw new RuntimeException(getDoStuffException());
+                }
+                for (InputStream in : ins) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // squishing exception to not hide other exceptions.
+                    }
+                }
+            }
+            
+            @Override
+            protected Integer getJobSizeImpl() {
+                int jobSize = 0;
+                for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
+                    jobSize += workspaceDAO.getJobSize();
+                }
+                
+                return jobSize;
+            }
+            
+            @Override
+            protected String getMessageImpl() {
+                if (currentDAO != null) { 
+                    return currentDAO.getMessage();
+                } else {
+                    return "";
+                }
+            }
+            
+            @Override
+            protected int getProgressImpl() {
+                int progress = 0;
+                for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
+                    progress += workspaceDAO.getProgress();
+                }
+                
+                return progress;
+            }
+            
+            @Override
+            protected boolean hasStartedImpl() {
+                boolean started = false;
+                for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
+                    started = started || workspaceDAO.hasStarted();
+                }
+                
+                return started;
+            }
+            
+            @Override
+            protected boolean isFinishedImpl() {
+                boolean finished = true;
+                for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
+                    finished = finished && workspaceDAO.isFinished();
+                }
+                
+                return finished;
+            }
+            
+            @Override
+            public synchronized boolean isCancelled() {
+                boolean cancelled = false;
+                for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
+                    cancelled = cancelled || workspaceDAO.hasStarted();
+                }
+                
+                return cancelled;
+            }
+            
+            @Override
+            public synchronized void setCancelled(boolean cancelled) {
+                for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
+                    workspaceDAO.setCancelled(cancelled);
+                }
+            }
+		    
+		};
+		
+		new OpenProgressWindow(context.getFrame(), worker).startWorker();
 	}
 
-	/**
-	 * This will load a Wabit workspace file in a new session in the given context
-	 * through an input stream. This is slightly different from loading from a
-	 * file as no default file to save to will be specified and nothing will be
-	 * added to the recent files menu.
-	 * 
-	 * @return The list of sessions loaded from the input stream.
-	 */
-	public static List<WabitSession> loadFile(InputStream input, WabitSwingSessionContext context) {
-		BufferedInputStream in = new BufferedInputStream(input);
-		try {
-			OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in);
-			List<WabitSession> sessions = workspaceLoader.openWorkspaces();
-			context.setEditorPanel();
-			return sessions;
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-				// squishing exception to not hide other exceptions.
-			}
-		}
+    /**
+     * This will load a Wabit workspace file in a new
+     * session in the given context through an input stream. This is slightly
+     * different from loading from a file as no default file to save to will be
+     * specified and nothing will be added to the recent files menu.
+     */
+	public static void loadFile(InputStream input, final WabitSwingSessionContext context, int bytesInStream) {
+	    
+	    final BufferedInputStream in = new BufferedInputStream(input);
+	    final OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, bytesInStream);
+	    SPSwingWorker worker = new SPSwingWorker(context) {
+
+	        @Override
+	        public void doStuff() throws Exception {
+	            workspaceLoader.openWorkspaces();
+	            context.setEditorPanel();
+	        }
+	        
+	        @Override
+	        public void cleanup() throws Exception {
+	            if (getDoStuffException()!= null) {
+	                throw new RuntimeException(getDoStuffException());
+	            }
+	            try {
+	                in.close();
+	            } catch (IOException e) {
+	                logger.error(e);
+	            }
+	        }
+	        
+	        @Override
+	        protected Integer getJobSizeImpl() {
+	            return workspaceLoader.getJobSize();
+	        }
+	        
+	        @Override
+	        protected String getMessageImpl() {
+	            return workspaceLoader.getMessage();
+	        }
+	        
+	        @Override
+	        protected int getProgressImpl() {
+	            return workspaceLoader.getProgress();
+	        }
+	        
+	        @Override
+	        protected boolean hasStartedImpl() {
+	            return workspaceLoader.hasStarted();
+	        }
+	        
+	        @Override
+	        protected boolean isFinishedImpl() {
+	            return workspaceLoader.isFinished();
+	        }
+	        
+	        @Override
+            public synchronized boolean isCancelled() {
+                return workspaceLoader.isCancelled();
+            }
+            
+            @Override
+            public synchronized void setCancelled(boolean cancelled) {
+                workspaceLoader.setCancelled(cancelled);
+            }
+	        
+	    };
+	    
+	    new OpenProgressWindow(context.getFrame(), worker).startWorker();
 	}
 
 }

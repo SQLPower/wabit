@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -121,6 +122,8 @@ import com.jgoodies.forms.layout.FormLayout;
 public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
+    
+    public static final String EXAMPLE_WORKSPACE_URL = "/ca/sqlpower/wabit/example_workspace.wabit";
     
     /**
      * This icon is at the top left of every frame.
@@ -455,10 +458,13 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
+                final URL resource = WabitWelcomeScreen.class.getResource(
+                    EXAMPLE_WORKSPACE_URL);
                 final InputStream resourceStream = WabitWelcomeScreen.class.getResourceAsStream(
-                        "/ca/sqlpower/wabit/example_workspace.wabit");
-                OpenWorkspaceAction.loadFile(resourceStream, WabitSwingSessionContextImpl.this);
+                    EXAMPLE_WORKSPACE_URL);
                 try {
+                    int contentLength = resource.openConnection().getContentLength();
+                    OpenWorkspaceAction.loadFile(resourceStream, WabitSwingSessionContextImpl.this, contentLength);
                     resourceStream.close();
                 } catch (IOException e1) {
                     throw new RuntimeException(e1);
@@ -913,6 +919,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
                 	WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
                     WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
+                    context.setEditorPanel();
                     
                     final List<File> importFile = new ArrayList<File>();
                     if (args.length > 0) {
@@ -927,16 +934,19 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                         }
                     }
                     
+                    List<File> startupFiles = new ArrayList<File>();
                     for (File file : importFile) {
                         if (file != null) {
-                            try {
-                                OpenWorkspaceAction.loadFile(file, context);
-                            } catch (FileNotFoundException e) {
-                                //if the file cannot be found just skip its load on startup.
-                            }
+                            startupFiles.add(file);
                         }
                     }
-                    context.setEditorPanel();
+                    
+                    try {
+                        OpenWorkspaceAction.loadFiles(startupFiles, context);
+                    } catch (FileNotFoundException e) {
+                        //if the file cannot be found just skip its load on startup.
+                    }
+                    
                 } catch (Exception ex) {
                      ex.printStackTrace();
                     // We wish we had a parent component to direct the dialog but this is being invoked, so

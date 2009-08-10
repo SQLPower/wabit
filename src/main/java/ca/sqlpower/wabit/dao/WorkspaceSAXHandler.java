@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.imageio.ImageIO;
 
@@ -196,8 +198,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	/**
 	 * Describes if the loading of the workspace has been cancelled.
 	 */
-	private boolean cancelled;
-	
+	private AtomicBoolean cancelled = new AtomicBoolean();
+    
+    /**
+     * This message describes where the parser is in the file.
+     */
+    private String progressMessage = "";
+    
 	/**
 	 * This map stores old DS names used in the loaded workspace to the new DS specified
 	 * by the user. Only the data sources that have a new data source specified will
@@ -258,7 +265,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         this.promptFactory = context;
 		sessions = new ArrayList<WabitSession>();
 		oldToNewDSNames = new HashMap<String, String>();
-		cancelled = false;
+		setCancelled(false);
 	}
 	
 	/**
@@ -277,7 +284,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	@Override
 	public void startElement(String uri, String localName, String name,
 			Attributes attributes) throws SAXException {
-		if (cancelled) return;
+		if (isCancelled()) {
+		    throw new CancellationException();
+		}
 
 		xmlContext.push(name);
 
@@ -334,6 +343,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("data-source")) {
         	String dsName = attributes.getValue("name");
         	checkMandatory("name", dsName);
+        	
+        	progressMessage = session.getWorkspace().getName() + ": loading data source " + dsName;
+        	
         	SPDataSource ds = context.getDataSources().getDataSource(dsName);
         	if (ds == null) {
         		List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
@@ -357,7 +369,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		} else if (response == UserPromptResponse.NOT_OK) {
         			ds = null;
         		} else {
-        			cancelled = true;
+        			setCancelled(true);
         			context.deregisterChildSession(session);
         		}
         	} else if (!session.getWorkspace().dsAlreadyAdded(ds)) {
@@ -367,13 +379,18 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	cache = new QueryCache(uuid, session.getContext());
+        	
+        	String queryName = attributes.getValue("name");
+        	cache.setName(queryName);
+        	progressMessage = session.getWorkspace().getName() + " : loading query " + queryName;
+        	
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
         		if (aname.equals("uuid")) {
         			// already loaded
         		} else if (aname.equals("name")) {
-        			cache.setName(aval);
+        			// already loaded
         		} else if (aname.equals("data-source")) { 
         			JDBCDataSource ds = session.getWorkspace().getDataSource(aval, JDBCDataSource.class);
         			if (ds == null) {
@@ -602,6 +619,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             currentWabitImage = new WabitImage(wabitImageUUID);
             currentWabitImage.setName(wabitImageName);
             session.getWorkspace().addImage(currentWabitImage);
+            
+            progressMessage = session.getWorkspace().getName() + " : loading image " + wabitImageName;
+            
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
@@ -617,6 +637,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		checkMandatory("name", layoutName);
     		layout = new Layout(layoutName,attributes.getValue("uuid"));
     		session.getWorkspace().addLayout(layout);
+    		
+    		progressMessage = session.getWorkspace().getName() + " : loading layout " + layoutName;
+    		
           	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -1212,7 +1235,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String name)
     		throws SAXException {
-    	if (cancelled) return;
+    	if (isCancelled()) throw new CancellationException();
     	
     	if (name.equals("wabit")) {
     	    context.setLoading(false);
@@ -1280,6 +1303,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     @Override
     public void characters(char[] ch, int start, int length)
     		throws SAXException {
+        if (isCancelled()) throw new CancellationException();
+        
     	if (imageRenderer != null || currentWabitImage != null) {
     		logger.debug("Starting characters at " + start + " and ending at " + length);
     		for (int i = start; i < start+length; i++) {
@@ -1290,9 +1315,19 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     }
 
 	public List<WabitSession> getSessions() {
-		if (cancelled) return Collections.emptyList();
-		
 		return Collections.unmodifiableList(sessions);
 	}
+	
+    public String getMessage() {
+        return progressMessage;
+    }
+
+    public boolean isCancelled() {
+        return cancelled.get();
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled.set(cancelled);
+    }
 	
 }

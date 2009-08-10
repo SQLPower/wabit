@@ -28,8 +28,12 @@ import java.io.FileNotFoundException;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
+import ca.sqlpower.wabit.swingui.OpenProgressWindow;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
@@ -37,6 +41,8 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
  * This will import all the items from one workspace into an existing workspace.
  */
 public class ImportWorkspaceAction extends AbstractAction {
+    
+    private static final Logger logger = Logger.getLogger(ImportWorkspaceAction.class);
 
 	private final WabitSwingSessionContext context;
 
@@ -46,7 +52,7 @@ public class ImportWorkspaceAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-	    WabitSwingSession session = context.getActiveSwingSession();
+	    final WabitSwingSession session = context.getActiveSwingSession();
 	    
 	    File defaultFile = null;
         if (context.getActiveSession() != null) {
@@ -64,14 +70,67 @@ public class ImportWorkspaceAction extends AbstractAction {
 		}
 		importFile = fc.getSelectedFile();
 
-		BufferedInputStream in = null;
 		try {
-			in = new BufferedInputStream(new FileInputStream(importFile));
+		    final BufferedInputStream in = new BufferedInputStream(new FileInputStream(importFile));
+		    final OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
+
+		    SPSwingWorker worker = new SPSwingWorker(context) {
+
+		        @Override
+		        public void doStuff() throws Exception {
+		            workspaceLoader.importWorkspaces(session);
+		        }
+
+		        @Override
+		        public void cleanup() throws Exception {
+		            try {
+		                in.close();
+		            } catch (Exception e) {
+		                logger.error(e);
+		            }
+		        }
+		        
+		        @Override
+	            protected Integer getJobSizeImpl() {
+	                return workspaceLoader.getJobSize();
+	            }
+	            
+	            @Override
+	            protected String getMessageImpl() {
+	                return workspaceLoader.getMessage();
+	            }
+	            
+	            @Override
+	            protected int getProgressImpl() {
+	                return workspaceLoader.getProgress();
+	            }
+	            
+	            @Override
+	            protected boolean hasStartedImpl() {
+	                return workspaceLoader.hasStarted();
+	            }
+	            
+	            @Override
+	            protected boolean isFinishedImpl() {
+	                return workspaceLoader.isFinished();
+	            }
+	            
+	            @Override
+	            public synchronized boolean isCancelled() {
+	                return workspaceLoader.isCancelled();
+	            }
+	            
+	            @Override
+	            public synchronized void setCancelled(boolean cancelled) {
+	                workspaceLoader.setCancelled(cancelled);
+	            }
+	            
+		    };
+
+		    new OpenProgressWindow(context.getFrame(), worker).startWorker(); 
 		} catch (FileNotFoundException e1) {
-			throw new RuntimeException(e1);
+		    throw new RuntimeException(e1);
 		}
-		OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in);
-		workspaceLoader.importWorkspaces(session);
 	}
 
 }

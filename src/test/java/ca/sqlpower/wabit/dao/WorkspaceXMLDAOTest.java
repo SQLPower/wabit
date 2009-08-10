@@ -289,7 +289,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
         System.out.println(out.toString("utf-8"));
         
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in);
+        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in, 0);
         
         WabitSession loadedSession = loadDAO.openWorkspaces().get(0);
         

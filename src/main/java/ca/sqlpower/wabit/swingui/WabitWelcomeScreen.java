@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
@@ -176,10 +177,12 @@ public class WabitWelcomeScreen {
 		JButton openDemoButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
+				final URL resource = WabitWelcomeScreen.class.getResource(WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL);
 				final InputStream resourceStream = WabitWelcomeScreen.class.getResourceAsStream(
-				        "/ca/sqlpower/wabit/example_workspace.wabit");
-                OpenWorkspaceAction.loadFile(resourceStream, context);
+				        WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL);
                 try {
+                    int contentLength = resource.openConnection().getContentLength();
+                    OpenWorkspaceAction.loadFile(resourceStream, context, contentLength);
                     resourceStream.close();
                 } catch (IOException e1) {
                     throw new RuntimeException(e1);

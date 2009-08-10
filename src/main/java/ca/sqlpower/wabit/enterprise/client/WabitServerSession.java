@@ -211,7 +211,7 @@ public class WabitServerSession extends WabitSessionImpl {
                     }
                     try {
                         OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(
-                                context, response.getEntity().getContent());
+                                context, response.getEntity().getContent(), 0); //TODO set the workspace size correctly
                         workspaceLoader.openWorkspaces();
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
