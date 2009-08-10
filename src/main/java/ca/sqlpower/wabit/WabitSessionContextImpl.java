@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -109,6 +111,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * This prefs node stores context specific prefs. At current this is the pl.ini location.
      */
     protected final Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
+    
+    /**
+     * Used to fire property changes.
+     */
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     
     /**
      * This flag will be true if the context is in the process of loading from a
@@ -409,7 +416,9 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     }
     
     public void setLoading(boolean loading) {
+        boolean oldLoading = this.loading;
         this.loading = loading;
+        pcs.firePropertyChange("loading", oldLoading, loading);
     }
 
     public SQLDatabase getDatabase(JDBCDataSource dataSource) {
@@ -447,7 +456,17 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     }
 
     public void setActiveSession(WabitSession activeSession) {
+        WabitSession oldSession = this.activeSession;
         this.activeSession = activeSession;
+        pcs.firePropertyChange("activeSession", oldSession, activeSession);
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener l) {
+        pcs.addPropertyChangeListener(l);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener l) {
+        pcs.removePropertyChangeListener(l);
     }
 
 }

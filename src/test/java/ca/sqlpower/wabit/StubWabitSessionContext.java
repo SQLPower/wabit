@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -174,6 +175,16 @@ public class StubWabitSessionContext implements WabitSessionContext {
     }
 
     public void setActiveSession(WabitSession session) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener l) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener l) {
         // TODO Auto-generated method stub
         
     }

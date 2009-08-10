@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -228,4 +229,8 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      * Returns the session that the user is currently viewing or editing.
      */
     WabitSession getActiveSession();
+    
+    public void addPropertyChangeListener(PropertyChangeListener l);
+    
+    public void removePropertyChangeListener(PropertyChangeListener l);
 }

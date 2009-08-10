@@ -70,13 +70,13 @@ public class SaveWorkspaceAction extends AbstractAction {
 			try {
 			    final FileOutputStream out = new FileOutputStream(currentFile);
 			    workspaceSaver = new WorkspaceXMLDAO(out, context);
+			    workspaceSaver.saveActiveWorkspace();
 			    out.close();
 			} catch (FileNotFoundException e1) {
 			    throw new RuntimeException(e1);
 			} catch (IOException e) {
 			    throw new RuntimeException(e);
 			}
-			workspaceSaver.saveActiveWorkspace();
 			context.putRecentFileName(currentFile.getAbsolutePath());
 			context.setStatusMessage("Saved " + context.getActiveSession().getWorkspace().getName() + " to " +
 			        currentFile.getName());

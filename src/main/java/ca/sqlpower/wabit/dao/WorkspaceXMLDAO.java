@@ -334,6 +334,7 @@ public class WorkspaceXMLDAO {
 		xml.println(out, "</wabit>");
 		out.flush();
 		out.close();
+		logger.debug("Saving complete");
 	}
 
 	private void saveDataSources(List<WabitDataSource> dataSources) {

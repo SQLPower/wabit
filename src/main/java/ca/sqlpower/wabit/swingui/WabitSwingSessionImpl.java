@@ -133,6 +133,24 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             }
         }
     };
+    
+    /**
+     * This listener will listen for the context to finish loading and update
+     * the selected element in the tree to be the same as the current editor.
+     * This is done to select the correct object in the tree as it cannot be
+     * done during loading. Doing this on sessions that are already loaded when
+     * other sessions are loading should not hurt anything.
+     */
+    private final PropertyChangeListener loadingContextListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("loading") && !((Boolean) evt.getNewValue())
+                    && getWorkspace().getEditorPanelModel() != null) {
+                final TreePath createTreePathForObject = 
+                    getWorkspaceTreeModel().createTreePathForObject(getWorkspace().getEditorPanelModel());
+                getTree().setSelectionPath(createTreePathForObject);
+            }
+        };
+    };
 
 	/**
 	 * Creates a new session 
@@ -153,6 +171,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
         buildUIComponents();
         getWorkspace().addPropertyChangeListener(workspaceEditorModelListener);
+        getContext().addPropertyChangeListener(loadingContextListener);
 	}
 	
 	public WabitSwingSessionImpl(WabitServerInfo serverInfo,
@@ -263,6 +282,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	
 	public boolean close() {
 	    getWorkspace().removePropertyChangeListener(workspaceEditorModelListener);
+	    getContext().removePropertyChangeListener(loadingContextListener);
 	    return delegateSession.close();
 	}
 

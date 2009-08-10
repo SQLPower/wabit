@@ -30,6 +30,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
@@ -72,21 +73,27 @@ public class OpenWorkspaceAction extends AbstractAction {
 		}
 		importFile = fc.getSelectedFile();
 
-		loadFile(importFile, context);
+		try {
+            loadFile(importFile, context);
+        } catch (FileNotFoundException e1) {
+            JOptionPane.showMessageDialog(context.getFrame(), "Cannot find file " + importFile.getName() + " to open.",
+                    "Cannot Find File", JOptionPane.WARNING_MESSAGE);
+        }
 		
 	}
 
 	/**
 	 * This will load a Wabit workspace file in a new session in the given context.
 	 */
-	public static void loadFile(File importFile, WabitSwingSessionContext context) {
+	public static void loadFile(File importFile, WabitSwingSessionContext context) throws FileNotFoundException {
 		BufferedInputStream in = null;
-		try {
-			in = new BufferedInputStream(new FileInputStream(importFile));
-		} catch (FileNotFoundException e1) {
-			throw new RuntimeException(e1);
-		}
+		in = new BufferedInputStream(new FileInputStream(importFile));
 		List<WabitSession> loadFile = loadFile(in, context);
+		try {
+            in.close();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
 		for (WabitSession session : loadFile) {
 		    ((WabitSwingSession) session).setCurrentFile(importFile);
 		}

@@ -30,7 +30,9 @@ import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -97,6 +99,7 @@ import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
+import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
@@ -216,7 +219,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     /**
      * This tabbed pane contains all of the trees for each swing session in the context.
      */
-    private JTabbedPane treeTabbedPane;
+    private final JTabbedPane treeTabbedPane;
     
     /**
      * This is the limit of all result sets in Wabit. Changing this spinner
@@ -273,6 +276,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + getName());
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
+        treeTabbedPane = new JTabbedPane();
 
         rowLimitSpinner = new JSpinner();
         final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
@@ -310,7 +314,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			@Override
 			public void loadFile(String fileName) throws IOException {
 				File file = new File(fileName);
-				OpenWorkspaceAction.loadFile(file, WabitSwingSessionContextImpl.this);
+				try {
+				    OpenWorkspaceAction.loadFile(file, WabitSwingSessionContextImpl.this);
+				} catch (FileNotFoundException e) {
+				    //skip adding the file to the recent menu if it cannot be found.
+				}
 			}
 		};
 		
@@ -324,9 +332,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 //	}
 	
 	public void deregisterChildSession(WabitSession child) {
-	    delegateContext.deregisterChildSession(child);
-	    
 	    treeTabbedPane.removeTabAt(getSessions().indexOf(child));
+	    delegateContext.deregisterChildSession(child);
 	}
 	
 	/**
@@ -399,7 +406,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         // this will be the frame's content pane
         JPanel cp = new JPanel(new BorderLayout());
         
-        treeTabbedPane = new JTabbedPane();
         for (WabitSession session : getSessions()) {
             treeTabbedPane.addTab(session.getWorkspace().getName(), ((WabitSwingSession) session).getTree());
         }
@@ -449,8 +455,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
-                        "/ca/sqlpower/wabit/example_workspace.wabit"), WabitSwingSessionContextImpl.this);
+                final InputStream resourceStream = WabitWelcomeScreen.class.getResourceAsStream(
+                        "/ca/sqlpower/wabit/example_workspace.wabit");
+                OpenWorkspaceAction.loadFile(resourceStream, WabitSwingSessionContextImpl.this);
+                try {
+                    resourceStream.close();
+                } catch (IOException e1) {
+                    throw new RuntimeException(e1);
+                }
             }
         });
         
@@ -489,12 +501,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
         }));
         fileMenu.addSeparator();
-        fileMenu.add(new AbstractAction("Close Workspace") {
-            public void actionPerformed(ActionEvent e) {
-                close();
-            }
-        });
+        
+        JMenuItem closeMenuItem = new JMenuItem(new CloseWorkspaceAction(this));
+        closeMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.META_DOWN_MASK));
+        fileMenu.add(closeMenuItem);
         fileMenu.addSeparator();
+        
         JMenuItem databaseConnectionManager = new JMenuItem(new AbstractAction("Database Connection Manager...") {
             public void actionPerformed(ActionEvent e) {
                 getActiveSwingSession().getDbConnectionManager().showDialog(getFrame());
@@ -724,12 +736,17 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         frame.dispose();
 
-        for (int i = 0; i < getSessionCount(); i++) {
+        int i = 0;
+        for (; i < getSessionCount(); i++) {
         	
             File currentFile = ((WabitSwingSession) getSessions().get(i)).getCurrentFile();
             if (currentFile == null) continue;
 			getPrefs().put(PREFS_OPEN_WORKSPACES + i, 
                     currentFile.getAbsolutePath());
+        }
+        while (getPrefs().get(PREFS_OPEN_WORKSPACES + i, null) != null) {
+            getPrefs().remove(PREFS_OPEN_WORKSPACES + i);
+            i++;
         }
         
         delegateContext.close();
@@ -837,13 +854,17 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     public void setActiveSession(WabitSession activeSession) {
         delegateContext.setActiveSession(activeSession);
+        treeTabbedPane.setSelectedIndex(getSessions().indexOf(activeSession));
+        setEditorPanel();
     }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {
+        delegateContext.addPropertyChangeListener(l);
         pcs.addPropertyChangeListener(l);
     }
     
     public void removePropertyChangeListener(PropertyChangeListener l) {
+        delegateContext.removePropertyChangeListener(l);
         pcs.removePropertyChangeListener(l);
     }
 
@@ -907,7 +928,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                     
                     for (File file : importFile) {
                         if (file != null) {
-                            OpenWorkspaceAction.loadFile(file, context);
+                            try {
+                                OpenWorkspaceAction.loadFile(file, context);
+                            } catch (FileNotFoundException e) {
+                                //if the file cannot be found just skip its load on startup.
+                            }
                         }
                     }
                     context.setEditorPanel();

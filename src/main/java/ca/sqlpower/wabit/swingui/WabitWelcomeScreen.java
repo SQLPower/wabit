@@ -25,6 +25,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
@@ -34,6 +37,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
@@ -140,7 +144,12 @@ public class WabitWelcomeScreen {
 				}
 				importFile = fc.getSelectedFile();
 
-				OpenWorkspaceAction.loadFile(importFile, context);
+				try {
+                    OpenWorkspaceAction.loadFile(importFile, context);
+                } catch (FileNotFoundException e1) {
+                    JOptionPane.showMessageDialog(mainPanel, "Cannot find file " + importFile.getName() + " to open.",
+                            "Cannot Find File", JOptionPane.WARNING_MESSAGE);
+                }
 				terminate = false;
 			}
 		});
@@ -166,8 +175,14 @@ public class WabitWelcomeScreen {
 		JButton openDemoButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
-				OpenWorkspaceAction.loadFile(WabitWelcomeScreen.class.getResourceAsStream(
-				        "/ca/sqlpower/wabit/example_workspace.wabit"), context);
+				final InputStream resourceStream = WabitWelcomeScreen.class.getResourceAsStream(
+				        "/ca/sqlpower/wabit/example_workspace.wabit");
+                OpenWorkspaceAction.loadFile(resourceStream, context);
+                try {
+                    resourceStream.close();
+                } catch (IOException e1) {
+                    throw new RuntimeException(e1);
+                }
 			}
 		});
 		
