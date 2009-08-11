@@ -68,6 +68,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 		newDS.setName("Missing DS is replaced");
 		final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
 		final WabitSession session = beforeSaveContext.createSession();
+		beforeSaveContext.registerChildSession(session);
 		beforeSaveContext.setActiveSession(session);
 		WabitWorkspace p = session.getWorkspace();
 		p.setName("Workspace");

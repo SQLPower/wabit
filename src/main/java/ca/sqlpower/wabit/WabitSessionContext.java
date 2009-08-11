@@ -78,14 +78,16 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
 	boolean isMacOSX();
 	
 	/**
-	 * This will create an appropriate local session for the current context and will
-	 * register the session with the context.
+	 * This will create an appropriate local session for the current context. Registering
+	 * the session with the context should be done immediately or shortly after creating
+	 * the session.
 	 */
 	WabitSession createSession();
 	
 	/**
-     * This will create an appropriate server session for the current context and will
-     * register the session with the context.
+     * This will create an appropriate server session for the current context. Registering
+     * the session with the context should be done immediately or shortly after creating
+     * the session.
      */
     WabitSession createServerSession(WabitServerInfo serverInfo);
 	

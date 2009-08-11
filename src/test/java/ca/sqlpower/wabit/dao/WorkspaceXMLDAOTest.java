@@ -252,6 +252,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
 	public void testSaveAndLoad() throws Exception {
 	    final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
 	    final WabitSession session = beforeSaveContext.createSession();
+	    beforeSaveContext.registerChildSession(session);
 	    beforeSaveContext.setActiveSession(session);
 		WabitWorkspace p = session.getWorkspace();
 		p.setName("Workspace");

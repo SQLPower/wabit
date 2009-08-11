@@ -31,8 +31,18 @@ import javax.xml.parsers.SAXParserFactory;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.util.Monitorable;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.Layout;
 
 import com.rc.retroweaver.runtime.Collections;
 
@@ -138,31 +148,15 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 			parser = SAXParserFactory.newInstance().newSAXParser();
 			parser.parse(in, saxHandler);
 		} catch (CancellationException e) {
-		    try {
-                for (WabitSession session : saxHandler.getSessions()) {
-                    context.deregisterChildSession(session);
-                    session.close();
-                }
-            } catch (Exception ex) {
-                //Logging this exception as it is hiding the underlying exception.
-                logger.error(ex);
-            }
             return Collections.emptyList();
 		} catch (Exception e) {
-		    try {
-		        for (WabitSession session : saxHandler.getSessions()) {
-		            context.deregisterChildSession(session);
-		            session.close();
-		        }
-		    } catch (Exception ex) {
-		        //Logging this exception as it is hiding the underlying exception.
-		        logger.error(ex);
-		    }
 			throw new RuntimeException(e);
 		} finally {
 		    context.setLoading(false);
 		}
-		
+		for (WabitSession session : saxHandler.getSessions()) {
+		    context.registerChildSession(session);
+		}
 		finished.set(true);
 		
 		return saxHandler.getSessions();
@@ -175,20 +169,54 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
     public void importWorkspaces(WabitSession session) {
         if (started.get()) throw new IllegalStateException("Loading already started. A new instance " +
             "of this class should be created instead of calling this method again.");
+        if (session == null) {
+            context.createUserPrompter("Select a workspace to import into.", UserPromptType.MESSAGE, 
+                    UserPromptOptions.OK, UserPromptResponse.OK, null);
+            return;
+        }
         started.set(true);
         SAXParser parser;
-        saxHandler = new WorkspaceSAXHandler(context, session);
+        saxHandler = new WorkspaceSAXHandler(context);
         
         if (cancelled.get()) return;
         
         try {
             parser = SAXParserFactory.newInstance().newSAXParser();
             parser.parse(in, saxHandler);
+            
+            context.setLoading(true);
+            final WabitWorkspace workspace = session.getWorkspace();
+            int importObjectCount = 0;
+            for (WabitSession importingSession : saxHandler.getSessions()) {
+                for (WabitObject importObject : importingSession.getWorkspace().getChildren()) {
+                    if (importObject instanceof WabitDataSource) {
+                        if (!session.getWorkspace().dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
+                            workspace.addDataSource((WabitDataSource) importObject);
+                        }
+                    } else if (importObject instanceof QueryCache) {
+                        workspace.addQuery((QueryCache) importObject, session);
+                    } else if (importObject instanceof OlapQuery) {
+                        workspace.addOlapQuery((OlapQuery) importObject);
+                    } else if (importObject instanceof WabitImage) {
+                        workspace.addImage((WabitImage) importObject);
+                    } else if (importObject instanceof Layout) {
+                        workspace.addLayout((Layout) importObject);
+                    } else {
+                        throw new IllegalStateException("Cannot import the WabitObject type " + importObject.getClass());
+                    }
+                    importObjectCount++;
+                }
+            }
+            logger.debug("Imported " + importObjectCount + " objects into " + session.getWorkspace().getName());
+        } catch (CancellationException e) {
+            //the operation was cancelled so we neeed to not add anything to the importing session.
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             context.setLoading(false);
         }
+        
+        
         finished.set(true);
     }
 

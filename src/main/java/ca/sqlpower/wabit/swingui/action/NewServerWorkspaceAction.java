@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.NewWorkspaceScreen;
@@ -45,7 +46,8 @@ public class NewServerWorkspaceAction extends AbstractAction {
     
     public void actionPerformed(ActionEvent e) {
         try {
-            context.createServerSession(si);
+            WabitSession serverSession = context.createServerSession(si);
+            context.registerChildSession(serverSession);
             NewWorkspaceScreen newWorkspace = new NewWorkspaceScreen(context, si);
             newWorkspace.showFrame();
         } catch (Exception ex) {

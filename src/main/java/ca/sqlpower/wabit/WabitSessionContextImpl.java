@@ -254,13 +254,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 
 	public WabitSession createSession() {
 		final WabitSessionImpl session = new WabitSessionImpl(this);
-		registerChildSession(session);
         return session;
 	}
 	
 	public WabitSession createServerSession(WabitServerInfo serverInfo) {
         final WabitSession session = new WabitServerSession(serverInfo, this);
-        registerChildSession(session);
         return session;
     }
 

@@ -31,6 +31,7 @@ public class CloseWorkspaceActionTest extends TestCase {
         WabitSwingSessionContext context = new WabitSwingSessionContextImpl(
                 new WabitSessionContextImpl(false, false), true);
         WabitSession session = context.createSession();
+        context.registerChildSession(session);
         context.setActiveSession(session);
         
         CloseWorkspaceAction.closeActiveWorkspace(context);

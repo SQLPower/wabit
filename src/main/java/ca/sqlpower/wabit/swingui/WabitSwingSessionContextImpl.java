@@ -301,13 +301,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	public WabitSession createSession() {
 	    final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this);
-	    registerChildSession(session);
         return session;
 	}
 	
 	public WabitSession createServerSession(WabitServerInfo serverInfo) {
         final WabitSwingSessionImpl session = new WabitSwingSessionImpl(serverInfo, this);
-        registerChildSession(session);
         return session;
     }
 	
