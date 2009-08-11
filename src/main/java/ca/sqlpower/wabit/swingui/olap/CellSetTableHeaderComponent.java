@@ -77,6 +77,7 @@ import org.olap4j.CellSetAxisMetaData;
 import org.olap4j.OlapException;
 import org.olap4j.Position;
 import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
@@ -318,7 +319,13 @@ public class CellSetTableHeaderComponent extends JComponent {
                     		Hierarchy h = (Hierarchy) transferData;
                     		m = h.getDefaultMember();
                     	} else if (transferData instanceof Member) {
-                    		m = (Member) transferData;
+                    		m =(Member) transferData;
+                    	} else if (transferData instanceof Level) {
+                    		Level level = (Level) transferData;
+                    		for (Member member : level.getMembers()) {
+                    			query.addToAxis(calcDropInsertIndex(p), member, axis);
+                    		}
+                    		continue;
                     	} else {
                     		return false;
                     	}
