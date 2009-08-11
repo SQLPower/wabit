@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -33,6 +32,10 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -47,12 +50,16 @@ import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 
 /**
  * This panel will allow editing a WabitImage. WabitImages can be used
@@ -65,7 +72,7 @@ public class WabitImagePanel implements WabitPanel {
     /**
      * This message will be placed where you can drag and drop images to change the image.
      */
-    private static final String EMPTY_IMAGE_STRING = "Drag and drop an image here.";
+    private static final String EMPTY_IMAGE_STRING = "Drop an image here or click to browse.";
     
     /**
      * Stores the image that will be used in other parts of Wabit.
@@ -80,50 +87,18 @@ public class WabitImagePanel implements WabitPanel {
     private final Action browseForImageAction = new AbstractAction("", WabitSwingSessionContextImpl.OPEN_WABIT_ICON) {
     
         public void actionPerformed(ActionEvent e) {
-            JFileChooser imageChooser = new JFileChooser();
-            int retVal = imageChooser.showOpenDialog(context.getFrame());
-            if (retVal == JFileChooser.APPROVE_OPTION) {
-                logger.debug("Chosen file is " + imageChooser.getSelectedFile().getAbsolutePath());
-                try {
-                    image.setImage(ImageIO.read(imageChooser.getSelectedFile()));
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-                image.setName("Image: " + imageChooser.getSelectedFile().getName());
-            } else if (image == null) {
-                image.setName("Image: not defined");
-            }    
+            showImageBrowser();   
         }
     };
 
-    /**
-     * This panel should have it's one child, the image of the {@link #image}
-     * object, replaced when the image of the {@link #image} object changes.
-     */
-    private final JPanel imagePanel = new JPanel() {
-        @Override
-        public void paint(Graphics g) {
-            super.paint(g);
-            if (image.getImage() != null) {
-                final int imageWidth = image.getImage().getWidth(null);
-                final int imageHeight = image.getImage().getHeight(null);
-                g.drawImage(image.getImage(), (getWidth() - imageWidth) / 2, 
-                        (getHeight() - imageHeight) / 2, imageWidth, 
-                        imageHeight, null);
-            } else {
-                g.drawString(EMPTY_IMAGE_STRING, 
-                        (getWidth() - g.getFontMetrics().stringWidth(EMPTY_IMAGE_STRING)) / 2, 
-                        (getHeight() - g.getFontMetrics().getHeight()) / 2);
-            }
-        }
-    };
+    private JLabel imageLabel = new JLabel(EMPTY_IMAGE_STRING);
 
     /**
      * When the image changes this listener will cause the image panel to repaint.
      */
     private final PropertyChangeListener imageListener = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent evt) {
-            imagePanel.repaint();
+            resetImage();
         }
     };
     
@@ -139,8 +114,8 @@ public class WabitImagePanel implements WabitPanel {
             Transferable t = dtde.getTransferable();
             List<DataFlavor> flavorList = dtde.getCurrentDataFlavorsAsList();
             
-            System.out.println("Got drop event!");
-            System.out.println("Available Flavours: "+flavorList);
+            logger.debug("Got drop event!");
+            logger.debug("Available Flavours: "+flavorList);
             
             boolean success;
             try {
@@ -169,10 +144,10 @@ public class WabitImagePanel implements WabitPanel {
                     return;
                 }
             } catch (UnsupportedFlavorException e) {
-                System.out.println("Auto-generated catch: "+e.getMessage());
+                logger.debug("Auto-generated catch: "+e.getMessage());
                 success = false;
             } catch (IOException e) {
-                System.out.println("Auto-generated catch: "+e.getMessage());
+                logger.debug("Auto-generated catch: "+e.getMessage());
                 success = false;
             }
             dtde.dropComplete(success);
@@ -211,20 +186,101 @@ public class WabitImagePanel implements WabitPanel {
     
     private final WabitSwingSessionContext context;
 
+    /**
+     * The panel that contains the image label. Resizing this panel will cause the image to resize.
+     */
+    private JPanel imagePanel;
+
     public WabitImagePanel(WabitImage image, WabitSwingSessionContext context) {
         this.image = image;
         this.context = context;
 
         JToolBar toolBar = new JToolBar();
         toolBar.add(browseForImageAction);
+        imagePanel = new JPanel(new MigLayout("align 50% 50%"));
         
         panel.setLayout(new BorderLayout());
         panel.add(toolBar, BorderLayout.NORTH);
         panel.add(imagePanel, BorderLayout.CENTER);
         imagePanel.setBackground(Color.WHITE);
+        imagePanel.add(imageLabel);
+        
         new DropTarget(imagePanel, dndDropListener);
         
+        imagePanel.addMouseListener(new MouseAdapter() {
+        
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                showImageBrowser();
+            }
+        
+        });
+        
+        imagePanel.addComponentListener(new ComponentAdapter() {
+        
+            public void componentResized(ComponentEvent e) {
+                resetImage();
+            }
+        
+        });
+        
+        imagePanel.setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
+        
         image.addPropertyChangeListener(imageListener);
+    }
+    
+    /**
+     * Helper method to update the image displayed in the editor based on
+     * the image in the {@link WabitImage}.
+     */
+    private void resetImage() {
+        if (image.getImage() != null) {
+            imageLabel.setText("");
+            ImageIcon icon = new ImageIcon(image.getImage());
+            
+            int iconWidth = icon.getIconWidth();
+            int iconHeight = icon.getIconHeight();
+            double reduceWidthRatio = 1;
+            double reduceHeightRatio = 1;
+            
+            if (iconWidth > imagePanel.getWidth()) {
+                reduceWidthRatio = ((double) imagePanel.getWidth()) / ((double) iconWidth); 
+            }
+            if (iconHeight > imagePanel.getHeight()) {
+                reduceHeightRatio = ((double) imagePanel.getHeight()) / ((double) iconHeight); 
+            }
+            
+            double reduceSizeRatio = Math.min(reduceWidthRatio, reduceHeightRatio);
+            
+            iconWidth = (int) (reduceSizeRatio * iconWidth);
+            iconHeight = (int) (reduceSizeRatio * iconHeight);
+            
+            imageLabel.setIcon(new ImageIcon(image.getImage().getScaledInstance(iconWidth, iconHeight, Image.SCALE_SMOOTH)));
+            imagePanel.setBorder(null);
+        } else {
+            imageLabel.setIcon(null);
+            imageLabel.setText(EMPTY_IMAGE_STRING);
+            imagePanel.setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
+        }
+    }
+    
+    /**
+     * Helper method to show the {@link JFileChooser} to choose an image.
+     */
+    private void showImageBrowser() {
+        JFileChooser imageChooser = new JFileChooser();
+        int retVal = imageChooser.showOpenDialog(context.getFrame());
+        if (retVal == JFileChooser.APPROVE_OPTION) {
+            logger.debug("Chosen file is " + imageChooser.getSelectedFile().getAbsolutePath());
+            try {
+                image.setImage(ImageIO.read(imageChooser.getSelectedFile()));
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            image.setName("Image: " + imageChooser.getSelectedFile().getName());
+        } else if (image == null) {
+            image.setName("Image: not defined");
+        }
     }
 
     public void maximizeEditor() {

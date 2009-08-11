@@ -147,9 +147,9 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 
 	private void renderWabitImage(WorkspaceTreeCellRenderer r, WabitObject wo) {
 		final Image wabitImage = ((WabitImage) wo).getImage();
-		if (wabitImage != null && r.getIcon() != null) {
-		    final int width = r.getIcon().getIconWidth();
-		    final int height = r.getIcon().getIconHeight();
+		if (wabitImage != null) {
+		    final int width = DB_ICON.getIconWidth();
+		    final int height = DB_ICON.getIconHeight();
 		    final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
 		    Graphics2D g = image.createGraphics();
