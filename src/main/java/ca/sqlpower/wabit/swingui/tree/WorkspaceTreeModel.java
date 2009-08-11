@@ -177,6 +177,8 @@ public class WorkspaceTreeModel implements TreeModel {
 			return folderList.get(index);
     	}  else if (parentObject instanceof FolderNode) {
     		return ((FolderNode) parentObject).getChildren().get(index);
+    	} else if (parentObject instanceof Layout) {
+    		return  getLayoutsChildren(parentObject).get(index);
     	} else {
 			WabitObject wabitObject = (WabitObject) parentObject;
 			return wabitObject.getChildren().get(index);
@@ -188,10 +190,23 @@ public class WorkspaceTreeModel implements TreeModel {
     		return folderList.size();
     	} else if (parent instanceof FolderNode) {
     		return ((FolderNode) parent).getChildren().size();
+    	} else if (parent instanceof Layout) {
+    		return getLayoutsChildren(parent).size();
     	} else {
     		return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
     	}
     }
+
+	private List<WabitObject> getLayoutsChildren(Object parent) {
+		List<WabitObject> layoutChildren = new ArrayList<WabitObject>();
+		List<Page> page = ((Layout) parent).getChildren();
+		for (WabitObject wo : ((Page) page.get(0)).getChildren()) {
+			if (wo instanceof ContentBox) {
+				layoutChildren.add(wo);
+			}
+		}
+		return layoutChildren;
+	}
     
     public int getIndexOfChild(Object parent, Object child) {
     	if (parent instanceof WabitWorkspace) {
@@ -209,7 +224,9 @@ public class WorkspaceTreeModel implements TreeModel {
     	boolean retval;
     	if (node instanceof FolderNode) {
     		retval = !(((FolderNode) node).allowsChildren());
-    	} else {
+    	} else if (node instanceof ContentBox) {
+    		retval = true;
+    	} else { 
     		retval = !((WabitObject) node).allowsChildren();
     	}
 		return retval;

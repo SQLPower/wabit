@@ -47,10 +47,16 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.ImageRenderer;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
@@ -101,47 +107,35 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(LAYOUT_ICON);
             } else if (wo instanceof ContentBox) {
                 ContentBox cb = (ContentBox) wo;
-                r.setIcon(BOX_ICON);
-                r.setText(cb.getName() + " ("+cb.getX()+","+cb.getY()+" "+cb.getWidth()+"x"+cb.getHeight()+")");
+                ReportContentRenderer cbChild = (ReportContentRenderer) cb.getChildren().get(0);
+                if (cbChild instanceof ResultSetRenderer) {
+                	renderQueryCache(r, ((ResultSetRenderer) cbChild).getQuery());
+                } else if (cbChild instanceof CellSetRenderer) {
+                	r.setIcon(OLAP_QUERY_ICON);
+                	r.setText(((CellSetRenderer) cbChild).getOlapQuery().getName());
+                } else if (cbChild instanceof ImageRenderer) {
+                    renderWabitImage(r, ((ImageRenderer) cbChild).getImage());
+                } else if (cbChild instanceof ChartRenderer) {
+                	//TODO add chart icons
+                	r.setIcon(BOX_ICON); 
+	                r.setText(((ChartRenderer) cbChild).getQuery().getName());
+                } else if (cbChild instanceof Label) {
+                	//TODO add label icons (and their associated icons)
+                	r.setIcon(BOX_ICON); 
+	                r.setText(((Label) cbChild).getText());
+                } else {
+                	r.setIcon(BOX_ICON); 
+	                r.setText(cbChild.getName());
+                }
             } else if (wo instanceof Guide) {
             	Guide g = (Guide) wo;
             	r.setText(g.getName() + " @" + g.getOffset());
             } else if (wo instanceof QueryCache) {
-            	if (((QueryCache) wo).isRunning()) {
-            		if (((QueryCache) wo).isStreaming()) {
-            			r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, STREAMING_QUERY_BADGE})));
-            		} else {
-            			if (objectToTimedImageMap.containsKey(wo)) {
-            				logger.debug("The image for " + wo + " should be at position " + objectToTimedImageMap.get(wo));
-            				int imageNumber = (objectToTimedImageMap.get(wo) % 12) + 1;
-            				final String imageURL = "icons/throbber-badge_" + imageNumber + ".png";
-            				logger.debug("Loading image: " + imageURL);
-							r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource(imageURL))})));
-            			} else { 
-            				r.setIcon(QUERY_ICON);
-            			}
-            		}
-            	} else {
-            		r.setIcon(QUERY_ICON);
-            	}
+            	renderQueryCache(r, wo);
             } else if (wo instanceof OlapQuery) {
                 r.setIcon(OLAP_QUERY_ICON);
             } else if (wo instanceof WabitImage) {
-                final Image wabitImage = ((WabitImage) wo).getImage();
-                if (wabitImage != null) {
-                    final int width = r.getIcon().getIconWidth();
-                    final int height = r.getIcon().getIconHeight();
-                    final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-                    Graphics2D g = image.createGraphics();
-                    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
-                            RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    g.drawImage(wabitImage, 0, 0, width, height, new Color(0xffffffff, true), null);
-                    g.dispose();
-                
-                    final ImageIcon icon = new ImageIcon(image);
-                    r.setIcon(icon);
-                }
+                renderWabitImage(r, wo);
             }
 
         } else if (value instanceof FolderNode) {
@@ -150,6 +144,46 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         }
         return r;
     }
+
+	private void renderWabitImage(WorkspaceTreeCellRenderer r, WabitObject wo) {
+		final Image wabitImage = ((WabitImage) wo).getImage();
+		if (wabitImage != null && r.getIcon() != null) {
+		    final int width = r.getIcon().getIconWidth();
+		    final int height = r.getIcon().getIconHeight();
+		    final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+		    Graphics2D g = image.createGraphics();
+		    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+		            RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		    g.drawImage(wabitImage, 0, 0, width, height, new Color(0xffffffff, true), null);
+		    g.dispose();
+		
+		    final ImageIcon icon = new ImageIcon(image);
+		    r.setIcon(icon);
+		}
+		r.setText(wo.getName());
+	}
+
+	private void renderQueryCache(WorkspaceTreeCellRenderer r, WabitObject wo) {
+		if (((QueryCache) wo).isRunning()) {
+			if (((QueryCache) wo).isStreaming()) {
+				r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, STREAMING_QUERY_BADGE})));
+			} else {
+				if (objectToTimedImageMap.containsKey(wo)) {
+					logger.debug("The image for " + wo + " should be at position " + objectToTimedImageMap.get(wo));
+					int imageNumber = (objectToTimedImageMap.get(wo) % 12) + 1;
+					final String imageURL = "icons/throbber-badge_" + imageNumber + ".png";
+					logger.debug("Loading image: " + imageURL);
+					r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource(imageURL))})));
+				} else { 
+					r.setIcon(QUERY_ICON);
+				}
+			}
+		} else {
+			r.setIcon(QUERY_ICON);
+		}
+		r.setText(wo.getName());
+	}
 
     /**
      * Updates the frame counter for the given wabit object's "busy badge."
