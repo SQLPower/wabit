@@ -40,9 +40,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.WindowConstants;
 
+import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -60,17 +60,17 @@ public class WabitWelcomeScreen {
 	/**
 	 * The icon for the "New Workspace" button.
 	 */
-	private static final ImageIcon NEW_WORKSPACE_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/page_white.png"));
+	private static final ImageIcon NEW_WORKSPACE_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/welcome-new.png"));
 	
 	/**
 	 * The icon for the "Open Existing Workspace" button.
 	 */
-	private static final Icon OPEN_EXISTING_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit_load.png"));
+	private static final Icon OPEN_EXISTING_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/welcome-open.png"));
 	
 	/**
 	 * The icon for the "Open Demonstration Workspace" button.
 	 */
-	private static final Icon OPEN_DEMO_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
+	private static final Icon OPEN_DEMO_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/welcome-demo.png"));
 	
 	/**
 	 * The main Wabit icon.
@@ -111,11 +111,8 @@ public class WabitWelcomeScreen {
 	}
 	
 	private void buildUI() {
-		
-		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, 4dlu, pref, 4dlu, pref"));
-		builder.setDefaultDialogBorder();
-		builder.append(new JLabel(WABIT_ICON), 5);
-		builder.nextLine();
+		JPanel iconsPanel = new JPanel(new MigLayout("", "[center, grow][center, grow][center, grow]"));
+		iconsPanel.add(new JLabel(WABIT_ICON), "span 3, wrap, center");
 		
 		JButton newWorkspaceButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
@@ -124,11 +121,13 @@ public class WabitWelcomeScreen {
 				new NewWorkspaceScreen(context).showFrame();
 			}
 		});
-		newWorkspaceButton.setIcon(NEW_WORKSPACE_ICON);
-		builder.append(new JLabel());
-		builder.append(newWorkspaceButton);
-		builder.append(Messages.getString("WabitWelcomeScreen.newWorkspace"));
-		builder.nextLine();
+		JPanel workspacePanel = new JPanel(new MigLayout("", "[center]"));
+		workspacePanel.add(new JLabel(NEW_WORKSPACE_ICON), "wrap");
+		workspacePanel.add(new JLabel(Messages.getString("WabitWelcomeScreen.newWorkspace")), "");
+		newWorkspaceButton.add(workspacePanel);
+//		newWorkspaceButton.setIcon(NEW_WORKSPACE_ICON);
+		
+		iconsPanel.add(newWorkspaceButton, "");
 		
 		JButton openExistingButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
@@ -156,25 +155,23 @@ public class WabitWelcomeScreen {
 			}
 		});
 		openExistingButton.setIcon(OPEN_EXISTING_ICON);
-		builder.append(new JLabel());
-		builder.append(openExistingButton);
-		builder.append(Messages.getString("WabitWelcomeScreen.openExisting"));
-		builder.nextLine();
+		iconsPanel.add(openExistingButton, "center");
 		
-		final JButton openOnServerButton = new JButton();
-		openOnServerButton.setAction(new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                JPopupMenu popup = ServerListMenu.createPopupInstance(context, frame);
-                popup.show(openOnServerButton, 0, 0);
-            }
-		});
-		openOnServerButton.setIcon(OPEN_EXISTING_ICON);
-        builder.append(new JLabel());
-        builder.append(openOnServerButton);
-        builder.append("Open On Server");
-        builder.nextLine();
+		//No need for this after the gui makeover? everything from servers will just
+		//populate in your tree
+//		final JButton openOnServerButton = new JButton();
+//		openOnServerButton.setAction(new AbstractAction() {
+//            public void actionPerformed(ActionEvent e) {
+//                JPopupMenu popup = ServerListMenu.createPopupInstance(context, frame);
+//                popup.show(openOnServerButton, 0, 0);
+//            }
+//		});
+//		openOnServerButton.setIcon(OPEN_EXISTING_ICON);
+//		iconsPanel.add(openOnServerButton, "center");
+//        builder.append("Open On Server");
+//        builder.nextLine();
 		
-		JButton openDemoButton = new JButton(new AbstractAction() {
+		AbstractAction openDemoAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
 				final URL resource = WabitWelcomeScreen.class.getResource(WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL);
@@ -188,12 +185,21 @@ public class WabitWelcomeScreen {
                     throw new RuntimeException(e1);
                 }
 			}
-		});
+		};
+		JButton openDemoButton = new JButton(openDemoAction);
 		
 		openDemoButton.setIcon(OPEN_DEMO_ICON);
-		builder.append(new JLabel());
-		builder.append(openDemoButton);
-		builder.append(Messages.getString("WabitWelcomeScreen.openDemo"));
+		iconsPanel.add(openDemoButton, "center, wrap");
+		
+		JLabel newWorkspaceLabel = new JLabel("");
+		iconsPanel.add(newWorkspaceLabel);
+		
+		JLabel existingWorkspaceLabel = new JLabel(Messages.getString("WabitWelcomeScreen.openExisting"));
+		iconsPanel.add(existingWorkspaceLabel);
+		
+		JLabel openDemoLabel = new JLabel(Messages.getString("WabitWelcomeScreen.openDemo"));
+		iconsPanel.add(openDemoLabel);
+		
 		
 		DefaultFormBuilder bottomPanelBuilder = new DefaultFormBuilder(new FormLayout("pref, 4dlu, pref, 4dlu:grow, pref"));
 		bottomPanelBuilder.setDefaultDialogBorder();
@@ -217,7 +223,7 @@ public class WabitWelcomeScreen {
 		bottomPanelBuilder.append(quitButton);
 		
 		mainPanel = new JPanel(new BorderLayout());
-		mainPanel.add(builder.getPanel(), BorderLayout.CENTER);
+		mainPanel.add(iconsPanel, BorderLayout.CENTER);
 		mainPanel.add(bottomPanelBuilder.getPanel(), BorderLayout.SOUTH);
 		
 		frame.setIconImage(WabitSwingSessionContextImpl.FRAME_ICON.getImage());
