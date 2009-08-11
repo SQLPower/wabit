@@ -106,9 +106,16 @@ public class OpenWorkspaceAction extends AbstractAction {
 	    final List<InputStream> ins = new ArrayList<InputStream>();
 	    final Map<File, OpenWorkspaceXMLDAO> workspaceLoaders = new HashMap<File, OpenWorkspaceXMLDAO>();
 	    for (File importFile : importFiles) {
-	        BufferedInputStream in = new BufferedInputStream(new FileInputStream(importFile));
-	        OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
-	        ins.add(in);
+	    	BufferedInputStream in = null;
+	    	OpenWorkspaceXMLDAO workspaceLoader = null;
+	    	try {
+	    		in = new BufferedInputStream(new FileInputStream(importFile));
+    			workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
+	    	} catch (Exception e) {
+	    		SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while loading the workspace located at: " + importFile.getAbsolutePath(), e);
+	    		continue; //continue on but still show the user an error
+	    	}
+			ins.add(in);
 	        workspaceLoaders.put(importFile, workspaceLoader);
 	    }
 		
@@ -120,7 +127,13 @@ public class OpenWorkspaceAction extends AbstractAction {
             public void doStuff() throws Exception {
                 for (Map.Entry<File, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
                     currentDAO = entry.getValue();
-                    List<WabitSession> loadFile = entry.getValue().openWorkspaces();
+                    List<WabitSession> loadFile = null;
+                    try {
+                    	loadFile = entry.getValue().openWorkspaces();
+                    } catch (Exception e) {
+        	    		SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while loading the workspace located at: " + entry.getKey().getAbsolutePath(), e);
+        	    		continue; //continue on but still show the user an error
+                    }
                     context.setEditorPanel();
                     for (WabitSession session : loadFile) {
                         ((WabitSwingSession) session).setCurrentFile(entry.getKey());
