@@ -72,7 +72,7 @@ public class SlicerPanel extends JPanel {
 	 */
 	private final OlapQuery olapQuery;
 	
-	private final String slicerText = "Drag Dimensions, Hierarchies, Measures, and Members here";
+	private final static String SLICER_TEXT = "Drag Dimensions, Hierarchies, Measures, and Members here";
 	
 	/**
 	 * This is the panel within the main bottom component of the {@link CellSetViewer}
@@ -104,7 +104,7 @@ public class SlicerPanel extends JPanel {
 		if (slicerMember != null) {
 			slicerDisplay = new JPanel();
 			
-			JLabel axisTitle = new JLabel("Filter: ");
+			JLabel axisTitle = new JLabel("Filter By: ");
 			slicerDisplay.add(axisTitle);
 			if (slicerMember instanceof Measure) {
 
@@ -146,7 +146,7 @@ public class SlicerPanel extends JPanel {
 			add(slicerDisplay);
 			slicerDisplay.setBackground(Color.WHITE);
 		} else {
-			add(new JLabel(slicerText));
+			add(new JLabel(SLICER_TEXT));
 			setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
 			setBackground(Color.WHITE);
 			CellSetTableHeaderComponent.addGreyedButtonsToPanel(this);
