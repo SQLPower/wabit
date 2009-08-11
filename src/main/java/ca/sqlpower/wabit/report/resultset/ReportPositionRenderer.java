@@ -302,7 +302,9 @@ public class ReportPositionRenderer {
                 for (int i = columnInfoList.size() - 1; i >= 0; i--) {
                     Object oldValue = rs.getObject(i + 1);
                     Object nextValue = nextRowValues.get(i);
-                    if (groupingTotalMap.get(i) != null && !oldValue.equals(nextValue)) {
+                    if (groupingTotalMap.get(i) != null && 
+                            ((oldValue != null && !oldValue.equals(nextValue))
+                            || (oldValue == null && nextValue != null))) {
                         List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
                         String groupingText = " " + rs.getString(i + 1);
                         List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
