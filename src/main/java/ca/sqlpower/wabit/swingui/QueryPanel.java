@@ -439,6 +439,7 @@ public class QueryPanel implements WabitPanel {
 						rootNode.addChild(context.getDatabase((JDBCDataSource) reportComboBox.getSelectedItem()));
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 						dragTree.setModel(tempTreeModel);
+						dragTree.expandRow(0);
 						dragTree.setVisible(true);
 					} 
 				} catch (SQLObjectException e) {
