@@ -49,6 +49,8 @@ import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
+import com.lowagie.text.Font;
+
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
@@ -146,6 +148,9 @@ public class SlicerPanel extends JPanel {
 			add(slicerDisplay);
 			slicerDisplay.setBackground(Color.WHITE);
 		} else {
+			JLabel filterAxisLabel = new JLabel("Filter Axis:");
+			filterAxisLabel.setFont(filterAxisLabel.getFont().deriveFont(Font.BOLD));
+			add(filterAxisLabel);
 			add(new JLabel(SLICER_TEXT));
 			setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
 			setBackground(Color.WHITE);

@@ -500,7 +500,15 @@ public class CellSetTableHeaderComponent extends JComponent {
     	setLayout(new BorderLayout());
     	JPanel panel = new JPanel(new MigLayout("flowy, align 50% 50%, ins 20", "align center", ""));
     	panel.setBackground(Color.WHITE);
-    	
+    	String axisString = null;
+    	if (axis == Axis.COLUMNS) {
+    		axisString = "Columns Axis:";
+    	} else if (axis == Axis.ROWS) {
+    		axisString = "Rows Axis:";
+    	}
+    	JLabel axisLabel = new JLabel(axisString);
+    	axisLabel.setFont(axisLabel.getFont().deriveFont(Font.BOLD));
+    	panel.add(axisLabel, SwingConstants.CENTER);
     	JLabel label = new JLabel("Drag Dimensions, Hierarchies,", SwingConstants.CENTER);
     	panel.add(label);
     	label = new JLabel("Measures, and Members here", SwingConstants.CENTER);
