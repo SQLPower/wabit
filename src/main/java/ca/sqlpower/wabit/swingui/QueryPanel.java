@@ -81,12 +81,15 @@ import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRoot;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
@@ -96,6 +99,7 @@ import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
@@ -421,6 +425,7 @@ public class QueryPanel implements WabitPanel {
 		builder.append(columnNameLabel);
 		
 		dragTree = new JTree();
+		dragTree.setRootVisible(false);
 		rootNode = new SQLObjectRoot();
 		reportComboBox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent event) {
@@ -445,7 +450,41 @@ public class QueryPanel implements WabitPanel {
 		});
 		if (session.getWorkspace().getDataSources().size() != 0) {
             if (queryCache.getQuery().getDatabase() == null) {
-                dragTree.setVisible(false);
+            	dragTree.setVisible(false);
+        		List<SPDataSource> dataSources = session.getWorkspace().getConnections();
+        		List<JDBCDataSource> availableDS = new ArrayList<JDBCDataSource>();
+        		for (SPDataSource ds : dataSources) {
+        			if (ds instanceof JDBCDataSource) {
+        				availableDS.add((JDBCDataSource) ds);
+        			}
+        		}
+                final JDBCDataSource startingDataSource;
+                if (availableDS.size() > 0) {
+                	startingDataSource = (JDBCDataSource) availableDS.get(0);
+                } else {
+                	startingDataSource = null;
+                }
+                
+                SPSwingWorker databaseLazyLoad = new SPSwingWorker(context) {
+                	public void doStuff() throws Exception {
+                		if (startingDataSource != null) {
+                			//populate the database
+                            SQLDatabase db = context.getDatabase(startingDataSource);
+                		}
+                	}
+                	
+        			public void cleanup() throws Exception {
+        				if (reportComboBox.getSelectedItem() == null) {
+        					reportComboBox.setSelectedItem(startingDataSource);
+        					dragTree.setVisible(true);
+        				}
+        			}
+                };
+                //populates some data in a separate thread to create an easier workflow
+                //when a user creates a new query (bug 2054)
+                if (startingDataSource != null) {
+                	databaseLazyLoad.run();
+                }
             } else {
                 reportComboBox.setSelectedItem((SPDataSource) queryCache.getQuery().getDatabase().getDataSource());
                 dragTree.setVisible(true);
@@ -453,6 +492,8 @@ public class QueryPanel implements WabitPanel {
         } else {
             dragTree.setVisible(false);
         }
+		
+		
 		dragTree.setCellRenderer(new DBTreeCellRenderer());
 		DragSource ds = new DragSource();
 		ds.createDefaultDragGestureRecognizer(dragTree, DnDConstants.ACTION_COPY, new DragGestureListener() {
