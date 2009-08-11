@@ -59,6 +59,7 @@ import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -286,7 +287,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 	
-    public ReportLayoutPanel(WabitSwingSession session, Layout report) {
+    public ReportLayoutPanel(final WabitSwingSession session, final Layout report) {
         this.session = session;
         parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
 		this.report = report;
@@ -337,6 +338,8 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.add(new PrintAction(report, toolbar, session));
         toolbar.add(new PDFAction(session, toolbar, report));
         toolbar.add(new ExportLayoutAction(session, report));
+        toolbar.add(new PrintPreviewAction(parentFrame, report));
+        
         toolbar.addSeparator();
         JPanel zoomPanel = new JPanel(new BorderLayout());
         zoomPanel.add(new JLabel(ZOOM_OUT_ICON), BorderLayout.WEST);
