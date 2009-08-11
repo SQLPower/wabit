@@ -126,6 +126,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     public static final String EXAMPLE_WORKSPACE_URL = "/ca/sqlpower/wabit/example_workspace.wabit";
     
     /**
+     * The regex to split all of the workspaces on when they are saved to prefs
+     */
+	private static final String WORKSPACE_PREFS_REGEX = ";";
+    
+    /**
      * This icon is at the top left of every frame.
      */
     public static final ImageIcon FRAME_ICON = new ImageIcon(
@@ -741,17 +746,19 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         frame.dispose();
 
-        int i = 0;
-        for (; i < getSessionCount(); i++) {
-        	
+        getPrefs().remove(PREFS_OPEN_WORKSPACES);
+        for (int i = 0; i < getSessionCount(); i++) {
             File currentFile = ((WabitSwingSession) getSessions().get(i)).getCurrentFile();
             if (currentFile == null) continue;
-			getPrefs().put(PREFS_OPEN_WORKSPACES + i, 
-                    currentFile.getAbsolutePath());
-        }
-        while (getPrefs().get(PREFS_OPEN_WORKSPACES + i, null) != null) {
-            getPrefs().remove(PREFS_OPEN_WORKSPACES + i);
-            i++;
+            String currentWorkspaces;
+            String workspaces = getPrefs().get(PREFS_OPEN_WORKSPACES, null);
+			if (workspaces == null) {
+            	currentWorkspaces = "";
+            } else {
+            	currentWorkspaces = workspaces + WORKSPACE_PREFS_REGEX;
+            }
+			String saveOutString = currentWorkspaces + currentFile.getAbsolutePath();
+			getPrefs().put(PREFS_OPEN_WORKSPACES, saveOutString);
         }
         
         delegateContext.close();
@@ -923,12 +930,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                     if (args.length > 0) {
                         importFile.add(new File(args[0]));
                     } else {
-                        int i = 0;
-                        while (context.getPrefs().get(PREFS_OPEN_WORKSPACES + i, null) != null) {
-                            String uri = context.getPrefs().get(PREFS_OPEN_WORKSPACES + i, null);
-                            File newFile = new File(uri);
-                            importFile.add(newFile);
-                            i++;
+                        String workspacesToLoad = context.getPrefs().get(PREFS_OPEN_WORKSPACES, null);
+                        if (workspacesToLoad != null) {
+							for (String workspaceLocation: workspacesToLoad.split(WORKSPACE_PREFS_REGEX)) {
+                        		File newFile = new File(workspaceLocation);
+                        		importFile.add(newFile);
+                        	}
                         }
                     }
                     
@@ -939,11 +946,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                         }
                     }
                     
-                    try {
-                        OpenWorkspaceAction.loadFiles(startupFiles, context);
-                    } catch (FileNotFoundException e) {
-                        //if the file cannot be found just skip its load on startup.
-                    }
+                    OpenWorkspaceAction.loadFiles(startupFiles, context);
                     
                 } catch (Exception ex) {
                      ex.printStackTrace();
@@ -955,6 +958,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         });
         
     }
+    
     
 	public UserPrompter createUserPrompter(String question,
 			UserPromptType responseType, UserPromptOptions optionType,
