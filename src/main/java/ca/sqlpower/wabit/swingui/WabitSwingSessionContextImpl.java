@@ -413,7 +413,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JPanel cp = new JPanel(new BorderLayout());
         
         for (WabitSession session : getSessions()) {
-            treeTabbedPane.addTab(session.getWorkspace().getName(), ((WabitSwingSession) session).getTree());
+            treeTabbedPane.addTab(session.getWorkspace().getName(), SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree()));
         }
         final ChangeListener tabChangeListener = new ChangeListener() {
         
@@ -829,7 +829,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     public void registerChildSession(WabitSession child) {
         delegateContext.registerChildSession(child);
-        treeTabbedPane.addTab(child.getWorkspace().getName(), ((WabitSwingSession) child).getTree());
+        treeTabbedPane.addTab(child.getWorkspace().getName(), SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree()));
         treeTabbedPane.setSelectedIndex(treeTabbedPane.getTabCount() - 1);
     }
 
