@@ -257,11 +257,13 @@ public class OlapQueryPanel implements WabitPanel {
      */
     private final JPanel dragTreePanel;
     
+    
+    
     /**
      * This toolbar is placed at the top of the olap query editor.
      */
     private JToolBar olapPanelToolbar;
-
+    
     public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
         this.parentComponent = parentComponent;
         this.query = query;
@@ -270,11 +272,12 @@ public class OlapQueryPanel implements WabitPanel {
         cellSetViewer = new CellSetViewer(query);
         
         this.undoManager  = new UndoManager();
-        
         cubeTree = new JTree();
-        cubeTree.setUI(new MultiDragTreeUI());
         cubeTree.setRootVisible(false);
         cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
+        cubeTree.setUI(new MultiDragTreeUI());
+        cubeTree.updateUI(); //This seems to fix some L&F problems that linux has with the BasicTreeUI
+        cubeTree.setBackground(Color.WHITE);
         DragSource ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(cubeTree, DnDConstants.ACTION_COPY, new CubeTreeDragGestureListener());
 
