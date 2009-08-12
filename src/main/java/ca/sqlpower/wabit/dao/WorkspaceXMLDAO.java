@@ -576,34 +576,36 @@ public class WorkspaceXMLDAO {
         xml.indent++;
 	    
 	    final Image wabitInnerImage = wabitImage.getImage();
-        BufferedImage image;
-        if (wabitInnerImage instanceof BufferedImage) {
-            image = (BufferedImage) wabitInnerImage;
-        } else {
-            image = new BufferedImage(wabitInnerImage.getWidth(null), 
-                    wabitInnerImage.getHeight(null), BufferedImage.TYPE_INT_ARGB); 
-            final Graphics2D g = image.createGraphics();
-            g.drawImage(wabitInnerImage, 0, 0, null);
-            g.dispose();
-        }
-        if (image != null) {
-            try {
-                out.flush();
-                ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-                ImageIO.write(image, "PNG", byteStream);
-                byte[] byteArray = new Base64().encode(byteStream.toByteArray());
-                logger.debug("Encoded length is " + byteArray.length);
-                logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
-                for (int i = 0; i < byteArray.length; i++) {
-                    out.write((char)byteArray[i]);
-                    if (i % 60 == 59) {
-                        out.write("\n");
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+	    if (wabitInnerImage != null) {
+	        BufferedImage image;
+	        if (wabitInnerImage instanceof BufferedImage) {
+	            image = (BufferedImage) wabitInnerImage;
+	        } else {
+	            image = new BufferedImage(wabitInnerImage.getWidth(null), 
+	                    wabitInnerImage.getHeight(null), BufferedImage.TYPE_INT_ARGB); 
+	            final Graphics2D g = image.createGraphics();
+	            g.drawImage(wabitInnerImage, 0, 0, null);
+	            g.dispose();
+	        }
+	        if (image != null) {
+	            try {
+	                out.flush();
+	                ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+	                ImageIO.write(image, "PNG", byteStream);
+	                byte[] byteArray = new Base64().encode(byteStream.toByteArray());
+	                logger.debug("Encoded length is " + byteArray.length);
+	                logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
+	                for (int i = 0; i < byteArray.length; i++) {
+	                    out.write((char)byteArray[i]);
+	                    if (i % 60 == 59) {
+	                        out.write("\n");
+	                    }
+	                }
+	            } catch (IOException e) {
+	                throw new RuntimeException(e);
+	            }
+	        }
+	    }
         
         xml.indent--;
         xml.println(out, "</wabit-image>");
