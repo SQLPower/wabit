@@ -38,9 +38,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.CharBuffer;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -138,9 +144,35 @@ public class WabitImagePanel implements WabitPanel {
                     image.setImage(droppedImage.getImage());
                     success = true;
                 } else {
+                    dtde.acceptDrop(DnDConstants.ACTION_COPY);
+                    logger.info("Could not drop the image in the following transferable");
+                    for (DataFlavor df : t.getTransferDataFlavors()) {
+                        Object transferable = t.getTransferData(df);
+                        if (transferable instanceof InputStream) {
+                            BufferedReader stream = new BufferedReader(new InputStreamReader((InputStream) transferable));
+                            logger.info(df.getMimeType() + " : " + stream.readLine());
+                        } else if (df.getRepresentationClass().isArray()) {
+                            String stringRep;
+                            if (transferable instanceof Object[]) {
+                                stringRep = Arrays.toString((Object[]) transferable);
+                            } else {
+                                //Since this wasn't an Object array it must be one of the native arrays.
+                                try {
+                                    Method m = Arrays.class.getMethod("toString", transferable.getClass());
+                                    stringRep = (String) m.invoke(null, transferable);
+                                } catch (Exception e) {
+                                    stringRep = "Couldn't convert array of type " + transferable.getClass();
+                                }
+                                
+                            }
+                            logger.info(df.getMimeType() + " : " + stringRep);
+                        } else {
+                            logger.info(df.getMimeType() + " : " + transferable);
+                        }
+                    }
+                    
                     // possible stuff that we should check for but don't yet:
                     // 1. an InputStream of type image/* (could try to read it into an ImageIcon)
-                    dtde.rejectDrop();
                     return;
                 }
             } catch (UnsupportedFlavorException e) {
@@ -162,6 +194,21 @@ public class WabitImagePanel implements WabitPanel {
             while (it.hasNext()) {
                 DataFlavor f = it.next();
                 if (f.getRepresentationClass().equals(clazz)) {
+                    return f;
+                }
+            }
+            return null;
+        }
+        
+        /**
+         * Helper method for the {@link #drop(DropTargetDropEvent)} method.
+         * This is taken from PictureDropListener in WebCMS.
+         */
+        private DataFlavor searchListForType(List<DataFlavor> flavorList, String mimeType, Class<?> clazz) {
+            Iterator<DataFlavor> it = flavorList.iterator();
+            while (it.hasNext()) {
+                DataFlavor f = it.next();
+                if (f.getRepresentationClass().equals(clazz) && f.getMimeType().contains(mimeType)) {
                     return f;
                 }
             }
