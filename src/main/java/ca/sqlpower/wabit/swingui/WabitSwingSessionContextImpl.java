@@ -49,6 +49,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -56,10 +57,13 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
@@ -103,6 +107,10 @@ import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.NewImageAction;
+import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
+import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
+import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
@@ -267,6 +275,62 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
     };
 
+    public static final Icon NEW_ICON = new ImageIcon(
+            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/new.png"));
+    
+	/**
+	 * Creates a popup menu with all the possible 'New <insert Wabit object
+	 * here>' options
+	 */
+    private final Action newAction = new AbstractAction("New", NEW_ICON) {
+    	public void actionPerformed(ActionEvent e) {
+    		if (e.getSource() instanceof JButton) {
+    			JButton source = (JButton) e.getSource();
+    			JPopupMenu popupMenu = new JPopupMenu();
+    			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
+    			WabitSwingSession activeSession = getActiveSwingSession();
+    			if (activeSession != null) {
+    				popupMenu.add(new NewQueryAction(activeSession));
+    				popupMenu.add(new NewOLAPQueryAction(activeSession));
+    				popupMenu.add(new NewImageAction(activeSession));
+    				popupMenu.add(new NewLayoutAction(activeSession));
+    			}
+    			popupMenu.show(source, 0, source.getHeight());
+    		}
+    	}
+    };
+    
+    public static final Icon OPEN_ICON = new ImageIcon(
+    	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/open.png"));
+
+    /**
+     * An action that creates a popup with an open and import option
+     */
+    private final Action openAction = new AbstractAction("Open", OPEN_ICON) {
+    	public void actionPerformed(ActionEvent e) {
+    		if (e.getSource() instanceof JButton) {
+    			JButton source = (JButton) e.getSource();
+    			JPopupMenu popupMenu = new JPopupMenu();
+    			popupMenu.add(new OpenWorkspaceAction(WabitSwingSessionContextImpl.this));
+    			popupMenu.add(new ImportWorkspaceAction(WabitSwingSessionContextImpl.this));
+    			popupMenu.show(source, 0, source.getHeight());
+    		}
+    	}
+    };
+    
+    public static final Icon SAVE_ICON = new ImageIcon(
+        	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/save.png"));
+
+    /**
+     * An action that saves the current active workspace.
+     * TODO: This eventually needs to be a 'save everything button'
+     */
+    private final Action saveAction = new AbstractAction("Save", SAVE_ICON) {
+    	public void actionPerformed(ActionEvent e) {
+			SaveWorkspaceAction.save(WabitSwingSessionContextImpl.this);
+    	}
+    };
+    
 	/**
 	 * @param terminateWhenLastSessionCloses
 	 *            Set to true if the context should stop the app when the last
@@ -412,6 +476,32 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         // this will be the frame's content pane
         JPanel cp = new JPanel(new BorderLayout());
         
+        JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
+        
+        final JButton newButton = new JButton(newAction);
+        newButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        newButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        
+        final JButton openButton = new JButton(openAction);
+        openButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        openButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        
+        final JButton saveButton = new JButton(saveAction);
+        saveButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        saveButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        
+        // OS X specific client properties to modify the button appearance.
+        // This only seems to affect OS X 10.5 Leopard's buttons.
+        newButton.putClientProperty("JButton.buttonType", "toolbar");
+        openButton.putClientProperty("JButton.buttonType", "toolbar");
+        saveButton.putClientProperty("JButton.buttonType", "toolbar");
+
+        toolBar.add(newButton);
+        toolBar.add(openButton);
+		toolBar.add(saveButton);
+        
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        
         for (WabitSession session : getSessions()) {
             treeTabbedPane.addTab(session.getWorkspace().getName(), SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree()));
         }
@@ -427,7 +517,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         };
         treeTabbedPane.addChangeListener(tabChangeListener);
         
-        wabitPane.add(treeTabbedPane, JSplitPane.LEFT);
+        leftPanel.add(toolBar, BorderLayout.NORTH);
+        leftPanel.add(treeTabbedPane, BorderLayout.CENTER);
+        
+        wabitPane.add(leftPanel, JSplitPane.LEFT);
         
         //prefs
         if(prefs.get("MainDividerLocaton", null) != null) {
