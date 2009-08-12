@@ -180,7 +180,6 @@ public class WabitWelcomeScreen {
                 try {
                     int contentLength = resource.openConnection().getContentLength();
                     OpenWorkspaceAction.loadFile(resourceStream, context, contentLength);
-                    resourceStream.close();
                 } catch (IOException e1) {
                     throw new RuntimeException(e1);
                 }

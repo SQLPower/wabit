@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -28,18 +29,24 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
+import javax.swing.Timer;
 
 import net.miginfocom.swing.MigLayout;
+
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.swingui.SPSwingWorker;
-import ca.sqlpower.swingui.event.TaskTerminationEvent;
-import ca.sqlpower.swingui.event.TaskTerminationListener;
 
 /**
  * This class displays a modal dialog that shows the progress of a workspace
- * loading.
+ * loading. After creating an instance of this class starting the worker will
+ * cause the dialog to appear. When the worker completes the dialog will be
+ * disposed of.
  */
 public class OpenProgressWindow {
+    
+    private static final Logger logger = Logger.getLogger(OpenProgressWindow.class);
 
     /**
      * The DAO that will be used to display the progress of the loading file.
@@ -60,16 +67,15 @@ public class OpenProgressWindow {
     
     private final JButton cancelButton;
     
-    private final TaskTerminationListener workerTerminationListener = new TaskTerminationListener() {
-    
-        public void taskFinished(TaskTerminationEvent e) {
-            progressDialog.setVisible(false);
-        }
-    };
-
     private final JFrame parent;
+    
+    /**
+     * Every time this timer ticks the worker will be checked to see if it has
+     * started or finished it's execution.
+     */
+    private final Timer timer;
 
-    public OpenProgressWindow(JFrame parent, final SPSwingWorker worker) {
+    public OpenProgressWindow(final JFrame parent, final SPSwingWorker worker) {
         this.parent = parent;
         this.worker = worker;
         
@@ -81,8 +87,25 @@ public class OpenProgressWindow {
             
         });
         
-        
-        progressDialog = new JDialog(parent, "Loading", true);
+                
+        timer = new Timer(50, new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                if (worker.isFinished() || worker.isCancelled()) {
+                    timer.stop();
+                    progressDialog.setVisible(false);
+                    progressDialog.dispose();
+                    parent.setEnabled(true);
+                    logger.debug("Worker stopped");
+                } else if (worker.hasStarted()) {
+                    startWorker();
+                }
+            }
+        });
+
+        timer.start(); 
+                
+        progressDialog = new JDialog(parent, "Loading");
         
         buildUI();
     }
@@ -94,18 +117,18 @@ public class OpenProgressWindow {
         progressDialog.add(cancelButton, "align right");
     }
     
-    public void startWorker() {
-        worker.addTaskTerminationListener(workerTerminationListener);
-        
+    private void startWorker() {
         ProgressWatcher.watchProgress(progressBar, worker, messageLabel);
         
-        new Thread(worker).start();
-        
-        messageLabel.setMinimumSize(new Dimension(350, (int) messageLabel.getPreferredSize().getHeight()));
+        messageLabel.setMinimumSize(new Dimension(300, (int) messageLabel.getPreferredSize().getHeight()));
+        messageLabel.setPreferredSize(new Dimension(300, (int) messageLabel.getPreferredSize().getHeight()));
         progressDialog.pack();
         
         progressDialog.setLocationRelativeTo(parent);
+        
         progressDialog.setVisible(true);
+        
+        parent.setEnabled(false);
     }
     
 }

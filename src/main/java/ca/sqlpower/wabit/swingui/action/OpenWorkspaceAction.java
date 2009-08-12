@@ -97,7 +97,8 @@ public class OpenWorkspaceAction extends AbstractAction {
 	 * This will load a Wabit workspace file in a new session in the given context.
 	 */
 	@SuppressWarnings("unchecked")
-    public static void loadFile(final File importFile, final WabitSwingSessionContext context) throws FileNotFoundException {
+    public static void loadFile(final File importFile, final WabitSwingSessionContext context) 
+	    throws FileNotFoundException {
 	    loadFiles(Collections.singletonList(importFile), context);
 	}
 	
@@ -112,7 +113,8 @@ public class OpenWorkspaceAction extends AbstractAction {
 	    		in = new BufferedInputStream(new FileInputStream(importFile));
     			workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
 	    	} catch (Exception e) {
-	    		SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while loading the workspace located at: " + importFile.getAbsolutePath(), e);
+	    		SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while loading the " +
+	    				"workspace located at: " + importFile.getAbsolutePath(), e);
 	    		continue; //continue on but still show the user an error
 	    	}
 			ins.add(in);
@@ -127,27 +129,36 @@ public class OpenWorkspaceAction extends AbstractAction {
             public void doStuff() throws Exception {
                 for (Map.Entry<File, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
                     currentDAO = entry.getValue();
-                    List<WabitSession> loadFile = null;
-                    try {
-                    	loadFile = entry.getValue().openWorkspaces();
-                    } catch (Exception e) {
-        	    		SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while loading the workspace located at: " + entry.getKey().getAbsolutePath(), e);
-        	    		continue; //continue on but still show the user an error
-                    }
-                    context.setEditorPanel();
-                    for (WabitSession session : loadFile) {
-                        ((WabitSwingSession) session).setCurrentFile(entry.getKey());
-                    }
-                    context.putRecentFileName(entry.getKey().getAbsolutePath());
+                    entry.getValue().loadWorkspacesFromStream();
                 }
             }
             
             @Override
             public void cleanup() throws Exception {
-                if (getDoStuffException()!= null) {
+                if (getDoStuffException() != null) {
                     throw new RuntimeException(getDoStuffException());
                 }
+
+                if (!isCancelled()) {
+                    for (Map.Entry<File, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
+                        List<WabitSession> loadFile = null;
+                        try {
+                            loadFile = entry.getValue().addLoadedWorkspacesToContext();
+                        } catch (Exception e) {
+                            SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while " +
+                            		"loading the workspace located at: " + entry.getKey().getAbsolutePath(), e);
+                            continue; //continue on but still show the user an error
+                        }
+                        context.setEditorPanel();
+                        for (WabitSession session : loadFile) {
+                            ((WabitSwingSession) session).setCurrentFile(entry.getKey());
+                        }
+                        context.putRecentFileName(entry.getKey().getAbsolutePath());
+                    }
+                }
+                
                 for (InputStream in : ins) {
+                    
                     try {
                         in.close();
                     } catch (IOException e) {
@@ -209,7 +220,7 @@ public class OpenWorkspaceAction extends AbstractAction {
             public synchronized boolean isCancelled() {
                 boolean cancelled = false;
                 for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
-                    cancelled = cancelled || workspaceDAO.hasStarted();
+                    cancelled = cancelled || workspaceDAO.isCancelled();
                 }
                 
                 return cancelled;
@@ -224,7 +235,8 @@ public class OpenWorkspaceAction extends AbstractAction {
 		    
 		};
 		
-		new OpenProgressWindow(context.getFrame(), worker).startWorker();
+		new OpenProgressWindow(context.getFrame(), worker);
+		new Thread(worker).start();
 	}
 
     /**
@@ -241,14 +253,17 @@ public class OpenWorkspaceAction extends AbstractAction {
 
 	        @Override
 	        public void doStuff() throws Exception {
-	            workspaceLoader.openWorkspaces();
-	            context.setEditorPanel();
+	            workspaceLoader.loadWorkspacesFromStream();
 	        }
 	        
 	        @Override
 	        public void cleanup() throws Exception {
 	            if (getDoStuffException()!= null) {
 	                throw new RuntimeException(getDoStuffException());
+	            }
+	            if (!isCancelled()) {
+	                workspaceLoader.addLoadedWorkspacesToContext();
+	                context.setEditorPanel();
 	            }
 	            try {
 	                in.close();
@@ -294,7 +309,8 @@ public class OpenWorkspaceAction extends AbstractAction {
 	        
 	    };
 	    
-	    new OpenProgressWindow(context.getFrame(), worker).startWorker();
+	    new OpenProgressWindow(context.getFrame(), worker);
+	    new Thread(worker).start();
 	}
 
 }

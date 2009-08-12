@@ -32,6 +32,9 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.OpenProgressWindow;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -53,6 +56,12 @@ public class ImportWorkspaceAction extends AbstractAction {
 
 	public void actionPerformed(ActionEvent e) {
 	    final WabitSwingSession session = context.getActiveSwingSession();
+	    
+	    if (session == null) {
+            context.createUserPrompter("Select a workspace to import into.", UserPromptType.MESSAGE, 
+                    UserPromptOptions.OK, UserPromptResponse.OK, null);
+            return;
+        }
 	    
 	    File defaultFile = null;
         if (context.getActiveSession() != null) {
@@ -78,11 +87,17 @@ public class ImportWorkspaceAction extends AbstractAction {
 
 		        @Override
 		        public void doStuff() throws Exception {
-		            workspaceLoader.importWorkspaces(session);
+		            workspaceLoader.loadWorkspacesFromStream();
 		        }
 
 		        @Override
 		        public void cleanup() throws Exception {
+		            if (getDoStuffException() != null) {
+		                throw new RuntimeException(getDoStuffException());
+		            }
+		            if (!isCancelled()) {
+		                workspaceLoader.addImportedWorkspaceContentToWorkspace(session);
+		            }
 		            try {
 		                in.close();
 		            } catch (Exception e) {
@@ -127,7 +142,8 @@ public class ImportWorkspaceAction extends AbstractAction {
 	            
 		    };
 
-		    new OpenProgressWindow(context.getFrame(), worker).startWorker(); 
+		    new OpenProgressWindow(context.getFrame(), worker);
+		    new Thread(worker).start();
 		} catch (FileNotFoundException e1) {
 		    throw new RuntimeException(e1);
 		}

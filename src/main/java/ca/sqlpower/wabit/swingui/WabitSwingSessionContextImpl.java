@@ -468,7 +468,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 try {
                     int contentLength = resource.openConnection().getContentLength();
                     OpenWorkspaceAction.loadFile(resourceStream, WabitSwingSessionContextImpl.this, contentLength);
-                    resourceStream.close();
                 } catch (IOException e1) {
                     throw new RuntimeException(e1);
                 }
