@@ -19,6 +19,11 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -40,6 +45,7 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.swingui.MultiDragTreeUI;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
@@ -57,6 +63,7 @@ import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -163,7 +170,29 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		
 		workspaceTreeModel = new WorkspaceTreeModel(delegateSession.getWorkspace());
 		workspaceTree = new JTree(workspaceTreeModel);
+		workspaceTree.setRootVisible(false);
 		workspaceTree.setToggleClickCount(0);
+		workspaceTree.setUI(new MultiDragTreeUI());
+//		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
+		DragSource ds = new DragSource();
+        ds.createDefaultDragGestureRecognizer(workspaceTree, DnDConstants.ACTION_COPY, new DragGestureListener(){
+
+			public void dragGestureRecognized(DragGestureEvent dge) {
+	            dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
+	            JTree t = (JTree) dge.getComponent();
+	            List<Object> selectedNodes = new ArrayList<Object>();
+	            for (TreePath path : t.getSelectionPaths()) {
+	            	selectedNodes.add(path.getLastPathComponent());
+	            }
+	            dge.getDragSource().startDrag(dge, null, 
+	                    new WabitObjectTransferable(selectedNodes.toArray()), 
+	                    new DragSourceAdapter() {//just need a default adapter
+	                    }
+	            );
+			}
+        	
+        });
+
 		
         //Temporary upfMissingLoadedDB factory that is not parented in case there is no frame at current.
         //This should be replaced in the buildUI with a properly parented prompter factory.
@@ -179,7 +208,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         this(context);
         delegateSession = new WabitServerSession(serverInfo, context);
     }
-
+	
     /**
 	 *  Builds the GUI pieces that belong to this session.
 	 */

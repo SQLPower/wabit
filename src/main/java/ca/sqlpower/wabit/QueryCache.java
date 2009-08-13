@@ -39,6 +39,7 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
@@ -163,12 +164,16 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         this(q, false);
     }
     
+    public QueryCache(QueryCache q, boolean connectListeners) {
+    	this(q, connectListeners, q.getQuery().getDatabase());
+    }
+    
     /**
      * This makes a copy of the given query cache. The query in the given query cache
      * can have its listeners connected to allow using this query cache in the workspace.
      */
-    public QueryCache(QueryCache q, boolean copyQuery) {
-        this.query = new Query(q.query, copyQuery);
+    public QueryCache(QueryCache q, boolean connectListeners, SQLDatabase sqlDS) {
+        this.query = new Query(q.query, connectListeners, sqlDS);
         
         for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {
@@ -477,7 +482,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     }
 
     public SQLDatabaseMapping getDBMapping() {
-        return query.getDBMapping();
+        return query.getDbMapping();
     }
 
     public void setDBMapping(SQLDatabaseMapping dbMapping) {

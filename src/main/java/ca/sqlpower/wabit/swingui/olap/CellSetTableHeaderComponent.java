@@ -231,6 +231,12 @@ public class CellSetTableHeaderComponent extends JComponent {
 
 		public void dragOver(DropTargetDragEvent dtde) {
 			resetUIAfterDrag();
+			if (canImport(CellSetTableHeaderComponent.this, dtde.getCurrentDataFlavors())) {
+				dtde.acceptDrag(dtde.getDropAction());
+			} else {
+				dtde.rejectDrag();
+				return;
+			}
 			
 			Point point = dtde.getLocation();
 			int insertIndex = calcDropInsertIndex(point);
@@ -268,11 +274,6 @@ public class CellSetTableHeaderComponent extends JComponent {
 				borderedComponent = CellSetTableHeaderComponent.this;
 			}
 			borderedComponent.setBorder(compoundBorder);
-			if (canImport(CellSetTableHeaderComponent.this, dtde.getCurrentDataFlavors())) {
-				dtde.acceptDrag(dtde.getDropAction());
-			} else {
-				dtde.rejectDrag();
-			}
 		}
 
 		public void drop(DropTargetDropEvent dtde) {

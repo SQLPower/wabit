@@ -24,7 +24,9 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.olap.OlapQuery;
 
 /**
  * This method will copy a given query and add it to the same
@@ -32,19 +34,36 @@ import ca.sqlpower.wabit.WabitSession;
  */
 public class CopyQueryAction extends AbstractAction {
 
-    private final QueryCache query;
+    private final WabitObject query;
     private final WabitSession session;
 
-    public CopyQueryAction(WabitSession session, QueryCache query) {
+    public CopyQueryAction(WabitSession session, WabitObject query) {
         super("Copy Query");
         this.session = session;
-        this.query = query;
+        if (query instanceof QueryCache || query instanceof OlapQuery) {
+        	this.query = query;
+        } else {
+        	throw new UnsupportedOperationException("Copy query action only works for items of type " + 
+        			QueryCache.class.getName() + " and " + OlapQuery.class.getName() + " and not for " +
+        			"items of type " + query.getClass().getName() + ".");
+        }
     }
     
     public void actionPerformed(ActionEvent e) {
-        QueryCache newQuery = new QueryCache(query, true);
-        newQuery.setName(newQuery.getName() + " copy");
-        session.getWorkspace().addQuery(newQuery, session);
+    	if (query instanceof QueryCache) {
+	        QueryCache newQuery = new QueryCache((QueryCache) query, true);
+	        newQuery.setName(newQuery.getName() + " Copy");
+	        session.getWorkspace().addQuery(newQuery, session);
+    	} else if (query instanceof OlapQuery) {
+    		OlapQuery olapQuery;
+			try {
+				olapQuery = new OlapQuery((OlapQuery) query);
+			} catch (Exception e1) {
+				throw new RuntimeException("Error copying query", e1);
+			}
+			olapQuery.setName(query.getName() + " Copy");
+    		session.getWorkspace().addOlapQuery(olapQuery);
+    	}
     }
 
 }

@@ -21,6 +21,15 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Point;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -58,10 +67,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -77,9 +88,11 @@ import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.RecentMenu;
@@ -93,6 +106,7 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.ServerListListener;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -102,6 +116,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
@@ -119,6 +134,8 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
+import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -349,6 +366,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
         treeTabbedPane = new JTabbedPane();
+        treeTabbedPane.setDropTarget(new DropTarget(treeTabbedPane, treeTabDropTargetListener));
 
         rowLimitSpinner = new JSpinner();
         final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
@@ -366,6 +384,205 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             buildUI();
             macOSXRegistration();
         }
+	}
+	
+	private TreeTabDropTargetListener treeTabDropTargetListener = new TreeTabDropTargetListener();
+	
+	/**
+	 * This is the droplistener on the tabbed pane which controls importing
+	 * and exporting between workspaces 
+	 */
+	public class TreeTabDropTargetListener implements DropTargetListener {
+
+		public void dragEnter(DropTargetDragEvent dtde) {
+			//don't care
+		}
+
+		public void dragExit(DropTargetEvent dte) {
+			//don't care
+		}
+
+		public void dragOver(DropTargetDragEvent dtde) {
+			if (canImport(dtde.getCurrentDataFlavors())) {
+				dtde.acceptDrag(dtde.getDropAction());
+			} else {
+				dtde.rejectDrag();
+			}
+		}
+		
+        public boolean canImport(DataFlavor[] transferFlavors) {
+            for (DataFlavor dataFlavor : transferFlavors) {
+                if (dataFlavor == WabitObjectTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+		public void drop(DropTargetDropEvent dtde) {
+			Point mouseLocation = dtde.getLocation();
+			int tabIndex = treeTabbedPane.indexAtLocation(mouseLocation.x, mouseLocation.y);
+			if (tabIndex == -1) return;
+			treeTabbedPane.setSelectedIndex(tabIndex);
+			
+			Object[] data;
+			try {
+				Transferable t = dtde.getTransferable();
+				data = (Object[]) t.getTransferData(WabitObjectTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			
+			WabitSession activeSession = getActiveSession();
+			WabitWorkspace activeWorkspace = activeSession.getWorkspace();
+			
+			copyObjectsToActiveWorkspace(data, activeSession, activeWorkspace);
+			
+		}
+
+		/**
+		 * This copies a list of objects from the left hand side tree
+		 * to another Workspace
+		 * @param data
+		 * 		The data to copy to a new workspace: this is not an array of
+		 * 		WabitObjects because the user may accidentally pass in a folder
+		 * 		if they do we just skip it
+		 * @param activeSession
+		 * 		This is the session to add the objects to
+		 * @param activeWorkspace
+		 * 		This is the workspace to add the objects to
+		 * 
+		 * Note: this method will select the workspace you pass in in the tree
+		 */
+		private void copyObjectsToActiveWorkspace(Object[] data, WabitSession activeSession, WabitWorkspace activeWorkspace) {
+			for (Object object : data) {
+				if (object instanceof FolderNode) continue; //we can't copy folders over
+				
+				WabitObject wo = (WabitObject) object;
+				WabitObject newWO = null;
+				if (wo instanceof WabitDataSource) {
+					newWO = copyAndAddDatasource(activeSession, activeWorkspace, wo);
+					if (newWO == null) continue;
+				} else if (wo instanceof QueryCache) {
+					//TODO implement database user prompt
+					newWO = copyAndAddRelationalQuery(activeSession, activeWorkspace, (QueryCache) wo);
+				} else if (wo instanceof OlapQuery) {
+					//TODO implement database user prompt
+					newWO = copyAndAddOlapQuery(activeSession, activeWorkspace, (OlapQuery) wo);
+				} else if (wo instanceof Layout) {
+					Layout layout = ((Layout) wo); //TODO copy constructor
+//					newWO = 
+				} else if (wo instanceof WabitImage) {
+					WabitImage image = new WabitImage(((WabitImage) wo));
+					activeWorkspace.addImage(image);
+					newWO = image;
+				} else {
+					throw new UnsupportedOperationException("Importing and exporting item of type "
+							+ wo.getClass().getName() + " is not yet supported.");
+				}
+				
+				JTree tree = getActiveSwingSession().getTree();
+				int queryIndex = tree.getModel().getIndexOfChild(activeWorkspace, newWO);
+				tree.setSelectionRow(queryIndex + 1);
+			}
+		}
+
+		/**
+		 * This adds a copy of the passed in OlapQuery to a given session
+		 * and its dependencies
+		 * 
+		 * @param activeSession	
+		 * 		The active session to add the relational query to.
+		 * @param activeWorkspace
+		 * 		The activeWorkspace to add the Relational Query to.
+		 * @param wo
+		 * 		The QueryCache to add to the session
+		 * @return
+		 * 		The new QueryCache object that was added to the session
+		 */
+		private WabitObject copyAndAddRelationalQuery(
+				WabitSession activeSession, WabitWorkspace activeWorkspace,
+				QueryCache wo) {
+			WabitObject newWO;
+			WabitObject dependantDS = copyAndAddDatasource(activeSession, activeWorkspace, wo.getDependencies().get(0));
+			JDBCDataSource newDependantDS = (JDBCDataSource)((WabitDataSource) dependantDS).getSPDataSource();
+			QueryCache query = new QueryCache(wo, false);
+			query.setDataSource(newDependantDS);
+			activeWorkspace.addQuery(query, activeSession);
+			newWO = query;
+			return newWO;
+		}
+
+		/**
+		 * This adds a copy of the passed in OlapQuery to a given session
+		 * and its dependencies
+		 * @param activeSession
+		 * @param activeWorkspace
+		 * @param wo
+		 * @return
+		 */
+		private WabitObject copyAndAddOlapQuery(WabitSession activeSession,
+				WabitWorkspace activeWorkspace, OlapQuery wo) {
+			WabitObject newWO;
+			WabitObject dependantDS = copyAndAddDatasource(activeSession, activeWorkspace, wo.getDependencies().get(0));
+			Olap4jDataSource olapDS = (Olap4jDataSource) ((WabitDataSource) dependantDS).getSPDataSource();
+			OlapQuery olapQuery = null;
+			try {
+				olapQuery = new OlapQuery(wo, olapDS);
+			} catch (Exception e) {
+				throw new RuntimeException("Error occured when copying Olap Query to the workspace "
+						+ activeWorkspace.getName(), e);
+			}
+			activeWorkspace.addOlapQuery(olapQuery);
+			newWO = olapQuery;
+			return newWO;
+		}
+		
+		/**
+		 * Copies a Datasource and adds it to a given session, this will prompt
+		 * the user to make sure they know that they're passing their username and password
+		 * to this session
+		 * @param activeSession
+		 * @param activeWorkspace
+		 * @param wo
+		 * @return
+		 */
+		private WabitObject copyAndAddDatasource(WabitSession activeSession,
+				WabitWorkspace activeWorkspace, WabitObject wo) {
+			WabitDataSource wds = (WabitDataSource) wo;
+			SPDataSource ds = wds.getSPDataSource();
+			WabitObject newWO = null;
+			
+			UserPrompter u = upf.createUserPrompter("WARNING by copying over the datasource " + ds.getDisplayName() + " to the workspace " +
+					activeWorkspace.getName() + "\nyou are also copying over your user name and password. Do you wish to continue?",
+					UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.CANCEL, null, "Continue", "Cancel");
+			UserPromptResponse r = u.promptUser();
+			
+			if (r.equals(UserPromptResponse.OK)) {
+				SPDataSource newDS = null;
+				if (ds instanceof JDBCDataSource) {
+					newDS = (SPDataSource) new JDBCDataSource(activeWorkspace);
+					newDS.copyFrom(ds);
+					newDS.setDisplayName(ds.getDisplayName());
+					activeSession.getDataSources().addDataSourceType(((JDBCDataSource)newDS).getParentType());
+				} else if (ds instanceof Olap4jDataSource) {
+					newDS = new Olap4jDataSource(activeWorkspace);
+					newDS.copyFrom(ds);
+				} else {
+					throw new UnsupportedOperationException("Datasource of type " + 
+							ds.getClass().getName() + " is not yet supported to be copied to another workspace.");
+				}
+				newWO = new WabitDataSource(newDS);
+				activeWorkspace.addDataSource((WabitDataSource) newWO);
+			} else {
+				return null;
+			}
+			return newWO;
+		}
+
+		public void dropActionChanged(DropTargetDragEvent dtde) {
+			//don't care
+		}
 	}
 	
 	public WabitSession createSession() {
@@ -503,7 +720,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JPanel leftPanel = new JPanel(new BorderLayout());
         
         for (WabitSession session : getSessions()) {
-            treeTabbedPane.addTab(session.getWorkspace().getName(), SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree()));
+            JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree());
+			treeTabbedPane.addTab(session.getWorkspace().getName(), new JScrollPane(brandedTree));
         }
         final ChangeListener tabChangeListener = new ChangeListener() {
         
@@ -921,8 +1139,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     public void registerChildSession(WabitSession child) {
         delegateContext.registerChildSession(child);
-        treeTabbedPane.addTab(child.getWorkspace().getName(), SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree()));
-        treeTabbedPane.setSelectedIndex(treeTabbedPane.getTabCount() - 1);
+        JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree());
+		treeTabbedPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree));
+		treeTabbedPane.setSelectedIndex(treeTabbedPane.getTabCount() - 1);
     }
 
     public Preferences getPrefs() {

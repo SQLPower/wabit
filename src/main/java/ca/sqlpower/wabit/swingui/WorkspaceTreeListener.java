@@ -55,6 +55,7 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
+import ca.sqlpower.wabit.swingui.action.CopyImageAction;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
@@ -100,10 +101,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			maybeShowPopup(e);
 		}
 		if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
-			session.getWorkspace().setEditorPanelModel((WabitObject) lastPathComponent);
 			if (e.getButton() == MouseEvent.BUTTON1  && e.getClickCount() == 2) {
-				JTree tree = (JTree)e.getSource();
-				tree.startEditingAtPath(tree.getSelectionPath());
+				session.getWorkspace().setEditorPanelModel((WabitObject) lastPathComponent);
 			}
 		}
 	}
@@ -331,8 +330,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		
 		if (lastPathComponent != null) {
 			menu.addSeparator();
-			if (lastPathComponent instanceof QueryCache) {
-			    menu.add(new CopyQueryAction(session, (QueryCache) lastPathComponent));
+			if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof OlapQuery) {
+			    menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
+			} else if (lastPathComponent instanceof WabitImage) {
+				menu.add(new CopyImageAction(session, (WabitImage) lastPathComponent));
 			}
 			
 			JTree tree = (JTree) e.getSource();

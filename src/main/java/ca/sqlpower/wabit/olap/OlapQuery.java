@@ -83,26 +83,48 @@ public class OlapQuery extends AbstractWabitObject {
     private Member slicerMember = null;
     
     /**
-     * This will create a copy of the query.
+     * Copy Constructor.
      * @throws QueryInitializationException 
+     * 		This should never happen because if its not initialized it'll just use the xml
+     * @throws SQLException 
      */
-    public OlapQuery createCopyOfSelf() throws SQLException, QueryInitializationException {
-    	OlapQuery newQuery = new OlapQuery(olapMapping);
-    	newQuery.setOlapDataSource(this.getOlapDataSource());
-        if (hasCachedXml()) {
-        	for (int i = 0; i < this.rootNodes.size(); i++) {
-        		newQuery.appendElement(
-        				this.rootNodes.get(i), this.attributes.get(i));
-        	}
-        } else {
-        	newQuery.setNonEmpty(isNonEmpty());
-        	newQuery.setCurrentCube(mdxQuery.getCube());
-        	newQuery.setMdxQuery(this.getMdxQueryCopy());
-        }
-        newQuery.setName(getName());
-        return newQuery;
+    public OlapQuery(OlapQuery oldOlapQuery) throws SQLException, QueryInitializationException {
+    	this(oldOlapQuery, oldOlapQuery.getOlapDataSource());
     }
     
+    /**
+     * Copy constructor which lets the user specify a new datasource
+     */
+    public OlapQuery(OlapQuery oldOlapQuery, Olap4jDataSource ds) throws SQLException, QueryInitializationException {
+    	this(oldOlapQuery.olapMapping);
+    	setOlapDataSource(ds);
+        if (hasCachedXml()) {
+        	for (int i = 0; i < oldOlapQuery.rootNodes.size(); i++) {
+        		appendElement(
+        				oldOlapQuery.rootNodes.get(i), oldOlapQuery.attributes.get(i));
+        	}
+        } else {
+        	setNonEmpty(isNonEmpty());
+        	if (oldOlapQuery.mdxQuery != null) {
+	        	setCurrentCube(oldOlapQuery.mdxQuery.getCube());
+	        	Query newMDXQuery = oldOlapQuery.getMdxQueryCopy();
+				setMdxQuery(newMDXQuery);
+				
+				if (oldOlapQuery.hierarchiesInUse != null) {
+					hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
+		        	for (Entry<QueryDimension, Hierarchy> oldEntry : oldOlapQuery.hierarchiesInUse.entrySet()) {
+		        		QueryDimension oldDimension = oldEntry.getKey();
+		        		Hierarchy oldHierarchy = oldEntry.getValue();
+						QueryDimension newDimension = newMDXQuery.getDimension(oldDimension.getName());
+						Hierarchy newHierarchy = newDimension.getDimension().getHierarchies().get(oldHierarchy.getName());
+						hierarchiesInUse.put(newDimension, newHierarchy);
+		        	}
+				}
+				slicerMember = oldOlapQuery.slicerMember;
+        	}
+        }
+        setName(oldOlapQuery.getName());
+    }
     /**
      * The current query. Gets replaced whenever a new cube is selected via
      * {@link #setCurrentCube(Cube)}. This variable should only be accessed

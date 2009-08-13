@@ -33,6 +33,11 @@ public class WabitImage extends AbstractWabitObject {
     
     private Image image;
     
+    public WabitImage(WabitImage wabitImage) {
+    	super();
+    	image = wabitImage.getImage();
+    }
+    
     public WabitImage() {
         super();
     }
