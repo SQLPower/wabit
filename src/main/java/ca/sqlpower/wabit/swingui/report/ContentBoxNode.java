@@ -105,7 +105,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
      */
     private final SwingContentRenderer swingRenderer;
     
-    public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, ContentBox contentBox) {
+    public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, ReportLayoutPanel parentPanel, ContentBox contentBox) {
         this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
@@ -114,7 +114,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
         if (renderer instanceof CellSetRenderer) {
             swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
         } else if (renderer instanceof ResultSetRenderer) {
-            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer);
+            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer, parentPanel);
         } else if (renderer instanceof ImageRenderer) {
             swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
         } else if (renderer instanceof ChartRenderer) {

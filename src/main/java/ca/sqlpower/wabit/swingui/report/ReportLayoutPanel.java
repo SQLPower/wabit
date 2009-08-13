@@ -179,7 +179,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
 			        contentBox.setContentRenderer(rsRenderer);
 			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
-			                session.getWorkspace(), contentBox);
+			                session.getWorkspace(), ReportLayoutPanel.this, contentBox);
 			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
 			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
 			                pageNode.getHeight() / 10);
@@ -190,7 +190,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
 			        contentBox.setContentRenderer(renderer);
 			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
-			                session.getWorkspace(), contentBox);
+			                session.getWorkspace(), ReportLayoutPanel.this, contentBox);
                     newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
                             (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
                             pageNode.getHeight() / 10);
@@ -202,7 +202,8 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        renderer.setImage(image);
 			        renderer.setName(image.getName());
 			        contentBox.setContentRenderer(renderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), contentBox);
+			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
+			                ReportLayoutPanel.this, contentBox);
 			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
 			                image.getImage().getWidth(null), image.getImage().getHeight(null));
 			        pageNode.addChild(newCBNode);
@@ -298,7 +299,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         canvas.setPreferredSize(new Dimension(400,600));
         cursorManager = new CursorManager(canvas);
         
-        pageNode = new PageNode(session, report.getPage());
+        pageNode = new PageNode(session, this, report.getPage());
         canvas.getLayer().addChild(pageNode);
         
         // XXX why is this being done? skipping it appears to have no effect

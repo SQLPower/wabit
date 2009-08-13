@@ -48,7 +48,7 @@ public class PageNode extends PNode implements WabitNode {
         }
     };
     
-    public PageNode(WabitSwingSession session, Page page) {
+    public PageNode(WabitSwingSession session, ReportLayoutPanel parentPanel, Page page) {
         this.page = page;
         page.addPropertyChangeListener(pageChangeHandler);
         for (WabitObject pageChild : page.getChildren()) {
@@ -57,7 +57,7 @@ public class PageNode extends PNode implements WabitNode {
             } else if (pageChild instanceof ContentBox) {
                 logger.debug("Adding content box node for " + pageChild);
                 addChild(new ContentBoxNode(((WabitSwingSessionContext) session.getContext()).getFrame(), 
-                        session.getWorkspace(), (ContentBox) pageChild));
+                        session.getWorkspace(), parentPanel, (ContentBox) pageChild));
             } else {
                 throw new UnsupportedOperationException(
                         "Don't know what view class to use for page child: " + pageChild);

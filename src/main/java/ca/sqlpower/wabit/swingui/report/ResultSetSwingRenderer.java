@@ -50,9 +50,6 @@ import javax.swing.SpinnerNumberModel;
 
 import org.apache.log4j.Logger;
 
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
-
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.ColumnInfo;
@@ -64,6 +61,10 @@ import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.ReportContentRenderer.BackgroundColours;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.swingui.Icons;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
+
 import edu.umd.cs.piccolo.event.PInputEvent;
 
 public class ResultSetSwingRenderer implements SwingContentRenderer {
@@ -76,10 +77,12 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
      * Lists of Formatting Options for date
      */
     private final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>();
-    
 
-    public ResultSetSwingRenderer(ResultSetRenderer renderer) {
+    private final ReportLayoutPanel reportLayoutPanel;
+
+    public ResultSetSwingRenderer(ResultSetRenderer renderer, ReportLayoutPanel reportLayoutPanel) {
         this.renderer = renderer;
+        this.reportLayoutPanel = reportLayoutPanel;
         setUpFormats();
     }
     
@@ -399,7 +402,11 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
     public void processEvent(PInputEvent event, int type) {
         if (type == MouseEvent.MOUSE_MOVED) {
             final double mouseXPos = event.getPositionRelativeTo(event.getPickedNode()).getX() - renderer.getParent().getX();
-            renderer.defineColumnBeingDragged(mouseXPos);
+            if (renderer.defineColumnBeingDragged(mouseXPos)) {
+                reportLayoutPanel.getCursorManager().dragLineStarted();
+            } else {
+                reportLayoutPanel.getCursorManager().dragLineFinished();
+            }
         } else if (type == MouseEvent.MOUSE_DRAGGED) {
             if (renderer.moveColumnBeingDragged(event.getDelta().getWidth())) {
                 event.setHandled(true);

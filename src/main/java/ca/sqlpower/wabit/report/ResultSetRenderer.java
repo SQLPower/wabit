@@ -739,7 +739,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	public List<ColumnInfo> getColumnInfoList() {
 		return columnInfo;
 	}
-	
+
     /**
      * This method will look for a column edge that is near the given x
      * location. If the edge of a column is close to this value it will be
@@ -749,8 +749,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * @param mouseXPos
      *            The distance from the left side of the parent content box to
      *            look for an edge of a column. This cannot be null.
+     * @return True if a column is now able to be dragged, false otherwise.
      */
-    public void defineColumnBeingDragged(final double mouseXPos) {
+    public boolean defineColumnBeingDragged(final double mouseXPos) {
         setColBeingDragged(null);
         int overallWidth = 0;
         for (ColumnInfo ci : getColumnInfoList()) {
@@ -762,8 +763,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
                         + overallWidth + " mouse x position is " + mouseXPos);
                 
                 setColBeingDragged(ci);
+                return true;
             }
         }
+        return false;
     }
 
     /**
