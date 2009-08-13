@@ -715,7 +715,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
          	}
         } else if (name.equals("image-renderer")) {
-        	imageRenderer = new ImageRenderer(session.getWorkspace(), false);
+        	imageRenderer = new ImageRenderer();
         	contentBox.setContentRenderer(imageRenderer);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -742,9 +742,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             
             String uuid = attributes.getValue("uuid");
             if (uuid == null) {
-                graphRenderer = new ChartRenderer(contentBox, session.getWorkspace());
+                graphRenderer = new ChartRenderer(contentBox);
             } else {
-                graphRenderer = new ChartRenderer(contentBox, session.getWorkspace(), uuid);
+                graphRenderer = new ChartRenderer(contentBox, uuid);
             }
             contentBox.setContentRenderer(graphRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {

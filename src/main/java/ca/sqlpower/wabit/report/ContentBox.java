@@ -71,16 +71,19 @@ public class ContentBox extends AbstractWabitObject {
     };
 
     /**
-     * This is an empty child listener for the content box. If a null child listener
-     * is added to the listener list a NPE will be thrown when any of the events fire.
+     * This adds and removes listeners from children of the renderer when the
+     * children of a renderer changes.
      */
     private final WabitChildListener emptyChildListener = new WabitChildListener() {
+        
 		public void wabitChildRemoved(WabitChildEvent e) {
-			//do nothing.
+		    WabitUtils.unlistenToHierarchy(e.getChild(), rendererChangeHandler, emptyChildListener);
 		}
+		
 		public void wabitChildAdded(WabitChildEvent e) {
-			//do nothing.
+		    WabitUtils.listenToHierarchy(e.getChild(), rendererChangeHandler, emptyChildListener);
 		}
+		
 	};
     
     public ContentBox() {

@@ -34,9 +34,15 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.ImageRenderer;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
@@ -60,7 +66,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
         @Override
         public void processEvent(PInputEvent event, int type) {
             super.processEvent(event, type);
-            contentBox.getContentRenderer().processEvent(event, type);
+            swingRenderer.processEvent(event, type);
         }
         
         @Override
@@ -92,11 +98,36 @@ public class ContentBoxNode extends PNode implements ReportNode {
     };
     
     private final Window dialogOwner;
+
+    /**
+     * This {@link ResultSetRenderer} compliment will handle operations on the
+     * renderer that are swing specific.
+     */
+    private final SwingContentRenderer swingRenderer;
     
-    public ContentBoxNode(Window dialogOwner, ContentBox contentBox) {
+    public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, ContentBox contentBox) {
         this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
+        
+        final ReportContentRenderer renderer = contentBox.getContentRenderer();
+        if (renderer instanceof CellSetRenderer) {
+            swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
+        } else if (renderer instanceof ResultSetRenderer) {
+            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer);
+        } else if (renderer instanceof ImageRenderer) {
+            swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
+        } else if (renderer instanceof ChartRenderer) {
+            swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
+        } else if (renderer instanceof Label) {
+            swingRenderer = new SwingLabel((Label) renderer);
+        } else if (renderer == null) {
+            swingRenderer = null;
+        } else {
+            throw new IllegalStateException("Unknown renderer of type " + renderer.getClass() 
+                    + ". The swing components of this renderer type are missing.");
+        }
+        
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
         addInputEventListener(mouseInputHandler);
         contentBox.addPropertyChangeListener(modelChangeHandler);
@@ -183,7 +214,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
     public DataEntryPanel getPropertiesPanel() {
         if (contentBox.getContentRenderer() != null) {
-            DataEntryPanel propertiesPanel = contentBox.getContentRenderer().getPropertiesPanel();
+            DataEntryPanel propertiesPanel = swingRenderer.getPropertiesPanel();
             if (propertiesPanel == null) {
                 logger.debug("Content renderer has no properties dialog: " + contentBox.getContentRenderer());
             }

@@ -130,9 +130,13 @@ public class ResultSetCell {
         String printingText = text;
         double stringLength = fm.getStringBounds(text, g).getWidth();
         final double widthInsideInsets = getBounds().getWidth() - insets.left - insets.right;
-        if (stringLength > widthInsideInsets) {
-            String ellipse = "...";
-            double ellipseLength = fm.getStringBounds(ellipse, g).getWidth();
+        
+        String ellipse = "...";
+        double ellipseLength = fm.getStringBounds(ellipse, g).getWidth();
+        
+        if (widthInsideInsets < ellipseLength) {
+            printingText = "";
+        } else if (stringLength > widthInsideInsets) {
             int charLimit = 0;
             while (fm.getStringBounds(text, 0, charLimit, g).getWidth() < widthInsideInsets - ellipseLength) {
                 charLimit++;

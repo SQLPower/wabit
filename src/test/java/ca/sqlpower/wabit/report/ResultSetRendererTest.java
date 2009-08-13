@@ -25,13 +25,10 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
@@ -42,8 +39,6 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
-
-import com.lowagie.text.Section;
 
 public class ResultSetRendererTest extends AbstractWabitObjectTest {
 
@@ -167,6 +162,68 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
             if (con != null) con.close();
         }
         
+    }
+
+    /**
+     * This is a test to confirm that the correct column is being selected to
+     * have it's width changed when dragging.
+     */
+    public void testColSelectedForDrag() throws Exception {
+        List<ColumnInfo> ciList = new ArrayList<ColumnInfo>();
+        ColumnInfo ci1 = new ColumnInfo("Col1");
+        ci1.setWidth(50);
+        ciList.add(ci1);
+        ColumnInfo ci2 = new ColumnInfo("Col2");
+        ci2.setWidth(50);
+        ciList.add(ci2);
+        ColumnInfo ci3 = new ColumnInfo("Col3");
+        ci3.setWidth(50);
+        ciList.add(ci3);
+        ResultSetRenderer rsRenderer = new ResultSetRenderer(new QueryCache(stubMapping), ciList);
+        
+        assertNull(rsRenderer.getColBeingDragged());
+        
+        rsRenderer.defineColumnBeingDragged(50);
+        assertEquals(ci1, rsRenderer.getColBeingDragged());
+        
+        rsRenderer.defineColumnBeingDragged(99); //check that you don't have to be 100% accurate.
+        assertEquals(ci2, rsRenderer.getColBeingDragged());
+        
+        rsRenderer.defineColumnBeingDragged(75);
+        assertNull(rsRenderer.getColBeingDragged());
+    }
+    
+    /**
+     * Test to confirm that a column can be dragged.
+     */
+    public void testColCanBeDragged() throws Exception {
+        List<ColumnInfo> ciList = new ArrayList<ColumnInfo>();
+        ColumnInfo ci1 = new ColumnInfo("Col1");
+        ci1.setWidth(50);
+        ciList.add(ci1);
+        ColumnInfo ci2 = new ColumnInfo("Col2");
+        ci2.setWidth(50);
+        ciList.add(ci2);
+        ColumnInfo ci3 = new ColumnInfo("Col3");
+        ci3.setWidth(50);
+        ciList.add(ci3);
+        ResultSetRenderer rsRenderer = new ResultSetRenderer(new QueryCache(stubMapping), ciList);
+        
+        rsRenderer.defineColumnBeingDragged(50);
+        rsRenderer.moveColumnBeingDragged(25);
+        assertEquals(75, ci1.getWidth());
+        
+        rsRenderer.defineColumnBeingDragged(125);
+        assertEquals(ci2, rsRenderer.getColBeingDragged());
+        
+        rsRenderer.moveColumnBeingDragged(-25);
+        assertEquals(25, ci2.getWidth());
+        
+        rsRenderer.defineColumnBeingDragged(150);
+        assertEquals(ci3, rsRenderer.getColBeingDragged());
+        
+        rsRenderer.moveColumnBeingDragged(-100);
+        assertEquals(0, ci3.getWidth());
     }
 
 }

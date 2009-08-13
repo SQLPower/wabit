@@ -59,7 +59,6 @@ import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -180,7 +179,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
 			        contentBox.setContentRenderer(rsRenderer);
 			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
-			                contentBox);
+			                session.getWorkspace(), contentBox);
 			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
 			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
 			                pageNode.getHeight() / 10);
@@ -191,7 +190,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
 			        contentBox.setContentRenderer(renderer);
 			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
-                            contentBox);
+			                session.getWorkspace(), contentBox);
                     newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
                             (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
                             pageNode.getHeight() / 10);
@@ -199,11 +198,11 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			    } else if (wabitObject instanceof WabitImage) {
 			        WabitImage image = (WabitImage) wabitObject;
 			        ContentBox contentBox = new ContentBox();
-			        ImageRenderer renderer = new ImageRenderer(session.getWorkspace(), false);
+			        ImageRenderer renderer = new ImageRenderer();
 			        renderer.setImage(image);
 			        renderer.setName(image.getName());
 			        contentBox.setContentRenderer(renderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
+			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), contentBox);
 			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
 			                image.getImage().getWidth(null), image.getImage().getHeight(null));
 			        pageNode.addChild(newCBNode);

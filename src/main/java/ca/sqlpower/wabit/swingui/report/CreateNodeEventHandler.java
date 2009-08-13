@@ -58,7 +58,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			ContentBox contentBox = new ContentBox();
 			Label label = new Label(panel.getReport(), "New Content Box");
 			contentBox.setContentRenderer(label);
-			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
+			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), contentBox);
 			Page page = panel.getReport().getPage();
 			newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
 			panel.getPageNode().addChild(newCBNode);
@@ -72,9 +72,9 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			panel.getPageNode().addChild(new GuideNode(tmpGuide));
 		} else if (panel.getMouseState().equals(MouseStates.CREATE_GRAPH)) {
 			ContentBox contentBox = new ContentBox();
-			ChartRenderer graph = new ChartRenderer(contentBox, session.getWorkspace());
+			ChartRenderer graph = new ChartRenderer(contentBox);
 			contentBox.setContentRenderer(graph);
-			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, contentBox);
+			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), contentBox);
 			newCBNode.setX(event.getPosition().getX());
 			newCBNode.setY(event.getPosition().getY());
 			panel.getPageNode().addChild(newCBNode);

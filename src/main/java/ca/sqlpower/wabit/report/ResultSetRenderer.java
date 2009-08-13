@@ -19,13 +19,12 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -35,33 +34,12 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.Format;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
-import javax.swing.SpinnerNumberModel;
 
 import org.apache.log4j.Logger;
 
@@ -71,8 +49,6 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
-import ca.sqlpower.swingui.ColorCellRenderer;
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
@@ -81,17 +57,13 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
-import ca.sqlpower.wabit.swingui.Icons;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
-
-import edu.umd.cs.piccolo.event.PInputEvent;
 
 /**
  * Renders a JDBC result set using configurable absolute column widths.
  */
 public class ResultSetRenderer extends AbstractWabitObject implements ReportContentRenderer {
+    
+    private static final Color DRAGGABLE_COL_LINE_COLOUR = new Color(0xcccccc);
     
     private static final Logger logger = Logger.getLogger(ResultSetRenderer.class);
     
@@ -193,7 +165,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * This decides if the grand totals will be printed at the end of a result
      * set.
      */
-    private boolean isPrintingGrandTotals = false;
+    private boolean printingGrandTotals = false;
     
     /**
      * This enum is used to describe the types of rows that are able to
@@ -213,10 +185,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     
     private final List<ColumnInfo> columnInfo;
     
-    /**
-     * Lists of Formatting Options for date
-     */
-    private final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>();
     /**
      * The string that will be rendered for null values in the result set.
      */
@@ -258,6 +226,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	 * This will store the background colour for the result set renderer.
 	 */
 	private Color backgroundColour;
+	
+	/**
+     * This is the column whose right side is currently being dragged in the editor.
+     * If this is null then no column is being dragged.
+     */
+    private ColumnInfo colBeingDragged = null;
 	
 	/**
 	 * This listens for all property changes on the parent content box to 
@@ -309,7 +283,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
         }
 		query.addPropertyChangeListener(queryChangeListener);
-        setUpFormats();
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         setName("Result Set: " + query.getName());
 	}
@@ -390,44 +363,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		}
 	}
 	
-	/**
-     * Adds some formats to the Numeric format as well as the Date Format
-     * 
-     */
-    private void setUpFormats() {
-    	// adding date Formats
-    	dateFormats.add(new SimpleDateFormat("yyy/MM/dd"));
-    	dateFormats.add(new SimpleDateFormat("yyy-MM-dd"));
-    	dateFormats.add(new SimpleDateFormat("yyy MM dd h:mm:ss"));
-    	dateFormats.add(new SimpleDateFormat("yyy/MM/dd h:mm:ss"));
-    	dateFormats.add(new SimpleDateFormat("yyy-MM-dd h:mm:ss"));
-    	dateFormats.add(new SimpleDateFormat("MMMM d, yy h:mm:ss"));
-    	dateFormats.add(new SimpleDateFormat("MMMM d, yy"));
-    	dateFormats.add(new SimpleDateFormat("MMMM d, yyyy"));
-    	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateTimeInstance());
-    	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getDateInstance());
-    	dateFormats.add((SimpleDateFormat)SimpleDateFormat.getTimeInstance());
-    }
-    
-    private Format getFormat(DataType dataType, String pattern){
-    	logger.debug("dataType is"+ dataType+ " pattern is "+ pattern);
-    	if(dataType == DataType.NUMERIC) {
-    		for(DecimalFormat decimalFormat : ReportUtil.getNumberFormats()) {
-    			if(decimalFormat.toPattern().equals(pattern)){
-    				return decimalFormat;
-    			}
-    		}
-    	} else if(dataType == DataType.DATE) {
-    		for(SimpleDateFormat dateFormat: dateFormats) {
-    			if((dateFormat.toPattern()).equals(pattern)){
-    				return dateFormat;
-    			}
-    		}
-    	}
-    	
-    	return null;
-    }
-
 	/**
 	 * Constructor subroutine.
 	 * 
@@ -598,6 +533,27 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             g.drawLine(0, 0, contentBoxWidth - 1, 0);
         }
         
+        if (colBeingDragged != null) {
+            int xLocation = 0;
+            for (ColumnInfo ci : getColumnInfoList()) {
+                if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK) continue;
+                if (ci != colBeingDragged) {
+                    xLocation += ci.getWidth();
+                } else {
+                    xLocation += ci.getWidth();
+                    break;
+                }
+            }
+            
+            Color oldColor = g.getColor();
+            Stroke oldStroke = g.getStroke();
+            g.setColor(DRAGGABLE_COL_LINE_COLOUR);
+            g.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1, new float[]{5, 5}, 0));
+            g.drawLine(xLocation, 0, xLocation, (int) contentBox.getHeight());
+            g.setColor(oldColor);
+            g.setStroke(oldStroke);
+        }
+        
         //TODO come up with a better way to clear the result sets, probably at the same time the page positions are cleared to get fresh data.
         final boolean isLastPage = pageCells.get().size() - 1 == pageIndex;
         if (isLastPage) {
@@ -614,7 +570,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * Call this method if something changes in the result set that causes
      * the need to redefine the layout of the result set. 
      */
-    private void clearResultSetLayout() {
+    public void clearResultSetLayout() {
         pageCells.set(null);
         printingResultSet = null;
         paintingRS = null;
@@ -628,10 +584,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * break changes, new columns being sub-totaled, different graphics in use
      * such as printing vs painting, and changes to the query.
      * <p>
-     * This method will first create all of the sections based on the result set
-     * and the columns defined as breaks. Then the {@link Position}s will be
-     * created to lay out the result set. Multiple passes of the layout can be
-     * done if desired to try and increase the look of the layout.
+     * The bulk of the work is done by the ReportPositionRenderer.
      * <p>
      * Package private for testing.
      * 
@@ -655,7 +608,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         final ReportPositionRenderer reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, (int) getParent().getWidth(), nullString);
         
         List<List<ResultSetCell>> createResultSetLayout = reportPositionRenderer.createResultSetLayout(
-                g, rs, getColumnInfoList(), getParent(), isPrintingGrandTotals);
+                g, rs, getColumnInfoList(), getParent(), isPrintingGrandTotals());
         pageCells.set(createResultSetLayout);
     }
     
@@ -767,273 +720,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         return query;
     }
     
-    public DataEntryPanel getPropertiesPanel() {
-        FormLayout layout = new FormLayout("pref, 4dlu, fill:pref:grow, 4dlu, pref");
-        final DefaultFormBuilder fb = new DefaultFormBuilder(layout);
-        
-        // TODO gap (padding) between columns
-        // TODO line under header?
-        
-        final JLabel headerFontExample = new JLabel("Header Font Example");
-        headerFontExample.setFont(getHeaderFont());
-        fb.append("Header Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
-        
-        final JLabel bodyFontExample = new JLabel("Body Font Example");
-        bodyFontExample.setFont(getBodyFont());
-        fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample));
-        fb.nextLine();
-
-        final JTextField nullStringField = new JTextField(nullString);
-        fb.append("Null string", nullStringField);
-        fb.nextLine();
-        
-        final JLabel colourLabel = new JLabel(" ");
-       	colourLabel.setBackground(getBackgroundColour());
-        colourLabel.setOpaque(true);
-        final JComboBox colourCombo = new JComboBox();
-        colourCombo.setRenderer(new ColorCellRenderer(85, 30));
-        for (BackgroundColours bgColour : BackgroundColours.values()) {
-        	colourCombo.addItem(bgColour.getColour());
-        }
-        colourCombo.setSelectedItem(backgroundColour);
-        colourCombo.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Color colour = (Color) colourCombo.getSelectedItem();
-				colourLabel.setBackground(colour);
-			}
-		});
-        fb.append("Background", colourLabel, colourCombo);
-        fb.nextLine();
-        final JComboBox borderComboBox = new JComboBox(BorderStyles.values());
-        borderComboBox.setSelectedItem(borderType);
-        fb.append("Border", borderComboBox);
-        fb.nextLine();
-        final JCheckBox grandTotalsCheckBox = new JCheckBox("Grand totals");
-        grandTotalsCheckBox.setSelected(isPrintingGrandTotals);
-        fb.append("", grandTotalsCheckBox);
-        fb.nextLine();
-        
-        fb.appendRow("fill:pref");
-        Box box = Box.createVerticalBox();
-        final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
-        final FormLayout columnLayout = new FormLayout(
-                "min(pref; 100dlu):grow, 5dlu, min(pref; 100dlu):grow, 5dlu, pref:grow, 5dlu, pref:grow", 
-                "pref, pref, pref, pref");
-        for (ColumnInfo ci : columnInfo) {
-            DataEntryPanel columnPropsPanel = createColumnPropsPanel(columnLayout, ci);
-            columnPanels.add(columnPropsPanel);
-            box.add(columnPropsPanel.getPanel());
-            box.add(Box.createHorizontalStrut(5));
-        }
-        JScrollPane columnScrollPane = new JScrollPane(box,
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        columnScrollPane.setPreferredSize(new Dimension(columnScrollPane.getPreferredSize().width, 400));
-        fb.append("Column info", columnScrollPane, 3);
-        
-        return new DataEntryPanel() {
-
-			public boolean applyChanges() {
-                setHeaderFont(headerFontExample.getFont());
-                setBodyFont(bodyFontExample.getFont());
-                setNullString(nullStringField.getText());
-                setBackgroundColour((Color) colourCombo.getSelectedItem());
-                borderType = (BorderStyles) borderComboBox.getSelectedItem();
-                isPrintingGrandTotals = grandTotalsCheckBox.isSelected();
-                
-                boolean applied = true;
-                for (DataEntryPanel columnPropsPanel : columnPanels) {
-                    applied &= columnPropsPanel.applyChanges();
-                }
-                return applied;
-            }
-
-            public void discardChanges() {
-                for (DataEntryPanel columnPropsPanel : columnPanels) {
-                    columnPropsPanel.discardChanges();
-                }
-            }
-
-            public JComponent getPanel() {
-                return fb.getPanel();
-            }
-
-            public boolean hasUnsavedChanges() {
-                boolean hasUnsaved = false;
-                for (DataEntryPanel columnPropsPanel : columnPanels) {
-                    hasUnsaved |= columnPropsPanel.hasUnsavedChanges();
-                }
-                return hasUnsaved;
-            }
-            
-        };
-
-    }
-    
-    public DataEntryPanel createColumnPropsPanel(FormLayout layout, final ColumnInfo ci) {
-
-        DefaultFormBuilder fb = new DefaultFormBuilder(layout);
-        
-        final JTextField columnLabel = new JTextField(ci.getName());
-        fb.append(columnLabel);
-        
-        // TODO better UI (auto/manual, and manual is based on a jtable with resizable headers)
-        final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, Integer.MAX_VALUE, 12));
-        fb.append(widthSpinner);
-        
-        ButtonGroup hAlignmentGroup = new ButtonGroup();
-        final JToggleButton leftAlign = new JToggleButton(
-                Icons.LEFT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.LEFT);
-        hAlignmentGroup.add(leftAlign);
-        final JToggleButton centreAlign = new JToggleButton(
-                Icons.CENTRE_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.CENTER);
-        hAlignmentGroup.add(centreAlign);
-        final JToggleButton rightAlign = new JToggleButton(
-                Icons.RIGHT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.RIGHT);
-        hAlignmentGroup.add(rightAlign);
-        Box alignmentBox = Box.createHorizontalBox();
-        alignmentBox.add(leftAlign);
-        alignmentBox.add(centreAlign);
-        alignmentBox.add(rightAlign);
-        alignmentBox.add(Box.createHorizontalGlue());
-        fb.append(alignmentBox);
-        fb.append(new JLabel("Breaking and Grouping"));
-        
-        fb.nextLine();
-        
-        final JComboBox dataTypeComboBox = new JComboBox(DataType.values());
-        final JComboBox formatComboBox = new JComboBox();
-        
-        dataTypeComboBox.setSelectedItem(ci.getDataType());
-
-        fb.append(dataTypeComboBox);
-       
-        if(dataTypeComboBox.getSelectedItem() == DataType.TEXT) {
-        	formatComboBox.setEnabled(false);
-        } else {
-        	setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
-        	if (ci.getFormat() != null) {
-        		if (ci.getFormat() instanceof SimpleDateFormat) {
-        			formatComboBox.setSelectedItem(((SimpleDateFormat) ci.getFormat()).toPattern());
-        		} else if (ci.getFormat() instanceof DecimalFormat) {
-        			formatComboBox.setSelectedItem(((DecimalFormat) ci.getFormat()).toPattern());
-        		} else {
-        			throw new ClassCastException("Cannot cast the format " + ci.getFormat().getClass() + " to a known format");
-        		}
-        	}
-        }
-        fb.append(formatComboBox);
-        dataTypeComboBox.addActionListener(new AbstractAction(){
-
-			public void actionPerformed(ActionEvent e) {
-				if(((JComboBox)e.getSource()).getSelectedItem() == DataType.TEXT){
-					formatComboBox.setEnabled(false);
-				} else {
-					formatComboBox.setEnabled(true);
-				}
-				setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
-			}
-		});
-        final ButtonGroup breakAndGroupButtons = new ButtonGroup();
-        final JRadioButton noBreakOrGroupButton = new JRadioButton("None");
-        breakAndGroupButtons.add(noBreakOrGroupButton);
-        final JRadioButton breakRadioButton = new JRadioButton("Break Into Sections");
-        breakAndGroupButtons.add(breakRadioButton);
-        final JCheckBox subtotalCheckbox = new JCheckBox("Subtotal");
-        if (ci.getDataType().equals(DataType.NUMERIC)) {
-        	fb.append(subtotalCheckbox);
-        	subtotalCheckbox.setSelected(ci.getWillSubtotal());
-        } else {
-            fb.append("");
-        }
-        
-        final JRadioButton groupRadioButton = new JRadioButton("Group (Suppress Repeating Values)");
-        breakAndGroupButtons.add(groupRadioButton);
-        if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
-            groupRadioButton.setSelected(true);
-        } else if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
-            breakRadioButton.setSelected(true);
-        } else {
-            noBreakOrGroupButton.setSelected(true);
-        }
-        
-        fb.append(noBreakOrGroupButton);
-        fb.nextLine();
-        fb.append(new JLabel(), 5);
-        fb.append(breakRadioButton);
-        fb.nextLine();
-        fb.append(new JLabel(), 5);
-        fb.append(groupRadioButton);
-        
-        final JPanel panel = fb.getPanel();
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 3, 3, 5));
-        
-        return new DataEntryPanel() {
-
-            public boolean applyChanges() {
-                ci.setName(columnLabel.getText());
-                if (leftAlign.isSelected()) {
-                    ci.setHorizontalAlignment(HorizontalAlignment.LEFT);
-                } else if (centreAlign.isSelected()) {
-                    ci.setHorizontalAlignment(HorizontalAlignment.CENTER);
-                } else if (rightAlign.isSelected()) {
-                	ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-                }
-                ci.setDataType((DataType)dataTypeComboBox.getSelectedItem());
-                logger.debug("formatCombobBox.getSelectedItem is"+ (String)formatComboBox.getSelectedItem());
-                
-                if (formatComboBox.getSelectedItem() != null &&
-                		((String)formatComboBox.getSelectedItem()).equals(ReportUtil.DEFAULT_FORMAT_STRING)) {
-                		ci.setFormat(null);
-                	}
-                else {
-                	ci.setFormat(getFormat(ci.getDataType(), (String)formatComboBox.getSelectedItem()));
-                }
-                ci.setWidth((Integer) widthSpinner.getValue());
-
-                if (groupRadioButton.isSelected()) {
-                    ci.setWillGroupOrBreak(GroupAndBreak.GROUP);
-                } else if (breakRadioButton.isSelected()) {
-                    ci.setWillGroupOrBreak(GroupAndBreak.BREAK);
-                } else {
-                    ci.setWillGroupOrBreak(GroupAndBreak.NONE);
-                }
-                ci.setWillSubtotal(subtotalCheckbox.isSelected());
-                
-                clearResultSetLayout();
-                
-                return true;
-            }
-
-            public void discardChanges() {
-            	// no op
-            }
-
-            public JComponent getPanel() {
-                return panel;
-            }
-
-            public boolean hasUnsavedChanges() {
-                return true;
-            }
-            
-        };
-    }
-    
-    private void setItemforFormatComboBox(JComboBox combobox, DataType dataType) {
-    	combobox.removeAllItems();
-    	combobox.addItem(ReportUtil.DEFAULT_FORMAT_STRING);
-    	if(dataType == DataType.NUMERIC) {
-    		for(NumberFormat item : ReportUtil.getNumberFormats()) {
-    			combobox.addItem(((DecimalFormat)item).toPattern());
-    		}
-    	} else if(dataType == DataType.DATE) {
-    		for(DateFormat item : dateFormats) {
-    			combobox.addItem(((SimpleDateFormat)item).toPattern());
-    		}
-    	}
-    	
-    }
-
 	public void setBackgroundColour(Color backgroundColour) {
 		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
 		this.backgroundColour = backgroundColour;
@@ -1053,9 +739,62 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 	public List<ColumnInfo> getColumnInfoList() {
 		return columnInfo;
 	}
+	
+    /**
+     * This method will look for a column edge that is near the given x
+     * location. If the edge of a column is close to this value it will be
+     * defined as the column edge to be dragged. This is to support the
+     * operation of defining column widths by clicking and dragging.
+     * 
+     * @param mouseXPos
+     *            The distance from the left side of the parent content box to
+     *            look for an edge of a column. This cannot be null.
+     */
+    public void defineColumnBeingDragged(final double mouseXPos) {
+        setColBeingDragged(null);
+        int overallWidth = 0;
+        for (ColumnInfo ci : getColumnInfoList()) {
+            if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK) continue;
+            overallWidth += ci.getWidth();
+            if (mouseXPos > overallWidth - 5 && mouseXPos < overallWidth + 5) {
+                
+                logger.debug("OVER CORRECT POSITION " + ci.getName() + " overall width is " 
+                        + overallWidth + " mouse x position is " + mouseXPos);
+                
+                setColBeingDragged(ci);
+            }
+        }
+    }
 
-    public void processEvent(PInputEvent event, int type) {
-        //TODO allow other cool things to happen with this event
+    /**
+     * This is package private for testing. Other classes don't need to know
+     * which column is being dragged, modifying a column by dragging should be
+     * done through the appropriate methods.
+     * @see {@link #defineColumnBeingDragged(double)} {@link #moveColumnBeingDragged(double)}
+     */
+    ColumnInfo getColBeingDragged() {
+        return colBeingDragged;
+    }
+
+    /**
+     * This will move the edge of the column defined to be dragged by the delta.
+     * To shrink the column give a negative value as the delta. If no column is
+     * being dragged this will do nothing.
+     * 
+     * @param moveDelta
+     *            The amount to resize the column width. Cannot be null.
+     * @return True if a column was resized. False otherwise.
+     */
+    public boolean moveColumnBeingDragged(double moveDelta) {
+        if (colBeingDragged != null) {
+            int newColWidth = (int) (colBeingDragged.getWidth() + moveDelta);
+            if (newColWidth < 0) {
+                newColWidth = 0;
+            }
+            colBeingDragged.setWidth(newColWidth);
+            return true;
+        }
+        return false;
     }
 
     public List<WabitObject> getDependencies() {
@@ -1083,5 +822,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      */
     List<List<ResultSetCell>> findCells() {
         return Collections.unmodifiableList(pageCells.get());
+    }
+    
+    public void setColBeingDragged(ColumnInfo colBeingDragged) {
+        ColumnInfo oldCol = this.colBeingDragged;
+        this.colBeingDragged = colBeingDragged;
+        firePropertyChange("colBeingDragged", oldCol, colBeingDragged);
+    }
+
+    public void setPrintingGrandTotals(boolean isPrintingGrandTotals) {
+        boolean oldGrandTotals = this.printingGrandTotals;
+        this.printingGrandTotals = isPrintingGrandTotals;
+        firePropertyChange("printingGrandTotals", oldGrandTotals, isPrintingGrandTotals);
+    }
+
+    public boolean isPrintingGrandTotals() {
+        return printingGrandTotals;
     }
 }

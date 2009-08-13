@@ -20,17 +20,14 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,18 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.Box;
-import javax.swing.ButtonGroup;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTable;
-import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
-
-import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -62,19 +48,15 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
-import ca.sqlpower.wabit.swingui.Icons;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.LayoutItem;
-import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PInputEvent;
 
 /**
  * Renders a CellSet from a MDX query on a report layout.
@@ -218,102 +200,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         return null;
     }
 
-    public DataEntryPanel getPropertiesPanel() {
-        final JPanel panel = new JPanel(new MigLayout("", "[][grow][]", ""));
-        
-        panel.add(new JLabel("Header Font"), "gap related");
-        final JLabel headerFontExample = new JLabel("Header Font Example");
-        headerFontExample.addPropertyChangeListener("font" , new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent arg0) {
-				JDialog dialog = (JDialog) SwingUtilities.getWindowAncestor(panel);
-				if (dialog != null) {
-					panel.invalidate();
-					int newWidth = (int) Math.max(dialog.getContentPane().getPreferredSize().getWidth(), dialog.getContentPane().getSize().getWidth());
-					int newHeight = (int) Math.max(dialog.getContentPane().getPreferredSize().getHeight(), dialog.getContentPane().getSize().getHeight());
-					dialog.setSize(new Dimension(newWidth, newHeight));
-				}
-			}
-        });
-        headerFontExample.setFont(getHeaderFont());
-        panel.add(headerFontExample, "gap related");
-        panel.add(ReportUtil.createFontButton(headerFontExample), "wrap");
-        
-        panel.add(new JLabel("Body Font"), "gap related");
-        final JLabel bodyFontExample = new JLabel("Body Font Example");
-        bodyFontExample.setFont(getBodyFont());
-        panel.add(bodyFontExample, "gap related");
-        panel.add(ReportUtil.createFontButton(bodyFontExample), "wrap");
-        
-        ButtonGroup hAlignmentGroup = new ButtonGroup();
-        final JToggleButton leftAlign = new JToggleButton(
-                Icons.LEFT_ALIGN_ICON, bodyAlignment == HorizontalAlignment.LEFT);
-        hAlignmentGroup.add(leftAlign);
-        final JToggleButton centreAlign = new JToggleButton(
-                Icons.CENTRE_ALIGN_ICON, bodyAlignment == HorizontalAlignment.CENTER);
-        hAlignmentGroup.add(centreAlign);
-        final JToggleButton rightAlign = new JToggleButton(
-                Icons.RIGHT_ALIGN_ICON, bodyAlignment == HorizontalAlignment.RIGHT);
-        hAlignmentGroup.add(rightAlign);
-        Box alignmentBox = Box.createHorizontalBox();
-        alignmentBox.add(leftAlign);
-        alignmentBox.add(centreAlign);
-        alignmentBox.add(rightAlign);
-        alignmentBox.add(Box.createHorizontalGlue());
-        panel.add(new JLabel("Column Alignment"), "gap related");
-        panel.add(alignmentBox, "span 2, wrap");
-        
-        final JComboBox bodyFormatComboBox = new JComboBox();
-        bodyFormatComboBox.addItem(ReportUtil.DEFAULT_FORMAT_STRING);
-        for (NumberFormat item : ReportUtil.getNumberFormats()) {
-            bodyFormatComboBox.addItem(((DecimalFormat) item).toPattern());
-        }
-        if (bodyFormat != null) {
-            bodyFormatComboBox.setSelectedItem(bodyFormat.toPattern());
-        } else {
-            bodyFormatComboBox.setSelectedItem(ReportUtil.DEFAULT_FORMAT_STRING);
-        }
-        panel.add(new JLabel("Body Format"), "gap related");
-        panel.add(bodyFormatComboBox, "span 2, wrap");
-        
-        
-        return new DataEntryPanel() {
-            
-        
-            public boolean hasUnsavedChanges() {
-                return true;
-            }
-        
-            public JComponent getPanel() {
-                return panel;
-            }
-        
-            public void discardChanges() {
-                //do nothing
-            }
-        
-            public boolean applyChanges() {
-                setHeaderFont(headerFontExample.getFont());
-                setBodyFont(bodyFontExample.getFont());
-                
-                if (leftAlign.isSelected()) {
-                    setBodyAlignment(HorizontalAlignment.LEFT);
-                } else if (rightAlign.isSelected()) {
-                    setBodyAlignment(HorizontalAlignment.RIGHT);
-                } else if (centreAlign.isSelected()) {
-                    setBodyAlignment(HorizontalAlignment.CENTER);
-                }
-                
-                if (bodyFormatComboBox.getSelectedItem().equals(ReportUtil.DEFAULT_FORMAT_STRING)) {
-                    setBodyFormat(null);
-                } else {
-                    setBodyFormat(new DecimalFormat((String) bodyFormatComboBox.getSelectedItem()));
-                }
-                
-                return true;
-            }
-        };
-    }
-    
     /**
      * This method renders the report content in the CellSetRenderer
      */
@@ -665,33 +551,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         firePropertyChange("bodyFormat", oldFormat, bodyFormat);
     }
 
-    public void processEvent(PInputEvent event, int type) {
-        if (type == MouseEvent.MOUSE_MOVED) {
-            final PNode pickedNode = event.getPickedNode();
-            Point2D p = event.getPositionRelativeTo(pickedNode);
-            p = new Point2D.Double(p.getX() - pickedNode.getX(), p.getY() - pickedNode.getY());
-            for (Map.Entry<Member, Set<Rectangle>> entry : memberHeaderMap.entrySet()) {
-                for (Rectangle rect : entry.getValue()) {
-                    if (rect.contains(p)) {
-                        setSelectedMember(entry.getKey());
-                        return;
-                    }
-                }
-            }
-            setSelectedMember(null);
-
-        } else if (type == MouseEvent.MOUSE_RELEASED) {
-            if (selectedMember != null) {
-                try {
-                    modifiedOlapQuery.toggleMember(selectedMember);
-                    modifiedOlapQuery.execute();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-    }
-
     public void setSelectedMember(Member selectedMember) {
         Member oldSelection = this.selectedMember; 
         this.selectedMember = selectedMember;
@@ -736,6 +595,44 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public List<WabitObject> getDependencies() {
         if (getOlapQuery() == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(getOlapQuery()));
+    }
+
+    /**
+     * This method will look for a member located at the given point. If a
+     * member is found it will be defined to be the selected member. If no
+     * member exists at the given point the selected member will be null.
+     * 
+     * @param p
+     *            Used to locate the member to be defined as selected. Cannot be
+     *            null. The origin of this point is the top left point of the parent
+     *            content box.
+     */
+    public void setMemberSelectedAtPoint(Point2D p) {
+        for (Map.Entry<Member, Set<Rectangle>> entry : memberHeaderMap.entrySet()) {
+            for (Rectangle rect : entry.getValue()) {
+                if (rect.contains(p)) {
+                    setSelectedMember(entry.getKey());
+                    return;
+                }
+            }
+        }
+        setSelectedMember(null);
+    }
+
+    /**
+     * If the selected member is not null it will be expanded or collapsed
+     * depending on the current state of the member. If the selected member
+     * is null this is a no-op.
+     */
+    public void toggleSelectedMember() {
+        if (selectedMember != null) {
+            try {
+                modifiedOlapQuery.toggleMember(selectedMember);
+                modifiedOlapQuery.execute();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }        
     }
 
 }

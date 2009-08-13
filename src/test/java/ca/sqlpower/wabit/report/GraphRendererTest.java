@@ -35,7 +35,6 @@ import org.jfree.data.category.CategoryDataset;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
@@ -53,8 +52,7 @@ public class GraphRendererTest extends TestCase {
         plIni.read(new File("src/test/java/pl.regression.ini"));
         ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         ContentBox contentBox = new ContentBox();
-        WabitWorkspace workspace = new WabitWorkspace();
-        renderer = new ChartRenderer(contentBox, workspace);
+        renderer = new ChartRenderer(contentBox);
     }
 
     /**
