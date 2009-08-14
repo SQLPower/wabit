@@ -43,7 +43,7 @@ public class ExportLayoutAction extends AbstractAction {
 	private final Layout layout;
 
 	public ExportLayoutAction(WabitSwingSession session, Layout layout) {
-		super("", new ImageIcon(ExportLayoutAction.class.getClassLoader().getResource("icons/wabit_exportLayout.png")));
+		super("", new ImageIcon(ExportLayoutAction.class.getClassLoader().getResource("icons/32x32/export.png")));
 		putValue(SHORT_DESCRIPTION, "Export layout to Wabit file");
 		this.session = session;
 		this.layout = layout;

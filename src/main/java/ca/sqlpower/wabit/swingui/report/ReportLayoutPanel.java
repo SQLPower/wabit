@@ -106,13 +106,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 
 	private static final ImageIcon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
 	private static final ImageIcon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
-	private static final ImageIcon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_out16.png"));
+	private static final ImageIcon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-minus.png"));
+	private static final ImageIcon ZOOM_IN_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/32x32/zoom-plus.png"));
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
-    public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/text_add.png"));		
-    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_horizontal.png"));
-    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/guides_add_vertical.png"));
-    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/zoom_fit16.png"));
-    private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/chart_bar_add.png"));
+    public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
+    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
+    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
+    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
+    private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/chart.png"));
     private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
     private static final ImageIcon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge_1.png")); //originally said throbber-badge.gif, that icon doesn't exist. I think this is what we need...
     
@@ -367,7 +368,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         	zoomSlider.setValue(report.getZoomLevel());
         }
         zoomPanel.add(zoomSlider, BorderLayout.CENTER);
-        zoomPanel.add(new JLabel(new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/zoom_in16.png"))), BorderLayout.EAST);
+		zoomPanel.add(new JLabel(ZOOM_IN_ICON), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
         toolbar.add(zoomPanel);
         toolbar.addSeparator();

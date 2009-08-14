@@ -84,7 +84,7 @@ public class PrintAction extends AbstractAction {
 
 	}
 
-    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/printer.png"));
+    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/32x32/print.png"));
     private final Layout layout;
     private final Component dialogOwner;
 	private final WabitSwingSession session;

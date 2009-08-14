@@ -90,7 +90,7 @@ public class WabitImagePanel implements WabitPanel {
      */
     private final JPanel panel = new JPanel();
     
-    private final Action browseForImageAction = new AbstractAction("", WabitSwingSessionContextImpl.OPEN_WABIT_ICON) {
+    private final Action browseForImageAction = new AbstractAction("", new ImageIcon(WabitImagePanel.class.getClassLoader().getResource("icons/32x32/open.png"))) {
     
         public void actionPerformed(ActionEvent e) {
             showImageBrowser();   

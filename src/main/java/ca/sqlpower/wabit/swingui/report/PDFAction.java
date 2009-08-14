@@ -48,7 +48,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class PDFAction extends AbstractAction {
 
-    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/page_white_acrobat.png"));
+    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/32x32/pdf.png"));
     
     /**
      * Controls whether or not this action should prompt when the user attempts

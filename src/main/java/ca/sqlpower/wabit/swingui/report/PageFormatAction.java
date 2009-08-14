@@ -35,7 +35,7 @@ import ca.sqlpower.wabit.report.Page;
  */
 public class PageFormatAction extends AbstractAction {
 
-    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/page_white_wrench.png"));
+    public static final Icon ICON = new ImageIcon(PageFormatAction.class.getResource("/icons/32x32/settings.png"));
     
     private final Page page;
 

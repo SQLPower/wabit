@@ -391,7 +391,7 @@ public class QueryPanel implements WabitPanel {
                 queryPenExecuteButtonAction,
                 queryCache.getQuery(),
                 WabitSwingSessionContextImpl.FORUM_ACTION);
-		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("ca/sqlpower/swingui/querypen/wabit_execute.png")));
+		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/32x32/run.png")));
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
 		

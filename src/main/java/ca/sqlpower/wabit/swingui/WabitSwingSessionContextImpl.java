@@ -293,7 +293,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     };
 
     public static final Icon NEW_ICON = new ImageIcon(
-            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/new.png"));
+            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/32x32/new.png"));
     
 	/**
 	 * Creates a popup menu with all the possible 'New <insert Wabit object
@@ -318,7 +318,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     };
     
     public static final Icon OPEN_ICON = new ImageIcon(
-    	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/open.png"));
+    	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/32x32/open.png"));
 
     /**
      * An action that creates a popup with an open and import option
@@ -339,7 +339,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     };
     
     public static final Icon SAVE_ICON = new ImageIcon(
-        	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/save.png"));
+        	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/32x32/save.png"));
 
     /**
      * An action that saves the current active workspace.

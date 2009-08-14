@@ -289,7 +289,7 @@ public class OlapQueryPanel implements WabitPanel {
         } 
         
         resetQueryButton = new JButton();
-        resetQueryButton.setIcon(new ImageIcon(OlapQueryPanel.class.getClassLoader().getResource("icons/reset.png")));
+        resetQueryButton.setIcon(new ImageIcon(OlapQueryPanel.class.getClassLoader().getResource("icons/32x32/cancel.png")));
         resetQueryButton.setToolTipText("Reset Query");
         resetQueryButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
