@@ -776,18 +776,35 @@ public class QueryPanel implements WabitPanel {
 	    toolBar.add(pen.getPlayPenExecuteButton());
 	    toolBar.addSeparator();
 
-	    JButton exportQuery = new JButton(new ExportQueryAction(session, queryCache));
-	    exportQuery.setToolTipText("Export query to Wabit file.");
-	    toolBar.add(exportQuery);
-	    JButton exportSQL = new JButton(new ExportSQLScriptAction(session, queryCache));
-	    exportSQL.setToolTipText("Export query to SQL script.");
-	    toolBar.add(exportSQL);
+	    JButton exportButton = new JButton(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+	    		if (e.getSource() instanceof JButton) {
+	    			JButton source = (JButton) e.getSource();
+	    			JPopupMenu popupMenu = new JPopupMenu();
+	    			JMenuItem menuItem = new JMenuItem(new ExportQueryAction(session, queryCache));
+	    			menuItem.setText("Export Query to Workspace file");
+	    			popupMenu.add(menuItem);
+	    			menuItem = new JMenuItem(new ExportSQLScriptAction(session, queryCache));
+	    			menuItem.setText("Export Query to SQL Script");
+	    			popupMenu.add(menuItem);
+	    			popupMenu.show(source, 0, source.getHeight());
+	    		}
+			}
+		});
+		exportButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/export.png")));
+		exportButton.setToolTipText("Export");
+	    toolBar.add(exportButton);
 	    toolBar.addSeparator();
 	    
-	    toolBar.add(pen.getDeleteButton());
-	    toolBar.add(pen.getCreateJoinButton());
+	    JButton deleteButton = pen.getDeleteButton();
+	    deleteButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/cancel.png")));
+		toolBar.add(deleteButton);
+	    JButton createJoinButton = pen.getCreateJoinButton();
+		createJoinButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/join.png")));
+	    toolBar.add(createJoinButton);
 	    toolBar.addSeparator();
-	    toolBar.add(pen.getZoomSliderContainer());
+	    JPanel zoomSliderContainer = pen.getZoomSliderContainer();
+		toolBar.add(zoomSliderContainer);
 	    toolBar.addSeparator();
 	        
 	    toolBar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
