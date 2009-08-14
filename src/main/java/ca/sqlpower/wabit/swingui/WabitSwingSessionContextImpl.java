@@ -37,6 +37,8 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -71,7 +73,6 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
-import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -103,13 +104,13 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.ServerListListener;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -131,7 +132,6 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
-import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -424,159 +424,20 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			if (tabIndex == -1) return;
 			treeTabbedPane.setSelectedIndex(tabIndex);
 			
-			Object[] data;
+			ByteArrayOutputStream output;
 			try {
-				Transferable t = dtde.getTransferable();
-				data = (Object[]) t.getTransferData(WabitObjectTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR);
+				Transferable transferable = dtde.getTransferable();
+				DataFlavor dataFlavor = WabitObjectTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR;
+				output = (ByteArrayOutputStream) transferable.getTransferData(dataFlavor);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 			
-			WabitSession activeSession = getActiveSession();
-			WabitWorkspace activeWorkspace = activeSession.getWorkspace();
+			byte[] outByteArray = output.toByteArray();
+			ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
 			
-			copyObjectsToActiveWorkspace(data, activeSession, activeWorkspace);
-			
-		}
-
-		/**
-		 * This copies a list of objects from the left hand side tree
-		 * to another Workspace
-		 * @param data
-		 * 		The data to copy to a new workspace: this is not an array of
-		 * 		WabitObjects because the user may accidentally pass in a folder
-		 * 		if they do we just skip it
-		 * @param activeSession
-		 * 		This is the session to add the objects to
-		 * @param activeWorkspace
-		 * 		This is the workspace to add the objects to
-		 * 
-		 * Note: this method will select the workspace you pass in in the tree
-		 */
-		private void copyObjectsToActiveWorkspace(Object[] data, WabitSession activeSession, WabitWorkspace activeWorkspace) {
-			for (Object object : data) {
-				if (object instanceof FolderNode) continue; //we can't copy folders over
-				
-				WabitObject wo = (WabitObject) object;
-				WabitObject newWO = null;
-				if (wo instanceof WabitDataSource) {
-					newWO = copyAndAddDatasource(activeSession, activeWorkspace, wo);
-					if (newWO == null) continue;
-				} else if (wo instanceof QueryCache) {
-					//TODO implement database user prompt
-					newWO = copyAndAddRelationalQuery(activeSession, activeWorkspace, (QueryCache) wo);
-				} else if (wo instanceof OlapQuery) {
-					//TODO implement database user prompt
-					newWO = copyAndAddOlapQuery(activeSession, activeWorkspace, (OlapQuery) wo);
-				} else if (wo instanceof Layout) {
-					Layout layout = ((Layout) wo); 
-					newWO = new Layout(layout, activeSession);
-				} else if (wo instanceof WabitImage) {
-					WabitImage image = new WabitImage(((WabitImage) wo));
-					activeWorkspace.addImage(image);
-					newWO = image;
-				} else {
-					throw new UnsupportedOperationException("Importing and exporting item of type "
-							+ wo.getClass().getName() + " is not yet supported.");
-				}
-				
-				JTree tree = getActiveSwingSession().getTree();
-				int queryIndex = tree.getModel().getIndexOfChild(activeWorkspace, newWO);
-				tree.setSelectionRow(queryIndex + 1);
-			}
-		}
-
-		/**
-		 * This adds a copy of the passed in OlapQuery to a given session
-		 * and its dependencies
-		 * 
-		 * @param activeSession	
-		 * 		The active session to add the relational query to.
-		 * @param activeWorkspace
-		 * 		The activeWorkspace to add the Relational Query to.
-		 * @param wo
-		 * 		The QueryCache to add to the session
-		 * @return
-		 * 		The new QueryCache object that was added to the session
-		 */
-		private WabitObject copyAndAddRelationalQuery(
-				WabitSession activeSession, WabitWorkspace activeWorkspace,
-				QueryCache wo) {
-			WabitObject newWO;
-			WabitObject dependantDS = copyAndAddDatasource(activeSession, activeWorkspace, wo.getDependencies().get(0));
-			JDBCDataSource newDependantDS = (JDBCDataSource)((WabitDataSource) dependantDS).getSPDataSource();
-			QueryCache query = new QueryCache(wo, false);
-			query.setDataSource(newDependantDS);
-			activeWorkspace.addQuery(query, activeSession);
-			newWO = query;
-			return newWO;
-		}
-
-		/**
-		 * This adds a copy of the passed in OlapQuery to a given session
-		 * and its dependencies
-		 * @param activeSession
-		 * @param activeWorkspace
-		 * @param wo
-		 * @return
-		 */
-		private WabitObject copyAndAddOlapQuery(WabitSession activeSession,
-				WabitWorkspace activeWorkspace, OlapQuery wo) {
-			WabitObject newWO;
-			WabitObject dependantDS = copyAndAddDatasource(activeSession, activeWorkspace, wo.getDependencies().get(0));
-			Olap4jDataSource olapDS = (Olap4jDataSource) ((WabitDataSource) dependantDS).getSPDataSource();
-			OlapQuery olapQuery = null;
-			try {
-				olapQuery = new OlapQuery(wo, olapDS);
-			} catch (Exception e) {
-				throw new RuntimeException("Error occured when copying Olap Query to the workspace "
-						+ activeWorkspace.getName(), e);
-			}
-			activeWorkspace.addOlapQuery(olapQuery);
-			newWO = olapQuery;
-			return newWO;
-		}
-		
-		/**
-		 * Copies a Datasource and adds it to a given session, this will prompt
-		 * the user to make sure they know that they're passing their username and password
-		 * to this session
-		 * @param activeSession
-		 * @param activeWorkspace
-		 * @param wo
-		 * @return
-		 */
-		private WabitObject copyAndAddDatasource(WabitSession activeSession,
-				WabitWorkspace activeWorkspace, WabitObject wo) {
-			WabitDataSource wds = (WabitDataSource) wo;
-			SPDataSource ds = wds.getSPDataSource();
-			WabitObject newWO = null;
-			
-			UserPrompter u = upf.createUserPrompter("WARNING by copying over the datasource " + ds.getDisplayName() + " to the workspace " +
-					activeWorkspace.getName() + "\nyou are also copying over your user name and password. Do you wish to continue?",
-					UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.CANCEL, null, "Continue", "Cancel");
-			UserPromptResponse r = u.promptUser();
-			
-			if (r.equals(UserPromptResponse.OK)) {
-				SPDataSource newDS = null;
-				if (ds instanceof JDBCDataSource) {
-					newDS = (SPDataSource) new JDBCDataSource(activeWorkspace);
-					newDS.copyFrom(ds);
-					newDS.setDisplayName(ds.getDisplayName());
-					activeSession.getDataSources().addDataSourceType(((JDBCDataSource)newDS).getParentType());
-				} else if (ds instanceof Olap4jDataSource) {
-					newDS = new Olap4jDataSource(activeWorkspace);
-					newDS.copyFrom(ds);
-				} else {
-					throw new UnsupportedOperationException("Datasource of type " + 
-							ds.getClass().getName() + " is not yet supported to be copied to another workspace.");
-				}
-				newWO = new WabitDataSource(newDS);
-				activeWorkspace.addDataSource((WabitDataSource) newWO);
-			} else {
-				return null;
-			}
-			return newWO;
+			OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
+			open.importWorkspaces(getActiveSession());
 		}
 
 		public void dropActionChanged(DropTargetDragEvent dtde) {

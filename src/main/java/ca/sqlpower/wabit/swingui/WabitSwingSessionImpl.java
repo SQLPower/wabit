@@ -26,7 +26,9 @@ import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,12 +63,14 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 
 /**
@@ -173,7 +177,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		workspaceTree.setRootVisible(false);
 		workspaceTree.setToggleClickCount(0);
 		workspaceTree.setUI(new MultiDragTreeUI());
-//		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
+		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
 		workspaceTree.setShowsRootHandles(true);
 		DragSource ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(workspaceTree, DnDConstants.ACTION_COPY, new DragGestureListener(){
@@ -181,12 +185,27 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			public void dragGestureRecognized(DragGestureEvent dge) {
 	            dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
 	            JTree t = (JTree) dge.getComponent();
-	            List<Object> selectedNodes = new ArrayList<Object>();
+	            List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
 	            for (TreePath path : t.getSelectionPaths()) {
-	            	selectedNodes.add(path.getLastPathComponent());
+	            	Object lastPathComponent = path.getLastPathComponent();
+					if (lastPathComponent instanceof FolderNode) continue;
+					wabitObjectsToExport.add((WabitObject) lastPathComponent);
+	            	
 	            }
+	            
+				if (wabitObjectsToExport.size() == 0) return;
+				
+				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+				WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, sessionContext);
+				dao.save(wabitObjectsToExport);
+				try {
+					byteOut.flush();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				
 	            dge.getDragSource().startDrag(dge, null, 
-	                    new WabitObjectTransferable(selectedNodes.toArray()), 
+	                    new WabitObjectTransferable(byteOut), 
 	                    new DragSourceAdapter() {//just need a default adapter
 	                    }
 	            );

@@ -27,13 +27,13 @@ import java.io.IOException;
 public class WabitObjectTransferable implements Transferable {
 	public static final DataFlavor LOCAL_OBJECT_ARRAY_FLAVOUR =
         new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
-                "; class=\"[Ljava.lang.Object;\"", "WabitObjectArray");
+                "; class=\"[Ljava.lang.Object;\"", "WabitByteStream");
 	
-	private final Object[] transferData;
+	private final Object byteStream;
 	
-	public WabitObjectTransferable(Object[] transferData) {
+	public WabitObjectTransferable(Object byteStream) {
 		super();
-		this.transferData = transferData;
+		this.byteStream = byteStream;
 	}
 	
 	public Object getTransferData(DataFlavor flavor)
@@ -41,7 +41,7 @@ public class WabitObjectTransferable implements Transferable {
 		if (flavor != LOCAL_OBJECT_ARRAY_FLAVOUR) {
 			throw new UnsupportedFlavorException(flavor);
 		}
-		return transferData;
+		return byteStream;
 	}
 
 	public DataFlavor[] getTransferDataFlavors() {

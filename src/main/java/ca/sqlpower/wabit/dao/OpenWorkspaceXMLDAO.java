@@ -264,7 +264,7 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
      */
     public void importWorkspaces(WabitSession session) {
         loadWorkspacesFromStream();
-        importWorkspaces(session);
+        addImportedWorkspaceContentToWorkspace(session);
     }
 
     public Integer getJobSize() {
