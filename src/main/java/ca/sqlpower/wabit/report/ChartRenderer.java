@@ -24,8 +24,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -73,6 +71,8 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.OlapQueryEvent;
+import ca.sqlpower.wabit.olap.OlapQueryListener;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
@@ -255,7 +255,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	private final Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis = new HashMap<ColumnIdentifier, ColumnIdentifier>();
 	
 	/**
-	 * This change listener watches for changes to the query and refreshes the
+	 * This change listener watches for changes to the streaming query and refreshes the
 	 * chart when a change occurs.
 	 */
 	private final RowSetChangeListener queryListener = new RowSetChangeListener() {
@@ -271,28 +271,14 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	 * XXX This can be simplified when the olap4j query can be listened to and we can specifically
 	 * listen for members in the column axis being removed.
 	 */
-	private final PropertyChangeListener olapQueryChangeListener = new PropertyChangeListener() {
+	private final OlapQueryListener olapQueryChangeListener = new OlapQueryListener() {
 
-        public void propertyChange(PropertyChangeEvent evt) {
+	    public void queryExecuted(OlapQueryEvent e) {
             
             if (!(query instanceof OlapQuery)) throw new IllegalStateException("The listener to update the chart on OLAP query changes was added to a query of type " + query + " which does not extend OlapQuery.");
             
-            OlapQuery olapQuery = (OlapQuery) query;
-            
-            CellSetAxis columnAxis;
-            final CellSet cellSet;
-            try {
-                
-                //XXX will need to be changed once the Olap4j Query can be listened to
-                cellSet = olapQuery.execute();
-                
-                columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-            } catch (Exception e) {
-            	logger.warn(e);
-               	return; //XXX should not squish this exception, when we can just listen to the query directly. The problem right
-               	//XXX now is that if a user has a query with a chart based upon it and they are just building up the query
-               	//XXX and it is broken, this will throw an error unneccesarily.
-            }
+            final CellSet cellSet = e.getCellSet();
+            CellSetAxis columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
             
             //XXX Positions aren't comparable so going to compare based on the unique names of their member list.
             //This can be simplified when positions become comparable or their equals method is defined.
@@ -320,7 +306,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
             }
             
         }
-	    
+
 	};
 	
 	/**
@@ -979,13 +965,13 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 			}
 		} else if (this.query instanceof OlapQuery) {
 		    if (this.query != null) {
-		        ((OlapQuery) this.query).removePropertyChangeListener(olapQueryChangeListener);
+		        ((OlapQuery) this.query).removeOlapQueryListener(olapQueryChangeListener);
 		    }
 		}
 		if (query instanceof StatementExecutor) {
 			((StatementExecutor) query).addRowSetChangeListener(queryListener);
 		} else if (query instanceof OlapQuery) {
-		    ((OlapQuery) query).addPropertyChangeListener(olapQueryChangeListener);
+		    ((OlapQuery) query).addOlapQueryListener(olapQueryChangeListener);
 		    if (logger.isDebugEnabled()) {
 		        logger.debug("Getting MDX Query");
 		        try {

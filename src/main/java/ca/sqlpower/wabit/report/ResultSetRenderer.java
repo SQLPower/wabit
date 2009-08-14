@@ -268,6 +268,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			if (evt.getPropertyName().equals("name")) {
 				setName("Result Set: " + query.getName());
 			}
+			//XXX This is not a property change. It should either be a new event type 
+			//or handle it directly.
 			firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
 		}
 	};
