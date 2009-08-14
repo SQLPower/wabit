@@ -695,7 +695,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
          	}
         } else if (name.equals("content-label")) {
-        	Label label = new Label(layout);
+        	Label label = new Label();
         	contentBox.setContentRenderer(label);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);

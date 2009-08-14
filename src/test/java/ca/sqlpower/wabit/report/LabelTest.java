@@ -30,7 +30,8 @@ public class LabelTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        label = new Label(new TestingVariableContext());
+        label = new Label();
+        label.setVariableContext(new TestingVariableContext());
     }
     
     @Override

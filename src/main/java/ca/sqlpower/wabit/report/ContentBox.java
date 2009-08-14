@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
@@ -112,7 +113,9 @@ public class ContentBox extends AbstractWabitObject {
     	} else if (oldContentRenderer instanceof ImageRenderer) {
     		newContentRenderer = new ImageRenderer((ImageRenderer) oldContentRenderer);
     	} else if (oldContentRenderer instanceof Label) {
-    		newContentRenderer = new Label((Label) oldContentRenderer, (Layout) this.getParent().getParent());
+    		Label newLabel = new Label((Label) oldContentRenderer);
+			newContentRenderer = newLabel;
+    		newLabel.setParent(this);
     	} else if (oldContentRenderer instanceof ChartRenderer) {
     		//TODO
 //    		newContentRenderer = new ChartRenderer((ChartRenderer) oldContentRenderer);
@@ -121,8 +124,7 @@ public class ContentBox extends AbstractWabitObject {
     				+ " not yet supported for copying.");
     		
     	}
-    	newContentRenderer.setParent(this);
-    	this.contentRenderer = newContentRenderer;
+    	setContentRenderer(newContentRenderer);
     }
 
     /**

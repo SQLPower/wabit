@@ -47,7 +47,7 @@ import ca.sqlpower.wabit.WabitVersion;
 /**
  * Represents a report layout in the Wabit.
  */
-public class Layout extends AbstractWabitObject implements Pageable, Printable, VariableContext {
+public class Layout extends AbstractWabitObject implements Pageable, Printable {
 
     private static final Logger logger = Logger.getLogger(Layout.class);
 
@@ -64,6 +64,35 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
 	 * A property that defines which page is currently being printed.
 	 */
 	public static final String PAGE_NUMBER = "page_number";
+	
+	public class LayoutVarContext implements VariableContext {
+	    /**
+	     * The variables defined for this report.
+	     */
+	    private final Map<String, Object> vars = new HashMap<String, Object>();
+	    
+	    public Set<String> getVariableNames() {
+	        return vars.keySet();
+	    }
+
+	    public Object getVariableValue(String name, Object defaultValue) {
+	        if (vars.containsKey(name)) {
+	            return vars.get(name);
+	        } else {
+	            return defaultValue;
+	        }
+	    }
+	    
+	    public Map<String, Object> getVars() {
+	    	return vars;
+		}
+	};
+	
+	public LayoutVarContext varContext = new LayoutVarContext();
+	
+	public LayoutVarContext getVarContext() {
+		return varContext;
+	}
     
     /**
      * The page size and margin info.
@@ -75,11 +104,6 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     private Page page;
     
     private int pageCount = Integer.MAX_VALUE;
-    
-    /**
-     * The variables defined for this report.
-     */
-    private final Map<String, Object> vars = new HashMap<String, Object>();
     
     /**
      * This is the zoom level for the views of this layout.
@@ -120,8 +144,8 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
     	setName(layout.getName());
     	page = new Page(layout.getPage());
     	page.setParent(this);
-    	for (String variableName : layout.getVariableNames()) {
-    		setVariable(variableName, layout.getVariableValue(variableName, null));
+    	for (String variableName : layout.getVarContext().getVariableNames()) {
+    		setVariable(variableName, layout.getVarContext().getVariableValue(variableName, null));
     	}
     	setZoomLevel(layout.getZoomLevel());
     	
@@ -139,20 +163,8 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         return page;
     }
     
-    public Set<String> getVariableNames() {
-        return vars.keySet();
-    }
-
-    public Object getVariableValue(String name, Object defaultValue) {
-        if (vars.containsKey(name)) {
-            return vars.get(name);
-        } else {
-            return defaultValue;
-        }
-    }
-    
     public void setVariable(String name, Object value) {
-        vars.put(name, value);
+        varContext.getVars().put(name, value);
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
@@ -191,7 +203,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setColor(Color.BLACK);
-        if (!((Boolean) getVariableValue(COUNTING_PAGES, false))) {
+        if (!((Boolean) getVarContext().getVariableValue(COUNTING_PAGES, false))) {
         	setVariable(PAGE_NUMBER, pageIndex + 1);
         }
         boolean needMorePages = false;

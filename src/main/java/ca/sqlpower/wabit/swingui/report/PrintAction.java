@@ -75,7 +75,7 @@ public class PrintAction extends AbstractAction {
 
 		@Override
 		protected int getProgressImpl() {
-			Object progressObject = printingLayout.getVariableValue(Layout.PAGE_NUMBER, progress);
+			Object progressObject = printingLayout.getVarContext().getVariableValue(Layout.PAGE_NUMBER, progress);
 			if (progressObject instanceof Integer) {
 				progress = ((Integer) progressObject).intValue();
 			}

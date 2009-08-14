@@ -113,7 +113,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         body.setY(p.getUpperMarginOffset());
         
         ContentBox header = new ContentBox();
-        header.setContentRenderer(new Label(l, layoutName));
+        header.setContentRenderer(new Label(layoutName));
         p.addContentBox(header);
         header.setWidth(pageBodyWidth / 2);
         header.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
@@ -122,9 +122,9 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         
         // shameless self promotion
         ContentBox dateHeader = new ContentBox();
-        Label dateLabel = new Label(l, "Generated on ${now}");
+        Label dateLabel = new Label("Generated on ${now}");
+        dateLabel.setParent(dateHeader);
         dateLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-        dateHeader.setContentRenderer(dateLabel);
         p.addContentBox(dateHeader);
         dateHeader.setWidth(pageBodyWidth - header.getWidth());
         dateHeader.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
@@ -132,7 +132,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         dateHeader.setY(p.getUpperMarginOffset() - dateHeader.getHeight());
         
         ContentBox footer = new ContentBox();
-        Label footerLabel = new Label(l, "Page ${page_number} of ${page_count}");
+        Label footerLabel = new Label("Page ${page_number} of ${page_count}");
         footerLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
         footer.setContentRenderer(footerLabel);
         // TODO add option for horizontal and vertical alignment (left, center, right, top, middle, bottom) in label
@@ -144,7 +144,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         
         // shameless self promotion
         ContentBox shameless = new ContentBox();
-        Label selfPromotionLabel = new Label(l,
+        Label selfPromotionLabel = new Label(
                 "Made with Wabit ${wabit_version} - Free Reporting That Just Works.  http://www.sqlpower.ca/wabit");
         selfPromotionLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
         selfPromotionLabel.setVerticalAlignment(VerticalAlignment.TOP);

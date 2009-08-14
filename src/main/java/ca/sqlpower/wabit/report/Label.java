@@ -52,7 +52,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     private HorizontalAlignment hAlignment = HorizontalAlignment.LEFT;
     private VerticalAlignment vAlignment = VerticalAlignment.MIDDLE;
     
-    private final VariableContext variableContext;
+    private VariableContext variableContext;
     
     /**
      * The font that this label is using to display text. If null, getFont()
@@ -71,8 +71,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * @param variableContext
      * @param text
      */
-    public Label(VariableContext variableContext, String text) {
-        this.variableContext = variableContext; //XXX this is essentially the grandparent, should be set where it is created
+    public Label(String text) {
         this.text = text;
         setName("Label");
     }
@@ -80,8 +79,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     /**
      * Copy constructor
      */
-    public Label(Label label, VariableContext variableContext) {
-    	this.variableContext = variableContext; //XXX this is essentially the grandparent, should be set where it is created
+    public Label(Label label) {
     	this.text = label.getText();
     	this.hAlignment = label.getHorizontalAlignment();
     	this.backgroundColour = label.getBackgroundColour();
@@ -93,8 +91,8 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     	//do nothing
     }
     
-    public Label(VariableContext variableContext) {
-        this(variableContext, null);
+    public Label() {
+        this("");
         setName("Label");
     }
     
@@ -150,6 +148,13 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
             return null;
         }
     }
+    
+    /**
+     * ONLY USED FOR TESTING
+     */
+    public void setVariableContext(VariableContext variableContext) {
+		this.variableContext = variableContext;
+	}
 
 	/**
 	 * Renders this label to the given graphics, with the baseline centered in
@@ -184,7 +189,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * Return the Label text with variables substituted.
      */
     String[] getVariableSubstitutedText() {
-		return Variables.substitute(text, variableContext).split("\n");
+		return Variables.substitute(text, getVariableContext()).split("\n");
 	}
 
     @Override
@@ -222,6 +227,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     }
 
     public VariableContext getVariableContext() {
+    	variableContext = ((Layout)getParent().getParent().getParent()).getVarContext();
         return variableContext;
     }
     
