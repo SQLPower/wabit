@@ -298,6 +298,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     	this.borderType = resultSetRenderer.borderType;
     	this.executeException = resultSetRenderer.executeException;
     	this.headerFont = resultSetRenderer.headerFont;
+    	this.bodyFont = resultSetRenderer.bodyFont;
     	this.nullString = resultSetRenderer.nullString;
     	this.printingGrandTotals = resultSetRenderer.printingGrandTotals;
     	query.addPropertyChangeListener(queryChangeListener);
