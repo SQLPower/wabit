@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.swing.JTable;
 
@@ -137,8 +136,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private Member selectedMember;
 
     /**
-     * This listener will listen for changes to the query and set the refresh
-     * variable to decide when to refresh.
+     * Listens to the query and updates the view every time the query has been executed.
      */
     private final OlapQueryListener queryListener = new OlapQueryListener() {
 		public void queryExecuted(OlapQueryEvent evt) {
