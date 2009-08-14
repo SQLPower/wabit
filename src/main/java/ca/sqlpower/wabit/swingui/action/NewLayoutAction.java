@@ -40,7 +40,7 @@ public class NewLayoutAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        Layout layout = new Layout("New Layout");
+        Layout layout = new Layout("New Report");
 		session.getWorkspace().addLayout(layout);
     }
 }

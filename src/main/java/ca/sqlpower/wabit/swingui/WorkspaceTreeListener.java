@@ -304,6 +304,17 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		JPopupMenu menu = new JPopupMenu();
 		final Object lastPathComponent = getLastPathComponent(e);
 
+		JMenuItem newQuery = new JMenuItem(new NewQueryAction(session));
+		newQuery.setIcon(WorkspaceTreeCellRenderer.QUERY_ICON);
+		
+		JMenuItem newOlapQuery = new JMenuItem(new NewOLAPQueryAction(session));
+		newOlapQuery.setIcon(WorkspaceTreeCellRenderer.OLAP_QUERY_ICON);
+		
+		JMenuItem newImage = new JMenuItem(new NewImageAction(session));
+		
+		JMenuItem newLayout = new JMenuItem(new NewLayoutAction(session));
+		newLayout.setIcon(WorkspaceTreeCellRenderer.LAYOUT_ICON);
+		
 		if (lastPathComponent != null) {
 			JTree tree = (JTree) e.getSource();
 			if (lastPathComponent instanceof FolderNode) {
@@ -318,22 +329,28 @@ public class WorkspaceTreeListener extends MouseAdapter {
 
 					menu.add(createDataSourcesMenu());
 				} else if (lastFolderNode.getFolderType().equals(FolderType.QUERIES)) {
-					menu.add(new NewQueryAction(session));
-					menu.add(new NewOLAPQueryAction(session));
+					menu.add(newQuery);
+					menu.add(newOlapQuery);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.IMAGES)) {
-					menu.add(new NewImageAction(session));
+					menu.add(newImage);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTS)) {
-					menu.add(new NewLayoutAction(session));
+					menu.add(newLayout);
 				}
 			} else {
 				if (lastPathComponent instanceof WabitDataSource) {
 					SPDataSource ds = ((WabitDataSource) lastPathComponent).getSPDataSource();
 					if (ds instanceof JDBCDataSource) {
-						menu.add(new NewQueryAction(session, (JDBCDataSource) ds));
+						NewQueryAction newQueryOnDS = new NewQueryAction(session, (JDBCDataSource) ds);
+						JMenuItem newQueryItem = new JMenuItem(newQueryOnDS);
+						newQueryItem.setIcon(WorkspaceTreeCellRenderer.QUERY_ICON);
+						menu.add(newQueryItem);
 						menu.addSeparator();
 					}
 					if (ds instanceof Olap4jDataSource) {
-						menu.add(new NewOLAPQueryAction(session, (Olap4jDataSource) ds));
+						NewOLAPQueryAction newOlapQueryOnDS = new NewOLAPQueryAction(session, (Olap4jDataSource) ds);
+						JMenuItem newOlapQueryItem = new JMenuItem(newOlapQueryOnDS);
+						newOlapQueryItem.setIcon(WorkspaceTreeCellRenderer.OLAP_QUERY_ICON);
+						menu.add(newOlapQueryItem);
 						menu.addSeparator();
 					}
 					menu.add(new AbstractAction("Database Connection Manager...") {
@@ -347,18 +364,18 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.addSeparator();
 					menu.add(new CopyOlapDatasource(session, (WabitDataSource) lastPathComponent));
 				} else if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof OlapQuery) {
-					menu.add(new NewQueryAction(session));
-					menu.add(new NewOLAPQueryAction(session));
+					menu.add(newQuery);
+					menu.add(newOlapQuery);
 					
 					menu.addSeparator();
 					menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
 				} else if (lastPathComponent instanceof Layout) {
-					menu.add(new NewLayoutAction(session));
+					menu.add(newLayout);
 					
 					menu.addSeparator();
 					menu.add(new CopyLayoutAction((Layout) lastPathComponent, session));
 				} else if (lastPathComponent instanceof WabitImage) {
-					menu.add(new NewImageAction(session));
+					menu.add(newImage);
 					
 					menu.addSeparator();
 					menu.add(new CopyImageAction(session, (WabitImage) lastPathComponent));
@@ -393,10 +410,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			menu.add(createDataSourcesMenu());
 			menu.addSeparator();
 			
-			menu.add(new NewQueryAction(session));
-			menu.add(new NewOLAPQueryAction(session));
-			menu.add(new NewLayoutAction(session));
-			menu.add(new NewImageAction(session));
+			menu.add(newQuery);
+			menu.add(newOlapQuery);
+			menu.add(newLayout);
+			menu.add(newImage);
 		}
 		if (!(lastPathComponent instanceof ContentBox)) {
 			menu.show(e.getComponent(), e.getX(), e.getY());
