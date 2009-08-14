@@ -177,7 +177,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		workspaceTree.setRootVisible(false);
 		workspaceTree.setToggleClickCount(0);
 		workspaceTree.setUI(new MultiDragTreeUI());
-		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
+//		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
 		workspaceTree.setShowsRootHandles(true);
 		DragSource ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(workspaceTree, DnDConstants.ACTION_COPY, new DragGestureListener(){
