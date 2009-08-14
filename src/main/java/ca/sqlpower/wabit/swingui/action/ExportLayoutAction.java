@@ -54,7 +54,7 @@ public class ExportLayoutAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
 	    File defaultFile = null;
 	    if (context.getActiveSession() != null) {
-	        defaultFile = context.getActiveSwingSession().getCurrentFile();
+	        defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
 	    }
 		JFileChooser fc = new JFileChooser(defaultFile);
 		fc.setDialogTitle("Select the file to save to.");

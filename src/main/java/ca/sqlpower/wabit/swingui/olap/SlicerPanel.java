@@ -241,6 +241,7 @@ public class SlicerPanel extends JPanel {
                     	olapQuery.addToAxis(0, m, Axis.FILTER);
                     }
         			resetUI();
+        			olapQuery.execute();
                     return true;
 
                 } catch (Exception e) {

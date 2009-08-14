@@ -25,8 +25,14 @@ package ca.sqlpower.wabit.olap;
  * UI classes.
  */
 public interface OlapQueryListener {
-	/**
-	 * Called when {@link OlapQuery#execute()} has been called. 
-	 */
+
+    /**
+     * Called when {@link OlapQuery#execute()} has finished, and provides a
+     * reference to the cell set produced by the execution of the query. If you
+     * are consuming this event from a single-threaded subsystem (such as a
+     * Swing user interface), beware that this event might be delivered on a
+     * worker thread!
+     */
 	public void queryExecuted(OlapQueryEvent e);
+
 }

@@ -65,7 +65,7 @@ public class ImportWorkspaceAction extends AbstractAction {
 	    
 	    File defaultFile = null;
         if (context.getActiveSession() != null) {
-            defaultFile = context.getActiveSwingSession().getCurrentFile();
+            defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
         }
 		JFileChooser fc = new JFileChooser(defaultFile);
 		fc.setDialogTitle("Select the file to import from.");

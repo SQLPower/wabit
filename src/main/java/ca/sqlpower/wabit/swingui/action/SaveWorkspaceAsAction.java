@@ -60,7 +60,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 	public boolean save() {
 	    if (context.getActiveSession() == null) return false;
 	    
-		JFileChooser fc = new JFileChooser(context.getActiveSwingSession().getCurrentFile());
+		JFileChooser fc = new JFileChooser(context.getActiveSwingSession().getCurrentURIAsFile());
 		fc.setDialogTitle("Select the directory to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 		
@@ -89,7 +89,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 		    throw new RuntimeException(e);
 		}
 		
-		this.context.getActiveSwingSession().setCurrentFile(selectedFile);
+		this.context.getActiveSwingSession().setCurrentURI(selectedFile.toURI());
 		
 		context.putRecentFileName(selectedFile.getAbsolutePath());
 		context.setStatusMessage("Saved " + context.getActiveSession().getWorkspace().getName() + " to " +

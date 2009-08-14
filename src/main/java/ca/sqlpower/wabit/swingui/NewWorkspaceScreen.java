@@ -82,7 +82,7 @@ public class NewWorkspaceScreen {
 	
 	public NewWorkspaceScreen(final WabitSwingSessionContext context) {
 		this.context = context;
-        session = new WabitSwingSessionImpl(context);
+        session = context.createSession();
 		
         session.getWorkspace().addDatabaseListChangeListener(workspaceDataSourceListener);
 		
@@ -93,7 +93,7 @@ public class NewWorkspaceScreen {
 	
 	public NewWorkspaceScreen(WabitSwingSessionContext context, WabitServerInfo serverInfo) {
 	    this.context = context;
-        session = new WabitSwingSessionImpl(serverInfo, context);
+        session = context.createServerSession(serverInfo);
         
         session.getWorkspace().addDatabaseListChangeListener(workspaceDataSourceListener);
         

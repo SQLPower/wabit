@@ -19,8 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -70,12 +68,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     private final Query query;
     
-    /**
-     * This property change support object is used to forward timer events from the 
-     * worker this class is running in to classes listening for the timer event.
-     */
-    private final PropertyChangeSupport timerPCS = new PropertyChangeSupport(this);
-    
     private final List<CachedRowSet> resultSets = new ArrayList<CachedRowSet>();
     
     private final List<Integer> updateCounts = new ArrayList<Integer>();
@@ -99,21 +91,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * This is only used if {@link Query#streaming} is true.
      */
     private Connection currentConnection; 
-    
-    /**
-     * This listener is used to forward the timer events to the timerPCS object
-     * for classes listening for timer events.
-     */
-    private final ActionListener timerListener = new ActionListener() {
-        
-        private int timerTicks = 0;
-        
-        public void actionPerformed(ActionEvent e) {
-            int oldTimer = timerTicks;
-            timerTicks++;
-            timerPCS.firePropertyChange("timerTicks", oldTimer, timerTicks);
-        }
-    };
     
     /**
      * A change listener to flush the cached row sets on a row limit change.
@@ -190,10 +167,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     public QueryCache(String uuid, SQLDatabaseMapping dbMapping) {
         query = new Query(uuid, dbMapping);
-    }
-
-    public void addTimerListener(PropertyChangeListener l) {
-        timerPCS.addPropertyChangeListener(l);
     }
 
     /**
@@ -413,14 +386,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return new WabitDataSource(query.getDatabase().getDataSource());
     }
 
-    public ActionListener getTimerListener() {
-        return timerListener;
-    }
-
-    public void removeTimerListener(PropertyChangeListener l) {
-        timerPCS.removePropertyChangeListener(l);
-    }
-    
     public void addRowSetChangeListener(RowSetChangeListener l) {
         rowSetChangeListeners.add(l);
     }

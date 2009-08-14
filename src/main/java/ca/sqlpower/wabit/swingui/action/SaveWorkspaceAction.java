@@ -60,7 +60,9 @@ public class SaveWorkspaceAction extends AbstractAction {
 	public static boolean save(WabitSwingSessionContext context) {
 	    if (context.getActiveSession() == null) return false;
 	    
-		File currentFile = context.getActiveSwingSession().getCurrentFile();
+	    // TODO this will move into the session impl, and a corresponding interface method will appear on WabitSession
+	    // see bug 2092 for details
+		File currentFile = context.getActiveSwingSession().getCurrentURIAsFile();
         if (currentFile != null) {
 			WorkspaceXMLDAO workspaceSaver;
 			int lastIndexOfDecimal = currentFile.getName().lastIndexOf(".");

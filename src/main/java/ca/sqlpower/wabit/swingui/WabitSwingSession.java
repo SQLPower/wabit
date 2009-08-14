@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.io.File;
+import java.net.URI;
 
 import javax.swing.JTree;
 
@@ -52,13 +53,32 @@ public interface WabitSwingSession extends WabitSession {
     DatabaseConnectionManager getDbConnectionManager();
     
     /**
-     * Set the file that the session was most recently loaded from or saved to.
+     * Sets the URI that this session was most recently loaded from or saved to,
+     * and resets the unsaved changes flag for this session.
      */
-    void setCurrentFile(File file);
+    void setCurrentURI(URI uri);
     
     /**
-     * Get the file that the session was most recently loaded from or saved to.
+     * Returns the URI that this session was most recently loaded from or saved to.
      */
-    File getCurrentFile();
+    URI getCurrentURI();
+
+    /**
+     * Returns the current URI as a File object, if the current URI is not null
+     * and it actually represents a file on a locally-accessible filesystem.
+     * Otherwise, returns null (for example, if the current URI is an HTTP URI
+     * or represents a Java system resource).
+     * 
+     * @see #getCurrentURI()
+     */
+    File getCurrentURIAsFile();
     
+    /**
+     * Reports whether or not any changes have been detected in this workspace
+     * since it was opened or last saved.
+     * 
+     * @see #setCurrentURI(URI)
+     */
+    boolean hasUnsavedChanges();
+
 }

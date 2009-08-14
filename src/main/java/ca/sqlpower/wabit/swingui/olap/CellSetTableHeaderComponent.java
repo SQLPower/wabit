@@ -334,6 +334,7 @@ public class CellSetTableHeaderComponent extends JComponent {
                     	query.addToAxis(calcDropInsertIndex(p), m, axis);
                     }
                     logger.debug("  -- import complete");
+                    query.execute();
                     return true;
 
                 } catch (Exception e) {

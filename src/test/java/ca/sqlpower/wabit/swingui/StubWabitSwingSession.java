@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.net.URI;
 import java.sql.Connection;
 import java.util.List;
 
@@ -129,13 +130,22 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		return null;
 	}
 
-    public File getCurrentFile() {
+    public File getCurrentURIAsFile() {
         // TODO Auto-generated method stub
         return null;
     }
 
-    public void setCurrentFile(File file) {
+    public URI getCurrentURI() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void setCurrentURI(URI uri) {
         // TODO Auto-generated method stub
         
+    }
+
+    public boolean hasUnsavedChanges() {
+        return false;
     }
 }

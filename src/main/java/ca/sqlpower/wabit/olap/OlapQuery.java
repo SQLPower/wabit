@@ -58,6 +58,7 @@ import org.xml.sax.Attributes;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.xml.XMLHelper;
@@ -66,7 +67,7 @@ import ca.sqlpower.xml.XMLHelper;
  * This is the model of an OLAP query. This will store all values that need to be persisted
  * in an OLAP query.
  */
-public class OlapQuery extends AbstractWabitObject {
+public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWorker {
     
     private static final Logger logger = Logger.getLogger(OlapQuery.class);
     
@@ -158,6 +159,13 @@ public class OlapQuery extends AbstractWabitObject {
      * A List of {@link OlapQueryListener} objects that will be listening to
      * changes to this OlapQuery instance. Currently, it is primarily used
      * to notify listeners when the query has been executed.
+     * <p>
+     * Although this appears to overlap somewhat with the PropertyChangeEvent
+     * for "running" which indicates to the session that this WabitObject is
+     * doing work in the background, it serves a slightly different purpose
+     * since it actually delivers the new successful result to the listener.
+     * All the "running" property change does is notify listeners of the state
+     * transitions themselves. 
      */
     private final List<OlapQueryListener> listeners = new ArrayList<OlapQueryListener>();
     
@@ -212,7 +220,8 @@ public class OlapQuery extends AbstractWabitObject {
 	 * last one it returned. Olap4j CellSet instances can be safely used from
 	 * multiple threads.
 	 * <p>
-	 * TODO discuss thread safety of this operation
+	 * TODO discuss thread safety of this operation: what if the query is already running?
+	 * (should probably cancel and reexecute)
 	 * 
 	 * @return The {@link CellSet} result of the execution of the query. If the
 	 *         query has no dimensions in either it's row or column axis
@@ -224,22 +233,28 @@ public class OlapQuery extends AbstractWabitObject {
 	 */
     public CellSet execute() throws OlapException, QueryInitializationException {
         logger.debug("Executing MDX query...");
-        // TODO execute the textual query if there is one
-        CellSet cellSet = null;
-        if (getRowHierarchies().size() > 0 &&
-        		getColumnHierarchies().size() > 0) {
-        	cellSet = getMDXQuery().execute();
+        try {
+            setRunning(true);
+            // TODO execute the textual query if there is one
+            CellSet cellSet = null;
+            if (getRowHierarchies().size() > 0 &&
+                    getColumnHierarchies().size() > 0) {
+                cellSet = getMDXQuery().execute();
+            }
+            fireQueryExecuted(cellSet);
+            return cellSet;
+        } finally {
+            setRunning(false);
         }
-        fireQueryExecuted(cellSet);
-		return cellSet;
     }
     
     private void fireQueryExecuted(CellSet cellSet) {
-    	for (OlapQueryListener listener: listeners) {
-    		listener.queryExecuted(new OlapQueryEvent(cellSet));
-    	}
-	}
-    
+        OlapQueryEvent e = new OlapQueryEvent(this, cellSet);
+        for (int i = listeners.size() - 1; i >= 0; i--) {
+            listeners.get(i).queryExecuted(e);
+        }
+    }
+
 	/**
 	 * Removes the given {@link Hierarchy} from the given {@link Axis} in the
 	 * query
@@ -748,7 +763,6 @@ public class OlapQuery extends AbstractWabitObject {
 		if (!(member instanceof Measure) && qa.getLocation() != Axis.FILTER) {
 			qd.setHierarchizeMode(HierarchizeMode.PRE);
         }
-    	execute();
     }
 
     public List<Hierarchy> getRowHierarchies() throws QueryInitializationException {
@@ -922,4 +936,26 @@ public class OlapQuery extends AbstractWabitObject {
 		QueryDimension dimension = getMDXQuery().getDimension(hierarchy.getDimension().getName());
 		dimension.clearExclusions();
 	}
+
+	// -------------- WabitBackgroundWorker interface --------------
+	
+	private volatile boolean backgroundWorkerRunning;
+	
+    public void cancel() {
+        // TODO
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private void setRunning(boolean running) {
+        boolean oldValue = backgroundWorkerRunning;
+        backgroundWorkerRunning = running;
+        firePropertyChange("running", oldValue, running);
+    }
+    
+    public boolean isRunning() {
+        return backgroundWorkerRunning;
+    }
+
+    // -------------- End of WabitBackgroundWorker interface --------------
+
 }

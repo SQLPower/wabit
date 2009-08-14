@@ -29,6 +29,7 @@ import java.beans.PropertyChangeListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,11 +38,9 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JTree;
-import javax.swing.event.TreeModelEvent;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -58,14 +57,13 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionImpl;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
@@ -80,12 +78,17 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     
     private static final Icon DB_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
-	private static Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
+	private static final Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	
 	private final WabitSwingSessionContext sessionContext;
 	
 	private final JTree workspaceTree;
 	
+    /**
+     * The cell renderer for this session's workspace tree.
+     */
+    private final WorkspaceTreeCellRenderer renderer = new WorkspaceTreeCellRenderer();
+
 	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
 
@@ -94,31 +97,78 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * pl.ini file. This DB connection manager can be used anywhere needed in 
 	 * wabit. 
 	 */
-	private DatabaseConnectionManager dbConnectionManager;
+	private final DatabaseConnectionManager dbConnectionManager;
 	
 	/**
 	 * A {@link UserPrompterFactory} that will create a dialog for users to choose an existing
 	 * DB or create a new one if they load a workspace with a DB not in their pl.ini.
 	 */
-	private UserPrompterFactory upfMissingLoadedDB;
+	private final UserPrompterFactory upfMissingLoadedDB;
 	
 	/**
 	 * All of the session specific operations should be delegated to this session.
 	 * This class is mainly used to tie Swing objects to a core session.
 	 */
-	private WabitSession delegateSession;
+	private final WabitSession delegateSession;
 	
+	/**
+	 * Gets set to true whenever a change (child added/removed or property
+	 * changed) is observed in any of the objects under (and including) the
+	 * workspace.
+	 */
+	private boolean unsavedChangesExist = false;
+	
+    /**
+     * Multipurpose event handler that watches every WabitObject in this
+     * session's workspace for property changes, and handles them appropriately.
+     */
+	private class WorkspaceWatcher implements WabitChildListener, PropertyChangeListener {
+
+        public WorkspaceWatcher(WabitWorkspace workspace) {
+            WabitUtils.listenToHierarchy(workspace, this, this);
+        }
+	    
+        public void wabitChildAdded(WabitChildEvent e) {
+            WabitUtils.listenToHierarchy(e.getChild(), this, this);
+            unsavedChangesExist = true;
+        }
+
+        public void wabitChildRemoved(WabitChildEvent e) {
+            WabitUtils.unlistenToHierarchy(e.getChild(), this, this);
+            unsavedChangesExist = true;
+        }
+
+        public void propertyChange(PropertyChangeEvent evt) {
+            if ("running".equals(evt.getPropertyName())) {
+                WabitObject src = (WabitObject) evt.getSource();
+                Boolean isRunning = (Boolean) evt.getNewValue();
+                if (isRunning) {
+                    logger.info(evt.getSource() + " is running now");
+                    renderer.updateTimer(src, 0); // TODO animate!
+                    workspaceTree.repaint(workspaceTree.getPathBounds(workspaceTreeModel.createTreePathForObject(src)));
+                } else {
+                    logger.info(evt.getSource() + " has stopped running");
+                    renderer.removeTimer(src);
+                    workspaceTree.repaint(workspaceTree.getPathBounds(workspaceTreeModel.createTreePathForObject(src)));
+                }
+            } else {
+                unsavedChangesExist = true;
+            }
+        }
+	    
+	}
+
 	/**
 	 * The model behind the workspace tree on the left side of Wabit.
 	 */
-	private WorkspaceTreeModel workspaceTreeModel;
+	private final WorkspaceTreeModel workspaceTreeModel;
 	
     /**
-     * This is the most recent file loaded in this context or the last
-     * file that the context was saved to. This will be null if no file has
-     * been loaded or the workspaces has not been saved yet.
+     * This is the most recent URI this session was saved to or the URI
+     * this session was loaded from if it has not been saved. This will
+     * be null for new sessions that have not been saved.
      */
-    private File currentFile = null;
+    private URI currentURI = null;
 	
     /**
      * This listener is attached to the active session's workspace and will
@@ -163,20 +213,32 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         };
     };
 
-	/**
-	 * Creates a new session 
-	 * 
-	 * @param context
-	 */
-	public WabitSwingSessionImpl(WabitSwingSessionContext context) {
-	    delegateSession = new WabitSessionImpl(context);
+    /**
+     * Creates a new session that belongs to the given context and delegates
+     * some of its work to the given delegate session.
+     * <p>
+     * To create an instance of this class, use
+     * {@link WabitSwingSessionContextImpl#createSession()}.
+     * 
+     * @param context The context this session belongs to.
+     * @param delegateSession The session to delegate some WabitSession operations to.
+     */
+	WabitSwingSessionImpl(WabitSwingSessionContext context, WabitSession delegateSession) {
+	    this.delegateSession = delegateSession;
 		sessionContext = context;
+		
+		new WorkspaceWatcher(delegateSession.getWorkspace());
 		
 		workspaceTreeModel = new WorkspaceTreeModel(delegateSession.getWorkspace());
 		workspaceTree = new JTree(workspaceTreeModel);
 		workspaceTree.setRootVisible(false);
 		workspaceTree.setToggleClickCount(0);
-		workspaceTree.setUI(new MultiDragTreeUI());
+
+        dbConnectionManager = createDbConnectionManager();
+        
+        upfMissingLoadedDB = new SwingUIUserPrompterFactory(sessionContext.getFrame());
+
+        workspaceTree.setUI(new MultiDragTreeUI());
 //		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
 		workspaceTree.setShowsRootHandles(true);
 		DragSource ds = new DragSource();
@@ -213,106 +275,35 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         	
         });
 
-		
-        //Temporary upfMissingLoadedDB factory that is not parented in case there is no frame at current.
-        //This should be replaced in the buildUI with a properly parented prompter factory.
-        upfMissingLoadedDB = new SwingUIUserPrompterFactory(null);
-		
-        buildUIComponents();
-        getWorkspace().addPropertyChangeListener(workspaceEditorModelListener);
-        getContext().addPropertyChangeListener(loadingContextListener);
-	}
-	
-	public WabitSwingSessionImpl(WabitServerInfo serverInfo,
-            WabitSwingSessionContext context) {
-        this(context);
-        delegateSession = new WabitServerSession(serverInfo, context);
-    }
-	
-    /**
-	 *  Builds the GUI pieces that belong to this session.
-	 */
-    public void buildUIComponents() {
-		
-		List<Class<? extends SPDataSource>> newDSTypes = new ArrayList<Class<? extends SPDataSource>>();
-        newDSTypes.add(JDBCDataSource.class);
-        newDSTypes.add(Olap4jDataSource.class);
-        dbConnectionManager = new DatabaseConnectionManager(getDataSources(), 
-				new DefaultDataSourceDialogFactory(), 
-				new DefaultDataSourceTypeDialogFactory(getDataSources()),
-				new ArrayList<Action>(), new ArrayList<JComponent>(), sessionContext.getFrame(), false, newDSTypes);
-		dbConnectionManager.setDbIcon(DB_ICON);
-		
-		upfMissingLoadedDB = new SwingUIUserPrompterFactory(sessionContext.getFrame());
+        workspaceTree.setCellRenderer(renderer);
+        workspaceTree.setCellEditor(new WorkspaceTreeCellEditor(workspaceTree, renderer));
+        workspaceTree.addMouseListener(new WorkspaceTreeListener(this));
+        workspaceTree.setEditable(true);
         
-		final WorkspaceTreeCellRenderer renderer = new WorkspaceTreeCellRenderer();
-		workspaceTree.setCellRenderer(renderer);
-		workspaceTree.setCellEditor(new WorkspaceTreeCellEditor(workspaceTree, renderer));
-		
-		for (final QueryCache queryCache : getWorkspace().getQueries()) {
-		    //Repaints the tree when the worker thread's timer fires. This will allow the tree node
-		    //to paint a throbber badge on the query node.
-		    queryCache.addTimerListener(new PropertyChangeListener() {
-		        public void propertyChange(PropertyChangeEvent evt) {
-		            renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-		            workspaceTree.repaint(workspaceTree.getPathBounds(new TreePath(new WabitObject[]{getWorkspace(), queryCache})));
-		        }
-		    });
-
-		    //This removes the timer from the query if the query has stopped running.
-		    queryCache.addPropertyChangeListener(new PropertyChangeListener() {
-		        public void propertyChange(PropertyChangeEvent evt) {
-		            if (evt.getPropertyName().equals(QueryCache.RUNNING) && !((Boolean) evt.getNewValue())) {
-		                renderer.removeTimer(queryCache);
-		                workspaceTree.repaint(workspaceTree.getPathBounds(
-		                        new TreePath(new WabitObject[]{delegateSession.getWorkspace(), queryCache})));
-		            }
-		        }
-		    });
-		}
-		
-		//XXX Pull this out into a final variable
-		//This is a listener on each query cache that forwards timer events to
-		//the renderer to update a throbber badge on the query's image when the
-		//query is running.
-		workspaceTree.getModel().addTreeModelListener(new TreeModelAdapter() {
-			@Override
-			public void treeNodesInserted(final TreeModelEvent e) {
-				for (int i = 0; i < e.getChildren().length; i++) {
-					if (e.getChildren()[i] instanceof QueryCache) {
-						final QueryCache queryCache = (QueryCache) e.getChildren()[i];
-						final TreePath treePath = e.getTreePath();
-						queryCache.addTimerListener(new PropertyChangeListener() {
-							public void propertyChange(PropertyChangeEvent evt) {
-								renderer.updateTimer(queryCache, (Integer) evt.getNewValue());
-								workspaceTree.repaint(workspaceTree.getPathBounds(
-								        new TreePath(new WabitObject[]{getWorkspace(), queryCache})));
-							}
-						});
-						queryCache.addPropertyChangeListener(new PropertyChangeListener() {
-							public void propertyChange(PropertyChangeEvent evt) {
-								if (evt.getPropertyName().equals("running") && !((Boolean) evt.getNewValue())) {
-									renderer.removeTimer(queryCache);
-									workspaceTree.repaint(workspaceTree.getPathBounds(
-									        new TreePath(new WabitObject[]{getWorkspace(), queryCache})));
-								}
-							}
-						});
-					}
-				}
-			}
-		});
-		workspaceTree.addMouseListener(new WorkspaceTreeListener(this));
-    	workspaceTree.setEditable(true);
-
-    	//Sets the editor panel if it is not set when creating the UI 
-    	//components. This may need to move elsewhere.
+        //Sets the editor panel if it is not set when creating the UI 
+        //components. This may need to move elsewhere.
         if (getWorkspace().getEditorPanelModel() == null) {
         	getWorkspace().setEditorPanelModel(getWorkspace());
         }
-    	
+        getWorkspace().addPropertyChangeListener(workspaceEditorModelListener);
+        getContext().addPropertyChangeListener(loadingContextListener);
+	}
+
+	/**
+	 * Constructor subroutine that builds the DB connection manager for this session.
+	 */
+    private DatabaseConnectionManager createDbConnectionManager() {
+        List<Class<? extends SPDataSource>> newDSTypes = new ArrayList<Class<? extends SPDataSource>>();
+        newDSTypes.add(JDBCDataSource.class);
+        newDSTypes.add(Olap4jDataSource.class);
+        DatabaseConnectionManager dbcm = new DatabaseConnectionManager(getDataSources(), 
+                new DefaultDataSourceDialogFactory(), 
+                new DefaultDataSourceTypeDialogFactory(getDataSources()),
+                new ArrayList<Action>(), new ArrayList<JComponent>(), sessionContext.getFrame(), false, newDSTypes);
+        dbcm.setDbIcon(DB_ICON);
+        return dbcm;
     }
-    
+	
     public DataSourceCollection<SPDataSource> getDataSources() {
         return delegateSession.getDataSources();
     }
@@ -377,12 +368,30 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return upfMissingLoadedDB.createDatabaseUserPrompter(question, dsTypes, optionType, defaultResponseType,
 				defaultResponse, dsCollection, buttonNames);
 	}
-	
-    public File getCurrentFile() {
-        return currentFile;
-    }
 
-    public void setCurrentFile(File file) {
-        currentFile = file;       
+	public URI getCurrentURI() {
+	    return currentURI;
+	}
+	
+	/**
+	 * Updates the current URI this session's workspace was last loaded from or saved to.
+	 * Also clears the unsaved changes state.
+	 */
+	public void setCurrentURI(URI uri) {
+	    currentURI = uri;
+	    unsavedChangesExist = false;
+	}
+	
+	public File getCurrentURIAsFile() {
+	    if (getCurrentURI() != null && "file".equals(getCurrentURI().getScheme())) {
+	        return new File(getCurrentURI());
+	    } else {
+	        return null;
+	    }
+	}
+
+	public boolean hasUnsavedChanges() {
+        return unsavedChangesExist;
     }
+    
 }

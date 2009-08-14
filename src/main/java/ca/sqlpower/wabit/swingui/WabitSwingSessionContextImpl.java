@@ -40,11 +40,10 @@ import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -385,6 +384,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
 	}
 	
+	public WabitSwingSession createSession() {
+	    final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this, delegateContext.createSession());
+        return session;
+    }
+
 	private TreeTabDropTargetListener treeTabDropTargetListener = new TreeTabDropTargetListener();
 	
 	/**
@@ -444,14 +448,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			//don't care
 		}
 	}
-	
-	public WabitSession createSession() {
-	    final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this);
-        return session;
-	}
-	
-	public WabitSession createServerSession(WabitServerInfo serverInfo) {
-        final WabitSwingSessionImpl session = new WabitSwingSessionImpl(serverInfo, this);
+
+	public WabitSwingSession createServerSession(WabitServerInfo serverInfo) {
+        final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this, delegateContext.createServerSession(serverInfo));
         return session;
     }
 	
@@ -461,11 +460,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			@Override
 			public void loadFile(String fileName) throws IOException {
 				File file = new File(fileName);
-				try {
-				    OpenWorkspaceAction.loadFile(file, WabitSwingSessionContextImpl.this);
-				} catch (FileNotFoundException e) {
-				    //skip adding the file to the recent menu if it cannot be found.
-				}
+				OpenWorkspaceAction.loadFiles(WabitSwingSessionContextImpl.this, file.toURI());
 			}
 		};
 		
@@ -632,15 +627,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                final URL resource = WabitWelcomeScreen.class.getResource(
-                    EXAMPLE_WORKSPACE_URL);
-                final InputStream resourceStream = WabitWelcomeScreen.class.getResourceAsStream(
-                    EXAMPLE_WORKSPACE_URL);
                 try {
-                    int contentLength = resource.openConnection().getContentLength();
-                    OpenWorkspaceAction.loadFile(resourceStream, WabitSwingSessionContextImpl.this, contentLength);
-                } catch (IOException e1) {
-                    throw new RuntimeException(e1);
+                    final URI resource = WabitWelcomeScreen.class.getResource(
+                            EXAMPLE_WORKSPACE_URL).toURI();
+                    OpenWorkspaceAction.loadFiles(WabitSwingSessionContextImpl.this, resource);
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         });
@@ -785,7 +777,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         // CellSetViewer. If done before, the Graphics2D object is null.
         if (currentEditorPanel instanceof OlapQueryPanel) {
             try {
-                ((OlapQueryPanel) currentEditorPanel).updateCellSet(((OlapQuery) entryPanelModel).execute());
+//                ((OlapQueryPanel) currentEditorPanel).updateCellSet(((OlapQuery) entryPanelModel).execute().get());
+                ((OlapQuery) entryPanelModel).execute();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -918,7 +911,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         getPrefs().remove(PREFS_OPEN_WORKSPACES);
         for (int i = 0; i < getSessionCount(); i++) {
-            File currentFile = ((WabitSwingSession) getSessions().get(i)).getCurrentFile();
+            File currentFile = ((WabitSwingSession) getSessions().get(i)).getCurrentURIAsFile();
             if (currentFile == null) continue;
             String currentWorkspaces;
             String workspaces = getPrefs().get(PREFS_OPEN_WORKSPACES, null);
@@ -961,12 +954,19 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         statusLabel.setText(msg);   
     }
     
+    /**
+     * Returns true if any of this context's sessions have unsaved changes.
+     */
     private boolean hasUnsavedChanges() {
-        // FIXME: this does not work obviously. Need to implement this with
-        //a dirty/clean flag if we are still going to prompt to save on close
-        //of the context.
-        
-        return true;
+        for (WabitSession session : getSessions()) {
+            if (session instanceof WabitSwingSession) {
+                WabitSwingSession swingSession = (WabitSwingSession) session;
+                if (swingSession.hasUnsavedChanges()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public DataSourceCollection<SPDataSource> getDataSources() {
@@ -1110,14 +1110,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                         }
                     }
                     
-                    List<File> startupFiles = new ArrayList<File>();
+                    List<URI> startupURIs = new ArrayList<URI>();
                     for (File file : importFile) {
                         if (file != null) {
-                            startupFiles.add(file);
+                            startupURIs.add(file.toURI());
                         }
                     }
                     
-                    OpenWorkspaceAction.loadFiles(startupFiles, context);
+                    OpenWorkspaceAction.loadFiles(context, startupURIs.toArray(new URI[startupURIs.size()]));
                     
                 } catch (Exception ex) {
                      ex.printStackTrace();

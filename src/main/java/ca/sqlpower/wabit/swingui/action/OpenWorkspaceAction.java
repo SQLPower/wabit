@@ -22,10 +22,11 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,8 +46,6 @@ import ca.sqlpower.wabit.swingui.OpenProgressWindow;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This action will load in workspaces from a user selected file to a given
@@ -70,7 +69,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 	    File defaultFile = null;
         if (context.getActiveSession() != null) {
-            defaultFile = context.getActiveSwingSession().getCurrentFile();
+            defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
         }
 		JFileChooser fc = new JFileChooser(defaultFile);
 		fc.setDialogTitle("Select the file to load from.");
@@ -83,88 +82,126 @@ public class OpenWorkspaceAction extends AbstractAction {
 		    return;
 		}
 		importFile = fc.getSelectedFile();
-
-		try {
-            loadFile(importFile, context);
-        } catch (FileNotFoundException e1) {
-            JOptionPane.showMessageDialog(context.getFrame(), "Cannot find file " + importFile.getName() + " to open.",
-                    "Cannot Find File", JOptionPane.WARNING_MESSAGE);
-        }
-		
+		loadFiles(context, importFile.toURI());
 	}
 
-	/**
-	 * This will load a Wabit workspace file in a new session in the given context.
-	 */
-	@SuppressWarnings("unchecked")
-    public static void loadFile(final File importFile, final WabitSwingSessionContext context) 
-	    throws FileNotFoundException {
-	    loadFiles(Collections.singletonList(importFile), context);
-	}
-	
-	public static void loadFiles(final List<File> importFiles, final WabitSwingSessionContext context) 
-	        throws FileNotFoundException {
+    /**
+     * Attempts to read the workspaces at the given URIs, adding them to the
+     * given context only after every workspace has been loaded successfully.
+     * Any URIs that could not be resolved are discarded after warning the user
+     * that the URI(s) was/were unrecognized. The work of loading the workspaces
+     * itself is done on a separate worker thread <i>after</i> this method
+     * returns; the results of loading are integrated into the context on the
+     * Swing Event Dispatch Thread after the worker thread has terminated.
+     * <p>
+     * The progress of the worker is made visible by use of a dialog with a
+     * progress bar and a reasonably fine-grained status message. While that
+     * dialog is visible, the session's frame is made unresponsive to mouse and
+     * keyboard input.
+     * <p>
+     * If any of the workspaces whose URIs were deemed valid could not be opened
+     * (probably due to IO errors or file corruption), a message to that effect
+     * will be displayed to the user. No sessions will be added to the context,
+     * even the ones that were loaded successfully before the IO error was
+     * encountered.
+     * 
+     * @param context
+     *            The context to open new workspaces into
+     * @param importFiles
+     *            The URIs to read workspace data from (Wabit XML format)
+     */
+	public static void loadFiles(final WabitSwingSessionContext context, final URI ... importFiles) {
 	    final List<InputStream> ins = new ArrayList<InputStream>();
-	    final Map<File, OpenWorkspaceXMLDAO> workspaceLoaders = new HashMap<File, OpenWorkspaceXMLDAO>();
-	    for (File importFile : importFiles) {
+	    final Map<URI, OpenWorkspaceXMLDAO> workspaceLoaders = new HashMap<URI, OpenWorkspaceXMLDAO>();
+	    List<URI> invalidURIs = new ArrayList<URI>();
+	    for (URI importFile : importFiles) {
 	    	BufferedInputStream in = null;
 	    	OpenWorkspaceXMLDAO workspaceLoader = null;
 	    	try {
-	    		in = new BufferedInputStream(new FileInputStream(importFile));
-    			workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
+	    	    URL importURL = importFile.toURL();
+	    	    URLConnection urlConnection = importURL.openConnection();
+	    		in = new BufferedInputStream(urlConnection.getInputStream());
+	    		ins.add(in);
+    			workspaceLoader = new OpenWorkspaceXMLDAO(context, in, urlConnection.getContentLength());
+    			workspaceLoaders.put(importFile, workspaceLoader);
 	    	} catch (Exception e) {
-	    		SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while loading the " +
-	    				"workspace located at: " + importFile.getAbsolutePath(), e);
-	    		continue; //continue on but still show the user an error
+	    	    logger.info("Can't deal with URI " + importFile, e);
+	    	    invalidURIs.add(importFile);
 	    	}
-			ins.add(in);
-	        workspaceLoaders.put(importFile, workspaceLoader);
 	    }
 		
+	    if (!invalidURIs.isEmpty()) {
+	        StringBuilder message = new StringBuilder();
+	        message.append("The following workspace locations will not be opened:");
+	        for (URI badURI : invalidURIs) {
+	            message.append("\n").append(badURI);
+	        }
+	        JOptionPane.showMessageDialog(
+	                context.getFrame(),
+	                message.toString(),
+	                "Some workspaces not opened",
+	                JOptionPane.WARNING_MESSAGE);
+	    }
+	        
 		SPSwingWorker worker = new SPSwingWorker(context) {
 		    
-		    private OpenWorkspaceXMLDAO currentDAO;
+		    /**
+		     * Used for communicating the current message of this monitorable worker.
+		     * Marked as volatile because it is used from multiple threads concurrently.
+		     */
+		    private volatile OpenWorkspaceXMLDAO currentDAO;
 
             @Override
             public void doStuff() throws Exception {
-                for (Map.Entry<File, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
-                    currentDAO = entry.getValue();
-                    entry.getValue().loadWorkspacesFromStream();
+                for (OpenWorkspaceXMLDAO dao : workspaceLoaders.values()) {
+                    currentDAO = dao;
+                    dao.loadWorkspacesFromStream();
                 }
             }
             
             @Override
             public void cleanup() throws Exception {
-                if (getDoStuffException() != null) {
-                    throw new RuntimeException(getDoStuffException());
-                }
-
-                if (!isCancelled()) {
-                    for (Map.Entry<File, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
-                        List<WabitSession> loadFile = null;
-                        try {
-                            loadFile = entry.getValue().addLoadedWorkspacesToContext();
-                        } catch (Exception e) {
-                            SPSUtils.showExceptionDialogNoReport(context.getFrame(), "Error occured while " +
-                            		"loading the workspace located at: " + entry.getKey().getAbsolutePath(), e);
-                            continue; //continue on but still show the user an error
-                        }
-                        context.setEditorPanel();
-                        for (WabitSession session : loadFile) {
-                            ((WabitSwingSession) session).setCurrentFile(entry.getKey());
-                        }
-                        context.putRecentFileName(entry.getKey().getAbsolutePath());
-                    }
-                }
-                
                 for (InputStream in : ins) {
-                    
                     try {
                         in.close();
                     } catch (IOException e) {
-                        // squishing exception to not hide other exceptions.
+                        logger.warn(
+                                "Failed to close a workspace input stream. " +
+                                "Squishing this exception: " + e);
                     }
                 }
+
+                if (getDoStuffException() != null) {
+                    SPSUtils.showExceptionDialogNoReport(
+                            context.getFrame(),
+                            "Wabit had trouble opening your workspace",
+                            getDoStuffException());
+                    return;
+                }
+
+                if (!isCancelled()) {
+                    for (Map.Entry<URI, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
+                        List<WabitSession> registeredSession = null;
+                        try {
+                            registeredSession = entry.getValue().addLoadedWorkspacesToContext();
+                            for (WabitSession session : registeredSession) {
+                                ((WabitSwingSession) session).setCurrentURI(entry.getKey());
+                            }
+                            
+                            // TODO convert recent file menu to recent URI menu
+                            try {
+                                context.putRecentFileName(new File(entry.getKey()).getAbsolutePath());
+                            } catch (IllegalArgumentException ignored) { /* yikes! */ }
+                            
+                        } catch (Exception e) {
+                            SPSUtils.showExceptionDialogNoReport(context.getFrame(),
+                                    "Wabit had trouble after opening the workspace located at " +
+                                    entry.getKey(), e);
+                        }
+                    }
+                    context.setEditorPanel();
+                }
+                
             }
             
             @Override
@@ -179,8 +216,9 @@ public class OpenWorkspaceAction extends AbstractAction {
             
             @Override
             protected String getMessageImpl() {
-                if (currentDAO != null) { 
-                    return currentDAO.getMessage();
+                OpenWorkspaceXMLDAO myCurrentDAO = currentDAO;
+                if (myCurrentDAO != null) { 
+                    return myCurrentDAO.getMessage();
                 } else {
                     return "";
                 }
@@ -206,13 +244,20 @@ public class OpenWorkspaceAction extends AbstractAction {
                 return started;
             }
             
+            /**
+             * This worker is finished if all of the workspace loaders are finished,
+             * OR if doStuff() has thrown an exception.
+             */
             @Override
             protected boolean isFinishedImpl() {
+                if (getDoStuffException() != null) {
+                    return true;
+                }
+                
                 boolean finished = true;
                 for (OpenWorkspaceXMLDAO workspaceDAO : workspaceLoaders.values()) {
                     finished = finished && workspaceDAO.isFinished();
                 }
-                
                 return finished;
             }
             
@@ -238,79 +283,4 @@ public class OpenWorkspaceAction extends AbstractAction {
 		OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
 		new Thread(worker).start();
 	}
-
-    /**
-     * This will load a Wabit workspace file in a new
-     * session in the given context through an input stream. This is slightly
-     * different from loading from a file as no default file to save to will be
-     * specified and nothing will be added to the recent files menu.
-     */
-	public static void loadFile(InputStream input, final WabitSwingSessionContext context, int bytesInStream) {
-	    
-	    final BufferedInputStream in = new BufferedInputStream(input);
-	    final OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, bytesInStream);
-	    SPSwingWorker worker = new SPSwingWorker(context) {
-
-	        @Override
-	        public void doStuff() throws Exception {
-	            workspaceLoader.loadWorkspacesFromStream();
-	        }
-	        
-	        @Override
-	        public void cleanup() throws Exception {
-	            if (getDoStuffException()!= null) {
-	                throw new RuntimeException(getDoStuffException());
-	            }
-	            if (!isCancelled()) {
-	                workspaceLoader.addLoadedWorkspacesToContext();
-	                context.setEditorPanel();
-	            }
-	            try {
-	                in.close();
-	            } catch (IOException e) {
-	                logger.error(e);
-	            }
-	        }
-	        
-	        @Override
-	        protected Integer getJobSizeImpl() {
-	            return workspaceLoader.getJobSize();
-	        }
-	        
-	        @Override
-	        protected String getMessageImpl() {
-	            return workspaceLoader.getMessage();
-	        }
-	        
-	        @Override
-	        protected int getProgressImpl() {
-	            return workspaceLoader.getProgress();
-	        }
-	        
-	        @Override
-	        protected boolean hasStartedImpl() {
-	            return workspaceLoader.hasStarted();
-	        }
-	        
-	        @Override
-	        protected boolean isFinishedImpl() {
-	            return workspaceLoader.isFinished();
-	        }
-	        
-	        @Override
-            public synchronized boolean isCancelled() {
-                return workspaceLoader.isCancelled();
-            }
-            
-            @Override
-            public synchronized void setCancelled(boolean cancelled) {
-                workspaceLoader.setCancelled(cancelled);
-            }
-	        
-	    };
-	    
-	    OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
-	    new Thread(worker).start();
-	}
-
 }

@@ -25,10 +25,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
@@ -38,7 +36,6 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
@@ -144,13 +141,7 @@ public class WabitWelcomeScreen {
 				    return;
 				}
 				importFile = fc.getSelectedFile();
-
-				try {
-                    OpenWorkspaceAction.loadFile(importFile, context);
-                } catch (FileNotFoundException e1) {
-                    JOptionPane.showMessageDialog(mainPanel, "Cannot find file " + importFile.getName() + " to open.",
-                            "Cannot Find File", JOptionPane.WARNING_MESSAGE);
-                }
+				OpenWorkspaceAction.loadFiles(context, importFile.toURI());
 				terminate = false;
 			}
 		});
@@ -174,14 +165,11 @@ public class WabitWelcomeScreen {
 		AbstractAction openDemoAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				frame.dispose();
-				final URL resource = WabitWelcomeScreen.class.getResource(WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL);
-				final InputStream resourceStream = WabitWelcomeScreen.class.getResourceAsStream(
-				        WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL);
                 try {
-                    int contentLength = resource.openConnection().getContentLength();
-                    OpenWorkspaceAction.loadFile(resourceStream, context, contentLength);
-                } catch (IOException e1) {
-                    throw new RuntimeException(e1);
+                    final URI resource = WabitWelcomeScreen.class.getResource(WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL).toURI();
+                    OpenWorkspaceAction.loadFiles(context, resource);
+                } catch (URISyntaxException ex) {
+                    throw new RuntimeException(ex);
                 }
 			}
 		};

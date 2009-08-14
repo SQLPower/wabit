@@ -29,6 +29,7 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSessionContext {
 
@@ -94,4 +95,14 @@ public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSess
     
     public WabitSwingSession getActiveSwingSession();
     
+    /**
+     * Creates a new server-based session for the given server. The new session
+     * will belong to this context.
+     */
+    WabitSwingSession createServerSession(WabitServerInfo serverInfo);
+
+    /**
+     * Creates a new local session that belongs to this context.
+     */
+    WabitSwingSession createSession();
 }

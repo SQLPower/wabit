@@ -21,14 +21,56 @@ package ca.sqlpower.wabit.olap;
 
 import org.olap4j.CellSet;
 
+/**
+ * Event object that carries the notification of the fact that a certain
+ * OlapQuery has recently been executed.
+ * <p>
+ * Instances of this class are immutable.
+ */
 public class OlapQueryEvent {
-	
-	private CellSet cellSet;
-	
-	public OlapQueryEvent(CellSet cellSet) {
+
+    /**
+     * The {@link OlapQuery} that fired this event. Never null.
+     */
+    private final OlapQuery source;
+
+    /**
+     * The cellSet that has just been produced, or null if the source OlapQuery
+     * is not currently able to produce a result.
+     */
+	private final CellSet cellSet;
+
+    /**
+     * Creates a new event object. As a best/expected practice, only one
+     * instance of this event class should be created for each event--the same
+     * instance should be passed to each of the current listeners.
+     * 
+     * @param source
+     *            The OLAP query that produced this event. Must not be null.
+     * @param cellSet
+     *            The cell set that has just been produced. If the source
+     *            OlapQuery is not currently able to produce a result, this
+     *            value can be null.
+     */
+	public OlapQueryEvent(OlapQuery source, CellSet cellSet) {
+	    if (source == null) {
+	        throw new NullPointerException("Null source not allowed");
+	    }
+	    this.source = source;
 		this.cellSet = cellSet;
 	}
 
+    /**
+     * Returns the {@link OlapQuery} that fired this event. Never null.
+     */
+	public OlapQuery getSource() {
+        return source;
+    }
+
+    /**
+     * Returns the cellSet that has just been produced, or null if the source
+     * OlapQuery is not currently able to produce a result.
+     */
 	public CellSet getCellSet() {
 		return cellSet;
 	}

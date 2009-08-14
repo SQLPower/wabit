@@ -58,7 +58,7 @@ public class ExportSQLScriptAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 	    File defaultFile = null;
         if (context.getActiveSession() != null) {
-            defaultFile = context.getActiveSwingSession().getCurrentFile();
+            defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
         }
 		JFileChooser chooser = new JFileChooser(defaultFile);
 		chooser.setDialogTitle("Select the file to save to.");
