@@ -62,7 +62,7 @@ public class WorkspaceTreeModel implements TreeModel {
 
     private static final Logger logger = Logger.getLogger(WorkspaceTreeModel.class);
     
-    private static enum FolderType {
+    public static enum FolderType {
     	CONNECTIONS,
     	QUERIES,
     	IMAGES,

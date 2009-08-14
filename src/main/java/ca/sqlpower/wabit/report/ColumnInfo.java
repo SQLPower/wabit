@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -100,6 +102,16 @@ public class ColumnInfo extends AbstractWabitObject{
 	public ColumnInfo(String alias, String label) {
 		setColumnAlias(alias);
 		setName(label);
+	}
+	
+	public ColumnInfo(ColumnInfo columnInfo) {
+		this.columnInfoItem = columnInfo.columnInfoItem.createCopy();
+		this.columnAlias = columnInfo.columnAlias;
+		this.dataType = columnInfo.dataType;
+		this.hAlign = columnInfo.hAlign;
+		this.width = columnInfo.width;
+		this.willGroupOrBreak = columnInfo.willGroupOrBreak;
+		this.willSubtotal = columnInfo.willSubtotal;
 	}
 
 	/**

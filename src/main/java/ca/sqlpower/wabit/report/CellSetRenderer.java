@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.swing.JTable;
 
@@ -153,6 +154,20 @@ public class CellSetRenderer extends AbstractWabitObject implements
 
     public CellSetRenderer(OlapQuery olapQuery) {
         this(olapQuery, null);
+    }
+    
+    public CellSetRenderer(CellSetRenderer cellSetRenderer) {
+    	this.olapQuery = cellSetRenderer.getOlapQuery();
+    	this.modifiedOlapQuery = cellSetRenderer.getModifiedOlapQuery();
+    	setName(cellSetRenderer.getName());
+    	this.olapQuery.addPropertyChangeListener(nameListener);
+    	this.headerFont = cellSetRenderer.headerFont;
+    	this.bodyFont = cellSetRenderer.bodyFont;
+    	this.bodyAlignment = cellSetRenderer.bodyAlignment;
+    	this.bodyFormat = cellSetRenderer.bodyFormat;
+    	this.cellSet = cellSetRenderer.cellSet;
+    	this.errorMessage = cellSetRenderer.errorMessage;
+    	this.initDone = false;
     }
     
     public CellSetRenderer(OlapQuery olapQuery, String uuid) {

@@ -473,8 +473,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					//TODO implement database user prompt
 					newWO = copyAndAddOlapQuery(activeSession, activeWorkspace, (OlapQuery) wo);
 				} else if (wo instanceof Layout) {
-					Layout layout = ((Layout) wo); //TODO copy constructor
-//					newWO = 
+					Layout layout = ((Layout) wo); 
+					newWO = new Layout(layout, activeSession);
 				} else if (wo instanceof WabitImage) {
 					WabitImage image = new WabitImage(((WabitImage) wo));
 					activeWorkspace.addImage(image);

@@ -152,6 +152,29 @@ public class Page extends AbstractWabitObject {
         
         setDefaultFont(Font.decode("Arial-10"));
     }
+    
+    /**
+     * Copy constructor
+     */
+    public Page(Page page) {
+    	this.orientation = page.orientation;
+    	this.width = page.width;
+    	this.height = page.height;
+    	setDefaultFont(page.getDefaultFont());
+    	
+    	for (Guide guide : page.guides) {
+    		Guide newGuide = new Guide(guide.getAxis(), guide.getOffset());
+			addGuide(newGuide);
+    		
+    	}
+    	
+    	for (ContentBox contentBox : page.contentBoxes) {
+    		ContentBox newContentBox = new ContentBox(contentBox);
+			addContentBox(newContentBox);
+    	}
+    	
+    	
+    }
 
     /**
      * Creates a new page whose dimensions and orientation are equivalent to the

@@ -56,6 +56,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.CopyImageAction;
+import ca.sqlpower.wabit.swingui.action.CopyLayoutAction;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
@@ -63,6 +64,9 @@ import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderType;
 
 /**
  * This listener is the main listener on the workspace tree in Wabit.
@@ -297,68 +301,89 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		}
 		
 		JPopupMenu menu = new JPopupMenu();
-		menu.add(new AbstractAction("Database Connection Manager...") {
-
-			public void actionPerformed(ActionEvent e) {
-				session.getDbConnectionManager().showDialog(context.getFrame());
-			}
-		});
-
-		menu.add(createDataSourcesMenu());
-
-		menu.addSeparator();
-
-		menu.add(new NewQueryAction(session));
-		
-		menu.add(new NewOLAPQueryAction(session));
-		
 		final Object lastPathComponent = getLastPathComponent(e);
 
-		if (lastPathComponent instanceof WabitDataSource) {
-			SPDataSource ds = ((WabitDataSource) lastPathComponent).getSPDataSource();
-			if (ds instanceof JDBCDataSource) {
-				menu.add(new NewQueryAction(session, (JDBCDataSource) ds));
-			}
-			if (ds instanceof Olap4jDataSource) {
-				menu.add(new NewOLAPQueryAction(session, (Olap4jDataSource) ds));
-			}
-		}
-		
-		menu.add(new NewImageAction(session));
-		
-		menu.add(new NewLayoutAction(session));
-		
 		if (lastPathComponent != null) {
-			menu.addSeparator();
-			if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof OlapQuery) {
-			    menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
-			} else if (lastPathComponent instanceof WabitImage) {
-				menu.add(new CopyImageAction(session, (WabitImage) lastPathComponent));
-			}
-			
 			JTree tree = (JTree) e.getSource();
+			if (lastPathComponent instanceof FolderNode) {
+				FolderNode lastFolderNode = (FolderNode) lastPathComponent;
+				if (lastFolderNode.getFolderType().equals(FolderType.CONNECTIONS)) {
+					menu.add(new AbstractAction("Database Connection Manager...") {
+
+						public void actionPerformed(ActionEvent e) {
+							session.getDbConnectionManager().showDialog(context.getFrame());
+						}
+					});
+
+					menu.add(createDataSourcesMenu());
+				} else if (lastFolderNode.getFolderType().equals(FolderType.QUERIES)) {
+					menu.add(new NewQueryAction(session));
+					menu.add(new NewOLAPQueryAction(session));
+				} else if (lastFolderNode.getFolderType().equals(FolderType.IMAGES)) {
+					menu.add(new NewImageAction(session));
+				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTS)) {
+					menu.add(new NewLayoutAction(session));
+				}
+			} else {
+				if (lastPathComponent instanceof WabitDataSource) {
+					SPDataSource ds = ((WabitDataSource) lastPathComponent).getSPDataSource();
+					if (ds instanceof JDBCDataSource) {
+						menu.add(new NewQueryAction(session, (JDBCDataSource) ds));
+						menu.addSeparator();
+					}
+					if (ds instanceof Olap4jDataSource) {
+						menu.add(new NewOLAPQueryAction(session, (Olap4jDataSource) ds));
+						menu.addSeparator();
+					}
+					menu.add(new AbstractAction("Database Connection Manager...") {
+						
+						public void actionPerformed(ActionEvent e) {
+							session.getDbConnectionManager().showDialog(context.getFrame());
+						}
+					});
+					
+					menu.add(createDataSourcesMenu());
+					menu.addSeparator();
+				} else if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof OlapQuery) {
+					menu.add(new NewQueryAction(session));
+					menu.add(new NewOLAPQueryAction(session));
+					
+					menu.addSeparator();
+					menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
+				} else if (lastPathComponent instanceof Layout) {
+					menu.add(new NewLayoutAction(session));
+					
+					menu.addSeparator();
+					menu.add(new CopyLayoutAction((Layout) lastPathComponent, session));
+				} else if (lastPathComponent instanceof WabitImage) {
+					menu.add(new NewImageAction(session));
+					
+					menu.addSeparator();
+					menu.add(new CopyImageAction(session, (WabitImage) lastPathComponent));
+				}
+				
+				if (!(lastPathComponent instanceof ContentBox)) {
+					menu.add(new EditCellAction(tree));
+					menu.add(new DeleteFromTreeAction(lastPathComponent));
+				}
+				
+				if (lastPathComponent instanceof QueryCache) {
+					menu.addSeparator();
+					menu.add(new AbstractAction("Stop Running") {
+						public void actionPerformed(ActionEvent e) {
+							((QueryCache) lastPathComponent).stopRunning();
+						}
+					});
+				}
+			}
 			//For some bizarre reason, you cannot select a node
 			//in the JTree on right-click. So the coordinates for e.getSource()
-			//are different from e.getPoint()
+			//are different from e.getPoint().setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
 			tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
-			menu.add(new EditCellAction(tree));
+			if (!(lastPathComponent instanceof ContentBox)) {
+				menu.show(e.getComponent(), e.getX(), e.getY());
+			}
 		}
-		if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof WabitDataSource
-				|| lastPathComponent instanceof Layout || lastPathComponent instanceof OlapQuery
-				|| lastPathComponent instanceof WabitImage) {
-			menu.add(new DeleteFromTreeAction(lastPathComponent));
-		}
-		
-		if (lastPathComponent instanceof QueryCache) {
-			menu.addSeparator();
-			menu.add(new AbstractAction("Stop Running") {
-				public void actionPerformed(ActionEvent e) {
-					((QueryCache) lastPathComponent).stopRunning();
-				}
-			});
-		}
-
-		menu.show(e.getComponent(), e.getX(), e.getY());
 	}
 	
     /**

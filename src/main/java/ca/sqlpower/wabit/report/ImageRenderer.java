@@ -46,6 +46,18 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public void cleanup() {
 		//do nothing
 	}
+	
+	public ImageRenderer() {
+		//default constructor
+	}
+	
+	/**
+	 * Copy constructor
+	 */
+	public ImageRenderer(ImageRenderer imageRenderer) {
+		this.image = imageRenderer.getImage();
+		this.filename = imageRenderer.getFilename();
+	}
 
 	public Color getBackgroundColour() {
 		return null;

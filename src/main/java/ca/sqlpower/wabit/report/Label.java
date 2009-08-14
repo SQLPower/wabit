@@ -72,9 +72,21 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * @param text
      */
     public Label(VariableContext variableContext, String text) {
-        this.variableContext = variableContext;
+        this.variableContext = variableContext; //XXX this is essentially the grandparent, should be set where it is created
         this.text = text;
         setName("Label");
+    }
+    
+    /**
+     * Copy constructor
+     */
+    public Label(Label label, VariableContext variableContext) {
+    	this.variableContext = variableContext; //XXX this is essentially the grandparent, should be set where it is created
+    	this.text = label.getText();
+    	this.hAlignment = label.getHorizontalAlignment();
+    	this.backgroundColour = label.getBackgroundColour();
+    	this.vAlignment = label.getVerticalAlignment();
+    	setName(label.getName());
     }
     
     public void cleanup() {

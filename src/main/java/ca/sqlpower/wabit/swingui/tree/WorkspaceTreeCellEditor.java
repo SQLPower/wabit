@@ -24,6 +24,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.EventObject;
 
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -73,6 +74,7 @@ public class WorkspaceTreeCellEditor extends DefaultTreeCellEditor {
 
 	public WorkspaceTreeCellEditor(JTree tree, DefaultTreeCellRenderer renderer) {
 		super(tree, renderer);
+		
 	}
 	
 	/**

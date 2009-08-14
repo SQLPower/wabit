@@ -742,7 +742,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             
             String uuid = attributes.getValue("uuid");
             if (uuid == null) {
-                graphRenderer = new ChartRenderer(contentBox);
+                graphRenderer = new ChartRenderer();
+                contentBox.setWidth(100);
+                contentBox.setHeight(100);
             } else {
                 graphRenderer = new ChartRenderer(contentBox, uuid);
             }

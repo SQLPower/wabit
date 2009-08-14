@@ -90,6 +90,40 @@ public class ContentBox extends AbstractWabitObject {
         // This is just to initialize this content box's name
         setContentRenderer(null);
     }
+    
+    /**
+     * Copy Constructor
+     * @param contentBox
+     */
+    public ContentBox(ContentBox contentBox) {
+    	this.x = contentBox.x;
+    	this.y = contentBox.y;
+    	this.font = contentBox.font;
+    	this.height = contentBox.height;
+    	this.width = contentBox.width;
+    	setName(contentBox.getName() + " Copy");
+    	
+    	ReportContentRenderer oldContentRenderer = contentBox.contentRenderer;
+    	ReportContentRenderer newContentRenderer = null;
+    	if (oldContentRenderer instanceof ResultSetRenderer) {
+    		newContentRenderer = new ResultSetRenderer((ResultSetRenderer) oldContentRenderer);
+    	} else if (oldContentRenderer instanceof CellSetRenderer) {
+    		newContentRenderer = new CellSetRenderer((CellSetRenderer) oldContentRenderer);
+    	} else if (oldContentRenderer instanceof ImageRenderer) {
+    		newContentRenderer = new ImageRenderer((ImageRenderer) oldContentRenderer);
+    	} else if (oldContentRenderer instanceof Label) {
+    		newContentRenderer = new Label((Label) oldContentRenderer, (Layout) this.getParent().getParent());
+    	} else if (oldContentRenderer instanceof ChartRenderer) {
+    		//TODO
+//    		newContentRenderer = new ChartRenderer((ChartRenderer) oldContentRenderer);
+    	} else {
+    		throw new UnsupportedOperationException("ContentRenderer of type " + oldContentRenderer.getClass().getName()
+    				+ " not yet supported for copying.");
+    		
+    	}
+    	newContentRenderer.setParent(this);
+    	this.contentRenderer = newContentRenderer;
+    }
 
     /**
      * Sets the given content renderer as this box's provider of rendered

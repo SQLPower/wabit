@@ -331,12 +331,15 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	    missingIdentifiers.clear();
     }
 
-    public ChartRenderer(ContentBox parent) {
+    public ChartRenderer() {
         super();
-		parent.setWidth(100);
-		parent.setHeight(100);
 		setName("Chart");
 	}
+    
+    //TODO when charts become first class citizens have a copy constructor for a chart and chart renderer
+//    public ChartRenderer(ChartRenderer chartRenderer) {
+//    	throw new UnsupportedOperationException("not implemented yet");
+//	}
 	
 	public void cleanup() {
 		if (query instanceof StatementExecutor) {

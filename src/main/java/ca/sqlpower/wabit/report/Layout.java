@@ -41,6 +41,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitVersion;
 
 /**
@@ -105,6 +106,26 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable, 
         page.setParent(this);
         updateBuiltinVariables();
     }
+    
+    /**
+     * Copy constructor
+     * 
+     * @param layout
+     * 		The layout to copy
+     * @param session
+     * 		The session to add the layout to
+     */
+    public Layout(Layout layout, WabitSession session) {
+    	super();
+    	setName(layout.getName());
+    	page = new Page(layout.getPage());
+    	page.setParent(this);
+    	for (String variableName : layout.getVariableNames()) {
+    		setVariable(variableName, layout.getVariableValue(variableName, null));
+    	}
+    	setZoomLevel(layout.getZoomLevel());
+    	
+	}
     
     protected void updateBuiltinVariables() {
         setVariable("now", new Date());

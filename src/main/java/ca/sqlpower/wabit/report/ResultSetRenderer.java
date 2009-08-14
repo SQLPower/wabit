@@ -289,6 +289,30 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         setName("Result Set: " + query.getName());
 	}
     
+    /**
+     * Copy constructor
+     */
+    public ResultSetRenderer(ResultSetRenderer resultSetRenderer) {
+    	this.query = resultSetRenderer.query;
+    	this.backgroundColour = resultSetRenderer.backgroundColour;
+    	this.borderType = resultSetRenderer.borderType;
+    	this.executeException = resultSetRenderer.executeException;
+    	this.headerFont = resultSetRenderer.headerFont;
+    	this.nullString = resultSetRenderer.nullString;
+    	this.printingGrandTotals = resultSetRenderer.printingGrandTotals;
+    	query.addPropertyChangeListener(queryChangeListener);
+    	setName(resultSetRenderer.getName());
+    	
+    	columnInfo = new ArrayList<ColumnInfo>();
+    	for (ColumnInfo column : resultSetRenderer.columnInfo) {
+    		ColumnInfo newColumnInfo = new ColumnInfo(column);
+    		newColumnInfo.setParent(this);
+			columnInfo.add(newColumnInfo);
+    		
+    	}
+    	
+    }
+    
     public void cleanup() {
     	if (query != null && query instanceof StatementExecutor) {
         	((QueryCache) query).removeRowSetChangeListener(rowSetChangeListener);
