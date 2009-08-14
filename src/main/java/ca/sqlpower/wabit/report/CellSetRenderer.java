@@ -180,11 +180,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
             }
         	this.initDone=true;
         } catch (Exception e) {
-            //XXX it seems that this error message doesn't say anything conclusive
-            //Ex. Olap4j throws an 'Array index out of bounds: -1' exception when 
-            //there are no rows.
-            logger.warn(e.toString());
-            errorMessage = "Error when executing query.";
+            logger.warn("Error while executing Olap Query", e);
+            errorMessage = "Error when executing query:\n" + e;
         }
     }
 
