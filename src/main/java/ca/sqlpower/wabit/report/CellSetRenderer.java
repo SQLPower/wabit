@@ -124,7 +124,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     private PropertyChangeListener nameListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName() == "name") {
+			if (evt.getPropertyName().equals("name")) {
 				setName((String) evt.getNewValue());
 			}
 		}
