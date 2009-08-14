@@ -35,7 +35,6 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JTree;
-import javax.swing.UIManager;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.tree.TreePath;
 
@@ -174,7 +173,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		workspaceTree.setRootVisible(false);
 		workspaceTree.setToggleClickCount(0);
 		workspaceTree.setUI(new MultiDragTreeUI());
-		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
+//		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
 		workspaceTree.setShowsRootHandles(true);
 		DragSource ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(workspaceTree, DnDConstants.ACTION_COPY, new DragGestureListener(){

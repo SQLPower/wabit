@@ -57,6 +57,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.CopyImageAction;
 import ca.sqlpower.wabit.swingui.action.CopyLayoutAction;
+import ca.sqlpower.wabit.swingui.action.CopyOlapDatasource;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
@@ -344,6 +345,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					
 					menu.add(createDataSourcesMenu());
 					menu.addSeparator();
+					menu.add(new CopyOlapDatasource(session, (WabitDataSource) lastPathComponent));
 				} else if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof OlapQuery) {
 					menu.add(new NewQueryAction(session));
 					menu.add(new NewOLAPQueryAction(session));
@@ -380,9 +382,24 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			//in the JTree on right-click. So the coordinates for e.getSource()
 			//are different from e.getPoint().setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
 			tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
-			if (!(lastPathComponent instanceof ContentBox)) {
-				menu.show(e.getComponent(), e.getX(), e.getY());
-			}
+		} else {
+			menu.add(new AbstractAction("Database Connection Manager...") {
+
+				public void actionPerformed(ActionEvent e) {
+					session.getDbConnectionManager().showDialog(context.getFrame());
+				}
+			});
+
+			menu.add(createDataSourcesMenu());
+			menu.addSeparator();
+			
+			menu.add(new NewQueryAction(session));
+			menu.add(new NewOLAPQueryAction(session));
+			menu.add(new NewLayoutAction(session));
+			menu.add(new NewImageAction(session));
+		}
+		if (!(lastPathComponent instanceof ContentBox)) {
+			menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 	}
 	
