@@ -34,7 +34,7 @@ public class NewWorkspaceAction extends AbstractAction {
 	/**
 	 * An icon for a new Wabit workspace.
 	 */
-	private static final Icon NEW_WORKSPACE_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/page_white.png"));
+	private static final Icon NEW_WORKSPACE_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/workspace-16.png"));
 
 	private final WabitSwingSessionContext context;
 

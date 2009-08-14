@@ -22,9 +22,12 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * An action that adds a new empty layout to a particular workspace every time it
@@ -32,10 +35,12 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
  */
 public class NewLayoutAction extends AbstractAction {
 
+	private static final Icon NEW_REPORT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/report-16.png"));
+	
 	private final WabitSwingSession session;
 
     public NewLayoutAction(WabitSwingSession session) {
-        super("New Layout");
+        super("New Report", NEW_REPORT_ICON);
 		this.session = session;
     }
 

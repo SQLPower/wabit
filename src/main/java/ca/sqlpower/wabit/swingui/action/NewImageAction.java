@@ -22,19 +22,24 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * This action creates a new WabitImage and adds it to the workspace
  */
 public class NewImageAction extends AbstractAction {
     
+	private static final Icon NEW_IMAGE_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/image-16.png"));
+	
     private final WabitSwingSession session;
     
     public NewImageAction(WabitSwingSession session) {
-        super("New Image");
+        super("New Image", NEW_IMAGE_ICON);
         this.session = session;
     }
 

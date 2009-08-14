@@ -23,12 +23,15 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JTree;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * A Swing {@link Action} for creating new relational (SQL) queries in a Wabit
@@ -36,7 +39,9 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
  */
 public class NewQueryAction extends AbstractAction {
 	
-    private final WabitWorkspace workspace;
+	private static final Icon NEW_QUERY_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/query-db-16.png"));
+
+	private final WabitWorkspace workspace;
     private final WabitSwingSession session;
     private final JDBCDataSource ds;
     private final String newQueryName;
@@ -50,7 +55,7 @@ public class NewQueryAction extends AbstractAction {
 	 *            new query will be added to.
 	 */
     public NewQueryAction(WabitSwingSession session) {
-        super("New Relational Query");
+        super("New Relational Query", NEW_QUERY_ICON);
         this.newQueryName = "New Relational Query";
         this.workspace = session.getWorkspace();
         this.session = session;
@@ -67,7 +72,7 @@ public class NewQueryAction extends AbstractAction {
 	 *            The datasource that the new query will use to start with
 	 */
     public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
-    	super("New Relational Query on '" + ds.getName() + "'");
+    	super("New Relational Query on '" + ds.getName() + "'", NEW_QUERY_ICON);
     	this.newQueryName = "New " + ds.getName() + " query";
     	this.workspace = session.getWorkspace();
     	this.session = session;
