@@ -235,7 +235,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 		    
 		};
 		
-		new OpenProgressWindow(context.getFrame(), worker);
+		OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
 		new Thread(worker).start();
 	}
 
@@ -309,7 +309,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	        
 	    };
 	    
-	    new OpenProgressWindow(context.getFrame(), worker);
+	    OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
 	    new Thread(worker).start();
 	}
 

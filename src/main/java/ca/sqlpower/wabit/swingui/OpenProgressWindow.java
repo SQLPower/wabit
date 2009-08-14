@@ -32,54 +32,40 @@ import javax.swing.JProgressBar;
 import javax.swing.Timer;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.swingui.SPSwingWorker;
 
 /**
  * This class displays a modal dialog that shows the progress of a workspace
- * loading. After creating an instance of this class starting the worker will
- * cause the dialog to appear. When the worker completes the dialog will be
- * disposed of.
+ * loading. After calling the one static method in this class the progress
+ * window will appear and make the Wabit window unresponsive. When the worker
+ * completes the dialog will be disposed of and the Wabit window will become
+ * responsive again.
  */
 public class OpenProgressWindow {
-    
-    private static final Logger logger = Logger.getLogger(OpenProgressWindow.class);
 
     /**
-     * The DAO that will be used to display the progress of the loading file.
+     * This method displays a modal dialog that shows the progress of a
+     * workspace loading. The progress window will appear immediately and make
+     * the Wabit window unresponsive. When the worker completes the dialog will
+     * be disposed of and the Wabit window will become responsive again.
+     * 
+     * @param parent
+     *            The frame to parent the dialog to. This frame will be
+     *            unresponsive while the progress dialog is displayed.
+     * @param worker
+     *            The worker this progress window will monitor. When the worker
+     *            finishes this dialog will go away.
      */
-    private final SPSwingWorker worker;
-    
-    /**
-     * This modal dialog will be displayed while the file is being loaded.
-     */
-    private final JDialog progressDialog;
-    
-    /**
-     * This label will be used to display progress information.
-     */
-    private final JLabel messageLabel = new JLabel("Loading");
-    
-    private final JProgressBar progressBar = new JProgressBar();
-    
-    private final JButton cancelButton;
-    
-    private final JFrame parent;
-    
-    /**
-     * Every time this timer ticks the worker will be checked to see if it has
-     * started or finished it's execution.
-     */
-    private final Timer timer;
-
-    public OpenProgressWindow(final JFrame parent, final SPSwingWorker worker) {
-        this.parent = parent;
-        this.worker = worker;
+    public static void showProgressWindow(final JFrame parent, final SPSwingWorker worker) {
         
-        cancelButton = new JButton(new AbstractAction("Cancel") {
+        final JDialog progressDialog = new JDialog(parent, "Loading");
+        
+        final JLabel messageLabel = new JLabel("Loading");
+        
+        final JProgressBar progressBar = new JProgressBar();
+        
+        final JButton cancelButton = new JButton(new AbstractAction("Cancel") {
 
             public void actionPerformed(ActionEvent e) {
                 worker.setCancelled(true);
@@ -87,37 +73,27 @@ public class OpenProgressWindow {
             
         });
         
-                
-        timer = new Timer(50, new ActionListener() {
+        // sticking the timer in an array so it can be accessed from inside the innerO class
+        final Timer[] timerHandle = new Timer[1];
+        timerHandle[0] = new Timer(50, new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
                 if (worker.isFinished() || worker.isCancelled()) {
-                    timer.stop();
+                    timerHandle[0].stop();
                     progressDialog.setVisible(false);
                     progressDialog.dispose();
                     parent.setEnabled(true);
-                    logger.debug("Worker stopped");
-                } else if (worker.hasStarted()) {
-                    startWorker();
                 }
             }
         });
-
-        timer.start(); 
+        timerHandle[0].start(); 
                 
-        progressDialog = new JDialog(parent, "Loading");
         
-        buildUI();
-    }
-    
-    private void buildUI() {
         progressDialog.setLayout(new MigLayout("fillx"));
         progressDialog.add(messageLabel, "grow, wrap");
         progressDialog.add(progressBar, "grow, wrap");
         progressDialog.add(cancelButton, "align right");
-    }
     
-    private void startWorker() {
         ProgressWatcher.watchProgress(progressBar, worker, messageLabel);
         
         messageLabel.setMinimumSize(new Dimension(300, (int) messageLabel.getPreferredSize().getHeight()));

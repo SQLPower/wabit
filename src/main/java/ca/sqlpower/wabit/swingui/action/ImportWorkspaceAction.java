@@ -142,7 +142,7 @@ public class ImportWorkspaceAction extends AbstractAction {
 	            
 		    };
 
-		    new OpenProgressWindow(context.getFrame(), worker);
+		    OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
 		    new Thread(worker).start();
 		} catch (FileNotFoundException e1) {
 		    throw new RuntimeException(e1);
