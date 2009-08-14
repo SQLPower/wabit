@@ -52,7 +52,9 @@ public class GraphRendererTest extends TestCase {
         plIni.read(new File("src/test/java/pl.regression.ini"));
         ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         ContentBox contentBox = new ContentBox();
-        renderer = new ChartRenderer(contentBox);
+        renderer = new ChartRenderer();
+        contentBox.setHeight(100);
+        contentBox.setWidth(100);
     }
 
     /**
