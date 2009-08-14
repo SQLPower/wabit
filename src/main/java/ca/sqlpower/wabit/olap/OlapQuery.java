@@ -83,21 +83,11 @@ public class OlapQuery extends AbstractWabitObject {
     private Member slicerMember = null;
     
     /**
-     * Copy Constructor.
-     * @throws QueryInitializationException 
-     * 		This should never happen because if its not initialized it'll just use the xml
-     * @throws SQLException 
-     */
-    public OlapQuery(OlapQuery oldOlapQuery) throws SQLException, QueryInitializationException {
-    	this(oldOlapQuery, oldOlapQuery.getOlapDataSource());
-    }
-    
-    /**
      * Copy constructor which lets the user specify a new datasource
      */
-    public OlapQuery(OlapQuery oldOlapQuery, Olap4jDataSource ds) throws SQLException, QueryInitializationException {
+    public OlapQuery(OlapQuery oldOlapQuery) throws SQLException, QueryInitializationException {
     	this(oldOlapQuery.olapMapping);
-    	setOlapDataSource(ds);
+    	setOlapDataSource(oldOlapQuery.getOlapDataSource());
         if (oldOlapQuery.hasCachedXml()) {
         	for (int i = 0; i < oldOlapQuery.rootNodes.size(); i++) {
         		appendElement(

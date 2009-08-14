@@ -164,16 +164,12 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         this(q, false);
     }
     
-    public QueryCache(QueryCache q, boolean connectListeners) {
-    	this(q, connectListeners, q.getQuery().getDatabase());
-    }
-    
     /**
      * This makes a copy of the given query cache. The query in the given query cache
      * can have its listeners connected to allow using this query cache in the workspace.
      */
-    public QueryCache(QueryCache q, boolean connectListeners, SQLDatabase sqlDS) {
-        this.query = new Query(q.query, connectListeners, sqlDS);
+    public QueryCache(QueryCache q, boolean connectListeners) {
+        this.query = new Query(q.query, connectListeners);
         
         for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {
