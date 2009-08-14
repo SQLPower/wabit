@@ -37,7 +37,7 @@ import ca.sqlpower.wabit.QueryCache;
  */
 public class ShowQueryPropertiesAction extends AbstractAction {
 	
-	private static final Icon QUERY_PROPERTIES_ICON = new ImageIcon(CreateLayoutFromQueryAction.class.getResource("/icons/page_white_wrench.png"));
+	private static final Icon QUERY_PROPERTIES_ICON = new ImageIcon(CreateLayoutFromQueryAction.class.getResource("/icons/32x32/settings.png"));
 
 	/**
 	 * The window to parent the dialog to.

@@ -694,15 +694,15 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
         
-        final JButton newButton = new JButton(newAction);
+        JButton newButton = new JButton(newAction);
         newButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         newButton.setHorizontalTextPosition(SwingConstants.CENTER);
         
-        final JButton openButton = new JButton(openAction);
+        JButton openButton = new JButton(openAction);
         openButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         openButton.setHorizontalTextPosition(SwingConstants.CENTER);
         
-        final JButton saveButton = new JButton(saveAction);
+        JButton saveButton = new JButton(saveAction);
         saveButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         saveButton.setHorizontalTextPosition(SwingConstants.CENTER);
         
