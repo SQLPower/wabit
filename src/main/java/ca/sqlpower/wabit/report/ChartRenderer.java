@@ -263,34 +263,43 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 			firePropertyChange("resultSetRowAdded", null, e.getRow());
 		}
 	};
-	
-	/**
-	 * This is a listener placed on OLAP queries to find if columns removed from a query were in use
-	 * in this chart. 
-	 * 
-	 * XXX This can be simplified when the olap4j query can be listened to and we can specifically
-	 * listen for members in the column axis being removed.
-	 */
+
+    /**
+     * This is a listener placed on OLAP queries to find if columns removed from
+     * a query were in use in this chart.
+     */
 	private final OlapQueryListener olapQueryChangeListener = new OlapQueryListener() {
 
 	    public void queryExecuted(OlapQueryEvent e) {
+            updateMissingIdentifierList(e.getCellSet());
+        }
+
+        /**
+         * Looks through the given cell set (which can be null if the source
+         * query has become invalid/empty) and figures out which parts of this
+         * chart's data set are not available in the new cell set.
+         * 
+         * @param cellSet
+         *            The new cell set this chart should be based on. Can be
+         *            null if there's no longer a cell set available.
+         */
+	    private void updateMissingIdentifierList(CellSet cellSet) {
             
-            if (!(query instanceof OlapQuery)) throw new IllegalStateException("The listener to update the chart on OLAP query changes was added to a query of type " + query + " which does not extend OlapQuery.");
-            
-            final CellSet cellSet = e.getCellSet();
-            CellSetAxis columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-            
-            //XXX Positions aren't comparable so going to compare based on the unique names of their member list.
-            //This can be simplified when positions become comparable or their equals method is defined.
+	        //XXX Positions aren't comparable. This is the current workaround. See bug 2101.
             List<List<String>> positionMemberUniqueNamesInColumnAxis = new ArrayList<List<String>>();
-            for (Position position : columnAxis.getPositions()) {
-                List<String> positionMembers = new ArrayList<String>();
-                for (Member member : position.getMembers()) {
-                    positionMembers.add(member.getUniqueName());
-                }
-                positionMemberUniqueNamesInColumnAxis.add(positionMembers);
-            }
             
+            if (cellSet != null) {
+                CellSetAxis columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
+
+                for (Position position : columnAxis.getPositions()) {
+                    List<String> positionMembers = new ArrayList<String>();
+                    for (Member member : position.getMembers()) {
+                        positionMembers.add(member.getUniqueName());
+                    }
+                    positionMemberUniqueNamesInColumnAxis.add(positionMembers);
+                }
+
+            }
             List<ColumnIdentifier> positionColumnsInUse = new ArrayList<ColumnIdentifier>();
             for (Map.Entry<ColumnIdentifier, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
                 if (entry.getValue() != DataTypeSeries.NONE && entry.getKey() instanceof PositionColumnIdentifier) {
@@ -304,8 +313,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
                     missingIdentifiers.add(identifier);
                 }
             }
-            
-        }
+	    }
 
 	};
 	
