@@ -329,7 +329,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     			JButton source = (JButton) e.getSource();
     			JPopupMenu popupMenu = new JPopupMenu();
     			popupMenu.add(new OpenWorkspaceAction(WabitSwingSessionContextImpl.this));
-    			popupMenu.add(new ImportWorkspaceAction(WabitSwingSessionContextImpl.this));
+    			WabitSwingSession activeSession = getActiveSwingSession();
+    			if (activeSession != null) {
+    				popupMenu.add(new ImportWorkspaceAction(WabitSwingSessionContextImpl.this));
+    			}
     			popupMenu.show(source, 0, source.getHeight());
     		}
     	}
