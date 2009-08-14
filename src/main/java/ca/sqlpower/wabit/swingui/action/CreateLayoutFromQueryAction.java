@@ -123,9 +123,9 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         // shameless self promotion
         ContentBox dateHeader = new ContentBox();
         Label dateLabel = new Label("Generated on ${now}");
-        dateLabel.setParent(dateHeader);
-        dateLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        dateHeader.setContentRenderer(dateLabel);
         p.addContentBox(dateHeader);
+        dateLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
         dateHeader.setWidth(pageBodyWidth - header.getWidth());
         dateHeader.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
         dateHeader.setX(header.getX() + header.getWidth());
