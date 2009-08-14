@@ -23,10 +23,13 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import org.olap4j.OlapException;
+
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * This method will copy a given query and add it to the same
@@ -63,6 +66,11 @@ public class CopyQueryAction extends AbstractAction {
 			}
 			olapQuery.setName(query.getName() + " Copy");
     		session.getWorkspace().addOlapQuery(olapQuery);
+    		try {
+				olapQuery.execute();
+			} catch (Exception e1) {
+				throw new RuntimeException(e1);
+			}
     	}
     }
 
