@@ -98,20 +98,20 @@ public class OlapQuery extends AbstractWabitObject {
     public OlapQuery(OlapQuery oldOlapQuery, Olap4jDataSource ds) throws SQLException, QueryInitializationException {
     	this(oldOlapQuery.olapMapping);
     	setOlapDataSource(ds);
-        if (hasCachedXml()) {
+        if (oldOlapQuery.hasCachedXml()) {
         	for (int i = 0; i < oldOlapQuery.rootNodes.size(); i++) {
         		appendElement(
         				oldOlapQuery.rootNodes.get(i), oldOlapQuery.attributes.get(i));
         	}
         } else {
-        	setNonEmpty(isNonEmpty());
+        	setNonEmpty(oldOlapQuery.isNonEmpty());
         	if (oldOlapQuery.mdxQuery != null) {
 	        	setCurrentCube(oldOlapQuery.mdxQuery.getCube());
 	        	Query newMDXQuery = oldOlapQuery.getMdxQueryCopy();
-				setMdxQuery(newMDXQuery);
+				this.mdxQuery = newMDXQuery;
 				
+				this.hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
 				if (oldOlapQuery.hierarchiesInUse != null) {
-					hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
 		        	for (Entry<QueryDimension, Hierarchy> oldEntry : oldOlapQuery.hierarchiesInUse.entrySet()) {
 		        		QueryDimension oldDimension = oldEntry.getKey();
 		        		Hierarchy oldHierarchy = oldEntry.getValue();
