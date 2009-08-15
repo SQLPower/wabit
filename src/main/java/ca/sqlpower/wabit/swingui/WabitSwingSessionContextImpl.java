@@ -198,13 +198,15 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private final WabitSessionContext delegateContext;
 
     private final SwingUIUserPrompterFactory upf = new SwingUIUserPrompterFactory(null);
-    
+
     /**
-     * This is a preference that stores the absolute file location of each file that should
-     * be started when Wabit starts up. To get the files that need to be opened when Wabit
-     * starts append a number to the end of this string, starting at 0, until the pref is null.
-     * Each file stored in the prefs should be loaded and if an exception occurs stop loading.
-     * If no files are listed the welcome screen should appear.
+     * This is a preference that stores the absolute file location of each file
+     * that should be started when Wabit starts up. Each file name is separated
+     * by the {@link #WORKSPACE_PREFS_REGEX}. To get the files that need to be
+     * opened when Wabit starts get the string stored in prefs with this key and
+     * split the string by the regex. Each file stored in the prefs should be
+     * loaded and if an exception occurs stop loading. If no files are listed
+     * the welcome screen should appear.
      */
     private static final String PREFS_OPEN_WORKSPACES = "OPEN_WORKSPACES";
     
