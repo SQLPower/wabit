@@ -344,7 +344,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private final Action saveAction = new AbstractAction("Save", SAVE_ICON) {
     	public void actionPerformed(ActionEvent e) {
-			SaveWorkspaceAction.save(WabitSwingSessionContextImpl.this);
+			SaveWorkspaceAction.saveAllSessions(WabitSwingSessionContextImpl.this);
     	}
     };
     
@@ -896,10 +896,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 return;
             } else {
                 boolean isClosing = true;
-                for (WabitSession session : delegateContext.getSessions()) {
-                    if (!SaveWorkspaceAction.save(WabitSwingSessionContextImpl.this)) {
-                        isClosing = false;
-                    }
+                if (!SaveWorkspaceAction.saveAllSessions(WabitSwingSessionContextImpl.this)) {
+                	isClosing = false;
                 }
                 if (!isClosing) return;
             }
