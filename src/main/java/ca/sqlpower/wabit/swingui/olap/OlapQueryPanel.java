@@ -63,6 +63,7 @@ import javax.swing.KeyStroke;
 import javax.swing.Popup;
 import javax.swing.PopupFactory;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
@@ -291,6 +292,9 @@ public class OlapQueryPanel implements WabitPanel {
         resetQueryButton = new JButton();
         resetQueryButton.setIcon(new ImageIcon(OlapQueryPanel.class.getClassLoader().getResource("icons/32x32/cancel.png")));
         resetQueryButton.setToolTipText("Reset Query");
+        resetQueryButton.setText("Reset");
+        resetQueryButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        resetQueryButton.setHorizontalTextPosition(SwingConstants.CENTER);
         resetQueryButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -385,7 +389,11 @@ public class OlapQueryPanel implements WabitPanel {
         olapPanelToolbar.add(resetQueryButton);
         olapPanelToolbar.addSeparator();
         
-        olapPanelToolbar.add(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
+        JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
+        createLayoutButton.setText("Create Report");
+        createLayoutButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        createLayoutButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+		olapPanelToolbar.add(createLayoutButton);
         
         final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
         nonEmptyRowsCheckbox.setSelected(query.isNonEmpty());

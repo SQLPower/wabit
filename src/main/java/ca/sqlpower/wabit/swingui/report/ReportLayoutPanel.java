@@ -69,6 +69,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -345,11 +346,22 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
-        toolbar.add(new PageFormatAction(report.getPage()));
-        toolbar.add(new PrintAction(report, toolbar, session));
-        toolbar.add(new PDFAction(session, toolbar, report));
-        toolbar.add(new ExportLayoutAction(session, report));
-        toolbar.add(new PrintPreviewAction(parentFrame, report));
+       
+        JButton button = new JButton(addContentBoxAction);
+        setupToolBarButtonLabel(button, "Label");
+        toolbar.add(button);
+
+        button = new JButton(addGraphBoxAction);
+        setupToolBarButtonLabel(button, "Chart");
+        toolbar.add(button);
+        
+        button = new JButton(addHorizontalGuideAction);
+        setupToolBarButtonLabel(button, "H. Guide");
+        toolbar.add(button);
+        
+        button = new JButton(addVerticalGuideAction);
+        setupToolBarButtonLabel(button, "V.Guide");
+        toolbar.add(button);
         
         toolbar.addSeparator();
         JPanel zoomPanel = new JPanel(new BorderLayout());
@@ -381,12 +393,31 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		zoomPanel.add(new JLabel(ZOOM_IN_ICON), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
         toolbar.add(zoomPanel);
+        button = new JButton(zoomToFitAction);
+        setupToolBarButtonLabel(button, "Zoom to Fit");
+        toolbar.add(button);
         toolbar.addSeparator();
-        toolbar.add(addContentBoxAction);
-        toolbar.add(addGraphBoxAction);
-        toolbar.add(addHorizontalGuideAction);
-        toolbar.add(addVerticalGuideAction);
-        toolbar.add(zoomToFitAction);
+        
+        button = new JButton(new PageFormatAction(report.getPage()));
+        setupToolBarButtonLabel(button, "Page Settings");
+        toolbar.add(button);
+        
+        button = new JButton(new ExportLayoutAction(session, report));
+        setupToolBarButtonLabel(button, "Export");
+        toolbar.add(button);
+        
+        button = new JButton(new PrintPreviewAction(parentFrame, report));
+        setupToolBarButtonLabel(button, "Preview");
+        toolbar.add(button);
+
+        button = new JButton(new PrintAction(report, toolbar, session));
+        setupToolBarButtonLabel(button, "Print");
+        toolbar.add(button);
+        
+        button = new JButton(new PDFAction(session, toolbar, report));
+        setupToolBarButtonLabel(button, "Print PDF");
+        toolbar.add(button);
+        
         
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
@@ -559,5 +590,15 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	
 	public String getTitle() {
 		return "Report Editor - " + report.getName();
+	}
+	
+	/**
+	 * Adds a text label with the given label String, and sets it at the bottom
+	 * center of the button
+	 */
+	private void setupToolBarButtonLabel(JButton button, String label) {
+		button.setText(label);
+		button.setHorizontalTextPosition(SwingConstants.CENTER);
+		button.setVerticalTextPosition(SwingConstants.BOTTOM);
 	}
 }

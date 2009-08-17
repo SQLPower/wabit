@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -54,11 +53,13 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -243,7 +244,11 @@ public class WabitImagePanel implements WabitPanel {
         this.context = context;
 
         JToolBar toolBar = new JToolBar();
-        toolBar.add(browseForImageAction);
+        JButton browseButton = new JButton(browseForImageAction);
+        browseButton.setText("Browse...");
+        browseButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        browseButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        toolBar.add(browseButton);
         imagePanel = new JPanel(new MigLayout("align 50% 50%"));
         
         panel.setLayout(new BorderLayout());
