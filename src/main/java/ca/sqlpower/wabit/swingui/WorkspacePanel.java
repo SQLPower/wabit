@@ -76,24 +76,23 @@ public class WorkspacePanel implements WabitPanel {
 	private static final ImageIcon UP_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
 	private static final Icon DB_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
-    private static class LogoLayout implements LayoutManager {
+    public static class LogoLayout implements LayoutManager {
 
+    	private static final JLabel bgLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_bkgd.png")));
+//    	private static final JLabel welcomeLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_welcome.png")));
+//    	private static final JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_wabit.png")));
+    	private static final JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_welcome.png")));
+    	private static final JLabel versionLabel = new JLabel("" + WabitVersion.VERSION);
+    	
         private int textStartY = 130;
         private int textStartX = 400;
         
         public static JPanel generateLogoPanel() {
         	JPanel panel = new JPanel(new LogoLayout());
         	
-        	JLabel bgLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_bkgd.png")));
-        	JLabel welcomeLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_welcome.png")));
-        	JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_wabit.png")));
-        	JLabel sqlpLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_sqlp.png")));
-        	JLabel versionLabel = new JLabel("" + WabitVersion.VERSION);
         	versionLabel.setForeground(new Color(0x999999));
         	
-        	panel.add(welcomeLabel);
         	panel.add(wabitLabel);
-        	panel.add(sqlpLabel);
         	panel.add(versionLabel);
         	panel.add(bgLabel);
 			return panel;
@@ -104,28 +103,23 @@ public class WorkspacePanel implements WabitPanel {
         }
         
         public void layoutContainer(Container parent) {
-        	JLabel bgLabel = (JLabel) parent.getComponent(4);
-        	JLabel welcomeLabel = (JLabel) parent.getComponent(0);
-        	JLabel wabitLabel = (JLabel) parent.getComponent(1);
-        	JLabel sqlpLabel = (JLabel) parent.getComponent(2);
-        	JLabel versionLabel = (JLabel) parent.getComponent(3);
+        	JLabel bgLabel = (JLabel) parent.getComponent(2);
+        	JLabel wabitLabel = (JLabel) parent.getComponent(0);
+        	JLabel versionLabel = (JLabel) parent.getComponent(1);
         	
-        	int headerStartX = (parent.getWidth() - 800) / 2;
+        	int headerStartX = ((parent.getWidth() / 2) - ((wabitLabel.getPreferredSize().width) / 2));
         	
             bgLabel.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-            welcomeLabel.setBounds(headerStartX, 0, welcomeLabel.getPreferredSize().width, welcomeLabel.getPreferredSize().height);
-            wabitLabel.setBounds(welcomeLabel.getX() + welcomeLabel.getPreferredSize().width, 0, wabitLabel.getPreferredSize().width, wabitLabel.getPreferredSize().height);
-            sqlpLabel.setBounds(headerStartX + 800 - sqlpLabel.getPreferredSize().width, 0, sqlpLabel.getPreferredSize().width, sqlpLabel.getPreferredSize().height);
+            wabitLabel.setBounds(headerStartX, 0, wabitLabel.getPreferredSize().width, wabitLabel.getPreferredSize().height);
             versionLabel.setBounds(wabitLabel.getX() + textStartX, wabitLabel.getY() + textStartY, versionLabel.getPreferredSize().width, versionLabel.getPreferredSize().height);
         }
 
         public Dimension minimumLayoutSize(Container parent) {
         	JLabel welcomeLabel = (JLabel) parent.getComponent(0);
         	JLabel wabitLabel = (JLabel) parent.getComponent(1);
-        	JLabel sqlpLabel = (JLabel) parent.getComponent(2);
         	
-            return new Dimension(welcomeLabel.getWidth() + wabitLabel.getWidth() + sqlpLabel.getWidth(),
-            		Math.max(Math.max(welcomeLabel.getHeight(), wabitLabel.getHeight()), sqlpLabel.getHeight()));
+            return new Dimension(welcomeLabel.getWidth() + wabitLabel.getWidth(),
+            		Math.max(welcomeLabel.getHeight(), wabitLabel.getHeight()));
         }
 
         public Dimension preferredLayoutSize(Container parent) {
