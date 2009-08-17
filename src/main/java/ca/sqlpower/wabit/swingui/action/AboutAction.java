@@ -30,7 +30,10 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import net.miginfocom.swing.MigLayout;
 
 import ca.sqlpower.swingui.AboutPanel;
 import ca.sqlpower.swingui.CommonCloseAction;
@@ -44,7 +47,7 @@ public class AboutAction extends AbstractAction {
 	/**
 	 * An icon for the aboutAction in the Help menu.
 	 */
-	private static final Icon ABOUT_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/wabit-16.png"));
+	private static final Icon ABOUT_ICON = new ImageIcon(AboutAction.class.getClassLoader().getResource("icons/wabit-16.png"));
 	
 	private final JFrame parentFrame;
 
@@ -63,7 +66,6 @@ public class AboutAction extends AbstractAction {
 		cp.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
 		
 		ImageIcon icon = SPSUtils.createIcon("wabit-128", "Wabit Logo");
-		
 		final AboutPanel aboutPanel = new AboutPanel(icon, "Wabit", "ca/sqlpower/wabit/wabit.properties", WabitVersion.VERSION.toString());
 		cp.add(aboutPanel, BorderLayout.CENTER);
 
