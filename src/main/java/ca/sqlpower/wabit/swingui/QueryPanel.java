@@ -841,7 +841,8 @@ public class QueryPanel implements WabitPanel {
 		mainSplitPane.addHierarchyListener(new HierarchyListener() {
             public void hierarchyChanged(HierarchyEvent e) {
                 if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) > 0
-                        && mainSplitPane.getParent() != null) {
+                        && mainSplitPane.getParent() != null
+                        && !queryCache.isScriptModified()) {
                     executeQueryInCache();
                 }
             }
