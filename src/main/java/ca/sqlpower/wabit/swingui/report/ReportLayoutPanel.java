@@ -205,8 +205,18 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			        contentBox.setContentRenderer(renderer);
 			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
 			                ReportLayoutPanel.this, contentBox);
+			        int width;
+			        int height;
+			        if (image.getImage() != null) {
+			        	height = image.getImage().getHeight(null);
+			        	width = image.getImage().getWidth(null);
+			        } else {
+			        	//arbitrary values to make an empty image content box.
+			        	height = (int) (pageNode.getHeight() / 10);
+			        	width = (int) (pageNode.getWidth() / 10);
+			        }
 			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-			                image.getImage().getWidth(null), image.getImage().getHeight(null));
+			                width, height);
 			        pageNode.addChild(newCBNode);
 			    } else {
 			        throw new IllegalStateException("Unknown query dragged into the report layout. Object was " + wabitObject.getClass());
