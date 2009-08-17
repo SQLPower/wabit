@@ -248,6 +248,8 @@ public class WabitImagePanel implements WabitPanel {
         browseButton.setText("Browse...");
         browseButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         browseButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        // Removes button borders on OS X 10.5
+        browseButton.putClientProperty("JButton.buttonType", "toolbar");
         toolBar.add(browseButton);
         imagePanel = new JPanel(new MigLayout("align 50% 50%"));
         

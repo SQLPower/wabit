@@ -1111,5 +1111,7 @@ public class QueryPanel implements WabitPanel {
 		button.setText(label);
 		button.setHorizontalTextPosition(SwingConstants.CENTER);
 		button.setVerticalTextPosition(SwingConstants.BOTTOM);
+		// Removes button borders on OS X 10.5
+		button.putClientProperty("JButton.buttonType", "toolbar");
 	}
 }

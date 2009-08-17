@@ -304,6 +304,8 @@ public class OlapQueryPanel implements WabitPanel {
                 }
             }
         });
+        // Removes button borders on OS X 10.5
+        resetQueryButton.putClientProperty("JButton.buttonType", "toolbar");
         
         databaseComboBox = new JComboBox(session.getWorkspace().getConnections(Olap4jDataSource.class).toArray());
         databaseComboBox.setSelectedItem(query.getOlapDataSource());
@@ -393,6 +395,8 @@ public class OlapQueryPanel implements WabitPanel {
         createLayoutButton.setText("Create Report");
         createLayoutButton.setHorizontalTextPosition(SwingConstants.CENTER);
         createLayoutButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        // Removes button borders on OS X 10.5
+        createLayoutButton.putClientProperty("JButton.buttonType", "toolbar");
 		olapPanelToolbar.add(createLayoutButton);
         
         final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
