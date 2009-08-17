@@ -30,6 +30,7 @@ import javax.swing.JTree;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.UserPrompter;
@@ -141,6 +142,16 @@ public class StubWabitSwingSession implements WabitSwingSession {
     }
 
     public void setCurrentURI(URI uri) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void registerSwingWorker(SPSwingWorker worker) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void removeSwingWorker(SPSwingWorker worker) {
         // TODO Auto-generated method stub
         
     }

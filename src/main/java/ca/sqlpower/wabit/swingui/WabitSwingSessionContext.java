@@ -29,9 +29,10 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
-public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSessionContext {
+public interface WabitSwingSessionContext extends WabitSessionContext {
 
     /**
      * Creates a menu that keeps track of the last few opened and saved workspace
@@ -94,7 +95,15 @@ public interface WabitSwingSessionContext extends SwingWorkerRegistry, WabitSess
     public void setStatusMessage (String msg);
     
     public WabitSwingSession getActiveSwingSession();
-    
+
+    /**
+     * Returns a {@link SwingWorkerRegistry} for the context to track workers
+     * that are involved with loading files. It would be useful if the
+     * {@link OpenWorkspaceXMLDAO} created the session(s) to load into before
+     * creating the thread to do the loading. Then the loading thread could
+     * register with the session and we could remove this implementation.
+     */
+    SwingWorkerRegistry getLoadingRegistry();
     /**
      * Creates a new server-based session for the given server. The new session
      * will belong to this context.

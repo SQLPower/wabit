@@ -50,6 +50,8 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
@@ -64,6 +66,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -71,6 +74,8 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -151,6 +156,63 @@ public class QueryPanel implements WabitPanel {
 			return tableRowSize;
 		}
 		
+	}
+
+    /**
+     * This class will display a modal dialog when it is created that will
+     * prompt the user if they want to continue executing a query that contains
+     * cross joins. Their response and their choice to keep seeing the prompt
+     * are retrievable from methods in this class.
+     */
+	private static class CrossJoinDialog {
+	    
+	    private boolean continuingExecution;
+	    
+	    private boolean dontAskAgain = false;
+	    
+	    public CrossJoinDialog(JFrame parent) {
+	        final JDialog crossJoinDialog = new JDialog(parent, "Query contains cross joins", true);
+            JPanel crossJoinPanel = new JPanel(new MigLayout());
+            final JLabel textLabel = new JLabel("<html>The query you are about to execute contains cross joins.<br> " +
+                    "This query could take more time than expected to execute.<br> " +
+                    "Do you wish to continue?</html>");
+            textLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            crossJoinPanel.add(textLabel, "align 50%, span, wrap");
+            final JCheckBox askAgainCheckBox = new JCheckBox("Do not ask me again.", dontAskAgain);
+            crossJoinPanel.add(askAgainCheckBox, "align 50%, span, wrap");
+            
+            crossJoinPanel.add(new JButton(new AbstractAction("Continue") {
+            
+                public void actionPerformed(ActionEvent e) {
+                    continuingExecution = true;
+                    dontAskAgain = askAgainCheckBox.isSelected();
+                    crossJoinDialog.dispose();
+                }
+            }), "tag ok, align right, gap related");
+            
+            crossJoinPanel.add(new JButton(new AbstractAction("Stop") {
+            
+                public void actionPerformed(ActionEvent e) {
+                    continuingExecution = false;
+                    dontAskAgain = askAgainCheckBox.isSelected();
+                    crossJoinDialog.dispose();
+                }
+            }), "tag cancel, align right, wrap");
+            
+            crossJoinDialog.add(crossJoinPanel);
+            crossJoinDialog.pack();
+            crossJoinDialog.setLocationRelativeTo(parent);
+            crossJoinDialog.setVisible(true);
+	    }
+	    
+	    public boolean isContinuingExecution() {
+            return continuingExecution;
+        }
+	    
+	    public boolean getDontAskAgain() {
+            return dontAskAgain;
+        }
+	    
 	}
 	
 	private SQLQueryUIComponents queryUIComponents;
@@ -395,7 +457,7 @@ public class QueryPanel implements WabitPanel {
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
 		
-		queryUIComponents = new SQLQueryUIComponents(context, 
+		queryUIComponents = new SQLQueryUIComponents(session, 
 		        new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), 
 		        context, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(context.getRowLimitSpinner());
@@ -466,7 +528,7 @@ public class QueryPanel implements WabitPanel {
                 	startingDataSource = null;
                 }
                 
-                SPSwingWorker databaseLazyLoad = new SPSwingWorker(context) {
+                SPSwingWorker databaseLazyLoad = new SPSwingWorker(session) {
                 	public void doStuff() throws Exception {
                 		if (startingDataSource != null) {
                 			//populate the database
@@ -918,6 +980,15 @@ public class QueryPanel implements WabitPanel {
 	 * store a copy of the QueryCache in the queued list.
 	 */
 	public synchronized void executeQueryInCache() {
+	    if (queryCache.getPromptForCrossJoins() && queryCache.containsCrossJoins()) {
+	        CrossJoinDialog dialog = new CrossJoinDialog(context.getFrame());
+	        queryCache.setPromptForCrossJoins(!dialog.getDontAskAgain());
+	        queryCache.setExecuteQueriesWithCrossJoins(dialog.isContinuingExecution());
+	        if (!dialog.isContinuingExecution()) return;
+	    } else if (!queryCache.getPromptForCrossJoins() && !queryCache.getExecuteQueriesWithCrossJoins()) {
+	        return;
+	    }
+	    
 		queuedQueryCache.add(new QueryCache(queryCache));
 		queuedQueryCacheQueries.add(queryCache.generateQuery());
 		queryUIComponents.executeQuery(queryCache);

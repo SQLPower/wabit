@@ -160,7 +160,7 @@ public class PDFAction extends AbstractAction {
 					e.consume();
 				}
 			});
-            final LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(((WabitSwingSessionContext) session.getContext()), targetFile, layout, dialogOwner);
+            final LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(session, targetFile, layout, dialogOwner);
             ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, pdfWorker.getJobSize());
             monitor.setMillisToPopup(0);
 			ProgressWatcher watcher = new ProgressWatcher(monitor, pdfWorker) {

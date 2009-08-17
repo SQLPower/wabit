@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Action;
@@ -47,6 +48,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
+import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
@@ -169,6 +171,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * be null for new sessions that have not been saved.
      */
     private URI currentURI = null;
+    
+    /**
+     * The list of all currently-registered background tasks.
+     */
+    private final List<SPSwingWorker> activeWorkers =
+        Collections.synchronizedList(new ArrayList<SPSwingWorker>());
 	
     /**
      * This listener is attached to the active session's workspace and will
@@ -321,9 +329,15 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 	
 	public boolean close() {
+	    if (!delegateSession.close()) {
+	        return false;
+	    }
 	    getWorkspace().removePropertyChangeListener(workspaceEditorModelListener);
 	    getContext().removePropertyChangeListener(loadingContextListener);
-	    return delegateSession.close();
+	    for (SPSwingWorker worker : activeWorkers) {
+	        worker.kill();
+	    }
+	    return true;
 	}
 
     public WabitWorkspace getWorkspace() {
@@ -392,6 +406,16 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
 	public boolean hasUnsavedChanges() {
         return unsavedChangesExist;
+    }
+
+    /* docs inherited from interface */
+    public void registerSwingWorker(SPSwingWorker worker) {
+        activeWorkers.add(worker);
+    }
+
+    /* docs inherited from interface */
+    public void removeSwingWorker(SPSwingWorker worker) {
+        activeWorkers.remove(worker);
     }
     
 }

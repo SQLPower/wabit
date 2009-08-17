@@ -24,6 +24,7 @@ import java.net.URI;
 
 import javax.swing.JTree;
 
+import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -33,7 +34,7 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
  * UI pieces can be used to display or modify information in the session
  * and its workspace.
  */
-public interface WabitSwingSession extends WabitSession {
+public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 
     /**
      * Returns the JTree that describes the given session.

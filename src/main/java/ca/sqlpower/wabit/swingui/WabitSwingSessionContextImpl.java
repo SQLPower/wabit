@@ -47,7 +47,6 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -96,6 +95,7 @@ import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
+import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.action.ForumAction;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -176,6 +176,39 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * A constant for storing the location of the divider for layouts in prefs.
      */
     private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
+
+    /**
+     * This is a simple {@link SwingWorkerRegistry} implementation for the
+     * context to track workers involved with loading files. It would be useful
+     * if the {@link OpenWorkspaceXMLDAO} created the session(s) to load into
+     * before creating the thread to do the loading. Then the loading thread
+     * could register with the session and we could remove this implementation.
+     */
+    private static class LoadingSwingWorkerRegistry implements SwingWorkerRegistry {
+
+        private final List<SPSwingWorker> activeWorkers = new ArrayList<SPSwingWorker>();
+        
+        public void registerSwingWorker(SPSwingWorker worker) {
+            activeWorkers.add(worker);
+        }
+
+        public void removeSwingWorker(SPSwingWorker worker) {
+            activeWorkers.remove(worker);
+        }
+        
+        public void close() {
+            for (SPSwingWorker worker : activeWorkers) {
+                worker.kill();
+            }
+        }
+        
+    }
+    
+    /**
+     * This is the {@link SwingWorkerRegistry} responsible for tracking
+     * the threads used in loading sessions that don't have a session yet.
+     */
+    private final LoadingSwingWorkerRegistry loadingRegistry = new LoadingSwingWorkerRegistry();
     
     /**
      * This listener is attached to the context's frame to call close
@@ -190,7 +223,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         };
         
     };
-
+    
     /**
      * The core session context that this swing session context delegates its
      * "core" operations to.
@@ -268,12 +301,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    /**
-     * The list of all currently-registered background tasks.
-     */
-    private final List<SPSwingWorker> activeWorkers =
-        Collections.synchronizedList(new ArrayList<SPSwingWorker>());
-    
     /**
      * This welcome screen's panel will be displayed when there is no active session
      * available.
@@ -924,18 +951,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			getPrefs().put(PREFS_OPEN_WORKSPACES, saveOutString);
         }
         
+        loadingRegistry.close();
+        
         delegateContext.close();
         
-    }
-    
-    /* docs inherited from interface */
-    public void registerSwingWorker(SPSwingWorker worker) {
-        activeWorkers.add(worker);
-    }
-
-    /* docs inherited from interface */
-    public void removeSwingWorker(SPSwingWorker worker) {
-        activeWorkers.remove(worker);
     }
     
     public JSpinner getRowLimitSpinner() {
@@ -1147,5 +1166,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		delegateContext.removeServerListListener(l);
 	}
 
-	
+	public SwingWorkerRegistry getLoadingRegistry() {
+        return loadingRegistry;
+    }
 }

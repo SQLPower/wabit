@@ -154,7 +154,7 @@ public class PrintAction extends AbstractAction {
 			});
             
 			ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Printing " + layout.getName(), "", 0, 1);
-        	final PrintWorker worker = new PrintWorker(((WabitSwingSessionContext) session.getContext()), job, layout);
+        	final PrintWorker worker = new PrintWorker(session, job, layout);
             monitor.setMillisToPopup(0);
 			ProgressWatcher watcher = new ProgressWatcher(monitor, worker) {
 				@Override

@@ -133,6 +133,22 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     private final List<Thread> streamingThreads = new ArrayList<Thread>();
     
     /**
+     * Tracks if the user should be prompted every time a query is going to
+     * be executed and it contains cross joins. This property can be set from
+     * the prompt itself or the query's settings.
+     */
+    private boolean promptForCrossJoins = true;
+
+    /**
+     * If the user has selected to no longer be prompted when executing queries
+     * with cross joins this boolean will store true if queries with cross joins
+     * should be executed and false otherwise. If the user is being prompted
+     * when executing queries with cross joins the state of this value is not
+     * defined.
+     */
+    private boolean executeQueriesWithCrossJoins;
+    
+    /**
      * This makes a copy of the given query cache. The query in the given query cache
      * has its listeners disconnected to prevent copies from being affected by user
      * actions. This also makes cleanup of copies easier.
@@ -409,6 +425,10 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     public String generateQuery() {
         return query.generateQuery();
     }
+    
+    public boolean containsCrossJoins() {
+        return query.containsCrossJoins();
+    }
 
     public boolean isScriptModified() {
         return query.isScriptModified();
@@ -482,6 +502,22 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      */
     public boolean isPhantomQuery() {
         return getParent() == null;
+    }
+
+    public void setPromptForCrossJoins(boolean promptForCrossJoins) {
+        this.promptForCrossJoins = promptForCrossJoins;
+    }
+
+    public boolean getPromptForCrossJoins() {
+        return promptForCrossJoins;
+    }
+
+    public void setExecuteQueriesWithCrossJoins(boolean executeQueriesWithCrossJoins) {
+        this.executeQueriesWithCrossJoins = executeQueriesWithCrossJoins;
+    }
+
+    public boolean getExecuteQueriesWithCrossJoins() {
+        return executeQueriesWithCrossJoins;
     }
 
 }

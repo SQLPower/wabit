@@ -143,7 +143,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	                JOptionPane.WARNING_MESSAGE);
 	    }
 	        
-		SPSwingWorker worker = new SPSwingWorker(context) {
+	    SPSwingWorker worker = new SPSwingWorker(context.getLoadingRegistry()) {
 		    
 		    /**
 		     * Used for communicating the current message of this monitorable worker.
@@ -283,4 +283,79 @@ public class OpenWorkspaceAction extends AbstractAction {
 		OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
 		new Thread(worker).start();
 	}
+
+    /**
+     * This will load a Wabit workspace file in a new
+     * session in the given context through an input stream. This is slightly
+     * different from loading from a file as no default file to save to will be
+     * specified and nothing will be added to the recent files menu.
+     */
+	public static void loadFile(InputStream input, final WabitSwingSessionContext context, int bytesInStream) {
+	    
+	    final BufferedInputStream in = new BufferedInputStream(input);
+	    final OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, bytesInStream);
+	    SPSwingWorker worker = new SPSwingWorker(context.getLoadingRegistry()) {
+
+	        @Override
+	        public void doStuff() throws Exception {
+	            workspaceLoader.loadWorkspacesFromStream();
+	        }
+	        
+	        @Override
+	        public void cleanup() throws Exception {
+	            if (getDoStuffException()!= null) {
+	                throw new RuntimeException(getDoStuffException());
+	            }
+	            if (!isCancelled()) {
+	                workspaceLoader.addLoadedWorkspacesToContext();
+	                context.setEditorPanel();
+	            }
+	            try {
+	                in.close();
+	            } catch (IOException e) {
+	                logger.error(e);
+	            }
+	        }
+	        
+	        @Override
+	        protected Integer getJobSizeImpl() {
+	            return workspaceLoader.getJobSize();
+	        }
+	        
+	        @Override
+	        protected String getMessageImpl() {
+	            return workspaceLoader.getMessage();
+	        }
+	        
+	        @Override
+	        protected int getProgressImpl() {
+	            return workspaceLoader.getProgress();
+	        }
+	        
+	        @Override
+	        protected boolean hasStartedImpl() {
+	            return workspaceLoader.hasStarted();
+	        }
+	        
+	        @Override
+	        protected boolean isFinishedImpl() {
+	            return workspaceLoader.isFinished();
+	        }
+	        
+	        @Override
+            public synchronized boolean isCancelled() {
+                return workspaceLoader.isCancelled();
+            }
+            
+            @Override
+            public synchronized void setCancelled(boolean cancelled) {
+                workspaceLoader.setCancelled(cancelled);
+            }
+	        
+	    };
+	    
+	    OpenProgressWindow.showProgressWindow(context.getFrame(), worker);
+	    new Thread(worker).start();
+	}
+
 }
