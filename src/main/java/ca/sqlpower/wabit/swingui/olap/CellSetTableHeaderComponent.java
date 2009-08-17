@@ -878,11 +878,11 @@ public class CellSetTableHeaderComponent extends JComponent {
          * is no effect on subsequent calls (they just return immediately).
          */
         public void createLayout() {
-            if (!getLayoutItems().isEmpty() && isValid()) return;
+            Graphics2D g2 = (Graphics2D) getGraphics();
+            if (g2 == null || ((!getLayoutItems().isEmpty()) && isValid()) return;
             layoutItems.clear();
             preferredSizes.clear();
 
-            Graphics2D g2 = (Graphics2D) getGraphics();
             g2.setFont(getFont());
             FontMetrics fm = g2.getFontMetrics();
             int colsRowHeight = Math.max(fm.getHeight(), EXPANDED_TREE_ICON.getIconHeight());
