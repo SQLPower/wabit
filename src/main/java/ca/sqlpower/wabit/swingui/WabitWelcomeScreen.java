@@ -20,6 +20,9 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URI;
@@ -38,6 +41,7 @@ import javax.swing.JScrollPane;
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.swingui.WorkspacePanel.FurryPanel;
 import ca.sqlpower.wabit.swingui.WorkspacePanel.LogoLayout;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
@@ -79,22 +83,24 @@ public class WabitWelcomeScreen {
 		buildUI();
 	}
 	
-	private void buildUI() {
-		JPanel iconsPanel = new JPanel(new MigLayout("", "[right, grow][][left, grow]"));
-		iconsPanel.add(LogoLayout.generateLogoPanel(), "span, wrap, center, grow, dock north");
+	private JPanel buildButtonsPanel() {
+		JPanel buttonsPanel = new JPanel(new MigLayout("gap 0 0", "[right][][left]"));
 		
+		//new workspace
 		JButton newWorkspaceButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				new NewWorkspaceScreen(context).showFrame();
 			}
 		});
-		JPanel newWorkspacePanel = new JPanel(new MigLayout("", "[center]"));
+		JPanel newWorkspacePanel = new JPanel(new MigLayout("gap 0 0", "[center]"));
 		newWorkspaceButton.setIcon(NEW_WORKSPACE_ICON);
+		newWorkspacePanel.setOpaque(false);
 		newWorkspacePanel.add(newWorkspaceButton, "wrap");
 		newWorkspacePanel.add(new JLabel("Create a New"), "wrap");
 		newWorkspacePanel.add(new JLabel("Workspace"), "wrap");
-		iconsPanel.add(newWorkspacePanel, "");
+		buttonsPanel.add(newWorkspacePanel, "gap 0 0 0 0");
 		
+		//existing workspace
 		JButton openExistingButton = new JButton(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser fc = new JFileChooser(context.createRecentMenu().getMostRecentFile());
@@ -113,12 +119,13 @@ public class WabitWelcomeScreen {
 		});
 		
 		
-		JPanel existingWorkspacePanel = new JPanel(new MigLayout("", "[center]"));
+		JPanel existingWorkspacePanel = new JPanel(new MigLayout("gap 0 0", "[center]"));
+		existingWorkspacePanel.setOpaque(false);
 		openExistingButton.setIcon(OPEN_EXISTING_ICON);
 		existingWorkspacePanel.add(openExistingButton, "wrap");
-		existingWorkspacePanel.add(new JLabel("Create a New"), "wrap");
+		existingWorkspacePanel.add(new JLabel("Open an Existing"), "wrap");
 		existingWorkspacePanel.add(new JLabel("Workspace"), "wrap");
-		iconsPanel.add(existingWorkspacePanel, "");
+		buttonsPanel.add(existingWorkspacePanel, "gap 0 0 0 0");
 		
 		//No need for this after the gui makeover? everything from servers will just
 		//populate in your tree
@@ -134,6 +141,7 @@ public class WabitWelcomeScreen {
 //        builder.append("Open On Server");
 //        builder.nextLine();
 		
+		//open demo
 		AbstractAction openDemoAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
                 try {
@@ -147,17 +155,30 @@ public class WabitWelcomeScreen {
 		JButton openDemoButton = new JButton(openDemoAction);
 		
 		
-		JPanel demoWorkspacePanel = new JPanel(new MigLayout("", "[center]"));
+		JPanel demoWorkspacePanel = new JPanel(new MigLayout("gap 0 0", "[center]"));
+		demoWorkspacePanel.setOpaque(false);
 		openDemoButton.setIcon(OPEN_DEMO_ICON);
 		demoWorkspacePanel.add(openDemoButton, "wrap");
 		demoWorkspacePanel.add(new JLabel("Try the Demo"), "wrap");
 		demoWorkspacePanel.add(new JLabel("Workspace"), "wrap");
-		iconsPanel.add(demoWorkspacePanel, "");
+		buttonsPanel.add(demoWorkspacePanel, "gap 0 0 0 0");
 		
-		DefaultFormBuilder bottomPanelBuilder = new DefaultFormBuilder(new FormLayout("pref, 4dlu, pref, 4dlu:grow, pref"));
-		bottomPanelBuilder.setDefaultDialogBorder();
-		JButton helpButton = new JButton(new HelpAction(context.getFrame()));
-		bottomPanelBuilder.append(helpButton);
+		return buttonsPanel;
+	}
+	
+	private void buildUI() {
+		//This panel is only here to center the icons panel in the middle of the dialog
+		JPanel centerPanel = new JPanel(new MigLayout("fill, gap 0 0", "[center, grow]"));
+		centerPanel.setOpaque(false);
+		
+		JPanel iconsPanel = new JPanel(new MigLayout("gap 0 0", "[]"));
+		iconsPanel.setOpaque(false);
+		
+		JPanel generateLogoPanel = LogoLayout.generateLogoPanel();
+		generateLogoPanel.setOpaque(false);
+		iconsPanel.add(generateLogoPanel, "wrap, alignx center, gap 0 0 0 0");
+
+		iconsPanel.add(buildButtonsPanel(), "gap 0 0 0 0");
 		
 		JButton tutorialButton = new JButton(new AbstractAction("View Tutorials") {
 			public void actionPerformed(ActionEvent e) {
@@ -166,11 +187,18 @@ public class WabitWelcomeScreen {
 		});
 //		bottomPanelBuilder.append(tutorialButton);
 		//Temporary spacer label until tutorials exist on the website.
-		bottomPanelBuilder.append(new JLabel());
 		
-		mainPanel = new JPanel(new BorderLayout());
-		mainPanel.add(iconsPanel, BorderLayout.CENTER);
+		
+		DefaultFormBuilder bottomPanelBuilder = new DefaultFormBuilder(new FormLayout("pref, 4dlu, pref, 4dlu:grow, pref"));
+		bottomPanelBuilder.setDefaultDialogBorder();
+		JButton helpButton = new JButton(new HelpAction(context.getFrame()));
+		bottomPanelBuilder.append(helpButton);
+		
+		centerPanel.add(iconsPanel, "");
+		mainPanel = new FurryPanel(new BorderLayout());
+		mainPanel.add(centerPanel, BorderLayout.CENTER);
 		mainPanel.add(bottomPanelBuilder.getPanel(), BorderLayout.SOUTH);
+		
 		mainScrollPane = new JScrollPane(mainPanel);
 	}
 	

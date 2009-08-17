@@ -19,11 +19,11 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.LayoutManager;
 import java.awt.Window;
 import java.awt.event.FocusEvent;
@@ -40,9 +40,12 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
@@ -58,9 +61,7 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.olap.OlapQuery;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
-import javax.swing.JOptionPane;
 
 /**
  * This panel will display information about the workspace. It will
@@ -78,9 +79,6 @@ public class WorkspacePanel implements WabitPanel {
 	
     public static class LogoLayout implements LayoutManager {
 
-    	private static final JLabel bgLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_bkgd.png")));
-//    	private static final JLabel welcomeLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_welcome.png")));
-//    	private static final JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_app_wabit.png")));
     	private static final JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_welcome.png")));
     	private static final JLabel versionLabel = new JLabel("" + WabitVersion.VERSION);
     	
@@ -94,23 +92,16 @@ public class WorkspacePanel implements WabitPanel {
         	
         	panel.add(wabitLabel);
         	panel.add(versionLabel);
-        	panel.add(bgLabel);
+        	panel.setOpaque(false);
+        	
 			return panel;
         }
         
-        private LogoLayout() {
-        	//Do nothing for init.
-        }
-        
         public void layoutContainer(Container parent) {
-        	JLabel bgLabel = (JLabel) parent.getComponent(2);
         	JLabel wabitLabel = (JLabel) parent.getComponent(0);
         	JLabel versionLabel = (JLabel) parent.getComponent(1);
         	
-        	int headerStartX = ((parent.getWidth() / 2) - ((wabitLabel.getPreferredSize().width) / 2));
-        	
-            bgLabel.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-            wabitLabel.setBounds(headerStartX, 0, wabitLabel.getPreferredSize().width, wabitLabel.getPreferredSize().height);
+            wabitLabel.setBounds(0, 10, wabitLabel.getPreferredSize().width, wabitLabel.getPreferredSize().height);
             versionLabel.setBounds(wabitLabel.getX() + textStartX, wabitLabel.getY() + textStartY, versionLabel.getPreferredSize().width, versionLabel.getPreferredSize().height);
         }
 
@@ -150,21 +141,34 @@ public class WorkspacePanel implements WabitPanel {
 	}
 	
 	private JPanel buildUI() {
-		JPanel panel = new JPanel(new BorderLayout());
-		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, fill:pref, pref:grow", "pref, pref, pref"));
-		CellConstraints cc = new CellConstraints();
+		JPanel panel = new FurryPanel(new MigLayout("", "[center, grow]"));
+		final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session, context.getFrame());
+		
 		JPanel logoPanel = LogoLayout.generateLogoPanel();
-		builder.add(logoPanel, cc.xyw(1, 1, 3));
-
-        final DatabaseConnectionManager dbConnectionManager = createDBConnectionManager(session, context.getFrame());
-        
-		builder.add(dbConnectionManager.getPanel(), cc.xy(2, 3));
-		JPanel builderPanel = builder.getPanel();
-		panel.add(builderPanel, BorderLayout.CENTER);
+		panel.add(logoPanel, "wrap");
+		panel.add(dbConnectionManager.getPanel(), "");
 		
 		logoPanel.getLayout().layoutContainer(logoPanel);
 		
 		return panel;
+	}
+	
+	/**
+	 * This is the panel which paints the hair on the back of the wabit welcome screen
+	 * and the hair on the back of the WorkspacePanel.
+	 */
+	public static class FurryPanel extends JPanel {
+		private final ImageIcon furryImage = new ImageIcon(FurryPanel.class.getClassLoader().getResource("icons/wabit_header_app_bkgd.png"));
+		
+		public FurryPanel(LayoutManager layout) {
+			super(layout);
+		}
+		
+		@Override
+		public void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			g.drawImage(furryImage.getImage(), 0, 0, this.getWidth(), furryImage.getIconHeight(), furryImage.getImageObserver());
+		}
 	}
 
 	/**
