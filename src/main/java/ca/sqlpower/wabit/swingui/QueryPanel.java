@@ -32,6 +32,8 @@ import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
@@ -835,8 +837,15 @@ public class QueryPanel implements WabitPanel {
     	JPanel southPanel = southPanelBuilder.getPanel();
 		mainSplitPane.add(southPanel, JSplitPane.BOTTOM);
 		southPanel.setMinimumSize(new Dimension(0, ICON.getIconHeight() * 5));
-		
-		executeQueryInCache();
+
+		mainSplitPane.addHierarchyListener(new HierarchyListener() {
+            public void hierarchyChanged(HierarchyEvent e) {
+                if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) > 0
+                        && mainSplitPane.getParent() != null) {
+                    executeQueryInCache();
+                }
+            }
+        });
 	}
 	
 	private JToolBar createQueryPenToolBar(QueryPen pen) {

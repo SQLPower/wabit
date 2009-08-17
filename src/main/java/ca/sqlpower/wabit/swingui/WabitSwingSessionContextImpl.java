@@ -1055,9 +1055,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     }
 
     public void setActiveSession(WabitSession activeSession) {
+        WabitSession oldSession = delegateContext.getActiveSession();
         delegateContext.setActiveSession(activeSession);
         treeTabbedPane.setSelectedIndex(getSessions().indexOf(activeSession));
-        setEditorPanel();
+        if (oldSession != activeSession) {
+            setEditorPanel();
+        }
     }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {

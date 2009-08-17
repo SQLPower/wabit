@@ -172,13 +172,18 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
      */
 	@SuppressWarnings("unchecked")
     public List<WabitSession> addLoadedWorkspacesToContext() {
-	       if (cancelled.get()) return Collections.emptyList();
-	        
+	    try {
+	        context.setLoading(true);
+	        if (cancelled.get()) return Collections.emptyList();
+
 	        for (WabitSession session : saxHandler.getSessions()) {
 	            context.registerChildSession(session);
 	        }
-	        
+
 	        return saxHandler.getSessions();
+	    } finally {
+	        context.setLoading(false);
+	    }
 	}
 	
     /**
