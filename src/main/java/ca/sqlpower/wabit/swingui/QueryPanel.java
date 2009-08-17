@@ -110,6 +110,7 @@ import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
 import ca.sqlpower.wabit.swingui.action.ShowQueryPropertiesAction;
 
+import com.jgoodies.forms.builder.ButtonBarBuilder;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
@@ -181,23 +182,25 @@ public class QueryPanel implements WabitPanel {
             final JCheckBox askAgainCheckBox = new JCheckBox("Do not ask me again.", dontAskAgain);
             crossJoinPanel.add(askAgainCheckBox, "align 50%, span, wrap");
             
-            crossJoinPanel.add(new JButton(new AbstractAction("Continue") {
+            ButtonBarBuilder builder = new ButtonBarBuilder();
+            builder.addGridded(new JButton(new AbstractAction("Continue") {
             
                 public void actionPerformed(ActionEvent e) {
                     continuingExecution = true;
                     dontAskAgain = askAgainCheckBox.isSelected();
                     crossJoinDialog.dispose();
                 }
-            }), "tag ok, align right, gap related");
+            }));
             
-            crossJoinPanel.add(new JButton(new AbstractAction("Stop") {
+            builder.addGridded(new JButton(new AbstractAction("Stop") {
             
                 public void actionPerformed(ActionEvent e) {
                     continuingExecution = false;
                     dontAskAgain = askAgainCheckBox.isSelected();
                     crossJoinDialog.dispose();
                 }
-            }), "tag cancel, align right, wrap");
+            }));
+            crossJoinPanel.add(builder.getPanel(), "align right");
             
             crossJoinDialog.add(crossJoinPanel);
             crossJoinDialog.pack();
