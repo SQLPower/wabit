@@ -66,11 +66,7 @@ public class CopyQueryAction extends AbstractAction {
 			}
 			olapQuery.setName(query.getName() + " Copy");
     		session.getWorkspace().addOlapQuery(olapQuery);
-    		try {
-				olapQuery.execute();
-			} catch (Exception e1) {
-				throw new RuntimeException(e1);
-			}
+
     	}
     }
 
