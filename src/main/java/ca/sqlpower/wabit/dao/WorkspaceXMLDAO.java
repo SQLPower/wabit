@@ -103,10 +103,13 @@ public class WorkspaceXMLDAO {
      *  <dt>1.1.1 <dd>OLAP query syntax has changed for reports, -report tag was removed.
      *  <dt>1.1.2 <dd>Added exclusions when saving an OLAP query
      *  <dt>1.1.3 <dd>Changed how images are being saved. There is now a wabit-image section for each {@link WabitImage}.
+     *  <dt>1.1.4 <dd>Added two flags to the query cache to save if a user should be prompted each time the query
+     *  is executed with a missing join, and if the user is not being prompted, if the query should be automatically
+     *  executed.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 1, 3); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 1, 4); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
@@ -314,7 +317,7 @@ public class WorkspaceXMLDAO {
 
 		    for (WabitObject wabitObject : dependenciesToSave) {
 		        if (wabitObject instanceof QueryCache) {
-		            saveQueryCache(((QueryCache) wabitObject).getQuery());
+		            saveQueryCache((QueryCache) wabitObject);
 		        } else if (wabitObject instanceof OlapQuery) {
 		            saveOlapQuery((OlapQuery) wabitObject);
 		        } else if (wabitObject instanceof Layout) {
@@ -694,7 +697,8 @@ public class WorkspaceXMLDAO {
 	 * If this save method is used to export the query cache somewhere then close should be 
 	 * called on it to flush the print writer and close it.
 	 */
-	private void saveQueryCache(Query data) {
+	private void saveQueryCache(QueryCache cache) {
+	    Query data = cache.getQuery();
 		xml.print(out, "<query");
 		printAttribute("name", data.getName());
 		printAttribute("uuid", data.getUUID());
@@ -702,6 +706,10 @@ public class WorkspaceXMLDAO {
 		printAttribute("streaming-row-limit", data.getStreamingRowLimit());
 		printAttribute("row-limit", data.getRowLimit());
 		printAttribute("grouping-enabled", Boolean.toString(data.isGroupingEnabled()));
+		printAttribute("prompt-for-cross-joins", cache.getPromptForCrossJoins());
+		if (!cache.getPromptForCrossJoins()) {
+		    printAttribute("execute-queries-with-cross-joins", cache.getExecuteQueriesWithCrossJoins());
+		}
 		if (data.getDatabase() != null && data.getDatabase().getDataSource() != null) {
 			printAttribute("data-source", data.getDatabase().getDataSource().getName());
 		}
