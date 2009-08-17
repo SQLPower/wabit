@@ -37,7 +37,6 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
-import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
@@ -450,6 +449,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return 0;
     }
 
+    @SuppressWarnings("unchecked")
     public List<? extends WabitObject> getChildren() {
         return Collections.EMPTY_LIST;
     }
