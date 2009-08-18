@@ -729,6 +729,16 @@ public class QueryPanel implements WabitPanel {
 		JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 		setupToolBarButtonLabel(createLayoutButton, "Create Report");
 		queryToolBar.add(createLayoutButton);
+		// TODO: Replace the AbstractAction with a CreateChartFromQueryAction when Charts are first-class objects
+		JButton createChartButton = new JButton(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				// Temporary until Charts are made first-class objects
+				JOptionPane.showMessageDialog(QueryPanel.this.getPanel(), "Not Implemented Yet. Sorry!", "Not Implemented", JOptionPane.WARNING_MESSAGE);
+			}
+		});
+		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
+		setupToolBarButtonLabel(createChartButton, "Create Chart");
+		queryToolBar.add(createChartButton);
 		JButton propertiesButton = new JButton(new ShowQueryPropertiesAction(queryCache, context.getFrame()));
 		setupToolBarButtonLabel(propertiesButton, "Properties");
 		queryToolBar.add(propertiesButton);
@@ -895,6 +905,14 @@ public class QueryPanel implements WabitPanel {
 	    JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 	    setupToolBarButtonLabel(createLayoutButton, "Create Report");
 	    toolBar.add(createLayoutButton);
+		JButton createChartButton = new JButton(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(QueryPanel.this.getPanel(), "Not Implemented Yet. Sorry!", "Not Implemented", JOptionPane.WARNING_MESSAGE);
+			}
+		});
+		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
+		setupToolBarButtonLabel(createChartButton, "Create Chart");
+		toolBar.add(createChartButton);
 	    JButton queryPropertiesButton = new JButton(new ShowQueryPropertiesAction(queryCache, context.getFrame()));
 	    setupToolBarButtonLabel(queryPropertiesButton, "Properties");
 	    toolBar.add(queryPropertiesButton);

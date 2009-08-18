@@ -96,6 +96,7 @@ import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
+import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
@@ -399,6 +400,19 @@ public class OlapQueryPanel implements WabitPanel {
         createLayoutButton.putClientProperty("JButton.buttonType", "toolbar");
 		olapPanelToolbar.add(createLayoutButton);
         
+		// TODO: Replace the AbstractAction with a CreateChartFromQueryAction when Charts are first-class objects
+		JButton createChartButton = new JButton(new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				// Temporary until Charts are made first-class objects
+				JOptionPane.showMessageDialog(OlapQueryPanel.this.getPanel(), "Not Implemented Yet. Sorry!", "Not Implemented", JOptionPane.WARNING_MESSAGE);
+			}
+		});
+		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
+		createChartButton.setText("Create Chart");
+		createChartButton.setHorizontalTextPosition(SwingConstants.CENTER);
+		createChartButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+		olapPanelToolbar.add(createChartButton);
+		
         final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
         nonEmptyRowsCheckbox.setSelected(query.isNonEmpty());
         nonEmptyRowsCheckbox.addActionListener(new ActionListener() {
