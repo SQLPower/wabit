@@ -307,7 +307,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         DatabaseConnectionManager dbcm = new DatabaseConnectionManager(getDataSources(), 
                 new DefaultDataSourceDialogFactory(), 
                 new DefaultDataSourceTypeDialogFactory(getDataSources()),
-                new ArrayList<Action>(), new ArrayList<JComponent>(), sessionContext.getFrame(), false, newDSTypes);
+                new ArrayList<Action>(), new ArrayList<JComponent>(), sessionContext.getFrame(), true, newDSTypes);
         dbcm.setDbIcon(DB_ICON);
         return dbcm;
     }
