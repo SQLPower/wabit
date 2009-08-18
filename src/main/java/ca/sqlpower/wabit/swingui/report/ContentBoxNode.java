@@ -127,17 +127,16 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	menu.add(properties);
         	menu.addSeparator();
         	
-        	final PCanvas canvas = (PCanvas) e.getComponent();
         	final PNode node = getParent();
         	JMenuItem delete = new JMenuItem(new AbstractAction() {
 				public void actionPerformed(ActionEvent e) {
-					Page page = contentBox.getParent();
-					page.removeContentBox(contentBox);
+					node.removeChild(ContentBoxNode.this);
 				}
         	});
         	delete.setText("Delete");
         	menu.add(delete);
         	Point2D position = e.getPosition();
+        	final PCanvas canvas = (PCanvas) e.getComponent();
 			menu.show(canvas, (int) position.getX(), (int) position.getY());
         }
         
