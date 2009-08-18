@@ -62,6 +62,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -105,18 +106,20 @@ import edu.umd.cs.piccolox.swing.PScrollPane;
 
 public class ReportLayoutPanel implements WabitPanel, MouseState {
 
-	private static final ImageIcon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
-	private static final ImageIcon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
-	private static final ImageIcon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-minus.png"));
-	private static final ImageIcon ZOOM_IN_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/32x32/zoom-plus.png"));
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
+
+	private static final Icon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
+	private static final Icon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
+	private static final Icon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-minus.png"));
+	private static final Icon ZOOM_IN_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/32x32/zoom-plus.png"));
     public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
     private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/chart.png"));
     private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
-    private static final ImageIcon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge_1.png")); //originally said throbber-badge.gif, that icon doesn't exist. I think this is what we need...
+    private static final Icon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber-badge_1.png")); //originally said throbber-badge.gif, that icon doesn't exist. I think this is what we need...
+    private static final Icon REFRESH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
     
     private final JSlider zoomSlider;
     
@@ -299,6 +302,13 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 	
+	private final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
+		public void actionPerformed(ActionEvent e) {
+			// TODO: Implement query data refresh
+			JOptionPane.showMessageDialog(ReportLayoutPanel.this.panel, "When implemented, this will refresh the data from all queries");
+		}
+	};
+	
     public ReportLayoutPanel(final WabitSwingSession session, final Layout report) {
         this.session = session;
         parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
@@ -347,7 +357,12 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
        
-        JButton button = new JButton(addContentBoxAction);
+        JButton button = new JButton(refreshDataAction);
+        setupToolBarButtonLabel(button, "Refresh");
+        toolbar.add(button);
+        toolbar.addSeparator();
+        
+        button = new JButton(addContentBoxAction);
         setupToolBarButtonLabel(button, "Label");
         toolbar.add(button);
 
