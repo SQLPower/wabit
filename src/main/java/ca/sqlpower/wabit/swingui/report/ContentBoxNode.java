@@ -24,10 +24,15 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.AbstractAction;
 import javax.swing.JDialog;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 import org.apache.log4j.Logger;
 
@@ -44,6 +49,7 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -83,7 +89,58 @@ public class ContentBoxNode extends PNode implements ReportNode {
                     d.setVisible(true);
                 }
             }
+            
         }
+        
+        @Override
+        public void mousePressed(PInputEvent arg0) {
+        	super.mousePressed(arg0);
+        	maybeShowPopup(arg0);
+        }
+        
+        @Override
+        public void mouseReleased(PInputEvent arg0) {
+        	super.mouseReleased(arg0);
+        	maybeShowPopup(arg0);
+        }
+        
+        /**
+         * This will Display a List of options once you right click on the WorkspaceTree.
+         */
+        private void maybeShowPopup(PInputEvent e) {
+        	if (!e.isPopupTrigger()) return;
+        	JPopupMenu menu = new JPopupMenu();
+        	JMenuItem properties = new JMenuItem(new AbstractAction() {
+				public void actionPerformed(ActionEvent arg0) {
+		        	DataEntryPanel propertiesPanel = getPropertiesPanel();
+		            if (propertiesPanel == null) {
+		                Toolkit.getDefaultToolkit().beep();
+		            } else {
+		                String propertiesPanelName = "Properties for " + contentBox.getName();
+		                JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(
+		                        propertiesPanel, dialogOwner, propertiesPanelName, "OK");
+		                d.setVisible(true);
+		            }
+				}
+        	});
+        	properties.setText("Properties");
+        	menu.add(properties);
+        	menu.addSeparator();
+        	
+        	final PCanvas canvas = (PCanvas) e.getComponent();
+        	final PNode node = getParent();
+        	JMenuItem delete = new JMenuItem(new AbstractAction() {
+				public void actionPerformed(ActionEvent e) {
+					Page page = contentBox.getParent();
+					page.removeContentBox(contentBox);
+				}
+        	});
+        	delete.setText("Delete");
+        	menu.add(delete);
+        	Point2D position = e.getPosition();
+			menu.show(canvas, (int) position.getX(), (int) position.getY());
+        }
+        
     };
     
     /**
