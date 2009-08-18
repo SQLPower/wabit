@@ -879,7 +879,7 @@ public class CellSetTableHeaderComponent extends JComponent {
          */
         public void createLayout() {
             Graphics2D g2 = (Graphics2D) getGraphics();
-            if (g2 == null || ((!getLayoutItems().isEmpty()) && isValid()) return;
+            if (g2 == null || ((!getLayoutItems().isEmpty()) && isValid())) return;
             layoutItems.clear();
             preferredSizes.clear();
 
