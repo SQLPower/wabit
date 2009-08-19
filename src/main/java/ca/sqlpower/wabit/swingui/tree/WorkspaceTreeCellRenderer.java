@@ -73,10 +73,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 
     private static final Icon[] THROBBER_OVERLAYS;
     static {
-        final int overlayFrameCount = 12;
+        final int overlayFrameCount = 8;
         THROBBER_OVERLAYS = new Icon[overlayFrameCount];
         for (int imageNumber = 0; imageNumber < overlayFrameCount; imageNumber++) {
-            String imageURL = "icons/throbber-badge_" + (imageNumber + 1) + ".png";
+            String imageURL = String.format("icons/throbber16-%02d.png", (imageNumber + 1));
             logger.debug("Loading image: " + imageURL);
             THROBBER_OVERLAYS[imageNumber] = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource(imageURL));
         }
