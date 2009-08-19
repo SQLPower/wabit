@@ -20,11 +20,12 @@
 package ca.sqlpower.wabit.report.chart;
 
 
+
 /**
  * This class uses the unique name of the column to identify each column. This
  * is used in relational queries.
  */
-public class ColumnNameColumnIdentifier implements ColumnIdentifier {
+public class ColumnNameColumnIdentifier extends AbstractColumnIdentifier {
 
     private final String columnName;
 

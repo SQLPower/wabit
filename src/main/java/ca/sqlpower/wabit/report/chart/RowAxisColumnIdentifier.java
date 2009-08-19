@@ -25,7 +25,14 @@ import org.olap4j.CellSetAxis;
 /**
  * This column identifier specifically represents the rows axis.
  */
-public class RowAxisColumnIdentifier implements ColumnIdentifier {
+public class RowAxisColumnIdentifier extends AbstractColumnIdentifier {
+    
+    /**
+     * Returns the unique identifier used by this column identifier type.
+     */
+    public static Axis generateUniqueIdentifier() {
+        return Axis.ROWS;
+    }
 
     private final Axis axis = Axis.ROWS;
     

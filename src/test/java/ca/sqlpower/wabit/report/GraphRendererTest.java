@@ -24,9 +24,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -81,12 +79,11 @@ public class GraphRendererTest extends TestCase {
         final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
-        Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
-        columnsToDataTypes.put(categoryIdentifier, DataTypeSeries.CATEGORY);
-        columnsToDataTypes.put(seriesIdentifier, DataTypeSeries.SERIES);
+        categoryIdentifier.setDataType(DataTypeSeries.CATEGORY);
+        seriesIdentifier.setDataType(DataTypeSeries.SERIES);
         List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
         categoryColumnIdentifiers.add(categoryIdentifier);
-        CategoryDataset dataset = ChartRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, rs, categoryColumnIdentifiers);
+        CategoryDataset dataset = ChartRenderer.createCategoryDataset(columnNamesInOrder, rs, categoryColumnIdentifiers);
         
         assertEquals(3, dataset.getColumnCount());
         System.out.println(dataset.getColumnKeys());
@@ -124,14 +121,13 @@ public class GraphRendererTest extends TestCase {
         final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
-        Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
-        columnsToDataTypes.put(categoryIdentifier, DataTypeSeries.CATEGORY);
-        columnsToDataTypes.put(category2Identifier, DataTypeSeries.CATEGORY);
-        columnsToDataTypes.put(seriesIdentifier, DataTypeSeries.SERIES);
+        categoryIdentifier.setDataType(DataTypeSeries.CATEGORY);
+        category2Identifier.setDataType(DataTypeSeries.CATEGORY);
+        seriesIdentifier.setDataType(DataTypeSeries.SERIES);
         List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
         categoryColumnIdentifiers.add(categoryIdentifier);
         categoryColumnIdentifiers.add(category2Identifier);
-        CategoryDataset dataset = ChartRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, rs, categoryColumnIdentifiers);
+        CategoryDataset dataset = ChartRenderer.createCategoryDataset(columnNamesInOrder, rs, categoryColumnIdentifiers);
         
         assertEquals(3, dataset.getColumnCount());
         System.out.println(dataset.getColumnKeys());

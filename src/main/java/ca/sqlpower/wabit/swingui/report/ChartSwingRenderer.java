@@ -87,7 +87,6 @@ import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
-import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetViewer;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -125,8 +124,9 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                 public void itemStateChanged(ItemEvent e) {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
                         JComboBox sourceCombo = (JComboBox) e.getSource();
-                        columnsToDataTypes.put(columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX())), (DataTypeSeries) e.getItem());
-                        logger.debug("Column data types are now " + columnsToDataTypes);
+                        ColumnIdentifier identifier = columnNamesInOrder.get(tableHeader.
+                                getColumnModel().getColumnIndexAtX(sourceCombo.getX()));
+                        identifier.setDataType((DataTypeSeries) e.getItem());
                         tableHeader.repaint();
                         updateChartPreview();
                     }
@@ -226,7 +226,7 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                     throw new RuntimeException(e);
                 }
                 columnToComboBox.put(new Integer(column), dataTypeComboBox);
-                final DataTypeSeries defaultDataTypeSeries = columnsToDataTypes.get(columnNamesInOrder.get(column));
+                final DataTypeSeries defaultDataTypeSeries = columnNamesInOrder.get(column).getDataType();
                 if (defaultDataTypeSeries == null) {
                     dataTypeComboBox.setSelectedItem(DataTypeSeries.NONE);
                 } else {
@@ -261,13 +261,12 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
                         JComboBox sourceCombo = (JComboBox) e.getSource();
                         final int columnIndexAtX = tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX());
-                        String colSeriesName = ((ColumnNameColumnIdentifier) columnNamesInOrder.get(columnIndexAtX)).getColumnName();
-                        columnsToDataTypes.put(new ColumnNameColumnIdentifier(colSeriesName), (DataTypeSeries) e.getItem());
+                        ColumnIdentifier identifier = columnNamesInOrder.get(columnIndexAtX);
+                        identifier.setDataType((DataTypeSeries) e.getItem());
                         if (((DataTypeSeries) e.getItem()) == DataTypeSeries.NONE) {
-                            columnSeriesToColumnXAxis.remove(colSeriesName);
+                            identifier.setXAxisIdentifier(null);
                             columnToXAxisComboBox.remove(columnIndexAtX);
                         }
-                        logger.debug("Column data types are now " + columnsToDataTypes);
                         tableHeader.repaint();
                         updateChartPreview();
                     }
@@ -280,7 +279,9 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                 public void itemStateChanged(ItemEvent e) {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
                         JComboBox sourceCombo = (JComboBox) e.getSource();
-                        columnSeriesToColumnXAxis.put(columnNamesInOrder.get(tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX())), new ColumnNameColumnIdentifier((String) e.getItem()));
+                        final ColumnIdentifier changedColumn = columnNamesInOrder.get(
+                                tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX()));
+                        changedColumn.setXAxisIdentifier(new ColumnNameColumnIdentifier((String) e.getItem()));
                         tableHeader.repaint();
                         updateChartPreview();
                     }
@@ -404,7 +405,7 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                     throw new RuntimeException(e);
                 }
                 columnToDataTypeSeriesComboBox.put(new Integer(column), dataTypeComboBox);
-                final DataTypeSeries defaultDataTypeSeries = columnsToDataTypes.get(columnNamesInOrder.get(column));
+                final DataTypeSeries defaultDataTypeSeries = columnNamesInOrder.get(column).getDataType();
                 if (defaultDataTypeSeries == null) {
                     dataTypeComboBox.setSelectedItem(DataTypeSeries.NONE);
                 } else {
@@ -425,7 +426,8 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                 }
                 final JComboBox comboBoxForXValues = new JComboBox(numericAndDateCols.toArray());
                 if (defaultDataTypeSeries == DataTypeSeries.SERIES) {
-                    comboBoxForXValues.setSelectedItem(columnSeriesToColumnXAxis.get(columnNamesInOrder.get(column)));
+                    comboBoxForXValues.setSelectedItem(columnNamesInOrder.get(column).
+                            getXAxisIdentifier());
                     newHeader.add(comboBoxForXValues, BorderLayout.CENTER);
                     
                     columnToXAxisComboBox.put(new Integer(column), comboBoxForXValues);
@@ -448,55 +450,6 @@ public class ChartSwingRenderer implements SwingContentRenderer {
             
         }
 
-        /**
-         * This layout manager is used for laying out components above a
-         * cellset's table header where the header is a row header. This lets
-         * users label or define values above a row header. The specific use of
-         * this at current is to add combo boxes above the rows axis to define
-         * row hierarchies as categories in a bar chart. If more components are
-         * in the container then there are hierarchies in the table header the
-         * addtional components will be ignored.
-         */
-        private class CellSetTableHeaderRowLayoutManager implements LayoutManager {
-            
-            private final CellSetTableHeaderComponent tableHeader;
-
-            public CellSetTableHeaderRowLayoutManager(CellSetTableHeaderComponent tableHeader) {
-                this.tableHeader = tableHeader;
-            }
-
-            public void layoutContainer(Container parent) {
-                int x = 0;
-                for (int i = 0; i < tableHeader.getHierarchies().size(); i++) {
-                    if (i >= parent.getComponentCount()) return;
-                    
-                    final int columnWidth = tableHeader.getHierarchies().get(i).getWidth();
-                    final int preferredHeight = (int) parent.getComponent(i).getPreferredSize().getHeight();
-                    parent.getComponent(i).setBounds(x, 0, columnWidth, preferredHeight);
-                    x += columnWidth;
-                }
-            }
-
-            public Dimension minimumLayoutSize(Container parent) {
-                return preferredLayoutSize(parent);
-            }
-
-            public Dimension preferredLayoutSize(Container parent) {
-                JComboBox comboBox = new JComboBox();
-                comboBox.paint(parent.getGraphics());
-                return new Dimension(tableHeader.getWidth(), (int) comboBox.getPreferredSize().getHeight());
-            }
-            
-            public void addLayoutComponent(String name, Component comp) {
-                //do nothing
-            }
-
-            public void removeLayoutComponent(Component comp) {
-                //do nothing
-            }
-
-        }
-        
         /**
          * This layout manager is used to synchronize the positions of the columns 
          * in the CellSetViewer. Each component added to a panel with this layout
@@ -644,17 +597,6 @@ public class ChartSwingRenderer implements SwingContentRenderer {
          */
         private final List<ColumnIdentifier> columnNamesInOrder = new ArrayList<ColumnIdentifier>(); 
 
-        /**
-         * This maps the column names for each column to the data type series.
-         */
-        private final Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
-
-        /**
-         * This map tracks the columns that are defined as series and the column
-         * defined to be the values displayed on the x axis.
-         */
-        private final Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis = new HashMap<ColumnIdentifier, ColumnIdentifier>();
-        
         /**
          * This panel will display a JFreeChart that is a preview of what the
          * user has selected from the result table. This chart should look
@@ -866,7 +808,6 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                 for (ColumnIdentifier identifier : renderer.getColumnNamesInOrder()) {
                     if (columnNamesInOrder.contains(identifier)) {
                         currentColumnNamesInOrder.add(identifier);
-                        currentNameToType.put(identifier, renderer.getColumnsToDataTypes().get(identifier));
                     }
                 }
                 for (ColumnIdentifier identifier : columnNamesInOrder) {
@@ -887,16 +828,8 @@ public class ChartSwingRenderer implements SwingContentRenderer {
 //                    }
 //                }
                 
-                for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : renderer.getColumnSeriesToColumnXAxis().entrySet()) {
-                    if (columnNamesInOrder.contains(entry.getKey())) {
-                        columnSeriesToColumnXAxis.put(entry.getKey(), entry.getValue());
-                    }
-                }
-
                 columnNamesInOrder.clear();
                 columnNamesInOrder.addAll(currentColumnNamesInOrder);
-                columnsToDataTypes.clear();
-                columnsToDataTypes.putAll(currentNameToType);
                 updateChartPreview();
             }
             
@@ -990,7 +923,8 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                 for (int i = 0; i < cellSetViewer.getTable().getColumnModel().getColumnCount(); i++) {
                     final Position position = columnAxis.getPositions().get(i);
                     final JComboBox comboBox = new JComboBox(DataTypeSeries.values());
-                    final DataTypeSeries columnDataType = columnsToDataTypes.get(new PositionColumnIdentifier(position));
+                    final DataTypeSeries columnDataType = findColumnIdentifier(
+                            PositionColumnIdentifier.generateUniqueIdentifier(position)).getDataType();
                     if (columnDataType != null) {
                         comboBox.setSelectedItem(columnDataType);
                     }
@@ -1000,8 +934,8 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                         public void itemStateChanged(ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
                                 logger.debug("Position ordinal is " + position.getOrdinal());
-                                columnsToDataTypes.put(new PositionColumnIdentifier(position), (DataTypeSeries) e.getItem());
-                                logger.debug("Column data types are now " + columnsToDataTypes);
+                                findColumnIdentifier(PositionColumnIdentifier
+                                        .generateUniqueIdentifier(position)).setDataType((DataTypeSeries) e.getItem());
                                 updateChartPreview();
                             }
                         }
@@ -1016,7 +950,8 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                 JPanel rowAxisComboBoxHeader = new JPanel(new BorderLayout());
                 final JComboBox comboBox = new JComboBox(new DataTypeSeries[]{DataTypeSeries.NONE, DataTypeSeries.CATEGORY});
                 final CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-                final DataTypeSeries hierarchyDataType = columnsToDataTypes.get(new RowAxisColumnIdentifier());
+                final DataTypeSeries hierarchyDataType = findColumnIdentifier(
+                        RowAxisColumnIdentifier.generateUniqueIdentifier()).getDataType();
                 if (hierarchyDataType != null) {
                     comboBox.setSelectedItem(hierarchyDataType);
                 }
@@ -1025,8 +960,8 @@ public class ChartSwingRenderer implements SwingContentRenderer {
 
                     public void itemStateChanged(ItemEvent e) {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
-                            columnsToDataTypes.put(new RowAxisColumnIdentifier(), (DataTypeSeries) e.getItem());
-                            logger.debug("Column data types are now " + columnsToDataTypes);
+                            findColumnIdentifier(RowAxisColumnIdentifier.generateUniqueIdentifier())
+                                .setDataType((DataTypeSeries) e.getItem());
                             updateChartPreview();
                         }
                     }
@@ -1061,11 +996,15 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                     columnComboBoxPanel.add(xAxisComboBox);
                     xAxisComboBox.setVisible(false);
                     
-                    if (columnsToDataTypes.get(new PositionColumnIdentifier(position)) == DataTypeSeries.SERIES) {
+                    if (findColumnIdentifier(PositionColumnIdentifier.
+                            generateUniqueIdentifier(position)).getDataType() 
+                            == DataTypeSeries.SERIES) {
                         seriesComboBox.setSelectedItem(DataTypeSeries.SERIES);
                         xAxisComboBox.setVisible(true);
                         
-                        final PositionColumnIdentifier xAxisIdentifier = ((PositionColumnIdentifier) columnSeriesToColumnXAxis.get(position));
+                        final PositionColumnIdentifier xAxisIdentifier = 
+                            ((PositionColumnIdentifier) findColumnIdentifier(
+                                    PositionColumnIdentifier.generateUniqueIdentifier(position)));
                         if (xAxisIdentifier != null) {
                             xAxisComboBox.setSelectedIndex(xAxisIdentifier.getPosition(cellSet).getOrdinal());
                         }
@@ -1078,9 +1017,13 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                                     xAxisComboBox.setVisible(true);
                                 } else if (e.getItem() == DataTypeSeries.NONE) {
                                     xAxisComboBox.setVisible(false);
-                                    columnSeriesToColumnXAxis.remove(new PositionColumnIdentifier(position));
+                                    findColumnIdentifier(PositionColumnIdentifier.
+                                            generateUniqueIdentifier(position)).
+                                            setXAxisIdentifier(null);
                                 }
-                                columnsToDataTypes.put(new PositionColumnIdentifier(position), (DataTypeSeries) e.getItem());
+                                findColumnIdentifier(PositionColumnIdentifier.
+                                        generateUniqueIdentifier(position)).
+                                        setDataType((DataTypeSeries) e.getItem());
                                 updateChartPreview();
                             }
                         }
@@ -1090,7 +1033,13 @@ public class ChartSwingRenderer implements SwingContentRenderer {
                     
                         public void itemStateChanged(ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
-                                columnSeriesToColumnXAxis.put(new PositionColumnIdentifier(position), new PositionColumnIdentifier(columnAxis.getPositions().get(xAxisComboBox.getSelectedIndex())));
+                                final Position xPosition = columnAxis.getPositions().
+                                    get(xAxisComboBox.getSelectedIndex());
+                                ColumnIdentifier xIdentifier = findColumnIdentifier(
+                                        PositionColumnIdentifier.generateUniqueIdentifier(xPosition));
+                                findColumnIdentifier(PositionColumnIdentifier.
+                                        generateUniqueIdentifier(position)).setXAxisIdentifier(
+                                                xIdentifier);
                                 updateChartPreview();
                             }
                         }
@@ -1111,27 +1060,20 @@ public class ChartSwingRenderer implements SwingContentRenderer {
          */
         private void resetChartColumns() throws SQLException {
             columnNamesInOrder.clear();
-            columnsToDataTypes.clear();
-            columnSeriesToColumnXAxis.clear();
             
             if (rs != null) {
-                columnNamesInOrder.clear();
-                columnsToDataTypes.clear();
-                columnSeriesToColumnXAxis.clear();
                 for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
                     String columnName = rs.getMetaData().getColumnName(i);
-                    columnNamesInOrder.add(new ColumnNameColumnIdentifier(columnName));
-                    columnsToDataTypes.put(new ColumnNameColumnIdentifier(columnName), DataTypeSeries.NONE);
+                    final ColumnNameColumnIdentifier identifier = 
+                        new ColumnNameColumnIdentifier(columnName);
+                    columnNamesInOrder.add(identifier);
                 }
             } else if (cellSet != null) {
-                CellSetAxis rowAxis = cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
                 columnNamesInOrder.add(new RowAxisColumnIdentifier());
-                columnsToDataTypes.put(new RowAxisColumnIdentifier(), DataTypeSeries.NONE);
                 final CellSetAxis columnsAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
                 for (int i = 0; i < columnsAxis.getPositionCount(); i++) {
                     Position position = columnsAxis.getPositions().get(i);
                     columnNamesInOrder.add(new PositionColumnIdentifier(position));
-                    columnsToDataTypes.put(new PositionColumnIdentifier(position), DataTypeSeries.NONE);
                 }
             }
             
@@ -1176,7 +1118,17 @@ public class ChartSwingRenderer implements SwingContentRenderer {
          * property panel.
          */
         private void updateChartPreview() {
-            JFreeChart chart = ChartRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, rs, cellSet, (ExistingChartTypes) chartTypeComboBox.getSelectedItem(), (LegendPosition) legendPositionComboBox.getSelectedItem(), nameField.getText(), yaxisNameField.getText(), xaxisNameField.getText());
+            Object data = null;
+            if (rs != null) {
+                data = rs;
+            } else if (cellSet != null) {
+                data = cellSet;
+            }
+            JFreeChart chart = ChartRenderer.createChartFromQuery(columnNamesInOrder, 
+                    data, (ExistingChartTypes) chartTypeComboBox.getSelectedItem(), 
+                    (LegendPosition) legendPositionComboBox.getSelectedItem(), 
+                    nameField.getText(), yaxisNameField.getText(), 
+                    xaxisNameField.getText());
             chartPanel.setChart(chart);
         }
 
@@ -1230,12 +1182,30 @@ public class ChartSwingRenderer implements SwingContentRenderer {
             renderer.setChartType((ExistingChartTypes) chartTypeComboBox.getSelectedItem());
             renderer.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
             renderer.setColumnNamesInOrder(columnNamesInOrder);
-            renderer.setColumnsToDataTypes(columnsToDataTypes);
-            renderer.setColumnSeriesToColumnXAxis(columnSeriesToColumnXAxis);
             renderer.setYaxisName(yaxisNameField.getText());
             renderer.setXaxisName(xaxisNameField.getText());
             renderer.clearMissingIdentifiers();
             return true;
+        }
+
+        /**
+         * This is a helper method for finding a column identifier for a given
+         * object.
+         * 
+         * @param uniqueIdentifier
+         *            An object that uniquely identifies a column. This may need
+         *            to be retrieved from one of the {@link ColumnIdentifier}
+         *            classes like the {@link PositionColumnIdentifier}.
+         * @return A {@link ColumnIdentifier} that is in the list of columns if
+         *         the given object matches a column or null otherwise.
+         */
+        private ColumnIdentifier findColumnIdentifier(Object uniqueIdentifier) {
+            for (ColumnIdentifier identifier : columnNamesInOrder) {
+                if (identifier.getUniqueIdentifier().equals(uniqueIdentifier)) {
+                    return identifier;
+                }
+            }
+            return null;
         }
     };
     

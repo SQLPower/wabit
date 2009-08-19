@@ -34,14 +34,32 @@ import org.olap4j.metadata.Member;
  * The Position is not stored itself but the members that make up the position are stored as
  * they are unique.
  */
-public class PositionColumnIdentifier implements ColumnIdentifier {
+public class PositionColumnIdentifier extends AbstractColumnIdentifier {
     
     private final List<String> uniqueMemberNames = new ArrayList<String>();
     private final List<String> memberNames = new ArrayList<String>();
-    
-    public PositionColumnIdentifier(Position position) {
+
+    /**
+     * Returns the current object being used as the unique identifier of a
+     * position. This value may change when the Position object is comparable.
+     * 
+     * @param position
+     *            The position to get the unique identifier used in this column
+     *            identifier.
+     * @return The unique identifier that this class makes from the position to
+     *         use in comparisions.
+     */
+    public static List<String> generateUniqueIdentifier(Position position) {
+        List<String> uniqueMemberNames = new ArrayList<String>();
         for (Member member : position.getMembers()) {
             uniqueMemberNames.add(member.getUniqueName());
+        }
+        return uniqueMemberNames;
+    }
+    
+    public PositionColumnIdentifier(Position position) {
+        uniqueMemberNames.addAll(generateUniqueIdentifier(position));
+        for (Member member : position.getMembers()) {
             memberNames.add(member.getName());
         }
     }
@@ -104,11 +122,7 @@ public class PositionColumnIdentifier implements ColumnIdentifier {
         if (obj instanceof List) {
             return ((List<?>) obj).equals(getUniqueMemberNames());
         } else if (obj instanceof Position) {
-            List<Member> members = ((Position) obj).getMembers();
-            List<String> uniqueMemberNames = new ArrayList<String>();
-            for (Member member : members) {
-                uniqueMemberNames.add(member.getUniqueName());
-            }
+            List<String> uniqueMemberNames = generateUniqueIdentifier((Position) obj);
             return uniqueMemberNames.equals(getUniqueMemberNames());
         } else if (obj instanceof PositionColumnIdentifier) {
             PositionColumnIdentifier ci = (PositionColumnIdentifier) obj;

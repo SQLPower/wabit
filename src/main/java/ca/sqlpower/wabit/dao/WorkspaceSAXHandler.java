@@ -819,10 +819,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier when ordering columns and cannot be loaded.");
             }
             
-            List<ColumnIdentifier> colNames = new ArrayList<ColumnIdentifier>(graphRenderer.getColumnNamesInOrder());
-            colNames.add(colIdentifier);
-            graphRenderer.setColumnNamesInOrder(colNames);
-        } else if (name.equals("graph-name-to-data-type")) {
+            for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("name")) {
+                    //already loaded
+                } else if (aname.equals("data-type")) {
+                    colIdentifier.setDataType(DataTypeSeries.valueOf(aval));
+                } else if (aname.matches("x-axis-.*")) {
+                    ColumnIdentifier xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
+                    colIdentifier.setXAxisIdentifier(xAxisIdentifier);
+                }
+            }
+            
+            graphRenderer.addColumnIdentifier(colIdentifier);
+        } else if (name.equals("graph-name-to-data-type")) { //For 1.1.4 and older
             String dataType = attributes.getValue("data-type");
             //this is how charts were loaded in version 1.0.1 and older
             String colName = attributes.getValue("name");
@@ -839,10 +850,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             }
             
             DataTypeSeries dataTypeSeries = DataTypeSeries.valueOf(dataType);
-            Map<ColumnIdentifier, DataTypeSeries> colToDataTypeMap = new HashMap<ColumnIdentifier, DataTypeSeries>(graphRenderer.getColumnsToDataTypes());
-            colToDataTypeMap.put(colIdentifier, dataTypeSeries);
-            graphRenderer.setColumnsToDataTypes(colToDataTypeMap);
-        } else if (name.equals("graph-series-col-to-x-axis-col")) {
+            List<ColumnIdentifier> columnNamesInOrder = graphRenderer.getColumnNamesInOrder();
+            for (ColumnIdentifier identifier : columnNamesInOrder) {
+                if (identifier.getUniqueIdentifier().equals(colIdentifier.getUniqueIdentifier())) {
+                    identifier.setDataType(dataTypeSeries);
+                    break;
+                }
+            }
+        } else if (name.equals("graph-series-col-to-x-axis-col")) { //Loading from 1.1.4 and older
             //This is how charts were loaded in version 1.0.1 and older
             String seriesName = attributes.getValue("series");
             String xAxisName = attributes.getValue("x-axis");
@@ -864,9 +879,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier and cannot be loaded.");
             }
             
-            Map<ColumnIdentifier, ColumnIdentifier> seriesToXAxis = new HashMap<ColumnIdentifier, ColumnIdentifier>(graphRenderer.getColumnSeriesToColumnXAxis());
-            seriesToXAxis.put(seriesIdentifier, xAxisIdentifier);
-            graphRenderer.setColumnSeriesToColumnXAxis(seriesToXAxis);
+            List<ColumnIdentifier> columnNamesInOrder = graphRenderer.getColumnNamesInOrder();
+            for (ColumnIdentifier identifier : columnNamesInOrder) {
+                if (identifier.getUniqueIdentifier().equals(seriesIdentifier.getUniqueIdentifier())) {
+                    identifier.setXAxisIdentifier(xAxisIdentifier);
+                    break;
+                }
+            }
         } else if (name.equals("missing-identifier")) {
             ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
             graphRenderer.addMissingIdentifier(colIdentifier);

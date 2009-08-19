@@ -106,6 +106,8 @@ public class WorkspaceXMLDAO {
      *  <dt>1.1.4 <dd>Added two flags to the query cache to save if a user should be prompted each time the query
      *  is executed with a missing join, and if the user is not being prompted, if the query should be automatically
      *  executed.
+     *  <dt>1.1.5 <dd>Merged the data type and the x axis identifier into the column identifier itself.
+     *  This removes the graph-name-to-data-type and graph-series-col-to-x-axis-col tags.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
@@ -490,30 +492,12 @@ public class WorkspaceXMLDAO {
                         for (ColumnIdentifier colIdentifier : graphRenderer.getColumnNamesInOrder()) {
                             xml.print(out, "<graph-col-names");
                             saveColumnIdentifier(out, colIdentifier, "");
+                            printAttribute("data-type", colIdentifier.getDataType().name());
+                            saveColumnIdentifier(out, colIdentifier.getXAxisIdentifier(), "x-axis-");
                             xml.niprintln(out, "/>");
                         }
                         xml.indent--;
                         xml.println(out, "</graph-col-names-in-order>");
-                        xml.println(out, "<graph-col-names-to-data-types>");
-                        xml.indent++;
-                        for (Map.Entry<ColumnIdentifier, ChartRenderer.DataTypeSeries> entry : graphRenderer.getColumnsToDataTypes().entrySet()) {
-                            xml.print(out, "<graph-name-to-data-type");
-                            saveColumnIdentifier(out, entry.getKey(), "");
-                            printAttribute("data-type", entry.getValue().name());
-                            xml.niprintln(out, "/>");
-                        }
-                        xml.indent--;
-                        xml.println(out, "</graph-col-names-to-data-types>");
-                        xml.println(out, "<graph-series-to-x-axis>");
-                        xml.indent++;
-                        for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : graphRenderer.getColumnSeriesToColumnXAxis().entrySet()) {
-                            xml.print(out, "<graph-series-col-to-x-axis-col");
-                            saveColumnIdentifier(out, entry.getKey(), "series-");
-                            saveColumnIdentifier(out, entry.getValue(), "x-axis-");
-                            xml.niprintln(out, "/>");
-                        }
-                        xml.indent--;
-                        xml.println(out, "</graph-series-to-x-axis>");
                         xml.println(out, "<missing-identifiers>");
                         xml.indent++;
                         for (ColumnIdentifier identifier : graphRenderer.getMissingIdentifiers()) {
@@ -623,6 +607,7 @@ public class WorkspaceXMLDAO {
      * in cases where multiples are saved in one element.
      */
     private void saveColumnIdentifier(PrintWriter out, ColumnIdentifier identifier, String namePrefix) {
+        if (identifier == null) return;
         if (identifier instanceof ColumnNameColumnIdentifier) {
             printAttribute(namePrefix + "column-name", ((ColumnNameColumnIdentifier) identifier).getColumnName());
         } else if (identifier instanceof PositionColumnIdentifier) {

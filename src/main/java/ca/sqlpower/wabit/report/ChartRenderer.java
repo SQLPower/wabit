@@ -30,9 +30,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.jfree.chart.ChartFactory;
@@ -104,24 +102,55 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	};
 	
 	/**
+	 * This is the list of supported datasets in the chart at current.
+	 */
+	public enum DatasetTypes {
+	    CATEGORY,
+	    XY
+	}
+	
+	/**
 	 * The types of charts this renderer can create.
 	 */
 	public enum ExistingChartTypes {
-		BAR,
-		CATEGORY_LINE,
-		LINE,
-		SCATTER
+		BAR(DatasetTypes.CATEGORY),
+		CATEGORY_LINE(DatasetTypes.CATEGORY),
+		LINE(DatasetTypes.XY),
+		SCATTER(DatasetTypes.XY);
+		
+		private final DatasetTypes type;
+
+        private ExistingChartTypes(DatasetTypes type) {
+            this.type = type;
+		}
+
+        public DatasetTypes getType() {
+            return type;
+        }
 	}
 	
 	/**
 	 * The possible positions a legend can occupy on a chart
 	 */
 	public enum LegendPosition {
-		NONE,
-		TOP,
-		LEFT,
-		RIGHT,
-		BOTTOM
+		NONE(null),
+		TOP(RectangleEdge.TOP),
+		LEFT(RectangleEdge.LEFT),
+		RIGHT(RectangleEdge.RIGHT),
+		BOTTOM(RectangleEdge.BOTTOM);
+		
+		/**
+		 * The edge that this legend position represents
+		 */
+		private final RectangleEdge rectangleEdge;
+		
+		private LegendPosition(RectangleEdge representationEdge) {
+		    rectangleEdge = representationEdge;
+		}
+		
+		public RectangleEdge getRectangleEdge() {
+		    return rectangleEdge;
+		}
 	}
 
 	/**
@@ -243,18 +272,6 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	private final List<ColumnIdentifier> columnNamesInOrder = new ArrayList<ColumnIdentifier>();
 	
 	/**
-	 * This maps each column in the result set to a DataTypeSeries. The types
-	 * decide how each column in the result set are used to display on the chart. 
-	 */
-	private final Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes = new HashMap<ColumnIdentifier, DataTypeSeries>();
-
-	/**
-	 * This map contains each column listed as a series and the column to be used as X axis values.
-	 * This mapping is used for line and line-like charts.
-	 */
-	private final Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis = new HashMap<ColumnIdentifier, ColumnIdentifier>();
-	
-	/**
 	 * This change listener watches for changes to the streaming query and refreshes the
 	 * chart when a change occurs.
 	 */
@@ -301,9 +318,10 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 
             }
             List<ColumnIdentifier> positionColumnsInUse = new ArrayList<ColumnIdentifier>();
-            for (Map.Entry<ColumnIdentifier, DataTypeSeries> entry : columnsToDataTypes.entrySet()) {
-                if (entry.getValue() != DataTypeSeries.NONE && entry.getKey() instanceof PositionColumnIdentifier) {
-                    positionColumnsInUse.add(entry.getKey());
+            for (ColumnIdentifier identifier : columnNamesInOrder) {
+                if (identifier.getDataType() != DataTypeSeries.NONE 
+                        && identifier instanceof PositionColumnIdentifier) {
+                    positionColumnsInUse.add(identifier);
                 }
             }
             
@@ -321,7 +339,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	 * This list tracks all of the column identifiers currently in use in the query but
 	 * cannot be found in the actual query object that backs this chart. The common reason
 	 * for columns being missing is that the user created a chart, modified the query and
-	 * removed columns in use in the chart, and then when to modify or use the chart.
+	 * removed columns in use in the chart, and then went to modify or use the chart.
 	 */
 	private final List<ColumnIdentifier> missingIdentifiers = new ArrayList<ColumnIdentifier>();
 	
@@ -373,16 +391,21 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	        
 		JFreeChart chart = null;
 		try {
+		    Object data;
 			if (query != null) {
 			    if (query instanceof QueryCache) {
-			        chart = ChartRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet(), chartType, selectedLegendPosition, getName(), yaxisName, xaxisName);
+			        data = ((QueryCache) query).fetchResultSet();
 			    } else if (query instanceof OlapQuery) {
 			        final OlapQuery olapQuery = (OlapQuery) query;
-                    logger.debug("The olap query being charted is " + olapQuery.getName() + " and the query text is " + olapQuery.getMdxText());
-			        chart = ChartRenderer.createJFreeChart(columnNamesInOrder, columnsToDataTypes, columnSeriesToColumnXAxis, olapQuery.execute(), chartType, selectedLegendPosition, getName(), yaxisName, xaxisName);
+                    logger.debug("The olap query being charted is " + olapQuery.getName() +
+                            " and the query text is " + olapQuery.getMdxText());
+			        data = olapQuery.execute();
 			    } else {
-			        throw new IllegalStateException("Unknown query type " + query.getClass() + " when trying to create a chart.");
+			        throw new IllegalStateException("Unknown query type " + query.getClass() + 
+			                " when trying to create a chart.");
 			    }
+			    chart = createChartFromQuery(columnNamesInOrder, data, chartType, getLegendPosition(), 
+			            getName(), yaxisName, xaxisName);
 			}
 			if (chart == null) {
 			    g.drawString("Empty Chart", 0, g.getFontMetrics().getHeight());
@@ -395,229 +418,329 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		}
 		return false;
 	}
-
-    /**
-     * Creates a JFreeChart based on the given column and series data. Returns
-     * null if the data given cannot create a chart.
-     * 
-     * @param columnNamesInOrder
-     *            A list of {@link ColumnIdentifier}s that define the order the
-     *            columns are in. This is used to decide the order the columns
-     *            marked as series come in when creating the chart.
-     * @param columnsToDataTypes
-     *            This maps the {@link ColumnIdentifier}s to a data type that
-     *            defines how the column is used in the chart. This is used for
-     *            bar charts.
-     * @param columnSeriesToColumnXAxis
-     *            This maps {@link ColumnIdentifier}s defined to be series in a
-     *            chart to columns that are used as the x-axis values. This is
-     *            used for line and scatter charts.
-     * @param resultSet
-     *            The result set to take values from for chart data.
-     * @param chartType
-     *            The type of chart to create.
-     * @param legendPosition
-     *            Where the legend should go in the chart.
-     * @param chartName
-     *            The name of the chart.
-     * @param yaxisName
-     *            The name of the y-axis of the chart.
-     * @param xaxisName
-     *            The name of the x-axis of the chart.
-     */
-	public static JFreeChart createJFreeChart(List<ColumnIdentifier> columnNamesInOrder, 
-	        Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes, 
-	        Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, 
-	        ResultSet resultSet, ExistingChartTypes chartType, LegendPosition legendPosition, 
-	        String chartName, String yaxisName, String xaxisName) {
-	    return createJFreeChart(columnNamesInOrder, columnsToDataTypes,
-	            columnSeriesToColumnXAxis, resultSet, null, chartType,
-	            legendPosition, chartName, yaxisName, xaxisName);
-	}
 	
 	/**
-     * Creates a JFreeChart based on the given column and series data. Returns
-     * null if the data given cannot create a chart.
+     * Creates a JFreeChart based on the given query results and how the columns
+     * are defined in the chart. The query given MUST be a query type that is
+     * allowed in the chart, either a {@link QueryCache} or an {@link OlapQuery}
+     * . Anything else will throw an exception.
      * 
      * @param columnNamesInOrder
-     *            A list of {@link ColumnIdentifier}s that define the order the
-     *            columns are in. This is used to decide the order the columns
-     *            marked as series come in when creating the chart.
+     *            The order the columns should come in in the chart. The first
+     *            column defined as a series will be the first bar or line, the
+     *            second defined as a series will be the second bar or line in
+     *            the chart and so on. The order of the category columns is also
+     *            enforced here and will decide the order the category names are
+     *            concatenated in.
      * @param columnsToDataTypes
-     *            This maps the {@link ColumnIdentifier}s to a data type that
-     *            defines how the column is used in the chart. This is used for
-     *            bar charts.
-     * @param columnSeriesToColumnXAxis
-     *            This maps {@link ColumnIdentifier}s defined to be series in a
-     *            chart to columns that are used as the x-axis values. This is
-     *            used for line and scatter charts.
-     * @param cellSet
-     *            The cell set to take values from for chart data.
+     *            Defines which columns are series and which ones are
+     *            categories.
+     * @param data
+     *            This must be either a {@link ResultSet} or a {@link CellSet}
+     *            that contains the data that will be displayed in the chart.
+     *            TODO If we change the cell set to be a cached row set this
+     *            just becomes a result set. 
      * @param chartType
-     *            The type of chart to create.
+     *            The type of chart to create from the data.
      * @param legendPosition
-     *            Where the legend should go in the chart.
+     *            The position where the legend will appear or NONE if it will
+     *            not be displayed.
      * @param chartName
      *            The name of the chart.
      * @param yaxisName
-     *            The name of the y-axis of the chart.
+     *            The name of the y axis.
      * @param xaxisName
-     *            The name of the x-axis of the chart.
+     *            The name of the x axis.
+     * @return A chart based on the data in the query of the given type.
      */
-    public static JFreeChart createJFreeChart(List<ColumnIdentifier> columnNamesInOrder, 
-            Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes, 
-            Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, 
-            CellSet cellSet, ExistingChartTypes chartType, LegendPosition legendPosition, 
+    public static JFreeChart createChartFromQuery(List<ColumnIdentifier> columnNamesInOrder, 
+            Object data, ExistingChartTypes chartType, LegendPosition legendPosition, 
             String chartName, String yaxisName, String xaxisName) {
-        return createJFreeChart(columnNamesInOrder, columnsToDataTypes,
-                columnSeriesToColumnXAxis, null, cellSet, chartType,
+        JFreeChart chart = null;
+        if (data == null) return chart;
+        
+        if (chartType.getType().equals(DatasetTypes.CATEGORY)) {
+            chart = createCategoryChartFromQuery(columnNamesInOrder, data, chartType, 
+                    legendPosition, chartName, yaxisName, xaxisName);
+        } else if (chartType.getType().equals(DatasetTypes.XY)) {
+            chart = createXYChartFromQuery(columnNamesInOrder, data, chartType, 
+                    legendPosition, chartName, yaxisName, xaxisName);
+        } else {
+            throw new IllegalStateException("Unknown chart dataset type " +
+                    chartType.getType());
+        }
+        return chart;
+    }
+	
+    /**
+     * Creates a JFreeChart based on the given query results and how the columns
+     * are defined in the chart. The query given MUST be a query type that is
+     * allowed in the chart, either a {@link QueryCache} or an {@link OlapQuery}
+     * . Anything else will throw an exception.
+     * 
+     * @param columnNamesInOrder
+     *            The order the columns should come in in the chart. The first
+     *            column defined as a series will be the first bar or line, the
+     *            second defined as a series will be the second bar or line in
+     *            the chart and so on. The order of the category columns is also
+     *            enforced here and will decide the order the category names are
+     *            concatenated in.
+     * @param columnsToDataTypes
+     *            Defines which columns are series and which ones are
+     *            categories.
+     * @param data
+     *            This must be either a {@link ResultSet} or a {@link CellSet}
+     *            that contains the data that will be displayed in the chart.
+     *            TODO If we change the cell set to be a cached row set this
+     *            just becomes a result set. 
+     * @param chartType
+     *            The type of chart to create from the data. This can be a bar
+     *            chart, line chart, or anything else that takes a category
+     *            dataset.
+     * @param legendPosition
+     *            The position where the legend will appear or NONE if it will
+     *            not be displayed.
+     * @param chartName
+     *            The name of the chart.
+     * @param yaxisName
+     *            The name of the y axis.
+     * @param xaxisName
+     *            The name of the x axis.
+     * @return A chart based on the data in the query of the given type.
+     */
+    private static JFreeChart createCategoryChartFromQuery(List<ColumnIdentifier> columnNamesInOrder, 
+            Object data, ExistingChartTypes chartType, LegendPosition legendPosition, 
+            String chartName, String yaxisName, String xaxisName) {
+        
+        boolean containsCategory = false;
+        boolean containsSeries = false;
+        for (ColumnIdentifier col : columnNamesInOrder) {
+            if (col.getDataType().equals(DataTypeSeries.CATEGORY)) {
+                containsCategory = true;
+            } else if (col.getDataType().equals(DataTypeSeries.SERIES)) {
+                containsSeries = true;
+            }
+        }
+        if (!containsCategory || !containsSeries) {
+            return null;
+        }
+        
+        List<ColumnIdentifier> categoryColumns = 
+            findCategoryColumnNames(columnNamesInOrder);
+        List<String> categoryColumnNames = new ArrayList<String>();
+        for (ColumnIdentifier identifier : categoryColumns) {
+            categoryColumnNames.add(identifier.getName());
+        }
+        CategoryDataset dataset;
+        
+        if (data instanceof CellSet) {
+            CellSet cellSet = (CellSet) data;
+            dataset = createOlapCategoryDataset(columnNamesInOrder,
+                    cellSet, categoryColumns);
+        } else if (data instanceof ResultSet) {
+            ResultSet rs = (ResultSet) data;
+            dataset = createCategoryDataset(columnNamesInOrder,
+                    rs, categoryColumns);
+        } else {
+            throw new IllegalStateException("Unknown result set type " 
+                    + data.getClass() + " when trying to create a chart.");
+        }
+        return createCategoryChartFromDataset(dataset, chartType, 
                 legendPosition, chartName, yaxisName, xaxisName);
     }
 
     /**
-     * Creates a JFreeChart based on the given column and series data. Returns
-     * null if the data given cannot create a chart. If the chart is to be
-     * created with a result set then the cellSet should be null. If a chart is
-     * to be created with a cell set then the resultSet should be null. Only one
-     * of the two values should not be null.
+     * This is a helper method for creating charts and is split off as it does
+     * only the chart creation and tweaking of a category chart. All of the
+     * decisions for what columns are defined as what and how the data is stored
+     * should be done in the method that calls this.
+     * <p>
+     * Given a dataset and other chart properties this will create an
+     * appropriate JFreeChart.
+     * 
+     * @param dataset
+     *            The data to create a chart from.
+     * @param chartType
+     *            The type of chart to create for the category dataset.
+     * @param legendPosition
+     *            The position where the legend should appear.
+     * @param chartName
+     *            The title of the chart.
+     * @param yaxisName
+     *            The title of the Y axis.
+     * @param xaxisName
+     *            The title of the X axis.
+     * @return A JFreeChart that represents the dataset given.
      */
-	public static JFreeChart createJFreeChart(List<ColumnIdentifier> columnNamesInOrder, 
-	        Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes, 
-	        Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, 
-	        ResultSet resultSet, CellSet cellSet, ExistingChartTypes chartType, LegendPosition legendPosition, 
-	        String chartName, String yaxisName, String xaxisName) {
-		if (chartType == null) {
-			return null;
-		}
-		RectangleEdge rEdge = RectangleEdge.BOTTOM;
-		boolean showLegend = true;
-		switch (legendPosition) {
-		case NONE: showLegend = false;
-					break;
-		case TOP: rEdge = RectangleEdge.TOP; 
-					break;
-		case LEFT: rEdge = RectangleEdge.LEFT; 
-					break;
-		case RIGHT: rEdge = RectangleEdge.RIGHT; 
-					break;
-		case BOTTOM: break;
-		default:
-			throw new IllegalStateException("Unknown legend position " + legendPosition);
-		}
-		
-		JFreeChart chart;
-		XYDataset xyCollection;
-		ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
-		BarRenderer.setDefaultBarPainter(new StandardBarPainter());
-		
-		switch (chartType) {
-		case BAR :
-		case CATEGORY_LINE:
-			if (!columnsToDataTypes.containsValue(DataTypeSeries.CATEGORY) || !columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
-				return null;
-			}
-			List<ColumnIdentifier> categoryColumns = findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes);
-			CategoryDataset dataset;
-			if (resultSet != null) {
-			    dataset = createCategoryDataset(columnNamesInOrder,
-			            columnsToDataTypes, resultSet, categoryColumns);
-			} else if (cellSet != null) {
-			    dataset = createOlapCategoryDataset(columnNamesInOrder,
-                        columnsToDataTypes, cellSet, categoryColumns);
-			} else {
-			    return null;
-			}
-			List<String> categoryColumnNames = new ArrayList<String>();
-			for (ColumnIdentifier identifier : categoryColumns) {
-			    categoryColumnNames.add(identifier.getName());
-			}
-			if (chartType == ExistingChartTypes.BAR) {
-			    chart = ChartFactory.createBarChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
-			} else if (chartType == ExistingChartTypes.CATEGORY_LINE) {
-			    chart = ChartFactory.createLineChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
-			} else {
-			    throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
-			}
-			if (legendPosition != LegendPosition.NONE) {
-				chart.getLegend().setPosition(rEdge);
-				chart.getTitle().setPadding(4,4,15,4);
-			}
-			
-			CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
-			int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
-			for (int i = 0; i < seriesSize; i++) {
-				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-				renderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
-			}
-			if (renderer instanceof BarRenderer) {
-			    BarRenderer barRenderer = (BarRenderer) renderer;
-			    barRenderer.setShadowVisible(false);
-			}
-			setTransparentChartBackground(chart);
-			return chart;
-		case LINE :
-			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
-				return null;
-			}
-			if (resultSet != null) {
-			    xyCollection = createSeriesCollection(
-			            columnSeriesToColumnXAxis, resultSet);
-			} else if (cellSet != null) {
-			    xyCollection = createOlapSeriesCollection(columnSeriesToColumnXAxis, cellSet);
-			} else {
-			    return null;
-			}
-			if (xyCollection == null) {
-				return null;
-			}
-			chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, showLegend, true, false);
-			if (legendPosition != LegendPosition.NONE) {
-				chart.getLegend().setPosition(rEdge);
-				chart.getTitle().setPadding(4,4,15,4);
-			}
-			final XYItemRenderer xyirenderer = chart.getXYPlot().getRenderer();
-			int xyLineSeriesSize = chart.getXYPlot().getDataset().getSeriesCount();
-			for (int i = 0; i < xyLineSeriesSize; i++) {
-				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-				xyirenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
-			}
-			setTransparentChartBackground(chart);
-			return chart;
-		case SCATTER :
-			if (!columnsToDataTypes.containsValue(DataTypeSeries.SERIES)) {
-				return null;
-			}
-			if (resultSet != null) {
-                xyCollection = createSeriesCollection(
-                        columnSeriesToColumnXAxis, resultSet);
-            } else if (cellSet != null) {
-                xyCollection = createOlapSeriesCollection(columnSeriesToColumnXAxis, cellSet);
-            } else {
-                return null;
+    private static JFreeChart createCategoryChartFromDataset( 
+            CategoryDataset dataset, ExistingChartTypes chartType, LegendPosition legendPosition, 
+            String chartName, String yaxisName, String xaxisName) {
+        
+        if (chartType == null || dataset == null) {
+            return null;
+        }
+        boolean showLegend = !legendPosition.equals(LegendPosition.NONE);
+        
+        JFreeChart chart;
+        ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
+        BarRenderer.setDefaultBarPainter(new StandardBarPainter());
+        
+        if (chartType == ExistingChartTypes.BAR) {
+            chart = ChartFactory.createBarChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+        } else if (chartType == ExistingChartTypes.CATEGORY_LINE) {
+            chart = ChartFactory.createLineChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+        } else {
+            throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
+        }
+        if (chart == null) return null;
+        
+        if (legendPosition != LegendPosition.NONE) {
+            chart.getLegend().setPosition(legendPosition.getRectangleEdge());
+            chart.getTitle().setPadding(4,4,15,4);
+        }
+        
+        CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
+        int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
+        for (int i = 0; i < seriesSize; i++) {
+            //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
+            renderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
+        }
+        if (renderer instanceof BarRenderer) {
+            BarRenderer barRenderer = (BarRenderer) renderer;
+            barRenderer.setShadowVisible(false);
+        }
+        setTransparentChartBackground(chart);
+        return chart;
+    }
+    
+    /**
+     * Creates a chart based on the data in the given query.
+     * @param columnNamesInOrder The order the column
+     * @param columnNamesInOrder
+     *            The order the columns should come in in the chart. The first
+     *            column defined as a series will be the first bar or line, the
+     *            second defined as a series will be the second bar or line in
+     *            the chart and so on. The order of the category columns is also
+     *            enforced here and will decide the order the category names are
+     *            concatenated in.
+     * @param columnsToDataTypes
+     *            Defines which columns are series and which ones are
+     *            categories.
+     * @param data
+     *            Either a {@link ResultSet} or a {@link CellSet} from a query
+     *            that will contain the information to chart.
+     *            TODO If we place the cell set into a cached row set this value
+     *            can become a result set.
+     * @param chartType
+     *            The type of chart to create from the data. This can be a bar
+     *            chart, line chart, or anything else that takes a category
+     *            dataset.
+     * @param legendPosition
+     *            The position where the legend will appear or NONE if it will
+     *            not be displayed.
+     * @param chartName
+     *            The name of the chart.
+     * @param yaxisName
+     *            The name of the y axis.
+     * @param xaxisName
+     *            The name of the x axis.
+     * @return A chart based on the data in the query of the given type.
+     */
+    private static JFreeChart createXYChartFromQuery(List<ColumnIdentifier> columnNamesInOrder, 
+            Object data, ExistingChartTypes chartType, LegendPosition legendPosition, 
+            String chartName, String yaxisName, String xaxisName) {
+        if (chartType == null) {
+            return null;
+        }
+        
+        XYDataset xyCollection;
+        
+        boolean containsSeries = false;
+        for (ColumnIdentifier identifier : columnNamesInOrder) {
+            if (identifier.getDataType().equals(DataTypeSeries.SERIES)) {
+                containsSeries = true;
+                break;
             }
-			if (xyCollection == null) {
-				return null;
-			}
-			chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, PlotOrientation.VERTICAL, showLegend, true, false);
-			if (legendPosition != LegendPosition.NONE) {
-				chart.getLegend().setPosition(rEdge);
-				chart.getTitle().setPadding(4,4,15,4);
-			}
-			final XYItemRenderer xyIrenderer = chart.getXYPlot().getRenderer();
-			BasicStroke circle = new BasicStroke();
-			int xyScatterSeriesSize = chart.getXYPlot().getDataset().getSeriesCount();
-			for (int i = 0; i < xyScatterSeriesSize; i++) {
-				xyIrenderer.setSeriesShape(i, circle.createStrokedShape(new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0)));
-				//XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-				xyIrenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
-			}
-			setTransparentChartBackground(chart);
-			return chart; 
-		default:
-			throw new IllegalStateException("Unknown chart type " + chartType);
-		}
-	}
-	
+        }
+        if (!containsSeries) {
+            return null;
+        }
+        
+        if (data instanceof CellSet) {
+            CellSet cellSet = (CellSet) data;
+            xyCollection = createOlapSeriesCollection(columnNamesInOrder, cellSet);
+        } else if (data instanceof ResultSet) {
+            ResultSet resultSet = (ResultSet) data;
+            xyCollection = createSeriesCollection(columnNamesInOrder, resultSet);
+        } else {
+            throw new IllegalStateException("Unknown query type " + data.getClass() +
+            " when trying to create a chart.");
+        }
+        if (xyCollection == null) {
+            return null;
+        }
+        return createChartFromXYDataset(xyCollection, chartType, legendPosition, 
+                chartName, yaxisName, xaxisName);
+    }
+
+    /**
+     * This is a helper method for creating a line chart. This should only do
+     * the chart creation and not setting up the dataset. The calling method
+     * should do the logic for the dataset setup.
+     * 
+     * @param xyCollection
+     *            The dataset to display a chart for.
+     * @param chartType
+     *            The chart type. This must be a valid chart type that can be
+     *            created from an XY dataset. At current only line and scatter
+     *            are supported
+     * @param legendPosition
+     *            The position of the legend.
+     * @param chartName
+     *            The name of the chart.
+     * @param yaxisName
+     *            The name of the y axis.
+     * @param xaxisName
+     *            The name of the x axis.
+     * @return A chart of the specified chartType based on the given dataset.
+     */
+    private static JFreeChart createChartFromXYDataset(XYDataset xyCollection,
+            ExistingChartTypes chartType, LegendPosition legendPosition, 
+            String chartName, String yaxisName, String xaxisName) {
+        boolean showLegend = !legendPosition.equals(LegendPosition.NONE);
+        JFreeChart chart;
+        ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
+        BarRenderer.setDefaultBarPainter(new StandardBarPainter());
+        if (chartType.equals(ExistingChartTypes.LINE)) {
+            chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, 
+                    PlotOrientation.VERTICAL, showLegend, true, false);
+        } else if (chartType.equals(ExistingChartTypes.SCATTER)) {
+            chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, 
+                    PlotOrientation.VERTICAL, showLegend, true, false);
+        } else {
+            throw new IllegalArgumentException("Unknown chart type " + chartType + " for an XY dataset.");
+        }
+        if (chart == null) return null;
+        
+        if (legendPosition != LegendPosition.NONE) {
+            chart.getLegend().setPosition(legendPosition.getRectangleEdge());
+            chart.getTitle().setPadding(4,4,15,4);
+        }
+        final XYItemRenderer xyirenderer = chart.getXYPlot().getRenderer();
+        int xyLineSeriesSize = chart.getXYPlot().getDataset().getSeriesCount();
+        for (int i = 0; i < xyLineSeriesSize; i++) {
+            //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
+            xyirenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
+            if (chartType.equals(ExistingChartTypes.SCATTER)) {
+                BasicStroke circle = new BasicStroke();
+                xyirenderer.setSeriesShape(i, circle.createStrokedShape(
+                        new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0)));
+            }
+        }
+        setTransparentChartBackground(chart);
+        return chart;
+    }
+    
 	private static void setTransparentChartBackground(JFreeChart chart) {
 		chart.setBackgroundPaint(new Color(255,255,255,0));
 		chart.getPlot().setBackgroundPaint(new Color(255,255,255,0));	
@@ -633,11 +756,10 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
      * the ability to define the column name order.
      */
 	private static List<ColumnIdentifier> findCategoryColumnNames(
-	        List<ColumnIdentifier> columnNamesInOrder,
-			Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes) {
+	        List<ColumnIdentifier> columnNamesInOrder) {
 		List<ColumnIdentifier> categoryColumnNames = new ArrayList<ColumnIdentifier>();
 		for (ColumnIdentifier identifier : columnNamesInOrder) {
-		    if (columnsToDataTypes.get(identifier) == DataTypeSeries.CATEGORY) {
+		    if (identifier.getDataType().equals(DataTypeSeries.CATEGORY)) {
 		        categoryColumnNames.add(identifier);
 		    }
 		}
@@ -651,7 +773,6 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
      */
     private static CategoryDataset createOlapCategoryDataset(
             List<ColumnIdentifier> columnNamesInOrder,
-            Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes,
             CellSet cellSet, List<ColumnIdentifier> categoryColumnIdentifiers) {
         
         if (categoryColumnIdentifiers.isEmpty()) {
@@ -691,19 +812,10 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
         for (int colPosition = 0; colPosition < columnNamesInOrder.size(); colPosition++) {
             ColumnIdentifier identifier = columnNamesInOrder.get(colPosition);
             if (!(identifier instanceof PositionColumnIdentifier)) continue; //Only positions can be used as series, not hierarchies, as they are numeric.
-            ColumnIdentifier colToTypeIdentifier = null;
-            DataTypeSeries dataType = null;
-            for (Map.Entry<ColumnIdentifier, DataTypeSeries> colToTypeIdentifierEntry : columnsToDataTypes.entrySet()) {
-                if (colToTypeIdentifierEntry.getKey().equals(identifier)) {
-                    colToTypeIdentifier = colToTypeIdentifierEntry.getKey();
-                    dataType = colToTypeIdentifierEntry.getValue();
-                    break;
-                }
-            }
-            if (dataType != DataTypeSeries.SERIES) continue;
+            if (!identifier.getDataType().equals(DataTypeSeries.SERIES)) continue;
             
             seriesPositions.add(((PositionColumnIdentifier) identifier).getPosition(cellSet).getOrdinal());
-            seriesNames.add(colToTypeIdentifier.getName());
+            seriesNames.add(identifier.getName());
         }
         
         double[][] data = new double[seriesPositions.size()][uniqueCategoryRowNames.size()];
@@ -741,7 +853,6 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
      */
 	static CategoryDataset createCategoryDataset(
 			List<ColumnIdentifier> columnNamesInOrder,
-			Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes,
 			ResultSet resultSet, List<ColumnIdentifier> categoryColumnIdentifiers) {
 	    
 	    //Create a list of unique category row names to label each bar with. Category rows
@@ -773,7 +884,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		
         List<String> seriesColumnNames = new ArrayList<String>();
         for (ColumnIdentifier identifier : columnNamesInOrder) {
-        	if (columnsToDataTypes.get(identifier) == DataTypeSeries.SERIES) {
+        	if (identifier.getDataType().equals(DataTypeSeries.SERIES)) {
         		seriesColumnNames.add(((ColumnNameColumnIdentifier) identifier).getColumnName());
         	}
         }
@@ -792,7 +903,11 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
         			if (logger.isDebugEnabled() && (seriesColumnNames.indexOf(colName) == -1 || uniqueNamesInCategory.indexOf(categoryRowName) == -1)) {
         				logger.debug("Index of series " + colName + " is " + seriesColumnNames.indexOf(colName) + ", index of category " + categoryColumnIdentifiers + " is " + uniqueNamesInCategory.indexOf(categoryRowName));
         			}
-        			data[seriesColumnNames.indexOf(colName)][uniqueNamesInCategory.indexOf(categoryRowName)] += resultSet.getDouble(colName); //XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
+        			//XXX Getting numeric values as double causes problems for BigDecimal and BigInteger.
+        			//XXX Add a property to decide if the values should be summed or aggregated in a 
+        			// different way like max, min, avg, etc
+        			data[seriesColumnNames.indexOf(colName)][uniqueNamesInCategory.indexOf(categoryRowName)] += 
+        			    resultSet.getDouble(colName);
         		}
         		j++;
         	}
@@ -825,12 +940,18 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	 * XYDataset cannot be created.
 	 */
 	private static XYDataset createSeriesCollection(
-			Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, ResultSet resultSet) {
+			List<ColumnIdentifier> columnNamesInOrder, ResultSet resultSet) {
 		boolean allNumeric = true;
 		boolean allDate = true;
 		try {
-			for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-				int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(((ColumnNameColumnIdentifier) entry.getValue()).getColumnName()));
+			for (ColumnIdentifier identifier : columnNamesInOrder) {
+			    final ColumnNameColumnIdentifier xAxisIdentifier = 
+			        (ColumnNameColumnIdentifier) identifier.getXAxisIdentifier();
+                if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+                        || xAxisIdentifier == null) continue;
+				int columnType = resultSet.getMetaData().getColumnType(
+				        resultSet.findColumn(
+				                xAxisIdentifier.getColumnName()));
 				if (columnType != Types.DATE && columnType != Types.TIMESTAMP) {
 					allDate = false;
 				} 
@@ -843,9 +964,13 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		}
 		if (allNumeric) {
 			XYSeriesCollection xyCollection = new XYSeriesCollection();
-			for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-			    ColumnNameColumnIdentifier seriesColIdentifier = ((ColumnNameColumnIdentifier) entry.getKey());
-			    ColumnNameColumnIdentifier xAxisColIdentifier = ((ColumnNameColumnIdentifier) entry.getValue());
+			for (ColumnIdentifier identifier : columnNamesInOrder) {
+			    ColumnNameColumnIdentifier seriesColIdentifier = 
+			        ((ColumnNameColumnIdentifier) identifier);
+			    ColumnNameColumnIdentifier xAxisColIdentifier =
+			        ((ColumnNameColumnIdentifier) identifier.getXAxisIdentifier());
+			    if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+			            || xAxisColIdentifier == null) continue;
 				XYSeries newSeries = new XYSeries(seriesColIdentifier.getColumnName());
 				try {
 					resultSet.beforeFirst();
@@ -861,9 +986,13 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 			return xyCollection;
 		} else if (allDate) {
 			TimePeriodValuesCollection timeCollection = new TimePeriodValuesCollection();
-			for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-			    ColumnNameColumnIdentifier seriesColIdentifier = ((ColumnNameColumnIdentifier) entry.getKey());
-                ColumnNameColumnIdentifier xAxisColIdentifier = ((ColumnNameColumnIdentifier) entry.getValue());
+			for (ColumnIdentifier identifier : columnNamesInOrder) {
+			    ColumnNameColumnIdentifier seriesColIdentifier = 
+			        ((ColumnNameColumnIdentifier) identifier);
+                ColumnNameColumnIdentifier xAxisColIdentifier = 
+                    ((ColumnNameColumnIdentifier) identifier.getXAxisIdentifier());
+                if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+                        || xAxisColIdentifier == null) continue;
 				TimePeriodValues newSeries = new TimePeriodValues(seriesColIdentifier.getColumnName());
 				try {
 					resultSet.beforeFirst();
@@ -893,11 +1022,16 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
      * XYDataset cannot be created.
      */
     private static XYDataset createOlapSeriesCollection(
-            Map<ColumnIdentifier, ColumnIdentifier> columnSeriesToColumnXAxis, CellSet cellSet) {
+            List<ColumnIdentifier> columnNamesInOrder, CellSet cellSet) {
         XYSeriesCollection xyCollection = new XYSeriesCollection();
-        for (Map.Entry<ColumnIdentifier, ColumnIdentifier> entry : columnSeriesToColumnXAxis.entrySet()) {
-            PositionColumnIdentifier seriesColIdentifier = ((PositionColumnIdentifier) entry.getKey());
-            PositionColumnIdentifier xAxisColIdentifier = ((PositionColumnIdentifier) entry.getValue());
+        for (ColumnIdentifier identifier : columnNamesInOrder) {
+            if (!(identifier instanceof PositionColumnIdentifier)) continue;
+            PositionColumnIdentifier seriesColIdentifier 
+                = ((PositionColumnIdentifier) identifier);
+            PositionColumnIdentifier xAxisColIdentifier 
+                = ((PositionColumnIdentifier) identifier.getXAxisIdentifier());
+            if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+                    || xAxisColIdentifier == null) continue;
             List<String> memberNames = new ArrayList<String>();
             for (Member member : seriesColIdentifier.getPosition(cellSet).getMembers()) {
                 memberNames.add(member.getName());
@@ -999,20 +1133,21 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		return columnNamesInOrder;
 	}
 	
+	//XXX Get rid of this method and make the column identifiers the children of a chart.
 	public void setColumnNamesInOrder(List<ColumnIdentifier> newColumnOrdering) {
-		firePropertyChange("columnNamesInOrder", this.columnNamesInOrder, newColumnOrdering);
+	    List<ColumnIdentifier> oldIdentifiers = new ArrayList<ColumnIdentifier>(columnNamesInOrder);
 		columnNamesInOrder.clear();
 		columnNamesInOrder.addAll(newColumnOrdering);
-	}
-
-	public Map<ColumnIdentifier, DataTypeSeries> getColumnsToDataTypes() {
-		return columnsToDataTypes;
+		firePropertyChange("columnNamesInOrder", oldIdentifiers, newColumnOrdering);
 	}
 	
-	public void setColumnsToDataTypes(Map<ColumnIdentifier, DataTypeSeries> columnsToDataTypes) {
-		firePropertyChange("columnsToDataTypes", this.columnsToDataTypes, columnsToDataTypes);
-		this.columnsToDataTypes.clear();
-		this.columnsToDataTypes.putAll(columnsToDataTypes);
+	public void addColumnIdentifier(ColumnIdentifier newColumnIdentifier) {
+	    //XXX now that the column information is folded into the ColumnIdentifier class
+	    //this list would be better to be the children of the chart renderer and use
+	    //child added and removed events.
+	    List<ColumnIdentifier> oldIdentifiers = new ArrayList<ColumnIdentifier>(columnNamesInOrder);
+	    columnNamesInOrder.add(newColumnIdentifier);
+	    firePropertyChange("columnNamesInOrder", oldIdentifiers, columnNamesInOrder);
 	}
 
 	public void setYaxisName(String yaxisName) {
@@ -1022,15 +1157,6 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 
 	public String getYaxisName() {
 		return yaxisName;
-	}
-
-	public Map<ColumnIdentifier, ColumnIdentifier> getColumnSeriesToColumnXAxis() {
-		return columnSeriesToColumnXAxis;
-	}
-	
-	public void setColumnSeriesToColumnXAxis(Map<ColumnIdentifier, ColumnIdentifier> newMapping) {
-		columnSeriesToColumnXAxis.clear();
-		columnSeriesToColumnXAxis.putAll(newMapping);
 	}
 
 	public void setXaxisName(String xaxisName) {
@@ -1047,10 +1173,10 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	            switch (chartType) {
 	            case BAR:
 	            case CATEGORY_LINE:
-	                return ChartRenderer.createCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((QueryCache) query).fetchResultSet(), ChartRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
+	                return ChartRenderer.createCategoryDataset(columnNamesInOrder, ((QueryCache) query).fetchResultSet(), ChartRenderer.findCategoryColumnNames(columnNamesInOrder));
 	            case LINE:
 	            case SCATTER:
-	                return ChartRenderer.createSeriesCollection(columnSeriesToColumnXAxis, ((QueryCache) query).fetchResultSet());
+	                return ChartRenderer.createSeriesCollection(columnNamesInOrder, ((QueryCache) query).fetchResultSet());
 	            default :
 	                throw new IllegalStateException("Unknown chart type " + chartType);
 	            }
@@ -1062,10 +1188,10 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
                 switch (chartType) {
                 case BAR:
                 case CATEGORY_LINE:
-                    return ChartRenderer.createOlapCategoryDataset(columnNamesInOrder, columnsToDataTypes, ((OlapQuery) query).execute(), ChartRenderer.findCategoryColumnNames(columnNamesInOrder, columnsToDataTypes));
+                    return ChartRenderer.createOlapCategoryDataset(columnNamesInOrder, ((OlapQuery) query).execute(), ChartRenderer.findCategoryColumnNames(columnNamesInOrder));
                 case LINE:
                 case SCATTER:
-                    return ChartRenderer.createOlapSeriesCollection(columnSeriesToColumnXAxis, ((OlapQuery) query).execute());
+                    return ChartRenderer.createOlapSeriesCollection(columnNamesInOrder, ((OlapQuery) query).execute());
                 default :
                     throw new IllegalStateException("Unknown chart type " + chartType);
                 }
