@@ -108,8 +108,8 @@ import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
-import ca.sqlpower.wabit.swingui.action.ExportQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
+import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
 import ca.sqlpower.wabit.swingui.action.ShowQueryPropertiesAction;
 
 import com.jgoodies.forms.builder.ButtonBarBuilder;
@@ -443,6 +443,8 @@ public class QueryPanel implements WabitPanel {
 		}	
 	};
 
+	private final ExportWabitObjectAction<QueryCache> exportQueryAction;
+	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new query panel.");
 		this.session = session;
@@ -462,6 +464,10 @@ public class QueryPanel implements WabitPanel {
 		queryPen.setExecuteIcon(new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/32x32/run.png")));
 		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
+		
+		exportQueryAction = new ExportWabitObjectAction<QueryCache>(session,
+				queryCache, WabitIcons.WABIT_FILE_ICON_16,
+				"Export Query to Wabit file");
 		
 		queryUIComponents = new SQLQueryUIComponents(session, 
 		        new SpecificDataSourceCollection<JDBCDataSource>(session.getWorkspace(), JDBCDataSource.class), 
@@ -712,7 +718,7 @@ public class QueryPanel implements WabitPanel {
 	    		if (e.getSource() instanceof JButton) {
 	    			JButton source = (JButton) e.getSource();
 	    			JPopupMenu popupMenu = new JPopupMenu();
-	    			JMenuItem menuItem = new JMenuItem(new ExportQueryAction(session, queryCache));
+	    			JMenuItem menuItem = new JMenuItem(exportQueryAction);
 	    			menuItem.setText("Export Query to Workspace file");
 	    			popupMenu.add(menuItem);
 	    			menuItem = new JMenuItem(new ExportSQLScriptAction(session, queryCache));
@@ -877,7 +883,7 @@ public class QueryPanel implements WabitPanel {
 	    		if (e.getSource() instanceof JButton) {
 	    			JButton source = (JButton) e.getSource();
 	    			JPopupMenu popupMenu = new JPopupMenu();
-	    			JMenuItem menuItem = new JMenuItem(new ExportQueryAction(session, queryCache));
+					JMenuItem menuItem = new JMenuItem(exportQueryAction);
 	    			menuItem.setText("Export Query to Workspace file");
 	    			popupMenu.add(menuItem);
 	    			menuItem = new JMenuItem(new ExportSQLScriptAction(session, queryCache));

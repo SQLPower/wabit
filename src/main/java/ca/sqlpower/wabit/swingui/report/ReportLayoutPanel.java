@@ -91,12 +91,13 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.MouseState;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
-import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
+import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
@@ -417,7 +418,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         setupToolBarButtonLabel(button, "Page Settings");
         toolbar.add(button);
         
-        button = new JButton(new ExportLayoutAction(session, report));
+		button = new JButton(new ExportWabitObjectAction<Layout>(session,
+				report, WabitIcons.EXPORT_ICON_32,
+				"Export Report to Wabit file"));
         setupToolBarButtonLabel(button, "Export");
         toolbar.add(button);
         

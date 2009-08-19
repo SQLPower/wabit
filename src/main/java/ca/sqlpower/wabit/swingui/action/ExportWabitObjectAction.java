@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * Copyright (c) 2009, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -23,41 +23,39 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.Collections;
 
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
-/**
- * This action will export a given query to a file that
- * can be opened as a separate workspace.
- */
-public class ExportQueryAction extends AbstractAction {
+import com.rc.retroweaver.runtime.Collections;
+
+public class ExportWabitObjectAction<T extends WabitObject> extends AbstractAction {
 
 	private final WabitSwingSession session;
 	private final WabitSwingSessionContext context;
-	private final QueryCache query;
+	private final T object;
 
-	public ExportQueryAction(WabitSwingSession session, QueryCache query) {
-		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabitFile-16.png")));
+	public ExportWabitObjectAction(WabitSwingSession session, T object, Icon icon, String description) {
+		super("", icon);
+		putValue(SHORT_DESCRIPTION, description);
 		this.session = session;
+		this.object = object;
 		context = (WabitSwingSessionContext) session.getContext();
-		this.query = query;
-		
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	@SuppressWarnings("unchecked")
+    public void actionPerformed(ActionEvent e) {
 	    File defaultFile = null;
-        if (context.getActiveSession() != null) {
-            defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
-        }
+	    if (context.getActiveSession() != null) {
+	        defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
+	    }
 		JFileChooser fc = new JFileChooser(defaultFile);
 		fc.setDialogTitle("Select the file to save to.");
 		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
@@ -82,7 +80,7 @@ public class ExportQueryAction extends AbstractAction {
 		}
 		WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, session.getContext());
 		
-		workspaceSaver.save(Collections.singletonList(query));
+		workspaceSaver.save(Collections.singletonList(object));
 
 	}
 

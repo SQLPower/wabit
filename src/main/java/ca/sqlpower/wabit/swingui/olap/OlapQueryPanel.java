@@ -97,11 +97,13 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
 import ca.sqlpower.wabit.swingui.QueryPanel;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
+import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
 
 public class OlapQueryPanel implements WabitPanel {
     
@@ -392,6 +394,17 @@ public class OlapQueryPanel implements WabitPanel {
         olapPanelToolbar.add(resetQueryButton);
         olapPanelToolbar.addSeparator();
         
+		JButton exportOlapQueryButton = new JButton(
+				new ExportWabitObjectAction<OlapQuery>(session, query,
+						WabitIcons.EXPORT_ICON_32,
+						"Export OLAP Query to Wabit file"));
+		exportOlapQueryButton.setText("Export");
+		exportOlapQueryButton.setHorizontalTextPosition(SwingConstants.CENTER);
+		exportOlapQueryButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        // Removes button borders on OS X 10.5
+		exportOlapQueryButton.putClientProperty("JButton.buttonType", "toolbar");
+		olapPanelToolbar.add(exportOlapQueryButton);
+		
         JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
         createLayoutButton.setText("Create Report");
         createLayoutButton.setHorizontalTextPosition(SwingConstants.CENTER);

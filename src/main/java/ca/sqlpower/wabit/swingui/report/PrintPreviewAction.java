@@ -46,7 +46,6 @@ import javax.swing.JToolBar;
 import javax.swing.border.BevelBorder;
 
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.swingui.action.ExportLayoutAction;
 
 /**
  * This is the action which pops up a print preview dialog which is
@@ -115,7 +114,7 @@ public class PrintPreviewAction extends AbstractAction {
 	 * JComponent which prints all of the data on the page.
 	 */
 	public PrintPreviewAction(JFrame parentFrame, Layout layout) {
-		super("Print Preview", new ImageIcon(ExportLayoutAction.class.getClassLoader().getResource("icons/32x32/printPreview.png")));
+		super("Print Preview", new ImageIcon(PrintPreviewAction.class.getClassLoader().getResource("icons/32x32/printPreview.png")));
 		putValue(SHORT_DESCRIPTION, "Print Preview");
 		this.parentFrame = parentFrame;
 		this.layout = layout;
