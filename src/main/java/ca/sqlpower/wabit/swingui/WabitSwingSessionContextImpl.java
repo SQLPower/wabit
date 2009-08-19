@@ -833,6 +833,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 String[] dividerLocations = prefs.get(QUERY_DIVIDER_LOCATON, null).split(",");
                 queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
                 queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
+            } else {
+                //Setting the lower half of the split initially to 1/4 of the screen
+                //height or else the results won't be visible and the user won't see
+                //them update
+                queryPanel.getFullSplitPane().setDividerLocation(
+                        (int) (wabitPane.getHeight() * 3 / 4));
             }
             currentEditorPanel = queryPanel;
         } else if (entryPanelModel instanceof OlapQuery) {

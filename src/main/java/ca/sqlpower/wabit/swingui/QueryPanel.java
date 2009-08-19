@@ -820,7 +820,7 @@ public class QueryPanel implements WabitPanel {
     		}
     	});
     	FormLayout layout = new FormLayout("pref, 5dlu, pref, 3dlu, pref:grow, 5dlu, max(pref;50dlu)"
-    			,"pref, fill:min(pref;100dlu):grow");
+    			,"pref, fill:0dlu:grow");
     	DefaultFormBuilder southPanelBuilder = new DefaultFormBuilder(layout);
     	southPanelBuilder.append(groupingCheckBox);
     	southPanelBuilder.append(whereText, queryPen.getGlobalWhereText());
@@ -830,6 +830,9 @@ public class QueryPanel implements WabitPanel {
 		searchPanel.add(searchField, BorderLayout.CENTER);
     	southPanelBuilder.append(searchPanel);
     	southPanelBuilder.nextLine();
+    	resultPane.setPreferredSize(new Dimension(
+    	        (int) resultPane.getPreferredSize().getWidth(),
+    	        0));
     	southPanelBuilder.append(resultPane, 7);
     	
     	JPanel rightTreePanel = new JPanel(new BorderLayout());
