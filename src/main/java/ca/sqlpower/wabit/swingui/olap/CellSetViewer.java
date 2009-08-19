@@ -42,8 +42,8 @@ import javax.swing.table.TableCellRenderer;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
+import org.olap4j.layout.RectangularCellSetFormatter;
 import org.olap4j.metadata.Hierarchy;
-import org.olap4j.query.RectangularCellSetFormatter;
 
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;

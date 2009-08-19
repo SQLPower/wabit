@@ -20,24 +20,15 @@
 package ca.sqlpower.wabit.olap;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 
 import org.olap4j.Axis;
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Dimension;
-import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
-import org.olap4j.query.QueryDimension.SortOrder;
-
-import ca.sqlpower.wabit.swingui.olap.action.ExcludeMemberAction;
 
 /**
  * This is a class full of static helper methods to assist with the execution of
