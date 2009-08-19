@@ -390,7 +390,16 @@ public class OlapQueryPanel implements WabitPanel {
         queryPanels = new JTabbedPane();
         olapPanelToolbar = new JToolBar(JToolBar.HORIZONTAL);
         olapPanelToolbar.setFloatable(false);
-        
+        JButton executeButton = new JButton(new AbstractAction("Execute", WabitIcons.RUN_ICON_32) {
+			public void actionPerformed(ActionEvent e) {
+				OlapGuiUtil.asyncExecute(query, session);
+			}
+		});
+        executeButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        executeButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        // Removes button borders on OS X 10.5
+        executeButton.putClientProperty("JButton.buttonType", "toolbar");
+		olapPanelToolbar.add(executeButton);
         olapPanelToolbar.add(resetQueryButton);
         olapPanelToolbar.addSeparator();
         
