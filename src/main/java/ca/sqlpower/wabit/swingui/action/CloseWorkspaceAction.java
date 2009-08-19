@@ -27,7 +27,8 @@ import javax.swing.JOptionPane;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
- * This action will close the active workspace in the context.
+ * This method will close the active workspace in the given context. This will
+ * also prompt to save the closing workspace if changes exist.
  */
 public class CloseWorkspaceAction extends AbstractAction {
 
@@ -40,14 +41,6 @@ public class CloseWorkspaceAction extends AbstractAction {
     
     public void actionPerformed(ActionEvent e) {
         if (context.getActiveSession() == null) return;
-        closeActiveWorkspace(context);
-    }
-
-    /**
-     * This method will close the active workspace in the given context.
-     * This will prompt to save the closing workspace if changes exist.
-     */
-    public static void closeActiveWorkspace(WabitSwingSessionContext context) {
         if (context.getActiveSwingSession().hasUnsavedChanges()) {
             int response = JOptionPane.showOptionDialog(context.getFrame(),
                     "You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
@@ -66,6 +59,10 @@ public class CloseWorkspaceAction extends AbstractAction {
                 if (!isClosing) return;
             }
         }
+        closeActiveWorkspace(context);
+    }
+
+    public static void closeActiveWorkspace(WabitSwingSessionContext context) {
         context.deregisterChildSession(context.getActiveSession());
         context.getActiveSession().close();
         context.setActiveSession(null);
