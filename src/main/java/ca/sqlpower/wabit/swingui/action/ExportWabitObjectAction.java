@@ -29,6 +29,7 @@ import javax.swing.Icon;
 import javax.swing.JFileChooser;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -36,12 +37,35 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 import com.rc.retroweaver.runtime.Collections;
 
+/**
+ * An action for exporting a {@link WabitObject} into a workspace file. It uses
+ * Wabit's saving mechanisms to save the given object and all other WabitObjects
+ * it depends on. For example, if you're exporting a {@link QueryCache}, then
+ * this action should also export the database connection that it depends on as
+ * well.
+ * 
+ * The resulting file can be opened as a separate Workspace, or it can be
+ * imported into another Workspace.
+ * 
+ * @param <T>
+ */
 public class ExportWabitObjectAction<T extends WabitObject> extends AbstractAction {
 
 	private final WabitSwingSession session;
 	private final WabitSwingSessionContext context;
 	private final T object;
 
+	/**
+	 * @param session
+	 *            The session that the WabitObject belongs to
+	 * @param object
+	 *            The WabitObject to be saved
+	 * @param icon
+	 *            An Icon to associate with the action for controls, such as
+	 *            buttons
+	 * @param description
+	 *            A short description of the action that is used as a tooltip
+	 */
 	public ExportWabitObjectAction(WabitSwingSession session, T object, Icon icon, String description) {
 		super("", icon);
 		putValue(SHORT_DESCRIPTION, description);
