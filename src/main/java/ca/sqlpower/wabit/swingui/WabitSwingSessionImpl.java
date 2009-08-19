@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import java.awt.Color;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
@@ -247,7 +248,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         upfMissingLoadedDB = new SwingUIUserPrompterFactory(sessionContext.getFrame());
 
         workspaceTree.setUI(new MultiDragTreeUI());
+        workspaceTree.setBackground(Color.WHITE); //this tree looks terrible in linux, just trying to make it slightly nicer
 //		workspaceTree.updateUI(); //this seems to make the tree look nice on linux, don't know why but not for lack of trying
+        //the updateUI() line doesn't seem to keep multidrag working on this tree however it does work on the cube chooser tree for some reason
 		workspaceTree.setShowsRootHandles(true);
 		DragSource ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(workspaceTree, DnDConstants.ACTION_COPY, new DragGestureListener(){
