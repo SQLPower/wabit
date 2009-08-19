@@ -367,7 +367,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     /**
      * An action that saves the current active workspace.
-     * TODO: This eventually needs to be a 'save everything button'
      */
     private final Action saveAction = new AbstractAction("Save", SAVE_ICON) {
     	public void actionPerformed(ActionEvent e) {
@@ -688,6 +687,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         fileMenu.add(new SaveWorkspaceAction(this));
         fileMenu.add(new SaveWorkspaceAsAction(this));
+        fileMenu.add(new AbstractAction("Save All") {
+            public void actionPerformed(ActionEvent e) {
+                SaveWorkspaceAction.saveAllSessions(WabitSwingSessionContextImpl.this);
+            }
+        });
         fileMenu.add(createServerListMenu(frame, "Save Workspace on Server", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 try {

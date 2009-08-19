@@ -59,9 +59,9 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import com.rc.retroweaver.runtime.Collections;
 
 /**
- * This action will save all of the workspaces in the given context to user
- * specified files. This class also contains a static method for saving a
- * specific session to a user selected file.
+ * This action will save the active workspace in the given context to a user
+ * specified file. This class also contains a static method for saving all
+ * sessions to user selected files.
  */
 public class SaveWorkspaceAsAction extends AbstractAction {
     
@@ -75,12 +75,12 @@ public class SaveWorkspaceAsAction extends AbstractAction {
     private final WabitSwingSessionContext context;
 
     public SaveWorkspaceAsAction(WabitSwingSessionContext context) {
-        super("Save Workspaces To...", SAVE_WABIT_ICON);
+        super("Save As...", SAVE_WABIT_ICON);
         this.context = context;
     }
 
     public void actionPerformed(ActionEvent e) {
-        saveAllSessions(context);
+        save(context, context.getActiveSwingSession());
     }
 
     /**
@@ -116,6 +116,8 @@ public class SaveWorkspaceAsAction extends AbstractAction {
 
     /**
      * This is a helper method for the saving methods in this class.
+     * <p>
+     * Package private for use in the SaveWorkspaceAction class.
      * 
      * @param context
      *            The context that contains the session to save. Cannot be null.
@@ -127,23 +129,22 @@ public class SaveWorkspaceAsAction extends AbstractAction {
      *         file given if a Wabit file extension needs to be appended to it.
      */
     @SuppressWarnings("unchecked")
-    private static File saveSessionToFile(WabitSwingSessionContext context,
+    static File saveSessionToFile(WabitSwingSessionContext context,
             WabitSwingSession session, File selectedFile) {
-        FileOutputStream out = null;
         int lastIndexOfDecimal = selectedFile.getName().lastIndexOf(".");
-        if (lastIndexOfDecimal < 0 || !selectedFile.getName().substring(lastIndexOfDecimal).equals(WABIT_FILE_EXTENSION)) {
+        if (lastIndexOfDecimal < 0 || 
+                !selectedFile.getName().substring(lastIndexOfDecimal).equals(
+                        WABIT_FILE_EXTENSION)) {
             selectedFile = new File(selectedFile.getAbsoluteFile() + WABIT_FILE_EXTENSION);
         }
         try {
-            out = new FileOutputStream(selectedFile);
-        } catch (FileNotFoundException e1) {
-            throw new RuntimeException(e1);
-        }
-        WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, context);
-        workspaceSaver.save(Collections.singletonList(session.getWorkspace()));
-        try {
+            final FileOutputStream out = new FileOutputStream(selectedFile);
+            WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, context);
+            workspaceSaver.save(Collections.singletonList(session.getWorkspace()));
             out.flush();
             out.close();
+        } catch (FileNotFoundException e1) {
+            throw new RuntimeException(e1);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

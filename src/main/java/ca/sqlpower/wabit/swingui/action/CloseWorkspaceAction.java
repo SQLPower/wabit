@@ -22,9 +22,13 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
 
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
+/**
+ * This action will close the active workspace in the context.
+ */
 public class CloseWorkspaceAction extends AbstractAction {
 
     private final WabitSwingSessionContext context;
@@ -39,7 +43,29 @@ public class CloseWorkspaceAction extends AbstractAction {
         closeActiveWorkspace(context);
     }
 
+    /**
+     * This method will close the active workspace in the given context.
+     * This will prompt to save the closing workspace if changes exist.
+     */
     public static void closeActiveWorkspace(WabitSwingSessionContext context) {
+        if (context.getActiveSwingSession().hasUnsavedChanges()) {
+            int response = JOptionPane.showOptionDialog(context.getFrame(),
+                    "You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+                    new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            if (response == 0) {
+                //we are closing
+            } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
+                context.setEditorPanel();
+                return;
+            } else {
+                boolean isClosing = true;
+                if (!SaveWorkspaceAction.save(context, context.getActiveSwingSession())) {
+                    isClosing = false;
+                }
+                if (!isClosing) return;
+            }
+        }
         context.deregisterChildSession(context.getActiveSession());
         context.getActiveSession().close();
         context.setActiveSession(null);
