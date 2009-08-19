@@ -411,6 +411,8 @@ public class OlapQueryPanel implements WabitPanel {
 		createChartButton.setText("Create Chart");
 		createChartButton.setHorizontalTextPosition(SwingConstants.CENTER);
 		createChartButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+		// Removes button borders on OS X 10.5
+		createChartButton.putClientProperty("JButton.buttonType", "toolbar");
 		olapPanelToolbar.add(createChartButton);
 		
         final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
