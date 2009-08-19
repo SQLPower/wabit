@@ -692,6 +692,7 @@ public class WorkspaceXMLDAO {
 		printAttribute("row-limit", data.getRowLimit());
 		printAttribute("grouping-enabled", Boolean.toString(data.isGroupingEnabled()));
 		printAttribute("prompt-for-cross-joins", cache.getPromptForCrossJoins());
+		printAttribute("automatically-executing", cache.isAutomaticallyExecuting());
 		if (!cache.getPromptForCrossJoins()) {
 		    printAttribute("execute-queries-with-cross-joins", cache.getExecuteQueriesWithCrossJoins());
 		}

@@ -398,6 +398,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		    cache.setPromptForCrossJoins(Boolean.parseBoolean(aval));
         		} else if (aname.equals("execute-queries-with-cross-joins")) {
         		    cache.setExecuteQueriesWithCrossJoins(Boolean.parseBoolean(aval));
+        		} else if (aname.equals("automatically-executing")) {
+        		    cache.setAutomaticallyExecuting(Boolean.getBoolean(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}

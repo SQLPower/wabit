@@ -24,13 +24,13 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.QueryPanel;
-
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
 
 /**
  * This panel will let a user modify properties of a {@link QueryCache} object
@@ -61,6 +61,18 @@ public class QueryPropertiesPanel implements DataEntryPanel {
      * query contains a cross join.
      */
     private final JCheckBox promptForCrossJoinsCB;
+    
+    /**
+     * If true the queries will be executed automatically when there is a change
+     * to the GUI even if the query contains cross joins.
+     */
+    private final JCheckBox executeWithCrossJoinsCB;
+
+    /**
+     * If checked the query will execute every time there is a change to the GUI
+     * side.
+     */
+    private final JCheckBox automaticallyExecutingCB;
 	
 	public QueryPropertiesPanel(QueryCache query) {
 		this.query = query;
@@ -71,13 +83,37 @@ public class QueryPropertiesPanel implements DataEntryPanel {
 		promptForCrossJoinsCB = new JCheckBox("Always prompt if query contains cross joins", 
 		        query.getPromptForCrossJoins());
 		
+		executeWithCrossJoinsCB = new JCheckBox("Execute if there is a cross join",
+		        query.getExecuteQueriesWithCrossJoins());
+		if (query.getPromptForCrossJoins()) {
+		    executeWithCrossJoinsCB.setEnabled(false);
+		    executeWithCrossJoinsCB.setSelected(false);
+		}
+		
+		promptForCrossJoinsCB.addChangeListener(new ChangeListener() {
+        
+            public void stateChanged(ChangeEvent e) {
+                if (promptForCrossJoinsCB.isSelected()) {
+                    executeWithCrossJoinsCB.setSelected(false);
+                    executeWithCrossJoinsCB.setEnabled(false);
+                } else {
+                    executeWithCrossJoinsCB.setEnabled(true);
+                }
+            }
+        });
+		
+		automaticallyExecutingCB = new JCheckBox("Automatically execute",
+		        query.isAutomaticallyExecuting());
+		
 		buildUI();
 	}
 	
 	private void buildUI() {
-		DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref:grow"), panel);
+	    panel.setLayout(new MigLayout());
 		
-		builder.append(promptForCrossJoinsCB, 3);
+		panel.add(automaticallyExecutingCB, "span");
+		panel.add(promptForCrossJoinsCB, "span");
+		panel.add(executeWithCrossJoinsCB, "gapbefore 20, span");
 		
 		String connectionStyle;
 		if (query.isStreaming()) {
@@ -85,10 +121,11 @@ public class QueryPropertiesPanel implements DataEntryPanel {
 		} else {
 			connectionStyle = "Non-streaming";
 		}
-		builder.append("Connection Style", new JLabel(connectionStyle));
-		builder.nextLine();
+		panel.add(new JLabel("Connection Style"));
+		panel.add(new JLabel(connectionStyle), "wrap");
 		if (query.isStreaming()) {
-			builder.append("Row Limit", streamingRowLimitField);
+			panel.add(new JLabel("Row Limit"));
+			panel.add(streamingRowLimitField, "wrap");
 		} else {
 			//TODO:add non streaming properties here.
 		}
@@ -96,6 +133,8 @@ public class QueryPropertiesPanel implements DataEntryPanel {
 
 	public boolean applyChanges() {
 	    query.setPromptForCrossJoins(promptForCrossJoinsCB.isSelected());
+	    query.setAutomaticallyExecuting(automaticallyExecutingCB.isSelected());
+	    query.setExecuteQueriesWithCrossJoins(executeWithCrossJoinsCB.isSelected());
 	    query.setStreamingRowLimit((Integer) streamingRowLimitField.getValue());
 		return true;
 	}

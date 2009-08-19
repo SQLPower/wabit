@@ -148,6 +148,12 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     private boolean executeQueriesWithCrossJoins;
     
     /**
+     * If true the query should be executed every time there is a change to the
+     * query. If false the query should only be executed by user request.
+     */
+    private boolean automaticallyExecuting = true;
+    
+    /**
      * This makes a copy of the given query cache. The query in the given query cache
      * has its listeners disconnected to prevent copies from being affected by user
      * actions. This also makes cleanup of copies easier.
@@ -518,6 +524,14 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 
     public boolean getExecuteQueriesWithCrossJoins() {
         return executeQueriesWithCrossJoins;
+    }
+
+    public void setAutomaticallyExecuting(boolean automaticallyExecute) {
+        this.automaticallyExecuting = automaticallyExecute;
+    }
+
+    public boolean isAutomaticallyExecuting() {
+        return automaticallyExecuting;
     }
 
 }

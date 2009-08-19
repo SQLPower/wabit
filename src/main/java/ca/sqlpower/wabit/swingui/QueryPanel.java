@@ -333,7 +333,7 @@ public class QueryPanel implements WabitPanel {
             if (queryCache.getQuery().getCanExecuteQuery() 
                     && evt.getPropertyName() != Query.USER_MODIFIED_QUERY 
                     && evt.getPropertyName() != "running") {
-                executeQueryInCache();
+                executeQuery();
             }
         }
     
@@ -342,7 +342,8 @@ public class QueryPanel implements WabitPanel {
         }
 
         private void executeQuery() {
-            if (queryCache.getQuery().getCanExecuteQuery()) {
+            if (queryCache.getQuery().getCanExecuteQuery()
+                    && queryCache.isAutomaticallyExecuting()) {
                 executeQueryInCache();
             }
         }
@@ -380,7 +381,7 @@ public class QueryPanel implements WabitPanel {
         }
     
         public void canExecuteQuery() {
-            executeQueryInCache();
+            executeQuery();
         }
     };
     
