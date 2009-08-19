@@ -49,7 +49,7 @@ public class OlapGuiUtil {
         SPSwingWorker worker = new SPSwingWorker(session, query) {
 
             @Override
-            public void doStuff() throws OlapException, QueryInitializationException {
+            public void doStuff() throws OlapException, QueryInitializationException, InterruptedException {
                 query.execute();
             }
             

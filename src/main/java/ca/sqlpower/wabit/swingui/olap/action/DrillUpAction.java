@@ -19,11 +19,11 @@
 
 package ca.sqlpower.wabit.swingui.olap.action;
 
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * A Member action that replaces the root of the hierarchy of the given member
@@ -46,14 +46,14 @@ public class DrillUpAction extends MemberAction {
 	 *            The ancestor Member of member that will be set as the root
 	 *            selection in member's hierarchy
 	 */
-	public DrillUpAction(OlapQuery query, Member member, Member targetAncestor) {
-        super("Drill up to '" + targetAncestor.getName() + "'", query, member);
+	public DrillUpAction(WabitSwingSession session, OlapQuery query, Member member, Member targetAncestor) {
+        super(session, "Drill up to '" + targetAncestor.getName() + "'", query, member);
         this.targetAncestor = targetAncestor;
     }
 
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
+	protected void performMemberAction(Member member, OlapQuery query)
+	    throws QueryInitializationException {
 		query.drillUpTo(member, targetAncestor);
-		query.execute();
 	}
 }

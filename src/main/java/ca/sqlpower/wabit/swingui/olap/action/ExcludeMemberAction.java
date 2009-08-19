@@ -19,12 +19,12 @@
 
 package ca.sqlpower.wabit.swingui.olap.action;
 
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * Excludes the given Member from the query.
@@ -33,8 +33,9 @@ public class ExcludeMemberAction extends MemberAction {
 
     private Operator operator;
 
-    public ExcludeMemberAction(OlapQuery query, Member member, Operator operator) {
-        super((operator == Operator.CHILDREN) ? 
+    public ExcludeMemberAction(WabitSwingSession session, OlapQuery query, Member member, Operator operator) {
+        super(session,
+                (operator == Operator.CHILDREN) ? 
         		"Exclude Children of Member '" + member.getName() + "'" :
         		"Exclude Member '" + member.getName() + "'",
         		query,
@@ -43,11 +44,11 @@ public class ExcludeMemberAction extends MemberAction {
     }
 
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
+	protected void performMemberAction(Member member, OlapQuery query)
+	    throws QueryInitializationException {
 		query.excludeMember(
 				member.getDimension().getName(), 
 				member, 
 				operator);
-		query.execute();
 	}
 }

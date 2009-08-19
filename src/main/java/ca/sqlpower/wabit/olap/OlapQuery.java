@@ -29,15 +29,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Semaphore;
 
 import javax.naming.NamingException;
+
+import net.jcip.annotations.GuardedBy;
+import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
+import org.olap4j.OlapStatement;
 import org.olap4j.mdx.ParseTreeWriter;
+import org.olap4j.mdx.SelectNode;
 import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
@@ -64,9 +70,33 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.xml.XMLHelper;
 
 /**
- * This is the model of an OLAP query. This will store all values that need to be persisted
- * in an OLAP query.
+ * This is the model of an OLAP query. This will store all values that need to
+ * be persisted in an OLAP query.
+ * <p>
+ * Instances of OlapQuery are thread safe: their state can me modified safely by
+ * multiple threads. To avoid thrashing the remote database, execution of the
+ * query is serialized so that only one MDX query evaluation at a time is in
+ * progress. However, while the query is executing, threads attempting to
+ * further modify the query's state are not blocked as long as they don't
+ * involve an attempt to execute the query.
+ * <p>
+ * Sometimes, you might want to perform a series of operations (such as adding
+ * or removing many members) atomically. You can do so by synchronizing on the
+ * OlapQuery instance, like this:
+ * <pre>
+ *  OlapQuery query = ...;
+ *  synchronized (query) {
+ *    for (Member member : membersToInclude) {
+ *      query.includeMember(member);
+ *    }
+ *  }
+ * </pre>
+ * This will guarantee all the members in the list have been added to the query
+ * with no intervening modifications to the query and no possibility that the
+ * query would start executing on another thread when only half the members have
+ * been added.
  */
+@ThreadSafe
 public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWorker {
     
     private static final Logger logger = Logger.getLogger(OlapQuery.class);
@@ -81,7 +111,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * slicers this variable is needed to assure that our user is unable to add
      * more than one member to their slicer axis
      */
-    private Member slicerMember = null;
+    @GuardedBy("this") private Member slicerMember = null;
     
     /**
      * Copy constructor which lets the user specify a new datasource
@@ -167,12 +197,21 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * All the "running" property change does is notify listeners of the state
      * transitions themselves. 
      */
-    private final List<OlapQueryListener> listeners = new ArrayList<OlapQueryListener>();
+    @GuardedBy("itself")
+    private final List<OlapQueryListener> listeners =
+        Collections.synchronizedList(new ArrayList<OlapQueryListener>());
+
+    /**
+     * A semaphore with one permit. This is the mechanism by which we serialize
+     * calls to {@link #execute()}.
+     */
+    private final Semaphore executionSemaphore = new Semaphore(1);
     
     /**
      * This boolean tracks if the ROWS axis of this query omits empty positions.
      * This is used when the mdxQuery is null.
      */
+    @GuardedBy("this")
     private boolean nonEmpty = false;
     
     /**
@@ -207,44 +246,88 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         firePropertyChange("currentCube", oldCube, currentCube);
     }
 
-    public Cube getCurrentCube() {
+    public synchronized Cube getCurrentCube() {
         return currentCube;
     }
 
-	/**
-	 * Executes the current MDX query represented by this object, returning the
-	 * cell set that results from the query's execution.
-	 * <p>
-	 * If this query has not been modified at all since it was last executed,
-	 * this method may return a cached reference to the same cell set as the
-	 * last one it returned. Olap4j CellSet instances can be safely used from
-	 * multiple threads.
-	 * <p>
-	 * TODO discuss thread safety of this operation: what if the query is already running?
-	 * (should probably cancel and reexecute)
-	 * 
-	 * @return The {@link CellSet} result of the execution of the query. If the
-	 *         query has no dimensions in either it's row or column axis
-	 *         however, it will not be able to execute, in which case it returns
-	 *         null.
-	 * @throws OlapException
-	 *             If there was a database error
-	 * @throws QueryInitializationException 
-	 */
-    public CellSet execute() throws OlapException, QueryInitializationException {
+    /**
+     * Executes the current MDX query represented by this object, returning the
+     * cell set that results from the query's execution.
+     * <p>
+     * If this query has not been modified at all since it was last executed,
+     * this method may return a cached reference to the same cell set as the
+     * last one it returned. Olap4j CellSet instances can be safely used from
+     * multiple threads.
+     * 
+     * <h2>Thread safety</h2>
+     * When the query begins to execute, it obtains this OlapQuery instance's
+     * monitor, takes a snapshot of the current query state, then releases the
+     * monitor. Query execution then proceeds while the OlapQuery instance
+     * itself remains unlocked. This allows other threads (especially the Swing
+     * GUI) to continue to modify the query while waiting for the results of the
+     * previous execution.
+     * <p>
+     * However, each OlapQuery instance does prevent itself from making
+     * overlapping execution requests. Calls to execute() are serialized using
+     * an internal synchronization mechanism. Each call to execute() does not
+     * take its snapshot of the query state until any previously in-flight
+     * execution has completed. This increases the chances that several blocked
+     * calls to execute() will end up executing the same MDX query and will
+     * therefore return the same cached CellSet rather than each wasting a
+     * potentially large amount of time executing a query that is no longer
+     * desired.
+     * 
+     * @return The {@link CellSet} result of the execution of the query. If the
+     *         query has no dimensions in either it's row or column axis
+     *         however, it will not be able to execute, in which case it returns
+     *         null and no OlapQueryEvent is fired.
+     * @throws OlapException
+     *             If there was a database error
+     * @throws QueryInitializationException
+     *             If this query has not yet been initialized and the attempted
+     *             initialization fails.
+     * @throws InterruptedException
+     *             If the calling thread is interrupted while blocked waiting
+     *             for another call to execute() to complete.
+     */
+    public CellSet execute() throws OlapException, QueryInitializationException, InterruptedException {
         logger.debug("Executing MDX query...", new Exception("Nothing wrong; just a stack trace"));
         try {
-            setRunning(true);
-            // TODO execute the textual query if there is one
-            CellSet cellSet = null;
-            if (getRowHierarchies().size() > 0 &&
-                    getColumnHierarchies().size() > 0) {
-                cellSet = getMDXQuery().execute();
+            executionSemaphore.acquire();
+            try {
+                setRunning(true);
+
+                // take the snapshot
+                SelectNode mdx;
+                synchronized (this) {
+                    if (getRowHierarchies().isEmpty() || getColumnHierarchies().isEmpty()) {
+                        return null;
+                    }
+                    // TODO if there is one, execute the textual query instead
+                    mdx = getMDXQuery().getSelect();
+                }
+                
+                // now run the query (while holding the semaphore but not the OlapQuery monitor)
+                
+                // The following code looks like it leaks an OlapConnection and an OlapStatement,
+                // but both the connection and statement are actually just "retrieved"; not
+                // "created" as their method names suggest
+                OlapStatement olapStatement = createOlapConnection().createStatement();
+                CellSet cellSet = olapStatement.executeOlapQuery(mdx);
+
+                fireQueryExecuted(cellSet);
+                return cellSet;
+            } catch (SQLException e) {
+                throw new OlapException("Couldn't create database connection for Olap query", e);
+            } catch (ClassNotFoundException e) {
+                throw new OlapException("Couldn't create database connection for Olap query", e);
+            } catch (NamingException e) {
+                throw new OlapException("Couldn't create database connection for Olap query", e);
+            } finally {
+                setRunning(false);
             }
-            fireQueryExecuted(cellSet);
-            return cellSet;
         } finally {
-            setRunning(false);
+            executionSemaphore.release();
         }
     }
     
@@ -265,7 +348,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 *            The {@link Axis} to remove the {@link Hierarchy} from
 	 * @throws QueryInitializationException 
 	 */
-	public void removeHierarchy(Hierarchy hierarchy, Axis axis) throws QueryInitializationException {
+	public synchronized void removeHierarchy(Hierarchy hierarchy, Axis axis) throws QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(hierarchy.getDimension().getName());
         
@@ -289,13 +372,24 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * @param mdxQuery The new query. 
      * @throws OlapException 
      */
-    private void setMdxQuery(Query mdxQuery) throws OlapException {
+    private synchronized void setMdxQuery(Query mdxQuery) throws OlapException {
     	if (mdxQuery == null) throw new NullPointerException();
         this.mdxQuery = mdxQuery;
         mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
         try {
 			this.currentCube = this.getMDXQuery().getCube();
-			execute();
+			
+			boolean tryAgain = false;
+			do {
+			    try {
+			        execute();
+			    } catch (InterruptedException e) {
+			        // we don't want this to get canceled; we're changing queries!
+			        logger.debug("Was interrupted while trying to execute new MDX query", e);
+			        tryAgain = true;
+			    }
+			} while (tryAgain);
+			
 		} catch (QueryInitializationException cantHappen) {
 			throw new RuntimeException("Unexpected exception", cantHappen);
 		}
@@ -332,7 +426,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * 		The boolean value that is responsible for tracking whether or not the
      * 		OlapQuery has been initialized.
      */
-    public boolean isInitDone() {
+    public synchronized boolean isInitDone() {
     	return initDone;
     }
 
@@ -341,7 +435,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 * will replace the current MDX Query with a blank one.
 	 * @throws SQLException 
 	 */
-    public void reset() throws SQLException {
+    public synchronized void reset() throws SQLException {
     	slicerMember = null;
     	hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
         try {
@@ -367,11 +461,11 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 *            other values of {@link Operator} will do.
 	 * @throws QueryInitializationException 
 	 */
-    public void excludeMember(String dimensionName, Member memberToExclude, Selection.Operator operator) throws QueryInitializationException {
+    public synchronized void excludeMember(String dimensionName, Member memberToExclude, Selection.Operator operator) throws QueryInitializationException {
         this.getMDXQuery().getDimension(dimensionName).exclude(operator, memberToExclude);
     }
 
-    public OlapConnection createOlapConnection()
+    public synchronized OlapConnection createOlapConnection()
     throws SQLException, ClassNotFoundException, NamingException {
         return olapMapping.createConnection(getOlapDataSource());
     }
@@ -380,7 +474,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * Sets the data source that this query obtains its connections from,
      * and fires a property change event.
      */
-    public void setOlapDataSource(Olap4jDataSource olapDataSource) {
+    public synchronized void setOlapDataSource(Olap4jDataSource olapDataSource) {
         Olap4jDataSource oldDS = this.olapDataSource;
         this.olapDataSource = olapDataSource;
         firePropertyChange("olapDataSource", oldDS, olapDataSource);
@@ -389,7 +483,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     /**
      * Returns the data source that this query obtains its connections from.
      */
-    public Olap4jDataSource getOlapDataSource() {
+    public synchronized Olap4jDataSource getOlapDataSource() {
         return olapDataSource;
     }
     
@@ -399,7 +493,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * mondrian does not support compound slicers we will use this variable to
      * make sure that the user does not add more than one member to their slicer
      */
-    public Member getSlicerMember() {
+    public synchronized Member getSlicerMember() {
     	return slicerMember;
     }
 
@@ -427,7 +521,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * these queries are placed in a combo box.
      */
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return getName();
     }
 
@@ -563,7 +657,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     /**
      * This method finds a member from a cube based on given attributes.
      */
-    public Member findMember(Map<String,String> attributes, Cube cube) {
+    public synchronized Member findMember(Map<String,String> attributes, Cube cube) {
         String uniqueMemberName = attributes.get("unique-member-name");
         if (uniqueMemberName != null) {
             String[] uniqueMemberNameList = uniqueMemberName.split("\\]\\.\\[");
@@ -614,7 +708,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * @throws OlapException if the list of child members can't be retrieved
      * @return Returns true if the query was expanded
      */
-    public boolean toggleMember(Member member) throws QueryInitializationException {
+    public synchronized boolean toggleMember(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
         QueryDimension qd = getMDXQuery().getDimension(d.getName());
         boolean wasExpanded = false;
@@ -638,7 +732,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     /**
      * Tells if the connection was initialized.
      */
-    public boolean hasCachedXml() {
+    public synchronized boolean hasCachedXml() {
         // Create a copy of the init flag so the object is immutable.
         return (!this.initDone && this.wasLoadedFromXml);
     }
@@ -650,7 +744,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * @return XML representation of the object, null if it was initialized
      * and the cached XML code is not relevant anymore.
      */
-    public void writeCachedXml(XMLHelper xml, PrintWriter out) {
+    public synchronized void writeCachedXml(XMLHelper xml, PrintWriter out) {
         if (this.wasLoadedFromXml) {
             for (int i = 0; i < this.rootNodes.size(); i++) {
                 StringBuilder sb = new StringBuilder("");
@@ -673,7 +767,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * Returns the current MDX text that this query object's state represents.
      * @throws QueryInitializationException 
      */
-    public String getMdxText() throws QueryInitializationException {
+    public synchronized String getMdxText() throws QueryInitializationException {
         StringWriter sw = new StringWriter();
         ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
         
@@ -698,7 +792,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 *             If a database error occurs
 	 * @throws QueryInitializationException 
 	 */
-    public void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
+    public synchronized void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(member.getDimension().getName());
         logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + " in ordinal " + ordinal);
@@ -763,11 +857,11 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         }
     }
 
-    public List<Hierarchy> getRowHierarchies() throws QueryInitializationException {
+    public synchronized List<Hierarchy> getRowHierarchies() throws QueryInitializationException {
         return getHierarchies(Axis.ROWS);
     }
 
-    public List<Hierarchy> getColumnHierarchies() throws QueryInitializationException {
+    public synchronized List<Hierarchy> getColumnHierarchies() throws QueryInitializationException {
         return getHierarchies(Axis.COLUMNS);
     }
 
@@ -777,10 +871,11 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * QueryDimension class, we'll maintain this mapping here to associate
      * Dimensions with Hierarchies.
      */
+    @GuardedBy("this")
     private Map<QueryDimension, Hierarchy> hierarchiesInUse =
         new HashMap<QueryDimension, Hierarchy>();
     
-    private List<Hierarchy> getHierarchies(Axis axis) throws QueryInitializationException {
+    private synchronized List<Hierarchy> getHierarchies(Axis axis) throws QueryInitializationException {
     	if (getMDXQuery() == null) return Collections.emptyList();
         QueryAxis qa = getMDXQuery().getAxis(axis);
         List<Hierarchy> selectedHierarchies = new ArrayList<Hierarchy>();
@@ -802,7 +897,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      *            root of the selection for its hierarchy.
      * @throws QueryInitializationException 
      */
-    public void drillReplace(Member member) throws QueryInitializationException {
+    public synchronized void drillReplace(Member member) throws QueryInitializationException {
         QueryDimension qd = findQueryDimension(member);
         for (Iterator<Selection> it = qd.getInclusions().iterator(); it.hasNext(); ) {
             Selection s = it.next();
@@ -834,7 +929,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 *            selection
 	 * @throws QueryInitializationException
 	 */
-    public void drillUpTo(Member fromMember, Member targetAncestor) throws QueryInitializationException {
+    public synchronized void drillUpTo(Member fromMember, Member targetAncestor) throws QueryInitializationException {
     	// is targetAncestor REALLY an ancestor?
     	if (!OlapUtils.isDescendant(targetAncestor, fromMember)) return;
     	
@@ -862,7 +957,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 * @return True if member is in one of the {@link Selection}s in dimension's
 	 *         inclusions. Otherwise false.
 	 */
-    public boolean isIncluded(Member member) throws QueryInitializationException {
+    public synchronized boolean isIncluded(Member member) throws QueryInitializationException {
     	QueryDimension dimension = findQueryDimension(member);
     	for (Selection s: dimension.getInclusions()) {
     		if (s.getMember().equals(member)) {
@@ -872,7 +967,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     	return false;
     }
     
-    private QueryDimension findQueryDimension(Member member) throws QueryInitializationException {
+    private synchronized QueryDimension findQueryDimension(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
         QueryDimension qd = getMDXQuery().getDimension(d.getName());
         assert qd != null : d + " not in query!?";
@@ -888,7 +983,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      *            included, this method has no effect.
      * @throws QueryInitializationException 
      */
-    public void includeMember(Member member) throws QueryInitializationException {
+    public synchronized void includeMember(Member member) throws QueryInitializationException {
         QueryDimension qd = findQueryDimension(member);
         qd.include(member);
     }
@@ -900,7 +995,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      *            True means to omit empty positions; false means to include
      *            them.
      */
-    public void setNonEmpty(boolean nonEmpty) {
+    public synchronized void setNonEmpty(boolean nonEmpty) {
     	this.nonEmpty = nonEmpty;
     	if (mdxQuery != null) {
     		mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
@@ -913,7 +1008,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * 
      * @return True is this query omits empty rows; false if it includes them.
      */
-    public boolean isNonEmpty() {
+    public synchronized boolean isNonEmpty() {
     	return nonEmpty;
     }
     
@@ -930,7 +1025,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      * @param hierarchy
      * @throws QueryInitializationException
      */
-	public void clearExclusions(Hierarchy hierarchy) throws QueryInitializationException {
+	public synchronized void clearExclusions(Hierarchy hierarchy) throws QueryInitializationException {
 		QueryDimension dimension = getMDXQuery().getDimension(hierarchy.getDimension().getName());
 		dimension.clearExclusions();
 	}

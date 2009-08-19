@@ -568,7 +568,9 @@ public class CellSetTableHeaderComponent extends JComponent {
     					throw new RuntimeException("Error while clearing all exclusions", ex);
     				} catch (OlapException ex) {
     					throw new RuntimeException("Error while clearing all exclusions", ex);
-    				}
+    				} catch (InterruptedException ex) {
+    				    logger.info("OlapQuery execution was canceled before it took place", ex);
+                    }
     			}
     		}
     	});
@@ -747,30 +749,38 @@ public class CellSetTableHeaderComponent extends JComponent {
 			private void maybeShowPopup(MouseEvent e,
 					final Member clickedOnMember, boolean isMousePressed) {
 				if (e.isPopupTrigger()) {
+			        WabitSwingSession session = evilDigUpSession();
+			        if (session == null) {
+			            throw new IllegalStateException(
+                                "Got a popup trigger event, but the current query " +
+                                "apparently doesn't belong to a Swing session!");
+			        }
 					JPopupMenu popUpMenu = new JPopupMenu();
-					popUpMenu.add(new RemoveHierarchyAction(query, hierarchy, CellSetTableHeaderComponent.this.axis));
-				    popUpMenu.add(new ClearExclusionsAction(query, hierarchy));
+					popUpMenu.add(new RemoveHierarchyAction(session, query, hierarchy, CellSetTableHeaderComponent.this.axis));
+				    popUpMenu.add(new ClearExclusionsAction(session, query, hierarchy));
 					if (clickedOnMember != null && 
 							!(clickedOnMember instanceof Measure)) {
 					    popUpMenu.addSeparator();
 					    popUpMenu.add(new ExcludeMemberAction(
+					            session,
 					            query,
 					            clickedOnMember,
 					            Selection.Operator.MEMBER));
 					    popUpMenu.add(new ExcludeMemberAction(
+					            session,
 					            query,
 					            clickedOnMember,
 					            Selection.Operator.CHILDREN));
 					    popUpMenu.addSeparator();
-						popUpMenu.add(new DrillReplaceAction(query, clickedOnMember));
+						popUpMenu.add(new DrillReplaceAction(session, query, clickedOnMember));
 						Member parentMember = clickedOnMember.getParentMember();
 						try {
 							if (parentMember != null && !query.isIncluded(parentMember)) {
-								popUpMenu.add(new DrillUpAction(query, clickedOnMember, parentMember));
+								popUpMenu.add(new DrillUpAction(session, query, clickedOnMember, parentMember));
 								try {
 									Member rootMember = hierarchy.getRootMembers().get(0);
 									if (!parentMember.equals(rootMember)  && !query.isIncluded(rootMember)) {
-										popUpMenu.add(new DrillUpAction(query, clickedOnMember, rootMember));
+										popUpMenu.add(new DrillUpAction(session, query, clickedOnMember, rootMember));
 									}
 								} catch (OlapException ex) {
 									throw new RuntimeException(
@@ -1190,14 +1200,30 @@ public class CellSetTableHeaderComponent extends JComponent {
      * 
      * @param query
      *            The query to execute
+     * @throws InterruptedException
+     *             if the current thread is interrupted while waiting for its
+     *             turn to execute the given OlapQuery.
      */
-    private void execute(OlapQuery query) throws OlapException, QueryInitializationException {
-        
-        // The following code is evil, and intended to be temporary. It
-        // would be much better if CellSetTableHeaderComponent was given a
-        // WabitSwingSession in its constructor, but due to early design
-        // decisions, this is not currently feasible.
-        // See bug XXX
+    private void execute(OlapQuery query) throws OlapException, QueryInitializationException, InterruptedException {
+        WabitSwingSession session = evilDigUpSession();
+        if (session != null) {
+            OlapGuiUtil.asyncExecute(query, session);
+        } else {
+            query.execute();
+        }
+    }
+
+    /**
+     * The following code is evil, and intended to be temporary. It would be
+     * much better if CellSetTableHeaderComponent was given a WabitSwingSession
+     * in its constructor, but due to early design decisions, this is not
+     * currently feasible.
+     * 
+     * @return the WabitSwingSession the current query belongs to, or null if
+     *         the query belongs to some other kind of session (or no session at
+     *         all).
+     */
+    private WabitSwingSession evilDigUpSession() {
         WabitSwingSession session = null;
         WabitObject wo = query;
         while (wo.getParent() != null) {
@@ -1209,12 +1235,6 @@ public class CellSetTableHeaderComponent extends JComponent {
                 session = (WabitSwingSession) owningSession;
             }
         }
-        
-        if (session != null) {
-            OlapGuiUtil.asyncExecute(query, session);
-        } else {
-            query.execute();
-        }
+        return session;
     }
-
 }

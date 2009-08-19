@@ -24,6 +24,7 @@ import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * A Member action that replaces the root of the hierarchy of the given member
@@ -31,14 +32,13 @@ import ca.sqlpower.wabit.olap.QueryInitializationException;
  */
 public class DrillReplaceAction extends MemberAction {
 
-    public DrillReplaceAction(OlapQuery query, Member member) {
-        super("Drill Replace on " + member.getName(), query, member);
+    public DrillReplaceAction(WabitSwingSession session, OlapQuery query, Member member) {
+        super(session, "Drill Replace on " + member.getName(), query, member);
     }
     
 	@Override
-	protected void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException {
+	protected void performMemberAction(Member member, OlapQuery query) throws QueryInitializationException {
 		query.drillReplace(member);
-		query.execute();
 	}
 
 }

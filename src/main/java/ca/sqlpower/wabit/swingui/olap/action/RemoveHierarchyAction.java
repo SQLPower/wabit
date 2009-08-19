@@ -25,21 +25,22 @@ import org.olap4j.metadata.Hierarchy;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class RemoveHierarchyAction extends OlapQueryAction {
 
     private Hierarchy hierarchy;
     private Axis axis;
 
-    public RemoveHierarchyAction(OlapQuery query, Hierarchy hierarchy, Axis axis) {
-        super(query, "Remove Hierarchy '" + hierarchy.getName() + "'");
+    public RemoveHierarchyAction(WabitSwingSession session, OlapQuery query, Hierarchy hierarchy, Axis axis) {
+        super(session, query, "Remove Hierarchy '" + hierarchy.getName() + "'");
         this.hierarchy = hierarchy;
         this.axis = axis;
     }
 
 	@Override
-	protected void performOlapQueryAction(OlapQuery query) throws OlapException, QueryInitializationException {
-		 query.removeHierarchy(hierarchy, axis);
-		 query.execute();
+	protected void performOlapQueryAction(OlapQuery query)
+	    throws QueryInitializationException {
+	    query.removeHierarchy(hierarchy, axis);
 	}
 }

@@ -23,12 +23,10 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.olap4j.OlapException;
-
-import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.olap.OlapGuiUtil;
 
 /**
  * An abstract base action meant to be extended by actions that modify
@@ -44,8 +42,14 @@ public abstract class OlapQueryAction extends AbstractAction {
      */
     private final OlapQuery query;
     
-    protected OlapQueryAction(OlapQuery query, String name) {
+    /**
+     * The session this action belongs to.
+     */
+    private final WabitSwingSession session;
+    
+    protected OlapQueryAction(WabitSwingSession session, OlapQuery query, String name) {
         super(name);
+        this.session = session;
         this.query = query;
         setEnabled(query != null);
     }
@@ -60,10 +64,27 @@ public abstract class OlapQueryAction extends AbstractAction {
     public final void actionPerformed(ActionEvent e) {
     	try {
     		performOlapQueryAction(query);
+    		
+    		OlapGuiUtil.asyncExecute(query, session);
     	} catch (Exception ex) {
     		throw new RuntimeException(ex);
     	}
     }
-    
-    protected abstract void performOlapQueryAction(OlapQuery query) throws OlapException, QueryInitializationException;
+
+    /**
+     * Manipulates the query but does not execute it. The
+     * {@link #actionPerformed(ActionEvent)} method will begin background
+     * execution of the query after calling this method.
+     * 
+     * @param query
+     *            The query to manipulate. Don't execute it!
+     *            <p>
+     *            This is the same query as returned by {@link #getQuery()};
+     *            it's provided for your convenience.
+     * @throws QueryInitializationException
+     *             If the query failed to initialize itself as a side effect of
+     *             manipulating it.
+     */
+    protected abstract void performOlapQueryAction(OlapQuery query)
+        throws QueryInitializationException;
 }

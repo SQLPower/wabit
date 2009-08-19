@@ -19,11 +19,11 @@
 
 package ca.sqlpower.wabit.swingui.olap.action;
 
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * An OlapQueryAction that clears all exclusions from the dimension of a given
@@ -33,15 +33,15 @@ public class ClearExclusionsAction extends OlapQueryAction {
 
 	private Hierarchy hierarchy;
 
-	public ClearExclusionsAction(OlapQuery query, Hierarchy hierarchy) {
-		super(query, "Clear All Exclusions in Dimension " + hierarchy.getDimension().getName());
+	public ClearExclusionsAction(WabitSwingSession session, OlapQuery query, Hierarchy hierarchy) {
+		super(session, query,
+		        "Clear All Exclusions in Dimension " + hierarchy.getDimension().getName());
 		this.hierarchy = hierarchy;
 	}
 
 	@Override
 	protected void performOlapQueryAction(OlapQuery query)
-			throws OlapException, QueryInitializationException {
+	    throws QueryInitializationException {
 		query.clearExclusions(hierarchy);
-		query.execute();
 	}
 }

@@ -19,11 +19,11 @@
 
 package ca.sqlpower.wabit.swingui.olap.action;
 
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * Abstract base action for all of the actions that make modifications to an
@@ -36,17 +36,38 @@ public abstract class MemberAction extends OlapQueryAction {
      */
     private final Member member;
 
-    protected MemberAction(String name, OlapQuery query, Member member) {
-        super(query, name);
+    protected MemberAction(WabitSwingSession session, String name, OlapQuery query, Member member) {
+        super(session, query, name);
         this.member = member;
     }
     
     @Override
-    protected final void performOlapQueryAction(OlapQuery query) throws OlapException, QueryInitializationException {
+    protected final void performOlapQueryAction(OlapQuery query)
+        throws QueryInitializationException {
     	performMemberAction(member, query);
     }
-    
-    protected abstract void performMemberAction(Member member, OlapQuery query) throws OlapException, QueryInitializationException;
+
+    /**
+     * Subclass hook. When implementing this method, manipulate the given member
+     * in the given query in whatever way makes sense for your specific action.
+     * Do not execute the query; this will be done after you return.
+     * 
+     * @param member
+     *            The member that was selected as the subject of this action.
+     *            <p>
+     *            This is the same member as returned by {@link #getMember()};
+     *            it's provided for your convenience.
+     * @param query
+     *            The query to manipulate. Don't execute it!
+     *            <p>
+     *            This is the same query as returned by {@link #getQuery()};
+     *            it's provided for your convenience.
+     * @throws QueryInitializationException
+     *             If the query failed to initialize itself as a side effect of
+     *             manipulating it.
+     */
+    protected abstract void performMemberAction(Member member, OlapQuery query)
+        throws QueryInitializationException;
 
 	public Member getMember() {
         return member;
