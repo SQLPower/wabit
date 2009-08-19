@@ -163,7 +163,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
     
     public static final Icon OPEN_WABIT_ICON = new ImageIcon(
-            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/wabit_load.png"));
+            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/workspace-16.png"));
     
     private static final int DEFAULT_DIVIDER_LOC = 50;
     

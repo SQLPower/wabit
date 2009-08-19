@@ -46,7 +46,7 @@ public class ExportQueryAction extends AbstractAction {
 	private final QueryCache query;
 
 	public ExportQueryAction(WabitSwingSession session, QueryCache query) {
-		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabit-exportQuery.png")));
+		super("", new ImageIcon(ExportQueryAction.class.getClassLoader().getResource("icons/wabitFile-16.png")));
 		this.session = session;
 		context = (WabitSwingSessionContext) session.getContext();
 		this.query = query;

@@ -50,7 +50,7 @@ public class ExportSQLScriptAction extends AbstractAction {
 	private final WabitSwingSessionContext context;
 
 	public ExportSQLScriptAction(WabitSwingSession session, QueryCache query) {
-		super("", new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/wabit_exportSQL.png")));
+		super("", new ImageIcon(QueryPen.class.getClassLoader().getResource("icons/sql-16.png")));
 		this.query = query;
 		context = (WabitSwingSessionContext) session.getContext();
 	}
