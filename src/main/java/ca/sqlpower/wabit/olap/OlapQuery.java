@@ -232,7 +232,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 * @throws QueryInitializationException 
 	 */
     public CellSet execute() throws OlapException, QueryInitializationException {
-        logger.debug("Executing MDX query...");
+        logger.debug("Executing MDX query...", new Exception("Nothing wrong; just a stack trace"));
         try {
             setRunning(true);
             // TODO execute the textual query if there is one
@@ -296,10 +296,8 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         try {
 			this.currentCube = this.getMDXQuery().getCube();
 			execute();
-		} catch (QueryInitializationException e) {
-			throw new AssertionError("The initialization of the MDX query failed when an Olap4j " +
-					"Query object was specified. The initialization method should not do anything " +
-					"in this case.");
+		} catch (QueryInitializationException cantHappen) {
+			throw new RuntimeException("Unexpected exception", cantHappen);
 		}
     }
 

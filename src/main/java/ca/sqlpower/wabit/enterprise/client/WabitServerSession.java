@@ -67,6 +67,7 @@ public class WabitServerSession extends WabitSessionImpl {
     
     public WabitServerSession(WabitServerInfo serviceInfo, WabitSessionContext context) {
         super(context);
+        getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(params, 2000);
         httpClient = new DefaultHttpClient(params);

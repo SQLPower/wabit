@@ -44,16 +44,16 @@ import javax.swing.JPopupMenu;
 import javax.swing.border.Border;
 
 import org.olap4j.Axis;
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
-import com.lowagie.text.Font;
-
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
+
+import com.lowagie.text.Font;
 
 /**
  * This is the slicer panel which shows at the bottom of the cell set viewer
@@ -84,12 +84,15 @@ public class SlicerPanel extends JPanel {
 	
 	private static final Border DEFAULT_BORDER = BorderFactory.createEtchedBorder();
 	private static final Border DRAG_OVER_BORDER = BorderFactory.createLineBorder(Color.BLACK, 5);
+
+    private final WabitSwingSession session;
 	
 	/**
 	 * This panel is the slicer panel which shows at the bottom of the cell set viewer.
 	 */
-	public SlicerPanel(OlapQuery olapQuery) {
+	public SlicerPanel(WabitSwingSession session, OlapQuery olapQuery) {
 		super();
+        this.session = session;
 		this.olapQuery = olapQuery;
 		updatePanel();
 		repaint();
@@ -241,7 +244,7 @@ public class SlicerPanel extends JPanel {
                     	olapQuery.addToAxis(0, m, Axis.FILTER);
                     }
         			resetUI();
-        			olapQuery.execute();
+        			OlapGuiUtil.asyncExecute(olapQuery, session);
                     return true;
 
                 } catch (Exception e) {
@@ -295,13 +298,10 @@ public class SlicerPanel extends JPanel {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						olapQuery.removeHierarchy(slicerMember.getHierarchy(), Axis.FILTER);
-						olapQuery.execute();
+						OlapGuiUtil.asyncExecute(olapQuery, session);
 					} catch (QueryInitializationException e1) {
 						SPSUtils.showExceptionDialogNoReport(SlicerPanel.this, "Error occured while initializing " +
 								"the query to remove the item on the filter axis.", e1);
-					} catch (OlapException e2) {
-						SPSUtils.showExceptionDialogNoReport(SlicerPanel.this, "Error occured " +
-								"while removing the filter.", e2);					
 					}
 				}
 			});

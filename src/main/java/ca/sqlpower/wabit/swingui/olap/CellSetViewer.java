@@ -48,6 +48,7 @@ import org.olap4j.metadata.Hierarchy;
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.CellSetTableCornerComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 
@@ -78,12 +79,17 @@ public class CellSetViewer {
     
     private final JScrollPane slicerScrollPane;
 
+    /**
+     * The session this cell set viewer belongs to.
+     */
+    private final WabitSwingSession session;
+
 	/**
 	 * Creates a CellSetViewer on the given {@link OlapQuery} and by default
 	 * allows Member modification
 	 */
-    public CellSetViewer(OlapQuery query) {
-        this(query, true);
+    public CellSetViewer(WabitSwingSession session, OlapQuery query) {
+        this(session, query, true);
     }
     
 	/**
@@ -96,8 +102,9 @@ public class CellSetViewer {
 	 *            Whether or not the CellSetViewer GUI will allow modification
 	 *            of the members of the Query.
 	 */
-    public CellSetViewer(OlapQuery query, boolean allowMemberModification) {
-    	this.allowMemberModification = allowMemberModification;
+    public CellSetViewer(WabitSwingSession session, OlapQuery query, boolean allowMemberModification) {
+    	this.session = session;
+        this.allowMemberModification = allowMemberModification;
     	viewerComponent.setPreferredSize(new Dimension(640, 480));
     	slicerScrollPane = new JScrollPane();
     	slicerScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -132,7 +139,7 @@ public class CellSetViewer {
         final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.COLUMNS, table);
         columnHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.WHITE));
         
-        SlicerPanel slicerPanel = new SlicerPanel(query);
+        SlicerPanel slicerPanel = new SlicerPanel(session, query);
         slicerPanel.setVisible(true);
         slicerScrollPane.setViewportView(slicerPanel);
         
@@ -218,7 +225,7 @@ public class CellSetViewer {
             logger.error("Exception while creating row header.", e);
         }
         
-        SlicerPanel slicerPanel = new SlicerPanel(query);
+        SlicerPanel slicerPanel = new SlicerPanel(session, query);
         slicerScrollPane.setPreferredSize(new Dimension(slicerScrollPane.getPreferredSize().height + 10, slicerPanel.getPreferredSize().height + 10));
 		slicerScrollPane.setViewportView(slicerPanel);
 	}

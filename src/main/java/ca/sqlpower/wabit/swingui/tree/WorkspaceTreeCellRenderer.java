@@ -25,9 +25,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -43,6 +40,7 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -72,13 +70,25 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon OLAP_QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-olap.png"));
     public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
     public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
-    
+
+    private static final Icon[] THROBBER_OVERLAYS;
+    static {
+        final int overlayFrameCount = 12;
+        THROBBER_OVERLAYS = new Icon[overlayFrameCount];
+        for (int imageNumber = 0; imageNumber < overlayFrameCount; imageNumber++) {
+            String imageURL = "icons/throbber-badge_" + (imageNumber + 1) + ".png";
+            logger.debug("Loading image: " + imageURL);
+            THROBBER_OVERLAYS[imageNumber] = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource(imageURL));
+        }
+    }
+
     /**
-     * This map contains {@link WabitObject}s that have an image or badge
-     * that is currently moving. The Integer value notes at what point in
-     * the sequence the image should be.
+     * Current frame number to use for the "busy bagde" ("throbber overlay").
+     * 
+     * @see #nextBusyBadgeFrame()
+     * @see #createBusyIcon()
      */
-    private final Map<WabitObject, Integer> objectToTimedImageMap = new HashMap<WabitObject, Integer>();
+    private int busyBadgeFrameNum;
     
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
@@ -110,12 +120,12 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 ContentBox cb = (ContentBox) wo;
                 ReportContentRenderer cbChild = (ReportContentRenderer) cb.getChildren().get(0);
                 if (cbChild instanceof ResultSetRenderer) {
-                	renderQueryCache(r, ((ResultSetRenderer) cbChild).getQuery());
+                	setupForQueryCache(r, ((ResultSetRenderer) cbChild).getQuery());
                 } else if (cbChild instanceof CellSetRenderer) {
                 	r.setIcon(OLAP_QUERY_ICON);
                 	r.setText(((CellSetRenderer) cbChild).getOlapQuery().getName());
                 } else if (cbChild instanceof ImageRenderer) {
-                    renderWabitImage(r, ((ImageRenderer) cbChild).getImage());
+                    setupForWabitImage(r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {
                 	//TODO add chart icons
                 	r.setIcon(BOX_ICON); 
@@ -132,21 +142,28 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             	Guide g = (Guide) wo;
             	r.setText(g.getName() + " @" + g.getOffset());
             } else if (wo instanceof QueryCache) {
-            	renderQueryCache(r, wo);
+            	setupForQueryCache(r, wo);
             } else if (wo instanceof OlapQuery) {
                 r.setIcon(OLAP_QUERY_ICON);
             } else if (wo instanceof WabitImage) {
-                renderWabitImage(r, wo);
+                setupForWabitImage(r, wo);
             }
 
+            if (wo instanceof WabitBackgroundWorker) {
+                if (((WabitBackgroundWorker) wo).isRunning()) {
+                    r.setIcon(makeBusy(r.getIcon()));
+                }
+            }
+            
         } else if (value instanceof FolderNode) {
         	FolderNode folder = ((FolderNode) value);
         	r.setText(folder.toString());
         }
+        
         return r;
     }
 
-	private void renderWabitImage(WorkspaceTreeCellRenderer r, WabitObject wo) {
+	private void setupForWabitImage(WorkspaceTreeCellRenderer r, WabitObject wo) {
 		final Image wabitImage = ((WabitImage) wo).getImage();
 		if (wabitImage != null) {
 		    final int width = DB_ICON.getIconWidth();
@@ -165,20 +182,12 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 		r.setText(wo.getName());
 	}
 
-	private void renderQueryCache(WorkspaceTreeCellRenderer r, WabitObject wo) {
+	private void setupForQueryCache(WorkspaceTreeCellRenderer r, WabitObject wo) {
 		if (((QueryCache) wo).isRunning()) {
 			if (((QueryCache) wo).isStreaming()) {
-				r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, STREAMING_QUERY_BADGE})));
+				r.setIcon(ComposedIcon.getInstance(QUERY_ICON, STREAMING_QUERY_BADGE));
 			} else {
-				if (objectToTimedImageMap.containsKey(wo)) {
-					logger.debug("The image for " + wo + " should be at position " + objectToTimedImageMap.get(wo));
-					int imageNumber = (objectToTimedImageMap.get(wo) % 12) + 1;
-					final String imageURL = "icons/throbber-badge_" + imageNumber + ".png";
-					logger.debug("Loading image: " + imageURL);
-					r.setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_ICON, new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource(imageURL))})));
-				} else { 
-					r.setIcon(QUERY_ICON);
-				}
+			    r.setIcon(QUERY_ICON);
 			}
 		} else {
 			r.setIcon(QUERY_ICON);
@@ -205,34 +214,18 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
      *            animation, so a monotonically increasing integer is
      *            sufficient.
      */
-	public void updateTimer(WabitObject object, Integer frameNum) {
-		logger.debug("Received update event of " + frameNum);
+	public void nextBusyBadgeFrame() {
 		if (!SwingUtilities.isEventDispatchThread()) {
 		    throw new IllegalStateException("This method can only be called on the event dispatch thread");
 		}
-		if (object instanceof QueryCache && !((QueryCache) object).isPhantomQuery()) {
-		    objectToTimedImageMap.put(object, frameNum);
+		if (busyBadgeFrameNum < THROBBER_OVERLAYS.length - 1) {
+		    busyBadgeFrameNum++;
+		} else {
+		    busyBadgeFrameNum = 0;
 		}
 	}
 	
-    /**
-     * Causes the given Wabit object to not have a "busy badge" next time it is rendered.
-     * <p>
-     * Important things to keep in mind:
-     * <ol>
-     *  <li>Calling this method does not cause the bagde to repaint; you will
-     *      have to ask the tree to repaint on your own
-     *  <li>this method <i>must</i> be called on the AWT/Swing Event Dispatch
-     *      Thread.
-     * </ol>
-     * 
-     * @param object
-     *            The tree object that should have a "busy" badge on its icon
-     */
-	public void removeTimer(WabitObject object) {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            throw new IllegalStateException("This method can only be called on the event dispatch thread");
-        }
-		objectToTimedImageMap.remove(object);
+	private Icon makeBusy(Icon base) {
+	    return ComposedIcon.getInstance(base, THROBBER_OVERLAYS[busyBadgeFrameNum]);
 	}
 }

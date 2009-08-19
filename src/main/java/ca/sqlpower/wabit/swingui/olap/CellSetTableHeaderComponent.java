@@ -84,9 +84,13 @@ import org.olap4j.query.Selection;
 
 import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.olap.action.ClearExclusionsAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillReplaceAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillUpAction;
@@ -334,7 +338,7 @@ public class CellSetTableHeaderComponent extends JComponent {
                     	query.addToAxis(calcDropInsertIndex(p), m, axis);
                     }
                     logger.debug("  -- import complete");
-                    query.execute();
+                    execute(query);
                     return true;
 
                 } catch (Exception e) {
@@ -391,6 +395,9 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * Creates a CellSetTableRowHeaderComponent for viewing the given CellSet
 	 * and Axis.
 	 * 
+     * @param session
+     *            the WabitSwingSession this component belongs to. Must not be
+     *            null.
 	 * @param query
 	 *            The query that generated the cell set. This query will be
 	 *            manipulated by the various drill down, up, replace,
@@ -417,6 +424,9 @@ public class CellSetTableHeaderComponent extends JComponent {
     /**
      * Creates a component for viewing the given CellSet and Axis.
      * 
+     * @param session
+     *            the WabitSwingSession this component belongs to. Must not be
+     *            null.
      * @param query
      *            The query that generated the cell set. This query will be
      *            manipulated by the various drill down, up, replace,
@@ -553,7 +563,7 @@ public class CellSetTableHeaderComponent extends JComponent {
     			for (Hierarchy h: hierarchies) {
     				try {
     					query.clearExclusions(h);
-    					query.execute();
+    					execute(query);
     				} catch (QueryInitializationException ex) {
     					throw new RuntimeException("Error while clearing all exclusions", ex);
     				} catch (OlapException ex) {
@@ -586,6 +596,9 @@ public class CellSetTableHeaderComponent extends JComponent {
 	 * it can display its existing hierarchies so that the user can tell what
 	 * they have added already.
 	 * 
+     * @param session
+     *            the WabitSwingSession this component belongs to. Must not be
+     *            null.
 	 * @param query
 	 *            The query that things dropped on the axis component should be
 	 *            added to.
@@ -774,7 +787,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 				} else if (selectedMember != null && !isMousePressed && e.getButton() == MouseEvent.BUTTON1) {
             		try {
             			query.toggleMember(selectedMember);
-            			query.execute();
+            			execute(query);
             		} catch (Exception ex) {
             			throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
             		}
@@ -1169,4 +1182,39 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
 		return cornerComponent;
 	}
+
+    /**
+     * Executes the given query in the background if it belongs to a
+     * WabitSwingSession (which is a worker registry). Otherwise, just executes
+     * the query on the current thread.
+     * 
+     * @param query
+     *            The query to execute
+     */
+    private void execute(OlapQuery query) throws OlapException, QueryInitializationException {
+        
+        // The following code is evil, and intended to be temporary. It
+        // would be much better if CellSetTableHeaderComponent was given a
+        // WabitSwingSession in its constructor, but due to early design
+        // decisions, this is not currently feasible.
+        // See bug XXX
+        WabitSwingSession session = null;
+        WabitObject wo = query;
+        while (wo.getParent() != null) {
+            wo = wo.getParent();
+        }
+        if (wo instanceof WabitWorkspace) {
+            WabitSession owningSession = ((WabitWorkspace) wo).getSession();
+            if (owningSession instanceof WabitSwingSession) {
+                session = (WabitSwingSession) owningSession;
+            }
+        }
+        
+        if (session != null) {
+            OlapGuiUtil.asyncExecute(query, session);
+        } else {
+            query.execute();
+        }
+    }
+
 }

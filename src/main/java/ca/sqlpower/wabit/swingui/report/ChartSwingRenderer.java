@@ -77,6 +77,7 @@ import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -87,6 +88,7 @@ import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.olap.CellSetViewer;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -679,7 +681,11 @@ public class ChartSwingRenderer implements SwingContentRenderer {
          */
         private final ChartRenderer renderer;
 
-        public ChartRendererPropertyPanel(WabitWorkspace workspace, final ChartRenderer renderer) {
+        private final WabitSwingSession session;
+
+        public ChartRendererPropertyPanel(WabitSwingSession session, final ChartRenderer renderer) {
+            this.session = session;
+            WabitWorkspace workspace = session.getWorkspace();
             this.renderer = renderer;
             defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
             List<WabitObject> queries = new ArrayList<WabitObject>();
@@ -904,7 +910,7 @@ public class ChartSwingRenderer implements SwingContentRenderer {
          * defining the chart in cases where the query changed.
          */
         private void displayOlapChartEditor(OlapQuery query) {
-            CellSetViewer cellSetViewer = new CellSetViewer(query, false);
+            CellSetViewer cellSetViewer = new CellSetViewer(session, query, false);
             
             JComboBox comboBoxForWidth = new JComboBox(new String[]{"MMMMM"});
             double comboBoxWidth = comboBoxForWidth.getUI().getPreferredSize(comboBoxForWidth).getWidth();
@@ -1214,15 +1220,36 @@ public class ChartSwingRenderer implements SwingContentRenderer {
     
     private final ChartRenderer renderer;
     
+    /**
+     * The workspace this renderer belongs to.
+     */
     private final WabitWorkspace workspace;
 
+    /**
+     * Creates a new renderer for charts in the Swing client environment.
+     * 
+     * @param session The session this renderer belongs to. Must not be null.
+     * @param renderer The underlying layout preferences for this chart.
+     */
     public ChartSwingRenderer(WabitWorkspace workspace, ChartRenderer renderer) {
         this.workspace = workspace;
         this.renderer = renderer;
     }
 
+    /**
+     * Returns the properties panel for this chart renderer, or throws an
+     * {@link IllegalStateException} if the workspace doesn't belong to a
+     * WabitSwingSession.
+     */
     public DataEntryPanel getPropertiesPanel() {
-        return new ChartRendererPropertyPanel(workspace, renderer);
+        WabitSession session = workspace.getSession();
+        if (session instanceof WabitSwingSession) {
+            return new ChartRendererPropertyPanel((WabitSwingSession) session, renderer);
+        } else {
+            throw new IllegalStateException(
+                    "The current workspace doesn't belong to a Swing session (is session is " +
+                    (session == null ? "null" : "a " + session.getClass().getName()) + ")");
+        }
     }
 
     public void processEvent(PInputEvent event, int type) {

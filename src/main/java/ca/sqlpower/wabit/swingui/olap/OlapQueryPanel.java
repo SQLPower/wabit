@@ -271,7 +271,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.query = query;
         this.session = session;
         final JFrame parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
-        cellSetViewer = new CellSetViewer(query);
+        cellSetViewer = new CellSetViewer(session, query);
         
         this.undoManager  = new UndoManager();
         cubeTree = new JTree();
@@ -419,7 +419,7 @@ public class OlapQueryPanel implements WabitPanel {
             public void actionPerformed(ActionEvent e) {
                 try {
                     query.setNonEmpty(nonEmptyRowsCheckbox.isSelected());
-                    query.execute();
+                    OlapGuiUtil.asyncExecute(query, session);
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }

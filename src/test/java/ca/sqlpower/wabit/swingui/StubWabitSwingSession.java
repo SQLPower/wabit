@@ -50,12 +50,13 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 public class StubWabitSwingSession implements WabitSwingSession {
 	
 	WabitSessionContext context = new StubWabitSessionContext();
-	private WabitWorkspace workspace;
 	private WabitSession delegateSession;
 	
 	public StubWabitSwingSession() {
-		workspace = new WabitWorkspace();
 		delegateSession = new StubWabitSession(context);
+		
+		// XXX leaking a reference to partially-constructed session!
+		delegateSession.getWorkspace().setSession(this);
 	}
 
 	public WabitSessionContext getContext() {
@@ -78,7 +79,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 	}
 
 	public WabitWorkspace getWorkspace() {
-		return workspace;
+		return delegateSession.getWorkspace();
 	}
 	
 	public DatabaseConnectionManager getDbConnectionManager() {
@@ -113,7 +114,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
     }
 
     public WorkspaceTreeModel getWorkspaceTreeModel() {
-        return new WorkspaceTreeModel(workspace);
+        return new WorkspaceTreeModel(getWorkspace()); // XXX new tree model? this looks fishy!
     }
 
     public DataSourceCollection<SPDataSource> getDataSources() {

@@ -20,11 +20,14 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayOutputStream;
@@ -33,6 +36,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.Action;
@@ -40,7 +44,10 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JTree;
+import javax.swing.Timer;
 import javax.swing.tree.TreePath;
+
+import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
@@ -72,6 +79,7 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 
 /**
@@ -120,10 +128,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * workspace.
 	 */
 	private boolean unsavedChangesExist = false;
-	
+
     /**
-     * Multipurpose event handler that watches every WabitObject in this
-     * session's workspace for property changes, and handles them appropriately.
+     * This timer updates the tree cell renderer's busy badge frame on a
+     * periodic basis. It's created in the session's constructor and shut down
+     * when the session closes.
+     */
+	private final Timer busyBadgeTimer;
+
+    /**
+     * Event handler that watches every WabitObject in this session's workspace
+     * for property changes, and handles them appropriately (usually by setting
+     * the session's dirty flag).
      */
 	private class WorkspaceWatcher implements WabitChildListener, PropertyChangeListener {
 
@@ -142,19 +158,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
 
         public void propertyChange(PropertyChangeEvent evt) {
-            if ("running".equals(evt.getPropertyName())) {
-                WabitObject src = (WabitObject) evt.getSource();
-                Boolean isRunning = (Boolean) evt.getNewValue();
-                if (isRunning) {
-                    logger.info(evt.getSource() + " is running now");
-                    renderer.updateTimer(src, 0); // TODO animate!
-                    workspaceTree.repaint(workspaceTree.getPathBounds(workspaceTreeModel.createTreePathForObject(src)));
-                } else {
-                    logger.info(evt.getSource() + " has stopped running");
-                    renderer.removeTimer(src);
-                    workspaceTree.repaint(workspaceTree.getPathBounds(workspaceTreeModel.createTreePathForObject(src)));
-                }
-            } else {
+            // TODO probably need to extend this to a set of ignorable property names
+            if (!"running".equals(evt.getPropertyName())) {
                 unsavedChangesExist = true;
             }
         }
@@ -174,11 +179,62 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     private URI currentURI = null;
     
     /**
-     * The list of all currently-registered background tasks.
+     * Thread-safe list of all currently-registered background tasks.
      */
-    private final List<SPSwingWorker> activeWorkers =
-        Collections.synchronizedList(new ArrayList<SPSwingWorker>());
-	
+    @GuardedBy("itself")
+    private final List<ActiveWorker> activeWorkers =
+        Collections.synchronizedList(new ArrayList<ActiveWorker>());
+
+    /**
+     * A collection of information about and operations on a currently-executing
+     * background task that exists within this session.
+     * 
+     * @see {@link WabitSwingSessionImpl#registerSwingWorker(SPSwingWorker)}
+     */
+    private class ActiveWorker {
+        private final SPSwingWorker worker;
+        private final TreePath pathToResponsibleObject;
+        
+        ActiveWorker(@NonNull SPSwingWorker worker) {
+            if (worker == null) {
+                throw new NullPointerException("Null worker!");
+            }
+            this.worker = worker;
+            if (worker.getResponsibleObject() instanceof WabitObject) {
+                WabitObject responsibleObject = (WabitObject) worker.getResponsibleObject();
+                pathToResponsibleObject =
+                    workspaceTreeModel.createTreePathForObject(responsibleObject);
+            } else {
+                pathToResponsibleObject = null;
+            }
+        }
+
+        /**
+         * Repaints the responsible object's node in the workspace tree. This
+         * method has no effect if there is no responsible object defined for
+         * this worker, or the tree node for the responsible object is not
+         * currently visible.
+         */
+        public void repaintInTree() {
+            if (pathToResponsibleObject != null) {
+                Rectangle pathBounds = workspaceTree.getPathBounds(pathToResponsibleObject);
+                if (pathBounds != null) {
+                    workspaceTree.repaint(pathBounds);
+                }
+            }
+        }
+        
+        /**
+         * Returns the worker.
+         * 
+         * @return The worker (never null)
+         */
+        @NonNull
+        public SPSwingWorker getWorker() {
+            return worker;
+        }
+        
+    }
     /**
      * This listener is attached to the active session's workspace and will
      * update the current editor displayed when the object being edited changes
@@ -235,6 +291,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	WabitSwingSessionImpl(WabitSwingSessionContext context, WabitSession delegateSession) {
 	    this.delegateSession = delegateSession;
 		sessionContext = context;
+		
+		// XXX leaking a reference to partially-constructed session!
+		delegateSession.getWorkspace().setSession(this);
 		
 		new WorkspaceWatcher(delegateSession.getWorkspace());
 		
@@ -298,6 +357,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
         getWorkspace().addPropertyChangeListener(workspaceEditorModelListener);
         getContext().addPropertyChangeListener(loadingContextListener);
+        
+        busyBadgeTimer = new Timer(100, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                renderer.nextBusyBadgeFrame();
+                synchronized (activeWorkers) {
+                    for (ActiveWorker worker : activeWorkers) {
+                        worker.repaintInTree();
+                    }
+                }
+            }
+        });
+        busyBadgeTimer.start();
 	}
 
 	/**
@@ -337,9 +408,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    }
 	    getWorkspace().removePropertyChangeListener(workspaceEditorModelListener);
 	    getContext().removePropertyChangeListener(loadingContextListener);
-	    for (SPSwingWorker worker : activeWorkers) {
-	        worker.kill();
+	    for (ActiveWorker worker : activeWorkers) {
+	        worker.getWorker().kill();
 	    }
+	    busyBadgeTimer.stop();
 	    return true;
 	}
 
@@ -412,13 +484,20 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
 
     /* docs inherited from interface */
-    public void registerSwingWorker(SPSwingWorker worker) {
-        activeWorkers.add(worker);
+    public void registerSwingWorker(@NonNull SPSwingWorker worker) {
+        activeWorkers.add(new ActiveWorker(worker));
     }
 
     /* docs inherited from interface */
-    public void removeSwingWorker(SPSwingWorker worker) {
-        activeWorkers.remove(worker);
+    public void removeSwingWorker(@NonNull SPSwingWorker worker) {
+        synchronized (activeWorkers) {
+            for (Iterator<ActiveWorker> it = activeWorkers.iterator(); it.hasNext(); ) {
+                ActiveWorker aw = it.next();
+                if (aw.getWorker().equals(worker)) {
+                    it.remove();
+                }
+            }
+        }
     }
     
 }

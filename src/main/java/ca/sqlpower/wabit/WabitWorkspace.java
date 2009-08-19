@@ -42,6 +42,11 @@ import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
 
+/**
+ * The WabitWorkspace is the root WabitObject of a WabitSession. It directly
+ * corresponds with the root workspace node in the XML representation of a Wabit
+ * workspace. It belongs to exactly one WabitSession.
+ */
 public class WabitWorkspace extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
 	
 	
@@ -94,8 +99,18 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     private WabitObject editorPanelModel;
 
+    /**
+     * The session this workspace belongs to. Sessions and workspaces have a 1:1
+     * correspondence.
+     */
+    private WabitSession session;
+
+    /**
+     * Creates a new Wabit workspace. This is normally done by the session it
+     * belongs to.
+     */
     public WabitWorkspace() {
-    	listeners = new ArrayList<DatabaseListChangeListener>();
+        listeners = new ArrayList<DatabaseListChangeListener>();
         setName("New Workspace");
     }
     
@@ -107,6 +122,23 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         allChildren.addAll(images);
         allChildren.addAll(layouts);
         return allChildren;
+    }
+    
+    /**
+     * Sets the session which this workspace belongs to. This should normally
+     * only be called by that workspace. It's exposed as a publicly settable
+     * method so that "wrapper" sessions in other packages can claim ownership
+     * of this workspace from the "core" or "delegate" session they wrap.
+     * 
+     * @param session
+     *            The session this workspace belongs to.
+     */
+    public void setSession(WabitSession session) {
+        this.session = session;
+    }
+    
+    public WabitSession getSession() {
+        return session;
     }
     
     public void addDataSource(WabitDataSource ds) {

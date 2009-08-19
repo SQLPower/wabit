@@ -183,7 +183,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
             	try {
     				modifiedOlapQuery = new OlapQuery(olapQuery);
     				modifiedOlapQuery.addOlapQueryListener(queryListener);
-    				modifiedOlapQuery.execute(); //This code will fire the change and set the cellset
+    				
+    				// This code will eventually fire the change and set the cellset
+    				// (must be done synchronously--don't use asyncExecute!)
+    				modifiedOlapQuery.execute();
+    				
     			} catch (Exception e) {
     				throw new RuntimeException(e);
     			}

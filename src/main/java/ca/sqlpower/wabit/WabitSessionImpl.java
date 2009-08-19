@@ -65,6 +65,7 @@ public class WabitSessionImpl implements WabitSession {
     public WabitSessionImpl(WabitSessionContext context) {
     	this.sessionContext = context;
     	workspace = new WabitWorkspace();
+    	workspace.setSession(this); // XXX leaking a reference to partially-constructed session!
     }
     
 	public void addPropertyChangeListener(PropertyChangeListener l) {

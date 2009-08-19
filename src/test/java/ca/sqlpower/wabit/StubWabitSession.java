@@ -57,8 +57,9 @@ public class StubWabitSession implements WabitSession {
 	public StubWabitSession(WabitSessionContext context) {
 		this.context = context;
 		workspace = new WabitWorkspace();
+		workspace.setSession(this); // XXX leaking a reference to partially-constructed session!
 	}
-
+	
 	public void addSessionLifecycleListener(
 			SessionLifecycleListener<WabitSession> l) {
 		// TODO Auto-generated method stub
