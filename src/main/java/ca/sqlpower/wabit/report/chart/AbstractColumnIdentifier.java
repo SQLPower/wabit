@@ -19,14 +19,20 @@
 
 package ca.sqlpower.wabit.report.chart;
 
+import java.util.List;
+
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
+
+import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This class handles some of the generic methods to the ColumnIdentifier.
  * This will not store the specific object that makes the column be uniquely
  * identified.
  */
-public abstract class AbstractColumnIdentifier implements ColumnIdentifier {
+public abstract class AbstractColumnIdentifier extends AbstractWabitObject implements ColumnIdentifier {
     
     private DataTypeSeries dataType;
     
@@ -45,11 +51,33 @@ public abstract class AbstractColumnIdentifier implements ColumnIdentifier {
     }
 
     public void setDataType(DataTypeSeries dataType) {
+        DataTypeSeries oldType = this.dataType;
         this.dataType = dataType;
+        firePropertyChange("dataType", oldType, dataType);
     }
 
     public void setXAxisIdentifier(ColumnIdentifier xAxisIdentifier) {
+        ColumnIdentifier oldIdentifier = this.xAxisIdentifier;
         this.xAxisIdentifier = xAxisIdentifier;
+        firePropertyChange("xAxisIdentifier", oldIdentifier, xAxisIdentifier);
+    }
+    
+    public boolean allowsChildren() {
+        return false;
+    }
+
+    public int childPositionOffset(Class<? extends WabitObject> childType) {
+        return 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<? extends WabitObject> getChildren() {
+        return Collections.emptyList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<WabitObject> getDependencies() {
+        return Collections.emptyList();
     }
 
 }

@@ -19,13 +19,14 @@
 
 package ca.sqlpower.wabit.report.chart;
 
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
 
 /**
  * This object identifies a single column in a table being used to define a chart.
  * Each column should be able to be uniquely identified.
  */
-public interface ColumnIdentifier {
+public interface ColumnIdentifier extends WabitObject {
 
     /**
      * Returns the object that uniquely identifies this column.

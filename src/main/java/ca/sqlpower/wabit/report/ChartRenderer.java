@@ -1070,15 +1070,19 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
 	public boolean allowsChildren() {
-		return false;
+		return true;
 	}
 
 	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	    if (!childType.equals(ColumnIdentifier.class)) {
+	        throw new IllegalArgumentException("The chart renderer does not contain children" +
+	        		" of type " + childType);
+	    }
 		return 0;
 	}
 
 	public List<? extends WabitObject> getChildren() {
-		return new ArrayList<WabitObject>();
+		return columnNamesInOrder;
 	}
 
 	public ExistingChartTypes getChartType() {
@@ -1133,21 +1137,25 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		return columnNamesInOrder;
 	}
 	
-	//XXX Get rid of this method and make the column identifiers the children of a chart.
-	public void setColumnNamesInOrder(List<ColumnIdentifier> newColumnOrdering) {
-	    List<ColumnIdentifier> oldIdentifiers = new ArrayList<ColumnIdentifier>(columnNamesInOrder);
-		columnNamesInOrder.clear();
-		columnNamesInOrder.addAll(newColumnOrdering);
-		firePropertyChange("columnNamesInOrder", oldIdentifiers, newColumnOrdering);
+	public void addColumnIdentifier(ColumnIdentifier newColumnIdentifier) {
+	    int index = columnNamesInOrder.size();
+	    columnNamesInOrder.add(newColumnIdentifier);
+	    newColumnIdentifier.setParent(this);
+	    fireChildAdded(ColumnIdentifier.class, newColumnIdentifier, index);
 	}
 	
-	public void addColumnIdentifier(ColumnIdentifier newColumnIdentifier) {
-	    //XXX now that the column information is folded into the ColumnIdentifier class
-	    //this list would be better to be the children of the chart renderer and use
-	    //child added and removed events.
-	    List<ColumnIdentifier> oldIdentifiers = new ArrayList<ColumnIdentifier>(columnNamesInOrder);
-	    columnNamesInOrder.add(newColumnIdentifier);
-	    firePropertyChange("columnNamesInOrder", oldIdentifiers, columnNamesInOrder);
+	public void clearColumnIdentifiers() {
+	    for (int i = columnNamesInOrder.size() - 1; i >= 0; i--) {
+	        removeColumnIdentifier(columnNamesInOrder.get(i));
+	    }
+	}
+	
+	public void removeColumnIdentifier(ColumnIdentifier identifier) {
+	    int index = columnNamesInOrder.size();
+        boolean removed = columnNamesInOrder.remove(identifier);
+        if (removed) {
+            fireChildRemoved(ColumnIdentifier.class, identifier, index);
+        }
 	}
 
 	public void setYaxisName(String yaxisName) {

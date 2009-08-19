@@ -1181,7 +1181,10 @@ public class ChartSwingRenderer implements SwingContentRenderer {
             }
             renderer.setChartType((ExistingChartTypes) chartTypeComboBox.getSelectedItem());
             renderer.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
-            renderer.setColumnNamesInOrder(columnNamesInOrder);
+            renderer.clearColumnIdentifiers();
+            for (ColumnIdentifier identifier : columnNamesInOrder) {
+                renderer.addColumnIdentifier(identifier);
+            }
             renderer.setYaxisName(yaxisNameField.getText());
             renderer.setXaxisName(xaxisNameField.getText());
             renderer.clearMissingIdentifiers();

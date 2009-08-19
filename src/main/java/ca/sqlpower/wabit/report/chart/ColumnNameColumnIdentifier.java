@@ -19,6 +19,10 @@
 
 package ca.sqlpower.wabit.report.chart;
 
+import java.util.List;
+
+import ca.sqlpower.wabit.WabitObject;
+
 
 
 /**
