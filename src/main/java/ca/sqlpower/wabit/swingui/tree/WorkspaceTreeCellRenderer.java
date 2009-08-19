@@ -57,6 +57,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
@@ -64,7 +65,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 	private static final Logger logger = Logger.getLogger(WorkspaceTreeCellRenderer.class);
 
     public static final Icon PAGE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/page_white.png"));
-    public static final Icon LAYOUT_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/layout.png"));
+    public static final Icon LAYOUT_ICON = WabitIcons.REPORT_ICON_16;
     public static final Icon BOX_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/shape_square.png"));
     public static final Icon QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-db.png"));
     public static final Icon STREAMING_QUERY_BADGE = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/stream-badge.png"));
