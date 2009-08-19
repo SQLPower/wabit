@@ -1255,7 +1255,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     				break;
     			}
     		}
-    		session.getWorkspace().setEditorPanelModel(initialView);
+    		//XXX uncomment the code below when we are confident that Wabit runs all
+    		//of its queries and other intensive operations on a separate thread.
+    		//See bug 2040.
+    		session.getWorkspace().setEditorPanelModel(session.getWorkspace());
+//    		session.getWorkspace().setEditorPanelModel(initialView);
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
