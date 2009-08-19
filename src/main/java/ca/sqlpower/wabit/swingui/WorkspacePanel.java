@@ -77,21 +77,29 @@ public class WorkspacePanel implements WabitPanel {
 	private static final ImageIcon UP_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
 	private static final Icon DB_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/dataSources-db.png"));
 	
+	/**
+	 * This layout generates the Wabit logo panel with the version number in it.
+	 */
     public static class LogoLayout implements LayoutManager {
 
-    	private static final JLabel wabitLabel = new JLabel(new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wabit_header_welcome.png")));
-    	private static final JLabel versionLabel = new JLabel("" + WabitVersion.VERSION);
+        private static final ImageIcon WABIT_HEADER = 
+            new ImageIcon(WorkspacePanel.class.getClassLoader().getResource(
+                    "icons/wabit_header_welcome.png"));
+        
+    	private final JLabel wabitLabel = new JLabel(WABIT_HEADER);
+    	private final JLabel versionLabel = new JLabel("" + WabitVersion.VERSION);
     	
         private int textStartY = 130;
         private int textStartX = 400;
         
         public static JPanel generateLogoPanel() {
-        	JPanel panel = new JPanel(new LogoLayout());
+        	final LogoLayout logo = new LogoLayout();
+            JPanel panel = new JPanel(logo);
         	
-        	versionLabel.setForeground(new Color(0x999999));
+        	logo.getVersionLabel().setForeground(new Color(0x999999));
         	
-        	panel.add(wabitLabel);
-        	panel.add(versionLabel);
+        	panel.add(logo.getWabitLabel());
+        	panel.add(logo.getVersionLabel());
         	panel.setOpaque(false);
         	
 			return panel;
@@ -123,6 +131,14 @@ public class WorkspacePanel implements WabitPanel {
         
         public void addLayoutComponent(String name, Component comp) {
             // no-op
+        }
+
+        public JLabel getWabitLabel() {
+            return wabitLabel;
+        }
+
+        public JLabel getVersionLabel() {
+            return versionLabel;
         }
     }
 
