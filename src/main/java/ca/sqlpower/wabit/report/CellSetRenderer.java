@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -50,6 +51,7 @@ import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Property;
 
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -138,15 +140,22 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private Member selectedMember;
 
     /**
-     * Listens to the query and updates the view every time the query has been executed.
+     * Listens to the query and updates the view every time the query has been
+     * executed. If the event is received on the event dispatch thread, the GUI
+     * update is done immediately; otherwise it's scheduled in the Swing event
+     * queue.
      */
     private final OlapQueryListener queryListener = new OlapQueryListener() {
-		public void queryExecuted(OlapQueryEvent evt) {
-			try {
-				setCellSet(evt.getCellSet());
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+		public void queryExecuted(final OlapQueryEvent evt) {
+		    SPSUtils.runOnSwingThread(new Runnable() {
+		        public void run() {
+		            try {
+		                setCellSet(evt.getCellSet());
+		            } catch (Exception e) {
+		                throw new RuntimeException(e);
+		            }
+		        }
+		    });
 		}
     };
     

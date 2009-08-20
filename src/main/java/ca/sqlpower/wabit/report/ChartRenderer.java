@@ -62,6 +62,7 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -287,8 +288,12 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
      */
 	private final OlapQueryListener olapQueryChangeListener = new OlapQueryListener() {
 
-	    public void queryExecuted(OlapQueryEvent e) {
-            updateMissingIdentifierList(e.getCellSet());
+	    public void queryExecuted(final OlapQueryEvent e) {
+	        SPSUtils.runOnSwingThread(new Runnable() {
+                public void run() {
+                    updateMissingIdentifierList(e.getCellSet());
+                }
+            });
         }
 
         /**

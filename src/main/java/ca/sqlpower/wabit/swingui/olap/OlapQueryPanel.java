@@ -92,6 +92,7 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
@@ -210,9 +211,12 @@ public class OlapQueryPanel implements WabitPanel {
      * panel. This will update the panel when changes occur in the query.
      */
     private final OlapQueryListener queryListener = new OlapQueryListener() {
-        public void queryExecuted(OlapQueryEvent e) {
-            final CellSet cellSet = e.getCellSet();
-            updateCellSet(cellSet);
+        public void queryExecuted(final OlapQueryEvent e) {
+            SPSUtils.runOnSwingThread(new Runnable() {
+                public void run() {
+                    updateCellSet(e.getCellSet());
+                }
+            });
         }
     };
     
