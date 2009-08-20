@@ -122,7 +122,7 @@ public class QueryPanel implements WabitPanel {
 	
 	private static final String SQL_TEXT_TAB_HEADING = "SQL";
 	
-	private static final ImageIcon THROBBER = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/throbber.gif"));
+	private static final ImageIcon THROBBER = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/throbber16-01.png"));
 	
 	private static final ImageIcon ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("ca/sqlpower/swingui/query/search.png"));
 	

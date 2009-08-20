@@ -55,6 +55,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
@@ -70,6 +71,12 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon OLAP_QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-olap.png"));
     public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
     public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
+    public static final Icon LABEL_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/label-16.png"));
+    public static final Icon CHART_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-16.png"));
+    public static final Icon CHART_BAR_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-bar-16.png"));
+    public static final Icon CHART_SCATTER_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-scatter-16.png"));
+    public static final Icon CHART_LINE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-line-16.png"));
+    public static final Icon CHART_PIE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-pie-16.png")); //TODO ADD ME
 
     private static final Icon[] THROBBER_OVERLAYS;
     static {
@@ -127,12 +134,25 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 } else if (cbChild instanceof ImageRenderer) {
                     setupForWabitImage(r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {
-                	//TODO add chart icons
-                	r.setIcon(BOX_ICON); 
-	                r.setText(((ChartRenderer) cbChild).getQuery().getName());
+                	ChartRenderer chartRenderer = (ChartRenderer) cbChild;
+                	ExistingChartTypes chartType = chartRenderer.getChartType();
+                	if (chartType.equals(ExistingChartTypes.BAR)) {
+                		r.setIcon(CHART_BAR_ICON);
+                	} else if (chartType.equals(ExistingChartTypes.CATEGORY_LINE)) {
+                		r.setIcon(CHART_LINE_ICON);
+                	} else if (chartType.equals(ExistingChartTypes.SCATTER)) {
+                		r.setIcon(CHART_SCATTER_ICON);
+                	} else if (chartType.equals(ExistingChartTypes.LINE)) {
+                		r.setIcon(CHART_LINE_ICON);
+                	} else {
+                		//TODO when pie charts are added change this
+                		throw new UnsupportedOperationException("The pie chart icon needs to be added to the tree model");
+//                		r.setIcon(CHART_ICON); 
+//						r.setIcon(CHART_PIE_ICON);
+                	}
+					r.setText(chartRenderer.getQuery().getName());
                 } else if (cbChild instanceof Label) {
-                	//TODO add label icons (and their associated icons)
-                	r.setIcon(BOX_ICON); 
+                	r.setIcon(LABEL_ICON); 
 	                r.setText(((Label) cbChild).getText());
                 } else {
                 	r.setIcon(BOX_ICON); 
