@@ -66,11 +66,11 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon PAGE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/page_white.png"));
     public static final Icon LAYOUT_ICON = WabitIcons.REPORT_ICON_16;
     public static final Icon BOX_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/shape_square.png"));
-    public static final Icon QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-db.png"));
+    public static final Icon QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-db-16.png"));
     public static final Icon STREAMING_QUERY_BADGE = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/stream-badge.png"));
-    public static final Icon OLAP_QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-olap.png"));
-    public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
-    public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
+    public static final Icon OLAP_QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-olap-16.png"));
+    public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/connection-db-16.png"));
+    public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/connection-olap-16.png"));
     public static final Icon LABEL_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/label-16.png"));
     public static final Icon CHART_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-16.png"));
     public static final Icon CHART_BAR_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-bar-16.png"));

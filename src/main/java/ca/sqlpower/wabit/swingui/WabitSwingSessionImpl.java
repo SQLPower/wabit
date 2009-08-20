@@ -87,7 +87,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 public class WabitSwingSessionImpl implements WabitSwingSession {
     
-    private static final Icon DB_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/dataSources-db.png"));
+    private static final Icon DB_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/connection-db-16.png"));
 	
 	private static final Logger logger = Logger.getLogger(WabitSwingSessionImpl.class);
 	

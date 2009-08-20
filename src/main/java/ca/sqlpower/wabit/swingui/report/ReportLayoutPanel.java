@@ -110,7 +110,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
 
 	private static final Icon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
-	private static final Icon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db.png"));
+	private static final Icon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db-16.png"));
 	private static final Icon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-minus.png"));
 	private static final Icon ZOOM_IN_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/32x32/zoom-plus.png"));
     public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
@@ -118,7 +118,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
     private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/chart.png"));
-    private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap.png"));
+    private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap-16.png"));
     private static final Icon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber16-01.png")); //XXX we should be animating this...
     private static final Icon REFRESH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
     

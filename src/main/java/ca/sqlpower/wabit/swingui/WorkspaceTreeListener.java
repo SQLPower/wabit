@@ -78,8 +78,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 	
 	private static final Logger logger = Logger.getLogger(WorkspaceTreeListener.class);
 	
-    public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-db.png"));
-    public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/dataSources-olap.png"));
+    public static final Icon DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/connection-db-16.png"));
+    public static final Icon OLAP_DB_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/connection-olap-16.png"));
 	
 	private final WabitSwingSession session;
 	private final WabitSwingSessionContext context;

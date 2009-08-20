@@ -75,7 +75,7 @@ public class WorkspacePanel implements WabitPanel {
 	private static final ImageIcon OVER_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_over.png"));
 	private static final ImageIcon DOWN_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_down.png"));
 	private static final ImageIcon UP_START_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/wunWabit_up.png"));
-	private static final Icon DB_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/dataSources-db.png"));
+	private static final Icon DB_ICON = new ImageIcon(WorkspacePanel.class.getClassLoader().getResource("icons/connection-db-16.png"));
 	
 	/**
 	 * This layout generates the Wabit logo panel with the version number in it.
