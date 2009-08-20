@@ -364,13 +364,21 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         	}
         }
     }
-    
+
     /**
-     * Replaces the current olap4j query with the given one, and fires a
-     * property change event. The query passed in should not be null.
+     * Replaces the current olap4j query with the given one, then executes it.
+     * <p>
+     * Because execution of the query is deemed non-optional, this method
+     * responds to interruption in execute() by retrying the call to execute().
+     * After an uninterrupted retry has gone through, the interrupted state of
+     * the thread will be restored.
+     * <p>
+     * XXX I'm not actually convinced it's necessary or even desirable to
+     * execute the new query here. Needs investigation!
      * 
-     * @param mdxQuery The new query. 
-     * @throws OlapException 
+     * @param mdxQuery
+     *            The new query. Must not be null.
+     * @throws OlapException
      */
     private synchronized void setMdxQuery(Query mdxQuery) throws OlapException {
     	if (mdxQuery == null) throw new NullPointerException();
@@ -379,16 +387,22 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         try {
 			this.currentCube = this.getMDXQuery().getCube();
 			
-			boolean tryAgain = false;
-			do {
+			boolean wasInterrupted = false;
+			boolean executed = false;
+			while (!executed) {
 			    try {
 			        execute();
+			        executed = true;
 			    } catch (InterruptedException e) {
-			        // we don't want this to get canceled; we're changing queries!
-			        logger.debug("Was interrupted while trying to execute new MDX query", e);
-			        tryAgain = true;
+			        wasInterrupted = true;
+			        logger.debug(
+			                "Was interrupted while trying to execute new MDX query. Retrying...", e);
+			    } finally {
+			        if (wasInterrupted) {
+			            Thread.currentThread().interrupt();
+			        }
 			    }
-			} while (tryAgain);
+			}
 			
 		} catch (QueryInitializationException cantHappen) {
 			throw new RuntimeException("Unexpected exception", cantHappen);
