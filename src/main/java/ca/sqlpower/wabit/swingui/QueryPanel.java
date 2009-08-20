@@ -692,7 +692,7 @@ public class QueryPanel implements WabitPanel {
 		queryToolBar.add(executeButton);
 		queryUIComponents.getStopButton().setAction(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
-				queryCache.stopRunning();
+				queryCache.cancel();
 			}
 		});
 		queryUIComponents.getStopButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/stop.png")));

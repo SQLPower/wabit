@@ -21,7 +21,6 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,6 +28,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
@@ -47,13 +48,8 @@ import ca.sqlpower.wabit.swingui.ExceptionHandler;
  * This method will be able to execute and cache the results of a query. It also
  * delegates some of the methods to the {@link Query} contained in it.
  */
-public class QueryCache extends AbstractWabitObject implements StatementExecutor {
+public class QueryCache extends AbstractWabitObject implements StatementExecutor, WabitBackgroundWorker {
     
-    /**
-     * Used in property change events to note if the query has started or stopped executing.
-     */
-    public static final String RUNNING = "running";
-
     private static final Logger logger = Logger.getLogger(QueryCache.class);
     
     /**
@@ -72,8 +68,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     private final List<Integer> updateCounts = new ArrayList<Integer>();
     
     private int resultPosition = 0;
-    
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     
     /**
      * This is the statement currently entering result sets into this query cache.
@@ -152,6 +146,12 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * query. If false the query should only be executed by user request.
      */
     private boolean automaticallyExecuting = true;
+
+    /**
+     * Flag to indicate whether or not the query is currently running.
+     */
+    @GuardedBy("this")
+    private int currentExecutionCount = 0;
     
     /**
      * This makes a copy of the given query cache. The query in the given query cache
@@ -221,7 +221,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      *             If the query fails to execute for any reason.
      */
     public boolean executeStatement(boolean fetchFullResults) throws SQLException {
-        stopRunning();
+        cancel();
         resultPosition = 0;
         resultSets.clear();
         updateCounts.clear();
@@ -231,8 +231,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         String sql = query.generateQuery();
         ResultSet rs = null;
         try {
+            setRunning(true);
             currentConnection = query.getDatabase().getConnection();
-            pcs.firePropertyChange(RUNNING, false, true);
             currentStatement = currentConnection.createStatement();
             if (!fetchFullResults) {
                 currentStatement.setMaxRows(query.getRowLimit());
@@ -297,12 +297,18 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
                         logger.warn("Failed to close connection. Squishing this exception: ", ex);
                     }
                 }
-                pcs.firePropertyChange(RUNNING, true, false);
+                setRunning(false);
             }
         }
     }
-    
-    public void stopRunning() {
+
+    /**
+     * Cancels this query's execution if it is currently running. Cancellation
+     * is not guaranteed to work perfectly, because it is partly the underlying
+     * JDBC driver's responsibility to provide an effective implementation of
+     * {@link Statement#cancel()}.
+     */
+    public void cancel() {
         if (currentStatement != null) {
             try {
                 currentStatement.cancel();
@@ -321,7 +327,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
             }
         }
         streamingThreads.clear();
-        pcs.firePropertyChange(RUNNING, true, false);
     }
 
     public ResultSet getResultSet() {
@@ -419,10 +424,32 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return Collections.unmodifiableList(streamingThreads);
     }
 
-    public boolean isRunning() {
-        return (currentStatement != null || currentConnection != null);
+    public synchronized boolean isRunning() {
+        return currentExecutionCount > 0;
     }
 
+    /**
+     * Maintains the counter that indicates if this query is currently running.
+     * Since there is no synchronization to prevent multiple threads from
+     * executing this query simultaneously, this method actually keeps a running
+     * count of how many concurrent executions are in progress.
+     * 
+     * @param isRunning
+     *            An argument of true means a new query execution is beginning;
+     *            false means a query execution has just completed.
+     */
+    private synchronized void setRunning(boolean isRunning) {
+        int prevExecCount;
+        if (isRunning) {
+            prevExecCount = currentExecutionCount++;
+        } else {
+            prevExecCount = currentExecutionCount--;
+        }
+        
+        boolean wasRunning = prevExecCount > 0;
+        firePropertyChange("running", wasRunning, isRunning);
+    }
+    
     public PropertyChangeListener getRowLimitChangeListener() {
         return rowLimitChangeListener;
     }

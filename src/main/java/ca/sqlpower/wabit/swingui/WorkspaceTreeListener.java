@@ -390,7 +390,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.addSeparator();
 					menu.add(new AbstractAction("Stop Running") {
 						public void actionPerformed(ActionEvent e) {
-							((QueryCache) lastPathComponent).stopRunning();
+							((QueryCache) lastPathComponent).cancel();
 						}
 					});
 				}
