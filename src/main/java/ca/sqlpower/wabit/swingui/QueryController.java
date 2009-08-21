@@ -110,7 +110,7 @@ public class QueryController {
 	
 		public void tableChanged(TableModelEvent e) {
 			TableModelSortDecorator sortDecorator = (TableModelSortDecorator)e.getSource();
-			query.startCompoundEdit();
+			query.startCompoundEdit("Handling sort order.");
 			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
 				int sortStatus = sortDecorator.getSortingStatus(i);
 				Item column = query.getSelectedColumns().get(i);

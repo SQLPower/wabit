@@ -88,6 +88,7 @@ import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
+import ca.sqlpower.query.QueryCompoundEditEvent;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.Query.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -381,12 +382,12 @@ public class QueryPanel implements WabitPanel {
             executeQuery();
         }
     
-        public void compoundEditEnded() {
+        public void compoundEditEnded(QueryCompoundEditEvent evt) {
             inCompoundEdit = false;
             executeQuery();
         }
 
-        public void compoundEditStarted() {
+        public void compoundEditStarted(QueryCompoundEditEvent evt) {
             inCompoundEdit = true;
         }
     };
