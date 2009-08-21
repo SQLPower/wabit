@@ -129,6 +129,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      * only be called by that workspace. It's exposed as a publicly settable
      * method so that "wrapper" sessions in other packages can claim ownership
      * of this workspace from the "core" or "delegate" session they wrap.
+     * <p>
+     * This setter does not fire an event because it is not supposed to be called
+     * after the workspace has been initialized.
      * 
      * @param session
      *            The session this workspace belongs to.
