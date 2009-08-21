@@ -594,7 +594,7 @@ public class OlapQueryPanel implements WabitPanel {
     /**
      * Sets the current cube to the given cube. This affects the tree of items
      * that can be dragged into the query builder, and it resets the query
-     * builder.
+     * builder. It also executes the (empty) query on the new cube.
      * 
      * @param currentCube
      *            The new cube to make current. If this is already the current
@@ -612,6 +612,7 @@ public class OlapQueryPanel implements WabitPanel {
         } else {
             cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
         }
+        OlapGuiUtil.asyncExecute(query, session);
     }
     
     /**

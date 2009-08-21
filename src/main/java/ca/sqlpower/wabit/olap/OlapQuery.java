@@ -231,16 +231,12 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         this.olapMapping = olapMapping;
     }
     
-    public void setCurrentCube(Cube currentCube) {
+    public void setCurrentCube(Cube currentCube) throws SQLException {
         Cube oldCube = this.currentCube;
         this.currentCube = currentCube;
         
         if (currentCube != oldCube && currentCube != null) {
-            try {
-				setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        	setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
         }
         
         firePropertyChange("currentCube", oldCube, currentCube);
@@ -250,46 +246,54 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         return currentCube;
     }
 
-    /**
-     * Executes the current MDX query represented by this object, returning the
-     * cell set that results from the query's execution.
-     * <p>
-     * If this query has not been modified at all since it was last executed,
-     * this method may return a cached reference to the same cell set as the
-     * last one it returned. Olap4j CellSet instances can be safely used from
-     * multiple threads.
-     * 
-     * <h2>Thread safety</h2>
-     * When the query begins to execute, it obtains this OlapQuery instance's
-     * monitor, takes a snapshot of the current query state, then releases the
-     * monitor. Query execution then proceeds while the OlapQuery instance
-     * itself remains unlocked. This allows other threads (especially the Swing
-     * GUI) to continue to modify the query while waiting for the results of the
-     * previous execution.
-     * <p>
-     * However, each OlapQuery instance does prevent itself from making
-     * overlapping execution requests. Calls to execute() are serialized using
-     * an internal synchronization mechanism. Each call to execute() does not
-     * take its snapshot of the query state until any previously in-flight
-     * execution has completed. This increases the chances that several blocked
-     * calls to execute() will end up executing the same MDX query and will
-     * therefore return the same cached CellSet rather than each wasting a
-     * potentially large amount of time executing a query that is no longer
-     * desired.
-     * 
-     * @return The {@link CellSet} result of the execution of the query. If the
-     *         query has no dimensions in either it's row or column axis
-     *         however, it will not be able to execute, in which case it returns
-     *         null and no OlapQueryEvent is fired.
-     * @throws OlapException
-     *             If there was a database error
-     * @throws QueryInitializationException
-     *             If this query has not yet been initialized and the attempted
-     *             initialization fails.
-     * @throws InterruptedException
-     *             If the calling thread is interrupted while blocked waiting
-     *             for another call to execute() to complete.
-     */
+	/**
+	 * Executes the current MDX query represented by this object, returning the
+	 * cell set that results from the query's execution.
+	 * <p>
+	 * If this query has not been modified at all since it was last executed,
+	 * this method may return a cached reference to the same cell set as the
+	 * last one it returned. Olap4j CellSet instances can be safely used from
+	 * multiple threads.
+	 * <p>
+	 * Every call to this method results in a CellSetEvent being fired. If the
+	 * query is in a state where it can't be executed (because one or more axes
+	 * is empty), the event will still be fired, but it will deliver a null
+	 * CellSet to listeners. <b>The CellSetEvent is fired while this query is still
+	 * locked against execution, so it is vitally important that CellSetListeners
+	 * do not attempt to re-execute the query in response to any CellSetEvent.</b>
+	 * Such behaviour by CellSetListeners is guaranteed to cause deadlock.
+	 * 
+	 * <h2>Thread safety</h2>
+	 * When the query begins to execute, it obtains this OlapQuery instance's
+	 * monitor, takes a snapshot of the current query state, then releases the
+	 * monitor. Query execution then proceeds while the OlapQuery instance
+	 * itself remains unlocked. This allows other threads (especially the Swing
+	 * GUI) to continue to modify the query while waiting for the results of the
+	 * previous execution.
+	 * <p>
+	 * However, each OlapQuery instance does prevent itself from making
+	 * overlapping execution requests. Calls to execute() are serialized using
+	 * an internal synchronization mechanism. Each call to execute() does not
+	 * take its snapshot of the query state until any previously in-flight
+	 * execution has completed. This increases the chances that several blocked
+	 * calls to execute() will end up executing the same MDX query and will
+	 * therefore return the same cached CellSet rather than each wasting a
+	 * potentially large amount of time executing a query that is no longer
+	 * desired.
+	 * 
+	 * @return The {@link CellSet} result of the execution of the query. If the
+	 *         query has no dimensions in either it's row or column axis
+	 *         however, it will not be able to execute, in which case it returns
+	 *         null and no OlapQueryEvent is fired.
+	 * @throws OlapException
+	 *             If there was a database error
+	 * @throws QueryInitializationException
+	 *             If this query has not yet been initialized and the attempted
+	 *             initialization fails.
+	 * @throws InterruptedException
+	 *             If the calling thread is interrupted while blocked waiting
+	 *             for another call to execute() to complete.
+	 */
     public CellSet execute() throws OlapException, QueryInitializationException, InterruptedException {
         logger.debug("Executing MDX query...", new Exception("Nothing wrong; just a stack trace"));
         try {
@@ -300,23 +304,30 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
                 // take the snapshot
                 SelectNode mdx;
                 synchronized (this) {
+                	// TODO if there is one, execute the textual query instead
                     if (getRowHierarchies().isEmpty() || getColumnHierarchies().isEmpty()) {
-                        return null;
+                        mdx = null;
+                    } else {
+                    	mdx = getMDXQuery().getSelect();
                     }
-                    // TODO if there is one, execute the textual query instead
-                    mdx = getMDXQuery().getSelect();
                 }
                 
                 // now run the query (while holding the semaphore but not the OlapQuery monitor)
+                CellSet cellSet;
+                if (mdx != null) {
+                	// The following code looks like it leaks an OlapConnection and an OlapStatement,
+                	// but both the connection and statement are actually just "retrieved"; not
+                	// "created" as their method names suggest
+                	OlapStatement olapStatement = createOlapConnection().createStatement();
+					cellSet = olapStatement.executeOlapQuery(mdx);
+                } else {
+                	// still need to notify listeners about the lack of a cell set
+                	cellSet = null;
+                }
                 
-                // The following code looks like it leaks an OlapConnection and an OlapStatement,
-                // but both the connection and statement are actually just "retrieved"; not
-                // "created" as their method names suggest
-                OlapStatement olapStatement = createOlapConnection().createStatement();
-                CellSet cellSet = olapStatement.executeOlapQuery(mdx);
-
                 fireQueryExecuted(cellSet);
                 return cellSet;
+                
             } catch (SQLException e) {
                 throw new OlapException("Couldn't create database connection for Olap query", e);
             } catch (ClassNotFoundException e) {
@@ -366,47 +377,18 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     }
 
     /**
-     * Replaces the current olap4j query with the given one, then executes it.
-     * <p>
-     * Because execution of the query is deemed non-optional, this method
-     * responds to interruption in execute() by retrying the call to execute().
-     * After an uninterrupted retry has gone through, the interrupted state of
-     * the thread will be restored.
-     * <p>
-     * XXX I'm not actually convinced it's necessary or even desirable to
-     * execute the new query here. Needs investigation!
+     * Replaces the current olap4j query with the given one. Preserves the
+     * current non-empty rows setting.
      * 
      * @param mdxQuery
      *            The new query. Must not be null.
      * @throws OlapException
      */
-    private synchronized void setMdxQuery(Query mdxQuery) throws OlapException {
+    private synchronized void setMdxQuery(Query mdxQuery) {
     	if (mdxQuery == null) throw new NullPointerException();
         this.mdxQuery = mdxQuery;
         mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
-        try {
-			this.currentCube = this.getMDXQuery().getCube();
-			
-			boolean wasInterrupted = false;
-			boolean executed = false;
-			while (!executed) {
-			    try {
-			        execute();
-			        executed = true;
-			    } catch (InterruptedException e) {
-			        wasInterrupted = true;
-			        logger.debug(
-			                "Was interrupted while trying to execute new MDX query. Retrying...", e);
-			    } finally {
-			        if (wasInterrupted) {
-			            Thread.currentThread().interrupt();
-			        }
-			    }
-			}
-			
-		} catch (QueryInitializationException cantHappen) {
-			throw new RuntimeException("Unexpected exception", cantHappen);
-		}
+        this.currentCube = mdxQuery.getCube();
     }
 
     private Query getMdxQueryCopy() throws SQLException, QueryInitializationException {
@@ -452,11 +434,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     public synchronized void reset() throws SQLException {
     	slicerMember = null;
     	hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
-        try {
-			setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+    	setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
     }
 
 	/**
@@ -646,11 +624,8 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         } catch (RuntimeException e) {
         	throw new QueryInitializationException(e);
         }
-        try {
-			setMdxQuery(localMDXQuery);
-		} catch (OlapException e) {
-			throw new QueryInitializationException(e);
-		}
+        
+        setMdxQuery(localMDXQuery);
         this.initDone = true;
     }
     
