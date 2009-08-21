@@ -60,7 +60,7 @@ public class CopyQueryAction extends AbstractAction {
     	} else if (query instanceof OlapQuery) {
     		OlapQuery olapQuery;
 			try {
-				olapQuery = new OlapQuery((OlapQuery) query);
+				olapQuery = OlapQuery.copyOlapQuery((OlapQuery) query);
 			} catch (Exception e1) {
 				throw new RuntimeException("Error copying query", e1);
 			}

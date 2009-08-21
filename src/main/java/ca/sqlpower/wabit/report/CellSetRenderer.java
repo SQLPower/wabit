@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -192,7 +191,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         try {
         	if (modifiedOlapQuery == null) {
             	try {
-    				modifiedOlapQuery = new OlapQuery(olapQuery);
+    				modifiedOlapQuery = OlapQuery.copyOlapQuery(olapQuery);
     				modifiedOlapQuery.addOlapQueryListener(queryListener);
     				
     				// This code will eventually fire the change and set the cellset

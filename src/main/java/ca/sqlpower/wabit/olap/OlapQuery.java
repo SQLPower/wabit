@@ -114,37 +114,41 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     @GuardedBy("this") private Member slicerMember = null;
     
     /**
-     * Copy constructor which lets the user specify a new datasource
+     * Creates a copy of the given OlapQuery.
      */
-    public OlapQuery(OlapQuery oldOlapQuery) throws SQLException, QueryInitializationException {
-    	this(oldOlapQuery.olapMapping);
-    	setOlapDataSource(oldOlapQuery.getOlapDataSource());
-        if (oldOlapQuery.hasCachedXml()) {
-        	for (int i = 0; i < oldOlapQuery.rootNodes.size(); i++) {
-        		appendElement(
-        				oldOlapQuery.rootNodes.get(i), oldOlapQuery.attributes.get(i));
-        	}
-        } else {
-        	setNonEmpty(oldOlapQuery.isNonEmpty());
-        	if (oldOlapQuery.mdxQuery != null) {
-	        	setCurrentCube(oldOlapQuery.mdxQuery.getCube());
-	        	Query newMDXQuery = oldOlapQuery.getMdxQueryCopy();
-				this.mdxQuery = newMDXQuery;
-				
-				this.hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
-				if (oldOlapQuery.hierarchiesInUse != null) {
-		        	for (Entry<QueryDimension, Hierarchy> oldEntry : oldOlapQuery.hierarchiesInUse.entrySet()) {
-		        		QueryDimension oldDimension = oldEntry.getKey();
-		        		Hierarchy oldHierarchy = oldEntry.getValue();
-						QueryDimension newDimension = newMDXQuery.getDimension(oldDimension.getName());
-						Hierarchy newHierarchy = newDimension.getDimension().getHierarchies().get(oldHierarchy.getName());
-						hierarchiesInUse.put(newDimension, newHierarchy);
-		        	}
-				}
-				slicerMember = oldOlapQuery.slicerMember;
-        	}
+    public static OlapQuery copyOlapQuery(OlapQuery oldOlapQuery) throws SQLException, 
+            QueryInitializationException {
+        synchronized (oldOlapQuery) {
+            OlapQuery newQuery = new OlapQuery(oldOlapQuery.olapMapping);
+            newQuery.setOlapDataSource(oldOlapQuery.getOlapDataSource());
+            if (oldOlapQuery.hasCachedXml()) {
+                for (int i = 0; i < oldOlapQuery.rootNodes.size(); i++) {
+                    newQuery.appendElement(
+                            oldOlapQuery.rootNodes.get(i), oldOlapQuery.attributes.get(i));
+                }
+            } else {
+                newQuery.setNonEmpty(oldOlapQuery.isNonEmpty());
+                if (oldOlapQuery.mdxQuery != null) {
+                    newQuery.setCurrentCube(oldOlapQuery.mdxQuery.getCube());
+                    Query newMDXQuery = oldOlapQuery.getMdxQueryCopy();
+                    newQuery.mdxQuery = newMDXQuery;
+
+                    newQuery.hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
+                    if (oldOlapQuery.hierarchiesInUse != null) {
+                        for (Entry<QueryDimension, Hierarchy> oldEntry : oldOlapQuery.hierarchiesInUse.entrySet()) {
+                            QueryDimension oldDimension = oldEntry.getKey();
+                            Hierarchy oldHierarchy = oldEntry.getValue();
+                            QueryDimension newDimension = newMDXQuery.getDimension(oldDimension.getName());
+                            Hierarchy newHierarchy = newDimension.getDimension().getHierarchies().get(oldHierarchy.getName());
+                            newQuery.hierarchiesInUse.put(newDimension, newHierarchy);
+                        }
+                    }
+                    newQuery.slicerMember = oldOlapQuery.slicerMember;
+                }
+            }
+            newQuery.setName(oldOlapQuery.getName());
+            return newQuery;
         }
-        setName(oldOlapQuery.getName());
     }
     /**
      * The current query. Gets replaced whenever a new cube is selected via
