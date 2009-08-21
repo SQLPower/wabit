@@ -85,6 +85,8 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -153,6 +155,8 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
+
+import edu.umd.cs.findbugs.annotations.ReturnValuesAreNonnullByDefault;
 
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
@@ -452,6 +456,28 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		searchPanel.add(searchTextArea, BorderLayout.NORTH);
 		searchPanel.add(new JScrollPane(searchTree), BorderLayout.CENTER);
 		treeTabbedPane.addTab("Search", searchPanel);
+		searchTree.addTreeSelectionListener(new TreeSelectionListener() {
+			public void valueChanged(TreeSelectionEvent e) {
+				TreePath pathToSelection = e.getNewLeadSelectionPath();
+				if (pathToSelection == null) return;
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode) pathToSelection.getLastPathComponent();
+				Object userObject = node.getUserObject();
+				if (userObject instanceof WabitObject) {
+					WabitObject wo = (WabitObject) userObject;
+					while (wo.getParent() != null) {
+						wo = wo.getParent();
+					}
+					WabitWorkspace workspace = (WabitWorkspace) wo; 
+					setActiveSession(workspace.getSession());
+					JTree tree = ((WabitSwingSessionImpl) workspace.getSession()).getTree();
+					TreePath path = ((WorkspaceTreeModel) tree.getModel()).createTreePathForObject((WabitObject) userObject);
+					tree.expandPath(path);
+					tree.setSelectionPath(path);
+					workspace.setEditorPanelModel((WabitObject) userObject);
+					setEditorPanel();
+				}
+			}
+		});
 		
 		searchTextArea.addKeyListener(new KeyListener() {
 			public void keyPressed(KeyEvent e) {
@@ -459,10 +485,13 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			}
 
 			public void keyReleased(KeyEvent e) {
+				String searchString = searchTextArea.getText().trim();
+				logger.debug("event: " + searchString);
+				
 				searchTreeRoot = new DefaultMutableTreeNode();
 				searchTreeModel = new DefaultTreeModel(searchTreeRoot);
 				searchTree.setModel(searchTreeModel);
-				String searchString = searchTextArea.getText().trim();
+				if (searchString.equals("")) return;
 				
 				List<TreeModel> searchableModels = new ArrayList<TreeModel>();
 				for (WabitSession session : getSessions()) {
@@ -495,7 +524,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 							if (indexOfChild == -1) {
 								DefaultMutableTreeNode currentNode = new DefaultMutableTreeNode(object);
 								searchTreeModel.insertNodeInto(currentNode, lastObject, lastObject.getChildCount());
-								logger.debug("Added: " + object.toString());
 								lastObject = currentNode;
 							} else {
 								if (treePath.indexOf(object) != (treePath.size() - 1)) {
@@ -624,7 +652,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		public void drop(DropTargetDropEvent dtde) {
 			Point mouseLocation = dtde.getLocation();
 			int tabIndex = treeTabbedPane.indexAtLocation(mouseLocation.x, mouseLocation.y);
-			if (tabIndex == -1 || treeTabbedPane.indexOfTab("Search") == tabIndex) return;
+			if (tabIndex == -1 || tabIndex == 0) return; //The search tab should always have an index of 0
 			treeTabbedPane.setSelectedIndex(tabIndex);
 			
 			ByteArrayOutputStream output;

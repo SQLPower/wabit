@@ -52,6 +52,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
@@ -385,7 +386,9 @@ public class WorkspaceTreeModel implements TreeModel {
             	}
             }
             obj = obj.getParent();
-            path.add(0, obj);
+            if (!(obj instanceof Page || obj instanceof ReportContentRenderer)) {
+            	path.add(0, obj);
+            }
     	}
     	return new TreePath(path.toArray());
     }
