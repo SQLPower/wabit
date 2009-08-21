@@ -32,6 +32,7 @@ import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -51,10 +52,12 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageReader;
 import javax.jmdns.JmDNS;
 import javax.naming.NamingException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -70,15 +73,22 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JToolBar;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -113,7 +123,14 @@ import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.ImageRenderer;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -131,6 +148,8 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -374,6 +393,33 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     	}
     };
     
+    private DefaultTreeModel searchTreeModel;
+    private DefaultMutableTreeNode searchTreeRoot;
+    /**
+     * This is the cell renderer in the search tree, it basically just gets
+     * the object out of the {@link DefaultMutableTreeNode} class that is in
+     * the tree and passes that object (which will be something that the
+     * {@link WorkspaceTreeCellRenderer} knows how to deal with) to the
+     * {@link WorkspaceTreeCellRenderer} so the search tree looks exactly 
+     * like the Workspace tree. 
+     */
+    private class SearchTreeCellRenderer extends WorkspaceTreeCellRenderer {
+    	@Override
+    	public Component getTreeCellRendererComponent(JTree tree, Object value,
+    			boolean sel, boolean expanded, boolean leaf, int row,
+    			boolean hasFocus) {
+    		Object objectToRender = ((DefaultMutableTreeNode) value).getUserObject();
+    		if (objectToRender == null) {
+    			//this means its the root node, it doesn't matter if we pass the cell
+    			//renderer something that it can't really render because the root node
+    			//is hidden
+    			objectToRender = value;
+    		}
+			return super.getTreeCellRendererComponent(tree, objectToRender, sel, expanded, leaf,
+    				row, hasFocus);
+    	}
+    }
+    
 	/**
 	 * @param terminateWhenLastSessionCloses
 	 *            Set to true if the context should stop the app when the last
@@ -393,7 +439,84 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         statusLabel= new JLabel();
         treeTabbedPane = new JTabbedPane();
         treeTabbedPane.setDropTarget(new DropTarget(treeTabbedPane, treeTabDropTargetListener));
+        
+        searchTreeRoot = new DefaultMutableTreeNode();
+        searchTreeModel = new DefaultTreeModel(searchTreeRoot);
+		final JTree searchTree = new JTree(searchTreeModel);
+		searchTree.setCellRenderer(new SearchTreeCellRenderer());
+		searchTree.setRootVisible(false);
+		searchTree.setShowsRootHandles(true);
+		final JTextArea searchTextArea = new JTextArea();
+		JPanel searchPanel = new JPanel(new BorderLayout());
+		searchTextArea.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+		searchPanel.add(searchTextArea, BorderLayout.NORTH);
+		searchPanel.add(new JScrollPane(searchTree), BorderLayout.CENTER);
+		treeTabbedPane.addTab("Search", searchPanel);
+		
+		searchTextArea.addKeyListener(new KeyListener() {
+			public void keyPressed(KeyEvent e) {
+				//Do nothing
+			}
 
+			public void keyReleased(KeyEvent e) {
+				searchTreeRoot = new DefaultMutableTreeNode();
+				searchTreeModel = new DefaultTreeModel(searchTreeRoot);
+				searchTree.setModel(searchTreeModel);
+				String searchString = searchTextArea.getText().trim();
+				
+				List<TreeModel> searchableModels = new ArrayList<TreeModel>();
+				for (WabitSession session : getSessions()) {
+					if (!(session instanceof WabitSwingSession)) {
+						throw new IllegalStateException("Found non swing session in swing session context!");
+					}
+					JTree tree = ((WabitSwingSession) session).getTree();
+					searchableModels.add(tree.getModel());
+				}
+				for (TreeModel originalModel : searchableModels) {
+					WorkspaceTreeModel model = (WorkspaceTreeModel) originalModel;
+					
+					//search the tree
+					ArrayList<Object> rootTreePath = new ArrayList<Object>();
+					rootTreePath.add(model.getRoot());
+					List<List<Object>> matchedTreePaths = searchTree(searchString, rootTreePath, model);
+					
+					//add everything into the tree if it's not already there
+					for (List<Object> treePath : matchedTreePaths) {
+						DefaultMutableTreeNode lastObject = (DefaultMutableTreeNode) searchTreeModel.getRoot();
+						for (Object object : treePath) {
+							int indexOfChild = -1;
+							for (int i = 0; i < lastObject.getChildCount(); i++) {
+								DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) lastObject.getChildAt(i);
+								if (childNode.getUserObject().equals(object)) {
+									indexOfChild = i;
+									break;
+								}
+							}
+							if (indexOfChild == -1) {
+								DefaultMutableTreeNode currentNode = new DefaultMutableTreeNode(object);
+								searchTreeModel.insertNodeInto(currentNode, lastObject, lastObject.getChildCount());
+								logger.debug("Added: " + object.toString());
+								lastObject = currentNode;
+							} else {
+								if (treePath.indexOf(object) != (treePath.size() - 1)) {
+									lastObject = (DefaultMutableTreeNode) searchTreeModel.getChild(lastObject, indexOfChild);
+								}
+							}
+						}
+					}
+					searchTree.expandPath(new TreePath(searchTreeModel.getRoot()));
+					for (int i = 0; i < searchTree.getRowCount(); i++) {
+						searchTree.expandRow(i); 
+					}
+					
+				}
+			}
+
+			public void keyTyped(KeyEvent e) {
+				//Do nothing
+			}
+		});
+		
         rowLimitSpinner = new JSpinner();
         final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
         getRowLimitSpinner().setEditor(rowLimitEditor);
@@ -412,6 +535,54 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
 	}
 	
+	/**
+	 * Recursive function which searches all of the objects' names in a tree
+	 * model for a given string.
+	 * 
+	 * @param searchString
+	 * 		The string to search all the names of objects in the treemodel for
+	 * @param currentTreePath
+	 * 		The current path in the tree (since the function is recursive)
+	 * @param model
+	 * 		The tree model being searched
+	 * @return
+	 * 		Returns a list of paths to all the tree objects in a model which have
+	 * 		a name which contains the searchString
+	 */
+	private List<List<Object>> searchTree(String searchString, List<Object> currentTreePath, WorkspaceTreeModel model) {
+		Object currentObject = currentTreePath.get(currentTreePath.size() - 1);
+
+		ArrayList<List<Object>> returnList = new ArrayList<List<Object>>();
+
+		for (int i = 0; i < model.getChildCount(currentObject); i++) {
+			List<Object> childPath = new ArrayList<Object>(currentTreePath);
+			childPath.add(model.getChild(currentObject, i));
+			returnList.addAll(searchTree(searchString, childPath, model));
+		}
+		if (currentObject instanceof WabitObject) { //It could be a FolderNode...
+			WabitObject currentWO = (WabitObject) currentObject;
+			String name = currentWO.getName();
+			if (currentWO instanceof ContentBox) {
+				ReportContentRenderer content = ((ContentBox) currentWO).getContentRenderer();
+				if (content instanceof CellSetRenderer) {
+					name = ((CellSetRenderer) content).getOlapQuery().getName();
+				} else if (content instanceof ResultSetRenderer) {
+					name = ((ResultSetRenderer) content).getQuery().getName();
+				} else if (content instanceof Label) {
+					name = ((Label) content).getText();
+				} else if (content instanceof ChartRenderer) {
+					name = ((ChartRenderer) content).getQuery().getName();
+				} else if (content instanceof ImageRenderer) {
+					name = ((ImageRenderer) content).getImage().getName();
+				}
+			}
+			if (name.toLowerCase().contains(searchString.toLowerCase())) { 
+				returnList.add(currentTreePath);
+			}
+		}
+		return returnList;
+	}
+
 	public WabitSwingSession createSession() {
 	    final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this, delegateContext.createSession());
         return session;
@@ -453,7 +624,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		public void drop(DropTargetDropEvent dtde) {
 			Point mouseLocation = dtde.getLocation();
 			int tabIndex = treeTabbedPane.indexAtLocation(mouseLocation.x, mouseLocation.y);
-			if (tabIndex == -1) return;
+			if (tabIndex == -1 || treeTabbedPane.indexOfTab("Search") == tabIndex) return;
 			treeTabbedPane.setSelectedIndex(tabIndex);
 			
 			ByteArrayOutputStream output;
@@ -502,7 +673,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 //	}
 	
 	public void deregisterChildSession(WabitSession child) {
-	    treeTabbedPane.removeTabAt(getSessions().indexOf(child));
+	    treeTabbedPane.removeTabAt(getSessions().indexOf(child) + 1);
 	    delegateContext.deregisterChildSession(child);
 	}
 	
@@ -610,8 +781,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
             public void stateChanged(ChangeEvent e) {
                 final int selectedIndex = treeTabbedPane.getSelectedIndex();
+                if (treeTabbedPane.indexOfTab("Search") == selectedIndex) return;
                 if (selectedIndex >= 0) {
-                    setActiveSession((WabitSwingSession) getSessions().get(selectedIndex));
+                    setActiveSession((WabitSwingSession) getSessions().get(selectedIndex - 1));
                     setEditorPanel();
                 }
             }
@@ -1067,7 +1239,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     public void setActiveSession(WabitSession activeSession) {
         WabitSession oldSession = delegateContext.getActiveSession();
         delegateContext.setActiveSession(activeSession);
-        treeTabbedPane.setSelectedIndex(getSessions().indexOf(activeSession));
+        treeTabbedPane.setSelectedIndex(getSessions().indexOf(activeSession) + 1);
         if (oldSession != activeSession) {
             setEditorPanel();
         }

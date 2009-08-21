@@ -179,6 +179,8 @@ public class WorkspaceTreeModel implements TreeModel {
     		return ((FolderNode) parentObject).getChildren().get(index);
     	} else if (parentObject instanceof Layout) {
     		return  getLayoutsChildren(parentObject).get(index);
+    	} else if (parentObject instanceof ContentBox) {
+    		return new ArrayList<Object>();
     	} else {
 			WabitObject wabitObject = (WabitObject) parentObject;
 			return wabitObject.getChildren().get(index);
@@ -192,6 +194,8 @@ public class WorkspaceTreeModel implements TreeModel {
     		return ((FolderNode) parent).getChildren().size();
     	} else if (parent instanceof Layout) {
     		return getLayoutsChildren(parent).size();
+    	} else if (parent instanceof ContentBox) {
+    		return 0;
     	} else {
     		return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
     	}
