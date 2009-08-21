@@ -51,8 +51,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.regex.Pattern;
 
-import javax.imageio.ImageReader;
 import javax.jmdns.JmDNS;
 import javax.naming.NamingException;
 import javax.swing.AbstractAction;
@@ -106,6 +106,8 @@ import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
+import ca.sqlpower.swingui.Search;
+import ca.sqlpower.swingui.SearchTextField;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.action.ForumAction;
@@ -155,8 +157,6 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
-
-import edu.umd.cs.findbugs.annotations.ReturnValuesAreNonnullByDefault;
 
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
@@ -399,6 +399,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     
     private DefaultTreeModel searchTreeModel;
     private DefaultMutableTreeNode searchTreeRoot;
+    private final SearchTextField searchTextArea = new SearchTextField(new SearchWabitTree(), 0);
+    final JTree searchTree = new JTree();
     /**
      * This is the cell renderer in the search tree, it basically just gets
      * the object out of the {@link DefaultMutableTreeNode} class that is in
@@ -446,17 +448,15 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         searchTreeRoot = new DefaultMutableTreeNode();
         searchTreeModel = new DefaultTreeModel(searchTreeRoot);
-		final JTree searchTree = new JTree(searchTreeModel);
+		searchTree.setModel(searchTreeModel);
 		searchTree.setCellRenderer(new SearchTreeCellRenderer());
 		searchTree.setRootVisible(false);
 		searchTree.setShowsRootHandles(true);
-		final JTextArea searchTextArea = new JTextArea();
 		JPanel searchPanel = new JPanel(new BorderLayout());
-		searchTextArea.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-		searchPanel.add(searchTextArea, BorderLayout.NORTH);
+		searchPanel.add(searchTextArea.getPanel(), BorderLayout.NORTH);
 		searchPanel.add(new JScrollPane(searchTree), BorderLayout.CENTER);
 		treeTabbedPane.addTab("Search", searchPanel);
-		searchTree.addTreeSelectionListener(new TreeSelectionListener() {
+		TreeSelectionListener searchTreeSelectionListener = new TreeSelectionListener() {
 			public void valueChanged(TreeSelectionEvent e) {
 				TreePath pathToSelection = e.getNewLeadSelectionPath();
 				if (pathToSelection == null) return;
@@ -477,73 +477,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					setEditorPanel();
 				}
 			}
-		});
-		
-		searchTextArea.addKeyListener(new KeyListener() {
-			public void keyPressed(KeyEvent e) {
-				//Do nothing
-			}
-
-			public void keyReleased(KeyEvent e) {
-				String searchString = searchTextArea.getText().trim();
-				logger.debug("event: " + searchString);
-				
-				searchTreeRoot = new DefaultMutableTreeNode();
-				searchTreeModel = new DefaultTreeModel(searchTreeRoot);
-				searchTree.setModel(searchTreeModel);
-				if (searchString.equals("")) return;
-				
-				List<TreeModel> searchableModels = new ArrayList<TreeModel>();
-				for (WabitSession session : getSessions()) {
-					if (!(session instanceof WabitSwingSession)) {
-						throw new IllegalStateException("Found non swing session in swing session context!");
-					}
-					JTree tree = ((WabitSwingSession) session).getTree();
-					searchableModels.add(tree.getModel());
-				}
-				for (TreeModel originalModel : searchableModels) {
-					WorkspaceTreeModel model = (WorkspaceTreeModel) originalModel;
-					
-					//search the tree
-					ArrayList<Object> rootTreePath = new ArrayList<Object>();
-					rootTreePath.add(model.getRoot());
-					List<List<Object>> matchedTreePaths = searchTree(searchString, rootTreePath, model);
-					
-					//add everything into the tree if it's not already there
-					for (List<Object> treePath : matchedTreePaths) {
-						DefaultMutableTreeNode lastObject = (DefaultMutableTreeNode) searchTreeModel.getRoot();
-						for (Object object : treePath) {
-							int indexOfChild = -1;
-							for (int i = 0; i < lastObject.getChildCount(); i++) {
-								DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) lastObject.getChildAt(i);
-								if (childNode.getUserObject().equals(object)) {
-									indexOfChild = i;
-									break;
-								}
-							}
-							if (indexOfChild == -1) {
-								DefaultMutableTreeNode currentNode = new DefaultMutableTreeNode(object);
-								searchTreeModel.insertNodeInto(currentNode, lastObject, lastObject.getChildCount());
-								lastObject = currentNode;
-							} else {
-								if (treePath.indexOf(object) != (treePath.size() - 1)) {
-									lastObject = (DefaultMutableTreeNode) searchTreeModel.getChild(lastObject, indexOfChild);
-								}
-							}
-						}
-					}
-					searchTree.expandPath(new TreePath(searchTreeModel.getRoot()));
-					for (int i = 0; i < searchTree.getRowCount(); i++) {
-						searchTree.expandRow(i); 
-					}
-					
-				}
-			}
-
-			public void keyTyped(KeyEvent e) {
-				//Do nothing
-			}
-		});
+		};
+		searchTree.addTreeSelectionListener(searchTreeSelectionListener);
 		
         rowLimitSpinner = new JSpinner();
         final JSpinner.NumberEditor rowLimitEditor = new JSpinner.NumberEditor(getRowLimitSpinner());
@@ -563,6 +498,66 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
 	}
 	
+	private class SearchWabitTree implements Search {
+		public void doSearch(Pattern p, boolean matchExactly) {
+			String searchString = searchTextArea.getText().trim();
+			logger.debug("event: " + searchString);
+			
+			searchTreeRoot = new DefaultMutableTreeNode();
+			searchTreeModel = new DefaultTreeModel(searchTreeRoot);
+			searchTree.setModel(searchTreeModel);
+			if (searchString.equals("")) return;
+			
+			List<TreeModel> searchableModels = new ArrayList<TreeModel>();
+			for (WabitSession session : getSessions()) {
+				if (!(session instanceof WabitSwingSession)) {
+					throw new IllegalStateException("Found non swing session in swing session context!");
+				}
+				JTree tree = ((WabitSwingSession) session).getTree();
+				searchableModels.add(tree.getModel());
+			}
+			for (TreeModel originalModel : searchableModels) {
+				WorkspaceTreeModel model = (WorkspaceTreeModel) originalModel;
+				
+				//search the tree
+				ArrayList<Object> rootTreePath = new ArrayList<Object>();
+				rootTreePath.add(model.getRoot());
+				List<List<Object>> matchedTreePaths = searchTree(rootTreePath, model, p, matchExactly);
+				
+				//add everything into the tree if it's not already there
+				for (List<Object> treePath : matchedTreePaths) {
+					DefaultMutableTreeNode lastObject = (DefaultMutableTreeNode) searchTreeModel.getRoot();
+					for (Object object : treePath) {
+						int indexOfChild = -1;
+						for (int i = 0; i < lastObject.getChildCount(); i++) {
+							DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) lastObject.getChildAt(i);
+							if (childNode.getUserObject().equals(object)) {
+								indexOfChild = i;
+								break;
+							}
+						}
+						if (indexOfChild == -1) {
+							DefaultMutableTreeNode currentNode = new DefaultMutableTreeNode(object);
+							searchTreeModel.insertNodeInto(currentNode, lastObject, lastObject.getChildCount());
+							lastObject = currentNode;
+						} else {
+							if (treePath.indexOf(object) != (treePath.size() - 1)) {
+								lastObject = (DefaultMutableTreeNode) searchTreeModel.getChild(lastObject, indexOfChild);
+							}
+						}
+					}
+				}
+				searchTree.expandPath(new TreePath(searchTreeModel.getRoot()));
+				for (int i = 0; i < searchTree.getRowCount(); i++) {
+					searchTree.expandRow(i); 
+				}
+				
+			}
+			
+		}
+		
+	}
+	
 	/**
 	 * Recursive function which searches all of the objects' names in a tree
 	 * model for a given string.
@@ -577,7 +572,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 * 		Returns a list of paths to all the tree objects in a model which have
 	 * 		a name which contains the searchString
 	 */
-	private List<List<Object>> searchTree(String searchString, List<Object> currentTreePath, WorkspaceTreeModel model) {
+	private List<List<Object>> searchTree(List<Object> currentTreePath, 
+			WorkspaceTreeModel model, Pattern p, boolean matchExactly) {
+		
 		Object currentObject = currentTreePath.get(currentTreePath.size() - 1);
 
 		ArrayList<List<Object>> returnList = new ArrayList<List<Object>>();
@@ -585,7 +582,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		for (int i = 0; i < model.getChildCount(currentObject); i++) {
 			List<Object> childPath = new ArrayList<Object>(currentTreePath);
 			childPath.add(model.getChild(currentObject, i));
-			returnList.addAll(searchTree(searchString, childPath, model));
+			returnList.addAll(searchTree(childPath, model, p, matchExactly));
 		}
 		if (currentObject instanceof WabitObject) { //It could be a FolderNode...
 			WabitObject currentWO = (WabitObject) currentObject;
@@ -604,9 +601,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					name = ((ImageRenderer) content).getImage().getName();
 				}
 			}
-			if (name.toLowerCase().contains(searchString.toLowerCase())) { 
+            if (matchExactly && p.matcher(name).matches()) {
 				returnList.add(currentTreePath);
-			}
+            } else if (!matchExactly && p.matcher(name).find()) {
+				returnList.add(currentTreePath);
+            }
 		}
 		return returnList;
 	}
