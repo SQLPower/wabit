@@ -301,7 +301,12 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		workspaceTree = new JTree(workspaceTreeModel);
 		workspaceTree.setRootVisible(false);
 		workspaceTree.setToggleClickCount(0);
-
+		Object root = workspaceTreeModel.getRoot();
+		workspaceTree.expandPath(new TreePath(root));
+		for (int i = 0; i < workspaceTreeModel.getChildCount(root); i++) {
+			Object treeFolder = workspaceTreeModel.getChild(root, i);
+			workspaceTree.expandPath(new TreePath(new Object[] { root, treeFolder} ));
+		}
         dbConnectionManager = createDbConnectionManager();
         
         upfMissingLoadedDB = new SwingUIUserPrompterFactory(sessionContext.getFrame());
