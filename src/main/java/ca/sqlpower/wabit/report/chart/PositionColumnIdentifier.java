@@ -119,12 +119,7 @@ public class PositionColumnIdentifier extends AbstractColumnIdentifier {
     public boolean equals(Object obj) {
         if (obj == null) return false;
         
-        if (obj instanceof List) {
-            return ((List<?>) obj).equals(getUniqueMemberNames());
-        } else if (obj instanceof Position) {
-            List<String> uniqueMemberNames = generateUniqueIdentifier((Position) obj);
-            return uniqueMemberNames.equals(getUniqueMemberNames());
-        } else if (obj instanceof PositionColumnIdentifier) {
+        if (obj instanceof PositionColumnIdentifier) {
             PositionColumnIdentifier ci = (PositionColumnIdentifier) obj;
             return getUniqueMemberNames().equals(ci.getUniqueMemberNames());
         } else {

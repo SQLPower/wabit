@@ -48,9 +48,7 @@ public class RowAxisColumnIdentifier extends AbstractColumnIdentifier {
     public boolean equals(Object obj) {
         if (obj == null) return false;
         
-        if (obj instanceof Axis) {
-            return ((CellSetAxis) obj).equals(getAxis());
-        } else if (obj instanceof RowAxisColumnIdentifier) {
+        if (obj instanceof RowAxisColumnIdentifier) {
             RowAxisColumnIdentifier ci = (RowAxisColumnIdentifier) obj;
             return getAxis() == ci.getAxis();
         } else {

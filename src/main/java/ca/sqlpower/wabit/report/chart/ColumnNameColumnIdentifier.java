@@ -51,9 +51,7 @@ public class ColumnNameColumnIdentifier extends AbstractColumnIdentifier {
     
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof String) {
-            return ((String) obj).equals(getColumnName());
-        } else if (obj instanceof ColumnNameColumnIdentifier) {
+        if (obj instanceof ColumnNameColumnIdentifier) {
             ColumnNameColumnIdentifier ci = (ColumnNameColumnIdentifier) obj;
             return getColumnName().equals(ci.getColumnName());
         } else {
