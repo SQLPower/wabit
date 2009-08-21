@@ -332,8 +332,6 @@ public class WabitImagePanel implements WabitPanel {
                 throw new RuntimeException(ex);
             }
             image.setName("Image: " + imageChooser.getSelectedFile().getName());
-        } else if (image == null) {
-            image.setName("Image: not defined");
         }
     }
 
