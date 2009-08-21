@@ -137,6 +137,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = GroupAndBreak.GROUP;
             }
+        } else if (valueType.equals(WabitSession.class)) {
+            newValue = new StubWabitSession(new StubWabitSessionContext());
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

@@ -306,7 +306,8 @@ public class WorkspaceXMLDAOTest extends TestCase {
         for (int i = 0; i < p.getQueries().size(); i++) {
         	Query oldQuery = (Query) ((QueryCache) p.getQueries().get(i)).getQuery();
 			Query newQuery = (Query) ((QueryCache) loadedSession.getWorkspace().getQueries().get(i)).getQuery();
-			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session", "streaming", "streamingStatement", "streamingConnection", "timerListener"});
+			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session", "streaming", 
+			        "streamingStatement", "streamingConnection", "timerListener", "dbMapping"});
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());
 			for (int j = 0; j < oldQuery.getConstantsContainer().getItems().size(); j++) {
 				assertPropertiesEqual(oldQuery.getConstantsContainer().getItems().get(j), newQuery.getConstantsContainer().getItems().get(j), "item", "columnWidth");

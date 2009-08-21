@@ -49,6 +49,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	Set<String> ignore = new HashSet<String>();
         ignore.add("dataSourceTypes");
         ignore.add("serverBaseURI");
+        ignore.add("session");
     	return ignore;
     }
     
