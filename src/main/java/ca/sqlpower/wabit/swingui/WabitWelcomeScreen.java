@@ -20,9 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URI;
@@ -180,7 +177,7 @@ public class WabitWelcomeScreen {
 
 		iconsPanel.add(buildButtonsPanel(), "");
 		
-		JButton tutorialButton = new JButton(new AbstractAction("View Tutorials") {
+		new JButton(new AbstractAction("View Tutorials") {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Link to a website with demos of Wabit.
 			}
