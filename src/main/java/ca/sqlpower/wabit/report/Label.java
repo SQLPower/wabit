@@ -93,7 +93,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     
     public Label() {
         this("");
-        setName("Label");
     }
     
     /**
