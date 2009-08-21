@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DropTarget;
@@ -31,6 +32,7 @@ import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -60,7 +62,9 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -87,6 +91,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.plaf.basic.BasicTabbedPaneUI.TabSelectionHandler;
+import javax.swing.text.TabSet;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -164,7 +170,9 @@ import com.jgoodies.forms.layout.FormLayout;
  */
 public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
-    private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
+    private static final String SEARCH_TAB = "Select Search Tab";
+
+	private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
     
     public static final String EXAMPLE_WORKSPACE_URL = "/ca/sqlpower/wabit/example_workspace.wabit";
     
@@ -397,10 +405,28 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     	}
     };
     
+    /**
+     * This is the model of the search JTree, it is just a default tree model
+     * that we add {@link DefaultMutableTreeNode}s to.
+     */
     private DefaultTreeModel searchTreeModel;
+    
+    /**
+     * This is the root of our searchTree, it is never visible and it is just a
+     * {@link DefaultMutableTreeNode} with null in it.
+     */
     private DefaultMutableTreeNode searchTreeRoot;
+    
+    /**
+     * This is the text area that a user types into to search.
+     */
     private final SearchTextField searchTextArea = new SearchTextField(new SearchWabitTree(), 0);
-    final JTree searchTree = new JTree();
+    
+    /**
+     * This is the tree that displays a user's search results.
+     */
+    private final JTree searchTree = new JTree();
+    
     /**
      * This is the cell renderer in the search tree, it basically just gets
      * the object out of the {@link DefaultMutableTreeNode} class that is in
@@ -441,10 +467,29 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		
         frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + getName());
+        
+
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
         treeTabbedPane = new JTabbedPane();
         treeTabbedPane.setDropTarget(new DropTarget(treeTabbedPane, treeTabDropTargetListener));
+
+        Action selectSearchTabAction = new AbstractAction() {
+        	public void actionPerformed(ActionEvent arg0) {
+        		// Choose the search tab. This, of course, assumes that the
+				// Search Tab is always at index 0.
+        		treeTabbedPane.setSelectedIndex(0);
+        		// This seems to improve the chances of requestFocusInWindow succeeding...
+        		SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						searchTextArea.getTextField().requestFocusInWindow();
+					}
+        		});
+        	}
+        };
+        InputMap inputMap = treeTabbedPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), SEARCH_TAB);
+        treeTabbedPane.getActionMap().put(SEARCH_TAB, selectSearchTabAction);
         
         searchTreeRoot = new DefaultMutableTreeNode();
         searchTreeModel = new DefaultTreeModel(searchTreeRoot);
@@ -498,16 +543,25 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
 	}
 	
+	/**
+	 * This is the class that actually does the search on the search tree.
+	 * It implements 'Search' which is something used in the library to have
+	 * a generic search text box that looks nice and has regular expressions. 
+	 */
 	private class SearchWabitTree implements Search {
 		public void doSearch(Pattern p, boolean matchExactly) {
 			String searchString = searchTextArea.getText().trim();
-			logger.debug("event: " + searchString);
 			
+			//clear the tree and start over
 			searchTreeRoot = new DefaultMutableTreeNode();
 			searchTreeModel = new DefaultTreeModel(searchTreeRoot);
 			searchTree.setModel(searchTreeModel);
-			if (searchString.equals("")) return;
 			
+			//this just makes sure that we don't see an all workspaces tree when there is
+			//no text showing we are not sure if we actually want this
+			if (searchString.equals("")) return;
+
+			//get all the tree models we can search
 			List<TreeModel> searchableModels = new ArrayList<TreeModel>();
 			for (WabitSession session : getSessions()) {
 				if (!(session instanceof WabitSwingSession)) {
@@ -516,6 +570,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				JTree tree = ((WabitSwingSession) session).getTree();
 				searchableModels.add(tree.getModel());
 			}
+			
 			for (TreeModel originalModel : searchableModels) {
 				WorkspaceTreeModel model = (WorkspaceTreeModel) originalModel;
 				
@@ -547,6 +602,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 						}
 					}
 				}
+
+				//Show everything in the tree, we would do this as we go but it doesn't wan't to work.
 				searchTree.expandPath(new TreePath(searchTreeModel.getRoot()));
 				for (int i = 0; i < searchTree.getRowCount(); i++) {
 					searchTree.expandRow(i); 
