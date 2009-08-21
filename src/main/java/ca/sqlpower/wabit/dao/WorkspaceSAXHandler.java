@@ -739,6 +739,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		        throw new IllegalStateException("Could not load the workspace as the report " + layout.getName() 
         		                + " is missing the image " + aval);
         		    }
+        		} else if (aname.equals("preserving-aspect-ratio")) {
+        			imageRenderer.setPreservingAspectRatio(
+        					Boolean.valueOf(aval));
         		} else {
         			logger.warn("Unexpected attribute of <image-renderer>: " + aname + "=" + aval);
         		}

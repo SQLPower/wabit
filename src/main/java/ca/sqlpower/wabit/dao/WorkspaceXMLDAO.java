@@ -466,6 +466,8 @@ public class WorkspaceXMLDAO {
 						if (imgRenderer.getImage() != null) {
 						    printAttribute("wabit-image-uuid", imgRenderer.getImage().getUUID());
 						}
+						printAttribute("preserving-aspect-ratio", 
+								imgRenderer.isPreservingAspectRatio());
 						xml.niprint(out, ">");
 						out.println("</image-renderer>");
 						

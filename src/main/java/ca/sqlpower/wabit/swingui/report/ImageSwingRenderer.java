@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -109,7 +111,15 @@ public class ImageSwingRenderer implements SwingContentRenderer {
     }
 
     public void processEvent(PInputEvent event, int type) {
-        //do something cool here later
+        if (type == KeyEvent.KEY_PRESSED) {
+        	if (event.getKeyCode() == KeyEvent.VK_CONTROL) {
+        		renderer.setPreserveAspectRatioWhenResizing(false);
+        	}
+        } else if (type == KeyEvent.KEY_RELEASED) {
+        	if (event.getKeyCode() == KeyEvent.VK_CONTROL) {
+        		renderer.setPreserveAspectRatioWhenResizing(true);
+        	}
+        }
     }
 
 }

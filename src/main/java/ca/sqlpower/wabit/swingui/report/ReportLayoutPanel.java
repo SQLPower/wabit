@@ -328,7 +328,8 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         // XXX why is this being done? skipping it appears to have no effect
         pageNode.setBounds(0, 0, pageNode.getWidth(), pageNode.getHeight());
         
-        PSelectionEventHandler selectionEventHandler = new GuideAwareSelectionEventHandler(pageNode, pageNode);
+        PSelectionEventHandler selectionEventHandler = 
+        	new GuideAwareSelectionEventHandler(canvas, pageNode, pageNode);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
         canvas.getRoot().getDefaultInputManager().setKeyboardFocus(selectionEventHandler);

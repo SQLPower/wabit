@@ -67,7 +67,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
     private Color textColour = Color.BLACK;
 
-    private PInputEventListener mouseInputHandler = new PBasicInputEventHandler() {
+    private PInputEventListener inputHandler = new PBasicInputEventHandler() {
         
         @Override
         public void processEvent(PInputEvent event, int type) {
@@ -185,9 +185,10 @@ public class ContentBoxNode extends PNode implements ReportNode {
         }
         
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
-        addInputEventListener(mouseInputHandler);
+        addInputEventListener(inputHandler);
         contentBox.addPropertyChangeListener(modelChangeHandler);
         updateBoundsFromContentBox();
+
     }
     
     private void updateBoundsFromContentBox() {
@@ -279,5 +280,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
             logger.debug("Content box has no renderer: " + contentBox);
             return null;
         }
+    }
+    
+    public PInputEventListener getInputHandler() {
+    	return inputHandler;
     }
 }

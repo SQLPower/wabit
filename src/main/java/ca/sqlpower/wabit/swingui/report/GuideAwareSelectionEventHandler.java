@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PDimension;
@@ -41,9 +42,15 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
     private static final Logger logger = Logger.getLogger(GuideAwareSelectionEventHandler.class);
     
     private double snapThreshold = 7;
+
+    /**
+     * The canvas that the nodes are on.
+     */
+	private final PCanvas canvas;
     
-    public GuideAwareSelectionEventHandler(PNode marqueeParent, PNode selectableParent) {
+    public GuideAwareSelectionEventHandler(PCanvas canvas, PNode marqueeParent, PNode selectableParent) {
         super(marqueeParent, selectableParent);
+		this.canvas = canvas;
     }
 
     /**
@@ -92,6 +99,33 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
         if (! (node instanceof GuideNode)) {
             super.select(node);
         }
+        System.out.println("Guide is " + node);
+        if (node instanceof ContentBoxNode) {
+        	canvas.getRoot().getDefaultInputManager().
+        		setKeyboardFocus(((ContentBoxNode) node).getInputHandler());
+        }
+    }
+    
+    @Override
+    public void unselect(PNode arg0) {
+    	super.unselect(arg0);
+    	canvas.getRoot().getDefaultInputManager().
+    		setKeyboardFocus(this);
+    }
+    
+    @SuppressWarnings("unchecked")
+	@Override
+    public void unselect(Collection arg0) {
+    	super.unselect(arg0);
+    	canvas.getRoot().getDefaultInputManager().
+		setKeyboardFocus(this);
+    }
+    
+    @Override
+    public void unselectAll() {
+    	super.unselectAll();
+    	canvas.getRoot().getDefaultInputManager().
+		setKeyboardFocus(this);
     }
     
     /**
