@@ -328,10 +328,11 @@ public class QueryPanel implements WabitPanel {
 	 * This will listen to any change in the query cache and update the results table as needed.
 	 */
 	private final QueryChangeListener queryListener = new QueryChangeListener() {
+	    
+	    private boolean inCompoundEdit = false;
     
         public void propertyChangeEvent(PropertyChangeEvent evt) {
-            if (queryCache.getQuery().getCanExecuteQuery() 
-                    && evt.getPropertyName() != Query.USER_MODIFIED_QUERY 
+            if (evt.getPropertyName() != Query.USER_MODIFIED_QUERY 
                     && evt.getPropertyName() != "running") {
                 executeQuery();
             }
@@ -342,7 +343,7 @@ public class QueryPanel implements WabitPanel {
         }
 
         private void executeQuery() {
-            if (queryCache.getQuery().getCanExecuteQuery()
+            if (!inCompoundEdit
                     && queryCache.isAutomaticallyExecuting()) {
                 executeQueryInCache();
             }
@@ -380,8 +381,13 @@ public class QueryPanel implements WabitPanel {
             executeQuery();
         }
     
-        public void canExecuteQuery() {
+        public void compoundEditEnded() {
+            inCompoundEdit = false;
             executeQuery();
+        }
+
+        public void compoundEditStarted() {
+            inCompoundEdit = true;
         }
     };
     
