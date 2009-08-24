@@ -435,7 +435,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         setupToolBarButtonLabel(button, "Print PDF");
         toolbar.add(button);
         
-        
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
         JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
@@ -447,17 +446,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         mainbar.add(toolbar, BorderLayout.CENTER);
         mainbar.add(wabitBar, BorderLayout.EAST);
         
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(mainbar, BorderLayout.NORTH);
         PScrollPane canvasScrollPane = new PScrollPane(canvas);
 		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
-        leftPanel.add(canvasScrollPane, BorderLayout.CENTER);
         
         mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         mainSplitPane.setOneTouchExpandable(true);
         mainSplitPane.setResizeWeight(1);
-        mainSplitPane.add(leftPanel, JSplitPane.LEFT);
+        mainSplitPane.add(canvasScrollPane, JSplitPane.LEFT);
         
         final JList queryList = new JList(new DraggableWabitObjectListModel(session.getWorkspace()));
         queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -524,6 +520,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
                 
         panel = new JPanel(new BorderLayout());
         panel.add(mainSplitPane, BorderLayout.CENTER);
+        panel.add(mainbar, BorderLayout.NORTH);
         
         panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelBoxCreateAction.getClass());

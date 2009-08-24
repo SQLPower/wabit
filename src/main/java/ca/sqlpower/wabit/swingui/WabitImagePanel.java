@@ -60,6 +60,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -251,10 +252,23 @@ public class WabitImagePanel implements WabitPanel {
         // Removes button borders on OS X 10.5
         browseButton.putClientProperty("JButton.buttonType", "toolbar");
         toolBar.add(browseButton);
+        toolBar.setFloatable(false);
+        
+        JToolBar wabitBar = new JToolBar();
+        wabitBar.setFloatable(false);
+        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		wabitBar.add(forumButton);
+		
+		JToolBar mainbar = new JToolBar();
+        mainbar.setLayout(new BorderLayout());
+        mainbar.add(toolBar, BorderLayout.CENTER);
+        mainbar.add(wabitBar, BorderLayout.EAST);
+        
         imagePanel = new JPanel(new MigLayout("align 50% 50%"));
         
         panel.setLayout(new BorderLayout());
-        panel.add(toolBar, BorderLayout.NORTH);
+        panel.add(mainbar, BorderLayout.NORTH);
         panel.add(imagePanel, BorderLayout.CENTER);
         imagePanel.setBackground(Color.WHITE);
         imagePanel.add(imageLabel);

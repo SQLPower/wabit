@@ -758,17 +758,16 @@ public class QueryPanel implements WabitPanel {
 		queryToolBar.add(propertiesButton);
 		
 		JToolBar wabitBar = new JToolBar();
-		wabitBar.setFloatable(false);
-		JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+        wabitBar.setFloatable(false);
+        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		wabitBar.add(forumButton);
+        
+        final JToolBar sqlToolBar = new JToolBar();
+        sqlToolBar.setLayout(new BorderLayout());
+        sqlToolBar.add(queryToolBar, BorderLayout.CENTER);
+        sqlToolBar.add(wabitBar, BorderLayout.EAST);
 		
-		JToolBar toolBar = new JToolBar();
-		toolBar.setLayout(new BorderLayout());
-		toolBar.add(queryToolBar, BorderLayout.CENTER);
-		toolBar.add(wabitBar, BorderLayout.EAST);
-		
-		queryToolPanel.add(toolBar, BorderLayout.NORTH);
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
@@ -787,6 +786,26 @@ public class QueryPanel implements WabitPanel {
     	}
     	
     	final JLabel whereText = new JLabel("Where:");
+    	
+    	final JPanel topPanel = new JPanel(new BorderLayout());
+    	topPanel.add(rightTopPane, BorderLayout.CENTER);
+    	
+    	wabitBar = new JToolBar();
+        wabitBar.setFloatable(false);
+        forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
+		wabitBar.add(forumButton);
+    	
+    	final JToolBar queryPenToolBar = new JToolBar();
+    	queryPenToolBar.setLayout(new BorderLayout());
+    	queryPenToolBar.add(queryPen.getQueryPenToolBar(), BorderLayout.CENTER);
+    	queryPenToolBar.add(wabitBar, BorderLayout.EAST);
+		
+    	if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
+    		topPanel.add(sqlToolBar, BorderLayout.NORTH);
+    	} else {
+    		topPanel.add(queryPenToolBar, BorderLayout.NORTH);
+    	}
     	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -812,12 +831,18 @@ public class QueryPanel implements WabitPanel {
 						queryPen.getGlobalWhereText().setVisible(true);
 						groupingCheckBox.setVisible(true);
 						whereText.setVisible(true);
+						topPanel.remove(sqlToolBar);
+						topPanel.add(queryPenToolBar, BorderLayout.NORTH);
+						queryPenToolBar.repaint();
 					}
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);
+					topPanel.remove(queryPenToolBar);
+					topPanel.add(sqlToolBar, BorderLayout.NORTH);
+					sqlToolBar.repaint();
 				}
 				executeQueryInCache();
 			}
@@ -857,13 +882,14 @@ public class QueryPanel implements WabitPanel {
     	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
     	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
     	rightTreePanel.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
+
     	
     	mainSplitPane.setOneTouchExpandable(true);
     	mainSplitPane.setResizeWeight(1);
-    	mainSplitPane.add(rightTopPane, JSplitPane.TOP);
-    	JPanel southPanel = southPanelBuilder.getPanel();
-		mainSplitPane.add(southPanel, JSplitPane.BOTTOM);
-		southPanel.setMinimumSize(new Dimension(0, ICON.getIconHeight() * 5));
+    	mainSplitPane.add(topPanel, JSplitPane.TOP);
+    	JPanel bottomPanel = southPanelBuilder.getPanel();
+		mainSplitPane.add(bottomPanel, JSplitPane.BOTTOM);
+		bottomPanel.setMinimumSize(new Dimension(0, ICON.getIconHeight() * 5));
 
 		mainSplitPane.addHierarchyListener(new HierarchyListener() {
             public void hierarchyChanged(HierarchyEvent e) {
