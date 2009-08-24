@@ -34,6 +34,8 @@ public class WabitIcons {
 	public static final Icon WABIT_FILE_ICON_16 = makeIcon("wabitFile-16"); 
 	public static final Icon EXPORT_ICON_32 = makeIcon("32x32/export");
 	public static final Icon RUN_ICON_32 = makeIcon("32x32/run");
+	public static final Icon ZOOM_OUT_ICON_16 = makeIcon("zoomMinus-16.png");
+	public static final Icon ZOOM_IN_ICON_16 = makeIcon("zoomPlus-16.png");
 	
     private static final ImageIcon makeIcon(String resourceName) {
         URL iconUrl = WabitIcons.class.getClassLoader().getResource(

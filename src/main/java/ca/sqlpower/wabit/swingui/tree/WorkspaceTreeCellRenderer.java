@@ -64,7 +64,6 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 	private static final Logger logger = Logger.getLogger(WorkspaceTreeCellRenderer.class);
 
     public static final Icon PAGE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/page_white.png"));
-    public static final Icon LAYOUT_ICON = WabitIcons.REPORT_ICON_16;
     public static final Icon BOX_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getResource("/icons/shape_square.png"));
     public static final Icon QUERY_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/query-db-16.png"));
     public static final Icon STREAMING_QUERY_BADGE = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/stream-badge.png"));
@@ -122,7 +121,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(PAGE_ICON);
                 r.setText(page.getName() + " (" + page.getWidth() + "x" + page.getHeight() + ")");
             } else if (wo instanceof Layout) {
-                r.setIcon(LAYOUT_ICON);
+                r.setIcon(WabitIcons.REPORT_ICON_16);
             } else if (wo instanceof ContentBox) {
                 ContentBox cb = (ContentBox) wo;
                 ReportContentRenderer cbChild = (ReportContentRenderer) cb.getChildren().get(0);

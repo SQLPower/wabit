@@ -111,8 +111,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 
 	private static final Icon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
 	private static final Icon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db-16.png"));
-	private static final Icon ZOOM_OUT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-minus.png"));
-	private static final Icon ZOOM_IN_ICON = new ImageIcon(StatusComponent.class.getClassLoader().getResource("icons/32x32/zoom-plus.png"));
     public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
@@ -382,7 +380,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         toolbar.addSeparator();
         JPanel zoomPanel = new JPanel(new BorderLayout());
-        zoomPanel.add(new JLabel(ZOOM_OUT_ICON), BorderLayout.WEST);
+        zoomPanel.add(new JLabel(WabitIcons.ZOOM_OUT_ICON_16), BorderLayout.WEST);
         final int defaultSliderValue = 500;
         zoomSlider= new JSlider(JSlider.HORIZONTAL, 1, 1000, defaultSliderValue);
         zoomSlider.addChangeListener(new ChangeListener() {
@@ -407,7 +405,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         	zoomSlider.setValue(report.getZoomLevel());
         }
         zoomPanel.add(zoomSlider, BorderLayout.CENTER);
-		zoomPanel.add(new JLabel(ZOOM_IN_ICON), BorderLayout.EAST);
+		zoomPanel.add(new JLabel(WabitIcons.ZOOM_IN_ICON_16), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
         toolbar.add(zoomPanel);
         button = new JButton(zoomToFitAction);

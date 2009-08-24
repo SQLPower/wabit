@@ -313,7 +313,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		JMenuItem newImage = new JMenuItem(new NewImageAction(session));
 		
 		JMenuItem newLayout = new JMenuItem(new NewLayoutAction(session));
-		newLayout.setIcon(WorkspaceTreeCellRenderer.LAYOUT_ICON);
+		newLayout.setIcon(WabitIcons.REPORT_ICON_16);
 		
 		if (lastPathComponent != null) {
 			JTree tree = (JTree) e.getSource();
