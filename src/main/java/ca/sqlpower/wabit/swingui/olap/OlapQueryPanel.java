@@ -399,11 +399,8 @@ public class OlapQueryPanel implements WabitPanel {
 				OlapGuiUtil.asyncExecute(query, session);
 			}
 		});
-        executeButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        executeButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        // Removes button borders on OS X 10.5
-        executeButton.putClientProperty("JButton.buttonType", "toolbar");
-		olapPanelToolbar.add(executeButton);
+        setupButton(executeButton);
+        olapPanelToolbar.add(executeButton);
         olapPanelToolbar.add(resetQueryButton);
         olapPanelToolbar.addSeparator();
         
@@ -412,19 +409,13 @@ public class OlapQueryPanel implements WabitPanel {
 						WabitIcons.EXPORT_ICON_32,
 						"Export OLAP Query to Wabit file"));
 		exportOlapQueryButton.setText("Export");
-		exportOlapQueryButton.setHorizontalTextPosition(SwingConstants.CENTER);
-		exportOlapQueryButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        // Removes button borders on OS X 10.5
-		exportOlapQueryButton.putClientProperty("JButton.buttonType", "toolbar");
+		setupButton(exportOlapQueryButton);
 		olapPanelToolbar.add(exportOlapQueryButton);
 		
         JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
         createLayoutButton.setText("Create Report");
-        createLayoutButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        createLayoutButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        // Removes button borders on OS X 10.5
-        createLayoutButton.putClientProperty("JButton.buttonType", "toolbar");
-		olapPanelToolbar.add(createLayoutButton);
+        setupButton(createLayoutButton);
+        olapPanelToolbar.add(createLayoutButton);
         
 		// TODO: Replace the AbstractAction with a CreateChartFromQueryAction when Charts are first-class objects
 		JButton createChartButton = new JButton(new AbstractAction() {
@@ -435,10 +426,7 @@ public class OlapQueryPanel implements WabitPanel {
 		});
 		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
 		createChartButton.setText("Create Chart");
-		createChartButton.setHorizontalTextPosition(SwingConstants.CENTER);
-		createChartButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-		// Removes button borders on OS X 10.5
-		createChartButton.putClientProperty("JButton.buttonType", "toolbar");
+		setupButton(createChartButton);
 		olapPanelToolbar.add(createChartButton);
 		
         final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
@@ -507,10 +495,9 @@ public class OlapQueryPanel implements WabitPanel {
         this.mdxTextArea.getActionMap().put(REDO_MDX_EDIT, redoMdxStatementAction);
         this.mdxTextArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + InputEvent.SHIFT_MASK), REDO_MDX_EDIT);
         
+        JToolBar toolBar = new JToolBar();
         
-        
-        
-        JButton executeButton = new JButton("Execute");
+        JButton executeButton = new JButton("Execute", WabitIcons.RUN_ICON_32);
         executeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 CellSet cellSet;
@@ -545,9 +532,12 @@ public class OlapQueryPanel implements WabitPanel {
             }
         });
         
+        setupButton(executeButton);
+        toolBar.add(executeButton);
+        
         JPanel queryPanel = new JPanel(new BorderLayout());
         queryPanel.add(new JScrollPane(mdxTextArea), BorderLayout.CENTER);
-        queryPanel.add(executeButton, BorderLayout.SOUTH);
+        queryPanel.add(toolBar, BorderLayout.NORTH);
 
         return queryPanel;
     }
@@ -777,4 +767,14 @@ public class OlapQueryPanel implements WabitPanel {
     public String getTitle() {
 		return "OLAP Query Editor - " + query.getName();
 	}
+    
+    /**
+     * Modifies the button to have their label text at the bottom
+     * and centered, and (in OS X 10.5), to have no button border
+     */
+    private void setupButton(JButton button) {
+    	button.setVerticalTextPosition(SwingConstants.BOTTOM);
+    	button.setHorizontalTextPosition(SwingConstants.CENTER);
+    	button.putClientProperty("JButton.buttonType", "toolbar");
+    }
 }
