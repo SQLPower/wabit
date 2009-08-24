@@ -57,7 +57,6 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitIcons;
-import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
 
 public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 	

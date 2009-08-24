@@ -71,7 +71,7 @@ public class Olap4jTreeModel implements TreeModel {
     
     private static final Logger logger = Logger.getLogger(Olap4jTreeModel.class);
 
-    private class OlapTreeRoot {
+    public class OlapTreeRoot {
         
         /** These are the children of the root object. */
         private final List<?> children;

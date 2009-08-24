@@ -64,10 +64,9 @@ import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
+import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
-import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
-import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderNode;
-import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.FolderType;
+import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
 
 /**
  * This listener is the main listener on the workspace tree in Wabit.

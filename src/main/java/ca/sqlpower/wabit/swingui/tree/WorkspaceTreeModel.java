@@ -23,7 +23,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -35,15 +38,22 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
+import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObject;
+import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -54,6 +64,8 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.swingui.olap.Olap4jTreeModel;
+import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
 
 /**
  * Provides a tree with the workspace at the root. The workspace contains data
@@ -63,101 +75,27 @@ public class WorkspaceTreeModel implements TreeModel {
 
     private static final Logger logger = Logger.getLogger(WorkspaceTreeModel.class);
     
-    public static enum FolderType {
-    	CONNECTIONS,
-    	QUERIES,
-    	IMAGES,
-    	REPORTS
-    	//TODO implement images and charts folders.... maybe olap cubes
-    }
-    
-    public static FolderType getProperFolderParent(WabitObject object) {
-    	if (object instanceof WabitDataSource) {
-    		return FolderType.CONNECTIONS;
-    	} else if (object instanceof QueryCache || object instanceof OlapQuery) {
-    		return FolderType.QUERIES; 
-    	} else if (object instanceof WabitImage) {
-    	    return FolderType.IMAGES;
-    	} else if (object instanceof Layout) {
-    		return FolderType.REPORTS;
-    	}
-    	throw new UnsupportedOperationException("Trying to find the parent folder of object of type: " + object.getClass());
-    }
-    
-    public class FolderNode {
-    	private WabitWorkspace parent;
-    	private FolderType folderType;
-    	
-    	
-    	public FolderNode(WabitWorkspace parent, FolderType folderType) {
-    		this.parent = parent;
-    		this.folderType = folderType;
-		}
-    	
-    	public WabitWorkspace getParent() {
-			return parent;
-		}
-    	
-		public FolderType getFolderType() {
-			return folderType;
-		}
-
-		public boolean allowsChildren() {
-			return true;
-		}
-
-
-		public List<? extends WabitObject> getChildren() {
-			List<WabitObject> childList = new ArrayList<WabitObject>();
-			switch (folderType) {
-			case CONNECTIONS:
-				childList.addAll(workspace.getDataSources());
-				break;
-			case QUERIES:
-				childList.addAll(workspace.getQueries());
-				childList.addAll(workspace.getOlapQueries());
-				break;
-			case IMAGES:
-			    childList.addAll(workspace.getImages());
-			    break;
-			case REPORTS:
-				childList.addAll(workspace.getLayouts());
-				break;
-			}
-			return childList;
-		}
-		
-		@Override
-		public String toString() {
-			String name = null;
-			switch (folderType) {
-			case CONNECTIONS:
-				name = "Connections";
-				break;
-			case QUERIES:
-				name = "Queries";
-				break;
-			case IMAGES:
-			    name = "Images";
-			    break;
-			case REPORTS:
-				name = "Reports";
-				break;
-			}
-			return name;
-		}
-
-		public int childPositionOffset(Class<? extends WabitObject> childType) {
-			return 0;
-		}
-    }
-    
+    /**
+     * This is the root node of the tree
+     */
     private final WabitWorkspace workspace;
     
+    /**
+     * This is the list of folders in the tree
+     */
     private final List<FolderNode> folderList;
 
+    /**
+     * This is the listener which listens for property change events o nthe tree
+     */
     private WabitTreeModelEventAdapter listener;
     
+    /**
+     * This is the tree model which contains a workspace
+     * 
+     * @param workspace
+     * 		This is the root node of the tree 
+     */
     public WorkspaceTreeModel(WabitWorkspace workspace) {
         this.workspace = workspace;
         this.folderList = new ArrayList<FolderNode>();
@@ -182,6 +120,22 @@ public class WorkspaceTreeModel implements TreeModel {
     		return  getLayoutsChildren(parentObject).get(index);
     	} else if (parentObject instanceof ContentBox) {
     		return new ArrayList<Object>();
+    	} else if (parentObject instanceof WabitDataSource) {
+    		List<Object> children = getWabitDatasourceChildren((WabitDataSource) parentObject);
+    		return children.get(index);
+    	} else if (parentObject instanceof SQLObject) {
+    		try {
+				return ((SQLObject) parentObject).getChild(index);
+			} catch (SQLObjectException e) {
+				throw new RuntimeException(e);
+			}
+    	} else if (parentObject instanceof Olap4jTreeNode) {
+    		Olap4jTreeNode parentTreeNode = (Olap4jTreeNode) parentObject;
+    		Olap4jTreeModel model = getOlapTreeModelFromNode(parentTreeNode);
+    		Object olap4jObject = model.getChild(parentTreeNode.getUserObject(), index);
+			Olap4jTreeNode newTreeNode = new Olap4jTreeNode(olap4jObject);
+			newTreeNode.setParent(parentTreeNode);
+			return newTreeNode;
     	} else {
 			WabitObject wabitObject = (WabitObject) parentObject;
 			return wabitObject.getChildren().get(index);
@@ -197,11 +151,27 @@ public class WorkspaceTreeModel implements TreeModel {
     		return getLayoutsChildren(parent).size();
     	} else if (parent instanceof ContentBox) {
     		return 0;
+    	} else if (parent instanceof WabitDataSource) {
+    		WabitDataSource wds = (WabitDataSource) parent;
+			List<Object> children = getWabitDatasourceChildren(wds);
+    		return children.size();
+    	} else if (parent instanceof SQLObject) {
+    		try {
+				return ((SQLObject) parent).getChildCount();
+			} catch (SQLObjectException e) {
+				throw new RuntimeException(e);
+			}
+    	} else if (parent instanceof Olap4jTreeNode) {
+    		Olap4jTreeNode treeNode = (Olap4jTreeNode) parent;
+    		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
+    		return model.getChildCount(treeNode.getUserObject());
     	} else {
     		return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
     	}
     }
 
+    private Map<OlapConnection, Olap4jTreeModel> treeModelMap = new HashMap<OlapConnection, Olap4jTreeModel>();
+    
 	private List<WabitObject> getLayoutsChildren(Object parent) {
 		List<WabitObject> layoutChildren = new ArrayList<WabitObject>();
 		List<Page> page = ((Layout) parent).getChildren();
@@ -212,16 +182,90 @@ public class WorkspaceTreeModel implements TreeModel {
 		}
 		return layoutChildren;
 	}
+	
+	@SuppressWarnings("unchecked") //everything in here will be an object, no warning is needed
+	private List<Object> getWabitDatasourceChildren(WabitDataSource parent) {
+		List<Object> children = new ArrayList<Object>();
+		SPDataSource spDS = parent.getSPDataSource();
+		WabitSessionContext context = workspace.getSession().getContext();
+		if (spDS instanceof JDBCDataSource) {
+			JDBCDataSource jdbcDS = (JDBCDataSource) spDS;
+			try {
+				children.addAll(context.getDatabase(jdbcDS).getChildren());
+			} catch (SQLObjectException e) {
+				throw new RuntimeException(e);
+			}
+		} else if (spDS instanceof Olap4jDataSource) {
+			Olap4jDataSource olapDS = (Olap4jDataSource) spDS;
+			Olap4jTreeModel olapTreeModel;
+			OlapConnection connection;
+			try {
+				connection = context.createConnection(olapDS);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			if (treeModelMap.containsKey(connection)) {
+				olapTreeModel = treeModelMap.get(connection);
+			} else {
+				olapTreeModel = new Olap4jTreeModel(Collections.singletonList(connection));
+				treeModelMap.put(connection, olapTreeModel);
+			}
+			Object root = olapTreeModel.getRoot();
+			for (int i = 0; i < olapTreeModel.getChildCount(root); i++) {
+				Olap4jTreeNode node = new Olap4jTreeNode(olapTreeModel.getChild(root, i));
+				node.setParent(connection);
+				children.add(node);
+			}
+		} else {
+			throw new UnsupportedOperationException("Datasource of type " + spDS.getClass().toString() + " is not yet" +
+					"supported in the tree on the LHS");
+		}
+		return children;
+	}
+	
+	private Olap4jTreeModel getOlapTreeModelFromNode(Olap4jTreeNode node) {
+		Object nodeData = node.getUserObject();
+		while (!(nodeData instanceof OlapConnection)) {
+			node = (Olap4jTreeNode) node.getParent();
+			nodeData = node.getUserObject();
+		}
+		OlapConnection olapConnection = (OlapConnection) nodeData;
+		if (treeModelMap.containsKey(olapConnection)) {
+			return treeModelMap.get(olapConnection);
+		} else {
+			throw new IllegalStateException("OlapConnection should have been in the map already because " +
+					"the user should have had to go through a WabitDataSource which would have added the connection" +
+					" to the map.");
+		}
+	}
     
     public int getIndexOfChild(Object parent, Object child) {
     	if (parent instanceof WabitWorkspace) {
     		return folderList.indexOf(child);
     	} else if (parent instanceof FolderNode) {
     		return ((FolderNode) parent).getChildren().indexOf(child);
-    	} else {
+    	} else if (parent instanceof WabitDataSource) {
+    		WabitDataSource wds = (WabitDataSource) parent;
+			List<Object> children = getWabitDatasourceChildren(wds);
+    		return children.indexOf(child);
+    	} else if (parent instanceof SQLObject) {
+    		try {
+				return ((SQLObject) parent).getChildren().indexOf(child);
+			} catch (SQLObjectException e) {
+				throw new RuntimeException(e);
+			}
+    	} else if (parent instanceof WabitObject) {
 	        WabitObject wo = (WabitObject) parent;
 	        List<? extends WabitObject> children = wo.getChildren();
 	        return children.indexOf(child);
+    	} else if (parent instanceof Olap4jTreeNode){
+    		Olap4jTreeNode treeNode = (Olap4jTreeNode) parent;
+			Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
+    		Olap4jTreeNode treeNodeChild = (Olap4jTreeNode) child;
+			return model.getIndexOfChild(treeNode.getUserObject(), treeNodeChild.getUserObject());
+    	} else {
+    		throw new UnsupportedOperationException("Object of type " + parent.getClass().toString() + " " +
+    				"not yet supported in Left Hand tree model");
     	}
     }
 
@@ -231,12 +275,48 @@ public class WorkspaceTreeModel implements TreeModel {
     		retval = !(((FolderNode) node).allowsChildren());
     	} else if (node instanceof ContentBox) {
     		retval = true;
-    	} else { 
+    	} else if (node instanceof WabitDataSource) {
+    		retval = false;
+    	} else if (node instanceof SQLDatabase){
+    		retval = false;
+    	} else if (node instanceof SQLObject) {
+    		retval = !((SQLObject) node).allowsChildren();
+    	} else if (node instanceof WabitObject) {
     		retval = !((WabitObject) node).allowsChildren();
+    	} else {
+    		Olap4jTreeNode treeNode = (Olap4jTreeNode) node;
+    		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
+    		retval = model.isLeaf(treeNode.getUserObject());
     	}
 		return retval;
     }
-
+    
+    private class Olap4jTreeNode {
+    	private Object userObject;
+    	private Object parent;
+    	
+    	public Olap4jTreeNode(Object userObject) {
+    		this.userObject = userObject;
+		}
+    	
+    	public Object getParent() {
+			return parent;
+		}
+    	
+    	public void setParent(Object parent) {
+			this.parent = parent;
+		}
+    	
+    	public Object getUserObject() {
+			return userObject;
+		}
+    	
+    	@Override
+    	public String toString() {
+    		return userObject.toString();
+    	}
+    }
+    
     public void valueForPathChanged(TreePath path, Object newValue) {
     	fireTreeStructureChanged(new TreeModelEvent(newValue, path));
     }
@@ -378,7 +458,7 @@ public class WorkspaceTreeModel implements TreeModel {
     	while (obj.getParent() != null && obj != getRoot()) {
     		if (obj.getParent() == getRoot()) {
             	//this will be where the folders are
-            	FolderType folderType = getProperFolderParent(obj);
+            	FolderType folderType = FolderNode.getProperFolderParent(obj);
             	for (FolderNode folder : folderList) {
             		if (folderType == folder.getFolderType()) {
             			path.add(0, folder);
