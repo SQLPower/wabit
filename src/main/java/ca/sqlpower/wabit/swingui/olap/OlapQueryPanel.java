@@ -119,6 +119,7 @@ public class OlapQueryPanel implements WabitPanel {
             dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
             JTree t = (JTree) dge.getComponent();
             List<Object> selectedNodes = new ArrayList<Object>();
+            if (t.getSelectionPaths() == null) return;
             for (TreePath path : t.getSelectionPaths()) {
             	selectedNodes.add(path.getLastPathComponent());
             }

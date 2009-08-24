@@ -55,6 +55,7 @@ import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.MultiDragTreeUI;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
@@ -75,10 +76,11 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
-import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
+import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 
@@ -322,30 +324,57 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			public void dragGestureRecognized(DragGestureEvent dge) {
 	            dge.getSourceAsDragGestureRecognizer().setSourceActions(DnDConstants.ACTION_COPY);
 	            JTree t = (JTree) dge.getComponent();
+	            
+	            //These are the three possible object types in the tree
 	            List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
+	            List<SQLObject> sqlObjectsToDrag = new ArrayList<SQLObject>(); 
+	            List<Olap4jTreeObject> olapObjectsToDrag = new ArrayList<Olap4jTreeObject>();
+	            
 	            for (TreePath path : t.getSelectionPaths()) {
 	            	Object lastPathComponent = path.getLastPathComponent();
 					if (lastPathComponent instanceof FolderNode) continue;
-					wabitObjectsToExport.add((WabitObject) lastPathComponent);
+					if (lastPathComponent instanceof WabitObject) {
+						wabitObjectsToExport.add((WabitObject) lastPathComponent);
+					} else if (lastPathComponent instanceof SQLObject) {
+						sqlObjectsToDrag.add((SQLObject) lastPathComponent);
+					} else if (lastPathComponent instanceof Olap4jTreeObject) {
+						olapObjectsToDrag.add((Olap4jTreeObject) lastPathComponent);
+					}
 	            	
 	            }
 	            
-				if (wabitObjectsToExport.size() == 0) return;
+				if (wabitObjectsToExport.size() == 0 && sqlObjectsToDrag.size() == 0 &&
+						olapObjectsToDrag.size() == 0) return;
 				
-				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-				WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, sessionContext);
-				dao.save(wabitObjectsToExport);
-				try {
-					byteOut.flush();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
+				List<Object> objectsToTransfer = new ArrayList<Object>(); 
+				
+				if (wabitObjectsToExport.size() != 0) {
+					ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+					WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, sessionContext);
+					dao.save(wabitObjectsToExport);
+					try {
+						byteOut.flush();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+					objectsToTransfer.add(byteOut);
+				} 
+				
+				if (sqlObjectsToDrag.size() != 0) {
+					objectsToTransfer.addAll(sqlObjectsToDrag);
 				}
 				
-	            dge.getDragSource().startDrag(dge, null, 
-	                    new WabitObjectTransferable(byteOut), 
-	                    new DragSourceAdapter() {//just need a default adapter
-	                    }
-	            );
+				if (olapObjectsToDrag.size() != 0) {
+					for (Olap4jTreeObject treeObject : olapObjectsToDrag) {
+						objectsToTransfer.add(treeObject);
+					}
+				}
+				
+				dge.getDragSource().startDrag(dge, null, 
+						new SmartLeftTreeTransferable(objectsToTransfer), 
+						new DragSourceAdapter() {//just need a default adapter
+				}
+				);
 			}
         	
         });

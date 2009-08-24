@@ -33,7 +33,7 @@ public class OlapMetadataTransferable implements Transferable {
      * olap4j metadata classes do not implement a common interface or extend a
      * more specific common base class).
      */
-    public static final DataFlavor LOCAL_OBJECT_ARRAY_FLAVOUR =
+    public static final DataFlavor OLAP_ARRAY_FLAVOUR =
         new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
                 "; class=\"[Ljava.lang.Object;\"", "Local Object Array");
     
@@ -47,18 +47,18 @@ public class OlapMetadataTransferable implements Transferable {
 
     public Object getTransferData(DataFlavor flavor)
             throws UnsupportedFlavorException, IOException {
-        if (flavor != LOCAL_OBJECT_ARRAY_FLAVOUR) {
+        if (flavor != OLAP_ARRAY_FLAVOUR) {
             throw new UnsupportedFlavorException(flavor);
         }
         return transferData;
     }
 
     public DataFlavor[] getTransferDataFlavors() {
-        return new DataFlavor[] { LOCAL_OBJECT_ARRAY_FLAVOUR };
+        return new DataFlavor[] { OLAP_ARRAY_FLAVOUR };
     }
 
     public boolean isDataFlavorSupported(DataFlavor flavor) {
-        return flavor == LOCAL_OBJECT_ARRAY_FLAVOUR;
+        return flavor == OLAP_ARRAY_FLAVOUR;
     }
 
 }

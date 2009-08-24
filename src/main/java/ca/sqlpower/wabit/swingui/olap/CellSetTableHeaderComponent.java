@@ -301,7 +301,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         public boolean canImport(JComponent comp, DataFlavor[] transferFlavors) {
             logger.debug("canImport()");
             for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor == OlapMetadataTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR) {
+                if (dataFlavor == OlapMetadataTransferable.OLAP_ARRAY_FLAVOUR) {
                     return true;
                 }
             }
@@ -310,10 +310,10 @@ public class CellSetTableHeaderComponent extends JComponent {
 
         public boolean importData(JComponent comp, Transferable t, Point p) {
             logger.debug("importData("+t+")");
-            if (t.isDataFlavorSupported(OlapMetadataTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR)) {
+            if (t.isDataFlavorSupported(OlapMetadataTransferable.OLAP_ARRAY_FLAVOUR)) {
                 try {
                     
-                    Object[] transferDataArray = (Object[]) t.getTransferData(OlapMetadataTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR);
+                    Object[] transferDataArray = (Object[]) t.getTransferData(OlapMetadataTransferable.OLAP_ARRAY_FLAVOUR);
                     for (Object transferData : transferDataArray) {
                     	Member m;
                     	if (transferData instanceof org.olap4j.metadata.Dimension) {

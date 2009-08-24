@@ -150,7 +150,7 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
-import ca.sqlpower.wabit.swingui.tree.WabitObjectTransferable;
+import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
@@ -691,7 +691,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
         public boolean canImport(DataFlavor[] transferFlavors) {
             for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor == WabitObjectTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR) {
+                if (dataFlavor == SmartLeftTreeTransferable.WABIT_OBJECT_BYTESTREAM_FLAVOUR) {
                     return true;
                 }
             }
@@ -707,8 +707,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			ByteArrayOutputStream output;
 			try {
 				Transferable transferable = dtde.getTransferable();
-				DataFlavor dataFlavor = WabitObjectTransferable.LOCAL_OBJECT_ARRAY_FLAVOUR;
-				output = (ByteArrayOutputStream) transferable.getTransferData(dataFlavor);
+				DataFlavor dataFlavor = SmartLeftTreeTransferable.WABIT_OBJECT_BYTESTREAM_FLAVOUR;
+				List<Object> transferData = (List<Object>) transferable.getTransferData(dataFlavor);
+				output = (ByteArrayOutputStream) transferData.get(0);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
