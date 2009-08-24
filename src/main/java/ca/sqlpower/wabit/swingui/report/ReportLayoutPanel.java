@@ -222,7 +222,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			                width, height);
 			        pageNode.addChild(newCBNode);
 			    } else {
-			        throw new IllegalStateException("Unknown query dragged into the report layout. Object was " + wabitObject.getClass());
+			        throw new IllegalStateException("Unknown item dragged into the report layout. Object was " + wabitObject.getClass());
 			    }
 			}
 			

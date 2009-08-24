@@ -349,15 +349,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				List<Object> objectsToTransfer = new ArrayList<Object>(); 
 				
 				if (wabitObjectsToExport.size() != 0) {
-					ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-					WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, sessionContext);
-					dao.save(wabitObjectsToExport);
-					try {
-						byteOut.flush();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-					objectsToTransfer.add(byteOut);
+					objectsToTransfer.addAll(wabitObjectsToExport);
 				} 
 				
 				if (sqlObjectsToDrag.size() != 0) {

@@ -25,6 +25,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
@@ -123,6 +124,7 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -691,7 +693,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
         public boolean canImport(DataFlavor[] transferFlavors) {
             for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor == SmartLeftTreeTransferable.WABIT_OBJECT_BYTESTREAM_FLAVOUR) {
+                if (dataFlavor == SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT) {
                     return true;
                 }
             }
@@ -704,19 +706,31 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			if (tabIndex == -1 || tabIndex == 0) return; //The search tab should always have an index of 0
 			treeTabbedPane.setSelectedIndex(tabIndex);
 			
-			ByteArrayOutputStream output;
+			ByteArrayOutputStream byteOut;
+			Transferable transferable = dtde.getTransferable();
+			DataFlavor dataFlavor = SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT;
+			Object[] transferData;
 			try {
-				Transferable transferable = dtde.getTransferable();
-				DataFlavor dataFlavor = SmartLeftTreeTransferable.WABIT_OBJECT_BYTESTREAM_FLAVOUR;
-				List<Object> transferData = (List<Object>) transferable.getTransferData(dataFlavor);
-				output = (ByteArrayOutputStream) transferData.get(0);
-			} catch (Exception e) {
+				transferData = (Object[]) transferable.getTransferData(dataFlavor);
+			} catch (Exception e1) {
+				throw new RuntimeException(e1);
+			}
+			List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
+			for (int i = 0; i < transferData.length; i++) {
+				wabitObjectsToExport.add((WabitObject) transferData[i]);
+			}
+			byteOut = new ByteArrayOutputStream();
+			WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, delegateContext);
+			dao.save(wabitObjectsToExport);
+			try {
+				byteOut.flush();
+			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-			
-			byte[] outByteArray = output.toByteArray();
+
+			byte[] outByteArray = byteOut.toByteArray();
 			ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
-			
+
 			OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
 			open.importWorkspaces(getActiveSession());
 		}
