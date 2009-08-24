@@ -38,6 +38,7 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
@@ -57,6 +58,8 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitIcons;
+import ca.sqlpower.wabit.swingui.olap.Olap4JTreeCellRenderer;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
 
 public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 	
@@ -86,7 +89,9 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             THROBBER_OVERLAYS[imageNumber] = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource(imageURL));
         }
     }
-
+    
+    private final Olap4JTreeCellRenderer delegateOlap4jRenderer = new Olap4JTreeCellRenderer();
+    private final DBTreeCellRenderer delegateSQLTreeCellRenderer = new DBTreeCellRenderer();
     /**
      * Current frame number to use for the "busy bagde" ("throbber overlay").
      * 
@@ -98,8 +103,8 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
             boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-        WorkspaceTreeCellRenderer r = (WorkspaceTreeCellRenderer) super.getTreeCellRendererComponent(
-                tree, value, sel, expanded, leaf, row, hasFocus);
+    	DefaultTreeCellRenderer r = (DefaultTreeCellRenderer) super.getTreeCellRendererComponent(
+    			tree, value, sel, expanded, leaf, row, hasFocus);
         
         if (value instanceof WabitObject) {
             WabitObject wo = (WabitObject) value;
@@ -125,12 +130,12 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 ContentBox cb = (ContentBox) wo;
                 ReportContentRenderer cbChild = (ReportContentRenderer) cb.getChildren().get(0);
                 if (cbChild instanceof ResultSetRenderer) {
-                	setupForQueryCache(r, ((ResultSetRenderer) cbChild).getQuery());
+                	setupForQueryCache((WorkspaceTreeCellRenderer) r, ((ResultSetRenderer) cbChild).getQuery());
                 } else if (cbChild instanceof CellSetRenderer) {
                 	r.setIcon(OLAP_QUERY_ICON);
                 	r.setText(((CellSetRenderer) cbChild).getOlapQuery().getName());
                 } else if (cbChild instanceof ImageRenderer) {
-                    setupForWabitImage(r, ((ImageRenderer) cbChild).getImage());
+                    setupForWabitImage((WorkspaceTreeCellRenderer) r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {
                 	ChartRenderer chartRenderer = (ChartRenderer) cbChild;
                 	ExistingChartTypes chartType = chartRenderer.getChartType();
@@ -160,11 +165,11 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             	Guide g = (Guide) wo;
             	r.setText(g.getName() + " @" + g.getOffset());
             } else if (wo instanceof QueryCache) {
-            	setupForQueryCache(r, wo);
+            	setupForQueryCache((WorkspaceTreeCellRenderer) r, wo);
             } else if (wo instanceof OlapQuery) {
                 r.setIcon(OLAP_QUERY_ICON);
             } else if (wo instanceof WabitImage) {
-                setupForWabitImage(r, wo);
+                setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
             }
 
             if (wo instanceof WabitBackgroundWorker) {
@@ -176,6 +181,15 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         } else if (value instanceof FolderNode) {
         	FolderNode folder = ((FolderNode) value);
         	r.setText(folder.toString());
+        } else if (value instanceof Olap4jTreeObject) {
+        	Object olapObject =((Olap4jTreeObject) value).getOlapObject();
+        	Component delegateComponent = delegateOlap4jRenderer.getTreeCellRendererComponent(tree, 
+        			olapObject, sel, expanded, leaf, row, hasFocus);
+			r = (DefaultTreeCellRenderer) delegateComponent;
+        } else if (value instanceof SQLObject) {
+        	Component delegateComponent = delegateSQLTreeCellRenderer.getTreeCellRendererComponent(tree, value, sel, 
+        			expanded, leaf, row, hasFocus);
+			r = (DefaultTreeCellRenderer) delegateComponent;
         }
         
         return r;

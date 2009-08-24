@@ -129,11 +129,11 @@ public class WorkspaceTreeModel implements TreeModel {
 			} catch (SQLObjectException e) {
 				throw new RuntimeException(e);
 			}
-    	} else if (parentObject instanceof Olap4jTreeNode) {
-    		Olap4jTreeNode parentTreeNode = (Olap4jTreeNode) parentObject;
+    	} else if (parentObject instanceof Olap4jTreeObject) {
+    		Olap4jTreeObject parentTreeNode = (Olap4jTreeObject) parentObject;
     		Olap4jTreeModel model = getOlapTreeModelFromNode(parentTreeNode);
-    		Object olap4jObject = model.getChild(parentTreeNode.getUserObject(), index);
-			Olap4jTreeNode newTreeNode = new Olap4jTreeNode(olap4jObject);
+    		Object olap4jObject = model.getChild(parentTreeNode.getOlapObject(), index);
+			Olap4jTreeObject newTreeNode = new Olap4jTreeObject(olap4jObject);
 			newTreeNode.setParent(parentTreeNode);
 			return newTreeNode;
     	} else {
@@ -161,15 +161,19 @@ public class WorkspaceTreeModel implements TreeModel {
 			} catch (SQLObjectException e) {
 				throw new RuntimeException(e);
 			}
-    	} else if (parent instanceof Olap4jTreeNode) {
-    		Olap4jTreeNode treeNode = (Olap4jTreeNode) parent;
+    	} else if (parent instanceof Olap4jTreeObject) {
+    		Olap4jTreeObject treeNode = (Olap4jTreeObject) parent;
     		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
-    		return model.getChildCount(treeNode.getUserObject());
+    		return model.getChildCount(treeNode.getOlapObject());
     	} else {
     		return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
     	}
     }
 
+    /**
+     * This is a hash map of all the {@link OlapConnection}'s associated with each delegate {@link Olap4jTreeModel}.
+     * For an explaination of why this is necessary see {@link Olap4jTreeObject#Olap4jTreeObject(Object)}.
+     */
     private Map<OlapConnection, Olap4jTreeModel> treeModelMap = new HashMap<OlapConnection, Olap4jTreeModel>();
     
 	private List<WabitObject> getLayoutsChildren(Object parent) {
@@ -212,7 +216,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			}
 			Object root = olapTreeModel.getRoot();
 			for (int i = 0; i < olapTreeModel.getChildCount(root); i++) {
-				Olap4jTreeNode node = new Olap4jTreeNode(olapTreeModel.getChild(root, i));
+				Olap4jTreeObject node = new Olap4jTreeObject(olapTreeModel.getChild(root, i));
 				node.setParent(connection);
 				children.add(node);
 			}
@@ -223,11 +227,15 @@ public class WorkspaceTreeModel implements TreeModel {
 		return children;
 	}
 	
-	private Olap4jTreeModel getOlapTreeModelFromNode(Olap4jTreeNode node) {
-		Object nodeData = node.getUserObject();
+	/**
+	 * When passed an {@link Olap4jTreeObject} this method will return the delegate {@link Olap4jTreeModel}
+	 * associated with it.
+	 */
+	private Olap4jTreeModel getOlapTreeModelFromNode(Olap4jTreeObject treeObject) {
+		Object nodeData = treeObject.getOlapObject();
 		while (!(nodeData instanceof OlapConnection)) {
-			node = (Olap4jTreeNode) node.getParent();
-			nodeData = node.getUserObject();
+			treeObject = (Olap4jTreeObject) treeObject.getParent();
+			nodeData = treeObject.getOlapObject();
 		}
 		OlapConnection olapConnection = (OlapConnection) nodeData;
 		if (treeModelMap.containsKey(olapConnection)) {
@@ -258,11 +266,11 @@ public class WorkspaceTreeModel implements TreeModel {
 	        WabitObject wo = (WabitObject) parent;
 	        List<? extends WabitObject> children = wo.getChildren();
 	        return children.indexOf(child);
-    	} else if (parent instanceof Olap4jTreeNode){
-    		Olap4jTreeNode treeNode = (Olap4jTreeNode) parent;
+    	} else if (parent instanceof Olap4jTreeObject){
+    		Olap4jTreeObject treeNode = (Olap4jTreeObject) parent;
 			Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
-    		Olap4jTreeNode treeNodeChild = (Olap4jTreeNode) child;
-			return model.getIndexOfChild(treeNode.getUserObject(), treeNodeChild.getUserObject());
+    		Olap4jTreeObject treeNodeChild = (Olap4jTreeObject) child;
+			return model.getIndexOfChild(treeNode.getOlapObject(), treeNodeChild.getOlapObject());
     	} else {
     		throw new UnsupportedOperationException("Object of type " + parent.getClass().toString() + " " +
     				"not yet supported in Left Hand tree model");
@@ -284,19 +292,34 @@ public class WorkspaceTreeModel implements TreeModel {
     	} else if (node instanceof WabitObject) {
     		retval = !((WabitObject) node).allowsChildren();
     	} else {
-    		Olap4jTreeNode treeNode = (Olap4jTreeNode) node;
+    		Olap4jTreeObject treeNode = (Olap4jTreeObject) node;
     		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
-    		retval = model.isLeaf(treeNode.getUserObject());
+    		retval = model.isLeaf(treeNode.getOlapObject());
     	}
 		return retval;
     }
     
-    private class Olap4jTreeNode {
-    	private Object userObject;
+    /**
+     * This is a class which wraps around every tree object
+     */
+    public class Olap4jTreeObject {
+    	private Object olapObject;
     	private Object parent;
     	
-    	public Olap4jTreeNode(Object userObject) {
-    		this.userObject = userObject;
+        /**
+         * This is a class which wraps around an Olap4jObject in the tree, since all Olap4j objects
+         * don't decend from a particular interface it is tedious and in some cases impossible to get
+         * the {@link OlapConnection} object from just a general Olap4j object (and impossible to do 
+         * so when dealing with certain query objects, ex. Dimension, Measures). The reason we need 
+         * this {@link OlapConnection} is because the {@link Olap4jTreeModel} is a complicated entity so
+         * we want to just delegate to it, we do this by having a map of {@link OlapConnection}s to
+         * {@link Olap4jTreeModel}'s. 
+         * 
+         * @param olapObject
+         * 		The {@link Olap4jTreeObject} being wrapped around.
+         */
+    	public Olap4jTreeObject(Object olapObject) {
+    		this.olapObject = olapObject;
 		}
     	
     	public Object getParent() {
@@ -307,13 +330,13 @@ public class WorkspaceTreeModel implements TreeModel {
 			this.parent = parent;
 		}
     	
-    	public Object getUserObject() {
-			return userObject;
+    	public Object getOlapObject() {
+			return olapObject;
 		}
     	
     	@Override
     	public String toString() {
-    		return userObject.toString();
+    		return olapObject.toString();
     	}
     }
     
