@@ -25,7 +25,6 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
@@ -117,6 +116,7 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.ServerListListener;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -716,9 +716,32 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				throw new RuntimeException(e1);
 			}
 			List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
+			String wabitDataSourcesBeingExported = "";
 			for (int i = 0; i < transferData.length; i++) {
-				wabitObjectsToExport.add((WabitObject) transferData[i]);
+				if (transferData[i] instanceof WabitDataSource) {
+					wabitDataSourcesBeingExported += (((WabitDataSource) transferData[i]).getName() + "\n");
+				} else {
+					WabitObject wo = (WabitObject) transferData[i];
+					wabitObjectsToExport.add(wo);
+					wabitDataSourcesBeingExported += getDatasourceDependencies(wo);
+				}
 			}
+			wabitDataSourcesBeingExported = wabitDataSourcesBeingExported.substring(0, wabitDataSourcesBeingExported.lastIndexOf("\n"));
+			boolean shouldContinue = false;
+			if (wabitDataSourcesBeingExported != "") {
+				UserPrompter up = upf.createUserPrompter("WARNING: By performing the following export you are exposing your database\n" +
+						" credentials to all users who have access to the workspace being dragged into. This \n" +
+						"is safe if you are meerly transferring the data to another local workspace but please use\n" +
+						" caution before transferring these over to a server. The following connections are being transferred: \n" +
+						wabitDataSourcesBeingExported + ".",
+						UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.OK, true,
+						"Continue", "Cancel");
+				UserPromptResponse response = up.promptUser();
+				shouldContinue = response.equals(UserPromptResponse.OK);
+			} else {
+				shouldContinue = true;
+			}
+			if (!shouldContinue) return;
 			byteOut = new ByteArrayOutputStream();
 			WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, delegateContext);
 			dao.save(wabitObjectsToExport);
@@ -734,12 +757,28 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
 			open.importWorkspaces(getActiveSession());
 		}
-
+		
 		public void dropActionChanged(DropTargetDragEvent dtde) {
 			//don't care
 		}
 	}
-
+	
+	/**
+	 * This is a recursive function which returns a \n delimited string of all of the
+	 * {@link WabitDataSource}s that the given {@link WabitObject} is dependant on. 
+	 */
+	private String getDatasourceDependencies(WabitObject wo) {
+		String wabitDatasources = "";
+		for (WabitObject dependency : wo.getDependencies()) {
+			if (dependency instanceof WabitDataSource) {
+				wabitDatasources += (((WabitDataSource) dependency).getName() + "\n");
+			} else {
+				wabitDatasources += getDatasourceDependencies(dependency);
+			}
+		}
+		return wabitDatasources;
+	}
+	
 	public WabitSwingSession createServerSession(WabitServerInfo serverInfo) {
         final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this, delegateContext.createServerSession(serverInfo));
         return session;
