@@ -111,7 +111,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     public WabitWorkspace() {
         listeners = new ArrayList<DatabaseListChangeListener>();
-        setName("New Workspace");
+        setName("Unsaved Workspace");
     }
     
     public List<WabitObject> getChildren() {

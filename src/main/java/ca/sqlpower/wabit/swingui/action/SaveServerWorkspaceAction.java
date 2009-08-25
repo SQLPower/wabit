@@ -119,7 +119,6 @@ public class SaveServerWorkspaceAction extends AbstractAction {
         }
         
         public boolean applyChanges() {
-            workspace.setName(fileNameField.getText());
             // TODO prompt about overwrite
             try {
                 WabitServerSession.saveWorkspace(httpClient, si, context, workspace);

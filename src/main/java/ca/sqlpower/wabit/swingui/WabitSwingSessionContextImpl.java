@@ -39,6 +39,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
@@ -886,6 +887,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	public void deregisterChildSession(WabitSession child) {
 	    treeTabbedPane.removeTabAt(getSessions().indexOf(child) + 1);
+	    child.getWorkspace().removePropertyChangeListener(nameChangeListener);
 	    delegateContext.deregisterChildSession(child);
 	}
 	
@@ -1411,9 +1413,21 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return delegateContext.isMacOSX();
     }
 
+    private PropertyChangeListener nameChangeListener = new PropertyChangeListener() {
+    	public void propertyChange(PropertyChangeEvent evt) {
+    		if (evt.getPropertyName().equals("name")) {
+    			WabitSession sourceSession = ((WabitWorkspace) evt.getSource()).getSession();
+				int index = getSessions().indexOf(sourceSession) + 1;
+    			treeTabbedPane.setTitleAt(index, (String) evt.getNewValue());
+    			treeTabbedPane.repaint();
+    		}
+    	}
+    };
+    
     public void registerChildSession(WabitSession child) {
         delegateContext.registerChildSession(child);
         JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree());
+		child.getWorkspace().addPropertyChangeListener(nameChangeListener);
 		treeTabbedPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree));
 		treeTabbedPane.setSelectedIndex(treeTabbedPane.getTabCount() - 1);
     }

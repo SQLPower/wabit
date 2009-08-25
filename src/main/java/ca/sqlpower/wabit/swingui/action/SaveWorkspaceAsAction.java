@@ -149,6 +149,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
             throw new RuntimeException(e);
         }
         
+        session.getWorkspace().setName(selectedFile.getName().replaceAll(".wabit", ""));
         session.setCurrentURI(selectedFile.toURI());
         
         context.putRecentFileName(selectedFile.getAbsolutePath());
