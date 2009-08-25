@@ -445,6 +445,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         mainbar.setLayout(new BorderLayout());
         mainbar.add(toolbar, BorderLayout.CENTER);
         mainbar.add(wabitBar, BorderLayout.EAST);
+        mainbar.setFloatable(false);
         
         PScrollPane canvasScrollPane = new PScrollPane(canvas);
 		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);

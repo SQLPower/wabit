@@ -767,7 +767,8 @@ public class QueryPanel implements WabitPanel {
         sqlToolBar.setLayout(new BorderLayout());
         sqlToolBar.add(queryToolBar, BorderLayout.CENTER);
         sqlToolBar.add(wabitBar, BorderLayout.EAST);
-		
+		sqlToolBar.setFloatable(false);
+        
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
@@ -800,7 +801,8 @@ public class QueryPanel implements WabitPanel {
     	queryPenToolBar.setLayout(new BorderLayout());
     	queryPenToolBar.add(queryPen.getQueryPenToolBar(), BorderLayout.CENTER);
     	queryPenToolBar.add(wabitBar, BorderLayout.EAST);
-		
+		queryPenToolBar.setFloatable(false);
+    	
     	if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
     		topPanel.add(sqlToolBar, BorderLayout.NORTH);
     	} else {

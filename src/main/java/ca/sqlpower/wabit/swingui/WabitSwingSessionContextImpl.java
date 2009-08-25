@@ -905,6 +905,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JPanel cp = new JPanel(new BorderLayout());
         
         JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
+        toolBar.setFloatable(false);
         
         JButton newButton = new JButton(newAction);
         newButton.setVerticalTextPosition(SwingConstants.BOTTOM);

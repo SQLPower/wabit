@@ -264,6 +264,7 @@ public class WabitImagePanel implements WabitPanel {
         mainbar.setLayout(new BorderLayout());
         mainbar.add(toolBar, BorderLayout.CENTER);
         mainbar.add(wabitBar, BorderLayout.EAST);
+        mainbar.setFloatable(false);
         
         imagePanel = new JPanel(new MigLayout("align 50% 50%"));
         

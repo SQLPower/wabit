@@ -462,6 +462,7 @@ public class OlapQueryPanel implements WabitPanel {
 		guiToolBar.setLayout(new BorderLayout());
 		guiToolBar.add(olapPanelToolbar, BorderLayout.CENTER);
 		guiToolBar.add(wabitBar, BorderLayout.EAST);
+		guiToolBar.setFloatable(false);
         
         final JComponent viewComponent = cellSetViewer.getViewComponent();
 		queryPanels.add("GUI", viewComponent);
