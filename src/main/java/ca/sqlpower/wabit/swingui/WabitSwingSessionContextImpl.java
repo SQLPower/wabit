@@ -41,6 +41,8 @@ import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -674,7 +676,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 * and exporting between workspaces 
 	 */
 	public class TreeTabDropTargetListener implements DropTargetListener {
-
+		boolean isFileList = false;
 		public void dragEnter(DropTargetDragEvent dtde) {
 			//don't care
 		}
@@ -694,7 +696,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         public boolean canImport(DataFlavor[] transferFlavors) {
             for (DataFlavor dataFlavor : transferFlavors) {
                 if (dataFlavor == SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT) {
-                    return true;
+                    isFileList = false;
+                	return true;
+                } else if (dataFlavor == DataFlavor.javaFileListFlavor) {
+                	isFileList = true;
+                	return true;
                 }
             }
             return false;
@@ -708,54 +714,74 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			
 			ByteArrayOutputStream byteOut;
 			Transferable transferable = dtde.getTransferable();
-			DataFlavor dataFlavor = SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT;
-			Object[] transferData;
-			try {
-				transferData = (Object[]) transferable.getTransferData(dataFlavor);
-			} catch (Exception e1) {
-				throw new RuntimeException(e1);
-			}
-			List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
-			String wabitDataSourcesBeingExported = "";
-			for (int i = 0; i < transferData.length; i++) {
-				if (transferData[i] instanceof WabitDataSource) {
-					wabitDataSourcesBeingExported += (((WabitDataSource) transferData[i]).getName() + "\n");
-				} else {
-					WabitObject wo = (WabitObject) transferData[i];
-					wabitObjectsToExport.add(wo);
-					wabitDataSourcesBeingExported += getDatasourceDependencies(wo);
+			if (isFileList == true) {
+				DataFlavor dataFlavor = DataFlavor.javaFileListFlavor;
+				List<File> transferData;
+				try {
+					transferData = (List<File>) transferable.getTransferData(dataFlavor);
+				} catch (Exception e1) {
+					throw new RuntimeException(e1);
 				}
+				for (File file : transferData) {
+					FileInputStream input;
+					try {
+						input = new FileInputStream(file);
+					} catch (FileNotFoundException e) {
+						throw new RuntimeException(e);
+					}
+					OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, (int) file.length());
+					open.importWorkspaces(getActiveSession());
+					
+				}
+			} else  {
+				DataFlavor dataFlavor = SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT;
+				Object[] transferData;
+				try {
+					transferData = (Object[]) transferable.getTransferData(dataFlavor);
+				} catch (Exception e1) {
+					throw new RuntimeException(e1);
+				}
+				List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
+				String wabitDataSourcesBeingExported = "";
+				for (int i = 0; i < transferData.length; i++) {
+					if (transferData[i] instanceof WabitDataSource) {
+						wabitDataSourcesBeingExported += (((WabitDataSource) transferData[i]).getName() + "\n");
+					} else {
+						WabitObject wo = (WabitObject) transferData[i];
+						wabitObjectsToExport.add(wo);
+						wabitDataSourcesBeingExported += getDatasourceDependencies(wo);
+					}
+				}
+				boolean shouldContinue = false;
+				if (wabitDataSourcesBeingExported != "") {
+					wabitDataSourcesBeingExported = wabitDataSourcesBeingExported.substring(0, wabitDataSourcesBeingExported.lastIndexOf("\n"));
+					UserPrompter up = upf.createUserPrompter("WARNING: By performing the following export you are exposing your database\n" +
+							" credentials to all users who have access to the workspace being dragged into. This \n" +
+							"is safe if you are meerly transferring the data to another local workspace but please use\n" +
+							" caution before transferring these over to a server. The following connections are being transferred: \n" +
+							wabitDataSourcesBeingExported + ".",
+							UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.OK, true,
+							"Continue", "Cancel");
+					UserPromptResponse response = up.promptUser();
+					shouldContinue = response.equals(UserPromptResponse.OK);
+				} else {
+					shouldContinue = true;
+				}
+				if (!shouldContinue) return;
+				byteOut = new ByteArrayOutputStream();
+				WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, delegateContext);
+				dao.save(wabitObjectsToExport);
+				try {
+					byteOut.flush();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				byte[] outByteArray = byteOut.toByteArray();
+				ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
+				OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
+				open.importWorkspaces(getActiveSession());
 			}
-			boolean shouldContinue = false;
-			if (wabitDataSourcesBeingExported != "") {
-				wabitDataSourcesBeingExported = wabitDataSourcesBeingExported.substring(0, wabitDataSourcesBeingExported.lastIndexOf("\n"));
-				UserPrompter up = upf.createUserPrompter("WARNING: By performing the following export you are exposing your database\n" +
-						" credentials to all users who have access to the workspace being dragged into. This \n" +
-						"is safe if you are meerly transferring the data to another local workspace but please use\n" +
-						" caution before transferring these over to a server. The following connections are being transferred: \n" +
-						wabitDataSourcesBeingExported + ".",
-						UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.OK, true,
-						"Continue", "Cancel");
-				UserPromptResponse response = up.promptUser();
-				shouldContinue = response.equals(UserPromptResponse.OK);
-			} else {
-				shouldContinue = true;
-			}
-			if (!shouldContinue) return;
-			byteOut = new ByteArrayOutputStream();
-			WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, delegateContext);
-			dao.save(wabitObjectsToExport);
-			try {
-				byteOut.flush();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-
-			byte[] outByteArray = byteOut.toByteArray();
-			ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
-
-			OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
-			open.importWorkspaces(getActiveSession());
+			
 		}
 		
 		public void dropActionChanged(DropTargetDragEvent dtde) {
