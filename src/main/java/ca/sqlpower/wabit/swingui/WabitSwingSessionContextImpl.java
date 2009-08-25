@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -517,11 +518,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		StyleConstants.setAlignment(attribs , StyleConstants.ALIGN_CENTER);  
 		explainText.setParagraphAttributes(attribs,true);
 		searchPanel.add(searchTextArea.getPanel(), BorderLayout.NORTH);
-		explainText.setText("Due to performance considerations OLAP connections" +
-			" will not be searched and only populated SQLObjects will be searched.");
+		explainText.setText("For performance reasons, OLAP" +
+				"connections and unvisited relational database objects (schemas," +
+				"tables, columns) will not be included in searches.");
 		explainText.setEditable(false);
 		explainText.setMinimumSize(new Dimension(10, 10));
 		explainText.setBackground(Color.WHITE);
+		Font defaultFont = UIManager.getLookAndFeel().getDefaults().getFont("Label.font");
+		explainText.setFont(defaultFont);
 		
 		searchScrollPane.setViewportView(explainText);
 		searchPanel.add(searchScrollPane, BorderLayout.CENTER);
