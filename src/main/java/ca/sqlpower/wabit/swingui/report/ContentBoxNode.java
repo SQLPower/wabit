@@ -82,9 +82,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
             super.mouseClicked(event);
             if (event.getClickCount() == 2) {
                 DataEntryPanel propertiesPanel = getPropertiesPanel();
-                if (propertiesPanel == null) {
-                    Toolkit.getDefaultToolkit().beep();
-                } else {
+                if (propertiesPanel != null) {
                     String propertiesPanelName = "Properties for " + contentBox.getName();
                     JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(
                             propertiesPanel, dialogOwner, propertiesPanelName, "OK");
@@ -115,9 +113,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	JMenuItem properties = new JMenuItem(new AbstractAction() {
 				public void actionPerformed(ActionEvent arg0) {
 		        	DataEntryPanel propertiesPanel = getPropertiesPanel();
-		            if (propertiesPanel == null) {
-		                Toolkit.getDefaultToolkit().beep();
-		            } else {
+		            if (propertiesPanel != null) {
 		                String propertiesPanelName = "Properties for " + contentBox.getName();
 		                JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(
 		                        propertiesPanel, dialogOwner, propertiesPanelName, "OK");
