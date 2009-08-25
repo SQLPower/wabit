@@ -726,9 +726,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					wabitDataSourcesBeingExported += getDatasourceDependencies(wo);
 				}
 			}
-			wabitDataSourcesBeingExported = wabitDataSourcesBeingExported.substring(0, wabitDataSourcesBeingExported.lastIndexOf("\n"));
 			boolean shouldContinue = false;
 			if (wabitDataSourcesBeingExported != "") {
+				wabitDataSourcesBeingExported = wabitDataSourcesBeingExported.substring(0, wabitDataSourcesBeingExported.lastIndexOf("\n"));
 				UserPrompter up = upf.createUserPrompter("WARNING: By performing the following export you are exposing your database\n" +
 						" credentials to all users who have access to the workspace being dragged into. This \n" +
 						"is safe if you are meerly transferring the data to another local workspace but please use\n" +
