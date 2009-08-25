@@ -270,46 +270,35 @@ public class Chart extends AbstractWabitObject {
      * @see #setChartType(ExistingChartTypes)
      */
     public Dataset createDataset() {
-        if (query instanceof QueryCache) {
-            try {
-                switch (chartType) {
-                case BAR:
-                case CATEGORY_LINE:
-                    return DatasetUtil.createCategoryDataset(
-                            columnNamesInOrder, ((QueryCache) query).fetchResultSet(),
-                            findCategoryColumns());
-                case LINE:
-                case SCATTER:
-                    return DatasetUtil.createSeriesCollection(
-                            columnNamesInOrder, ((QueryCache) query).fetchResultSet());
-                default :
-                    throw new IllegalStateException("Unknown chart type " + chartType);
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+        try {
+            ResultSet rs = getResultSet();
+            if (rs == null) {
+                logger.debug("Returning null data set because getResultSet() returned null");
+                return null;
             }
-        } else if (query instanceof OlapQuery) {
-            try {
-                switch (chartType) {
-                case BAR:
-                case CATEGORY_LINE:
-                    return DatasetUtil.createOlapCategoryDataset(
-                            columnNamesInOrder, ((OlapQuery) query).execute(),
-                            findCategoryColumns());
-                case LINE:
-                case SCATTER:
-                    return DatasetUtil.createOlapSeriesCollection(
-                            columnNamesInOrder, ((OlapQuery) query).execute());
-                default :
-                    throw new IllegalStateException("Unknown chart type " + chartType);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+
+            switch (chartType) {
+            case BAR:
+            case CATEGORY_LINE:
+                return DatasetUtil.createCategoryDataset(
+                        columnNamesInOrder, rs,
+                        findCategoryColumns());
+            case LINE:
+            case SCATTER:
+                return DatasetUtil.createSeriesCollection(
+                        columnNamesInOrder, rs);
+            default :
+                throw new IllegalStateException("Unknown chart type " + chartType);
             }
-        } else {
-            throw new IllegalStateException(
-                    "Unknown query type " + query.getClass() + " when creating a " +
-                    chartType + " chart dataset.");
+        } catch (InterruptedException e) {
+            // query run must have been interrupted; restore interrupted state of thread
+            logger.debug("Returning null data set because thread was interrupted");
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (QueryInitializationException e) {
+            throw new RuntimeException(e);
         }
     }
 
