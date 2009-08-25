@@ -138,6 +138,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
             selectedFile = new File(selectedFile.getAbsoluteFile() + WABIT_FILE_EXTENSION);
         }
         try {
+        	session.getWorkspace().setName(selectedFile.getName().replaceAll(".wabit", ""));
             final FileOutputStream out = new FileOutputStream(selectedFile);
             WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, context);
             workspaceSaver.save(Collections.singletonList(session.getWorkspace()));
@@ -149,7 +150,6 @@ public class SaveWorkspaceAsAction extends AbstractAction {
             throw new RuntimeException(e);
         }
         
-        session.getWorkspace().setName(selectedFile.getName().replaceAll(".wabit", ""));
         session.setCurrentURI(selectedFile.toURI());
         
         context.putRecentFileName(selectedFile.getAbsolutePath());
