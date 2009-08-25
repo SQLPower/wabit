@@ -72,7 +72,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
         @Override
         public void processEvent(PInputEvent event, int type) {
             super.processEvent(event, type);
-            swingRenderer.processEvent(event, type);
+            if (swingRenderer != null) {
+            	swingRenderer.processEvent(event, type);
+            }
         }
         
         @Override
@@ -233,7 +235,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
             contentGraphics.dispose();
         } else {
             g2.setColor(Color.LIGHT_GRAY);
-            g2.drawString("Empty box\u2014drag content provider here!", 0, (int) (getHeight() / 2));
+            g2.drawString("Empty box\u2014drag content provider here!", (int) getX(),(int) (getY() + (getHeight() / 2)));
         }
     }
     @Override

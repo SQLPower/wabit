@@ -125,6 +125,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap-16.png"));
     private static final Icon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber16-01.png")); //XXX we should be animating this...
     private static final Icon REFRESH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
+    private static final Icon CONTENTBOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/content.png"));
     
     private final JSlider zoomSlider;
     
@@ -271,7 +272,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	 */
 	private JSplitPane mainSplitPane;
 	
-	private final AbstractAction addContentBoxAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
+	private final AbstractAction addLabelAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
+		public void actionPerformed(ActionEvent e) {
+			setMouseState(MouseStates.CREATE_LABEL);
+			cursorManager.placeModeStarted();
+		}
+	};
+	
+    AbstractAction addContentBoxAction = new AbstractAction("", CONTENTBOX_ICON) {
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_BOX);
 			cursorManager.placeModeStarted();
@@ -341,7 +349,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         AbstractAction cancelBoxCreateAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
-        		if (mouseState == MouseStates.CREATE_BOX || mouseState == MouseStates.CREATE_HORIZONTAL_GUIDE 
+        		if (mouseState == MouseStates.CREATE_BOX || mouseState == MouseStates.CREATE_LABEL|| mouseState == MouseStates.CREATE_HORIZONTAL_GUIDE 
         				|| mouseState == MouseStates.CREATE_VERTICAL_GUIDE ) {
         			setMouseState(MouseStates.READY);
         			cursorManager.placeModeFinished();
@@ -349,11 +357,11 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         	}
         };
 		
-        canvas.getActionMap().put(addContentBoxAction.getClass(), addContentBoxAction);
+        canvas.getActionMap().put(addLabelAction.getClass(), addLabelAction);
 		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
-		inputMap.put(KeyStroke.getKeyStroke('b'), addContentBoxAction.getClass());
+		inputMap.put(KeyStroke.getKeyStroke('b'), addLabelAction.getClass());
 		
-		addContentBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
+		addLabelAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
 		addHorizontalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add horizontal guide");
 		addVerticalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add vertical guide");
 		zoomToFitAction.putValue(Action.SHORT_DESCRIPTION, "Zoom to fit");
@@ -367,7 +375,11 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.add(button);
         toolbar.addSeparator();
         
-        button = new JButton(addContentBoxAction);
+		button = new JButton(addContentBoxAction);
+        setupToolBarButtonLabel(button, "Content Box");
+        toolbar.add(button);
+        
+        button = new JButton(addLabelAction);
         setupToolBarButtonLabel(button, "Label");
         toolbar.add(button);
         

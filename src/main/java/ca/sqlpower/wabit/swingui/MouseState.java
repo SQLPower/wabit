@@ -31,6 +31,7 @@ public interface MouseState {
 		READY, 
 		CREATE_JOIN, 
 		CREATE_BOX, 
+		CREATE_LABEL,
 		CREATE_HORIZONTAL_GUIDE, 
 		CREATE_VERTICAL_GUIDE, 
 	}
