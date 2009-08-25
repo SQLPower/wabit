@@ -105,6 +105,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
+import ca.sqlpower.wabit.swingui.action.NewChartAction;
 
 public class OlapQueryPanel implements WabitPanel {
     
@@ -426,13 +427,7 @@ public class OlapQueryPanel implements WabitPanel {
         setupButton(createLayoutButton);
         olapPanelToolbar.add(createLayoutButton);
         
-		// TODO: Replace the AbstractAction with a CreateChartFromQueryAction when Charts are first-class objects
-		JButton createChartButton = new JButton(new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				// Temporary until Charts are made first-class objects
-				JOptionPane.showMessageDialog(OlapQueryPanel.this.getPanel(), "Not Implemented Yet. Sorry!", "Not Implemented", JOptionPane.WARNING_MESSAGE);
-			}
-		});
+        JButton createChartButton = new JButton(new NewChartAction(session, query));
 		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
 		createChartButton.setText("Create Chart");
 		setupButton(createChartButton);
