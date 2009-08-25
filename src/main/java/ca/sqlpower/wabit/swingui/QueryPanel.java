@@ -111,6 +111,7 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
+import ca.sqlpower.wabit.swingui.action.NewChartAction;
 import ca.sqlpower.wabit.swingui.action.ShowQueryPropertiesAction;
 
 import com.jgoodies.forms.builder.ButtonBarBuilder;
@@ -743,13 +744,7 @@ public class QueryPanel implements WabitPanel {
 		JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 		setupToolBarButtonLabel(createLayoutButton, "Create Report");
 		queryToolBar.add(createLayoutButton);
-		// TODO: Replace the AbstractAction with a CreateChartFromQueryAction when Charts are first-class objects
-		JButton createChartButton = new JButton(new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				// Temporary until Charts are made first-class objects
-				JOptionPane.showMessageDialog(QueryPanel.this.getPanel(), "Not Implemented Yet. Sorry!", "Not Implemented", JOptionPane.WARNING_MESSAGE);
-			}
-		});
+		JButton createChartButton = new JButton(new NewChartAction(session, queryCache));
 		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
 		setupToolBarButtonLabel(createChartButton, "Create Chart");
 		queryToolBar.add(createChartButton);
@@ -950,11 +945,7 @@ public class QueryPanel implements WabitPanel {
 	    JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
 	    setupToolBarButtonLabel(createLayoutButton, "Create Report");
 	    toolBar.add(createLayoutButton);
-		JButton createChartButton = new JButton(new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(QueryPanel.this.getPanel(), "Not Implemented Yet. Sorry!", "Not Implemented", JOptionPane.WARNING_MESSAGE);
-			}
-		});
+        JButton createChartButton = new JButton(new NewChartAction(session, queryCache));
 		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
 		setupToolBarButtonLabel(createChartButton, "Create Chart");
 		toolBar.add(createChartButton);
