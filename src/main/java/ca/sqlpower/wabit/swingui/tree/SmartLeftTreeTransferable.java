@@ -22,6 +22,8 @@ package ca.sqlpower.wabit.swingui.tree;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +32,14 @@ import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.olap.OlapMetadataTransferable;
 import ca.sqlpower.wabit.swingui.report.ReportQueryTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
+
+import com.rc.retroweaver.runtime.Collections;
 
 public class SmartLeftTreeTransferable implements Transferable {
 	public static final DataFlavor WABIT_OBJECT_FLAVOUR_TO_EXPORT = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
@@ -65,6 +71,11 @@ public class SmartLeftTreeTransferable implements Transferable {
 	private boolean hasSQLObject = false;
 	
 	/**
+	 * The context is needed for when a user tries to export to the desktop.
+	 */
+	private WabitSessionContext context = null;
+	
+	/**
 	 * This is a smart transferable class which knows what to return given a specific
 	 * {@link DataFlavor}. It also will know what types of data it has in it. Then
 	 * when asking for a specific {@link DataFlavor} it will only objects
@@ -73,10 +84,15 @@ public class SmartLeftTreeTransferable implements Transferable {
 	 * @param transferObjects
 	 * 		The objects to transfer, can either be of type {@link Olap4jTreeObject},
 	 * 		{@link WabitObject} or {@link SQLObject} or can be for exporting.
+	 * @param context
+	 * 		A context is needed for when a user tries to export to the desktop,
+	 * 		null is a valid value for this if no exporting to the desktop will
+	 * 		be done.
 	 */
-	public SmartLeftTreeTransferable(List<Object> transferObjects) {
+	public SmartLeftTreeTransferable(List<Object> transferObjects, WabitSessionContext context) {
 		super();
 		this.transferObjects = transferObjects;
+		this.context = context;
 		for (Object object : transferObjects) {
 			if (object instanceof Olap4jTreeObject) {
 				hasOlap = true;
@@ -140,6 +156,19 @@ public class SmartLeftTreeTransferable implements Transferable {
 				sqlObjects[i] = (SQLObject) filteredList.get(i);
 			}
 			return sqlObjects;
+		} else if (flavor == DataFlavor.javaFileListFlavor && hasWabitObjectToExport) {
+			List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
+			for (Object object : transferObjects) {
+				if (object instanceof WabitObject) {
+					wabitObjectsToExport.add((WabitObject) object);
+				}
+			}
+			File file = new File(wabitObjectsToExport.get(0).getName() + ".wabit");
+			FileOutputStream byteOut = new FileOutputStream(file);
+			WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, context);
+			dao.save(wabitObjectsToExport);
+			byteOut.flush();
+			return Collections.singletonList(file);
 		} else {
 			throw new UnsupportedFlavorException(flavor);
 		}
@@ -161,6 +190,9 @@ public class SmartLeftTreeTransferable implements Transferable {
 		
 		if (hasWabitObjectToExport) {
 			flavors.add(WABIT_OBJECT_FLAVOUR_TO_EXPORT);
+			if (context != null) {
+				flavors.add(DataFlavor.javaFileListFlavor);
+			}
 		}
 		
 		DataFlavor[] flavorArray = new DataFlavor[flavors.size()];
@@ -179,6 +211,8 @@ public class SmartLeftTreeTransferable implements Transferable {
 			return true;
 		} else if (flavor == SQLObjectSelection.LOCAL_SQLOBJECT_ARRAY_FLAVOUR && hasSQLObject) {
 			return true;
+		} else if (flavor == DataFlavor.javaFileListFlavor && hasWabitObjectToExport && context != null) {
+			return true; 
 		} else {
 			return false;
 		}

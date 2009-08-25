@@ -30,9 +30,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,7 +72,6 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -363,7 +360,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				}
 				
 				dge.getDragSource().startDrag(dge, null, 
-						new SmartLeftTreeTransferable(objectsToTransfer), 
+						new SmartLeftTreeTransferable(objectsToTransfer, getContext()), 
 						new DragSourceAdapter() {//just need a default adapter
 				}
 				);
