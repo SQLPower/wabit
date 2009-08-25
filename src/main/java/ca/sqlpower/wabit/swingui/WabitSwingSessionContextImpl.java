@@ -20,7 +20,9 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -77,6 +79,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
@@ -89,6 +92,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -103,6 +108,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.RecentMenu;
@@ -450,6 +456,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     	}
     }
     
+	private JTextPane explainText = new JTextPane();
+	private JScrollPane searchScrollPane = new JScrollPane();
+
+    
 	/**
 	 * @param terminateWhenLastSessionCloses
 	 *            Set to true if the context should stop the app when the last
@@ -496,8 +506,20 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		searchTree.setRootVisible(false);
 		searchTree.setShowsRootHandles(true);
 		JPanel searchPanel = new JPanel(new BorderLayout());
+		
+		//all this is to have a centered text field
+		SimpleAttributeSet attribs = new SimpleAttributeSet();  
+		StyleConstants.setAlignment(attribs , StyleConstants.ALIGN_CENTER);  
+		explainText.setParagraphAttributes(attribs,true);
 		searchPanel.add(searchTextArea.getPanel(), BorderLayout.NORTH);
-		searchPanel.add(new JScrollPane(searchTree), BorderLayout.CENTER);
+		explainText.setText("Due to performance considerations OLAP connections" +
+			" will not be searched and only populated SQLObjects will be searched.");
+		explainText.setEditable(false);
+		explainText.setMinimumSize(new Dimension(10, 10));
+		explainText.setBackground(Color.WHITE);
+		
+		searchScrollPane.setViewportView(explainText);
+		searchPanel.add(searchScrollPane, BorderLayout.CENTER);
 		treeTabbedPane.addTab("Search", searchPanel);
 		TreeSelectionListener searchTreeSelectionListener = new TreeSelectionListener() {
 			public void valueChanged(TreeSelectionEvent e) {
@@ -557,7 +579,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			
 			//this just makes sure that we don't see an all workspaces tree when there is
 			//no text showing we are not sure if we actually want this
-			if (searchString.equals("")) return;
+			if (searchString.equals("")) {
+				searchScrollPane.setViewportView(explainText);
+			} else {
+				searchScrollPane.setViewportView(searchTree);
+			}
 
 			//get all the tree models we can search
 			List<TreeModel> searchableModels = new ArrayList<TreeModel>();
@@ -613,6 +639,23 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
 	}
 	
+	private boolean isSafeForSearchChild(Object currentObject) {
+		if (currentObject instanceof SQLObject) {
+			//only search populated tables
+			if (!((SQLObject) currentObject).isPopulated()) {
+				return false;
+			}
+		} else if (currentObject instanceof WabitDataSource) {
+			SPDataSource ds = ((WabitDataSource) currentObject).getSPDataSource();
+			if (ds instanceof Olap4jDataSource) {
+				//TODO there is no way of knowing whether an OLAP query is cached...
+				//We should eventually make the search run in the background
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * Recursive function which searches all of the objects' names in a tree
 	 * model for a given string.
@@ -624,7 +667,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 * @param model
 	 * 		The tree model being searched
 	 * @return
-	 * 		Returns a list of paths to all the tree objects in a model which have
+	 * 		Returns a 
+				WabitSwingSessionContextImpl.this.createConnelist of paths to all the tree objects in a model which have
 	 * 		a name which contains the searchString
 	 */
 	private List<List<Object>> searchTree(List<Object> currentTreePath, 
@@ -634,10 +678,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
 		ArrayList<List<Object>> returnList = new ArrayList<List<Object>>();
 
-		for (int i = 0; i < model.getChildCount(currentObject); i++) {
-			List<Object> childPath = new ArrayList<Object>(currentTreePath);
-			childPath.add(model.getChild(currentObject, i));
-			returnList.addAll(searchTree(childPath, model, p, matchExactly));
+		if (isSafeForSearchChild(currentObject)) {
+			for (int i = 0; i < model.getChildCount(currentObject); i++) {
+				List<Object> childPath = new ArrayList<Object>(currentTreePath);
+				childPath.add(model.getChild(currentObject, i));
+				returnList.addAll(searchTree(childPath, model, p, matchExactly));
+			}
 		}
 		if (currentObject instanceof WabitObject) { //It could be a FolderNode...
 			WabitObject currentWO = (WabitObject) currentObject;
@@ -661,7 +707,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             } else if (!matchExactly && p.matcher(name).find()) {
 				returnList.add(currentTreePath);
             }
-		}
+		} else if (currentObject instanceof SQLObject) {
+			String name = ((SQLObject) currentObject).getName();
+            if (matchExactly && p.matcher(name).matches()) {
+				returnList.add(currentTreePath);
+            } else if (!matchExactly && p.matcher(name).find()) {
+				returnList.add(currentTreePath);
+            }
+		} 
 		return returnList;
 	}
 
