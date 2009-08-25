@@ -695,10 +695,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
         public boolean canImport(DataFlavor[] transferFlavors) {
             for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor == SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT) {
+                if (dataFlavor.equals(SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT)) {
                     isFileList = false;
                 	return true;
-                } else if (dataFlavor == DataFlavor.javaFileListFlavor) {
+                } else if (dataFlavor.equals(DataFlavor.javaFileListFlavor)) {
                 	isFileList = true;
                 	return true;
                 }
