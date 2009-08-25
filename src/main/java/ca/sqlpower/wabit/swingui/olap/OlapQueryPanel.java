@@ -150,7 +150,7 @@ public class OlapQueryPanel implements WabitPanel {
     /**
      * This is the JComponent that emcompasses the entire view.
      */
-    private JSplitPane queryAndResultsPanel = null;
+    private JPanel queryAndResultsPanel = null;
 
     private static final Object UNDO_MDX_EDIT = "Undo MDX Edit";
 
@@ -266,12 +266,15 @@ public class OlapQueryPanel implements WabitPanel {
      */
     private final JPanel dragTreePanel;
     
-    
-    
     /**
      * This toolbar is placed at the top of the olap query editor.
      */
     private JToolBar olapPanelToolbar;
+
+    /**
+     * An Action for executing the MDX text of a query.
+     */
+	private Action executeMdxAction;
     
     public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
         this.parentComponent = parentComponent;
@@ -307,6 +310,7 @@ public class OlapQueryPanel implements WabitPanel {
             public void actionPerformed(ActionEvent e) {
                 try {
                     query.reset();
+                    OlapGuiUtil.asyncExecute(query, session);
                 } catch (SQLException e1) {
                     throw new RuntimeException(e1);
                 }
@@ -386,7 +390,7 @@ public class OlapQueryPanel implements WabitPanel {
     }
 
     private void buildUI() {
-    	JComponent textQueryPanel;
+    	final JComponent textQueryPanel;
         try {
             textQueryPanel = createTextQueryPanel();
         } catch (SQLException e) {
@@ -397,7 +401,11 @@ public class OlapQueryPanel implements WabitPanel {
         olapPanelToolbar.setFloatable(false);
         JButton executeButton = new JButton(new AbstractAction("Execute", WabitIcons.RUN_ICON_32) {
 			public void actionPerformed(ActionEvent e) {
-				OlapGuiUtil.asyncExecute(query, session);
+				if (queryPanels.getSelectedComponent() == textQueryPanel) {
+					executeMdxAction.actionPerformed(e);
+				} else {
+					OlapGuiUtil.asyncExecute(query, session);
+				}
 			}
 		});
         setupButton(executeButton);
@@ -444,31 +452,30 @@ public class OlapQueryPanel implements WabitPanel {
         });
         olapPanelToolbar.add(nonEmptyRowsCheckbox);
         
-        JPanel guiPanel = new JPanel(new BorderLayout());
-        
         JToolBar wabitBar = new JToolBar();
 		wabitBar.setFloatable(false);
 		JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		wabitBar.add(forumButton);
         
-        JToolBar toolBar = new JToolBar();
-		toolBar.setLayout(new BorderLayout());
-		toolBar.add(olapPanelToolbar, BorderLayout.CENTER);
-		toolBar.add(wabitBar, BorderLayout.EAST);
+        final JToolBar guiToolBar = new JToolBar();
+		guiToolBar.setLayout(new BorderLayout());
+		guiToolBar.add(olapPanelToolbar, BorderLayout.CENTER);
+		guiToolBar.add(wabitBar, BorderLayout.EAST);
         
-        guiPanel.add(toolBar, BorderLayout.NORTH);
-        JComponent viewComponent = cellSetViewer.getViewComponent();
-		guiPanel.add(viewComponent, BorderLayout.CENTER);
-		
-        queryPanels.add("GUI", guiPanel);
+        final JComponent viewComponent = cellSetViewer.getViewComponent();
+		queryPanels.add("GUI", viewComponent);
         queryPanels.add("MDX", textQueryPanel);
         
-        queryAndResultsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		queryAndResultsPanel.setLeftComponent(queryPanels);
-        queryAndResultsPanel.setRightComponent(dragTreePanel);
-        queryAndResultsPanel.setDividerLocation(queryAndResultsPanel.getWidth() - dragTreePanel.getMinimumSize().width);
-        queryAndResultsPanel.setResizeWeight(1);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(queryPanels);
+        splitPane.setRightComponent(dragTreePanel);
+        splitPane.setDividerLocation(splitPane.getWidth() - dragTreePanel.getMinimumSize().width);
+        splitPane.setResizeWeight(1);
+        
+        queryAndResultsPanel = new JPanel(new BorderLayout());
+        queryAndResultsPanel.add(splitPane, BorderLayout.CENTER);
+        queryAndResultsPanel.add(guiToolBar, BorderLayout.NORTH);
     }
     
     /**
@@ -496,10 +503,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.mdxTextArea.getActionMap().put(REDO_MDX_EDIT, redoMdxStatementAction);
         this.mdxTextArea.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() + InputEvent.SHIFT_MASK), REDO_MDX_EDIT);
         
-        JToolBar toolBar = new JToolBar();
-        
-        JButton executeButton = new JButton("Execute", WabitIcons.RUN_ICON_32);
-        executeButton.addActionListener(new ActionListener() {
+        executeMdxAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 CellSet cellSet;
                 OlapStatement statement = null;
@@ -531,16 +535,9 @@ public class OlapQueryPanel implements WabitPanel {
                     throw new RuntimeException(e1);
                 }
             }
-        });
-        
-        setupButton(executeButton);
-        toolBar.add(executeButton);
-        
-        JPanel queryPanel = new JPanel(new BorderLayout());
-        queryPanel.add(new JScrollPane(mdxTextArea), BorderLayout.CENTER);
-        queryPanel.add(toolBar, BorderLayout.NORTH);
+        };
 
-        return queryPanel;
+        return new JScrollPane(mdxTextArea);
     }
     
     public void maximizeEditor() {
