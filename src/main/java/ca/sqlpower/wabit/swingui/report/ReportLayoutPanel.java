@@ -79,7 +79,6 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.CursorManager;
-import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -123,20 +122,40 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     private final JSlider zoomSlider;
     
     /**
-	 * The amount to scale the camera view by so that there is a slight space
-	 * between the outside guides and the viewable canvas, for better viewing.
-	 */
-    private static final double AUT0_FIT_SPACER = 0.1;
-
-    /**
      * The amount to multiply the exact zoom factor by in order to come up
      * with the actual zoom factor to use.  The default value of 0.9 leaves
      * at 10% border of empty space around the zoomed region, which is
      * usually a good comfortable amount. 
      */
-    private static final double OVER_ZOOM_COEFF = 0.97;
+    private static final double OVER_ZOOM_COEFF = 0.98;
     
-    private class QueryDropListener implements DropTargetListener {
+	/**
+	 * Centres the Page in the Report view and sets the zoom level so that the
+	 * entire page just fits into the view.
+	 * TODO: Also add zoom to fit margins, and zoom to fit selection
+	 */
+    private class ZoomToFitAction extends AbstractAction {
+		private ZoomToFitAction(String name, Icon icon) {
+			super(name, icon);
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			Rectangle rect = canvas.getVisibleRect();
+			Page page = pageNode.getModel();
+			double zoom = Math.min(rect.getHeight() / page.getHeight(),
+					rect.getWidth() / page.getWidth());
+			zoom *= OVER_ZOOM_COEFF;
+			logger.debug("zoom = " + zoom);
+			canvas.getCamera().setViewScale(zoom);
+			zoomSlider.setValue((int)((zoomSlider.getMaximum() - zoomSlider.getMinimum()) / 2 * zoom));
+			double x = (rect.getWidth() - (page.getWidth() * zoom)) / 2;
+			double y = (rect.getHeight() - (page.getHeight() * zoom)) / 2;
+			logger.debug("camera x = " + x + ", camera y = " + y);
+			canvas.getCamera().setViewOffset(x, y);
+		}
+	}
+
+	private class QueryDropListener implements DropTargetListener {
 
 		public void dragEnter(DropTargetDragEvent dtde) {
 			//no-op
@@ -282,17 +301,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 	
-	private final AbstractAction zoomToFitAction = new AbstractAction("", ZOOM_TO_FIT_ICON){
-		public void actionPerformed(ActionEvent e) {
-			Rectangle rect = canvas.getVisibleRect();
-			Page page = pageNode.getModel();
-			double zoom = Math.min(rect.getHeight() / (page.getLowerMarginOffset() - page.getUpperMarginOffset()),
-					rect.getWidth() / (page.getRightMarginOffset() - page.getLeftMarginOffset()));
-			zoom *= OVER_ZOOM_COEFF;
-			canvas.getCamera().setViewScale(zoom);
-			zoomSlider.setValue((int)((zoomSlider.getMaximum() - zoomSlider.getMinimum()) / 2 * zoom));
-			canvas.getCamera().setViewOffset(- (page.getLeftMarginOffset() * zoom - page.getLeftMarginOffset() * AUT0_FIT_SPACER), -(page.getUpperMarginOffset() * zoom - page.getUpperMarginOffset()*AUT0_FIT_SPACER));
-		}};
+	private final AbstractAction zoomToFitAction = new ZoomToFitAction("", ZOOM_TO_FIT_ICON);
 		
 	private final Action addGraphBoxAction = new AbstractAction("", CREATE_GRAPH_ICON) {
 		public void actionPerformed(ActionEvent e) {
