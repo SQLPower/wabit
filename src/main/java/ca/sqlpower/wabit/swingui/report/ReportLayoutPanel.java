@@ -332,6 +332,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         canvas.setPanEventHandler(null);
         canvas.setBackground(Color.LIGHT_GRAY);
         canvas.setPreferredSize(new Dimension(400,600));
+        canvas.setZoomEventHandler(null);
         cursorManager = new CursorManager(canvas);
         
         pageNode = new PageNode(session, this, report.getPage());
