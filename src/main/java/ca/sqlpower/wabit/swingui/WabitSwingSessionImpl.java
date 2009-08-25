@@ -20,17 +20,30 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,10 +81,14 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
+import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl.TreeTabDropTargetListener;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -93,6 +110,70 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	private final WabitSwingSessionContext sessionContext;
 	
 	private final JTree workspaceTree;
+	
+	private TreeTabDropTargetListener treeTabDropTargetListener = new TreeTabDropTargetListener();
+	
+	/**
+	 * This is the droplistener on the tabbed pane which controls importing
+	 * and exporting between workspaces 
+	 */
+	public class TreeTabDropTargetListener implements DropTargetListener {
+		public void dragEnter(DropTargetDragEvent dtde) {
+			//don't care
+		}
+
+		public void dragExit(DropTargetEvent dte) {
+			//don't care
+		}
+
+		public void dragOver(DropTargetDragEvent dtde) {
+			if (canImport(dtde.getCurrentDataFlavors())) {
+				dtde.acceptDrag(dtde.getDropAction());
+			} else {
+				dtde.rejectDrag();
+			}
+		}
+		
+        public boolean canImport(DataFlavor[] transferFlavors) {
+            for (DataFlavor dataFlavor : transferFlavors) {
+                if (dataFlavor.equals(DataFlavor.javaFileListFlavor)) {
+                	return true;
+                }
+            }
+            return false;
+        }
+
+		public void drop(DropTargetDropEvent dtde) {
+			
+			ByteArrayOutputStream byteOut;
+			Transferable transferable = dtde.getTransferable();
+				dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+				DataFlavor dataFlavor = DataFlavor.javaFileListFlavor;
+				List<File> transferData;
+				try {
+					transferData = (List<File>) transferable.getTransferData(dataFlavor);
+				} catch (Exception e1) {
+					throw new RuntimeException(e1);
+				}
+				for (File file : transferData) {
+					FileInputStream input;
+					try {
+						input = new FileInputStream(file);
+					} catch (FileNotFoundException e) {
+						throw new RuntimeException(e);
+					}
+					OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(getContext(), input, (int) file.length());
+					open.importWorkspaces(WabitSwingSessionImpl.this);
+					
+				}
+		
+			
+		}
+		
+		public void dropActionChanged(DropTargetDragEvent dtde) {
+			//don't care
+		}
+	}
 	
     /**
      * The cell renderer for this session's workspace tree.
@@ -306,7 +387,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 			Object treeFolder = workspaceTreeModel.getChild(root, i);
 			workspaceTree.expandPath(new TreePath(new Object[] { root, treeFolder} ));
 		}
-        dbConnectionManager = createDbConnectionManager();
+		workspaceTree.setDropTarget(new DropTarget(workspaceTree, treeTabDropTargetListener));
+		dbConnectionManager = createDbConnectionManager();
         
         upfMissingLoadedDB = new SwingUIUserPrompterFactory(sessionContext.getFrame());
 

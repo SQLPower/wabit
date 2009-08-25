@@ -25,6 +25,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
@@ -715,6 +716,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			ByteArrayOutputStream byteOut;
 			Transferable transferable = dtde.getTransferable();
 			if (isFileList == true) {
+				dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
 				DataFlavor dataFlavor = DataFlavor.javaFileListFlavor;
 				List<File> transferData;
 				try {
