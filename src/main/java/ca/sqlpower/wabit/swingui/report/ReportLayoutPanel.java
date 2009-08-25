@@ -41,10 +41,15 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +76,7 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -129,32 +135,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
      * usually a good comfortable amount. 
      */
     private static final double OVER_ZOOM_COEFF = 0.98;
-    
-	/**
-	 * Centres the Page in the Report view and sets the zoom level so that the
-	 * entire page just fits into the view.
-	 * TODO: Also add zoom to fit margins, and zoom to fit selection
-	 */
-    private class ZoomToFitAction extends AbstractAction {
-		private ZoomToFitAction(String name, Icon icon) {
-			super(name, icon);
-		}
-
-		public void actionPerformed(ActionEvent e) {
-			Rectangle rect = canvas.getVisibleRect();
-			Page page = pageNode.getModel();
-			double zoom = Math.min(rect.getHeight() / page.getHeight(),
-					rect.getWidth() / page.getWidth());
-			zoom *= OVER_ZOOM_COEFF;
-			logger.debug("zoom = " + zoom);
-			canvas.getCamera().setViewScale(zoom);
-			zoomSlider.setValue((int)((zoomSlider.getMaximum() - zoomSlider.getMinimum()) / 2 * zoom));
-			double x = (rect.getWidth() - (page.getWidth() * zoom)) / 2;
-			double y = (rect.getHeight() - (page.getHeight() * zoom)) / 2;
-			logger.debug("camera x = " + x + ", camera y = " + y);
-			canvas.getCamera().setViewOffset(x, y);
-		}
-	}
 
 	private class QueryDropListener implements DropTargetListener {
 
@@ -315,7 +295,17 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 	
-	private final AbstractAction zoomToFitAction = new ZoomToFitAction("", ZOOM_TO_FIT_ICON);
+	
+	/**
+	 * Centres the Page in the Report view and sets the zoom level so that the
+	 * entire page just fits into the view.
+	 * TODO: Also add zoom to fit margins, and zoom to fit selection
+	 */
+	private final AbstractAction zoomToFitAction = new AbstractAction("", ZOOM_TO_FIT_ICON) {
+		public void actionPerformed(ActionEvent e) {
+			zoomToFit();
+		}
+	};
 		
 	private final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
 		public void actionPerformed(ActionEvent e) {
@@ -536,6 +526,13 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelBoxCreateAction.getClass());
+        
+        canvasScrollPane.addComponentListener(new ComponentAdapter() {
+        	@Override
+        	public void componentResized(ComponentEvent e) {
+        		zoomToFit();
+        	}
+        });
     }
     
     /**
@@ -628,5 +625,20 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		button.setVerticalTextPosition(SwingConstants.BOTTOM);
 		// Removes button borders on OS X 10.5
 		button.putClientProperty("JButton.buttonType", "toolbar");
+	}
+	
+	private void zoomToFit() {
+		Rectangle rect = canvas.getVisibleRect();
+		Page page = pageNode.getModel();
+		double zoom = Math.min(rect.getHeight() / page.getHeight(),
+				rect.getWidth() / page.getWidth());
+		zoom *= OVER_ZOOM_COEFF;
+		logger.debug("zoom = " + zoom);
+		canvas.getCamera().setViewScale(zoom);
+		zoomSlider.setValue((int)((zoomSlider.getMaximum() - zoomSlider.getMinimum()) / 2 * zoom));
+		double x = (rect.getWidth() - (page.getWidth() * zoom)) / 2;
+		double y = (rect.getHeight() - (page.getHeight() * zoom)) / 2;
+		logger.debug("camera x = " + x + ", camera y = " + y);
+		canvas.getCamera().setViewOffset(x, y);
 	}
 }
