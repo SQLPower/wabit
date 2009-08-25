@@ -70,16 +70,6 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 			Guide tmpGuide = new Guide(Axis.VERTICAL, (int)event.getPosition().getX());
 			panel.getPageNode().getModel().addGuide(tmpGuide);
 			panel.getPageNode().addChild(new GuideNode(tmpGuide));
-		} else if (panel.getMouseState().equals(MouseStates.CREATE_GRAPH)) {
-			ContentBox contentBox = new ContentBox();
-			ChartRenderer graph = new ChartRenderer();
-			contentBox.setWidth(100);
-			contentBox.setHeight(100);
-			contentBox.setContentRenderer(graph);
-			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), panel, contentBox);
-			newCBNode.setX(event.getPosition().getX());
-			newCBNode.setY(event.getPosition().getY());
-			panel.getPageNode().addChild(newCBNode);
 		}
 		panel.setMouseState(MouseStates.READY);
 		panel.getCursorManager().placeModeFinished();

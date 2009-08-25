@@ -146,10 +146,12 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.NewChartAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
@@ -160,6 +162,7 @@ import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
+import ca.sqlpower.wabit.swingui.chart.ChartPanel;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
@@ -369,7 +372,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     			if (activeSession != null) {
     				popupMenu.add(new NewQueryAction(activeSession));
     				popupMenu.add(new NewOLAPQueryAction(activeSession));
-    				popupMenu.add(new NewImageAction(activeSession));
+                    popupMenu.add(new NewChartAction(activeSession));
+                    popupMenu.add(new NewImageAction(activeSession));
     				popupMenu.add(new NewLayoutAction(activeSession));
     			}
     			popupMenu.show(source, 0, source.getHeight());
@@ -698,7 +702,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				} else if (content instanceof Label) {
 					name = ((Label) content).getText();
 				} else if (content instanceof ChartRenderer) {
-					name = ((ChartRenderer) content).getQuery().getName();
+					name = ((ChartRenderer) content).getChart().getName();
 				} else if (content instanceof ImageRenderer) {
 					name = ((ImageRenderer) content).getImage().getName();
 				}
@@ -1230,6 +1234,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             currentEditorPanel = queryPanel;
         } else if (entryPanelModel instanceof OlapQuery) {
             OlapQueryPanel panel = new OlapQueryPanel(getActiveSwingSession(), wabitPane, (OlapQuery) entryPanelModel);
+            currentEditorPanel = panel;
+        } else if (entryPanelModel instanceof Chart) {
+            ChartPanel panel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
             currentEditorPanel = panel;
         } else if (entryPanelModel instanceof WabitImage) {
             WabitImagePanel panel = new WabitImagePanel((WabitImage) entryPanelModel, this);

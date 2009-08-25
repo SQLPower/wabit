@@ -84,11 +84,13 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitNode;
@@ -114,7 +116,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
-    private static final Icon CREATE_GRAPH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/chart.png"));
     private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap-16.png"));
     private static final Icon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber16-01.png")); //XXX we should be animating this...
     private static final Icon REFRESH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
@@ -182,9 +183,9 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				return;
 			}			
 			
-			WabitObject[] queries;
+			WabitObject[] wabitDroppings;
 			try {
-				queries = (WabitObject[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
+				wabitDroppings = (WabitObject[]) dtde.getTransferable().getTransferData(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR);
 			} catch (UnsupportedFlavorException e) {
 				dtde.dropComplete(false);
 				dtde.rejectDrop();
@@ -195,7 +196,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				throw new RuntimeException(e);
 			}
 			
-			for (WabitObject wabitObject : queries) {
+			for (WabitObject wabitObject : wabitDroppings) {
 			    if (wabitObject instanceof QueryCache) {
 			        QueryCache queryCache = (QueryCache) wabitObject;
 			        ContentBox contentBox = new ContentBox();
@@ -218,7 +219,20 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
                             (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
                             pageNode.getHeight() / 10);
                     pageNode.addChild(newCBNode);
-			    } else if (wabitObject instanceof WabitImage) {
+                    
+                } else if (wabitObject instanceof Chart) {
+                    Chart chart = (Chart) wabitObject;
+                    ChartRenderer renderer = new ChartRenderer(chart);
+                    ContentBox contentBox = new ContentBox();
+                    contentBox.setContentRenderer(renderer);
+                    ContentBoxNode newCBNode = new ContentBoxNode(
+                            parentFrame, session.getWorkspace(), 
+                            ReportLayoutPanel.this, contentBox);
+                    newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
+                            (int) (pageNode.getWidth() / 10), (int) (pageNode.getHeight() / 10));
+                    pageNode.addChild(newCBNode);
+                    
+                } else if (wabitObject instanceof WabitImage) {
 			        WabitImage image = (WabitImage) wabitObject;
 			        ContentBox contentBox = new ContentBox();
 			        ImageRenderer renderer = new ImageRenderer();
@@ -303,13 +317,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	
 	private final AbstractAction zoomToFitAction = new ZoomToFitAction("", ZOOM_TO_FIT_ICON);
 		
-	private final Action addGraphBoxAction = new AbstractAction("", CREATE_GRAPH_ICON) {
-		public void actionPerformed(ActionEvent e) {
-			setMouseState(MouseStates.CREATE_GRAPH);
-			cursorManager.placeModeStarted();
-		}
-	};
-	
 	private final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
 		public void actionPerformed(ActionEvent e) {
 			// TODO: Implement query data refresh
@@ -357,7 +364,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		inputMap.put(KeyStroke.getKeyStroke('b'), addContentBoxAction.getClass());
 		
 		addContentBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");
-		addGraphBoxAction.putValue(Action.SHORT_DESCRIPTION, "Add chart");
 		addHorizontalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add horizontal guide");
 		addVerticalGuideAction.putValue(Action.SHORT_DESCRIPTION, "Add vertical guide");
 		zoomToFitAction.putValue(Action.SHORT_DESCRIPTION, "Zoom to fit");
@@ -373,10 +379,6 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         button = new JButton(addContentBoxAction);
         setupToolBarButtonLabel(button, "Label");
-        toolbar.add(button);
-
-        button = new JButton(addGraphBoxAction);
-        setupToolBarButtonLabel(button, "Chart");
         toolbar.add(button);
         
         button = new JButton(addHorizontalGuideAction);

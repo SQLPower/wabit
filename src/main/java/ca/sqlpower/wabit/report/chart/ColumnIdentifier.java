@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.report.chart;
 
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
 
 /**
  * This object identifies a single column in a table being used to define a chart.

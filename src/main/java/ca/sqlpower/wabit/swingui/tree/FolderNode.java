@@ -29,6 +29,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.chart.Chart;
 
 /**
  * This is the FolderNode class and it represents the folder object in the tree.
@@ -40,9 +41,9 @@ public class FolderNode {
     public static enum FolderType {
     	CONNECTIONS,
     	QUERIES,
+    	CHARTS,
     	IMAGES,
     	REPORTS
-    	//TODO implement images and charts folders.... maybe olap cubes
     }
     
     public static FolderType getProperFolderParent(WabitObject object) {
@@ -50,8 +51,10 @@ public class FolderNode {
     		return FolderType.CONNECTIONS;
     	} else if (object instanceof QueryCache || object instanceof OlapQuery) {
     		return FolderType.QUERIES; 
-    	} else if (object instanceof WabitImage) {
-    	    return FolderType.IMAGES;
+    	} else if (object instanceof Chart) {
+    	    return FolderType.CHARTS;
+        } else if (object instanceof WabitImage) {
+            return FolderType.IMAGES;
     	} else if (object instanceof Layout) {
     		return FolderType.REPORTS;
     	}
@@ -99,9 +102,12 @@ public class FolderNode {
 			childList.addAll(parent.getQueries());
 			childList.addAll(parent.getOlapQueries());
 			break;
-		case IMAGES:
-			childList.addAll(parent.getImages());
-			break;
+		case CHARTS:
+		    childList.addAll(parent.getCharts());
+		    break;
+        case IMAGES:
+            childList.addAll(parent.getImages());
+            break;
 		case REPORTS:
 			childList.addAll(parent.getLayouts());
 			break;
@@ -119,9 +125,12 @@ public class FolderNode {
 		case QUERIES:
 			name = "Queries";
 			break;
-		case IMAGES:
-			name = "Images";
-			break;
+		case CHARTS:
+		    name = "Charts";
+		    break;
+        case IMAGES:
+            name = "Images";
+            break;
 		case REPORTS:
 			name = "Reports";
 			break;

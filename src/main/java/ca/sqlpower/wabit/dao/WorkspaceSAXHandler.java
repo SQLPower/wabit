@@ -93,15 +93,16 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
-import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
-import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
-import ca.sqlpower.wabit.report.ChartRenderer.LegendPosition;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.DataTypeSeries;
+import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 
@@ -213,12 +214,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private String currentEditorPanelModel;
 
 	/**
-	 * This is a temporary graph renderer used to load in the last graph renderer found
-	 * in the workspace being loaded.
-	 */
-	private ChartRenderer graphRenderer;
-	
-	/**
 	 * This is an {@link OlapQuery} that is currently being loaded from the file. This
 	 * may be null if no OlapQuery is currently being loaded. This variable is also used
 	 * when loading up the olapQuery in a report.
@@ -245,6 +240,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * This is the current WabitImage being loaded.
      */
     private WabitImage currentWabitImage;
+
+    /**
+     * The chart currently being read from the XML stream. This will be null
+     * unless we are within a &lt;chart&gt; element.
+     */
+    private Chart chart;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of workspace
@@ -295,6 +296,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                         "The Wabit workspace you are opening contains OLAP and/or reports from an.\n" +
                         "old version of the wabit. These items cannot be loaded and need to be updated\n" +
                         "to the latest version.",
+                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+                        null, "OK");
+                up.promptUser();
+		    } else if (versionString.startsWith("1.1.")) { // want to test for <1.2.0
+                UserPrompter up = promptFactory.createUserPrompter(
+                        "The Wabit workspace you are opening was created in an older version of Wabit\n" +
+                        "which stored charts within reports rather than sharing them within the Workspace.\n" +
+                        "Your charts will appear as empty boxes; you will have to re-create them.",
                         UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
                         null, "OK");
                 up.promptUser();
@@ -619,6 +628,88 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 }
             }
             byteStream = new ByteArrayOutputStream();
+            
+        } else if (name.equals("chart")) {
+            String uuid = attributes.getValue("uuid");
+            chart = new Chart(uuid);
+            session.getWorkspace().addChart(chart);
+            for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("uuid")) {
+                    //already loaded
+                } else if (aname.equals("name")) {
+                    chart.setName(aval);
+                } else if (aname.equals("y-axis-name")) {
+                    chart.setYaxisName(aval);
+                } else if (aname.equals("x-axis-name")) {
+                    chart.setXaxisName(aval);
+                } else if (aname.equals("type")) {
+                    chart.setChartType(ExistingChartTypes.valueOf(aval));
+                } else if (aname.equals("legend-position")) {
+                    chart.setLegendPosition(LegendPosition.valueOf(aval));
+                } else if (aname.equals("query-id")) {
+                    QueryCache query = null;
+                    for (QueryCache q : session.getWorkspace().getQueries()) {
+                        if (q.getUUID().equals(aval)) {
+                            query = q;
+                            break;
+                        }
+                    }
+                    if (query != null) {
+                        try {
+                            chart.defineQuery(query);
+                        } catch (SQLException e) {
+                            throw new RuntimeException("Error loading project while on chart " + chart.getName(), e);
+                        }
+                    }
+                    OlapQuery olapQuery = null;
+                    for (OlapQuery q : session.getWorkspace().getOlapQueries()) {
+                        if (q.getUUID().equals(aval)) {
+                            olapQuery = q;
+                            break;
+                        }
+                    }
+                    if (olapQuery != null) {
+                        try {
+                            chart.defineQuery(olapQuery);
+                        } catch (SQLException e) {
+                            throw new RuntimeException("Error loading project while on chart renderer " + chart.getName(), e);
+                        }
+                    }
+                    if (query == null && olapQuery == null) {
+                        throw new IllegalArgumentException("The query with UUID " + aval + " is missing from this project.");
+                    }
+                } else {
+                    logger.warn("Unexpected attribute of <chart>: " + aname + "=" + aval);
+                }
+            }
+
+        } else if (name.equals("chart-col-names")) {
+            ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
+            if (colIdentifier == null) {
+                throw new IllegalStateException("The chart " + chart.getName() + " with uuid " + chart.getUUID() + " has a missing column identifier when ordering columns and cannot be loaded.");
+            }
+            
+            for (int i = 0; i < attributes.getLength(); i++) {
+                String aname = attributes.getQName(i);
+                String aval = attributes.getValue(i);
+                if (aname.equals("name")) {
+                    //already handled
+                } else if (aname.equals("data-type")) {
+                    colIdentifier.setDataType(DataTypeSeries.valueOf(aval));
+                } else if (aname.matches("x-axis-.*")) {
+                    ColumnIdentifier xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
+                    colIdentifier.setXAxisIdentifier(xAxisIdentifier);
+                }
+            }
+            
+            chart.addColumnIdentifier(colIdentifier);
+        
+        } else if (name.equals("missing-identifier")) {
+            ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
+            chart.addMissingIdentifier(colIdentifier);
+
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
@@ -747,153 +838,40 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
          	}
          	byteStream = new ByteArrayOutputStream();
-        } else if (name.equals("graph-renderer")) {
+         	
+        } else if (name.equals("chart-renderer")) {
+            String chartUuid = attributes.getValue("chart-uuid");
+            Chart chart = session.getWorkspace().findByUuid(chartUuid, Chart.class);
+            if (chart == null) {
+                throw new IllegalStateException(
+                        "Missing chart with UUID " + chartUuid + ", which is supposed" +
+                        " to be attached to a chart renderer");
+            }
             
             String uuid = attributes.getValue("uuid");
+            final ChartRenderer chartRenderer;
             if (uuid == null) {
-                graphRenderer = new ChartRenderer();
+                chartRenderer = new ChartRenderer(chart);
                 contentBox.setWidth(100);
                 contentBox.setHeight(100);
             } else {
-                graphRenderer = new ChartRenderer(contentBox, uuid);
+                chartRenderer = new ChartRenderer(uuid, chart);
             }
-            contentBox.setContentRenderer(graphRenderer);
+            contentBox.setContentRenderer(chartRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
                 if (aname.equals("uuid")) {
-                    //already loaded
+                    // already handled
+                } else if (aname.equals("chart-uuid")) {
+                    // already handled
                 } else if (aname.equals("name")) {
-                    graphRenderer.setName(aval);
-                } else if (aname.equals("y-axis-name")) {
-                    graphRenderer.setYaxisName(aval);
-                } else if (aname.equals("x-axis-name")) {
-                    graphRenderer.setXaxisName(aval);
-                } else if (aname.equals("graph-type")) {
-                    graphRenderer.setChartType(ExistingChartTypes.valueOf(aval));
-                } else if (aname.equals("legend-position")) {
-                    graphRenderer.setLegendPosition(LegendPosition.valueOf(aval));
-                } else if (aname.equals("query-id")) {
-                    QueryCache query = null;
-                    for (QueryCache q : session.getWorkspace().getQueries()) {
-                        if (q.getUUID().equals(aval)) {
-                            query = q;
-                            break;
-                        }
-                    }
-                    if (query != null) {
-                        try {
-                            graphRenderer.defineQuery(query);
-                        } catch (SQLException e) {
-                            throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
-                        }
-                    }
-                    OlapQuery olapQuery = null;
-                    for (OlapQuery q : session.getWorkspace().getOlapQueries()) {
-                        if (q.getUUID().equals(aval)) {
-                            olapQuery = q;
-                            break;
-                        }
-                    }
-                    if (olapQuery != null) {
-                        try {
-                            graphRenderer.defineQuery(olapQuery);
-                        } catch (SQLException e) {
-                            throw new RuntimeException("Error loading project while on graph renderer " + graphRenderer.getName(), e);
-                        }
-                    }
-                    if (query == null && olapQuery == null) {
-                        throw new IllegalArgumentException("The query with UUID " + aval + " is missing from this project.");
-                    }
+                    chartRenderer.setName(aval);
                 } else {
-                    logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
-                }
-            }
-        } else if (name.equals("graph-col-names")) {
-            ColumnIdentifier colIdentifier;
-            //this is how charts were loaded in version 1.0.1 and older
-            String colName = attributes.getValue("name");
-            if (colName != null) {
-                colIdentifier = new ColumnNameColumnIdentifier(colName);
-            } else {
-                //This is how charts are loaded in version 1.0.2 and newer
-                colIdentifier = loadColumnIdentifier(attributes, "");
-            }
-            
-            if (colIdentifier == null) {
-                throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier when ordering columns and cannot be loaded.");
-            }
-            
-            for (int i = 0; i < attributes.getLength(); i++) {
-                String aname = attributes.getQName(i);
-                String aval = attributes.getValue(i);
-                if (aname.equals("name")) {
-                    //already loaded
-                } else if (aname.equals("data-type")) {
-                    colIdentifier.setDataType(DataTypeSeries.valueOf(aval));
-                } else if (aname.matches("x-axis-.*")) {
-                    ColumnIdentifier xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
-                    colIdentifier.setXAxisIdentifier(xAxisIdentifier);
+                    logger.warn("Unexpected attribute of <chart-renderer>: " + aname + "=" + aval);
                 }
             }
             
-            graphRenderer.addColumnIdentifier(colIdentifier);
-        } else if (name.equals("graph-name-to-data-type")) { //For 1.1.4 and older
-            String dataType = attributes.getValue("data-type");
-            //this is how charts were loaded in version 1.0.1 and older
-            String colName = attributes.getValue("name");
-            ColumnIdentifier colIdentifier;
-            if (colName != null) {
-                colIdentifier = new ColumnNameColumnIdentifier(colName);
-            } else {
-                //This is how charts are loaded in version 1.0.2 and newer
-                colIdentifier = loadColumnIdentifier(attributes, "");
-            }
-            
-            if (colIdentifier == null) {
-                throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier for the data type " + dataType + " and cannot be loaded.");
-            }
-            
-            DataTypeSeries dataTypeSeries = DataTypeSeries.valueOf(dataType);
-            List<ColumnIdentifier> columnNamesInOrder = graphRenderer.getColumnNamesInOrder();
-            for (ColumnIdentifier identifier : columnNamesInOrder) {
-                if (identifier.getUniqueIdentifier().equals(colIdentifier.getUniqueIdentifier())) {
-                    identifier.setDataType(dataTypeSeries);
-                    break;
-                }
-            }
-        } else if (name.equals("graph-series-col-to-x-axis-col")) { //Loading from 1.1.4 and older
-            //This is how charts were loaded in version 1.0.1 and older
-            String seriesName = attributes.getValue("series");
-            String xAxisName = attributes.getValue("x-axis");
-            ColumnIdentifier seriesIdentifier = null;
-            ColumnIdentifier xAxisIdentifier = null;
-            if (seriesName != null && xAxisName != null) {
-                seriesIdentifier = new ColumnNameColumnIdentifier(seriesName);
-                xAxisIdentifier = new ColumnNameColumnIdentifier(xAxisName);
-            } else {
-                //this is how charts are loaded in version 1.0.2 and newer
-                seriesIdentifier = loadColumnIdentifier(attributes, "series-");
-                xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
-            }
-            
-            if (seriesIdentifier == null) {
-                throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier and cannot be loaded.");
-            }
-            if (xAxisIdentifier == null) {
-                throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier and cannot be loaded.");
-            }
-            
-            List<ColumnIdentifier> columnNamesInOrder = graphRenderer.getColumnNamesInOrder();
-            for (ColumnIdentifier identifier : columnNamesInOrder) {
-                if (identifier.getUniqueIdentifier().equals(seriesIdentifier.getUniqueIdentifier())) {
-                    identifier.setXAxisIdentifier(xAxisIdentifier);
-                    break;
-                }
-            }
-        } else if (name.equals("missing-identifier")) {
-            ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
-            graphRenderer.addMissingIdentifier(colIdentifier);
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
@@ -1111,14 +1089,23 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             }
         }
     }
-	
-	/**
-     * This is a helper method for loading {@link ColumnIdentifier}s introduced in
-     * the save version 1.0.2. Column identifiers are defined by either a column name
-     * in a relational query, a row hierarchy for OLAP queries, or a Position of the
-     * column axis of an OLAP query.
+
+    /**
+     * This is a helper method for loading {@link ColumnIdentifier}s introduced
+     * in the save version 1.0.2 (updated in 1.2.0). Column identifiers are
+     * defined by either a column name in a relational query, a row hierarchy
+     * for OLAP queries, or a Position of the column axis of an OLAP query.
+     * 
+     * @param attributes
+     *            the attributes of the start tag that introduces this column
+     *            identifier
+     * @param prefix
+     *            the prefix string to apply to every attribute name when
+     *            looking up its value. This is intended for use when more than
+     *            one column identifier is defined in attributes of a single XML element.
      */
     private ColumnIdentifier loadColumnIdentifier(Attributes attributes, String prefix) {
+        // TODO clear out all the stuff related to OLAP column identifiers
         String colName;
         colName = attributes.getValue(prefix + "column-name");
         String positionOrdinalString = attributes.getValue(prefix + "position-ordinal");
@@ -1130,12 +1117,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (positionOrdinalString != null) {
             CellSet graphRendererCellSet;
             try {
-                graphRendererCellSet = ((OlapQuery) graphRenderer.getQuery()).execute();
+                graphRendererCellSet = ((OlapQuery) chart.getQuery()).execute();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             Integer positionOrdinal = Integer.parseInt(positionOrdinalString);
-            CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(org.olap4j.Axis.COLUMNS.axisOrdinal());
+            CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(
+                    org.olap4j.Axis.COLUMNS.axisOrdinal());
             //This is how a position describing a column identifier was loaded in 1.0.2
             colIdentifier = new PositionColumnIdentifier(rowAxis.getPositions().get(positionOrdinal));
         //This is loading positions in column identifiers in 1.0.3 and newer.
@@ -1154,11 +1142,15 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             if (org.olap4j.Axis.ROWS.axisOrdinal() == axisOrdinal) {
                 colIdentifier = new RowAxisColumnIdentifier();
             } else {
-                throw new IllegalStateException("Unknown axis being loaded for chart " + graphRenderer.getName() + ". The row ordinal being loaded is " + axisOrdinal);
+                throw new IllegalStateException(
+                        "Unknown axis being loaded for chart " + chart.getName() +
+                        ". The row ordinal being loaded is " + axisOrdinal);
             }
         }
         if (colIdentifier == null) {
-            throw new IllegalStateException("The chart " + graphRenderer.getName() + " with uuid " + graphRenderer.getUUID() + " has a missing column identifier and cannot be loaded.");
+            throw new IllegalStateException(
+                    "The chart " + chart.getName() + " with uuid " + chart.getUUID() +
+                    " has a missing column identifier and cannot be loaded.");
         }
         return colIdentifier;
     }

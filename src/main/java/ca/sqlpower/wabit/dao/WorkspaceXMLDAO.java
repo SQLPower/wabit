@@ -76,6 +76,7 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
@@ -108,10 +109,14 @@ public class WorkspaceXMLDAO {
      *  executed.
      *  <dt>1.1.5 <dd>Merged the data type and the x axis identifier into the column identifier itself.
      *  This removes the graph-name-to-data-type and graph-series-col-to-x-axis-col tags.
+     *  <dt>1.2.0 <dd>Pulled up charts to top level workspace objects; took the opportunity
+     *                to rename all the tags that had "graph" in their name to use "chart"
+     *                instead. This change is not backward compatible; all charts in reports will
+     *                be lost.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 1, 4); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 2, 0); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
@@ -324,8 +329,10 @@ public class WorkspaceXMLDAO {
 		            saveOlapQuery((OlapQuery) wabitObject);
 		        } else if (wabitObject instanceof Layout) {
 		            saveLayout((Layout) wabitObject);
-		        } else if (wabitObject instanceof WabitImage) {
-		            saveWabitImage((WabitImage) wabitObject);
+                } else if (wabitObject instanceof WabitImage) {
+                    saveWabitImage((WabitImage) wabitObject);
+                } else if (wabitObject instanceof Chart) {
+                    saveChart((Chart) wabitObject);
 		        } else {
 		            logger.info("Not saving wabit object " + wabitObject.getName() + " of type " + wabitObject.getClass() + " as it should be saved elsewhere.");
 		        }
@@ -472,45 +479,13 @@ public class WorkspaceXMLDAO {
 						out.println("</image-renderer>");
 						
 					} else if (box.getContentRenderer() instanceof ChartRenderer) {
-						ChartRenderer graphRenderer = (ChartRenderer) box.getContentRenderer();
-						xml.print(out, "<graph-renderer");
-						printAttribute("name", graphRenderer.getName());
-						printAttribute("uuid", graphRenderer.getUUID());
-						printAttribute("y-axis-name", graphRenderer.getYaxisName());
-						printAttribute("x-axis-name" , graphRenderer.getXaxisName());
-						if (graphRenderer.getChartType() != null) {
-						    printAttribute("graph-type", graphRenderer.getChartType().name());
-						}
-						if (graphRenderer.getLegendPosition() != null) {
-						    printAttribute("legend-position", graphRenderer.getLegendPosition().name());
-						}
-						if (graphRenderer.getQuery() != null) {
-						    printAttribute("query-id", graphRenderer.getQuery().getUUID());
-						}
-						xml.niprintln(out, ">");
-						xml.indent++;
-						xml.println(out, "<graph-col-names-in-order>");
-                        xml.indent++;
-                        for (ColumnIdentifier colIdentifier : graphRenderer.getColumnNamesInOrder()) {
-                            xml.print(out, "<graph-col-names");
-                            saveColumnIdentifier(out, colIdentifier, "");
-                            printAttribute("data-type", colIdentifier.getDataType().name());
-                            saveColumnIdentifier(out, colIdentifier.getXAxisIdentifier(), "x-axis-");
-                            xml.niprintln(out, "/>");
-                        }
-                        xml.indent--;
-                        xml.println(out, "</graph-col-names-in-order>");
-                        xml.println(out, "<missing-identifiers>");
-                        xml.indent++;
-                        for (ColumnIdentifier identifier : graphRenderer.getMissingIdentifiers()) {
-                            xml.print(out, "<missing-identifier");
-                            saveColumnIdentifier(out, identifier, "");
-                            xml.niprintln(out, "/>");
-                        }
-                        xml.indent--;
-                        xml.println(out, "</missing-identifiers>");
-						xml.indent--;
-						xml.println(out, "</graph-renderer>");
+						ChartRenderer chartRenderer = (ChartRenderer) box.getContentRenderer();
+						xml.print(out, "<chart-renderer");
+						printAttribute("name", chartRenderer.getName());
+						printAttribute("uuid", chartRenderer.getUUID());
+						printAttribute("chart-uuid", chartRenderer.getChart().getUUID());
+						xml.println(out, " />");
+						
 					} else if (box.getContentRenderer() instanceof CellSetRenderer) {
 					    CellSetRenderer renderer = (CellSetRenderer) box.getContentRenderer();
 					    xml.print(out, "<cell-set-renderer");
@@ -555,6 +530,48 @@ public class WorkspaceXMLDAO {
 		
 		xml.indent--;
 		xml.println(out, "</layout>");
+	}
+	
+	private void saveChart(Chart chart) {
+	    xml.print(out, "<chart ");
+        printAttribute("name", chart.getName());
+        printAttribute("uuid", chart.getUUID());
+        printAttribute("y-axis-name", chart.getYaxisName());
+        printAttribute("x-axis-name" , chart.getXaxisName());
+        if (chart.getType() != null) {
+            printAttribute("type", chart.getType().name());
+        }
+        if (chart.getLegendPosition() != null) {
+            printAttribute("legend-position", chart.getLegendPosition().name());
+        }
+        if (chart.getQuery() != null) {
+            printAttribute("query-id", chart.getQuery().getUUID());
+        }
+        xml.niprintln(out, ">");
+        xml.indent++;
+        xml.println(out, "<chart-col-names-in-order>");
+        xml.indent++;
+        for (ColumnIdentifier colIdentifier : chart.getColumnNamesInOrder()) {
+            xml.print(out, "<chart-col-names");
+            saveColumnIdentifier(out, colIdentifier, "");
+            printAttribute("data-type", colIdentifier.getDataType().name());
+            saveColumnIdentifier(out, colIdentifier.getXAxisIdentifier(), "x-axis-");
+            xml.niprintln(out, "/>");
+        }
+        xml.indent--;
+        xml.println(out, "</chart-col-names-in-order>");
+        xml.println(out, "<missing-identifiers>");
+        xml.indent++;
+        for (ColumnIdentifier identifier : chart.getMissingIdentifiers()) {
+            xml.print(out, "<missing-identifier");
+            saveColumnIdentifier(out, identifier, "");
+            xml.niprintln(out, "/>");
+        }
+        xml.indent--;
+        xml.println(out, "</missing-identifiers>");
+
+        xml.indent--;
+        xml.println(out, "</chart>");
 	}
 	
 	private void saveWabitImage(WabitImage wabitImage) {

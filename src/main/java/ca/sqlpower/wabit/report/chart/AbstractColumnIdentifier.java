@@ -23,7 +23,6 @@ import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.report.ChartRenderer.DataTypeSeries;
 
 import com.rc.retroweaver.runtime.Collections;
 

@@ -64,6 +64,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.olap.Olap4jTreeModel;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
 
@@ -86,7 +87,7 @@ public class WorkspaceTreeModel implements TreeModel {
     private final List<FolderNode> folderList;
 
     /**
-     * This is the listener which listens for property change events o nthe tree
+     * This is the listener which listens for property change events on the tree.
      */
     private WabitTreeModelEventAdapter listener;
     
@@ -101,6 +102,7 @@ public class WorkspaceTreeModel implements TreeModel {
         this.folderList = new ArrayList<FolderNode>();
         folderList.add(new FolderNode(workspace, FolderType.CONNECTIONS));
         folderList.add(new FolderNode(workspace, FolderType.QUERIES));
+        folderList.add(new FolderNode(workspace, FolderType.CHARTS));
         folderList.add(new FolderNode(workspace, FolderType.IMAGES));
         folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
@@ -114,7 +116,7 @@ public class WorkspaceTreeModel implements TreeModel {
     public Object getChild(Object parentObject, int index) {
 		if (parentObject instanceof WabitWorkspace) {
 			return folderList.get(index);
-    	}  else if (parentObject instanceof FolderNode) {
+    	} else if (parentObject instanceof FolderNode) {
     		return ((FolderNode) parentObject).getChildren().get(index);
     	} else if (parentObject instanceof Layout) {
     		return  getLayoutsChildren(parentObject).get(index);
@@ -445,29 +447,35 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesRemoved(treeEvent);
 		}
 
-		/**
-		 * This method will get the correct 
-		 * @param e
-		 * 		This is the 
-		 * @param backupIndex
-		 * @return
-		 */
+        /**
+         * For each child type, rebases the child index of Workspace children to
+         * 0 because this tree model puts them in folders. The indices of other
+         * children are returned as-is.
+         * 
+         * @param e
+         *            A WabitEvent for either an added or removed child of any
+         *            WabitObject.
+         */
 		private int getCorrectIndex(WabitChildEvent e) {
 			int index = 0;
 			WabitObject wabitObject = e.getChild();
 
+			// Unfortunately, can't use WabitObject.childPositionOffset because
+			// MDX and SQL query objects are mixed in the same folder and therefore
+			// need the same offset.
+			
 			index += e.getIndex();
 			if (wabitObject instanceof WabitDataSource) return index;
-			
 			index -= (workspace.getConnections().size());
 			
 			if (wabitObject instanceof OlapQuery || wabitObject instanceof QueryCache) return index;
-			
 			index -= (workspace.getQueries().size()) + (workspace.getOlapQueries().size());
 			
-			if (wabitObject instanceof WabitImage) return index;
-			
-			index -= (workspace.getImages().size());
+            if (wabitObject instanceof Chart) return index;
+            index -= (workspace.getCharts().size());
+
+            if (wabitObject instanceof WabitImage) return index;
+            index -= (workspace.getImages().size());
 			
 			if (wabitObject instanceof Layout) return index;
 			

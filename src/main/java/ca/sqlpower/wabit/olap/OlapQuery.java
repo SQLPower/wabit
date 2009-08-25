@@ -299,7 +299,6 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	 *             for another call to execute() to complete.
 	 */
     public CellSet execute() throws OlapException, QueryInitializationException, InterruptedException {
-        logger.debug("Executing MDX query...", new Exception("Nothing wrong; just a stack trace"));
         try {
             executionSemaphore.acquire();
             try {

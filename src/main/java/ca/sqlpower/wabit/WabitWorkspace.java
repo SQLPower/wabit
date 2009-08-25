@@ -41,6 +41,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.chart.Chart;
 
 /**
  * The WabitWorkspace is the root WabitObject of a WabitSession. It directly
@@ -86,6 +87,11 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private final List<WabitImage> images = new ArrayList<WabitImage>();
     
     /**
+     * The charts in this workspace.
+     */
+    private final List<Chart> charts = new ArrayList<Chart>();
+    
+    /**
      * TODO: These listeners are never fired at current as they are only used for
      * DS Type undo events in the library currently. These listeners are unused
      * until the workspace supports changing DS Types or other undoable edits are
@@ -119,6 +125,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         allChildren.addAll(dataSources);
         allChildren.addAll(queries);
         allChildren.addAll(olapQueries);
+        allChildren.addAll(charts);
         allChildren.addAll(images);
         allChildren.addAll(layouts);
         return allChildren;
@@ -252,7 +259,33 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public List<WabitImage> getImages() {
         return Collections.unmodifiableList(images);
     }
+
+    public void addChart(Chart chart) {
+        int index = charts.size();
+        charts.add(index, chart);
+        chart.setParent(this);
+        fireChildAdded(Chart.class, chart, index);
+        setEditorPanelModel(chart);
+    }
     
+    public boolean removeChart(Chart chart) {
+        int index = charts.indexOf(chart);
+        if (index != -1) {
+            charts.remove(chart);
+            fireChildRemoved(Chart.class, chart, index);
+            if (editorPanelModel == chart) {
+                setEditorPanelModel(this);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    public List<Chart> getCharts() {
+        return Collections.unmodifiableList(charts);
+    }
+
     public int childPositionOffset(Class<? extends WabitObject> childType) {
         int offset = 0;
 
@@ -266,9 +299,12 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         if (childType == OlapQuery.class) return offset;
         offset += olapQueries.size();
         
+        if (childType == Chart.class) return offset;
+        offset += charts.size();
+        
         if (childType == WabitImage.class) return offset;
         offset += images.size();
-        
+
         if (childType == Layout.class) return offset;
         
         throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
@@ -518,4 +554,50 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         return new ArrayList<WabitObject>(getChildren());
     }
 
+    /**
+     * Locates the WabitObject inside this workspace which has the given UUID,
+     * returning null if the item is not found. Throws ClassCastException if in
+     * item is found, but it is not of the expected type.
+     * 
+     * @param <T>
+     *            The expected type of the item
+     * @param uuid
+     *            The UUID of the item
+     * @param expectedType
+     *            The type of the item with the given UUID. If you are uncertain
+     *            what type of object it is, or you do not want a
+     *            ClassCastException in case the item is of the wrong type, use
+     *            <tt>WabitObject.class</tt> for this parameter.
+     * @return The item, or null if no item with the given UUID exists in this
+     *         workspace.
+     */
+    public <T extends WabitObject> T findByUuid(String uuid, Class<T> expectedType) {
+        return expectedType.cast(findRecursively(this, uuid));
+    }
+
+    /**
+     * Performs a preorder traversal of the given WabitObject and its
+     * descendants, returning the first WabitObject having the given UUID.
+     * Returns null if no such WabitObject exists under startWith.
+     * 
+     * @param startWith
+     *            The WabitObject to start the search with.
+     * @param uuid
+     *            The UUID to search for
+     * @return the first WabitObject having the given UUID in a preorder
+     *         traversal of startWith and its descendants. Returns null if no
+     *         such WabitObject exists.
+     */
+    private static WabitObject findRecursively(WabitObject startWith, String uuid) {
+        if (uuid.equals(startWith.getUUID())) {
+            return startWith;
+        }
+        for (WabitObject child : startWith.getChildren()) {
+            WabitObject found = findRecursively(child, uuid);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
+    }
 }

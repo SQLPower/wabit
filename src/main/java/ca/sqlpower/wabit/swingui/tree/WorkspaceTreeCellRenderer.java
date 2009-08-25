@@ -56,7 +56,8 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
-import ca.sqlpower.wabit.report.ChartRenderer.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.olap.Olap4JTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
@@ -128,8 +129,17 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(WabitIcons.REPORT_ICON_16);
             } else if (wo instanceof ContentBox) {
                 ContentBox cb = (ContentBox) wo;
-                ReportContentRenderer cbChild = (ReportContentRenderer) cb.getChildren().get(0);
-                if (cbChild instanceof ResultSetRenderer) {
+                final ReportContentRenderer cbChild;
+                if (cb.getChildren().size() > 0) {
+                    cbChild = (ReportContentRenderer) cb.getChildren().get(0);
+                } else {
+                    cbChild = null;
+                }
+                
+                if (cbChild == null) {
+                    r.setIcon(BOX_ICON);
+                    r.setText("Empty content box");
+                } else if (cbChild instanceof ResultSetRenderer) {
                 	setupForQueryCache((WorkspaceTreeCellRenderer) r, ((ResultSetRenderer) cbChild).getQuery());
                 } else if (cbChild instanceof CellSetRenderer) {
                 	r.setIcon(OLAP_QUERY_ICON);
@@ -138,22 +148,23 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                     setupForWabitImage((WorkspaceTreeCellRenderer) r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {
                 	ChartRenderer chartRenderer = (ChartRenderer) cbChild;
-                	ExistingChartTypes chartType = chartRenderer.getChartType();
+                	Chart chart = chartRenderer.getChart();
+                	ExistingChartTypes chartType = chart.getType();
                 	if (chartType.equals(ExistingChartTypes.BAR)) {
-                		r.setIcon(CHART_BAR_ICON);
+                	    r.setIcon(CHART_BAR_ICON);
                 	} else if (chartType.equals(ExistingChartTypes.CATEGORY_LINE)) {
-                		r.setIcon(CHART_LINE_ICON);
+                	    r.setIcon(CHART_LINE_ICON);
                 	} else if (chartType.equals(ExistingChartTypes.SCATTER)) {
-                		r.setIcon(CHART_SCATTER_ICON);
+                	    r.setIcon(CHART_SCATTER_ICON);
                 	} else if (chartType.equals(ExistingChartTypes.LINE)) {
-                		r.setIcon(CHART_LINE_ICON);
+                	    r.setIcon(CHART_LINE_ICON);
                 	} else {
-                		//TODO when pie charts are added change this
-                		throw new UnsupportedOperationException("The pie chart icon needs to be added to the tree model");
-//                		r.setIcon(CHART_ICON); 
-//						r.setIcon(CHART_PIE_ICON);
+                	    //TODO when pie charts are added change this
+                	    throw new UnsupportedOperationException("The pie chart icon needs to be added to the tree model");
+                	    // r.setIcon(CHART_ICON); 
+                	    // r.setIcon(CHART_PIE_ICON);
                 	}
-					r.setText(chartRenderer.getQuery().getName());
+					r.setText(chart.getName());
                 } else if (cbChild instanceof Label) {
                 	r.setIcon(LABEL_ICON); 
 	                r.setText(((Label) cbChild).getText());

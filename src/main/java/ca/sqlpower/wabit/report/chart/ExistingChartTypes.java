@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * Copyright (c) 2009, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -17,25 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui;
+package ca.sqlpower.wabit.report.chart;
 
 /**
- * Classes that contain a mouse state should implement this interface.
+ * The types of charts this renderer can create.
  */
-public interface MouseState {
+public enum ExistingChartTypes {
+    BAR(DatasetTypes.CATEGORY),
+    CATEGORY_LINE(DatasetTypes.CATEGORY),
+    LINE(DatasetTypes.XY),
+    SCATTER(DatasetTypes.XY);
+    
+    private final DatasetTypes type;
 
-	/**
-	 * The states a mouse can be on the query pen.
-	 */
-	public enum MouseStates {
-		READY, 
-		CREATE_JOIN, 
-		CREATE_BOX, 
-		CREATE_HORIZONTAL_GUIDE, 
-		CREATE_VERTICAL_GUIDE, 
-	}
-	
-	public MouseStates getMouseState();
-	
-	public void setMouseState(MouseStates state);
+    private ExistingChartTypes(DatasetTypes type) {
+        this.type = type;
+    }
+
+    public DatasetTypes getType() {
+        return type;
+    }
 }

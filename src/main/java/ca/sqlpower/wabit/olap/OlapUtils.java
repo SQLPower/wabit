@@ -19,10 +19,14 @@
 
 package ca.sqlpower.wabit.olap;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.olap4j.Axis;
+import org.olap4j.CellSet;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
@@ -129,6 +133,28 @@ public class OlapUtils {
             modifiedMDXQuery.getAxes().put(axisEntry.getKey(), copiedAxis);
         }
         return modifiedMDXQuery;
+    }
+
+    /**
+     * Creates and populates an OlapResultSet from the given CellSet, which must
+     * not be null.
+     * 
+     * @param execute
+     * @return
+     * @throws RuntimeException
+     *             in the unlikely event that the OlapResultSet throws
+     *             SQLException while it's being populated.
+     * @see OlapResultSet
+     */
+    public static ResultSet toResultSet(@Nonnull CellSet cellSet) {
+        try {
+            OlapResultSet ors;
+            ors = new OlapResultSet();
+            ors.populate(cellSet);
+            return ors;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
