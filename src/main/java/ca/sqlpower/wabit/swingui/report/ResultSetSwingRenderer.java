@@ -400,7 +400,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
     }
 
     public void processEvent(PInputEvent event, int type) {
-        if (type == MouseEvent.MOUSE_MOVED) {
+    	if (type == MouseEvent.MOUSE_MOVED) {
             final double mouseXPos = event.getPositionRelativeTo(event.getPickedNode()).getX() - renderer.getParent().getX();
             if (renderer.defineColumnBeingDragged(mouseXPos)) {
                 reportLayoutPanel.getCursorManager().dragLineStarted();

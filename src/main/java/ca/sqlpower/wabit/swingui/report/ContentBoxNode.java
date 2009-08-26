@@ -51,8 +51,8 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PInputManager;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -68,15 +68,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
     private Color textColour = Color.BLACK;
 
-    private PInputEventListener inputHandler = new PBasicInputEventHandler() {
-        
-        @Override
-        public void processEvent(PInputEvent event, int type) {
-            super.processEvent(event, type);
-            if (swingRenderer != null) {
-            	swingRenderer.processEvent(event, type);
-            }
-        }
+    private PInputEventListener inputHandler = new PInputManager() {
         
         @Override
         public void mouseClicked(PInputEvent event) {
@@ -172,25 +164,37 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		
 		public void wabitChildAdded(WabitChildEvent e) {
 			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
-	        if (renderer instanceof CellSetRenderer) {
-	            swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
-	        } else if (renderer instanceof ResultSetRenderer) {
-	            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer, parentPanel);
-	        } else if (renderer instanceof ImageRenderer) {
-	            swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
-	        } else if (renderer instanceof ChartRenderer) {
-	            swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
-	        } else if (renderer instanceof Label) {
-	            swingRenderer = new SwingLabel((Label) renderer);
-	        } else if (renderer == null) {
-	            swingRenderer = null;
-	        } else {
-	            throw new IllegalStateException("Unknown renderer of type " + renderer.getClass() 
-	                    + ". The swing components of this renderer type are missing.");
-	        }
+	        setSwingContentRenderer(renderer);
+
 		}
+
 	};
     
+	/**
+	 * This method will set the {@link SwingContentRenderer} on this content box node
+	 * this should only really be used in the constructor because after that it will
+	 * add a listener on the content box to listen for changes to the contentrenderer
+	 */
+	private void setSwingContentRenderer(ReportContentRenderer renderer) {
+		if (renderer instanceof CellSetRenderer) {
+            swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
+        } else if (renderer instanceof ResultSetRenderer) {
+            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer, parentPanel);
+        } else if (renderer instanceof ImageRenderer) {
+            swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
+        } else if (renderer instanceof ChartRenderer) {
+            swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
+        } else if (renderer instanceof Label) {
+            swingRenderer = new SwingLabel((Label) renderer);
+        } else if (renderer == null) {
+            swingRenderer = null;
+        } else {
+            throw new IllegalStateException("Unknown renderer of type " + renderer.getClass() 
+                    + ". The swing components of this renderer type are missing.");
+        }
+        addInputEventListener(swingRenderer);
+	}
+	
 	private final ReportLayoutPanel parentPanel;
 	
     public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, ReportLayoutPanel parentPanel, ContentBox contentBox) {
@@ -200,11 +204,11 @@ public class ContentBoxNode extends PNode implements ReportNode {
         this.parentPanel = parentPanel;
         this.workspace = workspace;
         
+        setSwingContentRenderer(contentBox.getContentRenderer());
 		contentBox.addChildListener(contentRendererListener);
-        
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
-        addInputEventListener(inputHandler);
         contentBox.addPropertyChangeListener(modelChangeHandler);
+        addInputEventListener(inputHandler);
         updateBoundsFromContentBox();
 
     }

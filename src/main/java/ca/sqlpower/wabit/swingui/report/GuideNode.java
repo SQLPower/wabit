@@ -183,16 +183,19 @@ public class GuideNode extends PNode implements WabitNode {
         
         @Override
     	public void mouseClicked(PInputEvent e) {
+        	super.mouseClicked(e);
     		maybeShowPopup(e);
     	}
 
     	@Override
     	public void mousePressed(PInputEvent e) {
+    		super.mousePressed(e);
     		maybeShowPopup(e);
     	}
     	
     	@Override
-    	public void mouseReleased(PInputEvent e) {    		
+    	public void mouseReleased(PInputEvent e) {    	
+    		super.mouseReleased(e);
     		maybeShowPopup(e);
     	}
     	

@@ -101,8 +101,7 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
         }
         System.out.println("Guide is " + node);
         if (node instanceof ContentBoxNode) {
-        	canvas.getRoot().getDefaultInputManager().
-        		setKeyboardFocus(((ContentBoxNode) node).getInputHandler());
+        	super.select(node);
         }
     }
     
