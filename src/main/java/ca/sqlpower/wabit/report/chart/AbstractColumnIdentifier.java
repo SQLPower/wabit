@@ -33,15 +33,15 @@ import com.rc.retroweaver.runtime.Collections;
  */
 public abstract class AbstractColumnIdentifier extends AbstractWabitObject implements ColumnIdentifier {
     
-    private DataTypeSeries dataType;
+    private ColumnRole dataType;
     
     private ColumnIdentifier xAxisIdentifier;
     
     public AbstractColumnIdentifier() {
-        setDataType(DataTypeSeries.NONE);
+        setRoleInChart(ColumnRole.NONE);
     }
 
-    public DataTypeSeries getDataType() {
+    public ColumnRole getRoleInChart() {
         return dataType;
     }
 
@@ -49,8 +49,8 @@ public abstract class AbstractColumnIdentifier extends AbstractWabitObject imple
         return xAxisIdentifier;
     }
 
-    public void setDataType(DataTypeSeries dataType) {
-        DataTypeSeries oldType = this.dataType;
+    public void setRoleInChart(ColumnRole dataType) {
+        ColumnRole oldType = this.dataType;
         this.dataType = dataType;
         firePropertyChange("dataType", oldType, dataType);
     }

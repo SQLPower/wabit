@@ -554,7 +554,7 @@ public class WorkspaceXMLDAO {
         for (ColumnIdentifier colIdentifier : chart.getColumnNamesInOrder()) {
             xml.print(out, "<chart-col-names");
             saveColumnIdentifier(out, colIdentifier, "");
-            printAttribute("data-type", colIdentifier.getDataType().name());
+            printAttribute("data-type", colIdentifier.getRoleInChart().name());
             saveColumnIdentifier(out, colIdentifier.getXAxisIdentifier(), "x-axis-");
             xml.niprintln(out, "/>");
         }

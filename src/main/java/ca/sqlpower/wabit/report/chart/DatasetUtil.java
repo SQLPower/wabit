@@ -95,7 +95,7 @@ class DatasetUtil {
         
         List<String> seriesColumnNames = new ArrayList<String>();
         for (ColumnIdentifier identifier : columnNamesInOrder) {
-            if (identifier.getDataType().equals(DataTypeSeries.SERIES)) {
+            if (identifier.getRoleInChart().equals(ColumnRole.SERIES)) {
                 seriesColumnNames.add(((ColumnNameColumnIdentifier) identifier).getColumnName());
             }
         }
@@ -176,7 +176,7 @@ class DatasetUtil {
         for (int colPosition = 0; colPosition < columnNamesInOrder.size(); colPosition++) {
             ColumnIdentifier identifier = columnNamesInOrder.get(colPosition);
             if (!(identifier instanceof PositionColumnIdentifier)) continue; //Only positions can be used as series, not hierarchies, as they are numeric.
-            if (!identifier.getDataType().equals(DataTypeSeries.SERIES)) continue;
+            if (!identifier.getRoleInChart().equals(ColumnRole.SERIES)) continue;
             
             seriesPositions.add(((PositionColumnIdentifier) identifier).getPosition(cellSet).getOrdinal());
             seriesNames.add(identifier.getName());
@@ -221,7 +221,7 @@ class DatasetUtil {
                 = ((PositionColumnIdentifier) identifier);
             PositionColumnIdentifier xAxisColIdentifier 
                 = ((PositionColumnIdentifier) identifier.getXAxisIdentifier());
-            if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+            if (!identifier.getRoleInChart().equals(ColumnRole.SERIES)
                     || xAxisColIdentifier == null) continue;
             List<String> memberNames = new ArrayList<String>();
             for (Member member : seriesColIdentifier.getPosition(cellSet).getMembers()) {
@@ -270,7 +270,7 @@ class DatasetUtil {
             for (ColumnIdentifier identifier : columnNamesInOrder) {
                 final ColumnNameColumnIdentifier xAxisIdentifier = 
                     (ColumnNameColumnIdentifier) identifier.getXAxisIdentifier();
-                if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+                if (!identifier.getRoleInChart().equals(ColumnRole.SERIES)
                         || xAxisIdentifier == null) continue;
                 int columnType = resultSet.getMetaData().getColumnType(
                         resultSet.findColumn(
@@ -292,7 +292,7 @@ class DatasetUtil {
                     ((ColumnNameColumnIdentifier) identifier);
                 ColumnNameColumnIdentifier xAxisColIdentifier =
                     ((ColumnNameColumnIdentifier) identifier.getXAxisIdentifier());
-                if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+                if (!identifier.getRoleInChart().equals(ColumnRole.SERIES)
                         || xAxisColIdentifier == null) continue;
                 XYSeries newSeries = new XYSeries(seriesColIdentifier.getColumnName());
                 try {
@@ -314,7 +314,7 @@ class DatasetUtil {
                     ((ColumnNameColumnIdentifier) identifier);
                 ColumnNameColumnIdentifier xAxisColIdentifier = 
                     ((ColumnNameColumnIdentifier) identifier.getXAxisIdentifier());
-                if (!identifier.getDataType().equals(DataTypeSeries.SERIES)
+                if (!identifier.getRoleInChart().equals(ColumnRole.SERIES)
                         || xAxisColIdentifier == null) continue;
                 TimePeriodValues newSeries = new TimePeriodValues(seriesColIdentifier.getColumnName());
                 try {

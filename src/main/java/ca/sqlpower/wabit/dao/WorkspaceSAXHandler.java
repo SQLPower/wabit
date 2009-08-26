@@ -100,7 +100,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.DataTypeSeries;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
@@ -697,7 +697,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 if (aname.equals("name")) {
                     //already handled
                 } else if (aname.equals("data-type")) {
-                    colIdentifier.setDataType(DataTypeSeries.valueOf(aval));
+                    colIdentifier.setRoleInChart(ColumnRole.valueOf(aval));
                 } else if (aname.matches("x-axis-.*")) {
                     ColumnIdentifier xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
                     colIdentifier.setXAxisIdentifier(xAxisIdentifier);

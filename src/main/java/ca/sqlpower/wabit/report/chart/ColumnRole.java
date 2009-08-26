@@ -23,7 +23,7 @@ package ca.sqlpower.wabit.report.chart;
  * This enum contains the values that each column can be defined as
  * for laying out a chart.
  */
-public enum DataTypeSeries {
+public enum ColumnRole {
     NONE,
     CATEGORY,
     SERIES

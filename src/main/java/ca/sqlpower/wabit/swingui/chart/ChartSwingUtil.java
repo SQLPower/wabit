@@ -46,7 +46,7 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.DataTypeSeries;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetTypes;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
@@ -155,9 +155,9 @@ public class ChartSwingUtil {
         boolean containsCategory = false;
         boolean containsSeries = false;
         for (ColumnIdentifier col : columnNamesInOrder) {
-            if (col.getDataType().equals(DataTypeSeries.CATEGORY)) {
+            if (col.getRoleInChart().equals(ColumnRole.CATEGORY)) {
                 containsCategory = true;
-            } else if (col.getDataType().equals(DataTypeSeries.SERIES)) {
+            } else if (col.getRoleInChart().equals(ColumnRole.SERIES)) {
                 containsSeries = true;
             }
         }
@@ -267,7 +267,7 @@ public class ChartSwingUtil {
         
         boolean containsSeries = false;
         for (ColumnIdentifier identifier : columnNamesInOrder) {
-            if (identifier.getDataType().equals(DataTypeSeries.SERIES)) {
+            if (identifier.getRoleInChart().equals(ColumnRole.SERIES)) {
                 containsSeries = true;
                 break;
             }

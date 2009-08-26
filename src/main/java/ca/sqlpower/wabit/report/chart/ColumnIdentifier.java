@@ -22,8 +22,9 @@ package ca.sqlpower.wabit.report.chart;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
- * This object identifies a single column in a table being used to define a chart.
- * Each column should be able to be uniquely identified.
+ * Combines the identity of a single column in a result set which being used to
+ * define a chart with its role in that chart. Each column in the result set can
+ * be uniquely identified by a ColumnIdentifier.
  */
 public interface ColumnIdentifier extends WabitObject {
 
@@ -40,27 +41,28 @@ public interface ColumnIdentifier extends WabitObject {
     /**
      * Returns the data type this column is being used as. If the column is
      * being used in a chart that uses a category dataset this value can be set
-     * to {@link DataTypeSeries#CATEGORY}.
+     * to {@link ColumnRole#CATEGORY}.
      */
-    DataTypeSeries getDataType();
+    ColumnRole getRoleInChart();
 
     /**
      * Defines how this column is used in the query. If the column is being used
      * in a chart that uses a category dataset the given value can be
-     * {@link DataTypeSeries#CATEGORY}.
+     * {@link ColumnRole#CATEGORY}.
      */
-    void setDataType(DataTypeSeries dataType);
+    void setRoleInChart(ColumnRole dataType);
 
     /**
      * Returns the column that is used as the x values of this column
-     * identifier. This only needs to be set for XY datasets and if the data
-     * type is {@link DataTypeSeries#SERIES}.
+     * identifier. This only needs to be set for XY datasets and if the column's
+     * role is {@link ColumnRole#SERIES}.
      */
     ColumnIdentifier getXAxisIdentifier();
-    
+
     /**
-     * Defines the column to use as X axis values when this column is used
-     * as a series in an XY dataset.
+     * Defines the column to use as X axis values when this column is used as a
+     * series in an XY dataset. This only needs to be set for XY datasets and if
+     * the column's role is {@link ColumnRole#SERIES}.
      */
     void setXAxisIdentifier(ColumnIdentifier xAxisIdentifier);
 }

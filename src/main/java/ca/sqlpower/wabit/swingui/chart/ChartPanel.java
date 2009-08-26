@@ -75,7 +75,7 @@ import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.DataTypeSeries;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
@@ -110,7 +110,7 @@ public class ChartPanel implements WabitPanel {
                     JComboBox sourceCombo = (JComboBox) e.getSource();
                     ColumnIdentifier identifier = columnNamesInOrder.get(tableHeader.
                             getColumnModel().getColumnIndexAtX(sourceCombo.getX()));
-                    identifier.setDataType((DataTypeSeries) e.getItem());
+                    identifier.setRoleInChart((ColumnRole) e.getItem());
                     tableHeader.repaint();
                     updateChartPreview();
                 }
@@ -193,7 +193,7 @@ public class ChartPanel implements WabitPanel {
                 final int column) {
             Component defaultComponent = defaultTableCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             final JPanel newHeader = new JPanel(new BorderLayout());
-            final JComboBox dataTypeComboBox = new JComboBox(DataTypeSeries.values());
+            final JComboBox dataTypeComboBox = new JComboBox(ColumnRole.values());
             try {
                 String columnName = (String) columnNamesInOrder.get(column).getUniqueIdentifier();
                 int rsColumnIndex = 0;
@@ -204,15 +204,15 @@ public class ChartPanel implements WabitPanel {
                     }
                 }
                 if (!SQL.isNumeric(rs.getMetaData().getColumnType(rsColumnIndex))) {
-                    dataTypeComboBox.removeItem(DataTypeSeries.SERIES);
+                    dataTypeComboBox.removeItem(ColumnRole.SERIES);
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
             columnToComboBox.put(new Integer(column), dataTypeComboBox);
-            final DataTypeSeries defaultDataTypeSeries = columnNamesInOrder.get(column).getDataType();
+            final ColumnRole defaultDataTypeSeries = columnNamesInOrder.get(column).getRoleInChart();
             if (defaultDataTypeSeries == null) {
-                dataTypeComboBox.setSelectedItem(DataTypeSeries.NONE);
+                dataTypeComboBox.setSelectedItem(ColumnRole.NONE);
             } else {
                 dataTypeComboBox.setSelectedItem(defaultDataTypeSeries);
             }
@@ -230,8 +230,7 @@ public class ChartPanel implements WabitPanel {
     }
 
     /**
-     * This table cell renderer is used to make headers for the result set
-     * table for line and scatter charts. This is for relational queries only.
+     * Makes headers for the result set table for line and scatter charts.
      */
     private class XYChartRendererCellRenderer implements CleanupTableCellRenderer {
 
@@ -246,8 +245,8 @@ public class ChartPanel implements WabitPanel {
                     JComboBox sourceCombo = (JComboBox) e.getSource();
                     final int columnIndexAtX = tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX());
                     ColumnIdentifier identifier = columnNamesInOrder.get(columnIndexAtX);
-                    identifier.setDataType((DataTypeSeries) e.getItem());
-                    if (((DataTypeSeries) e.getItem()) == DataTypeSeries.NONE) {
+                    identifier.setRoleInChart((ColumnRole) e.getItem());
+                    if (((ColumnRole) e.getItem()) == ColumnRole.NONE) {
                         identifier.setXAxisIdentifier(null);
                         columnToXAxisComboBox.remove(columnIndexAtX);
                     }
@@ -283,7 +282,7 @@ public class ChartPanel implements WabitPanel {
          * lets us know which combo box to use to display to a user when a
          * header is clicked.
          */
-        private final Map<Integer, JComboBox> columnToDataTypeSeriesComboBox = new HashMap<Integer, JComboBox>();
+        private final Map<Integer, JComboBox> columnToRoleComboBox = new HashMap<Integer, JComboBox>();
 
         /**
          * This map tracks which combo boxes are in which position for defining
@@ -323,7 +322,7 @@ public class ChartPanel implements WabitPanel {
                 final JComboBox dataTypeComboBox;
                 int yPosition = 0;
                 if (e.getY() < new JComboBox().getPreferredSize().getHeight()) {
-                    dataTypeComboBox = columnToDataTypeSeriesComboBox.get(column);
+                    dataTypeComboBox = columnToRoleComboBox.get(column);
                 } else if (e.getY() < new JComboBox().getPreferredSize().getHeight() * 2) {
                     dataTypeComboBox = columnToXAxisComboBox.get(column);
                     if (dataTypeComboBox != null) {
@@ -368,8 +367,8 @@ public class ChartPanel implements WabitPanel {
             Component defaultComponent = defaultTableCellRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             final JPanel newHeader = new JPanel(new BorderLayout());
             newHeader.add(defaultComponent, BorderLayout.SOUTH);
-            final JComboBox dataTypeComboBox = new JComboBox(DataTypeSeries.values());
-            dataTypeComboBox.removeItem(DataTypeSeries.CATEGORY);
+            final JComboBox dataTypeComboBox = new JComboBox(ColumnRole.values());
+            dataTypeComboBox.removeItem(ColumnRole.CATEGORY);
             try {
                 String columnName = (String) columnNamesInOrder.get(column).getUniqueIdentifier();
                 int rsColumnIndex = 0;
@@ -388,12 +387,12 @@ public class ChartPanel implements WabitPanel {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-            columnToDataTypeSeriesComboBox.put(new Integer(column), dataTypeComboBox);
-            final DataTypeSeries defaultDataTypeSeries = columnNamesInOrder.get(column).getDataType();
-            if (defaultDataTypeSeries == null) {
-                dataTypeComboBox.setSelectedItem(DataTypeSeries.NONE);
+            columnToRoleComboBox.put(new Integer(column), dataTypeComboBox);
+            final ColumnRole currentRole = columnNamesInOrder.get(column).getRoleInChart();
+            if (currentRole == null) {
+                dataTypeComboBox.setSelectedItem(ColumnRole.NONE);
             } else {
-                dataTypeComboBox.setSelectedItem(defaultDataTypeSeries);
+                dataTypeComboBox.setSelectedItem(currentRole);
             }
             List<String> numericAndDateCols = new ArrayList<String>();
             for (ColumnIdentifier identifier : columnNamesInOrder) {
@@ -408,20 +407,26 @@ public class ChartPanel implements WabitPanel {
                     numericAndDateCols.add(col);
                 }
             }
+
             final JComboBox comboBoxForXValues = new JComboBox(numericAndDateCols.toArray());
-            if (defaultDataTypeSeries == DataTypeSeries.SERIES) {
-                comboBoxForXValues.setSelectedItem(columnNamesInOrder.get(column).
-                        getXAxisIdentifier());
+            if (currentRole == ColumnRole.SERIES) {
+                ColumnIdentifier xAxis = columnNamesInOrder.get(column).getXAxisIdentifier();
+                String columnName;
+                if (xAxis != null) {
+                    columnName = ((ColumnNameColumnIdentifier) xAxis).getColumnName();
+                } else {
+                    columnName = null;
+                }
+                comboBoxForXValues.setSelectedItem(columnName);
                 newHeader.add(comboBoxForXValues, BorderLayout.CENTER);
-
                 columnToXAxisComboBox.put(new Integer(column), comboBoxForXValues);
-
                 comboBoxForXValues.addItemListener(xAxisValuesChangeListener);
             } else {
                 JLabel emptyLabel = new JLabel();
                 emptyLabel.setPreferredSize(new Dimension(0, (int) dataTypeComboBox.getPreferredSize().getHeight()));
                 newHeader.add(emptyLabel, BorderLayout.CENTER);
             }
+            
             dataTypeComboBox.addItemListener(dataTypeSeriesChangeListener);
             newHeader.add(dataTypeComboBox, BorderLayout.NORTH);
 
@@ -738,7 +743,7 @@ public class ChartPanel implements WabitPanel {
                 throw new RuntimeException(e1);
             }
             List<ColumnIdentifier> currentColumnNamesInOrder = new ArrayList<ColumnIdentifier>();
-            Map<ColumnIdentifier, DataTypeSeries> currentNameToType = new HashMap<ColumnIdentifier, DataTypeSeries>();
+            Map<ColumnIdentifier, ColumnRole> currentNameToType = new HashMap<ColumnIdentifier, ColumnRole>();
             for (ColumnIdentifier identifier : chart.getColumnNamesInOrder()) {
                 if (columnNamesInOrder.contains(identifier)) {
                     currentColumnNamesInOrder.add(identifier);
@@ -747,7 +752,7 @@ public class ChartPanel implements WabitPanel {
             for (ColumnIdentifier identifier : columnNamesInOrder) {
                 if (!chart.getColumnNamesInOrder().contains(identifier)) {
                     currentColumnNamesInOrder.add(identifier);
-                    currentNameToType.put(identifier, DataTypeSeries.NONE);
+                    currentNameToType.put(identifier, ColumnRole.NONE);
                 }
             }
 

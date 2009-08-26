@@ -150,7 +150,7 @@ public class Chart extends AbstractWabitObject {
             }
             List<ColumnIdentifier> positionColumnsInUse = new ArrayList<ColumnIdentifier>();
             for (ColumnIdentifier identifier : columnNamesInOrder) {
-                if (identifier.getDataType() != DataTypeSeries.NONE 
+                if (identifier.getRoleInChart() != ColumnRole.NONE 
                         && identifier instanceof PositionColumnIdentifier) {
                     positionColumnsInUse.add(identifier);
                 }
@@ -502,7 +502,7 @@ public class Chart extends AbstractWabitObject {
     public List<ColumnIdentifier> findCategoryColumns() {
         List<ColumnIdentifier> categoryColumnNames = new ArrayList<ColumnIdentifier>();
         for (ColumnIdentifier identifier : columnNamesInOrder) {
-            if (identifier.getDataType().equals(DataTypeSeries.CATEGORY)) {
+            if (identifier.getRoleInChart().equals(ColumnRole.CATEGORY)) {
                 categoryColumnNames.add(identifier);
             }
         }

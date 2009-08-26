@@ -73,8 +73,8 @@ public class DatasetUtilTest extends TestCase {
         final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
-        categoryIdentifier.setDataType(DataTypeSeries.CATEGORY);
-        seriesIdentifier.setDataType(DataTypeSeries.SERIES);
+        categoryIdentifier.setRoleInChart(ColumnRole.CATEGORY);
+        seriesIdentifier.setRoleInChart(ColumnRole.SERIES);
         List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
         categoryColumnIdentifiers.add(categoryIdentifier);
         CategoryDataset dataset = DatasetUtil.createCategoryDataset(columnNamesInOrder, rs, categoryColumnIdentifiers);
@@ -115,9 +115,9 @@ public class DatasetUtilTest extends TestCase {
         final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
-        categoryIdentifier.setDataType(DataTypeSeries.CATEGORY);
-        category2Identifier.setDataType(DataTypeSeries.CATEGORY);
-        seriesIdentifier.setDataType(DataTypeSeries.SERIES);
+        categoryIdentifier.setRoleInChart(ColumnRole.CATEGORY);
+        category2Identifier.setRoleInChart(ColumnRole.CATEGORY);
+        seriesIdentifier.setRoleInChart(ColumnRole.SERIES);
         List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
         categoryColumnIdentifiers.add(categoryIdentifier);
         categoryColumnIdentifiers.add(category2Identifier);
