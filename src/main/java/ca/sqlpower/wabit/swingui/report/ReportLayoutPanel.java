@@ -43,6 +43,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -166,66 +167,44 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			}
 			
 			for (WabitObject wabitObject : wabitDroppings) {
+				 ContentBox contentBox = new ContentBox();
+				 ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
+			                ReportLayoutPanel.this, contentBox);
+				 
+		        int width = 0;
+		        int height = 0;
+	        	height = (int) (pageNode.getHeight() / 10);
+	        	width = (int) (pageNode.getWidth() / 10);
+
 			    if (wabitObject instanceof QueryCache) {
 			        QueryCache queryCache = (QueryCache) wabitObject;
-			        ContentBox contentBox = new ContentBox();
 			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
 			        contentBox.setContentRenderer(rsRenderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
-			                session.getWorkspace(), ReportLayoutPanel.this, contentBox);
-			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-			                (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
-			                pageNode.getHeight() / 10);
-			        pageNode.addChild(newCBNode);
 			    } else if (wabitObject instanceof OlapQuery) {
 			        OlapQuery olapQuery = (OlapQuery) wabitObject;
-			        ContentBox contentBox = new ContentBox();
 			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
 			        contentBox.setContentRenderer(renderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame,
-			                session.getWorkspace(), ReportLayoutPanel.this, contentBox);
-                    newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-                            (report.getPage().getRightMarginOffset() - report.getPage().getLeftMarginOffset()) / 2,
-                            pageNode.getHeight() / 10);
-                    pageNode.addChild(newCBNode);
-                    
                 } else if (wabitObject instanceof Chart) {
                     Chart chart = (Chart) wabitObject;
                     ChartRenderer renderer = new ChartRenderer(chart);
-                    ContentBox contentBox = new ContentBox();
                     contentBox.setContentRenderer(renderer);
-                    ContentBoxNode newCBNode = new ContentBoxNode(
-                            parentFrame, session.getWorkspace(), 
-                            ReportLayoutPanel.this, contentBox);
-                    newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-                            (int) (pageNode.getWidth() / 10), (int) (pageNode.getHeight() / 10));
-                    pageNode.addChild(newCBNode);
-                    
                 } else if (wabitObject instanceof WabitImage) {
 			        WabitImage image = (WabitImage) wabitObject;
-			        ContentBox contentBox = new ContentBox();
 			        ImageRenderer renderer = new ImageRenderer();
 			        renderer.setImage(image);
-			        renderer.setName(image.getName());
 			        contentBox.setContentRenderer(renderer);
-			        ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
-			                ReportLayoutPanel.this, contentBox);
-			        int width;
-			        int height;
+			        
 			        if (image.getImage() != null) {
 			        	height = image.getImage().getHeight(null);
 			        	width = image.getImage().getWidth(null);
-			        } else {
-			        	//arbitrary values to make an empty image content box.
-			        	height = (int) (pageNode.getHeight() / 10);
-			        	width = (int) (pageNode.getWidth() / 10);
 			        }
-			        newCBNode.setBounds(dtde.getLocation().getX(), dtde.getLocation().getY(),
-			                width, height);
-			        pageNode.addChild(newCBNode);
 			    } else {
 			        throw new IllegalStateException("Unknown item dragged into the report layout. Object was " + wabitObject.getClass());
 			    }
+			    
+			    Point2D location = canvas.getCamera().localToView(dtde.getLocation());
+		        newCBNode.setBounds(location.getX(), location.getY(), height, width);
+		        pageNode.addChild(newCBNode);
 			}
 			
 			dtde.dropComplete(true);
@@ -347,7 +326,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         };
 		
         canvas.getActionMap().put(addLabelAction.getClass(), addLabelAction);
-		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_FOCUSED);
+		InputMap inputMap = canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		inputMap.put(KeyStroke.getKeyStroke('b'), addLabelAction.getClass());
 		
 		addLabelAction.putValue(Action.SHORT_DESCRIPTION, "Add content box");

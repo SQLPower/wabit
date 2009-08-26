@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui.report;
 
 import javax.swing.JFrame;
 
-import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Label;
@@ -54,30 +53,31 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 		if (event.isRightMouseButton()) {
 			panel.setMouseState(MouseStates.READY);
 			panel.getCursorManager().placeModeFinished();
-		} else if (panel.getMouseState().equals(MouseStates.CREATE_LABEL)) {
-			ContentBox contentBox = new ContentBox();
-			Label label = new Label("New Content Box");
-			contentBox.setContentRenderer(label);
-			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), panel, contentBox);
-			Page page = panel.getReport().getPage();
-			newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
-			panel.getPageNode().addChild(newCBNode);
-		} else if (panel.getMouseState().equals(MouseStates.CREATE_BOX)) {
-			ContentBox contentBox = new ContentBox();
-			ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), panel, contentBox);
-			Page page = panel.getReport().getPage();
-			newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
-			panel.getPageNode().addChild(newCBNode);
-		} else if (panel.getMouseState().equals(MouseStates.CREATE_HORIZONTAL_GUIDE)) {
-			Guide tmpGuide = new Guide(Axis.HORIZONTAL, (int)event.getPosition().getY());
-			panel.getPageNode().getModel().addGuide(tmpGuide);
-			panel.getPageNode().addChild(new GuideNode(tmpGuide));
-		}  else if (panel.getMouseState().equals(MouseStates.CREATE_VERTICAL_GUIDE)) {
-			Guide tmpGuide = new Guide(Axis.VERTICAL, (int)event.getPosition().getX());
-			panel.getPageNode().getModel().addGuide(tmpGuide);
-			panel.getPageNode().addChild(new GuideNode(tmpGuide));
+		} else {
+			
+			if (panel.getMouseState().equals(MouseStates.CREATE_LABEL) || panel.getMouseState().equals(MouseStates.CREATE_BOX)) {
+				ContentBox contentBox = new ContentBox();
+				ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), panel, contentBox);
+				
+				if (panel.getMouseState().equals(MouseStates.CREATE_LABEL)) {
+					Label label = new Label("New Content Box");
+					contentBox.setContentRenderer(label);
+				}
+				
+				Page page = panel.getReport().getPage();
+				newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
+				panel.getPageNode().addChild(newCBNode);
+			} else if (panel.getMouseState().equals(MouseStates.CREATE_HORIZONTAL_GUIDE)) {
+				Guide tmpGuide = new Guide(Axis.HORIZONTAL, (int)event.getPosition().getY());
+				panel.getPageNode().getModel().addGuide(tmpGuide);
+				panel.getPageNode().addChild(new GuideNode(tmpGuide));
+			}  else if (panel.getMouseState().equals(MouseStates.CREATE_VERTICAL_GUIDE)) {
+				Guide tmpGuide = new Guide(Axis.VERTICAL, (int)event.getPosition().getX());
+				panel.getPageNode().getModel().addGuide(tmpGuide);
+				panel.getPageNode().addChild(new GuideNode(tmpGuide));
+			}
+			panel.setMouseState(MouseStates.READY);
+			panel.getCursorManager().placeModeFinished();
 		}
-		panel.setMouseState(MouseStates.READY);
-		panel.getCursorManager().placeModeFinished();
 	}
 }

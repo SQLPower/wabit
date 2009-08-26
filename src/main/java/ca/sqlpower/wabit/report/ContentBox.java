@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
@@ -88,8 +87,7 @@ public class ContentBox extends AbstractWabitObject {
 	};
     
     public ContentBox() {
-        // This is just to initialize this content box's name
-        setContentRenderer(null);
+        setName("Empty Content Box");
     }
     
     /**
@@ -153,18 +151,16 @@ public class ContentBox extends AbstractWabitObject {
         this.contentRenderer = contentRenderer;
         firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
         if (contentRenderer != null) {
-            if(getName() == null || getName().contains("Empty content box")) {
-            	if (getParent() != null) {
-					getParent().setUniqueName(ContentBox.this,
-							"Content from " + contentRenderer.getName());
-				} else {
-					setName("Content from " + contentRenderer.getName());
-				}
-            }
+        	if (getParent() != null) {
+        		getParent().setUniqueName(ContentBox.this,
+        				"Content from " + contentRenderer.getName());
+        	} else {
+        		setName("Content from " + contentRenderer.getName());
+        	}
             contentRenderer.setParent(this);
             WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, emptyChildListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
-        } else if (getName() == null){
+        } else {
             setName("Empty content box");
         }
     }
@@ -256,7 +252,9 @@ public class ContentBox extends AbstractWabitObject {
 	}
 	
 	public void cleanup() {
-		contentRenderer.cleanup();
+		if (contentRenderer != null) {
+			contentRenderer.cleanup();
+		}
 	}
 
     public List<WabitObject> getDependencies() {

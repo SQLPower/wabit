@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui.report;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
@@ -39,6 +38,8 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -133,8 +134,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	});
         	delete.setText("Delete");
         	menu.add(delete);
-        	Point2D position = e.getPosition();
         	final PCanvas canvas = (PCanvas) e.getComponent();
+        	Point2D position = e.getCanvasPosition();
 			menu.show(canvas, (int) position.getX(), (int) position.getY());
         }
         
@@ -157,30 +158,49 @@ public class ContentBoxNode extends PNode implements ReportNode {
      * This {@link ResultSetRenderer} compliment will handle operations on the
      * renderer that are swing specific.
      */
-    private final SwingContentRenderer swingRenderer;
+    private SwingContentRenderer swingRenderer;
     
+    private final WabitWorkspace workspace;
+    
+    /**
+     * This is the contentRenderer listener which listens to changes is the 
+     */
+    private WabitChildListener contentRendererListener = new WabitChildListener() {
+		public void wabitChildRemoved(WabitChildEvent e) {
+			//do nothing 
+		}
+		
+		public void wabitChildAdded(WabitChildEvent e) {
+			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
+	        if (renderer instanceof CellSetRenderer) {
+	            swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
+	        } else if (renderer instanceof ResultSetRenderer) {
+	            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer, parentPanel);
+	        } else if (renderer instanceof ImageRenderer) {
+	            swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
+	        } else if (renderer instanceof ChartRenderer) {
+	            swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
+	        } else if (renderer instanceof Label) {
+	            swingRenderer = new SwingLabel((Label) renderer);
+	        } else if (renderer == null) {
+	            swingRenderer = null;
+	        } else {
+	            throw new IllegalStateException("Unknown renderer of type " + renderer.getClass() 
+	                    + ". The swing components of this renderer type are missing.");
+	        }
+		}
+	};
+    
+	private final ReportLayoutPanel parentPanel;
+	
     public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, ReportLayoutPanel parentPanel, ContentBox contentBox) {
         this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
+        this.parentPanel = parentPanel;
+        this.workspace = workspace;
         
-        final ReportContentRenderer renderer = contentBox.getContentRenderer();
-        if (renderer instanceof CellSetRenderer) {
-            swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
-        } else if (renderer instanceof ResultSetRenderer) {
-            swingRenderer = new ResultSetSwingRenderer((ResultSetRenderer) renderer, parentPanel);
-        } else if (renderer instanceof ImageRenderer) {
-            swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
-        } else if (renderer instanceof ChartRenderer) {
-            swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
-        } else if (renderer instanceof Label) {
-            swingRenderer = new SwingLabel((Label) renderer);
-        } else if (renderer == null) {
-            swingRenderer = null;
-        } else {
-            throw new IllegalStateException("Unknown renderer of type " + renderer.getClass() 
-                    + ". The swing components of this renderer type are missing.");
-        }
+		contentBox.addChildListener(contentRendererListener);
         
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
         addInputEventListener(inputHandler);
@@ -261,6 +281,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
     public void cleanup() {
         contentBox.removePropertyChangeListener(modelChangeHandler);
+        contentBox.removeChildListener(contentRendererListener);
     }
 
     public ContentBox getModel() {
