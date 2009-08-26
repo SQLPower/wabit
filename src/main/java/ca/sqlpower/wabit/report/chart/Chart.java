@@ -483,7 +483,7 @@ public class Chart extends AbstractWabitObject {
      * column was actually removed.
      */
     public void removeColumnIdentifier(ColumnIdentifier identifier) {
-        int index = columnNamesInOrder.size();
+        int index = columnNamesInOrder.indexOf(identifier);
         boolean removed = columnNamesInOrder.remove(identifier);
         if (removed) {
             fireChildRemoved(ColumnIdentifier.class, identifier, index);
