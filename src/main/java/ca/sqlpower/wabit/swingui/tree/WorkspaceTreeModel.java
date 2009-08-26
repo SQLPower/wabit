@@ -401,6 +401,7 @@ public class WorkspaceTreeModel implements TreeModel {
     private class WabitTreeModelEventAdapter implements PropertyChangeListener, WabitChildListener {
 
 		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals("zoomLevel")) return; //XXX this might be a cheap workaround
 			WabitObject node = (WabitObject) evt.getSource();
 
 			TreeModelEvent e;
@@ -414,6 +415,7 @@ public class WorkspaceTreeModel implements TreeModel {
 				    throw new NullPointerException("Parent of non-root node " + node + " was null!");
 				}
 				int indexOfChild = getIndexOfChild(parent, node);
+				
 				e = new TreeModelEvent(this, createTreePathForObject(node),
 						new int[] { indexOfChild }, new Object[] { node });
 			}
