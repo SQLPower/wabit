@@ -31,11 +31,7 @@ import javax.annotation.Nullable;
 
 import org.apache.log4j.Logger;
 import org.jfree.data.general.Dataset;
-import org.olap4j.Axis;
 import org.olap4j.CellSet;
-import org.olap4j.CellSetAxis;
-import org.olap4j.Position;
-import org.olap4j.metadata.Member;
 
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
@@ -103,8 +99,11 @@ public class Chart extends AbstractWabitObject {
      */
     private final RowSetChangeListener queryListener = new RowSetChangeListener() {
         public void rowAdded(RowSetChangeEvent e) {
-            // FIXME this is simply a repaint request; should be more explicit
-            firePropertyChange("resultSetRowAdded", null, e.getRow());
+            SPSUtils.runOnSwingThread(new Runnable() {
+                public void run() {
+                    fireChartDataChanged();
+                }
+            });
         }
     };
 
@@ -113,57 +112,13 @@ public class Chart extends AbstractWabitObject {
      * a query were in use in this chart.
      */
     private final OlapQueryListener olapQueryChangeListener = new OlapQueryListener() {
-
         public void queryExecuted(final OlapQueryEvent e) {
             SPSUtils.runOnSwingThread(new Runnable() {
                 public void run() {
-                    updateMissingIdentifierList(e.getCellSet());
+                    fireChartDataChanged();
                 }
             });
         }
-
-        /**
-         * Looks through the given cell set (which can be null if the source
-         * query has become invalid/empty) and figures out which parts of this
-         * chart's data set are not available in the new cell set.
-         * 
-         * @param cellSet
-         *            The new cell set this chart should be based on. Can be
-         *            null if there's no longer a cell set available.
-         */
-        private void updateMissingIdentifierList(CellSet cellSet) {
-            
-            //XXX Positions aren't comparable. This is the current workaround. See bug 2101.
-            List<List<String>> positionMemberUniqueNamesInColumnAxis = new ArrayList<List<String>>();
-            
-            if (cellSet != null) {
-                CellSetAxis columnAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-
-                for (Position position : columnAxis.getPositions()) {
-                    List<String> positionMembers = new ArrayList<String>();
-                    for (Member member : position.getMembers()) {
-                        positionMembers.add(member.getUniqueName());
-                    }
-                    positionMemberUniqueNamesInColumnAxis.add(positionMembers);
-                }
-
-            }
-            List<ColumnIdentifier> positionColumnsInUse = new ArrayList<ColumnIdentifier>();
-            for (ColumnIdentifier identifier : columnNamesInOrder) {
-                if (identifier.getRoleInChart() != ColumnRole.NONE 
-                        && identifier instanceof PositionColumnIdentifier) {
-                    positionColumnsInUse.add(identifier);
-                }
-            }
-            
-            missingIdentifiers.clear();
-            for (ColumnIdentifier identifier : positionColumnsInUse) {
-                if (!positionMemberUniqueNamesInColumnAxis.contains(((PositionColumnIdentifier) identifier).getUniqueMemberNames())) {
-                    missingIdentifiers.add(identifier);
-                }
-            }
-        }
-
     };
     
     /**
@@ -233,6 +188,20 @@ public class Chart extends AbstractWabitObject {
             throw new NullPointerException("null column identifier");
         }
         missingIdentifiers.add(ci);
+    }
+
+    /**
+     * Notifies all registered listeners that the data behind this chart has
+     * changed. This should result in a repaint in Swing, or pushing new data to
+     * the client in a Comet environment.
+     * <p>
+     * Presently, the event comes in the form of a bogus property change. In the
+     * future, we intend to create a ChartDataEvent/ChartDataListener pair to
+     * better express this event.
+     */
+    private void fireChartDataChanged() {
+        // XXX this is simply a repaint request; should be more explicit
+        firePropertyChange("resultSetRowAdded", null, null);
     }
     
     /**
