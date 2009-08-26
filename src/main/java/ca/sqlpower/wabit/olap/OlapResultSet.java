@@ -23,7 +23,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
@@ -32,6 +34,7 @@ import org.olap4j.CellSet;
 import org.olap4j.CellSetAxis;
 import org.olap4j.Position;
 import org.olap4j.metadata.Dimension;
+import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
 
@@ -97,6 +100,21 @@ import ca.sqlpower.sql.CachedRowSet;
 public class OlapResultSet extends CachedRowSet {
 
     private static final Logger logger = Logger.getLogger(OlapResultSet.class);
+
+    /**
+     * List of all Levels represented in the original cell set. The order of the
+     * items in this list corresponds with the column positions each level of
+     * the rows axis is mapped to.
+     * <p>
+     * For example, if rowAxisColumns[0] contains the Country level of the
+     * Geography dimension, then Country members appear in the first column of
+     * this result set. If rowAxisColumns[3] contains the Education Level member
+     * of the Education Level dimension, then the fourth column of this result
+     * set contains the Education Level members.
+     * <p>
+     * Gets created and initialized in {@link #populate(CellSet)}.
+     */
+    private List<Level> rowAxisColumns;
     
     public OlapResultSet() throws SQLException {
         super();
@@ -124,17 +142,14 @@ public class OlapResultSet extends CachedRowSet {
         
         // Rows axis: each represented level of each dimension is a column
         CellSetAxis rowsAxis = axes.get(Axis.ROWS.axisOrdinal());
-        if (rowsAxis.getPositionCount() > 0) {
-            Position firstRowPosition = rowsAxis.getPositions().get(0);
-            for (Member m : firstRowPosition.getMembers()) {
-                Dimension d = m.getDimension();
-                Level l = m.getLevel();
-                String colName = d.getName() + " " + l.getName();
+        rowAxisColumns = determineRowAxisColumns(rowsAxis);
+        for (Level l : rowAxisColumns) {
+            Dimension d = l.getDimension();
+            String colName = d.getName() + " " + l.getName();
 
-                rsmd.addColumn(false, false, false, false, DatabaseMetaData.columnNullable,
-                        true, 10, colName, colName, null, 1000, 0, null, null, Types.VARCHAR,
-                        "Dimension Member", true, false, false, "java.lang.String");
-            }
+            rsmd.addColumn(false, false, false, false, DatabaseMetaData.columnNullable,
+                    true, 10, colName, colName, null, 1000, 0, null, null, Types.VARCHAR,
+                    "Dimension Member", true, false, false, "java.lang.String");
         }
         
         // columns axis: the member names (across all levels of all dimensions)
@@ -161,9 +176,15 @@ public class OlapResultSet extends CachedRowSet {
             moveToInsertRow();
             int col = 1;
             for (Member m : p.getMembers()) {
+                col = findColumnForLevel(m.getLevel());
+                if (col == -1) {
+                    throw new IllegalStateException(
+                            "Found a member in the rows axis whose level doesn't" +
+                            " have a column in the result set!");
+                }
                 updateString(col, m.getName()); // TODO figure out placeholder value thing
-                col++;
             }
+            col = rowAxisColumns.size() + 1;
             for (Position colPos : colsAxis.getPositions()) {
                 Cell cell = cellSet.getCell(colPos, p);
                 Object value = cell.getValue();
@@ -187,4 +208,50 @@ public class OlapResultSet extends CachedRowSet {
         beforeFirst();
     }
 
+    /**
+     * Returns the column number in this result set that the given level's
+     * members are shown in.
+     * 
+     * @param level
+     *            The level whose column number to look up. Hint: only levels
+     *            that were in the original cell set's rows axis will have their
+     *            own column in this result set. The levels of the columns axis
+     *            are handled differently.
+     * @return The column in this result set that corresponds with the given
+     *         Level, or -1 if the given level does not have a column in this
+     *         result set.
+     */
+    private int findColumnForLevel(Level level) {
+        int index = rowAxisColumns.indexOf(level);
+        if (index >= 0) {
+            return index + 1;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * 
+     * @param axis
+     * @return
+     */
+    private List<Level> determineRowAxisColumns(CellSetAxis axis) {
+        Set<Level> levelsEncountered = new HashSet<Level>();
+        for (Position p : axis.getPositions()) {
+            for (Member m : p.getMembers()) {
+                levelsEncountered.add(m.getLevel());
+            }
+        }
+        
+        List<Level> columnAssignments = new ArrayList<Level>();
+        for (Hierarchy h : axis.getAxisMetaData().getHierarchies()) {
+            for (Level l : h.getLevels()) {
+                if (levelsEncountered.contains(l)) {
+                    columnAssignments.add(l);
+                }
+            }
+        }
+        
+        return columnAssignments;
+    }
 }
