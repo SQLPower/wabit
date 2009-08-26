@@ -200,7 +200,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * The icon for the "Open Demonstration Workspace" button.
      */
     private static final Icon OPEN_DEMO_ICON = new ImageIcon(
-            WabitWelcomeScreen.class.getClassLoader().getResource("icons/wabit-16.png"));
+            WabitWelcomeScreen.class.getClassLoader().getResource("icons/workspace-demo-16.png"));
     
     public static final Icon OPEN_WABIT_ICON = new ImageIcon(
             WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/workspace-16.png"));
@@ -1048,17 +1048,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.add(createRecentMenu());
         
         fileMenu.addSeparator();
-        JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    final URI resource = WabitWelcomeScreen.class.getResource(
-                            EXAMPLE_WORKSPACE_URL).toURI();
-                    OpenWorkspaceAction.loadFiles(WabitSwingSessionContextImpl.this, resource);
-                } catch (URISyntaxException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
         
         fileMenu.add(createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
@@ -1071,6 +1060,17 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
         }));
         
+        JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
+        	public void actionPerformed(ActionEvent e) {
+        		try {
+        			final URI resource = WabitWelcomeScreen.class.getResource(
+        					EXAMPLE_WORKSPACE_URL).toURI();
+        			OpenWorkspaceAction.loadFiles(WabitSwingSessionContextImpl.this, resource);
+        		} catch (URISyntaxException ex) {
+        			throw new RuntimeException(ex);
+        		}
+        	}
+        });
         fileMenu.addSeparator();
         openDemoMenuItem.setText("Open Demo Workspace");
         openDemoMenuItem.setIcon(OPEN_DEMO_ICON);
@@ -1082,7 +1082,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         fileMenu.add(new SaveWorkspaceAction(this));
         fileMenu.add(new SaveWorkspaceAsAction(this));
-        fileMenu.add(new AbstractAction("Save All") {
+        Icon saveAllIcon = new ImageIcon(WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/saveAll-16.png"));
+        fileMenu.add(new AbstractAction("Save All", saveAllIcon) {
             public void actionPerformed(ActionEvent e) {
                 SaveWorkspaceAction.saveAllSessions(WabitSwingSessionContextImpl.this);
             }

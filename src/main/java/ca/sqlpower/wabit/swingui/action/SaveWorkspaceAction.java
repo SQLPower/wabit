@@ -23,9 +23,9 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
@@ -36,9 +36,6 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
  * the sessions it will prompt the user for a file location.
  */
 public class SaveWorkspaceAction extends AbstractAction {
-    
-    private static final ImageIcon SAVE_ICON = 
-        new ImageIcon(SaveWorkspaceAction.class.getClassLoader().getResource("icons/wabit_save.png"));
     
     private final WabitSwingSessionContext context;
 
@@ -51,7 +48,7 @@ public class SaveWorkspaceAction extends AbstractAction {
      *            The context to use to get the active session from.
      */
     public SaveWorkspaceAction(WabitSwingSessionContext context) {
-        super("Save", SAVE_ICON);
+        super("Save", WabitIcons.SAVE_ICON_16);
         this.context = context;
     }
 

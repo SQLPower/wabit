@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 
 import org.apache.log4j.Logger;
@@ -50,7 +51,7 @@ public class ImportWorkspaceAction extends AbstractAction {
 	private final WabitSwingSessionContext context;
 
 	public ImportWorkspaceAction(WabitSwingSessionContext context) {
-		super("Import...");
+		super("Import...", new ImageIcon(ImportWorkspaceAction.class.getClassLoader().getResource("icons/open-16.png")));
 		this.context = context;
 	}
 

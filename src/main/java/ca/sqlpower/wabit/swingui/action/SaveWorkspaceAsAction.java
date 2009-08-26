@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -52,6 +51,7 @@ import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
@@ -67,15 +67,12 @@ public class SaveWorkspaceAsAction extends AbstractAction {
     
     private static final Logger logger = Logger.getLogger(SaveWorkspaceAsAction.class);
     
-    private static final ImageIcon SAVE_WABIT_ICON = 
-        new ImageIcon(SaveWorkspaceAsAction.class.getClassLoader().getResource("icons/wabit_save.png"));
-
     public static final String WABIT_FILE_EXTENSION = ".wabit";
     
     private final WabitSwingSessionContext context;
 
     public SaveWorkspaceAsAction(WabitSwingSessionContext context) {
-        super("Save As...", SAVE_WABIT_ICON);
+        super("Save As...",  WabitIcons.SAVE_ICON_16);
         this.context = context;
     }
 
