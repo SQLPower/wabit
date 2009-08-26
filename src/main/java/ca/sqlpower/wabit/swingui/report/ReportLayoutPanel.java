@@ -23,10 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -43,16 +40,11 @@ import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -73,17 +65,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
@@ -105,6 +96,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
@@ -116,14 +108,10 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 
 	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
 
-	private static final Icon STREAM_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/stream-badge.png"));
-	private static final Icon QUERY_DB = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-db-16.png"));
     public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
     public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
     public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
     public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
-    private static final Icon OLAP_QUERY_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/query-olap-16.png"));
-    private static final Icon THROBBER_BADGE = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/throbber16-01.png")); //XXX we should be animating this...
     private static final Icon REFRESH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
     private static final Icon CONTENTBOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/content.png"));
     
@@ -472,44 +460,16 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         
         final JList queryList = new JList(new DraggableWabitObjectListModel(session.getWorkspace()));
         queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+        // TODO factor out the guts of WorkspaceTreeCellRenderer so this can be less ugly
         queryList.setCellRenderer(new DefaultListCellRenderer() {
+            final JTree dummyTree = new JTree();
+            final WorkspaceTreeCellRenderer delegate = new WorkspaceTreeCellRenderer();
         	@Override
 			public Component getListCellRendererComponent(JList list, Object value,
 					int index, boolean isSelected, boolean cellHasFocus) {
-				Component c = super.getListCellRendererComponent(queryList, value, index, isSelected, cellHasFocus);
-				((JLabel) c).setText(((WabitObject) value).getName());
-				
-				if (value instanceof QueryCache) {
-				    if (((QueryCache) value).isRunning()) {
-				        if (((QueryCache) value).isStreaming()) {
-				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_DB, STREAM_BADGE})));
-				        } else {
-				            ((JLabel) c).setIcon(new ComposedIcon(Arrays.asList(new Icon[]{QUERY_DB, THROBBER_BADGE})));
-				        }
-				    } else {
-				        ((JLabel) c).setIcon(QUERY_DB);
-				    }
-				} else if (value instanceof OlapQuery) {
-				    ((JLabel) c).setIcon(OLAP_QUERY_ICON);
-				} else if (value instanceof WabitImage) {
-				    final Image wabitImage = ((WabitImage) value).getImage();
-				    if (wabitImage != null) {
-				        JLabel label = ((JLabel) c);
-				        final int width = QUERY_DB.getIconWidth();
-				        final int height = QUERY_DB.getIconHeight();
-				        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-				        Graphics2D g = image.createGraphics();
-				        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
-				                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-				        g.drawImage(wabitImage, 0, 0, width, height, new Color(0xffffffff, true), null);
-				        g.dispose();
-
-				        final ImageIcon icon = new ImageIcon(image);
-				        label.setIcon(icon);
-				    }
-				}
-				return c;
+				return delegate.getTreeCellRendererComponent(
+				        dummyTree, value, isSelected, false, true, 0, cellHasFocus);
 			}
 		});
         
