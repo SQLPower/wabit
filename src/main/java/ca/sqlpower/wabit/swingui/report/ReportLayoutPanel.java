@@ -403,9 +403,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         		}
         	}
 		});
-        if (report.getZoomLevel() > zoomSlider.getMinimum() && report.getZoomLevel() < zoomSlider.getMaximum()) {
-        	zoomSlider.setValue(report.getZoomLevel());
-        }
+        zoomSlider.setValue(1);
         zoomPanel.add(zoomSlider, BorderLayout.CENTER);
 		zoomPanel.add(new JLabel(WabitIcons.ZOOM_IN_ICON_16), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
