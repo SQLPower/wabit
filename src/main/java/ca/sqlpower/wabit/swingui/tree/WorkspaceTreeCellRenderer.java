@@ -148,23 +148,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                     setupForWabitImage((WorkspaceTreeCellRenderer) r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {
                 	ChartRenderer chartRenderer = (ChartRenderer) cbChild;
-                	Chart chart = chartRenderer.getChart();
-                	ExistingChartTypes chartType = chart.getType();
-                	if (chartType.equals(ExistingChartTypes.BAR)) {
-                	    r.setIcon(CHART_BAR_ICON);
-                	} else if (chartType.equals(ExistingChartTypes.CATEGORY_LINE)) {
-                	    r.setIcon(CHART_LINE_ICON);
-                	} else if (chartType.equals(ExistingChartTypes.SCATTER)) {
-                	    r.setIcon(CHART_SCATTER_ICON);
-                	} else if (chartType.equals(ExistingChartTypes.LINE)) {
-                	    r.setIcon(CHART_LINE_ICON);
-                	} else {
-                	    //TODO when pie charts are added change this
-                	    throw new UnsupportedOperationException("The pie chart icon needs to be added to the tree model");
-                	    // r.setIcon(CHART_ICON); 
-                	    // r.setIcon(CHART_PIE_ICON);
-                	}
-					r.setText(chart.getName());
+                	setupForChart(r, chartRenderer.getChart());
                 } else if (cbChild instanceof Label) {
                 	r.setIcon(LABEL_ICON); 
 	                r.setText(((Label) cbChild).getText());
@@ -179,6 +163,8 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             	setupForQueryCache((WorkspaceTreeCellRenderer) r, wo);
             } else if (wo instanceof OlapQuery) {
                 r.setIcon(OLAP_QUERY_ICON);
+            } else if (wo instanceof Chart) {
+                setupForChart(r, (Chart) wo);
             } else if (wo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
             }
@@ -204,6 +190,27 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         }
         
         return r;
+    }
+
+    private void setupForChart(DefaultTreeCellRenderer r, Chart chart) {
+        ExistingChartTypes chartType = chart.getType();
+        if (chartType == null) {
+            r.setIcon(CHART_ICON);
+        } else if (chartType.equals(ExistingChartTypes.BAR)) {
+            r.setIcon(CHART_BAR_ICON);
+        } else if (chartType.equals(ExistingChartTypes.CATEGORY_LINE)) {
+            r.setIcon(CHART_LINE_ICON);
+        } else if (chartType.equals(ExistingChartTypes.SCATTER)) {
+            r.setIcon(CHART_SCATTER_ICON);
+        } else if (chartType.equals(ExistingChartTypes.LINE)) {
+            r.setIcon(CHART_LINE_ICON);
+        } else {
+            //TODO when pie charts are added change this
+            throw new UnsupportedOperationException("The pie chart icon needs to be added to the tree model");
+            // r.setIcon(CHART_ICON); 
+            // r.setIcon(CHART_PIE_ICON);
+        }
+        r.setText(chart.getName());
     }
 
 	private void setupForWabitImage(WorkspaceTreeCellRenderer r, WabitObject wo) {

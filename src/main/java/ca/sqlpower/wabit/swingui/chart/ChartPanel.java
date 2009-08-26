@@ -977,10 +977,16 @@ public class ChartPanel implements WabitPanel {
         }
         chart.setChartType((ExistingChartTypes) chartTypeComboBox.getSelectedItem());
         chart.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
+        
+        // this removes all children from the Chart WabitObject.
+        // It fires WabitChildRemoved events.
         chart.clearColumnIdentifiers();
+        
+        // And this fires WabitChildAdded events
         for (ColumnIdentifier identifier : columnNamesInOrder) {
             chart.addColumnIdentifier(identifier);
         }
+        
         chart.setYaxisName(yaxisNameField.getText());
         chart.setXaxisName(xaxisNameField.getText());
         chart.clearMissingIdentifiers();
