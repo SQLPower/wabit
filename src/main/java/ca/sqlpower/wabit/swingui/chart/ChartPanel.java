@@ -45,6 +45,8 @@ import javax.swing.JTextField;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -616,6 +618,22 @@ public class ChartPanel implements WabitPanel {
      */
     private final Chart chart;
 
+    /**
+     * Listens for changes to all text fields on this panel. Updates the chart
+     * object and its preview on each document event.
+     */
+    private DocumentListener documentChangeHandler = new DocumentListener() {
+        public void changedUpdate(DocumentEvent e) {
+            updateChartPreview();
+        }
+        public void insertUpdate(DocumentEvent e) {
+            updateChartPreview();
+        }
+        public void removeUpdate(DocumentEvent e) {
+            updateChartPreview();
+        }
+    };
+
     public ChartPanel(WabitSwingSession session, final Chart chart) {
         WabitWorkspace workspace = session.getWorkspace();
         this.chart = chart;
@@ -643,8 +661,11 @@ public class ChartPanel implements WabitPanel {
         }
 
         nameField.setText(chart.getName());
+        nameField.getDocument().addDocumentListener(documentChangeHandler );
         yaxisNameField.setText(chart.getYaxisName());
+        yaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
         xaxisNameField.setText(chart.getXaxisName());
+        xaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
 
         queryComboBox.addItemListener(new ItemListener() {
 
