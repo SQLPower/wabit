@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui.chart;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.geom.Ellipse2D;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,11 +37,8 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.xy.XYDataset;
-import org.olap4j.CellSet;
 
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
@@ -64,41 +60,18 @@ public class ChartSwingUtil {
      * make an instance of this class.
      */
     private ChartSwingUtil() {/* don't */}
-    
+
     /**
-     * Creates a JFreeChart based on the given query results and how the columns
-     * are defined in the chart. The query given MUST be a query type that is
-     * allowed in the chart, either a {@link QueryCache} or an {@link OlapQuery}
-     * . Anything else will throw an exception.
+     * Creates a JFreeChart based on the current query results produced by the
+     * given chart.
      * 
-     * @param columnNamesInOrder
-     *            The order the columns should come in in the chart. The first
-     *            column defined as a series will be the first bar or line, the
-     *            second defined as a series will be the second bar or line in
-     *            the chart and so on. The order of the category columns is also
-     *            enforced here and will decide the order the category names are
-     *            concatenated in.
-     * @param columnsToDataTypes
-     *            Defines which columns are series and which ones are
-     *            categories.
-     * @param data
-     *            This must be either a {@link ResultSet} or a {@link CellSet}
-     *            that contains the data that will be displayed in the chart.
-     *            TODO If we change the cell set to be a cached row set this
-     *            just becomes a result set.
-     * @param chartType
-     *            The type of chart to create from the data.
-     * @param legendPosition
-     *            The position where the legend will appear or NONE if it will
-     *            not be displayed.
-     * @param chartName
-     *            The name of the chart.
-     * @param yaxisName
-     *            The name of the y axis.
-     * @param xaxisName
-     *            The name of the x axis.
-     * @return A chart based on the data in the query of the given type, or null
-     *         if the given chart is currently unable to produce a result set.
+     * @param c
+     *            The chart from which to produce a JFreeChart component. Must
+     *            not be null.
+     * @return A chart based on the data and settings in the given chart, or
+     *         null if the given chart is not sufficiently configured (for
+     *         example, if its type is not set) or it is currently unable to
+     *         produce a result set.
      */
     public static JFreeChart createChartFromQuery(Chart c) throws SQLException, QueryInitializationException, InterruptedException {
         logger.debug("Creating JFreeChart for Wabit chart " + c);
@@ -106,6 +79,11 @@ public class ChartSwingUtil {
         
         if (c.getResultSet() == null) {
             logger.debug("Returning null (chart's result set was null)");
+            return null;
+        }
+        
+        if (chartType == null) {
+            logger.debug("Returning null (chart's type is not set)");
             return null;
         }
         
