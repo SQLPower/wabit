@@ -25,6 +25,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.Cell;
 import org.olap4j.CellSet;
@@ -95,6 +96,8 @@ import ca.sqlpower.sql.CachedRowSet;
  */
 public class OlapResultSet extends CachedRowSet {
 
+    private static final Logger logger = Logger.getLogger(OlapResultSet.class);
+    
     public OlapResultSet() throws SQLException {
         super();
     }
@@ -163,7 +166,19 @@ public class OlapResultSet extends CachedRowSet {
             }
             for (Position colPos : colsAxis.getPositions()) {
                 Cell cell = cellSet.getCell(colPos, p);
-                updateObject(col, cell.getDoubleValue()); // TODO what about empty cells?
+                Object value = cell.getValue();
+                if (value instanceof Number) {
+                    updateObject(col, ((Number) value).doubleValue());
+                } else if (value == null) {
+                    updateObject(col, null);
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info(
+                                "Value at position " + p + " isn't a number and isn't null: " +
+                                value + "(" + value.getClass().getName() + ")");
+                    }
+                    updateObject(col, null);
+                }
                 col++;
             }
             insertRow();
