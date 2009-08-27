@@ -76,8 +76,6 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
-import com.sun.corba.se.impl.orbutil.graph.Node;
-
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
