@@ -65,6 +65,7 @@ import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.swingui.olap.Olap4jTreeModel;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
 
@@ -100,6 +101,7 @@ public class WorkspaceTreeModel implements TreeModel {
     public WorkspaceTreeModel(WabitWorkspace workspace) {
         this.workspace = workspace;
         this.folderList = new ArrayList<FolderNode>();
+        
         folderList.add(new FolderNode(workspace, FolderType.CONNECTIONS));
         folderList.add(new FolderNode(workspace, FolderType.QUERIES));
         folderList.add(new FolderNode(workspace, FolderType.CHARTS));
@@ -107,6 +109,27 @@ public class WorkspaceTreeModel implements TreeModel {
         folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
         WabitUtils.listenToHierarchy(workspace, listener, listener);
+    }
+    
+    /**
+     * Returns true if the given object should appear in the tree as a node.
+     * This is determined by the object's type.
+     * 
+     * @param o The object to test
+     * @return True if o should appear; false if it should not.
+     */
+    private boolean appearsInTree(WabitObject o) {
+        if (o instanceof WabitWorkspace) return true;
+        if (o instanceof WabitDataSource) return true;
+        if (o instanceof QueryCache) return true;
+        if (o instanceof OlapQuery) return true;
+        if (o instanceof FolderNode) return true;
+        if (o instanceof Layout) return true;
+        if (o instanceof Chart) return true;
+        if (o instanceof ColumnIdentifier) return true;
+        if (o instanceof ContentBox) return true;
+        if (o instanceof WabitImage) return true;
+        return false;
     }
     
     public Object getRoot() {
@@ -401,29 +424,43 @@ public class WorkspaceTreeModel implements TreeModel {
     private class WabitTreeModelEventAdapter implements PropertyChangeListener, WabitChildListener {
 
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals("zoomLevel")) return; //XXX this might be a cheap workaround
 			WabitObject node = (WabitObject) evt.getSource();
-
+			if (!appearsInTree(node)) {
+			    return;
+			}
 			TreeModelEvent e;
 			if (node == getRoot()) {
 				// special case for root node
 				e = new TreeModelEvent(this, new Object[] { getRoot() }, null,
 						null);
 			} else {
-				WabitObject parent = node.getParent();
-				if (parent == null) {
-				    throw new NullPointerException("Parent of non-root node " + node + " was null!");
-				}
-				int indexOfChild = getIndexOfChild(parent, node);
+                TreePath treePath = createTreePathForObject(node);
+                treePath = treePath.getParentPath();
+                int actualIndex = node.getParent().getChildren().indexOf(node);
+                if (actualIndex < 0) {
+                    throw new IllegalStateException(
+                            "Got an event from a WabitObject that isn't one " +
+                            "of its own parent's children!");
+                }
+	            int treeIndex = getCorrectIndex(node, actualIndex);
+				e = new TreeModelEvent(this, treePath,
+						new int[] { treeIndex }, new Object[] { node });
 				
-				e = new TreeModelEvent(this, createTreePathForObject(node),
-						new int[] { indexOfChild }, new Object[] { node });
+				if (logger.isDebugEnabled()) {
+				    logger.debug("Created change event for tree path " + treePath);
+				    logger.debug("actualIndex = " + actualIndex);
+				    logger.debug("treeIndex = " + treeIndex);
+				    logger.debug("node = " + node);
+				}
 			}
 			fireTreeNodesChanged(e);
 		}
 
 		public void wabitChildAdded(WabitChildEvent e) {
 		    WabitUtils.listenToHierarchy(e.getChild(), this, this);
+		    if (!appearsInTree(e.getChild())) {
+		        return;
+		    }
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
 			int index = getCorrectIndex(e);
@@ -438,6 +475,9 @@ public class WorkspaceTreeModel implements TreeModel {
 
 		public void wabitChildRemoved(WabitChildEvent e) {
             WabitUtils.unlistenToHierarchy(e.getChild(), this, this);
+            if (!appearsInTree(e.getChild())) {
+                return;
+            }
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
 			int index = getCorrectIndex(e);
@@ -459,14 +499,16 @@ public class WorkspaceTreeModel implements TreeModel {
          *            WabitObject.
          */
 		private int getCorrectIndex(WabitChildEvent e) {
-			int index = 0;
-			WabitObject wabitObject = e.getChild();
+		    return getCorrectIndex(e.getChild(), e.getIndex());
+		}
+		
+		private int getCorrectIndex(WabitObject wabitObject, final int actualIndex) {
 
 			// Unfortunately, can't use WabitObject.childPositionOffset because
 			// MDX and SQL query objects are mixed in the same folder and therefore
 			// need the same offset.
 			
-			index += e.getIndex();
+			int index = actualIndex;
 			if (wabitObject instanceof WabitDataSource) return index;
 			index -= (workspace.getConnections().size());
 			
@@ -481,11 +523,21 @@ public class WorkspaceTreeModel implements TreeModel {
 			
 			if (wabitObject instanceof Layout) return index;
 			
-			return e.getIndex();
+			return actualIndex;
 		}
     }
-    
+
+    /**
+     * Returns the correct tree path to the given Wabit Object, or null if the
+     * given object shouldn't appear in this tree model.
+     * 
+     * @param obj The WabitObject to calculate a tree path for
+     * @return The tree path to the given object, or null.
+     */
     public TreePath createTreePathForObject(WabitObject obj) {
+        if (!appearsInTree(obj)) {
+            return null;
+        }
     	List<Object> path = new ArrayList<Object>();
     	path.add(0, obj);
     	while (obj.getParent() != null && obj != getRoot()) {
@@ -502,6 +554,12 @@ public class WorkspaceTreeModel implements TreeModel {
             if (!(obj instanceof Page || obj instanceof ReportContentRenderer)) {
             	path.add(0, obj);
             }
+    	}
+    	if (path.get(0) != getRoot()) {
+    	    throw new IllegalArgumentException(
+    	            "The given object cannot be found in this tree. " +
+    	            "Its apparent root is " + path.get(0) + 
+    	            " but this tree's root is " + getRoot());
     	}
     	return new TreePath(path.toArray());
     }

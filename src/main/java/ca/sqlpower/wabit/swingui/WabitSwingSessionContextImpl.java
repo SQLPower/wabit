@@ -545,6 +545,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					setActiveSession(workspace.getSession());
 					JTree tree = ((WabitSwingSessionImpl) workspace.getSession()).getTree();
 					TreePath path = ((WorkspaceTreeModel) tree.getModel()).createTreePathForObject((WabitObject) userObject);
+					if (path == null) {
+					    // the item probably got deleted since the search started
+					    return;
+					}
 					tree.expandPath(path);
 					tree.setSelectionPath(path);
 					workspace.setEditorPanelModel((WabitObject) userObject);
