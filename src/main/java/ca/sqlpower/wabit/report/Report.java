@@ -49,7 +49,7 @@ public class Report extends Layout {
      * @param session
      * 		The session to add the layout to
      */
-    public Report(Report layout, WabitSession session) {
+    public Report(Layout layout, WabitSession session) {
     	super();
     	setName(layout.getName());
     	page = new Page(layout.getPage());

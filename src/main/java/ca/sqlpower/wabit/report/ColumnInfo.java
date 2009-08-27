@@ -105,11 +105,12 @@ public class ColumnInfo extends AbstractWabitObject{
 	}
 	
 	public ColumnInfo(ColumnInfo columnInfo) {
-		this.columnInfoItem = columnInfo.columnInfoItem.createCopy();
+		this.columnInfoItem = columnInfo.columnInfoItem;
 		this.columnAlias = columnInfo.columnAlias;
 		this.dataType = columnInfo.dataType;
 		this.hAlign = columnInfo.hAlign;
 		this.width = columnInfo.width;
+		setName(columnInfo.getName());
 		this.willGroupOrBreak = columnInfo.willGroupOrBreak;
 		this.willSubtotal = columnInfo.willSubtotal;
 	}

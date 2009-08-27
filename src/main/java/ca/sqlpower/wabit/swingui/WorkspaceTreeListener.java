@@ -66,6 +66,7 @@ import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
+import ca.sqlpower.wabit.swingui.action.NewReportOnTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
@@ -391,13 +392,13 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
 				} else if (lastPathComponent instanceof Report) {
 					menu.add(newReport);
-					
 					menu.addSeparator();
 					menu.add(new CopyReportAction((Report) lastPathComponent, session));
 				} else if (lastPathComponent instanceof Template) {
-					menu.add(newTemplate);
-
+					menu.add(new NewReportOnTemplateAction(session, (Template) lastPathComponent)); 
+					
 					menu.addSeparator();
+					menu.add(newTemplate);
 					menu.add(new CopyTemplateAction((Template) lastPathComponent, session));
 				} else if (lastPathComponent instanceof WabitImage) {
 					menu.add(newImage);
