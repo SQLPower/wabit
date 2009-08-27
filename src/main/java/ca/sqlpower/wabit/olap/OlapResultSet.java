@@ -23,8 +23,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -171,10 +173,11 @@ public class OlapResultSet extends CachedRowSet {
                     "Dimension Member", true, false, false, "java.lang.Double");
         }
 
-        // rows: each position along the rows axis!
+        // the data: each position along the rows axis is a row in the result set!
+        final Map<Level, RepeatedMember> currentMembers = new HashMap<Level, RepeatedMember>();
         for (Position p : rowsAxis.getPositions()) {
             moveToInsertRow();
-            int col = 1;
+            int col;
             for (Member m : p.getMembers()) {
                 col = findColumnForLevel(m.getLevel());
                 if (col == -1) {
@@ -182,7 +185,20 @@ public class OlapResultSet extends CachedRowSet {
                             "Found a member in the rows axis whose level doesn't" +
                             " have a column in the result set!");
                 }
-                updateString(col, m.getName()); // TODO figure out placeholder value thing
+                updateString(col, m.getName());
+                currentMembers.put(m.getLevel(), new RepeatedMember(m));
+                
+                // backfill higher levels of this dimension
+                col--;
+                while (col > 0 && getLevelForColumn(col) != null) {
+                    Level l = getLevelForColumn(col);
+                    if ( ! l.getDimension().equals(m.getDimension()) ) break;
+                    RepeatedMember ancestor = currentMembers.get(l);
+                    if (ancestor != null) {
+                        updateObject(col, ancestor);
+                    }
+                    col--;
+                }
             }
             col = rowAxisColumns.size() + 1;
             for (Position colPos : colsAxis.getPositions()) {
@@ -227,6 +243,28 @@ public class OlapResultSet extends CachedRowSet {
             return index + 1;
         } else {
             return -1;
+        }
+    }
+
+    /**
+     * Provides the inverse mapping of {@link #findColumnForLevel(Level)}.
+     * 
+     * @param colNum
+     *            The result set column number (1-based; first column is 1).
+     * @return The Level associated with the given column, or null if the given
+     *         column does not exist or is not a Level column.
+     * @throws SQLException
+     *             if colNum is not a legal column index in this result set.
+     */
+    private Level getLevelForColumn(int colNum) throws SQLException {
+        if (colNum > rsmd.getColumnCount() || colNum < 1) {
+            throw new SQLException(
+                    "Column index out of bounds. You requested " + colNum +
+                    "; legal range is 1.." + rsmd.getColumnCount());
+        } else if (colNum <= rowAxisColumns.size()) {
+            return rowAxisColumns.get(colNum - 1);
+        } else {
+            return null;
         }
     }
 

@@ -542,12 +542,14 @@ public class ChartPanel implements WabitPanel {
      * successfully, but reappear if there's an error.
      */
     private final JLabel chartError = new JLabel();
-    
+
     /**
-     * This is the default renderer of the table displaying the values from the query.
-     * This is stored to give the headers a normal look depending on user settings.
+     * This is the default renderer for the headers of the table displaying the
+     * values from the query. It's wrapped by {@link #currentHeaderCellRenderer},
+     * which uses it to render the standard headers below our custom
+     * "column role" components.
      */
-    private final TableCellRenderer defaultTableCellRenderer;
+    private final TableCellRenderer defaultHeaderCellRenderer;
 
     /**
      * This change listener will be added to the query that is selected in the combo box.
@@ -560,11 +562,12 @@ public class ChartPanel implements WabitPanel {
     };
 
     /**
-     * This {@link TableCellRenderer} is the current wrapper on the regular {@link TableCellRenderer}.
-     * This wrapper will place appropriate combo boxes above the table headers to allow users
-     * to specify if the columns are to be used as series, categories, or x-axis values in a chart.
+     * Wrapper around the regular {@link #defaultHeaderCellRenderer}. Places the
+     * appropriate combo boxes above the standard table headers to allow users
+     * to specify the roles of columns (series, categories, or x-axis values) in
+     * a chart.
      */
-    private CleanupTableCellRenderer currentHeaderTableCellRenderer;
+    private CleanupTableCellRenderer currentHeaderCellRenderer;
 
     /**
      * This scroll pane shows a table that allows users to edit the values
@@ -614,7 +617,7 @@ public class ChartPanel implements WabitPanel {
     };
 
     /**
-     * The actual renderer we are editing.
+     * The data model for this component.
      */
     private final Chart chart;
 
@@ -637,7 +640,7 @@ public class ChartPanel implements WabitPanel {
     public ChartPanel(WabitSwingSession session, final Chart chart) {
         WabitWorkspace workspace = session.getWorkspace();
         this.chart = chart;
-        defaultTableCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
+        defaultHeaderCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
         List<WabitObject> queries = new ArrayList<WabitObject>();
         queries.addAll(workspace.getQueries());
         queries.addAll(workspace.getOlapQueries());
@@ -648,11 +651,11 @@ public class ChartPanel implements WabitPanel {
         queryComboBox.setSelectedItem(chart.getQuery());
         chartTypeComboBox.setSelectedItem(chart.getType());
         if (chart.getType() == ExistingChartTypes.BAR || chart.getType() == ExistingChartTypes.CATEGORY_LINE) {
-            currentHeaderTableCellRenderer = new CategoryChartRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
-            resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
+            currentHeaderCellRenderer = new CategoryChartRendererTableCellRenderer(resultTable.getTableHeader(), defaultHeaderCellRenderer);
+            resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
         } else if (chart.getType() == ExistingChartTypes.LINE || chart.getType() == ExistingChartTypes.SCATTER) {
-            currentHeaderTableCellRenderer = new XYChartRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
-            resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
+            currentHeaderCellRenderer = new XYChartRendererCellRenderer(resultTable.getTableHeader(), defaultHeaderCellRenderer);
+            resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
         }
         if(chart.getLegendPosition() != null) {
             legendPositionComboBox.setSelectedItem(chart.getLegendPosition());
@@ -694,21 +697,21 @@ public class ChartPanel implements WabitPanel {
         chartTypeComboBox.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    if (currentHeaderTableCellRenderer != null) {
-                        currentHeaderTableCellRenderer.cleanup();
+                    if (currentHeaderCellRenderer != null) {
+                        currentHeaderCellRenderer.cleanup();
                     }
                     switch ((ExistingChartTypes) chartTypeComboBox.getSelectedItem()) {
                     case BAR:
                     case CATEGORY_LINE:
                         xaxisNameField.setVisible(false);
                         xaxisNameLabel.setVisible(false);
-                        currentHeaderTableCellRenderer = new CategoryChartRendererTableCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
-                        resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
+                        currentHeaderCellRenderer = new CategoryChartRendererTableCellRenderer(resultTable.getTableHeader(), defaultHeaderCellRenderer);
+                        resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
                         break;
                     case LINE:
                     case SCATTER:
-                        currentHeaderTableCellRenderer = new XYChartRendererCellRenderer(resultTable.getTableHeader(), defaultTableCellRenderer);
-                        resultTable.getTableHeader().setDefaultRenderer(currentHeaderTableCellRenderer);
+                        currentHeaderCellRenderer = new XYChartRendererCellRenderer(resultTable.getTableHeader(), defaultHeaderCellRenderer);
+                        resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
                         xaxisNameField.setVisible(true);
                         xaxisNameLabel.setVisible(true);
                         break;
@@ -827,6 +830,9 @@ public class ChartPanel implements WabitPanel {
 
         final ResultSetTableModel model = new ResultSetTableModel(rs);
         resultTable.setModel(model);
+        ChartTableCellRenderer bodyCellRenderer = new ChartTableCellRenderer();
+//        resultTable.setDefaultRenderer(String.class, bodyCellRenderer);
+        resultTable.setDefaultRenderer(Object.class, bodyCellRenderer);
 
         //reorder the columns from the result set to the order the user specified by dragging column headers.
         resultTable.getColumnModel().removeColumnModelListener(columnMovingListener);
