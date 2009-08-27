@@ -202,7 +202,7 @@
 
 								<!-- jarbundler is from sourceforge, defined near top of file -->
 								<jarbundler dir="target" name="Wabit" version="${app.version}"
-									mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionImpl"
+									mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl"
 									icon="src/main/resources/icons/wabit.icns"
 									jvmversion="1.5+" shortname="Wabit"
 									stubfile="src/main/installer/osx/JavaApplicationStub"
@@ -221,6 +221,7 @@
 								<replace file="target/Wabit.app/Contents/Info.plist"
 									token="KICKME" value="$JAVAROOT" />
 
+								<!-- NOTE: This generally won't work on Windows as it typically doesn't have 'tar' installed -->
 								<exec executable="tar" dir="target">
 									<arg value="-cpzf" />
 									<arg value="Wabit-OSX-${app.version}.tar.gz"/>
