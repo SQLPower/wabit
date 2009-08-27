@@ -74,8 +74,10 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
 import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
@@ -328,7 +330,7 @@ public class WorkspaceXMLDAO {
 		        } else if (wabitObject instanceof OlapQuery) {
 		            saveOlapQuery((OlapQuery) wabitObject);
 		        } else if (wabitObject instanceof Layout) {
-		            saveLayout((Layout) wabitObject);
+		        	saveLayout((Layout) wabitObject);
                 } else if (wabitObject instanceof WabitImage) {
                     saveWabitImage((WabitImage) wabitObject);
                 } else if (wabitObject instanceof Chart) {
@@ -375,6 +377,7 @@ public class WorkspaceXMLDAO {
 		xml.print(out, "<layout");
 		printAttribute("name", layout.getName());
 		printAttribute("zoom", layout.getZoomLevel());
+		printAttribute("template", (layout instanceof Template));
 		printAttribute("uuid", layout.getUUID());
 		xml.niprintln(out, ">");
 		xml.indent++;

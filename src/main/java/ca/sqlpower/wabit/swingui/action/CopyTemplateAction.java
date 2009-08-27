@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * Copyright (c) 2009, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -23,25 +23,23 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.swingui.WabitIcons;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.report.Template;
 
-/**
- * An action that adds a new empty layout to a particular workspace every time it
- * is invoked.
- */
-public class NewLayoutAction extends AbstractAction {
-
-	private final WabitSwingSession session;
-
-    public NewLayoutAction(WabitSwingSession session) {
-        super("New Report", WabitIcons.REPORT_ICON_16);
+public class CopyTemplateAction extends AbstractAction {
+	private Template layout;
+	private WabitSession session;
+	
+	public CopyTemplateAction(Template layout, WabitSession session) {
+		super("Copy Template");
+		this.layout = layout;
 		this.session = session;
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        Layout layout = new Layout("New Report");
-		session.getWorkspace().addLayout(layout);
-    }
+	}
+	
+	public void actionPerformed(ActionEvent e) {
+		Template layoutCopy = new Template(layout, session);
+		layoutCopy.setParent(layout.getParent());
+		layoutCopy.setName(layout.getName() + " Copy");
+		session.getWorkspace().addTemplate(layoutCopy);
+	}
 }

@@ -34,7 +34,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.swingui.olap.OlapMetadataTransferable;
 import ca.sqlpower.wabit.swingui.report.ReportQueryTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
@@ -98,7 +98,7 @@ public class SmartLeftTreeTransferable implements Transferable {
 				hasOlap = true;
 			} else if (object instanceof WabitObject) {
 				hasWabitObjectToExport = true;
-				if (!(object instanceof WabitDataSource) && !(object instanceof Layout)) {
+				if (!(object instanceof WabitDataSource) && !(object instanceof Report)) {
 					hasWabitObjectForReport = true;
 				}
 			} else if (object instanceof SQLObject) {

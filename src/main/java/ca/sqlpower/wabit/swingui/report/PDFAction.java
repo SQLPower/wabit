@@ -43,6 +43,7 @@ import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 

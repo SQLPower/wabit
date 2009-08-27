@@ -36,7 +36,7 @@ import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
+import ca.sqlpower.wabit.report.Report;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;

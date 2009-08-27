@@ -40,6 +40,7 @@ import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
@@ -75,7 +76,7 @@ public class PrintAction extends AbstractAction {
 
 		@Override
 		protected int getProgressImpl() {
-			Object progressObject = printingLayout.getVarContext().getVariableValue(Layout.PAGE_NUMBER, progress);
+			Object progressObject = printingLayout.getVarContext().getVariableValue(Report.PAGE_NUMBER, progress);
 			if (progressObject instanceof Integer) {
 				progress = ((Integer) progressObject).intValue();
 			}

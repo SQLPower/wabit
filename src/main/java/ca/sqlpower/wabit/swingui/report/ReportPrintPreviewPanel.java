@@ -26,6 +26,7 @@ import java.beans.PropertyChangeSupport;
 import javax.swing.JComponent;
 
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 
 /**
  * This is a JComponent which keeps track of what page you are on

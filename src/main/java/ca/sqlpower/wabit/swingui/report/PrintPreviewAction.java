@@ -46,6 +46,7 @@ import javax.swing.JToolBar;
 import javax.swing.border.BevelBorder;
 
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 
 /**
  * This is the action which pops up a print preview dialog which is

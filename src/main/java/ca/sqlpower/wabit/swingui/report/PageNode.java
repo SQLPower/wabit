@@ -48,7 +48,7 @@ public class PageNode extends PNode implements WabitNode {
         }
     };
     
-    public PageNode(WabitSwingSession session, ReportLayoutPanel parentPanel, Page page) {
+    public PageNode(WabitSwingSession session, LayoutPanel parentPanel, Page page) {
         this.page = page;
         page.addPropertyChangeListener(pageChangeHandler);
         for (WabitObject pageChild : page.getChildren()) {

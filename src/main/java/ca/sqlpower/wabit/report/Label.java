@@ -81,6 +81,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      */
     public Label(Label label) {
     	this.text = label.getText();
+    	this.font = label.getFont();
     	this.hAlignment = label.getHorizontalAlignment();
     	this.backgroundColour = label.getBackgroundColour();
     	this.vAlignment = label.getVerticalAlignment();

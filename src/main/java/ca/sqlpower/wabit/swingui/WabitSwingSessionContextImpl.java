@@ -154,10 +154,11 @@ import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
-import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
+import ca.sqlpower.wabit.swingui.action.NewReportAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
@@ -165,7 +166,7 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.chart.ChartPanel;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
-import ca.sqlpower.wabit.swingui.report.ReportLayoutPanel;
+import ca.sqlpower.wabit.swingui.report.LayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -375,7 +376,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     				popupMenu.add(new NewOLAPQueryAction(activeSession));
                     popupMenu.add(new NewChartAction(activeSession));
                     popupMenu.add(new NewImageAction(activeSession));
-    				popupMenu.add(new NewLayoutAction(activeSession));
+    				popupMenu.add(new NewReportAction(activeSession));
+    				popupMenu.add(new NewTemplateAction(activeSession));
     			}
     			popupMenu.show(source, 0, source.getHeight());
     		}
@@ -1251,7 +1253,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             WabitImagePanel panel = new WabitImagePanel((WabitImage) entryPanelModel, this);
             currentEditorPanel = panel;
         } else if (entryPanelModel instanceof Layout) {
-            ReportLayoutPanel rlPanel = new ReportLayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
+            LayoutPanel rlPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
             if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {
                 rlPanel.getSplitPane().setDividerLocation(Integer.parseInt(prefs.get(LAYOUT_DIVIDER_LOCATION, null)));
             }
@@ -1289,9 +1291,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 prefs.put(QUERY_DIVIDER_LOCATON, String.format("%d,%d", 
                         query.getTopRightSplitPane().getDividerLocation(), 
                         query.getFullSplitPane().getDividerLocation()));
-            } else if (currentEditorPanel instanceof ReportLayoutPanel) {
+            } else if (currentEditorPanel instanceof LayoutPanel) {
                 prefs.put(LAYOUT_DIVIDER_LOCATION, String.format("%d", 
-                        ((ReportLayoutPanel) currentEditorPanel).getSplitPane().getDividerLocation()));
+                        ((LayoutPanel) currentEditorPanel).getSplitPane().getDividerLocation()));
             }
             currentEditorPanel.discardChanges();
         }

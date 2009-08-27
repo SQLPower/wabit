@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.help.UnsupportedOperationException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultListCellRenderer;
@@ -87,7 +88,9 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.MouseState;
 import ca.sqlpower.wabit.swingui.WabitIcons;
@@ -106,16 +109,16 @@ import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
-public class ReportLayoutPanel implements WabitPanel, MouseState {
+public class LayoutPanel implements WabitPanel, MouseState {
 
-	private static final Logger logger = Logger.getLogger(ReportLayoutPanel.class);
+	private static final Logger logger = Logger.getLogger(LayoutPanel.class);
 
-    public static final Icon CREATE_BOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
-    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
-    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
-    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
-    private static final Icon REFRESH_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
-    private static final Icon CONTENTBOX_ICON = new ImageIcon(ReportLayoutPanel.class.getClassLoader().getResource("icons/32x32/content.png"));
+    public static final Icon CREATE_BOX_ICON = new ImageIcon(LayoutPanel.class.getClassLoader().getResource("icons/32x32/text.png"));		
+    public static final Icon CREATE_HORIZONTAL_GUIDE_ICON = new ImageIcon(LayoutPanel.class.getClassLoader().getResource("icons/32x32/guideH.png"));
+    public static final Icon CREATE_VERTICAL_GUIDE_ICON = new ImageIcon(LayoutPanel.class.getClassLoader().getResource("icons/32x32/guideV.png"));
+    public static final Icon ZOOM_TO_FIT_ICON = new ImageIcon(LayoutPanel.class.getClassLoader().getResource("icons/32x32/zoom-fit.png"));
+    private static final Icon REFRESH_ICON = new ImageIcon(LayoutPanel.class.getClassLoader().getResource("icons/32x32/refresh.png"));
+    private static final Icon CONTENTBOX_ICON = new ImageIcon(LayoutPanel.class.getClassLoader().getResource("icons/32x32/content.png"));
     
     private final JSlider zoomSlider;
     
@@ -197,17 +200,19 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 				resetUIAfterDrag();
 				throw new RuntimeException(e);
 			}
-
+			
+			boolean isFirstTime = true; //case where user drags multiple items onto a contentbox
 			for (WabitObject wabitObject : wabitDroppings) {
 				ContentBox contentBox; 
 				ContentBoxNode cbNode;
-				if (focusedCBNode != null) {
+				if (focusedCBNode != null && isFirstTime) {
 					cbNode = focusedCBNode;
 					contentBox = focusedCBNode.getModel();
+					isFirstTime = false;
 				} else {
 					contentBox = new ContentBox();
 					cbNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
-							ReportLayoutPanel.this, contentBox);
+							LayoutPanel.this, contentBox);
 				}
 
 				int width = 0;
@@ -272,7 +277,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	private final JPanel panel;
 	private final PCanvas canvas;
 	private final PageNode pageNode;
-	private final Layout report;
+	private final Layout layout;
 
 	/**
 	 * The mouse state in this LayoutPanel.
@@ -290,7 +295,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	 */
 	private JSplitPane mainSplitPane;
 	
-	private final AbstractAction addLabelAction = new AbstractAction("",  ReportLayoutPanel.CREATE_BOX_ICON){
+	private final AbstractAction addLabelAction = new AbstractAction("",  LayoutPanel.CREATE_BOX_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_LABEL);
 			cursorManager.placeModeStarted();
@@ -307,14 +312,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	private final WabitSwingSession session;
 	private final JFrame parentFrame;
 	
-	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
+	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  LayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_HORIZONTAL_GUIDE);
 			cursorManager.placeModeStarted();
 		}
 	};
 	
-	private final AbstractAction addVerticalGuideAction = new AbstractAction("",  ReportLayoutPanel.CREATE_VERTICAL_GUIDE_ICON){
+	private final AbstractAction addVerticalGuideAction = new AbstractAction("",  LayoutPanel.CREATE_VERTICAL_GUIDE_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_VERTICAL_GUIDE);
 			cursorManager.placeModeStarted();
@@ -336,14 +341,14 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	private final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
 		public void actionPerformed(ActionEvent e) {
 			// TODO: Implement query data refresh
-			JOptionPane.showMessageDialog(ReportLayoutPanel.this.panel, "When implemented, this will refresh the data from all queries");
+			JOptionPane.showMessageDialog(LayoutPanel.this.panel, "When implemented, this will refresh the data from all queries");
 		}
 	};
 	
-    public ReportLayoutPanel(final WabitSwingSession session, final Layout report) {
+    public LayoutPanel(final WabitSwingSession session, final Layout layout) {
         this.session = session;
         parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
-		this.report = report;
+		this.layout = layout;
 		canvas = new PCanvas();
         canvas.setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
         canvas.setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -353,7 +358,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         canvas.setZoomEventHandler(null);
         cursorManager = new CursorManager(canvas);
         
-        pageNode = new PageNode(session, this, report.getPage());
+        pageNode = new PageNode(session, this, layout.getPage());
         canvas.getLayer().addChild(pageNode);
         
         // XXX why is this being done? skipping it appears to have no effect
@@ -422,7 +427,7 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
                 double oldScale = camera.getViewScale();
                 camera.scaleViewAboutPoint(newScale/oldScale, camera.getViewBounds().getCenterX(), camera.getViewBounds().getCenterY());
                 logger.debug("Camera scaled by " + newScale/oldScale + " and is now at " + camera.getViewScale());
-				ReportLayoutPanel.this.report.setZoomLevel(zoomSlider.getValue());
+				LayoutPanel.this.layout.setZoomLevel(zoomSlider.getValue());
 			}
 		});
         zoomSlider.addMouseListener(new MouseAdapter() {
@@ -443,25 +448,25 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
         toolbar.add(button);
         toolbar.addSeparator();
         
-        button = new JButton(new PageFormatAction(report.getPage()));
+        button = new JButton(new PageFormatAction(layout.getPage()));
         setupToolBarButtonLabel(button, "Page Settings");
         toolbar.add(button);
         
 		button = new JButton(new ExportWabitObjectAction<Layout>(session,
-				report, WabitIcons.EXPORT_ICON_32,
+				layout, WabitIcons.EXPORT_ICON_32,
 				"Export Report to Wabit file"));
         setupToolBarButtonLabel(button, "Export");
         toolbar.add(button);
         
-        button = new JButton(new PrintPreviewAction(parentFrame, report));
+        button = new JButton(new PrintPreviewAction(parentFrame, layout));
         setupToolBarButtonLabel(button, "Preview");
         toolbar.add(button);
 
-        button = new JButton(new PrintAction(report, toolbar, session));
+        button = new JButton(new PrintAction(layout, toolbar, session));
         setupToolBarButtonLabel(button, "Print");
         toolbar.add(button);
         
-        button = new JButton(new PDFAction(session, toolbar, report));
+        button = new JButton(new PDFAction(session, toolbar, layout));
         setupToolBarButtonLabel(button, "Print PDF");
         toolbar.add(button);
         
@@ -588,8 +593,8 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 		this.mouseState = state;		
 	}
 
-	public Layout getReport() {
-		return report;
+	public Layout getLayout() {
+		return layout;
 	}
 
 	public PageNode getPageNode() {
@@ -613,7 +618,15 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 	}
 	
 	public String getTitle() {
-		return "Report Editor - " + report.getName();
+		if (layout instanceof Report) {
+			return "Query Editor - " + layout.getName();
+		} else if (layout instanceof Template) {
+			return "Report Editor - " + layout.getName();
+		} else {
+			throw new UnsupportedOperationException(
+					"Layout panel only supports Layout's of " +
+					"type Report and Template not of type " + layout.getClass());
+		}
 	}
 	
 	/**

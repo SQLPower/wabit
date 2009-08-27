@@ -31,6 +31,7 @@ import javax.swing.ImageIcon;
 public class WabitIcons {
 	
 	public static final Icon REPORT_ICON_16 = makeIcon("dashboard-16");
+	public static final Icon TEMPLATE_ICON_16 = makeIcon("template-16");
 	public static final Icon WABIT_FILE_ICON_16 = makeIcon("wabitFile-16"); 
 	public static final Icon EXPORT_ICON_32 = makeIcon("32x32/export");
 	public static final Icon RUN_ICON_32 = makeIcon("32x32/run");

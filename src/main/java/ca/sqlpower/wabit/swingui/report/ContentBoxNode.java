@@ -225,9 +225,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		}
 	}
 	
-	private final ReportLayoutPanel parentPanel;
+	private final LayoutPanel parentPanel;
 	
-    public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, ReportLayoutPanel parentPanel, ContentBox contentBox) {
+    public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, LayoutPanel parentPanel, ContentBox contentBox) {
         this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * Copyright (c) 2009, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -41,15 +41,10 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitVersion;
 
-/**
- * Represents a report layout in the Wabit.
- */
-public class Layout extends AbstractWabitObject implements Pageable, Printable {
-
-    private static final Logger logger = Logger.getLogger(Layout.class);
+public abstract class Layout extends AbstractWabitObject implements Pageable, Printable {
+    private static final Logger logger = Logger.getLogger(Report.class);
 
 	private static final String PROPERTY_ZOOM = "zoomLevel";
 	
@@ -59,6 +54,15 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable {
 	 * increases when it is not counting pages.
 	 */
 	private static final String COUNTING_PAGES = "counting_pages";
+	
+	public Layout() {
+		super();
+	}
+	
+	public Layout(String uuid) {
+		super(uuid);
+	}
+	
 	
 	/**
 	 * A property that defines which page is currently being printed.
@@ -101,7 +105,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable {
      * left and right masters, cover pages, and so on. For now, a Layout can only
      * have one arrangement of page content, and this is it.
      */
-    private Page page;
+    protected Page page;
     
     private int pageCount = Integer.MAX_VALUE;
     
@@ -117,40 +121,6 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable {
      */
     private AtomicBoolean currentlyPrinting = new AtomicBoolean(false);
 
-    public Layout(String name) {
-        this(name,null);
-    }
-    
-    public Layout(String name, String uuid) {
-        super(uuid);
-        setName(name);
-        PageFormat pageFormat = new PageFormat();
-        pageFormat.setOrientation(PageFormat.LANDSCAPE);
-        page = new Page("Default Page", pageFormat);
-        page.setParent(this);
-        updateBuiltinVariables();
-    }
-    
-    /**
-     * Copy constructor
-     * 
-     * @param layout
-     * 		The layout to copy
-     * @param session
-     * 		The session to add the layout to
-     */
-    public Layout(Layout layout, WabitSession session) {
-    	super();
-    	setName(layout.getName());
-    	page = new Page(layout.getPage());
-    	page.setParent(this);
-    	for (String variableName : layout.getVarContext().getVariableNames()) {
-    		setVariable(variableName, layout.getVarContext().getVariableValue(variableName, null));
-    	}
-    	setZoomLevel(layout.getZoomLevel());
-    	
-	}
-    
     protected void updateBuiltinVariables() {
         setVariable("now", new Date());
         setVariable("system_user", System.getProperty("user.name"));
@@ -193,7 +163,9 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable {
                 
         if (pageIndex == 0) {
             for (ContentBox cb : page.getContentBoxes()) {
-                cb.getContentRenderer().resetToFirstPage();
+            	if (cb.getContentRenderer() != null) {
+            		cb.getContentRenderer().resetToFirstPage();
+            	}
             }
         }
         logger.debug("Page count is " + pageCount + " looking or page indexed " + pageIndex);
@@ -275,7 +247,7 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable {
 	public int getZoomLevel() {
 		return zoomLevel;
 	}
-
+	
 	public boolean compareAndSetCurrentlyPrinting(boolean expected, boolean updateValue) {
 		return currentlyPrinting.compareAndSet(expected, updateValue);
 	}
@@ -288,4 +260,5 @@ public class Layout extends AbstractWabitObject implements Pageable, Printable {
         if (page == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(page));
     }
+
 }

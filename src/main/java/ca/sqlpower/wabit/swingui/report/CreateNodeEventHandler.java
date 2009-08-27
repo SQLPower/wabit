@@ -38,9 +38,9 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 
 	private final JFrame parentFrame;
 	
-	private final ReportLayoutPanel panel;
+	private final LayoutPanel panel;
 
-	public CreateNodeEventHandler(WabitSwingSession session, ReportLayoutPanel panel) {
+	public CreateNodeEventHandler(WabitSwingSession session, LayoutPanel panel) {
 		this.session = session;
 		parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
 		this.panel = panel;
@@ -64,7 +64,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 					contentBox.setContentRenderer(label);
 				}
 				
-				Page page = panel.getReport().getPage();
+				Page page = panel.getLayout().getPage();
 				newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);
 				panel.getPageNode().addChild(newCBNode);
 			} else if (panel.getMouseState().equals(MouseStates.CREATE_HORIZONTAL_GUIDE)) {

@@ -33,7 +33,7 @@ import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
@@ -92,8 +92,8 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
 	 *            be appended to this name.
 	 * @return The new layout that was added to the workspace.
 	 */
-    public static Layout createDefaultLayout(WabitWorkspace workspace, ReportContentRenderer contentRenderer, String layoutName) {
-        Layout l = new Layout(layoutName + " Layout");
+    public static Report createDefaultLayout(WabitWorkspace workspace, ReportContentRenderer contentRenderer, String layoutName) {
+        Report l = new Report(layoutName + " Layout");
         Page p = l.getPage();
         final int pageBodyWidth = (int) (p.getRightMarginOffset() - p.getLeftMarginOffset());
         final int pageBodyHeight = (int) (p.getLowerMarginOffset() - p.getUpperMarginOffset());
@@ -156,7 +156,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         shameless.setY(footer.getY() + footer.getHeight());
         
 
-        workspace.addLayout(l);
+        workspace.addReport(l);
         
         return l;
     }

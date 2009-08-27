@@ -28,14 +28,14 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 
 public class WabitPrintDialog {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                final Layout layout = new Layout("Test print");
+                final Report layout = new Report("Test print");
                 JFrame f = new JFrame("Hello World Printer");
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 JButton printButton = new JButton("Print Report");

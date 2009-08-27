@@ -91,7 +91,9 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
@@ -713,8 +715,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
-    		layout = new Layout(layoutName,attributes.getValue("uuid"));
-    		session.getWorkspace().addLayout(layout);
+    		if (attributes.getValue("template") == null || !Boolean.parseBoolean(attributes.getValue("template"))) {
+    			layout = new Report(layoutName, attributes.getValue("uuid"));
+    			session.getWorkspace().addReport((Report) layout);
+    		} else {
+    			layout = new Template(layoutName, attributes.getValue("uuid"));
+    			session.getWorkspace().addTemplate((Template) layout);
+    		}
     		
     		progressMessage = session.getWorkspace().getName() + " : loading layout " + layoutName;
     		

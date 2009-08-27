@@ -78,9 +78,9 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
      */
     private final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>();
 
-    private final ReportLayoutPanel reportLayoutPanel;
+    private final LayoutPanel reportLayoutPanel;
 
-    public ResultSetSwingRenderer(ResultSetRenderer renderer, ReportLayoutPanel reportLayoutPanel) {
+    public ResultSetSwingRenderer(ResultSetRenderer renderer, LayoutPanel reportLayoutPanel) {
         this.renderer = renderer;
         this.reportLayoutPanel = reportLayoutPanel;
         setUpFormats();

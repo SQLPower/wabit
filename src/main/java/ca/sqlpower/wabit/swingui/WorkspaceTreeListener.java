@@ -52,18 +52,21 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.CopyImageAction;
-import ca.sqlpower.wabit.swingui.action.CopyLayoutAction;
+import ca.sqlpower.wabit.swingui.action.CopyReportAction;
 import ca.sqlpower.wabit.swingui.action.CopyOlapDatasource;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
+import ca.sqlpower.wabit.swingui.action.CopyTemplateAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
-import ca.sqlpower.wabit.swingui.action.NewLayoutAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
+import ca.sqlpower.wabit.swingui.action.NewReportAction;
+import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
@@ -212,8 +215,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		        	} else if (response == JOptionPane.CLOSED_OPTION || response == 2) {
 		            	return;
 		            } 
-		    } else if (item instanceof Layout) {
-				session.getWorkspace().removeLayout((Layout)item);
+		    } else if (item instanceof Report) {
+				session.getWorkspace().removeReport((Report)item);
+		    } else if (item instanceof Template) {
+		    	session.getWorkspace().removeTemplate((Template) item);
 		    } else if (item instanceof OlapQuery) {
 				int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
@@ -249,12 +254,12 @@ public class WorkspaceTreeListener extends MouseAdapter {
          * Removes any content boxes dependent on the image passed to the method.
          */
 		private void removeLayoutPartsDependentOnImage(WabitImage image) {
-		    for (Layout layout : session.getWorkspace().getLayouts()) {
+		    for (Report layout : session.getWorkspace().getReports()) {
                 List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
                 for (ContentBox cb : cbList) {
                     if (cb.getContentRenderer() instanceof ImageRenderer && ((ImageRenderer) cb.getContentRenderer()).getImage() == image) {
-                        int layoutIndex = session.getWorkspace().getLayouts().indexOf(layout);
-                        session.getWorkspace().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
+                        int layoutIndex = session.getWorkspace().getReports().indexOf(layout);
+                        session.getWorkspace().getReports().get(layoutIndex).getPage().removeContentBox(cb);
                     }
                 }
             }
@@ -265,12 +270,22 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		 * @param query
 		 */
 		private void removeLayoutPartsDependentOnQuery(QueryCache query) {
-			for(Layout layout :session.getWorkspace().getLayouts()) {
+			List<ca.sqlpower.wabit.report.Layout> allLayouts = new ArrayList<ca.sqlpower.wabit.report.Layout>();
+			allLayouts.addAll(session.getWorkspace().getReports());
+			allLayouts.addAll(session.getWorkspace().getTemplates());
+			for (ca.sqlpower.wabit.report.Layout layout : allLayouts) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
-				    if(cb.getContentRenderer() instanceof ResultSetRenderer &&((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
-				    	int layoutIndex = session.getWorkspace().getLayouts().indexOf(layout);
-						session.getWorkspace().getLayouts().get(layoutIndex).getPage().removeContentBox(cb);
+				    if(cb.getContentRenderer() instanceof ResultSetRenderer && ((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
+				    	int layoutIndex;
+				    	if (layout instanceof Report) { 
+				    		layoutIndex = session.getWorkspace().getReports().indexOf(layout);
+				    		session.getWorkspace().getReports().get(layoutIndex).getPage().removeContentBox(cb);
+				    	} else if (layout instanceof Template) {
+				    		layoutIndex = session.getWorkspace().getTemplates().indexOf(layout);
+				    		session.getWorkspace().getTemplates().get(layoutIndex).getPage().removeContentBox(cb);
+				    	}
+						
 					}
 				}
 			}
@@ -281,7 +296,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		 * @param query
 		 */
 		private void removeLayoutPartsDependentOnOlapQuery(OlapQuery query) {
-			for(Layout layout :session.getWorkspace().getLayouts()) {
+			List<ca.sqlpower.wabit.report.Layout> allLayouts = new ArrayList<ca.sqlpower.wabit.report.Layout>();
+			allLayouts.addAll(session.getWorkspace().getReports());
+			allLayouts.addAll(session.getWorkspace().getTemplates());
+			for (ca.sqlpower.wabit.report.Layout layout : allLayouts) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
 				    if(cb.getContentRenderer() instanceof CellSetRenderer &&((CellSetRenderer) cb.getContentRenderer()).getOlapQuery() == query) {
@@ -311,8 +329,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		
 		JMenuItem newImage = new JMenuItem(new NewImageAction(session));
 		
-		JMenuItem newLayout = new JMenuItem(new NewLayoutAction(session));
-		newLayout.setIcon(WabitIcons.REPORT_ICON_16);
+		JMenuItem newReport = new JMenuItem(new NewReportAction(session));
+		
+		JMenuItem newTemplate = new JMenuItem(new NewTemplateAction(session));
 		
 		if (lastPathComponent != null) {
 			JTree tree = (JTree) e.getSource();
@@ -333,7 +352,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				} else if (lastFolderNode.getFolderType().equals(FolderType.IMAGES)) {
 					menu.add(newImage);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTS)) {
-					menu.add(newLayout);
+					menu.add(newReport);
+				} else if (lastFolderNode.getFolderType().equals(FolderType.TEMPLATES)) {
+					menu.add(newTemplate);
 				}
 			} else {
 				if (lastPathComponent instanceof WabitDataSource) {
@@ -368,11 +389,16 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					
 					menu.addSeparator();
 					menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
-				} else if (lastPathComponent instanceof Layout) {
-					menu.add(newLayout);
+				} else if (lastPathComponent instanceof Report) {
+					menu.add(newReport);
 					
 					menu.addSeparator();
-					menu.add(new CopyLayoutAction((Layout) lastPathComponent, session));
+					menu.add(new CopyReportAction((Report) lastPathComponent, session));
+				} else if (lastPathComponent instanceof Template) {
+					menu.add(newTemplate);
+
+					menu.addSeparator();
+					menu.add(new CopyTemplateAction((Template) lastPathComponent, session));
 				} else if (lastPathComponent instanceof WabitImage) {
 					menu.add(newImage);
 					
@@ -411,7 +437,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			
 			menu.add(newQuery);
 			menu.add(newOlapQuery);
-			menu.add(newLayout);
+			menu.add(newReport);
+			menu.add(newTemplate);
 			menu.add(newImage);
 		}
 		if (!(lastPathComponent instanceof ContentBox)) {

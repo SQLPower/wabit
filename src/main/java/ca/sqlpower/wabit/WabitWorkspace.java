@@ -40,7 +40,8 @@ import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 
 /**
@@ -77,9 +78,14 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	List<DatabaseListChangeListener> listeners;
     
     /**
-     * The report layouts in this workspace.
+     * The reports in this workspace.
      */
-    private final List<Layout> layouts = new ArrayList<Layout>();
+    private final List<Report> reports = new ArrayList<Report>();
+    
+    /**
+     * The templates in this workspace.
+     */
+    private final List<Template> templates = new ArrayList<Template>();
     
     /**
      * The images in this workspace.
@@ -127,7 +133,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         allChildren.addAll(olapQueries);
         allChildren.addAll(charts);
         allChildren.addAll(images);
-        allChildren.addAll(layouts);
+        allChildren.addAll(templates);
+        allChildren.addAll(reports);
         return allChildren;
     }
     
@@ -212,20 +219,42 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	}
     }
     
-    public void addLayout(Layout layout) {
-        int index = layouts.size();
-        layouts.add(index, layout);
-        layout.setParent(this);
-        fireChildAdded(Layout.class, layout, index);
-        setEditorPanelModel(layout);
+    public void addTemplate(Template template) {
+    	int index = templates.size();
+        templates.add(index, template);
+        template.setParent(this);
+        fireChildAdded(Template.class, template, index);
+        setEditorPanelModel(template);
+	}
+    
+    public boolean removeTemplate(Template template) {
+    	int index = templates.indexOf(template);
+    	if (index != -1) {
+    		templates.remove(template);
+    		fireChildRemoved(Template.class, template, index);
+    		if (editorPanelModel == template) {
+    		    setEditorPanelModel(this);
+    		}
+    		return true;
+    	} else {
+    		return false;
+    	}
+	}
+    
+    public void addReport(Report report) {
+        int index = reports.size();
+        reports.add(index, report);
+        report.setParent(this);
+        fireChildAdded(Report.class, report, index);
+        setEditorPanelModel(report);
     }
     
-    public boolean removeLayout(Layout layout) {
-    	int index = layouts.indexOf(layout);
+    public boolean removeReport(Report report) {
+    	int index = reports.indexOf(report);
     	if (index != -1) {
-    		layouts.remove(layout);
-    		fireChildRemoved(Layout.class, layout, index);
-    		if (editorPanelModel == layout) {
+    		reports.remove(report);
+    		fireChildRemoved(Report.class, report, index);
+    		if (editorPanelModel == report) {
     		    setEditorPanelModel(this);
     		}
     		return true;
@@ -304,8 +333,11 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         
         if (childType == WabitImage.class) return offset;
         offset += images.size();
+        
+        if (childType == Template.class) return offset;
+        offset += templates.size();
 
-        if (childType == Layout.class) return offset;
+        if (childType == Report.class) return offset;
         
         throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
     }
@@ -314,21 +346,25 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	return Collections.unmodifiableList(queries);
     }
     
-    public List<Layout> getLayouts() {
-    	return Collections.unmodifiableList(layouts);
+    public List<Report> getReports() {
+    	return Collections.unmodifiableList(reports);
     }
+    
+    public List<Template> getTemplates() {
+		return Collections.unmodifiableList(templates);
+	}
 
     /**
-     * Returns the first Layout child having the given name, or null
-     * if no layouts have the requested name.
+     * Returns the first Report child having the given name, or null
+     * if no reports have the requested name.
      * 
      * @param name The name to search. If null, null will be returned.
      */
-    public Layout getLayoutByName(String name) {
+    public Report getReportByName(String name) {
     	if (name == null) return null;
-    	for (Layout l : layouts) {
-    		if (name.equals(l.getName())) {
-    			return l;
+    	for (Report r : reports) {
+    		if (name.equals(r.getName())) {
+    			return r;
     		}
     	}
     	return null;

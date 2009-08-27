@@ -52,10 +52,11 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitIcons;
@@ -125,8 +126,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 Page page = (Page) wo;
                 r.setIcon(PAGE_ICON);
                 r.setText(page.getName() + " (" + page.getWidth() + "x" + page.getHeight() + ")");
-            } else if (wo instanceof Layout) {
+            } else if (wo instanceof Report) {
                 r.setIcon(WabitIcons.REPORT_ICON_16);
+            } else if (wo instanceof Template) {
+            	r.setIcon(WabitIcons.TEMPLATE_ICON_16);
             } else if (wo instanceof ContentBox) {
                 ContentBox cb = (ContentBox) wo;
                 final ReportContentRenderer cbChild;

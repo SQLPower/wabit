@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.Color;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -38,12 +37,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,14 +77,11 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl.TreeTabDropTargetListener;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -144,8 +137,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
 
 		public void drop(DropTargetDropEvent dtde) {
-			
-			ByteArrayOutputStream byteOut;
 			Transferable transferable = dtde.getTransferable();
 				dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
 				DataFlavor dataFlavor = DataFlavor.javaFileListFlavor;
@@ -166,8 +157,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 					open.importWorkspaces(WabitSwingSessionImpl.this);
 					
 				}
-		
-			
 		}
 		
 		public void dropActionChanged(DropTargetDragEvent dtde) {

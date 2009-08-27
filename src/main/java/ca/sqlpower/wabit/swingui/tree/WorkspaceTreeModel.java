@@ -61,8 +61,10 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
@@ -106,6 +108,7 @@ public class WorkspaceTreeModel implements TreeModel {
         folderList.add(new FolderNode(workspace, FolderType.QUERIES));
         folderList.add(new FolderNode(workspace, FolderType.CHARTS));
         folderList.add(new FolderNode(workspace, FolderType.IMAGES));
+        folderList.add(new FolderNode(workspace, FolderType.TEMPLATES));
         folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
         WabitUtils.listenToHierarchy(workspace, listener, listener);
@@ -124,7 +127,8 @@ public class WorkspaceTreeModel implements TreeModel {
         if (o instanceof QueryCache) return true;
         if (o instanceof OlapQuery) return true;
         if (o instanceof FolderNode) return true;
-        if (o instanceof Layout) return true;
+        if (o instanceof Template) return true;
+        if (o instanceof Report) return true;
         if (o instanceof Chart) return true;
         if (o instanceof ColumnIdentifier) return true;
         if (o instanceof ContentBox) return true;
@@ -142,7 +146,7 @@ public class WorkspaceTreeModel implements TreeModel {
     	} else if (parentObject instanceof FolderNode) {
     		return ((FolderNode) parentObject).getChildren().get(index);
     	} else if (parentObject instanceof Layout) {
-    		return  getLayoutsChildren(parentObject).get(index);
+    		return  getLayoutsChildren((Layout) parentObject).get(index);
     	} else if (parentObject instanceof ContentBox) {
     		return new ArrayList<Object>();
     	} else if (parentObject instanceof WabitDataSource) {
@@ -173,7 +177,7 @@ public class WorkspaceTreeModel implements TreeModel {
     	} else if (parent instanceof FolderNode) {
     		return ((FolderNode) parent).getChildren().size();
     	} else if (parent instanceof Layout) {
-    		return getLayoutsChildren(parent).size();
+    		return getLayoutsChildren((Layout) parent).size();
     	} else if (parent instanceof ContentBox) {
     		return 0;
     	} else if (parent instanceof WabitDataSource) {
@@ -201,7 +205,10 @@ public class WorkspaceTreeModel implements TreeModel {
      */
     private Map<OlapConnection, Olap4jTreeModel> treeModelMap = new HashMap<OlapConnection, Olap4jTreeModel>();
     
-	private List<WabitObject> getLayoutsChildren(Object parent) {
+    /**
+     * This method will return all the children of any given layout.
+     */
+	private List<WabitObject> getLayoutsChildren(Layout parent) {
 		List<WabitObject> layoutChildren = new ArrayList<WabitObject>();
 		List<Page> page = ((Layout) parent).getChildren();
 		for (WabitObject wo : ((Page) page.get(0)).getChildren()) {
@@ -520,8 +527,11 @@ public class WorkspaceTreeModel implements TreeModel {
 
             if (wabitObject instanceof WabitImage) return index;
             index -= (workspace.getImages().size());
+            
+            if (wabitObject instanceof Template) return index;
+            index -= (workspace.getTemplates().size());
 			
-			if (wabitObject instanceof Layout) return index;
+			if (wabitObject instanceof Report) return index;
 			
 			return actualIndex;
 		}
@@ -581,8 +591,8 @@ public class WorkspaceTreeModel implements TreeModel {
                     // TODO: Add queries to workspace
                     
                     // Add layouts to workspace
-                    Layout layout = new Layout("Example Layout");
-                    p.addLayout(layout);
+                    Report layout = new Report("Example Layout");
+                    p.addReport(layout);
                     Page page = layout.getPage();
                     page.addContentBox(new ContentBox());
                     page.addGuide(new Guide(Axis.HORIZONTAL, 123));

@@ -23,23 +23,24 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Template;
+import ca.sqlpower.wabit.swingui.WabitIcons;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
-public class CopyLayoutAction extends AbstractAction {
-	private Layout layout;
-	private WabitSession session;
-	
-	public CopyLayoutAction(Layout layout, WabitSession session) {
-		super("Copy Report");
-		this.layout = layout;
+/**
+ * An action that adds a new empty template to a particular workspace every time it
+ * is invoked.
+ */
+public class NewTemplateAction extends AbstractAction{
+	private final WabitSwingSession session;
+
+    public NewTemplateAction(WabitSwingSession session) {
+        super("New Template", WabitIcons.TEMPLATE_ICON_16);
 		this.session = session;
-	}
-	
-	public void actionPerformed(ActionEvent e) {
-		Layout layoutCopy = new Layout(layout, session);
-		layoutCopy.setParent(layout.getParent());
-		layoutCopy.setName(layout.getName() + " Copy");
-		session.getWorkspace().addLayout(layoutCopy);
-	}
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        Template template = new Template("New Template");
+		session.getWorkspace().addTemplate(template);
+    }
 }

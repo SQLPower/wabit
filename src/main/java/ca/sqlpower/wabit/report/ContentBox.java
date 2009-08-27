@@ -117,6 +117,8 @@ public class ContentBox extends AbstractWabitObject {
     	} else if (oldContentRenderer instanceof ChartRenderer) {
     		//TODO
 //    		newContentRenderer = new ChartRenderer((ChartRenderer) oldContentRenderer);
+    	} else if (oldContentRenderer == null) {
+    		newContentRenderer = null;
     	} else {
     		throw new UnsupportedOperationException("ContentRenderer of type " + oldContentRenderer.getClass().getName()
     				+ " not yet supported for copying.");
