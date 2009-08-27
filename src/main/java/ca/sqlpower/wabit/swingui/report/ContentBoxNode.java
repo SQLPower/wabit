@@ -282,14 +282,10 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	borderColor = Color.BLACK;
         } else {
         	borderStroke = new BasicStroke(1f);
-        	if (showDropInfo) {
-        		borderColor = Color.GRAY;
-        	} else {
-        		borderColor = Color.LIGHT_GRAY;
-        	}
+    		borderColor = Color.LIGHT_GRAY;
         }
         
-        String str = "Drag content provider here!";;
+        String str = "Drag content here!";;
     	double y = getY() + (getHeight() / 2);
     	Rectangle2D rect;
     	double x = 0;
