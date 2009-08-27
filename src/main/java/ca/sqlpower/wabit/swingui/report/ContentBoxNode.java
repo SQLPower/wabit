@@ -220,7 +220,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
             throw new IllegalStateException("Unknown renderer of type " + renderer.getClass() 
                     + ". The swing components of this renderer type are missing.");
         }
-        addInputEventListener(swingRenderer);
+		if (swingRenderer != null) {
+			addInputEventListener(swingRenderer);
+		}
 	}
 	
 	private final ReportLayoutPanel parentPanel;

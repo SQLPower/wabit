@@ -226,7 +226,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     }
 
     public VariableContext getVariableContext() {
-    	variableContext = ((Layout)getParent().getParent().getParent()).getVarContext();
+    	variableContext = ((Layout)getParent().getParent().getParent()).getVarContext(); //XXX not good.
         return variableContext;
     }
     
