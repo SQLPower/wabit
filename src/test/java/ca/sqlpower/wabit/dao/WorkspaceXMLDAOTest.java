@@ -58,7 +58,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 
 public class WorkspaceXMLDAOTest extends TestCase {
 	
@@ -329,8 +329,8 @@ public class WorkspaceXMLDAOTest extends TestCase {
 			}
         }
         
-        assertEquals(p.getLayouts().size(), loadedSession.getWorkspace().getLayouts().size());
-        for (Layout l : p.getLayouts()) {
+        assertEquals(p.getReports().size(), loadedSession.getWorkspace().getReports().size());
+        for (Report l : p.getReports()) {
         	//XXX Need to finish testing layouts
         }
         

@@ -32,7 +32,7 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 
 public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
@@ -103,12 +103,12 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      */
     public void testRemovingSelectedLayoutChangesSelection() throws Exception {
         WabitSession session = new StubWabitSession(new StubWabitSessionContext());
-        Layout layout = new Layout("Layout");
-        workspace.addLayout(layout);
+        Report layout = new Report("Layout");
+        workspace.addReport(layout);
         workspace.setEditorPanelModel(layout);
         assertEquals(layout, workspace.getEditorPanelModel());
         
-        workspace.removeLayout(layout);
+        workspace.removeReport(layout);
         assertNotSame(layout, workspace.getEditorPanelModel());
     }
 

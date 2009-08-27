@@ -24,12 +24,12 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class LayoutTest extends AbstractWabitObjectTest {
 
-    private Layout layout;
+    private Report layout;
     
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        layout = new Layout("test layout");
+        layout = new Report("test layout");
     }
     
     @Override

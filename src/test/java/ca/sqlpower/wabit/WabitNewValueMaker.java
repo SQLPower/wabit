@@ -39,7 +39,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
-import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
@@ -63,8 +63,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                     return null;
                 }
             });
-        } else if (valueType.equals(Layout.class)) {
-            newValue = new Layout("testing layout");
+        } else if (valueType.equals(Report.class)) {
+            newValue = new Report("testing layout");
         } else if (valueType.equals(ContentBox.class)) {
         	newValue = new ContentBox();
         } else if (valueType.equals(ReportContentRenderer.class)) {
