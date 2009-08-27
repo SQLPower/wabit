@@ -76,6 +76,8 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.log4j.Logger;
 
+import com.sun.corba.se.impl.orbutil.graph.Node;
+
 import ca.sqlpower.swingui.CursorManager;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
@@ -102,6 +104,7 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
+import edu.umd.cs.piccolo.util.PPickPath;
 import edu.umd.cs.piccolox.event.PSelectionEventHandler;
 import edu.umd.cs.piccolox.swing.PScrollPane;
 
@@ -125,31 +128,60 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
      * usually a good comfortable amount. 
      */
     private static final double OVER_ZOOM_COEFF = 0.98;
+    
+    private ContentBoxNode focusedCBNode = null;
 
 	private class QueryDropListener implements DropTargetListener {
 
 		public void dragEnter(DropTargetDragEvent dtde) {
-			//no-op
+			showDropInfo(true);
 		}
 
 		public void dragExit(DropTargetEvent dte) {
-			//no-op
+			showDropInfo(false);
+		}
+		
+		private void showDropInfo(boolean shouldShow) {
+			for (int i = 0; i < pageNode.getChildrenCount(); i++) {
+				PNode node = pageNode.getChild(i);
+				if (node instanceof ContentBoxNode) {
+					((ContentBoxNode) node).setDropFeedback(shouldShow);
+					node.repaint();
+				}
+				
+			}
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
-			//no-op
+			Point2D point = canvas.getCamera().localToView(dtde.getLocation());
+			PPickPath path = canvas.getCamera().pick(point.getX(), point.getY(), 1);
+			PNode node =  path.getPickedNode();
+			if (node == focusedCBNode) return;
+			
+			if (focusedCBNode != null) {
+				focusedCBNode.setDraggedOver(false);
+			}
+			if (node != null && node instanceof ContentBoxNode) {
+				ContentBoxNode contentNode = (ContentBoxNode) node;
+				contentNode.setDraggedOver(true);
+				focusedCBNode = contentNode;
+			} else {
+				focusedCBNode = null;
+			}
 		}
 
 		public void drop(DropTargetDropEvent dtde) {
 			if (!dtde.isLocalTransfer()) {
 			    logger.debug("Rejecting non-local transfer");
 			    dtde.rejectDrop();
+			    resetUIAfterDrag();
 				return;
 			}
 			
 			if (!dtde.isDataFlavorSupported(ReportQueryTransferable.LOCAL_QUERY_ARRAY_FLAVOUR)) {
                 logger.debug("Rejecting transfer of unknown flavour");
                 dtde.rejectDrop();
+                resetUIAfterDrag();
 				return;
 			}			
 			
@@ -159,76 +191,97 @@ public class ReportLayoutPanel implements WabitPanel, MouseState {
 			} catch (UnsupportedFlavorException e) {
 				dtde.dropComplete(false);
 				dtde.rejectDrop();
+				resetUIAfterDrag();
 				throw new RuntimeException(e);
 			} catch (IOException e) {
 				dtde.dropComplete(false);
 				dtde.rejectDrop();
+				resetUIAfterDrag();
 				throw new RuntimeException(e);
 			}
-			
-			for (WabitObject wabitObject : wabitDroppings) {
-				 ContentBox contentBox = new ContentBox();
-				 ContentBoxNode newCBNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
-			                ReportLayoutPanel.this, contentBox);
-				 
-		        int width = 0;
-		        int height = 0;
-	        	height = (int) (pageNode.getHeight() / 10);
-	        	width = (int) (pageNode.getWidth() / 10);
 
-			    if (wabitObject instanceof QueryCache) {
-			        QueryCache queryCache = (QueryCache) wabitObject;
-			        ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
-			        contentBox.setContentRenderer(rsRenderer);
-			    } else if (wabitObject instanceof OlapQuery) {
-			        OlapQuery olapQuery = (OlapQuery) wabitObject;
-			        CellSetRenderer renderer = new CellSetRenderer(olapQuery);
-			        contentBox.setContentRenderer(renderer);
-                } else if (wabitObject instanceof Chart) {
-                    Chart chart = (Chart) wabitObject;
-                    ChartRenderer renderer = new ChartRenderer(chart);
-                    contentBox.setContentRenderer(renderer);
-                } else if (wabitObject instanceof WabitImage) {
-			        WabitImage image = (WabitImage) wabitObject;
-			        ImageRenderer renderer = new ImageRenderer();
-			        renderer.setImage(image);
-			        contentBox.setContentRenderer(renderer);
-			        
-			        if (image.getImage() != null) {
-			        	height = image.getImage().getHeight(null);
-			        	width = image.getImage().getWidth(null);
-			        }
-			    } else {
-			        throw new IllegalStateException("Unknown item dragged into the report layout. Object was " + wabitObject.getClass());
-			    }
-			    
-			    Point2D location = canvas.getCamera().localToView(dtde.getLocation());
-		        newCBNode.setBounds(location.getX(), location.getY(), height, width);
-		        pageNode.addChild(newCBNode);
+			for (WabitObject wabitObject : wabitDroppings) {
+				ContentBox contentBox; 
+				ContentBoxNode cbNode;
+				if (focusedCBNode != null) {
+					cbNode = focusedCBNode;
+					contentBox = focusedCBNode.getModel();
+				} else {
+					contentBox = new ContentBox();
+					cbNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
+							ReportLayoutPanel.this, contentBox);
+				}
+
+				int width = 0;
+				int height = 0;
+				height = (int) (pageNode.getHeight() / 10);
+				width = (int) (pageNode.getWidth() / 10);
+
+				if (wabitObject instanceof QueryCache) {
+					QueryCache queryCache = (QueryCache) wabitObject;
+					ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
+					contentBox.setContentRenderer(rsRenderer);
+				} else if (wabitObject instanceof OlapQuery) {
+					OlapQuery olapQuery = (OlapQuery) wabitObject;
+					CellSetRenderer renderer = new CellSetRenderer(olapQuery);
+					contentBox.setContentRenderer(renderer);
+				} else if (wabitObject instanceof Chart) {
+					Chart chart = (Chart) wabitObject;
+					ChartRenderer renderer = new ChartRenderer(chart);
+					contentBox.setContentRenderer(renderer);
+				} else if (wabitObject instanceof WabitImage) {
+					WabitImage image = (WabitImage) wabitObject;
+					ImageRenderer renderer = new ImageRenderer();
+					renderer.setImage(image);
+					contentBox.setContentRenderer(renderer);
+
+					if (image.getImage() != null) {
+						height = image.getImage().getHeight(null);
+						width = image.getImage().getWidth(null);
+					}
+				} else {
+					dtde.dropComplete(false);
+					dtde.rejectDrop();
+					resetUIAfterDrag();
+					throw new IllegalStateException("Unknown item dragged into the report layout. Object was " + wabitObject.getClass());
+				}
+				if (focusedCBNode == null) {
+					Point2D location = canvas.getCamera().localToView(dtde.getLocation());
+					cbNode.setBounds(location.getX(), location.getY(), height, width);
+					pageNode.addChild(cbNode);
+				}
 			}
-			
+
 			dtde.dropComplete(true);
+			resetUIAfterDrag();
 			dtde.acceptDrop(dtde.getDropAction());
-			
+
+		}
+		
+		private void resetUIAfterDrag() {
+			if (focusedCBNode != null) {
+				focusedCBNode.setDraggedOver(false);
+			}
+			showDropInfo(false);
 		}
 
 		public void dropActionChanged(DropTargetDragEvent dtde) {
 			//no-op
 		}
-    	
-    }
-    
-    private final JPanel panel;
-    private final PCanvas canvas;
-    private final PageNode pageNode;
-    private final Layout report;
-    
+
+	}
+
+	private final JPanel panel;
+	private final PCanvas canvas;
+	private final PageNode pageNode;
+	private final Layout report;
+
 	/**
 	 * The mouse state in this LayoutPanel.
 	 */
 	private MouseStates mouseState = MouseStates.READY;
-	
-    /**
+
+	/**
      * The cursor manager for this Query pen.
      */
 	private final CursorManager cursorManager;

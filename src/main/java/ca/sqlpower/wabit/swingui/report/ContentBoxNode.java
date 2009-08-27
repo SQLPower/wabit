@@ -25,6 +25,7 @@ import java.awt.Graphics2D;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -63,10 +64,15 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     private final ContentBox contentBox;
 
-    private Color borderColour = new Color(0xcccccc);
-    private BasicStroke borderStroke = new BasicStroke(1f);
-
     private Color textColour = Color.BLACK;
+    
+    /**
+     * This is the variable which determines whether or not the borders will be
+     * painted on a content box.
+     */
+    private boolean paintBorders = false;
+    
+    private boolean showDropInfo = false;
 
     private PInputEventListener inputHandler = new PInputManager() {
         
@@ -95,6 +101,20 @@ public class ContentBoxNode extends PNode implements ReportNode {
         public void mouseReleased(PInputEvent arg0) {
         	super.mouseReleased(arg0);
         	maybeShowPopup(arg0);
+        }
+        
+        @Override
+        public void mouseEntered(PInputEvent event) {
+        	super.mouseEntered(event);
+        	paintBorders = true;
+        	repaint();
+        }
+        
+        @Override
+        public void mouseExited(PInputEvent event) {
+        	super.mouseExited(event);
+        	paintBorders = false;
+        	repaint();
         }
         
         /**
@@ -132,6 +152,11 @@ public class ContentBoxNode extends PNode implements ReportNode {
         }
         
     };
+    
+    public void setDropFeedback(boolean dropInfo) {
+		this.showDropInfo = dropInfo;
+		this.paintBorders = dropInfo;
+	}
     
     /**
      * Reacts to changes in the content box by repainting this pnode.
@@ -176,6 +201,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
 	 * add a listener on the content box to listen for changes to the contentrenderer
 	 */
 	private void setSwingContentRenderer(ReportContentRenderer renderer) {
+		if (swingRenderer != null) {
+			removeInputEventListener(swingRenderer);
+		}
 		if (renderer instanceof CellSetRenderer) {
             swingRenderer = new CellSetSwingRenderer((CellSetRenderer) renderer);
         } else if (renderer instanceof ResultSetRenderer) {
@@ -228,6 +256,13 @@ public class ContentBoxNode extends PNode implements ReportNode {
         return true;
     }
     
+    private boolean draggedOver = false;
+    
+    public void setDraggedOver(boolean draggedOver) {
+    	this.draggedOver = draggedOver;
+    	repaint();
+    }
+    
     @Override
     protected void paint(PPaintContext paintContext) {
     	ReportContentRenderer contentRenderer = contentBox.getContentRenderer();
@@ -238,13 +273,31 @@ public class ContentBoxNode extends PNode implements ReportNode {
         PCamera camera = paintContext.getCamera();
         Graphics2D g2 = paintContext.getGraphics();
         
-        g2.setColor(borderColour);
-        g2.setStroke(SPSUtils.getAdjustedStroke(borderStroke, camera.getViewScale()));
-        g2.draw(getBounds());
+        Color borderColor;
+        BasicStroke borderStroke;
+        if (draggedOver) {
+        	borderStroke = new BasicStroke(3f);
+        	borderColor = Color.BLACK;
+        } else {
+        	borderStroke = new BasicStroke(1f);
+        	if (showDropInfo) {
+        		borderColor = Color.GRAY;
+        	} else {
+        		borderColor = Color.LIGHT_GRAY;
+        	}
+        }
         
-        g2.setColor(textColour);
+        String str = "Drag content provider here!";;
+    	double y = getY() + (getHeight() / 2);
+    	Rectangle2D rect;
+    	double x = 0;
+        if (showDropInfo) {
+        	rect = g2.getFontMetrics().getStringBounds(str, g2);
+        	x = getX() + ((getWidth() /2) - (rect.getWidth() / 2));
+        }
         
-        if (contentRenderer != null) {
+		if (contentRenderer != null) {
+            g2.setColor(textColour);
             logger.debug("Rendering content");
             Graphics2D contentGraphics = (Graphics2D) g2.create(
                     (int) getX(), (int) getY(),
@@ -253,9 +306,25 @@ public class ContentBoxNode extends PNode implements ReportNode {
             contentRenderer.resetToFirstPage();
             contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale(), 0, false);
             contentGraphics.dispose();
+            if (showDropInfo) {
+            	g2.setColor(borderColor);
+                g2.drawString(str, (int) x,(int) y);
+            }
         } else {
-            g2.setColor(Color.LIGHT_GRAY);
-            g2.drawString("Empty box\u2014drag content provider here!", (int) getX(),(int) (getY() + (getHeight() / 2)));
+        	if (showDropInfo) {
+        		g2.setColor(borderColor);
+				g2.drawString(str, (int) x,(int) y);
+        	} else {
+        		g2.setColor(Color.LIGHT_GRAY);
+            	rect = g2.getFontMetrics().getStringBounds("Empty box\u2014" + str, g2);
+            	x = getX() + ((getWidth() /2) - (rect.getWidth() / 2));
+        		g2.drawString("Empty box\u2014" + str, (int) x,(int) y);
+        	}
+        }
+        if (paintBorders) {
+	        g2.setStroke(SPSUtils.getAdjustedStroke(borderStroke, camera.getViewScale()));
+	        g2.setColor(borderColor);
+	        g2.draw(getBounds());
         }
     }
     @Override
