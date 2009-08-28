@@ -43,6 +43,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 
 import com.rc.retroweaver.runtime.Collections;
@@ -229,6 +230,8 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
                         workspace.addChart((Chart) importObject);
                     } else if (importObject instanceof Report) {
                         workspace.addReport((Report) importObject);
+                    } else if (importObject instanceof Template) {
+                    	workspace.addTemplate((Template) importObject);
                     } else {
                         throw new IllegalStateException("Cannot import the WabitObject type " + importObject.getClass());
                     }

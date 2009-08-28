@@ -41,7 +41,13 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
 
 import com.rc.retroweaver.runtime.Collections;
 
-public class SmartLeftTreeTransferable implements Transferable {
+/**
+ * This is a transferrable which can take any datatype that is in the left tree,
+ * with it you can transfer Olap objects (cubes etc..), {@link SQLObject}'s (tables).
+ * Items that can be dragged into reports (all wabit objects except connections and 
+ * other reports) and finally files to import and export. 
+ */
+public class SmartTreeTransferable implements Transferable {
 	public static final DataFlavor WABIT_OBJECT_FLAVOUR_TO_EXPORT = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType +
                 "; class=\"[Ljava.lang.Object;\"", "WabitByteStream");
 	private final List<Object> transferObjects;
@@ -89,7 +95,7 @@ public class SmartLeftTreeTransferable implements Transferable {
 	 * 		null is a valid value for this if no exporting to the desktop will
 	 * 		be done.
 	 */
-	public SmartLeftTreeTransferable(List<Object> transferObjects, WabitSessionContext context) {
+	public SmartTreeTransferable(List<Object> transferObjects, WabitSessionContext context) {
 		super();
 		this.transferObjects = transferObjects;
 		this.context = context;

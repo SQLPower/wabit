@@ -99,7 +99,9 @@ import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
+import ca.sqlpower.wabit.swingui.action.NewReportOnTemplateAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
@@ -412,7 +414,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
         toolbar.add(button);
         
         button = new JButton(addVerticalGuideAction);
-        setupToolBarButtonLabel(button, "V.Guide");
+        setupToolBarButtonLabel(button, "V. Guide");
         toolbar.add(button);
         
         toolbar.addSeparator();
@@ -448,6 +450,14 @@ public class LayoutPanel implements WabitPanel, MouseState {
         toolbar.add(button);
         toolbar.addSeparator();
         
+        if (layout instanceof Template) {
+	        button = new JButton(new NewReportOnTemplateAction(session, (Template) layout));
+	        button.setIcon(CreateLayoutFromQueryAction.ADD_LAYOUT_ICON);
+	        setupToolBarButtonLabel(button, "Create Report");
+	        toolbar.add(button);
+	        toolbar.addSeparator();
+        }
+        
         button = new JButton(new PageFormatAction(layout.getPage()));
         setupToolBarButtonLabel(button, "Page Settings");
         toolbar.add(button);
@@ -457,18 +467,20 @@ public class LayoutPanel implements WabitPanel, MouseState {
 				"Export Report to Wabit file"));
         setupToolBarButtonLabel(button, "Export");
         toolbar.add(button);
-        
-        button = new JButton(new PrintPreviewAction(parentFrame, layout));
-        setupToolBarButtonLabel(button, "Preview");
-        toolbar.add(button);
 
-        button = new JButton(new PrintAction(layout, toolbar, session));
-        setupToolBarButtonLabel(button, "Print");
-        toolbar.add(button);
-        
-        button = new JButton(new PDFAction(session, toolbar, layout));
-        setupToolBarButtonLabel(button, "Print PDF");
-        toolbar.add(button);
+        if (layout instanceof Report) {
+        	button = new JButton(new PrintPreviewAction(parentFrame, layout));
+        	setupToolBarButtonLabel(button, "Preview");
+        	toolbar.add(button);
+
+        	button = new JButton(new PrintAction(layout, toolbar, session));
+        	setupToolBarButtonLabel(button, "Print");
+        	toolbar.add(button);
+
+        	button = new JButton(new PDFAction(session, toolbar, layout));
+        	setupToolBarButtonLabel(button, "Print PDF");
+        	toolbar.add(button);
+        }
         
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);

@@ -426,7 +426,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         			ci = colAliasToInfoMap.get(columnKey);
         		} else {
         			ci = new ColumnInfo(columnKey);
-        			ci.setWidth(-1);
+//        			ci.setWidth(-1); XXX i don't know why this is here but taking it out makes columns size properly
         		}
         	} else {
         		Item item = ((QueryCache) query).getQuery().getSelectedColumns().get(col - 1);
@@ -436,7 +436,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         			ci = colKeyToInfoMap.get(item);
         		} else {
         			ci = new ColumnInfo(item, columnKey);
-        			ci.setWidth(-1);
+//        			ci.setWidth(-1); XXX i don't know why this is here but taking it out makes columns size properly
         		}
         	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));

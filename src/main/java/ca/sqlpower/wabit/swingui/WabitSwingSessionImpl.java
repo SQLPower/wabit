@@ -83,7 +83,7 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
-import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
+import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -120,47 +120,61 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
-			if (canImport(dtde.getCurrentDataFlavors())) {
+			if (canImport(dtde.getCurrentDataFlavors(), dtde.getTransferable())) {
 				dtde.acceptDrag(dtde.getDropAction());
 			} else {
 				dtde.rejectDrag();
 			}
 		}
-		
-        public boolean canImport(DataFlavor[] transferFlavors) {
-            for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor.equals(DataFlavor.javaFileListFlavor)) {
-                	return true;
+
+        public boolean canImport(DataFlavor[] transferFlavors, Transferable transferable) {
+        	//This variable is required because we need to know if we have something 
+        	//from the left tree to prevent accidental imports and weird behavior
+        	boolean isFromLeftTree = false;
+        	//XXX this is weird code, wanted to do an instanceof check to see if the
+        	//XXX transferable is a SmartTreeTransferable but that didn't work
+        	boolean containsFileList = false;
+        	for (DataFlavor dataFlavor : transferFlavors) {
+        		if (dataFlavor.equals(SmartTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT)) {
+        			isFromLeftTree = true;
+        		}
+                if (dataFlavor.equals(DataFlavor.javaFileListFlavor) ) {
+                	containsFileList = true;
                 }
             }
-            return false;
+            return (containsFileList && !isFromLeftTree);
         }
 
-		public void drop(DropTargetDropEvent dtde) {
-			Transferable transferable = dtde.getTransferable();
-				dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-				DataFlavor dataFlavor = DataFlavor.javaFileListFlavor;
-				List<File> transferData;
-				try {
-					transferData = (List<File>) transferable.getTransferData(dataFlavor);
-				} catch (Exception e1) {
-					throw new RuntimeException(e1);
-				}
-				for (File file : transferData) {
-					FileInputStream input;
-					try {
-						input = new FileInputStream(file);
-					} catch (FileNotFoundException e) {
-						throw new RuntimeException(e);
-					}
-					OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(getContext(), input, (int) file.length());
-					open.importWorkspaces(WabitSwingSessionImpl.this);
-					
-				}
-		}
-		
-		public void dropActionChanged(DropTargetDragEvent dtde) {
-			//don't care
+        public void drop(DropTargetDropEvent dtde) {
+        	Transferable transferable = dtde.getTransferable();
+        	DataFlavor[] dataFlavors = transferable.getTransferDataFlavors();
+			if (!canImport(dataFlavors, transferable)) {
+				dtde.rejectDrop();
+				return;
+			}
+        	dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+        	DataFlavor dataFlavor = DataFlavor.javaFileListFlavor;
+        	List<File> transferData;
+        	try {
+        		transferData = (List<File>) transferable.getTransferData(dataFlavor);
+        	} catch (Exception e1) {
+        		throw new RuntimeException(e1);
+        	}
+        	for (File file : transferData) {
+        		FileInputStream input;
+        		try {
+        			input = new FileInputStream(file);
+        		} catch (FileNotFoundException e) {
+        			throw new RuntimeException(e);
+        		}
+        		OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(getContext(), input, (int) file.length());
+        		open.importWorkspaces(WabitSwingSessionImpl.this);
+
+        	}
+        }
+
+        public void dropActionChanged(DropTargetDragEvent dtde) {
+        	//don't care
 		}
 	}
 	
@@ -431,7 +445,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				}
 				
 				dge.getDragSource().startDrag(dge, null, 
-						new SmartLeftTreeTransferable(objectsToTransfer, getContext()), 
+						new SmartTreeTransferable(objectsToTransfer, getContext()), 
 						new DragSourceAdapter() {//just need a default adapter
 				}
 				);

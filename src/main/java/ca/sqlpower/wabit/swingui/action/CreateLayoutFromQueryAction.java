@@ -41,7 +41,7 @@ import ca.sqlpower.wabit.report.VerticalAlignment;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
-    private static final Icon ADD_LAYOUT_ICON = new ImageIcon(CreateLayoutFromQueryAction.class.getResource("/icons/32x32/dashboard.png"));
+    public static final Icon ADD_LAYOUT_ICON = new ImageIcon(CreateLayoutFromQueryAction.class.getResource("/icons/32x32/dashboard.png"));
 
     /**
      * The workspace we will add the new layout to when this action is invoked.

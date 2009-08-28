@@ -167,7 +167,7 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.chart.ChartPanel;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
-import ca.sqlpower.wabit.swingui.tree.SmartLeftTreeTransferable;
+import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
@@ -764,7 +764,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
         public boolean canImport(DataFlavor[] transferFlavors) {
             for (DataFlavor dataFlavor : transferFlavors) {
-                if (dataFlavor.equals(SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT)) {
+                if (dataFlavor.equals(SmartTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT)) {
                     isFileList = false;
                 	return true;
                 } else if (dataFlavor.equals(DataFlavor.javaFileListFlavor)) {
@@ -804,7 +804,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					
 				}
 			} else  {
-				DataFlavor dataFlavor = SmartLeftTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT;
+				DataFlavor dataFlavor = SmartTreeTransferable.WABIT_OBJECT_FLAVOUR_TO_EXPORT;
 				Object[] transferData;
 				try {
 					transferData = (Object[]) transferable.getTransferData(dataFlavor);

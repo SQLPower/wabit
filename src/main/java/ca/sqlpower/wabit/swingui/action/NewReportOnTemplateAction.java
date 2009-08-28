@@ -25,15 +25,17 @@ import javax.swing.AbstractAction;
 
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
+/**
+ * Creates a new report on a template.
+ */
 public class NewReportOnTemplateAction extends AbstractAction {
 	private final WabitSwingSession session;
 	private final Template template;
 
     public NewReportOnTemplateAction(WabitSwingSession session, Template template) {
-        super("New Report on " + template.getName(), WabitIcons.REPORT_ICON_16);
+        super("New Report on " + template.getName());
 		this.session = session;
 		this.template = template;
     }
