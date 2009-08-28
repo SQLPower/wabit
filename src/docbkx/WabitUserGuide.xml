@@ -7,7 +7,7 @@
   <bookinfo>
     <title id="book">Wabit User Guide</title>
 
-    <subtitle>Version 0.9.7</subtitle>
+    <subtitle>Version 0.9.8</subtitle>
 
     <mediaobject>
       <imageobject id="wabit_logo">
@@ -43,7 +43,7 @@
       many kinds of queries and reports. These queries and reports can then be
       exported for use in other workspaces or printed.</para>
 
-      <para>This user guide is based on Wabit version 0.9.7</para>
+      <para>This user guide is based on Wabit version 0.9.8</para>
     </section>
 
     <section id="intro.audience">
@@ -158,25 +158,6 @@
     <section id="setup_database_relational">
       <title>Relational Data Source</title>
 
-      <para>Connecting to a relational database with Wabit involves the
-      following steps:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Define general settings and drivers for the database platform
-          you plan to connect to (such as SQL Server or Oracle). For more
-          information, see <xref linkend="setup_database.database_types" />
-          below.</para>
-        </listitem>
-
-        <listitem>
-          <para>Create a connection to a specific database server. This
-          connection uses the general settings and drivers you have configured
-          for the database platform. For more information, see <xref
-          linkend="setup_database.connections" /> .</para>
-        </listitem>
-      </orderedlist>
-
       <section id="setup_database.supported_databases">
         <title>Supported Database</title>
 
@@ -194,6 +175,10 @@
                 <entry>
                   <para>Support Notes</para>
                 </entry>
+
+                <entry>
+                  <para>JDBC Driver included</para>
+                </entry>
               </row>
             </thead>
 
@@ -206,6 +191,10 @@
                 <entry>
                   <para>Fully supported.</para>
                 </entry>
+
+                <entry>
+                  <para>-</para>
+                </entry>
               </row>
 
               <row>
@@ -215,6 +204,10 @@
 
                 <entry>
                   <para>Fully supported.</para>
+                </entry>
+
+                <entry>
+                  <para>Yes</para>
                 </entry>
               </row>
 
@@ -226,6 +219,10 @@
                 <entry>
                   <para>Fully supported.</para>
                 </entry>
+
+                <entry>
+                  <para>Yes</para>
+                </entry>
               </row>
 
               <row>
@@ -235,6 +232,10 @@
 
                 <entry>
                   <para>Fully supported.</para>
+                </entry>
+
+                <entry>
+                  <para>Yes</para>
                 </entry>
               </row>
 
@@ -246,6 +247,10 @@
                 <entry>
                   <para>Partial support; needs more testing.</para>
                 </entry>
+
+                <entry>
+                  <para>-</para>
+                </entry>
               </row>
 
               <row>
@@ -255,6 +260,10 @@
 
                 <entry>
                   <para>Fully supported.</para>
+                </entry>
+
+                <entry>
+                  <para>Yes</para>
                 </entry>
               </row>
 
@@ -266,10 +275,157 @@
                 <entry>
                   <para>Preliminary support exists.</para>
                 </entry>
+
+                <entry>
+                  <para>-</para>
+                </entry>
               </row>
             </tbody>
           </tgroup>
         </informaltable>
+      </section>
+
+      <section id="setup_database.connections">
+        <title>Setting up Database Connections</title>
+
+        <para>You must set up a connection to allow Wabit to connect to a
+        specific database. When you create a connection, it is added to your
+        personal list of connections. Once defined, a particular connection
+        can easily be added to any number of workspaces.</para>
+
+        <para>Before creating a connection, you must define the general
+        settings for the database platform. Wabit already contains the general
+        settings for the most common databases. For more information, see
+        <xref linkend="setup_database.database_types" /> .</para>
+
+        <section id="setup_database.connections.create">
+          <title>Creating a New Database Connection</title>
+
+          <para>To create a new database connection:</para>
+
+          <orderedlist>
+            <listitem>
+              <para>Open the file menu and select 'Database Connection
+              Manager...'</para>
+            </listitem>
+
+            <listitem>
+              <para>Click the <guibutton>New...</guibutton> button, and then
+              select 'Database connection..'</para>
+            </listitem>
+
+            <listitem>
+              <mediaobject>
+                <imageobject>
+                  <imagedata fileref="src/docbkx/images/dbcs_properties.png"
+                             format="PNG" width="4in" />
+                </imageobject>
+              </mediaobject>
+
+              <informaltable frame="all">
+                <tgroup cols="2">
+                  <colspec colwidth="2in" />
+
+                  <colspec colwidth="3.5in" />
+
+                  <thead>
+                    <row>
+                      <entry>
+                        <para>In this field ...</para>
+                      </entry>
+
+                      <entry>
+                        <para>Do this ...</para>
+                      </entry>
+                    </row>
+                  </thead>
+
+                  <tbody>
+                    <row>
+                      <entry>
+                        <para>Connection Name</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter a name for the database connection.</para>
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>
+                        <para>Database Type</para>
+                      </entry>
+
+                      <entry>
+                        <para>Select the database platform you want to connect
+                        to. Note: This list contains the database types you
+                        defined in the JDBC Drivers... panel which can be
+                        accessed from the workspace page. For more
+                        information, see <xref
+                        linkend="setup_database.database_types" /> .</para>
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>
+                        <para>Connect Options and JDBC URL</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter the connection options for the database
+                        driver. (Theses options are based on the database type
+                        you select.)</para>
+
+                        <para>If you are using one of the fully-supported
+                        drivers, the connection option parameters are added
+                        into the JDBC URL field in the order that the Java
+                        driver expects to see them (this string is sometimes
+                        called a "db URL" in Java terminology). In the
+                        following example:</para>
+
+                        <itemizedlist>
+                          <listitem>
+                            <para>The default port number from the database type
+                            has been entered automatically in the Connect
+                            Options.</para>
+
+                            <para>Note: You would not usually change a default
+                            value unless the database server you're connecting
+                            to has been configured to use a different
+                            value.</para>
+                          </listitem>
+
+                          <listitem>
+                            <para>The hostname and database name have been
+                            entered manually in the Connect Options.</para>
+                          </listitem>
+                        </itemizedlist>
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>
+                        <para>Username and Password</para>
+                      </entry>
+
+                      <entry>
+                        <para>If necessary, enter the username and password to
+                        connect to the database.</para>
+                      </entry>
+                    </row>
+                  </tbody>
+                </tgroup>
+              </informaltable>
+            </listitem>
+
+            <listitem>
+              <para>Click OK. The new connection is added to the list of
+              available connections. Note: The Database Connection Manager can
+              also be accessed by right-clicking anywhere on the workspace
+              tree.</para>
+            </listitem>
+          </orderedlist>
+        </section>
       </section>
 
       <section id="setup_database.database_types">
@@ -554,149 +710,6 @@
           </orderedlist>
         </section>
       </section>
-
-      <section id="setup_database.connections">
-        <title>Setting up Database Connections</title>
-
-        <para>You must set up a connection to allow Wabit to connect to a
-        specific database. When you create a connection, it is added to your
-        personal list of connections. Once defined, a particular connection
-        can easily be added to any number of workspaces.</para>
-
-        <para>Before creating a connection, you must define the general
-        settings for the database platform. Wabit already contains the general
-        settings for the most common databases. For more information, see
-        <xref linkend="setup_database.database_types" /> .</para>
-
-        <section id="setup_database.connections.create">
-          <title>Creating a New Database Connection</title>
-
-          <para>To create a new database connection:</para>
-
-          <orderedlist>
-            <listitem>
-              <para>Open the file menu and select 'Database Connection
-              Manager...'</para>
-            </listitem>
-
-            <listitem>
-              <para>Click the <guibutton>New...</guibutton> button, and then
-              select 'Database connection..'</para>
-            </listitem>
-
-            <listitem>
-              <mediaobject>
-                <imageobject>
-                  <imagedata fileref="src/docbkx/images/dbcs_properties.png"
-                             format="PNG" width="4in" />
-                </imageobject>
-              </mediaobject>
-
-              <informaltable frame="all">
-                <tgroup cols="2">
-                  <colspec colwidth="2in" />
-
-                  <colspec colwidth="3.5in" />
-
-                  <thead>
-                    <row>
-                      <entry>
-                        <para>In this field ...</para>
-                      </entry>
-
-                      <entry>
-                        <para>Do this ...</para>
-                      </entry>
-                    </row>
-                  </thead>
-
-                  <tbody>
-                    <row>
-                      <entry>
-                        <para>Connection Name</para>
-                      </entry>
-
-                      <entry>
-                        <para>Enter a name for the database connection.</para>
-                      </entry>
-                    </row>
-
-                    <row>
-                      <entry>
-                        <para>Database Type</para>
-                      </entry>
-
-                      <entry>
-                        <para>Select the database platform you want to connect
-                        to. Note: This list contains the database types you
-                        defined in the JDBC Drivers... panel which can be
-                        accessed from the workspace page. For more
-                        information, see <xref
-                        linkend="setup_database.database_types" /> .</para>
-                      </entry>
-                    </row>
-
-                    <row>
-                      <entry>
-                        <para>Connect Options and JDBC URL</para>
-                      </entry>
-
-                      <entry>
-                        <para>Enter the connection options for the database
-                        driver. (Theses options are based on the database type
-                        you select.)</para>
-
-                        <para>If you are using one of the fully-supported
-                        drivers, the connection option parameters are added
-                        into the JDBC URL field in the order that the Java
-                        driver expects to see them (this string is sometimes
-                        called a "db URL" in Java terminology). In the
-                        following example:</para>
-
-                        <itemizedlist>
-                          <listitem>
-                            <para>The default port number from the database type
-                            has been entered automatically in the Connect
-                            Options.</para>
-
-                            <para>Note: You would not usually change a default
-                            value unless the database server you're connecting
-                            to has been configured to use a different
-                            value.</para>
-                          </listitem>
-
-                          <listitem>
-                            <para>The hostname and database name have been
-                            entered manually in the Connect Options.</para>
-                          </listitem>
-                        </itemizedlist>
-                      </entry>
-                    </row>
-
-                    <row>
-                      <entry>
-                        <para>Username and Password</para>
-                      </entry>
-
-                      <entry>
-                        <para>If necessary, enter the username and password to
-                        connect to the database.</para>
-                      </entry>
-                    </row>
-                  </tbody>
-                </tgroup>
-              </informaltable>
-            </listitem>
-
-            <listitem>
-              <para>Click OK. The new connection is added to the list of
-              available connections. Note: The Database Connection Manager can
-              also be accessed by right-clicking anywhere on the workspace
-              tree.</para>
-            </listitem>
-          </orderedlist>
-        </section>
-      </section>
     </section>
 
     <section id="setup_database_olap">
@@ -839,15 +852,15 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/execute_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - execute the current query (Shortcut: CTRL +
         R).</listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/query_to_wabitfile_button.png"
-                         format="PNG" width="0.40in" />
+              <imagedata fileref="src/docbkx/images/export.png" format="PNG"
+                         width="0.20in" />
             </imageobject>
           </inlinemediaobject> - export the current query to a new Wabit
         workspace file, or to a new SQL script file.</listitem>
@@ -855,7 +868,7 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/delete_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - delete all highlighted tables in the query
         pen (Shortcut: The delete key).</listitem>
@@ -863,7 +876,7 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/join_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - create a join from a column in a table to
         another column in another table (Shortcut: The accelerator key +
@@ -882,7 +895,7 @@
           <para><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.40in" />
+                           format="PNG" width="0.20in" />
               </imageobject>
             </inlinemediaobject> - generate a report based on the current
           query.</para>
@@ -891,8 +904,8 @@
         <listitem>
           <para><inlinemediaobject>
               <imageobject>
-                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.40in" />
+                <imagedata fileref="src/docbkx/images/chart.png" format="PNG"
+                           width="0.40in" />
               </imageobject>
             </inlinemediaobject> - generate a chart based on the current
           query.</para>
@@ -901,8 +914,8 @@
         <listitem>
           <para><inlinemediaobject>
               <imageobject>
-                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.40in" />
+                <imagedata fileref="src/docbkx/images/page_setup_button.png"
+                           format="PNG" width="0.20in" />
               </imageobject>
             </inlinemediaobject> - access the query properties panel.</para>
         </listitem>
@@ -1097,7 +1110,7 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/prev_query_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - replace the current query with the query
         executed last.</listitem>
@@ -1105,7 +1118,7 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/next_query_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - replace the current query with the query
         executed after it.</listitem>
@@ -1113,7 +1126,7 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/execute_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - execute the current query (Shortcut: The
         accelerator key + the enter key for whatever text is
@@ -1122,14 +1135,14 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/stop_execution_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - stop executing the current query.</listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/clear_sql_button.png"
-                         format="PNG" width="0.40in" />
+              <imagedata fileref="src/docbkx/images/reset.png" format="PNG"
+                         width="0.20in" />
             </imageobject>
           </inlinemediaobject> - clear all text on the text editor
         side.</listitem>
@@ -1137,23 +1150,23 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/undo_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - undo the last change made with the text
         editor.</listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/undo_button.png"
-                         format="PNG" width="0.40in" />
+              <imagedata fileref="src/docbkx/images/redo_button.png"
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - redo the last change made with the text
         editor.</listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/query_to_wabitfile_button.png"
-                         format="PNG" width="0.40in" />
+              <imagedata fileref="src/docbkx/images/export.png" format="PNG"
+                         width="0.20in" />
             </imageobject>
           </inlinemediaobject> - export the current query to a new Wabit
         workspace file, or to a new SQL script file.</listitem>
@@ -1162,7 +1175,7 @@
           <para><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.40in" />
+                           format="PNG" width="0.02in" />
               </imageobject>
             </inlinemediaobject> - generate a report of the current
           query.</para>
@@ -1171,8 +1184,8 @@
         <listitem>
           <para><inlinemediaobject>
               <imageobject>
-                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.40in" />
+                <imagedata fileref="src/docbkx/images/page_setup_button.png"
+                           format="PNG" width="0.20in" />
               </imageobject>
             </inlinemediaobject> - access the query properties panel.</para>
         </listitem>
@@ -1213,22 +1226,23 @@
         <listitem><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/execute_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - execute the current query.</listitem>
 
         <listitem>
           <para><inlinemediaobject>
               <imageobject>
-                <imagedata fileref="src/docbkx/images/reset.png" width="0.4in" />
+                <imagedata fileref="src/docbkx/images/reset.png"
+                           width="0.20in" />
               </imageobject>
             </inlinemediaobject> - Reset the query.</para>
         </listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/query_to_wabitfile_button.png"
-                         format="PNG" width="0.40in" />
+              <imagedata fileref="src/docbkx/images/export.png" format="PNG"
+                         width="0.20in" />
             </imageobject>
           </inlinemediaobject> - export the current query to a new Wabit
         workspace file.</listitem>
@@ -1237,7 +1251,7 @@
           <para><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           width="0.4in" />
+                           width="0.20in" />
               </imageobject>
             </inlinemediaobject> - Create a report based on the current
           query.</para>
@@ -1246,14 +1260,12 @@
         <listitem>
           <para><inlinemediaobject>
               <imageobject>
-                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.40in" />
+                <imagedata fileref="src/docbkx/images/chart.png" format="PNG"
+                           width="0.20in" />
               </imageobject>
             </inlinemediaobject> - generate a chart based on the current
           query.</para>
         </listitem>
-
-        <listitem> - Omit any empty rows from the results set.</listitem>
       </orderedlist>
     </section>
 
@@ -1379,8 +1391,8 @@
     <orderedlist>
       <listitem><inlinemediaobject>
           <imageobject>
-            <imagedata fileref="src/docbkx/images/page_setup_button.png"
-                       format="PNG" valign="bottom" width="0.40in" />
+            <imagedata fileref="src/docbkx/images/refresh.png" format="PNG"
+                       valign="bottom" width="0.20in" />
           </imageobject>
         </inlinemediaobject> - refresh the report to syncronize it with the
       queries it is based apon.</listitem>
@@ -1388,8 +1400,8 @@
       <listitem>
         <para><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/content_box_button.png"
-                         format="PNG" width="0.40in" />
+              <imagedata fileref="src/docbkx/images/content.png" format="PNG"
+                         width="0.20in" />
             </imageobject>
           </inlinemediaobject> - add a content box to the report.</para>
       </listitem>
@@ -1398,7 +1410,7 @@
         <para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/content_box_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - add a label to the report.</para>
       </listitem>
@@ -1407,7 +1419,7 @@
         <para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/horizontal_guide_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - add a horizontal guide to the report.</para>
       </listitem>
@@ -1416,7 +1428,7 @@
         <para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/vertical_guide_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - add a vertical guide to the report.</para>
       </listitem>
@@ -1432,7 +1444,7 @@
         <para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/zoom_to_fit_button.png"
-                         format="PNG" width="0.40in" />
+                         format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - auto-zooms to fit the report on the
         screen.</para>
@@ -1441,36 +1453,36 @@
       <listitem><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/page_setup_button.png"
-                       format="PNG" valign="bottom" width="0.40in" />
+                       format="PNG" valign="bottom" width="0.20in" />
           </imageobject>
         </inlinemediaobject> - access the page settings.</listitem>
 
       <listitem><inlinemediaobject>
           <imageobject>
-            <imagedata fileref="src/docbkx/images/report_to_wabitfile_button.png"
-                       format="PNG" width="0.40in" />
+            <imagedata fileref="src/docbkx/images/export.png" format="PNG"
+                       width="0.40in" />
           </imageobject>
         </inlinemediaobject> - export the report the to a new Wabit
       workspace.</listitem>
 
       <listitem><inlinemediaobject>
           <imageobject>
-            <imagedata fileref="src/docbkx/images/print_button.png"
-                       format="PNG" valign="bottom" width="0.40in" />
+            <imagedata fileref="src/docbkx/images/printPreview.png"
+                       format="PNG" valign="bottom" width="0.20in" />
           </imageobject>
         </inlinemediaobject> - preview the report.</listitem>
 
       <listitem><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/print_button.png"
-                       format="PNG" valign="bottom" width="0.40in" />
+                       format="PNG" valign="bottom" width="0.20in" />
           </imageobject>
         </inlinemediaobject> - print the report.</listitem>
 
       <listitem><inlinemediaobject>
           <imageobject>
-            <imagedata fileref="src/docbkx/images/export_pdf_button.png"
-                       format="PNG" width="0.40in" />
+            <imagedata fileref="src/docbkx/images/pdf.png" format="PNG"
+                       width="0.20in" />
           </imageobject>
         </inlinemediaobject> - generate a pdf file of the report.</listitem>
     </orderedlist>
