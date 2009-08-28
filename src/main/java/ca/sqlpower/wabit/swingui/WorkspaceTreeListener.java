@@ -55,6 +55,7 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.CopyImageAction;
 import ca.sqlpower.wabit.swingui.action.CopyReportAction;
@@ -62,6 +63,7 @@ import ca.sqlpower.wabit.swingui.action.CopyOlapDatasource;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.CopyTemplateAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
+import ca.sqlpower.wabit.swingui.action.NewChartAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
@@ -337,6 +339,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		JMenuItem newOlapQuery = new JMenuItem(new NewOLAPQueryAction(session));
 		newOlapQuery.setIcon(WorkspaceTreeCellRenderer.OLAP_QUERY_ICON);
 		
+		JMenuItem newChart = new JMenuItem(new NewChartAction(session));
+		newChart.setIcon(WorkspaceTreeCellRenderer.CHART_ICON);
+		
 		JMenuItem newImage = new JMenuItem(new NewImageAction(session));
 		
 		JMenuItem newReport = new JMenuItem(new NewReportAction(session));
@@ -361,6 +366,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newOlapQuery);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.IMAGES)) {
 					menu.add(newImage);
+				} else if (lastFolderNode.getFolderType().equals(FolderType.CHARTS)) {
+					menu.add(newChart);					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTS)) {
 					menu.add(newReport);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.TEMPLATES)) {
@@ -414,6 +421,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					
 					menu.addSeparator();
 					menu.add(new CopyImageAction(session, (WabitImage) lastPathComponent));
+				} else if (lastPathComponent instanceof Chart) {
+					menu.add(newChart);
+					menu.addSeparator();
+					//TODO Rename, Delete, Copy
 				}
 				
 				if (!(lastPathComponent instanceof ContentBox)) {
@@ -447,9 +458,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			
 			menu.add(newQuery);
 			menu.add(newOlapQuery);
-			menu.add(newReport);
-			menu.add(newTemplate);
+			menu.add(newChart);
 			menu.add(newImage);
+			menu.add(newTemplate);
+			menu.add(newReport);
 		}
 		if (!(lastPathComponent instanceof ContentBox)) {
 			menu.show(e.getComponent(), e.getX(), e.getY());
