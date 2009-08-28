@@ -58,6 +58,8 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.olap.Olap4JTreeCellRenderer;
@@ -168,6 +170,13 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(OLAP_QUERY_ICON);
             } else if (wo instanceof Chart) {
                 setupForChart(r, (Chart) wo);
+            } else if (wo instanceof ChartColumn) {
+                ChartColumn cc = (ChartColumn) wo;
+                if (cc.getRoleInChart() != ColumnRole.NONE) {
+                    r.setText(cc.getName() + " (" + cc.getRoleInChart() + ")");
+                } else {
+                    r.setText(cc.getName());
+                }
             } else if (wo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
             }

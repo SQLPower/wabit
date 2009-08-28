@@ -67,7 +67,7 @@ import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.swingui.olap.Olap4jTreeModel;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
 
@@ -130,7 +130,7 @@ public class WorkspaceTreeModel implements TreeModel {
         if (o instanceof Template) return true;
         if (o instanceof Report) return true;
         if (o instanceof Chart) return true;
-        if (o instanceof ColumnIdentifier) return true;
+        if (o instanceof ChartColumn) return true;
         if (o instanceof ContentBox) return true;
         if (o instanceof WabitImage) return true;
         return false;

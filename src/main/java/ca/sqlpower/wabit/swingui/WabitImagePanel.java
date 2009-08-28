@@ -113,8 +113,7 @@ public class WabitImagePanel implements WabitPanel {
     private final DropTargetListener dndDropListener = new DropTargetListener() {
     
         public void dropActionChanged(DropTargetDragEvent dtde) {
-            // TODO Auto-generated method stub
-    
+            // no-op
         }
     
         public void drop(DropTargetDropEvent dtde) {
@@ -202,34 +201,16 @@ public class WabitImagePanel implements WabitPanel {
             return null;
         }
         
-        /**
-         * Helper method for the {@link #drop(DropTargetDropEvent)} method.
-         * This is taken from PictureDropListener in WebCMS.
-         */
-        private DataFlavor searchListForType(List<DataFlavor> flavorList, String mimeType, Class<?> clazz) {
-            Iterator<DataFlavor> it = flavorList.iterator();
-            while (it.hasNext()) {
-                DataFlavor f = it.next();
-                if (f.getRepresentationClass().equals(clazz) && f.getMimeType().contains(mimeType)) {
-                    return f;
-                }
-            }
-            return null;
-        }
-    
         public void dragOver(DropTargetDragEvent dtde) {
-            // TODO Auto-generated method stub
-    
+            // no-op
         }
     
         public void dragExit(DropTargetEvent dte) {
-            // TODO Auto-generated method stub
-    
+            // no-op
         }
     
         public void dragEnter(DropTargetDragEvent dtde) {
-            // TODO Auto-generated method stub
-    
+            // no-op
         }
     };
     
@@ -246,7 +227,7 @@ public class WabitImagePanel implements WabitPanel {
 
         JToolBar toolBar = new JToolBar();
         JButton browseButton = new JButton(browseForImageAction);
-        browseButton.setText("Browse...");
+        browseButton.setText("Replace...");
         browseButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         browseButton.setHorizontalTextPosition(SwingConstants.CENTER);
         // Removes button borders on OS X 10.5

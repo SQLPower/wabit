@@ -41,7 +41,7 @@ import org.jfree.data.xy.XYDataset;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetTypes;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
@@ -124,7 +124,7 @@ public class ChartSwingUtil {
                     "(it is a " + c.getType() + ")");
         }
         
-        List<ColumnIdentifier> columnNamesInOrder = c.getColumnNamesInOrder();
+        List<ChartColumn> columnNamesInOrder = c.getColumnNamesInOrder();
         LegendPosition legendPosition = c.getLegendPosition(); 
         String chartName = c.getName();
         String yaxisName = c.getYaxisName();
@@ -132,7 +132,7 @@ public class ChartSwingUtil {
 
         boolean containsCategory = false;
         boolean containsSeries = false;
-        for (ColumnIdentifier col : columnNamesInOrder) {
+        for (ChartColumn col : columnNamesInOrder) {
             if (col.getRoleInChart().equals(ColumnRole.CATEGORY)) {
                 containsCategory = true;
             } else if (col.getRoleInChart().equals(ColumnRole.SERIES)) {
@@ -143,9 +143,9 @@ public class ChartSwingUtil {
             return null;
         }
         
-        List<ColumnIdentifier> categoryColumns = c.findCategoryColumns();
+        List<ChartColumn> categoryColumns = c.findCategoryColumns();
         List<String> categoryColumnNames = new ArrayList<String>();
-        for (ColumnIdentifier identifier : categoryColumns) {
+        for (ChartColumn identifier : categoryColumns) {
             categoryColumnNames.add(identifier.getName());
         }
         
@@ -235,7 +235,7 @@ public class ChartSwingUtil {
                     "(it is a " + c.getType() + ")");
         }
         
-        List<ColumnIdentifier> columnNamesInOrder = c.getColumnNamesInOrder();
+        List<ChartColumn> columnNamesInOrder = c.getColumnNamesInOrder();
         LegendPosition legendPosition = c.getLegendPosition(); 
         String chartName = c.getName();
         String yaxisName = c.getYaxisName();
@@ -244,7 +244,7 @@ public class ChartSwingUtil {
         final XYDataset xyCollection = (XYDataset) c.createDataset();
         
         boolean containsSeries = false;
-        for (ColumnIdentifier identifier : columnNamesInOrder) {
+        for (ChartColumn identifier : columnNamesInOrder) {
             if (identifier.getRoleInChart().equals(ColumnRole.SERIES)) {
                 containsSeries = true;
                 break;

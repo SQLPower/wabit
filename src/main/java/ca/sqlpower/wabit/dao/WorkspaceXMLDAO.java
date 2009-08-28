@@ -74,15 +74,11 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.xml.XMLHelper;
 
 public class WorkspaceXMLDAO {
@@ -554,7 +550,7 @@ public class WorkspaceXMLDAO {
         xml.indent++;
         xml.println(out, "<chart-col-names-in-order>");
         xml.indent++;
-        for (ColumnIdentifier colIdentifier : chart.getColumnNamesInOrder()) {
+        for (ChartColumn colIdentifier : chart.getColumnNamesInOrder()) {
             xml.print(out, "<chart-col-names");
             saveColumnIdentifier(out, colIdentifier, "");
             printAttribute("data-type", colIdentifier.getRoleInChart().name());
@@ -565,7 +561,7 @@ public class WorkspaceXMLDAO {
         xml.println(out, "</chart-col-names-in-order>");
         xml.println(out, "<missing-identifiers>");
         xml.indent++;
-        for (ColumnIdentifier identifier : chart.getMissingIdentifiers()) {
+        for (ChartColumn identifier : chart.getMissingIdentifiers()) {
             xml.print(out, "<missing-identifier");
             saveColumnIdentifier(out, identifier, "");
             xml.niprintln(out, "/>");
@@ -619,29 +615,18 @@ public class WorkspaceXMLDAO {
         xml.indent--;
         xml.println(out, "</wabit-image>");
 	}
-	
+
     /**
-     * This is a helper method for saving layouts with charts. This saves
-     * ColumnIdentifiers used in charts to define what column is used and how.
-     * This will only save the {@link ColumnIdentifier} as an attribute of the
-     * current xml element it is in, not as an entirely new element. A prefix to
-     * each of the values can be given to distinguish between column identifiers
-     * in cases where multiples are saved in one element.
+     * This is a helper method for saving charts. This saves ColumnIdentifiers
+     * used in charts to define what column is used and how. This will only save
+     * the {@link ChartColumn} as an attribute of the current xml element
+     * it is in, not as an entirely new element. A prefix to each of the values
+     * can be given to distinguish between column identifiers in cases where
+     * multiples are saved in one element.
      */
-    private void saveColumnIdentifier(PrintWriter out, ColumnIdentifier identifier, String namePrefix) {
+    private void saveColumnIdentifier(PrintWriter out, ChartColumn identifier, String namePrefix) {
         if (identifier == null) return;
-        if (identifier instanceof ColumnNameColumnIdentifier) {
-            printAttribute(namePrefix + "column-name", ((ColumnNameColumnIdentifier) identifier).getColumnName());
-        } else if (identifier instanceof PositionColumnIdentifier) {
-            PositionColumnIdentifier positionIdentifier = ((PositionColumnIdentifier) identifier);
-            for (int i = 0; i < positionIdentifier.getUniqueMemberNames().size(); i++) {
-                printAttribute(namePrefix + "unique-member-name" + i, positionIdentifier.getUniqueMemberNames().get(i));
-            }
-        } else if (identifier instanceof RowAxisColumnIdentifier) {
-            printAttribute(namePrefix + "axis-ordinal", ((RowAxisColumnIdentifier) identifier).getAxis().axisOrdinal());
-        } else {
-            throw new IllegalStateException("Column identifier " + identifier + " has no values defined to save.");
-        }
+        printAttribute(namePrefix + "column-name", identifier.getColumnName());
     }
 	
     /**

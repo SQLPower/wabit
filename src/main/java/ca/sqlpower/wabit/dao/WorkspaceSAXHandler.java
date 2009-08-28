@@ -43,8 +43,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.olap4j.CellSet;
-import org.olap4j.CellSetAxis;
 import org.olap4j.OlapException;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
@@ -100,13 +98,10 @@ import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.ColumnNameColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
-import ca.sqlpower.wabit.report.chart.PositionColumnIdentifier;
-import ca.sqlpower.wabit.report.chart.RowAxisColumnIdentifier;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.
@@ -647,7 +642,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 } else if (aname.equals("x-axis-name")) {
                     chart.setXaxisName(aval);
                 } else if (aname.equals("type")) {
-                    chart.setChartType(ExistingChartTypes.valueOf(aval));
+                    chart.setType(ExistingChartTypes.valueOf(aval));
                 } else if (aname.equals("legend-position")) {
                     chart.setLegendPosition(LegendPosition.valueOf(aval));
                 } else if (aname.equals("query-id")) {
@@ -688,7 +683,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             }
 
         } else if (name.equals("chart-col-names")) {
-            ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
+            ChartColumn colIdentifier = loadColumnIdentifier(attributes, "");
             if (colIdentifier == null) {
                 throw new IllegalStateException("The chart " + chart.getName() + " with uuid " + chart.getUUID() + " has a missing column identifier when ordering columns and cannot be loaded.");
             }
@@ -701,15 +696,15 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 } else if (aname.equals("data-type")) {
                     colIdentifier.setRoleInChart(ColumnRole.valueOf(aval));
                 } else if (aname.matches("x-axis-.*")) {
-                    ColumnIdentifier xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
+                    ChartColumn xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
                     colIdentifier.setXAxisIdentifier(xAxisIdentifier);
                 }
             }
             
-            chart.addColumnIdentifier(colIdentifier);
+            chart.addChartColumn(colIdentifier);
         
         } else if (name.equals("missing-identifier")) {
-            ColumnIdentifier colIdentifier = loadColumnIdentifier(attributes, "");
+            ChartColumn colIdentifier = loadColumnIdentifier(attributes, "");
             chart.addMissingIdentifier(colIdentifier);
 
         } else if (name.equals("layout")) {
@@ -1098,7 +1093,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     }
 
     /**
-     * This is a helper method for loading {@link ColumnIdentifier}s introduced
+     * This is a helper method for loading {@link ChartColumn}s introduced
      * in the save version 1.0.2 (updated in 1.2.0). Column identifiers are
      * defined by either a column name in a relational query, a row hierarchy
      * for OLAP queries, or a Position of the column axis of an OLAP query.
@@ -1111,48 +1106,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      *            looking up its value. This is intended for use when more than
      *            one column identifier is defined in attributes of a single XML element.
      */
-    private ColumnIdentifier loadColumnIdentifier(Attributes attributes, String prefix) {
-        // TODO clear out all the stuff related to OLAP column identifiers
+    private ChartColumn loadColumnIdentifier(Attributes attributes, String prefix) {
         String colName;
         colName = attributes.getValue(prefix + "column-name");
-        String positionOrdinalString = attributes.getValue(prefix + "position-ordinal");
-        String axisOrdinalString = attributes.getValue(prefix + "axis-ordinal");
-        String firstMemberPositionName = attributes.getValue(prefix + "unique-member-name0");
-        ColumnIdentifier colIdentifier = null;
+        ChartColumn colIdentifier = null;
         if (colName != null) {
-            colIdentifier = new ColumnNameColumnIdentifier(colName); 
-        } else if (positionOrdinalString != null) {
-            CellSet graphRendererCellSet;
-            try {
-                graphRendererCellSet = ((OlapQuery) chart.getQuery()).execute();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            Integer positionOrdinal = Integer.parseInt(positionOrdinalString);
-            CellSetAxis rowAxis = graphRendererCellSet.getAxes().get(
-                    org.olap4j.Axis.COLUMNS.axisOrdinal());
-            //This is how a position describing a column identifier was loaded in 1.0.2
-            colIdentifier = new PositionColumnIdentifier(rowAxis.getPositions().get(positionOrdinal));
-        //This is loading positions in column identifiers in 1.0.3 and newer.
-        } else if (firstMemberPositionName != null) {
-            int i = 0;
-            String memberPositionName = attributes.getValue(prefix + "unique-member-name" + i);
-            List<String> memberPositionNames = new ArrayList<String>();
-            while (memberPositionName != null) {
-                memberPositionNames.add(memberPositionName);
-                i++;
-                memberPositionName = attributes.getValue(prefix + "unique-member-name" + i);
-            }
-            colIdentifier = new PositionColumnIdentifier(memberPositionNames);
-        } else if (axisOrdinalString != null) {
-            Integer axisOrdinal = Integer.parseInt(axisOrdinalString);
-            if (org.olap4j.Axis.ROWS.axisOrdinal() == axisOrdinal) {
-                colIdentifier = new RowAxisColumnIdentifier();
-            } else {
-                throw new IllegalStateException(
-                        "Unknown axis being loaded for chart " + chart.getName() +
-                        ". The row ordinal being loaded is " + axisOrdinal);
-            }
+            colIdentifier = new ChartColumn(colName); 
         }
         if (colIdentifier == null) {
             throw new IllegalStateException(

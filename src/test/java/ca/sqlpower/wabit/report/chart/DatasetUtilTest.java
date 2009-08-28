@@ -68,14 +68,14 @@ public class DatasetUtilTest extends TestCase {
         con.close();
         
         
-        List<ColumnIdentifier> columnNamesInOrder = new ArrayList<ColumnIdentifier>(); 
-        final ColumnIdentifier categoryIdentifier = new ColumnNameColumnIdentifier("category");
-        final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
+        List<ChartColumn> columnNamesInOrder = new ArrayList<ChartColumn>(); 
+        final ChartColumn categoryIdentifier = new ChartColumn("category");
+        final ChartColumn seriesIdentifier = new ChartColumn("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
         categoryIdentifier.setRoleInChart(ColumnRole.CATEGORY);
         seriesIdentifier.setRoleInChart(ColumnRole.SERIES);
-        List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
+        List<ChartColumn> categoryColumnIdentifiers = new ArrayList<ChartColumn>();
         categoryColumnIdentifiers.add(categoryIdentifier);
         CategoryDataset dataset = DatasetUtil.createCategoryDataset(columnNamesInOrder, rs, categoryColumnIdentifiers);
         
@@ -109,16 +109,16 @@ public class DatasetUtilTest extends TestCase {
         con.close();
         
         
-        List<ColumnIdentifier> columnNamesInOrder = new ArrayList<ColumnIdentifier>(); 
-        final ColumnIdentifier categoryIdentifier = new ColumnNameColumnIdentifier("category");
-        final ColumnIdentifier category2Identifier = new ColumnNameColumnIdentifier("category2");
-        final ColumnIdentifier seriesIdentifier = new ColumnNameColumnIdentifier("series");
+        List<ChartColumn> columnNamesInOrder = new ArrayList<ChartColumn>(); 
+        final ChartColumn categoryIdentifier = new ChartColumn("category");
+        final ChartColumn category2Identifier = new ChartColumn("category2");
+        final ChartColumn seriesIdentifier = new ChartColumn("series");
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
         categoryIdentifier.setRoleInChart(ColumnRole.CATEGORY);
         category2Identifier.setRoleInChart(ColumnRole.CATEGORY);
         seriesIdentifier.setRoleInChart(ColumnRole.SERIES);
-        List<ColumnIdentifier> categoryColumnIdentifiers = new ArrayList<ColumnIdentifier>();
+        List<ChartColumn> categoryColumnIdentifiers = new ArrayList<ChartColumn>();
         categoryColumnIdentifiers.add(categoryIdentifier);
         categoryColumnIdentifiers.add(category2Identifier);
         CategoryDataset dataset = DatasetUtil.createCategoryDataset(columnNamesInOrder, rs, categoryColumnIdentifiers);

@@ -33,7 +33,7 @@ import org.jfree.chart.JFreeChart;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ColumnIdentifier;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
 
 /**
@@ -100,7 +100,7 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	}
 
 	public int childPositionOffset(Class<? extends WabitObject> childType) {
-	    if (!childType.equals(ColumnIdentifier.class)) {
+	    if (!childType.equals(ChartColumn.class)) {
 	        throw new IllegalArgumentException("The chart renderer does not contain children" +
 	        		" of type " + childType);
 	    }

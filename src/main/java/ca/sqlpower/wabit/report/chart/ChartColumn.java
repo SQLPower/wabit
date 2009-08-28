@@ -31,32 +31,35 @@ import com.rc.retroweaver.runtime.Collections;
  * This will not store the specific object that makes the column be uniquely
  * identified.
  */
-public abstract class AbstractColumnIdentifier extends AbstractWabitObject implements ColumnIdentifier {
+public class ChartColumn extends AbstractWabitObject {
     
-    private ColumnRole dataType;
+    private ColumnRole role;
     
-    private ColumnIdentifier xAxisIdentifier;
+    private ChartColumn xAxisIdentifier;
     
-    public AbstractColumnIdentifier() {
+    private final String columnName;
+
+    public ChartColumn(String columnName) {
         setRoleInChart(ColumnRole.NONE);
+        this.columnName = columnName;
     }
 
     public ColumnRole getRoleInChart() {
-        return dataType;
+        return role;
     }
 
-    public ColumnIdentifier getXAxisIdentifier() {
+    public ChartColumn getXAxisIdentifier() {
         return xAxisIdentifier;
     }
 
     public void setRoleInChart(ColumnRole dataType) {
-        ColumnRole oldType = this.dataType;
-        this.dataType = dataType;
+        ColumnRole oldType = this.role;
+        this.role = dataType;
         firePropertyChange("dataType", oldType, dataType);
     }
 
-    public void setXAxisIdentifier(ColumnIdentifier xAxisIdentifier) {
-        ColumnIdentifier oldIdentifier = this.xAxisIdentifier;
+    public void setXAxisIdentifier(ChartColumn xAxisIdentifier) {
+        ChartColumn oldIdentifier = this.xAxisIdentifier;
         this.xAxisIdentifier = xAxisIdentifier;
         firePropertyChange("xAxisIdentifier", oldIdentifier, xAxisIdentifier);
     }
@@ -77,6 +80,34 @@ public abstract class AbstractColumnIdentifier extends AbstractWabitObject imple
     @SuppressWarnings("unchecked")
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
+    }
+    
+    public String getName() {
+        return getColumnName();
+    }
+
+    public String getColumnName() {
+        return columnName;
+    }
+    
+    /**
+     * Two identifiers for the same column name are considered equal.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ChartColumn) {
+            ChartColumn ci = (ChartColumn) obj;
+            return getColumnName().equals(ci.getColumnName());
+        } else {
+            return false;
+        }
+    }
+    
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 37 * result + columnName.hashCode();
+        return result;
     }
 
 }

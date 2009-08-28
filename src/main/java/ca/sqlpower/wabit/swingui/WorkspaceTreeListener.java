@@ -149,6 +149,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 
 		public void actionPerformed(ActionEvent e) {
 			
+		    // this whole method needs to be genericized. See bug 2149.
+		    
 			if(item instanceof QueryCache) {
 				int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
 						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
