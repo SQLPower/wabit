@@ -101,7 +101,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
-import ca.sqlpower.wabit.swingui.action.NewReportOnTemplateAction;
+import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
@@ -451,7 +451,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
         toolbar.addSeparator();
         
         if (layout instanceof Template) {
-	        button = new JButton(new NewReportOnTemplateAction(session, (Template) layout));
+	        button = new JButton(new ReportFromTemplateAction(session, (Template) layout));
 	        button.setIcon(CreateLayoutFromQueryAction.ADD_LAYOUT_ICON);
 	        setupToolBarButtonLabel(button, "Create Report");
 	        toolbar.add(button);

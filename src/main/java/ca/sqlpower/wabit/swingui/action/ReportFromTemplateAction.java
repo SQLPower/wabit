@@ -30,11 +30,11 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 /**
  * Creates a new report on a template.
  */
-public class NewReportOnTemplateAction extends AbstractAction {
+public class ReportFromTemplateAction extends AbstractAction {
 	private final WabitSwingSession session;
 	private final Template template;
 
-    public NewReportOnTemplateAction(WabitSwingSession session, Template template) {
+    public ReportFromTemplateAction(WabitSwingSession session, Template template) {
         super("New Report on " + template.getName());
 		this.session = session;
 		this.template = template;
