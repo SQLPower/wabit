@@ -550,7 +550,7 @@ public class WorkspaceXMLDAO {
         xml.indent++;
         xml.println(out, "<chart-col-names-in-order>");
         xml.indent++;
-        for (ChartColumn colIdentifier : chart.getColumnNamesInOrder()) {
+        for (ChartColumn colIdentifier : chart.getColumns()) {
             xml.print(out, "<chart-col-names");
             saveColumnIdentifier(out, colIdentifier, "");
             printAttribute("data-type", colIdentifier.getRoleInChart().name());

@@ -124,7 +124,7 @@ public class ChartSwingUtil {
                     "(it is a " + c.getType() + ")");
         }
         
-        List<ChartColumn> columnNamesInOrder = c.getColumnNamesInOrder();
+        List<ChartColumn> columnNamesInOrder = c.getColumns();
         LegendPosition legendPosition = c.getLegendPosition(); 
         String chartName = c.getName();
         String yaxisName = c.getYaxisName();
@@ -235,7 +235,7 @@ public class ChartSwingUtil {
                     "(it is a " + c.getType() + ")");
         }
         
-        List<ChartColumn> columnNamesInOrder = c.getColumnNamesInOrder();
+        List<ChartColumn> columnNamesInOrder = c.getColumns();
         LegendPosition legendPosition = c.getLegendPosition(); 
         String chartName = c.getName();
         String yaxisName = c.getYaxisName();

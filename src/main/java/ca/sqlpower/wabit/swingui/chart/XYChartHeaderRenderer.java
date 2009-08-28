@@ -119,13 +119,13 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 
         columnNamesInOrder = new ArrayList<ChartColumn>();
         
-        String[] colNames = new String[chartPanel.getChart().getColumnNamesInOrder().size()];
-        for (int i = 0; i < chartPanel.getChart().getColumnNamesInOrder().size(); i++) {
-            ChartColumn col = chartPanel.getChart().getColumnNamesInOrder().get(i);
+        String[] colNames = new String[chartPanel.getChart().getColumns().size()];
+        for (int i = 0; i < chartPanel.getChart().getColumns().size(); i++) {
+            ChartColumn col = chartPanel.getChart().getColumns().get(i);
             colNames[i] = col.getName();
         }
         
-        for (ChartColumn col : chartPanel.getChart().getColumnNamesInOrder()) {
+        for (ChartColumn col : chartPanel.getChart().getColumns()) {
             columnNamesInOrder.add(col);
         }
         tableHeader.addMouseListener(comboBoxMouseListener);

@@ -133,7 +133,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 
         tableHeader.addMouseListener(comboBoxMouseListener);
         
-        chartColumns = new ArrayList<ChartColumn>(chartPanel.getChart().getColumnNamesInOrder());
+        chartColumns = new ArrayList<ChartColumn>(chartPanel.getChart().getColumns());
     }
 
     public Component getTableCellRendererComponent(JTable table,

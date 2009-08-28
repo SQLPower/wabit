@@ -427,8 +427,12 @@ public class Chart extends AbstractWabitObject {
         return 0;
     }
 
+    /**
+     * Alias for {@link #getColumns()}. Provided to satisfy {@link WabitObject} interface.
+     */
     public List<? extends WabitObject> getChildren() {
-        return getColumnNamesInOrder();
+        // TODO when we reinstate missing identifiers, make them children too
+        return getColumns();
     }
 
     public List<WabitObject> getDependencies() {
@@ -551,13 +555,13 @@ public class Chart extends AbstractWabitObject {
     }
 
     /**
-     * Returns an unmodifiable view of the column names in the order they should
-     * appear in the properties panel.
+     * Returns an unmodifiable view of the result set columns this chart knows
+     * about, along with information about their role in the chart.
      * 
-     * @return the current column names list. It is not modifiable by you,
-     *         but it may appear to change.
+     * @return the current column list. It is not modifiable by you, but
+     *         it may appear to change.
      */
-    public List<ChartColumn> getColumnNamesInOrder() {
+    public List<ChartColumn> getColumns() {
         return Collections.unmodifiableList(chartColumns);
     }
 
