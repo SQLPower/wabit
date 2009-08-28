@@ -346,7 +346,7 @@ public class WabitImagePanel implements WabitPanel {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-            image.setName("Image: " + imageChooser.getSelectedFile().getName());
+            image.setName(imageChooser.getSelectedFile().getName());
         }
     }
 
