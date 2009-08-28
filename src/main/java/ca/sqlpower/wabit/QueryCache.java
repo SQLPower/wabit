@@ -369,7 +369,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      *            limited result set will be retrieved based on the session's
      *            row limit.
      */
-    public ResultSet fetchResultSet() throws SQLException {
+    public CachedRowSet fetchResultSet() throws SQLException {
         if (!resultSets.isEmpty()) {
             for (CachedRowSet rs : resultSets) {
                 if (rs != null) {
