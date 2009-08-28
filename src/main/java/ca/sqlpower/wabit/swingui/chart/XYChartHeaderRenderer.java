@@ -86,14 +86,16 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
     private final JTableHeader tableHeader;
 
     /**
-     * A dummy combo box that's used by {@link #getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)}.
+     * This is the component used by the mouse handler to produce a popup menu
+     * when someone clicks the "column role" area of the table header.
      * <p>
      * This box contains items of type {@link ColumnRole}.
      */
     private final JComboBox columnRoleBox;
 
     /**
-     * A dummy combo box that's used by {@link #getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)}.
+     * This is the component used by the mouse handler to produce a popup menu
+     * when someone clicks the "x axis" area of the table header.
      * <p>
      * This box contains items of type String.
      */
