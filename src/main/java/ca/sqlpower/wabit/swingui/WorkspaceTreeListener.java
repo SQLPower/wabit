@@ -108,9 +108,18 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		if (e.isPopupTrigger()) {
 			maybeShowPopup(e);
 		}
-		if (lastPathComponent != null && lastPathComponent instanceof WabitObject) {
+		if (lastPathComponent != null) {
 			if (e.getButton() == MouseEvent.BUTTON1  && e.getClickCount() == 2) {
-				session.getWorkspace().setEditorPanelModel((WabitObject) lastPathComponent);
+				if (lastPathComponent instanceof WabitObject) {
+					session.getWorkspace().setEditorPanelModel((WabitObject) lastPathComponent);
+				} else if (lastPathComponent instanceof FolderNode) {
+					JTree tree = session.getTree();
+					if (tree.isExpanded(tree.getSelectionRows()[0])) {
+						tree.collapsePath(tree.getSelectionPath());
+					} else {
+						tree.expandPath(tree.getSelectionPath());
+					}
+				}
 			}
 		}
 	}
