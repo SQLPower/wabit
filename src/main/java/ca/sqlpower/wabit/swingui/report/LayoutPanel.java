@@ -631,9 +631,9 @@ public class LayoutPanel implements WabitPanel, MouseState {
 	
 	public String getTitle() {
 		if (layout instanceof Report) {
-			return "Query Editor - " + layout.getName();
-		} else if (layout instanceof Template) {
 			return "Report Editor - " + layout.getName();
+		} else if (layout instanceof Template) {
+			return "Template Editor - " + layout.getName();
 		} else {
 			throw new UnsupportedOperationException(
 					"Layout panel only supports Layout's of " +

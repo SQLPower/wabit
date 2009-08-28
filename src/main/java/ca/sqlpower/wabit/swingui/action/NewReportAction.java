@@ -19,13 +19,15 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.report.TemplateChooserDialog;
 
 /**
  * An action that adds a new empty report to a particular workspace every time it
@@ -40,7 +42,13 @@ public class NewReportAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        Report layout = new Report("New Report");
-		session.getWorkspace().addReport(layout);
+        TemplateChooserDialog dialog = new TemplateChooserDialog(session);
+        dialog.pack();
+        Toolkit toolkit = Toolkit.getDefaultToolkit();  
+        Dimension screenSize = toolkit.getScreenSize();	
+        int x = (screenSize.width - dialog.getWidth()) / 2;  
+        int y = (screenSize.height - dialog.getHeight()) / 2;  
+        dialog.setLocation(x, y);
+        dialog.setVisible(true);
     }
 }
