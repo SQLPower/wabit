@@ -6,7 +6,8 @@
 <book id="wabit-user-guide" lang="en">
   <bookinfo>
     <title id="book">Wabit User Guide</title>
-	<subtitle>Version 0.9.8</subtitle>
+
+    <subtitle>Version 0.9.7</subtitle>
 
     <mediaobject>
       <imageobject id="wabit_logo">
@@ -104,38 +105,22 @@
     application.</para>
 
     <para>To create a new workspace, click the create new workspace button
-    (<inlinemediaobject>
-        <imageobject>
-          <imagedata fileref="src/docbkx/images/new_workspace_button.png"
-                     format="PNG" width="0.25in" />
-        </imageobject>
-      </inlinemediaobject>) which will take you to a list of your data
-    sources. You can either choose an existing data source to use as a
-    database connection or create a new one.For more information on creating a
-    database connection see <xref linkend="setup_database" />. After selecting
-    your data source, click on the start button to create queries and
-    reports(layouts) based on that database connection.</para>
+    which will take you to a list of your data sources. You can either choose
+    an existing data source to use as a database connection or create a new
+    one. For more information on creating a database connection see <xref
+    linkend="setup_database" />. After selecting your data source, click on
+    the start button to create queries and reports(layouts) based on that
+    database connection.</para>
 
     <para>To open an existing workspace, click the open existing workspace
-    button (<inlinemediaobject>
-        <imageobject>
-          <imagedata fileref="src/docbkx/images/load_existing_button.png"
-                     format="PNG" width="0.25in" />
-        </imageobject>
-      </inlinemediaobject>) which will then ask you to locate the workspace
-    you want to load.</para>
+    button which will then ask you to locate the workspace you want to
+    load.</para>
 
-    <para>To open the demo workspace, click the open demo workspace button
-    (<inlinemediaobject>
-        <imageobject>
-          <imagedata fileref="src/docbkx/images/demo_workspace_button.png"
-                     format="PNG" width="0.25in" />
-        </imageobject>
-      </inlinemediaobject>). The demo workspace is for new users to get a feel
-    of the application and its potential. It includes a database connection
-    which contains a few tables for the user to play around with. A few
-    queries and reports have been designed to display the application's
-    different features.</para>
+    <para>To open the demo workspace, click the open demo workspace button.
+    The demo workspace is for new users to get a feel of the application and
+    its potential. It includes a database connection which contains a few
+    tables for the user to play around with. A few queries and reports have
+    been designed to display the application's different features.</para>
   </chapter>
 
   <chapter id="workspace_page">
@@ -152,12 +137,14 @@
     where queries from these data sources can be generated. A workspace must
     have at least one data source before you can create queries in it. To add
     a data source to the current workspace, select a data source from the list
-    and press the <guibutton>Start</guibutton> button. Currently relational
+    and press the <guibutton>Start</guibutton> button. Both relational
     databases and OLAP databases can be added as data sources to Wabit. For
     more information on creating a database connection see <xref
     linkend="setup_database" />. Once a data source has been added to the
-    workspace, queries can be made on the workspace from the query
-    builder.</para>
+    workspace, queries can be made on the workspace from the query builder.
+    The left-hand side window is known as the workspace tree, and it is area
+    where your connections, queries, charts, images, and reports will be
+    listed.</para>
   </chapter>
 
   <chapter id="setup_database">
@@ -165,7 +152,7 @@
 
     <para>Before creating queries in Wabit, a data source needs to be added to
     the workspace to tell the queries where the data is coming from. Wabit
-    allows you to use any JDBC- or ODBC-accessible database as a data
+    allows you to use any JDBC or ODBC-accessible database as a data
     source.</para>
 
     <section id="setup_database_relational">
@@ -588,12 +575,13 @@
 
           <orderedlist>
             <listitem>
-              <para>Go to the workspace page by selecting the top workspace
-              folder in the workspace tree on the left.</para>
+              <para>Open the file menu and select 'Database Connection
+              Manager...'</para>
             </listitem>
 
             <listitem>
-              <para>Click the <guibutton>New...</guibutton> button.</para>
+              <para>Click the <guibutton>New...</guibutton> button, and then
+              select 'Database connection..'</para>
             </listitem>
 
             <listitem>
@@ -681,11 +669,6 @@
                             <para>The hostname and database name have been
                             entered manually in the Connect Options.</para>
                           </listitem>
-
-                          <listitem>
-                            <para>The HSQLDB driver is being used in the
-                            screenshot.</para>
-                          </listitem>
                         </itemizedlist>
                       </entry>
                     </row>
@@ -707,9 +690,9 @@
 
             <listitem>
               <para>Click OK. The new connection is added to the list of
-              available connections and is also added to the Database
-              Connection Manager which can be accessed by right-clicking
-              anywhere on the workspace tree.</para>
+              available connections. Note: The Database Connection Manager can
+              also be accessed by right-clicking anywhere on the workspace
+              tree.</para>
             </listitem>
           </orderedlist>
         </section>
@@ -739,9 +722,8 @@
 
         <orderedlist>
           <listitem>
-            <para>Go to the workspace page by selecting the top workspace
-            folder in the workspace tree on the left. You will see all
-            available database connections.</para>
+            <para>Open the file menu and select 'Database Connection
+            Manager...'</para>
           </listitem>
 
           <listitem>
@@ -777,7 +759,7 @@
         <para>Wabit comes with an integrated Mondrian Server. In order to use
         it you must first setup a connection to the relational data source
         that your OLAP schema relates to. For more information on setting up a
-        relational data source, see the section called<xref
+        relational data source, see the section called <xref
         linkend="setup_database_relational" />.</para>
 
         <para>To create a new OLAP connection using the integrated Mondrian
@@ -835,9 +817,11 @@
     </mediaobject>
 
     <para>The query builder allows users to design queries through a graphical
-    or textual interface. The query builder has four main sections: the query
-    pen, the text editor, the database tree, and the log and results
-    tab.</para>
+    or textual interface. The query builder has three main sections: the
+    workspace tree (left section), the query pen / SQL text editor (top-right
+    section), and the results / log (bottom-right section). You can toggle
+    between the query pen / SQL text editor or the results / log by selecting
+    the appropriate tabs found at the top of their sections.</para>
 
     <section id="query_builder.gui_builder">
       <title>The Query Pen</title>
@@ -865,16 +849,8 @@
               <imagedata fileref="src/docbkx/images/query_to_wabitfile_button.png"
                          format="PNG" width="0.40in" />
             </imageobject>
-          </inlinemediaobject> - export the current query to a whole new Wabit
-        workspace.</listitem>
-
-        <listitem><inlinemediaobject>
-            <imageobject>
-              <imagedata fileref="src/docbkx/images/query_to_sqlscript_button.png"
-                         format="PNG" width="0.40in" />
-            </imageobject>
-          </inlinemediaobject> - write the current query to a SQL script
-        file.</listitem>
+          </inlinemediaobject> - export the current query to a new Wabit
+        workspace file, or to a new SQL script file.</listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
@@ -911,28 +887,48 @@
             </inlinemediaobject> - generate a report based on the current
           query.</para>
         </listitem>
+
+        <listitem>
+          <para><inlinemediaobject>
+              <imageobject>
+                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
+                           format="PNG" width="0.40in" />
+              </imageobject>
+            </inlinemediaobject> - generate a chart based on the current
+          query.</para>
+        </listitem>
+
+        <listitem>
+          <para><inlinemediaobject>
+              <imageobject>
+                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
+                           format="PNG" width="0.40in" />
+              </imageobject>
+            </inlinemediaobject> - access the query properties panel.</para>
+        </listitem>
       </orderedlist>
 
       <section id="query_builder.gui_builder.create_query">
         <title>Creating a query</title>
 
-        <para>The query pen allows creating queries by dragging and dropping
-        tables from the database tree on the right to the query pen. When a
-        table is dropped into the query pen it will be populated with all of
-        its columns and a join will be created for each existing relationship
-        between the dropped table and any table currently in the query pen. To
-        maximize or minimize the query pen size, use the shortcut: Ctrl +
-        Spacebar or go to the View menu and select "Maximize Editor" or use
-        the vertical and horizontal split panes.</para>
+        <para>The query pen allows you to create queries by dragging and
+        dropping tables from the workspace tree once you have expanded the
+        desired connection on the left side. When a table is dropped into the
+        query pen it will be populated with all of its columns selected and a
+        join will be created for each existing relationship between the
+        dropped table and any table currently in the query pen. To maximize or
+        minimize the query pen size, use the shortcut: Ctrl + Spacebar or go
+        to the View menu and select "Maximize Editor" or use the vertical and
+        horizontal split panes.</para>
 
-        <para>Each table dropped in the query pen can be modified in several
+        <para>Each table dropped into the query pen can be modified in several
         ways:</para>
 
         <orderedlist>
           <listitem>The table can be given an alias by clicking on the table
-          name and changing it. To remove the table alias, set the alias back
-          to the table's original name or remove the alias text while editing
-          it.</listitem>
+          name and changing it. To remove the table alias and reset it to the
+          column name, clear the editing space completely and press
+          enter.</listitem>
 
           <listitem>Columns in the table are added to the query if they have a
           check mark besides their name. Columns are easily added or removed
@@ -948,8 +944,10 @@
           <listitem>A where clause can be given to a specific column by
           clicking in the <quote>where</quote> field to the right of the
           column. For example, if we want all movies with a rating above 8.0
-          adding the text<quote>&gt; 8.0</quote> to the right of
-          the<quote>rating</quote> column.</listitem>
+          adding the text <quote>&gt; 8.0</quote> to the right of
+          the<quote>rating</quote> column. Note: When comparing strings, you
+          will have to add single quotes around the text. Eg. FullName = 'John
+          Doe'.</listitem>
         </orderedlist>
       </section>
 
@@ -965,7 +963,9 @@
         from an inner join right click near the join line on the side that is
         to be changed to get a menu. From this menu, the join can be changed
         to an outer join on that side. If a full outer join is desired, both
-        sides of the join can be changed to outer join.</para>
+        sides of the join can be changed to outer join. You can also delete
+        the join by selecting it, and then either pushing the delete button or
+        by hitting the delete key.</para>
       </section>
 
       <section id="query_builder.gui_builder.constants">
@@ -973,8 +973,8 @@
 
         <para>Along with the tables in the query pen is a constants table.
         This table can have additional columns defined that are constants,
-        functions, or modified columns in the existing tables. To add a
-        constant to a query click the <quote>Add...</quote> field at the
+        functions, or modified/derived columns in the existing tables. To add
+        a constant to a query click the <quote>Add...</quote> field at the
         bottom of the table. This will allow the constant to be typed in. When
         the constant is complete, it will be added to the constants table. To
         modify the constant at any time, just click on it. Constants can be
@@ -985,17 +985,21 @@
         if they require columns. The only restriction on adding functions
         depending on columns is the tables containing those columns must be in
         the query, even if nothing is selected from them.</para>
+      </section>
+
+      <section id="query_builder.gui_builder.finished_queries">
+        <title>Finished Queries</title>
+
+        <para>Once a query is complete, a report layout can be created from a
+        default template using the report from query button. Additionally, the
+        query can be exported as SQL text to a file, or the query and its
+        associated data source can be exported to an existing Wabit workspace.
+        Exporting a single query allows others to import that query into their
+        workspace for other uses.</para>
 
         <para>To add a more general where clause to the query or add grouping
         to the query on the graphical query see <xref
         linkend="query_builder.results" />.</para>
-
-        <para>Once a query is complete, a report layout can be created from a
-        template using the report from query button. Additionally, the query
-        can be exported as text to a file or the query and its associated data
-        source can be exported to a new Wabit file. Exporting a single query
-        allows others to import that query into their workspace for other
-        uses.</para>
       </section>
     </section>
 
@@ -1151,16 +1155,8 @@
               <imagedata fileref="src/docbkx/images/query_to_wabitfile_button.png"
                          format="PNG" width="0.40in" />
             </imageobject>
-          </inlinemediaobject> - export the current query to a whole new Wabit
-        workspace.</listitem>
-
-        <listitem><inlinemediaobject>
-            <imageobject>
-              <imagedata fileref="src/docbkx/images/query_to_sqlscript_button.png"
-                         format="PNG" width="0.40in" />
-            </imageobject>
-          </inlinemediaobject> - write the current query to a SQL script
-        file.</listitem>
+          </inlinemediaobject> - export the current query to a new Wabit
+        workspace file, or to a new SQL script file.</listitem>
 
         <listitem>
           <para><inlinemediaobject>
@@ -1170,6 +1166,15 @@
               </imageobject>
             </inlinemediaobject> - generate a report of the current
           query.</para>
+        </listitem>
+
+        <listitem>
+          <para><inlinemediaobject>
+              <imageobject>
+                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
+                           format="PNG" width="0.40in" />
+              </imageobject>
+            </inlinemediaobject> - access the query properties panel.</para>
         </listitem>
       </orderedlist>
 
@@ -1189,8 +1194,8 @@
     <title>OLAP queries</title>
 
     <para>Wabit allows you to create OLAP queries based on existing OLAP
-    connections. To learn how to add a OLAP connection, please read 
-    <xref linkend="setup_database_olap" />.</para>
+    connections. To learn how to add a OLAP connection, please read <xref
+    linkend="setup_database_olap" />.</para>
 
     <section id="query_olap_gui">
       <title>The OLAP query editor</title>
@@ -1205,6 +1210,13 @@
       <para>Click the following toolbar buttons to...</para>
 
       <orderedlist>
+        <listitem><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/execute_button.png"
+                         format="PNG" width="0.40in" />
+            </imageobject>
+          </inlinemediaobject> - execute the current query.</listitem>
+
         <listitem>
           <para><inlinemediaobject>
               <imageobject>
@@ -1212,6 +1224,14 @@
               </imageobject>
             </inlinemediaobject> - Reset the query.</para>
         </listitem>
+
+        <listitem><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/query_to_wabitfile_button.png"
+                         format="PNG" width="0.40in" />
+            </imageobject>
+          </inlinemediaobject> - export the current query to a new Wabit
+        workspace file.</listitem>
 
         <listitem>
           <para><inlinemediaobject>
@@ -1222,6 +1242,18 @@
             </inlinemediaobject> - Create a report based on the current
           query.</para>
         </listitem>
+
+        <listitem>
+          <para><inlinemediaobject>
+              <imageobject>
+                <imagedata fileref="src/docbkx/images/report_from_query_button.png"
+                           format="PNG" width="0.40in" />
+              </imageobject>
+            </inlinemediaobject> - generate a chart based on the current
+          query.</para>
+        </listitem>
+
+        <listitem> - Omit any empty rows from the results set.</listitem>
       </orderedlist>
     </section>
 
@@ -1246,8 +1278,9 @@
         </listitem>
 
         <listitem>
-          <para>Click on the button 'Select cube' to select the cube you want
-          to use in your query.</para>
+          <para>Click on the button 'Select cube', which is found in the cube
+          explorer (right side), to select the cube you want to use in your
+          query.</para>
         </listitem>
 
         <listitem>
@@ -1257,8 +1290,8 @@
         </listitem>
 
         <listitem>
-			<para>To drill down or up just click on the dimension element you wish
-				to drill down or up on.</para>
+          <para>To drill down or up just click on the dimension element you
+          wish to drill down or up on.</para>
         </listitem>
       </orderedlist>
     </section>
@@ -1269,8 +1302,66 @@
       <para>Just as the SQL queries created in the Playpen, Wabit generates
       the MDX query used to retrieve the OLAP results.</para>
 
-      <para>To view the created MDX query, click on 'MDX' above your OLAP query editor.</para>
+      <para>To view the created MDX query, click on 'MDX' tab above your OLAP
+      query editor.</para>
     </section>
+  </chapter>
+
+  <chapter id="charts">
+    <title>Charts</title>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/report_layout.png" format="PNG"
+                   width="6in" />
+      </imageobject>
+    </mediaobject>
+
+    <para>This is a text area. Booya!</para>
+
+    <para>Currently Wabit supports the following graphs:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Bar</para>
+      </listitem>
+
+      <listitem>
+        <para>Line</para>
+      </listitem>
+
+      <listitem>
+        <para>Category Line</para>
+      </listitem>
+
+      <listitem>
+        <para>Scatter</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+
+  <chapter id="images">
+    <title>Images</title>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/images.png" format="PNG"
+                   width="6in" />
+      </imageobject>
+    </mediaobject>
+
+    <para>This will be the text area!</para>
+  </chapter>
+
+  <chapter id="templates">
+    <title>Templates</title>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/report_layout.png" format="PNG"
+                   width="6in" />
+      </imageobject>
+    </mediaobject>
   </chapter>
 
   <chapter id="report_layout">
@@ -1291,36 +1382,8 @@
             <imagedata fileref="src/docbkx/images/page_setup_button.png"
                        format="PNG" valign="bottom" width="0.40in" />
           </imageobject>
-        </inlinemediaobject> - access the page setup.</listitem>
-
-      <listitem><inlinemediaobject>
-          <imageobject>
-            <imagedata fileref="src/docbkx/images/print_button.png"
-                       format="PNG" valign="bottom" width="0.40in" />
-          </imageobject>
-        </inlinemediaobject> - print the report.</listitem>
-
-      <listitem><inlinemediaobject>
-          <imageobject>
-            <imagedata fileref="src/docbkx/images/export_pdf_button.png"
-                       format="PNG" width="0.40in" />
-          </imageobject>
-        </inlinemediaobject> - generate a pdf file of the report.</listitem>
-
-      <listitem><inlinemediaobject>
-          <imageobject>
-            <imagedata fileref="src/docbkx/images/report_to_wabitfile_button.png"
-                       format="PNG" width="0.40in" />
-          </imageobject>
-        </inlinemediaobject> - export the report the to a new Wabit
-      workspace.</listitem>
-
-      <listitem><inlinemediaobject>
-          <imageobject>
-            <imagedata fileref="src/docbkx/images/zoom_slider.png"
-                       format="PNG" width="1.05in" />
-          </imageobject>
-        </inlinemediaobject> - zoom in and out of the report.</listitem>
+        </inlinemediaobject> - refresh the report to syncronize it with the
+      queries it is based apon.</listitem>
 
       <listitem>
         <para><inlinemediaobject>
@@ -1328,25 +1391,16 @@
               <imagedata fileref="src/docbkx/images/content_box_button.png"
                          format="PNG" width="0.40in" />
             </imageobject>
-          </inlinemediaobject> - add a text box to the report.</para>
+          </inlinemediaobject> - add a content box to the report.</para>
       </listitem>
 
       <listitem>
         <para><inlinemediaobject>
             <imageobject>
-              <imagedata fileref="src/docbkx/images/image_box_button.png"
+              <imagedata fileref="src/docbkx/images/content_box_button.png"
                          format="PNG" width="0.40in" />
             </imageobject>
-          </inlinemediaobject> - add an image to the report.</para>
-      </listitem>
-
-      <listitem>
-        <para><inlinemediaobject>
-            <imageobject>
-              <imagedata fileref="src/docbkx/images/chart_bar_add.png"
-                         format="PNG" width="0.4in" />
-            </imageobject>
-          </inlinemediaobject> - add a graph to the report.</para>
+          </inlinemediaobject> - add a label to the report.</para>
       </listitem>
 
       <listitem>
@@ -1367,32 +1421,77 @@
           </inlinemediaobject> - add a vertical guide to the report.</para>
       </listitem>
 
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/zoom_slider.png"
+                       format="PNG" width="1.05in" />
+          </imageobject>
+        </inlinemediaobject> - zoom in and out of the report.</listitem>
+
       <listitem>
         <para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/zoom_to_fit_button.png"
                          format="PNG" width="0.40in" />
             </imageobject>
-          </inlinemediaobject> - auto-zoom till the page fits on the
+          </inlinemediaobject> - auto-zooms to fit the report on the
         screen.</para>
       </listitem>
+
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/page_setup_button.png"
+                       format="PNG" valign="bottom" width="0.40in" />
+          </imageobject>
+        </inlinemediaobject> - access the page settings.</listitem>
+
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/report_to_wabitfile_button.png"
+                       format="PNG" width="0.40in" />
+          </imageobject>
+        </inlinemediaobject> - export the report the to a new Wabit
+      workspace.</listitem>
+
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/print_button.png"
+                       format="PNG" valign="bottom" width="0.40in" />
+          </imageobject>
+        </inlinemediaobject> - preview the report.</listitem>
+
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/print_button.png"
+                       format="PNG" valign="bottom" width="0.40in" />
+          </imageobject>
+        </inlinemediaobject> - print the report.</listitem>
+
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/export_pdf_button.png"
+                       format="PNG" width="0.40in" />
+          </imageobject>
+        </inlinemediaobject> - generate a pdf file of the report.</listitem>
     </orderedlist>
 
     <para>The report layout allows users to create and alter the look of a
-    report. Reports can have any number of queries, guides, text boxes, and
-    images on them. Once created, these components can be dragged around the
-    layout as desired. When printed or exported, the report layout created
-    will be repeated until all of the result sets added to the report have
-    exported all of their values.</para>
+    report. Reports can have any number of queries, guides, text boxes,
+    charts, and images on them. You can easily drag in existing reports,
+    images, and charts from the workspace tree into the report creation area.
+    Once added, these components can be dragged around the layout as desired.
+    When printed or exported, the report layout created will be repeated until
+    all of the result sets added to the report have exported all of their
+    values.</para>
 
     <section id="report_layout.queries">
       <title>Query results</title>
 
-      <para>While laying out the report, additional queries may be desired to
-      be shown on the same report. To add a query defined in the workspace,
-      drag and drop the query from the list of queries on the right. Once on
-      the report, the query can be resized like any other content box. To
-      modify a query, double click it to show its properties window.
+      <para>While laying out the report, you may want to add multiple query
+      results to the report. To add a query defined in the workspace, drag and
+      drop the query from the workspace tree into the query development area.
+      Once on the report, the query can be resized like any other content box.
+      To modify a query, double click it to show its properties window.
       Relational queries and OLAP queries have different properties as shown
       below.</para>
 
@@ -1597,8 +1696,7 @@
                 <entry>
                   <para>The format for all columns. By default the formatting
                   provided in the OLAP Schema is used. The current release of
-                  Wabit doesn't support to format columns
-                  individually.Gr</para>
+                  Wabit doesn't support to format columns individually.</para>
                 </entry>
               </row>
             </tbody>
@@ -1607,38 +1705,13 @@
       </section>
     </section>
 
-    <section id="report_layout.graphs">
-      <title>Graphs</title>
+    <section id="report_layout.charts">
+      <title>Charts</title>
 
-      <para>To add a graph, click on the button ( <inlinemediaobject>
-          <imageobject>
-            <imagedata fileref="src/docbkx/images/chart_bar_add.png"
-                       format="PNG" width="0.2in" />
-          </imageobject>
-        </inlinemediaobject> ) and click on the position in the report where
-      you want to place the graph. Once on the report, you can double click on
-      the empty graph box and select the query and graph you want to
-      use.</para>
-
-      <para>Currently Wabit supports the following graphs:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>Bar</para>
-        </listitem>
-
-        <listitem>
-          <para>Line</para>
-        </listitem>
-
-        <listitem>
-          <para>Category Line</para>
-        </listitem>
-
-        <listitem>
-          <para>Scatter</para>
-        </listitem>
-      </itemizedlist>
+      <para>To add a chart, drag in a chart from the workspace tree. If you
+      want to edit the chart properties, you have to go back into the design
+      view of the chart and make edits there. Once the edits are made, you can
+      refresh the report to see the new layout.</para>
     </section>
 
     <section id="report_layout.guides">
@@ -1824,7 +1897,7 @@
         layout, simply double click the box to show its properties window. The
         properties of any text box involve a simple text editor with font and
         alignment choices. After giving the header of the report a new value,
-        press OK and the header on the report will change. </para>
+        press OK and the header on the report will change.</para>
       </section>
 
       <section>
@@ -1843,17 +1916,16 @@
       <section>
         <title>Adding an image</title>
 
-        <para>To make the report look nicer add an image to it by pressing the
-        image button in the tool bar and then clicking on the report. An image
-        will have to be selected before the image appears on the report. To
-        place the image in the report drag it to the desired location. If you
-        drag the image near a guide, one of the dashed lines that make up the
-        border, the image will snap to it. To remove a content box from a
-        guide drag it away from the guide quickly. Guides can also be inserted
-        into a report to help layout different components. Guides can be added
-        by clicking on the horizontal or vertical guide button in the tool bar
-        and then clicking on the report. Now that the report is finished it
-        can be exported to a PDF file or printed from the tool bar.</para>
+        <para>To make the report look nicer add an image to it by dragging one
+        in from the workspace tree. To place the image in the report drag it
+        to the desired location. If you drag the image near a guide, one of
+        the dashed lines that make up the border, the image will snap to it.
+        To remove a content box from a guide drag it away from the guide
+        quickly. Guides can also be inserted into a report to help layout
+        different components. Guides can be added by clicking on the
+        horizontal or vertical guide button in the tool bar and then clicking
+        on the report. Now that the report is finished it can be exported to a
+        PDF file or printed from the tool bar.</para>
       </section>
     </section>
   </chapter>
@@ -2751,246 +2823,257 @@
         Learn about JUnit at <ulink url="http://www.junit.org/">
         http://www.junit.org/ </ulink> .</para>
       </section>
-      
+
       <section id="appendices.third_party_licences.EPL">
         <title>Olap4j &amp; Mondrian</title>
-	
-		<para>The Wabit team would like to thank Julian Hyde, Luc Boudreau, and
-			the Olap4j team. Olap4j provides us with the API that we use to
-				interact with OLAP servers for Wabit's OLAP support.</para>
-	
-		<para>The Wabit team would also like to thank the Mondrian team. The
-			Mondrian
-			OLAP engine is used in the Wabit as an in-process OLAP engine.
-		</para>
 
-		<para>Both Olap4j and Mondrian are provided under the Eclipse Public
-			License version 1.0
-			which is reproduced below.</para>
-	
-		<para>Eclipse Public License - v 1.0</para>
-	
-		<para>THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS
-			ECLIPSE PUBLIC LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR
-			DISTRIBUTION OF THE PROGRAM CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS
-			AGREEMENT.</para>
-	
-		<para>1. DEFINITIONS</para>
-	
-		<para>"Contribution" means:</para>
-	
-		<para>a) in the case of the initial Contributor, the initial code and
-			documentation distributed under this Agreement, and</para>
-		<para>b) in the case of each subsequent Contributor:</para>
-		<para>i) changes to the Program, and</para>
-		<para>ii) additions to the Program;</para>
-	
-		<para>where such changes and/or additions to the Program originate from
-			and are distributed by that particular Contributor. A Contribution
-			'originates' from a Contributor if it was added to the Program by such
-			Contributor itself or anyone acting on such Contributor's behalf.
-			Contributions do not include additions to the Program which: (i) are
-			separate modules of software distributed in conjunction with the
-			Program under their own license agreement, and (ii) are not derivative
-			works of the Program.</para>
-	
-		<para>"Contributor" means any person or entity that distributes the
-			Program.</para>
-	
-		<para>"Licensed Patents" mean patent claims licensable by a Contributor
-			which are necessarily infringed by the use or sale of its Contribution
-			alone or when combined with the Program.</para>
-	
-		<para>"Program" means the Contributions distributed in accordance with
-			this Agreement.</para>
-	
-		<para>"Recipient" means anyone who receives the Program under this
-			Agreement, including all Contributors.</para>
-	
-		<para>2. GRANT OF RIGHTS</para>
-	
-		<para>a) Subject to the terms of this Agreement, each Contributor
-			hereby grants Recipient a non-exclusive, worldwide, royalty-free
-			copyright license to reproduce, prepare derivative works of, publicly
-			display, publicly perform, distribute and sublicense the Contribution
-			of such Contributor, if any, and such derivative works, in source code
-			and object code form.</para>
-		<para>b) Subject to the terms of this Agreement, each Contributor
-			hereby grants Recipient a non-exclusive, worldwide, royalty-free
-			patent license under Licensed Patents to make, use, sell, offer to
-			sell, import and otherwise transfer the Contribution of such
-			Contributor, if any, in source code and object code form. This patent
-			license shall apply to the combination of the Contribution and the
-			Program if, at the time the Contribution is added by the Contributor,
-			such addition of the Contribution causes such combination to be
-			covered by the Licensed Patents. The patent license shall not apply to
-			any other combinations which include the Contribution. No hardware per
-			se is licensed hereunder.</para>
-		<para>c) Recipient understands that although each Contributor grants
-			the licenses to its Contributions set forth herein, no assurances are
-			provided by any Contributor that the Program does not infringe the
-			patent or other intellectual property rights of any other entity. Each
-			Contributor disclaims any liability to Recipient for claims brought by
-			any other entity based on infringement of intellectual property rights
-			or otherwise. As a condition to exercising the rights and licenses
-			granted hereunder, each Recipient hereby assumes sole responsibility
-			to secure any other intellectual property rights needed, if any. For
-			example, if a third party patent license is required to allow
-			Recipient to distribute the Program, it is Recipient's responsibility
-			to acquire that license before distributing the Program.</para>
-		<para>d) Each Contributor represents that to its knowledge it has
-			sufficient copyright rights in its Contribution, if any, to grant the
-			copyright license set forth in this Agreement.</para>
-	
-		<para>3. REQUIREMENTS</para>
-	
-		<para>A Contributor may choose to distribute the Program in object code
-			form under its own license agreement, provided that:</para>
-	
-		<para>a) it complies with the terms and conditions of this Agreement;
-			and</para>
-		<para>b) its license agreement:</para>
-		<para>i) effectively disclaims on behalf of all Contributors all
-			warranties and conditions, express and implied, including warranties
-			or conditions of title and non-infringement, and implied warranties or
-			conditions of merchantability and fitness for a particular purpose;
-		</para>
-		<para>ii) effectively excludes on behalf of all Contributors all
-			liability for damages, including direct, indirect, special, incidental
-			and consequential damages, such as lost profits;</para>
-		<para>iii) states that any provisions which differ from this Agreement
-			are offered by that Contributor alone and not by any other party; and
-		</para>
-		<para>iv) states that source code for the Program is available from
-			such Contributor, and informs licensees how to obtain it in a
-			reasonable manner on or through a medium customarily used for software
-			exchange.</para>
-	
-		<para>When the Program is made available in source code form:</para>
-	
-		<para>a) it must be made available under this Agreement; and</para>
-		<para>b) a copy of this Agreement must be included with each copy of
-			the Program.</para>
-		<para>Contributors may not remove or alter any copyright notices
-			contained within the Program.</para>
-	
-		<para>Each Contributor must identify itself as the originator of its
-			Contribution, if any, in a manner that reasonably allows subsequent
-			Recipients to identify the originator of the Contribution.</para>
+        <para>The Wabit team would like to thank Julian Hyde, Luc Boudreau,
+        and the Olap4j team. Olap4j provides us with the API that we use to
+        interact with OLAP servers for Wabit's OLAP support.</para>
 
-		<para>4. COMMERCIAL DISTRIBUTION</para>
+        <para>The Wabit team would also like to thank the Mondrian team. The
+        Mondrian OLAP engine is used in the Wabit as an in-process OLAP
+        engine.</para>
 
-		<para>Commercial distributors of software may accept certain
-			responsibilities with
-			respect to end users, business partners and the like. While this
-			license is intended to facilitate the commercial use of the Program,
-			the Contributor who includes the Program in a commercial product
-			offering should do so in a manner which does not create potential
-			liability for other Contributors. Therefore, if a Contributor includes
-			the Program in a commercial product offering, such Contributor
-			("Commercial Contributor") hereby agrees to defend and indemnify every
-			other Contributor ("Indemnified Contributor") against any losses,
-			damages and costs (collectively "Losses") arising from claims,
-			lawsuits
-			and other legal actions brought by a third party against the
-			Indemnified Contributor to the extent caused by the acts or omissions
-			of such Commercial Contributor in connection with its distribution of
-			the Program in a commercial product offering. The obligations in this
-			section do not apply to any claims or Losses relating to any actual or
-			alleged intellectual property infringement. In order to qualify, an
-			Indemnified Contributor must: a) promptly notify the Commercial
-			Contributor in writing of such claim, and b) allow the Commercial
-			Contributor to control, and cooperate with the Commercial Contributor
-			in, the defense and any related settlement negotiations. The
-			Indemnified Contributor may participate in any such claim at its own
-			expense.</para>
+        <para>Both Olap4j and Mondrian are provided under the Eclipse Public
+        License version 1.0 which is reproduced below.</para>
 
-		<para>For example, a Contributor might include the Program in a
-			commercial
-			product offering, Product X. That Contributor is then a Commercial
-			Contributor. If that Commercial Contributor then makes performance
-			claims, or offers warranties related to Product X, those performance
-			claims and warranties are such Commercial Contributor's responsibility
-			alone. Under this section, the Commercial Contributor would have to
-			defend claims against the other Contributors related to those
-			performance claims and warranties, and if a court requires any other
-			Contributor to pay any damages as a result, the Commercial Contributor
-			must pay those damages.</para>
+        <para>Eclipse Public License - v 1.0</para>
 
-		<para>5. NO WARRANTY</para>
-	
-		<para>EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS PROVIDED ON
-		AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
-		EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR
-		CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A
-		PARTICULAR PURPOSE. Each Recipient is solely responsible for
-		determining the appropriateness of using and distributing the Program
-		and assumes all risks associated with its exercise of rights under this
-		Agreement , including but not limited to the risks and costs of program
-		errors, compliance with applicable laws, damage to or loss of data,
-		programs or equipment, and unavailability or interruption of
-		operations.</para>
+        <para>THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS
+        ECLIPSE PUBLIC LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR
+        DISTRIBUTION OF THE PROGRAM CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS
+        AGREEMENT.</para>
 
-		<para>6. DISCLAIMER OF LIABILITY</para>
-	
-		<para>EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT NOR ANY
-		CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
-		INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING
-		WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND ON ANY THEORY OF
-		LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-		NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OR
-		DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED
-		HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</para>
-	
-		<para>7. GENERAL</para>
-	
-		<para>If any provision of this Agreement is invalid or unenforceable under
-		applicable law, it shall not affect the validity or enforceability of
-		the remainder of the terms of this Agreement, and without further
-		action by the parties hereto, such provision shall be reformed to the
-		minimum extent necessary to make such provision valid and enforceable.</para>
-	
-		<para>If Recipient institutes patent litigation against any entity (including
-		a cross-claim or counterclaim in a lawsuit) alleging that the Program
-		itself (excluding combinations of the Program with other software or
-		hardware) infringes such Recipient's patent(s), then such Recipient's
-		rights granted under Section 2(b) shall terminate as of the date such
-		litigation is filed.</para>
-	
-		<para>All Recipient's rights under this Agreement shall terminate if it fails to
-		comply with any of the material terms or conditions of this Agreement
-		and does not cure such failure in a reasonable period of time after
-		becoming aware of such noncompliance. If all Recipient's rights under
-		this Agreement terminate, Recipient agrees to cease use and
-		distribution of the Program as soon as reasonably practicable. However,
-		Recipient's obligations under this Agreement and any licenses granted
-		by Recipient relating to the Program shall continue and survive.</para>
-	
-		<para>Everyone is permitted to copy and distribute copies of this Agreement,
-		but in order to avoid inconsistency the Agreement is copyrighted and
-		may only be modified in the following manner. The Agreement Steward
-		reserves the right to publish new versions (including revisions) of
-		this Agreement from time to time. No one other than the Agreement
-		Steward has the right to modify this Agreement. The Eclipse Foundation
-		is the initial Agreement Steward. The Eclipse Foundation may assign the
-		responsibility to serve as the Agreement Steward to a suitable separate
-		entity. Each new version of the Agreement will be given a
-		distinguishing version number. The Program (including Contributions)
-		may always be distributed subject to the version of the Agreement under
-		which it was received. In addition, after a new version of the
-		Agreement is published, Contributor may elect to distribute the Program
-		(including its Contributions) under the new version. Except as
-		expressly stated in Sections 2(a) and 2(b) above, Recipient receives no
-		rights or licenses to the intellectual property of any Contributor
-		under this Agreement, whether expressly, by implication, estoppel or
-		otherwise. All rights in the Program not expressly granted under this
-		Agreement are reserved.</para>
-	
-		<para>This Agreement is governed by the laws of the State of New York and the
-		intellectual property laws of the United States of America. No party to
-		this Agreement will bring a legal action under this Agreement more than
-		one year after the cause of action arose. Each party waives its rights
-		to a jury trial in any resulting litigation.</para>
+        <para>1. DEFINITIONS</para>
+
+        <para>"Contribution" means:</para>
+
+        <para>a) in the case of the initial Contributor, the initial code and
+        documentation distributed under this Agreement, and</para>
+
+        <para>b) in the case of each subsequent Contributor:</para>
+
+        <para>i) changes to the Program, and</para>
+
+        <para>ii) additions to the Program;</para>
+
+        <para>where such changes and/or additions to the Program originate
+        from and are distributed by that particular Contributor. A
+        Contribution 'originates' from a Contributor if it was added to the
+        Program by such Contributor itself or anyone acting on such
+        Contributor's behalf. Contributions do not include additions to the
+        Program which: (i) are separate modules of software distributed in
+        conjunction with the Program under their own license agreement, and
+        (ii) are not derivative works of the Program.</para>
+
+        <para>"Contributor" means any person or entity that distributes the
+        Program.</para>
+
+        <para>"Licensed Patents" mean patent claims licensable by a
+        Contributor which are necessarily infringed by the use or sale of its
+        Contribution alone or when combined with the Program.</para>
+
+        <para>"Program" means the Contributions distributed in accordance with
+        this Agreement.</para>
+
+        <para>"Recipient" means anyone who receives the Program under this
+        Agreement, including all Contributors.</para>
+
+        <para>2. GRANT OF RIGHTS</para>
+
+        <para>a) Subject to the terms of this Agreement, each Contributor
+        hereby grants Recipient a non-exclusive, worldwide, royalty-free
+        copyright license to reproduce, prepare derivative works of, publicly
+        display, publicly perform, distribute and sublicense the Contribution
+        of such Contributor, if any, and such derivative works, in source code
+        and object code form.</para>
+
+        <para>b) Subject to the terms of this Agreement, each Contributor
+        hereby grants Recipient a non-exclusive, worldwide, royalty-free
+        patent license under Licensed Patents to make, use, sell, offer to
+        sell, import and otherwise transfer the Contribution of such
+        Contributor, if any, in source code and object code form. This patent
+        license shall apply to the combination of the Contribution and the
+        Program if, at the time the Contribution is added by the Contributor,
+        such addition of the Contribution causes such combination to be
+        covered by the Licensed Patents. The patent license shall not apply to
+        any other combinations which include the Contribution. No hardware per
+        se is licensed hereunder.</para>
+
+        <para>c) Recipient understands that although each Contributor grants
+        the licenses to its Contributions set forth herein, no assurances are
+        provided by any Contributor that the Program does not infringe the
+        patent or other intellectual property rights of any other entity. Each
+        Contributor disclaims any liability to Recipient for claims brought by
+        any other entity based on infringement of intellectual property rights
+        or otherwise. As a condition to exercising the rights and licenses
+        granted hereunder, each Recipient hereby assumes sole responsibility
+        to secure any other intellectual property rights needed, if any. For
+        example, if a third party patent license is required to allow
+        Recipient to distribute the Program, it is Recipient's responsibility
+        to acquire that license before distributing the Program.</para>
+
+        <para>d) Each Contributor represents that to its knowledge it has
+        sufficient copyright rights in its Contribution, if any, to grant the
+        copyright license set forth in this Agreement.</para>
+
+        <para>3. REQUIREMENTS</para>
+
+        <para>A Contributor may choose to distribute the Program in object
+        code form under its own license agreement, provided that:</para>
+
+        <para>a) it complies with the terms and conditions of this Agreement;
+        and</para>
+
+        <para>b) its license agreement:</para>
+
+        <para>i) effectively disclaims on behalf of all Contributors all
+        warranties and conditions, express and implied, including warranties
+        or conditions of title and non-infringement, and implied warranties or
+        conditions of merchantability and fitness for a particular
+        purpose;</para>
+
+        <para>ii) effectively excludes on behalf of all Contributors all
+        liability for damages, including direct, indirect, special, incidental
+        and consequential damages, such as lost profits;</para>
+
+        <para>iii) states that any provisions which differ from this Agreement
+        are offered by that Contributor alone and not by any other party;
+        and</para>
+
+        <para>iv) states that source code for the Program is available from
+        such Contributor, and informs licensees how to obtain it in a
+        reasonable manner on or through a medium customarily used for software
+        exchange.</para>
+
+        <para>When the Program is made available in source code form:</para>
+
+        <para>a) it must be made available under this Agreement; and</para>
+
+        <para>b) a copy of this Agreement must be included with each copy of
+        the Program.</para>
+
+        <para>Contributors may not remove or alter any copyright notices
+        contained within the Program.</para>
+
+        <para>Each Contributor must identify itself as the originator of its
+        Contribution, if any, in a manner that reasonably allows subsequent
+        Recipients to identify the originator of the Contribution.</para>
+
+        <para>4. COMMERCIAL DISTRIBUTION</para>
+
+        <para>Commercial distributors of software may accept certain
+        responsibilities with respect to end users, business partners and the
+        like. While this license is intended to facilitate the commercial use
+        of the Program, the Contributor who includes the Program in a
+        commercial product offering should do so in a manner which does not
+        create potential liability for other Contributors. Therefore, if a
+        Contributor includes the Program in a commercial product offering,
+        such Contributor ("Commercial Contributor") hereby agrees to defend
+        and indemnify every other Contributor ("Indemnified Contributor")
+        against any losses, damages and costs (collectively "Losses") arising
+        from claims, lawsuits and other legal actions brought by a third party
+        against the Indemnified Contributor to the extent caused by the acts
+        or omissions of such Commercial Contributor in connection with its
+        distribution of the Program in a commercial product offering. The
+        obligations in this section do not apply to any claims or Losses
+        relating to any actual or alleged intellectual property infringement.
+        In order to qualify, an Indemnified Contributor must: a) promptly
+        notify the Commercial Contributor in writing of such claim, and b)
+        allow the Commercial Contributor to control, and cooperate with the
+        Commercial Contributor in, the defense and any related settlement
+        negotiations. The Indemnified Contributor may participate in any such
+        claim at its own expense.</para>
+
+        <para>For example, a Contributor might include the Program in a
+        commercial product offering, Product X. That Contributor is then a
+        Commercial Contributor. If that Commercial Contributor then makes
+        performance claims, or offers warranties related to Product X, those
+        performance claims and warranties are such Commercial Contributor's
+        responsibility alone. Under this section, the Commercial Contributor
+        would have to defend claims against the other Contributors related to
+        those performance claims and warranties, and if a court requires any
+        other Contributor to pay any damages as a result, the Commercial
+        Contributor must pay those damages.</para>
+
+        <para>5. NO WARRANTY</para>
+
+        <para>EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+        PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+        WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+        OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is solely
+        responsible for determining the appropriateness of using and
+        distributing the Program and assumes all risks associated with its
+        exercise of rights under this Agreement , including but not limited to
+        the risks and costs of program errors, compliance with applicable
+        laws, damage to or loss of data, programs or equipment, and
+        unavailability or interruption of operations.</para>
+
+        <para>6. DISCLAIMER OF LIABILITY</para>
+
+        <para>EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER
+        RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY
+        DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+        DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+        AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+        OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+        THE USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS
+        GRANTED HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+        DAMAGES.</para>
+
+        <para>7. GENERAL</para>
+
+        <para>If any provision of this Agreement is invalid or unenforceable
+        under applicable law, it shall not affect the validity or
+        enforceability of the remainder of the terms of this Agreement, and
+        without further action by the parties hereto, such provision shall be
+        reformed to the minimum extent necessary to make such provision valid
+        and enforceable.</para>
+
+        <para>If Recipient institutes patent litigation against any entity
+        (including a cross-claim or counterclaim in a lawsuit) alleging that
+        the Program itself (excluding combinations of the Program with other
+        software or hardware) infringes such Recipient's patent(s), then such
+        Recipient's rights granted under Section 2(b) shall terminate as of
+        the date such litigation is filed.</para>
+
+        <para>All Recipient's rights under this Agreement shall terminate if
+        it fails to comply with any of the material terms or conditions of
+        this Agreement and does not cure such failure in a reasonable period
+        of time after becoming aware of such noncompliance. If all Recipient's
+        rights under this Agreement terminate, Recipient agrees to cease use
+        and distribution of the Program as soon as reasonably practicable.
+        However, Recipient's obligations under this Agreement and any licenses
+        granted by Recipient relating to the Program shall continue and
+        survive.</para>
+
+        <para>Everyone is permitted to copy and distribute copies of this
+        Agreement, but in order to avoid inconsistency the Agreement is
+        copyrighted and may only be modified in the following manner. The
+        Agreement Steward reserves the right to publish new versions
+        (including revisions) of this Agreement from time to time. No one
+        other than the Agreement Steward has the right to modify this
+        Agreement. The Eclipse Foundation is the initial Agreement Steward.
+        The Eclipse Foundation may assign the responsibility to serve as the
+        Agreement Steward to a suitable separate entity. Each new version of
+        the Agreement will be given a distinguishing version number. The
+        Program (including Contributions) may always be distributed subject to
+        the version of the Agreement under which it was received. In addition,
+        after a new version of the Agreement is published, Contributor may
+        elect to distribute the Program (including its Contributions) under
+        the new version. Except as expressly stated in Sections 2(a) and 2(b)
+        above, Recipient receives no rights or licenses to the intellectual
+        property of any Contributor under this Agreement, whether expressly,
+        by implication, estoppel or otherwise. All rights in the Program not
+        expressly granted under this Agreement are reserved.</para>
+
+        <para>This Agreement is governed by the laws of the State of New York
+        and the intellectual property laws of the United States of America. No
+        party to this Agreement will bring a legal action under this Agreement
+        more than one year after the cause of action arose. Each party waives
+        its rights to a jury trial in any resulting litigation.</para>
       </section>
     </section>
   </chapter>
