@@ -164,6 +164,7 @@ import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
+import ca.sqlpower.wabit.swingui.action.ShowWabitApplicationPreferencesAction;
 import ca.sqlpower.wabit.swingui.chart.ChartPanel;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
@@ -218,6 +219,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
 
+    /**
+     * A constant for storing the global preference for executing all queries automatically
+     */
+    static final String AUTOMATICALLY_EXECUTE_ALL_QUERIES = "autoExecuteAllQueries";
+    
     /**
      * This is a simple {@link SwingWorkerRegistry} implementation for the
      * context to track workers involved with loading files. It would be useful
@@ -308,6 +314,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 * This action will display an about dialog that is parented to the {@link #frame}.
 	 */
 	private AbstractAction aboutAction;
+	
+	/**
+	 * This action displays a dialog for modifying application preferences
+	 */
+	private final Action prefsAction;
 	
 	/**
 	 * This is the status label at the bottom of one of the windows.
@@ -571,6 +582,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 oldRowLimitValue = (Integer) rowLimitSpinner.getValue();
             }
         });
+        
+        prefsAction = new ShowWabitApplicationPreferencesAction(frame, prefs);
         
         if (!headless) {
             buildUI();
@@ -912,13 +925,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private void macOSXRegistration() {
 
-        Action prefAction = new AbstractAction() {
-		
-			public void actionPerformed(ActionEvent e) {
-				// TODO Implement prefs in Mac
-			}
-		};
-		
 		Action exitAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
 				close();
@@ -927,7 +933,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         // Whether or not this is OS X, the three actions we're referencing must have been initialized by now.
         if (exitAction == null) throw new IllegalStateException("Exit action has not been initialized"); //$NON-NLS-1$
-        if (prefAction == null) throw new IllegalStateException("Prefs action has not been initialized"); //$NON-NLS-1$
+        if (prefsAction == null) throw new IllegalStateException("Prefs action has not been initialized"); //$NON-NLS-1$
         if (aboutAction == null) throw new IllegalStateException("About action has not been initialized"); //$NON-NLS-1$
 
         if (isMacOSX()) {
@@ -937,7 +943,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 // The main registration method.  Takes quitAction, prefsAction, aboutAction.
                 Class[] defArgs = { Action.class, Action.class, Action.class };
                 Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs); //$NON-NLS-1$
-                Object[] args = { exitAction, prefAction, aboutAction };
+                Object[] args = { exitAction, prefsAction, aboutAction };
                 registerMethod.invoke(osxAdapter, args);
 
                 // The enable prefs method.  Takes a boolean.
@@ -1122,6 +1128,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
         
         if (!isMacOSX()) {
+        	fileMenu.addSeparator();
+        	fileMenu.add(prefsAction);
             fileMenu.addSeparator();
             fileMenu.add(exitAction);
         }
@@ -1441,7 +1449,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     		}
     	}
     };
-    
+
     public void registerChildSession(WabitSession child) {
         delegateContext.registerChildSession(child);
         JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree());
