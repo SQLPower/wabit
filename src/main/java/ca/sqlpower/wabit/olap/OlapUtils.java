@@ -146,7 +146,7 @@ public class OlapUtils {
      *             SQLException while it's being populated.
      * @see OlapResultSet
      */
-    public static ResultSet toResultSet(@Nonnull CellSet cellSet) {
+    public static OlapResultSet toResultSet(@Nonnull CellSet cellSet) {
         try {
             OlapResultSet ors;
             ors = new OlapResultSet();
