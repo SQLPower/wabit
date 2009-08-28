@@ -220,11 +220,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
 
     /**
-     * A constant for storing the global preference for executing all queries automatically
-     */
-    static final String AUTOMATICALLY_EXECUTE_ALL_QUERIES = "autoExecuteAllQueries";
-    
-    /**
      * This is a simple {@link SwingWorkerRegistry} implementation for the
      * context to track workers involved with loading files. It would be useful
      * if the {@link OpenWorkspaceXMLDAO} created the session(s) to load into

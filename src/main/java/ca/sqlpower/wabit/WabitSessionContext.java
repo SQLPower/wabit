@@ -56,6 +56,11 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      */
     public static final String WABIT_ENTERPRISE_SERVER_MDNS_TYPE = "_wabitenterprise._tcp.local.";
     
+    /**
+     * A constant for storing the global preference for disabling automatic execution of queries
+     */
+    public static final String DISABLE_AUTO_EXECUTE = "disableAutoExecute";
+    
 	DataSourceCollection<SPDataSource> getDataSources();
 	
 	/**

@@ -27,6 +27,7 @@ import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.wabit.WabitSessionContext;
 
 /**
  * A JPanel with a bunch of controls to allow the user to change global
@@ -43,7 +44,7 @@ public class WabitApplicationPreferencesPanel implements DataEntryPanel {
 	 * A checkbox to set if the user wants all queries in to be automatically
 	 * executed when opened or modified.
 	 */
-	private JCheckBox autoExecuteQueries;
+	private JCheckBox disableAutoExecute;
 
 	/**
 	 * The Preferences object representing the Wabit's global application preferences
@@ -62,18 +63,18 @@ public class WabitApplicationPreferencesPanel implements DataEntryPanel {
 		this.prefs = prefs;
 		prefs.getBoolean("", true);
 		panel = new JPanel(new MigLayout());
-		autoExecuteQueries = new JCheckBox("Automatically execute all queries when accessed", 
-				prefs.getBoolean(WabitSwingSessionContextImpl.AUTOMATICALLY_EXECUTE_ALL_QUERIES, true));
-		panel.add(autoExecuteQueries, "span");
+		disableAutoExecute = new JCheckBox("Disable automatic execution of queries", 
+				prefs.getBoolean(WabitSessionContext.DISABLE_AUTO_EXECUTE, false));
+		panel.add(disableAutoExecute, "span");
 	}
 	
 	public boolean applyChanges() {
-		prefs.putBoolean(WabitSwingSessionContextImpl.AUTOMATICALLY_EXECUTE_ALL_QUERIES, autoExecuteQueries.isSelected());
+		prefs.putBoolean(WabitSessionContext.DISABLE_AUTO_EXECUTE, disableAutoExecute.isSelected());
 		return true;
 	}
 
 	public void discardChanges() {
-		autoExecuteQueries.setSelected(prefs.getBoolean(WabitSwingSessionContextImpl.AUTOMATICALLY_EXECUTE_ALL_QUERIES, true));
+		disableAutoExecute.setSelected(prefs.getBoolean(WabitSessionContext.DISABLE_AUTO_EXECUTE, false));
 	}
 
 	public JComponent getPanel() {
