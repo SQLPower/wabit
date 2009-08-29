@@ -175,13 +175,21 @@ public class ChartPanel implements WabitPanel {
      */
     private DocumentListener documentChangeHandler = new DocumentListener() {
         public void changedUpdate(DocumentEvent e) {
-            updateChartFromGUI();
+            update();
         }
         public void insertUpdate(DocumentEvent e) {
-            updateChartFromGUI();
+            update();
         }
         public void removeUpdate(DocumentEvent e) {
-            updateChartFromGUI();
+            update();
+        }
+        private void update() {
+            try {
+                skipTextFieldRefresh = true;
+                updateChartFromGUI();
+            } finally {
+                skipTextFieldRefresh = false;
+            }
         }
     };
 
@@ -239,8 +247,18 @@ public class ChartPanel implements WabitPanel {
     /**
      * Protects {@link #updateChartFromGUI()} and {@link #updateGUIFromChart()}
      * against mutual recursion.
+     * 
+     * @see #skipTextFieldRefresh
      */
     private volatile boolean updating = false;
+
+    /**
+     * Protects against trying to update text fields when we're already handling
+     * a DocumentChanged event.
+     * 
+     * @see #updating
+     */
+    private volatile boolean skipTextFieldRefresh = false;
     
     private final Action refreshDataAction;
 
@@ -331,8 +349,12 @@ public class ChartPanel implements WabitPanel {
         if (updating) return;
         try {
             updating = true;
-            yaxisNameField.setText(chart.getYaxisName());
-            xaxisNameField.setText(chart.getXaxisName());
+            
+            if (!skipTextFieldRefresh) {
+                yaxisNameField.setText(chart.getYaxisName());
+                xaxisNameField.setText(chart.getXaxisName());
+            }
+            
             queryComboBox.setSelectedItem(chart.getQuery());
             setSelectedChartType(chart.getType());
             
