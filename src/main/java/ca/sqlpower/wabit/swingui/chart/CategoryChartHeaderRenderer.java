@@ -1,6 +1,7 @@
 package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -123,17 +124,28 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                     //don't care
                 }
             });
-            logger.debug("table header has components " + Arrays.toString(tableHeader.getComponents()));
+            logger.debug(e.getID() + " table header has components " + Arrays.toString(tableHeader.getComponents()));
         }
     };
 
     private final List<ChartColumn> chartColumns;
+    
+    private final Color backgroundColour;
     
     public CategoryChartHeaderRenderer(ChartPanel chartPanel, final JTableHeader tableHeader, TableCellRenderer defaultTableCellRenderer) {
         this.chartPanel = chartPanel;
         this.tableHeader = tableHeader;
         this.defaultTableCellRenderer = defaultTableCellRenderer;
 
+        if (logger.isDebugEnabled()) {
+            backgroundColour = new Color(
+                    (float) Math.random(),
+                    (float) Math.random(),
+                    (float) Math.random());
+        } else {
+            backgroundColour = null;
+        }
+        
         tableHeader.addMouseListener(comboBoxMouseListener);
         
         chartColumns = new ArrayList<ChartColumn>(chartPanel.getChart().getColumns());
@@ -167,6 +179,9 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      */
     private JComboBox makeRoleBox(final int column) {
         final JComboBox roleBox = new JComboBox(ColumnRole.values());
+        if (backgroundColour != null) {
+            roleBox.setBackground(backgroundColour);
+        }
         try {
             String columnName = chartColumns.get(column).getName();
             ResultSet rs = chartPanel.getChart().getUnfilteredResultSet();
