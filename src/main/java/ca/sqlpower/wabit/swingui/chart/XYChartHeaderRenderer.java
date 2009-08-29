@@ -185,11 +185,15 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
             int yPosition;
             if (e.getY() < comboBoxHeight) {
                 yPosition = 0;
-                clickedBox = columnRoleBox;
-                clickedBox.setSelectedItem(chartColumn);
-                
-                // this has to be attached after setting the selected item
-                columnRoleBox.addItemListener(columnRoleChangeListener);
+                if (numericAndDateCols.contains(chartColumn.getName())) {
+                    clickedBox = columnRoleBox;
+                    clickedBox.setSelectedItem(chartColumn);
+
+                    // this has to be attached after setting the selected item
+                    columnRoleBox.addItemListener(columnRoleChangeListener);
+                } else {
+                    return;
+                }
                 
             } else if (e.getY() < comboBoxHeight * 2) {
                 yPosition = comboBoxHeight;
@@ -208,6 +212,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 } else {
                     return;
                 }
+                
             } else {
                 return;
             }
