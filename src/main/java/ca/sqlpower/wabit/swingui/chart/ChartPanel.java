@@ -324,7 +324,7 @@ public class ChartPanel implements WabitPanel {
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
             }
 
-            resultTable.getTableHeader().repaint(); // the headers build up internal state when they're painting (gack!)
+            resultTable.getTableHeader().repaint(); // XXX probably unnecessary now
             
             if(chart.getLegendPosition() != null) {
                 legendPositionComboBox.setSelectedItem(chart.getLegendPosition());
@@ -480,6 +480,20 @@ public class ChartPanel implements WabitPanel {
             
         } finally {
             updating = false;
+        }
+        
+        /*
+         * Because we were purposely ignoring events from the chart while updating it,
+         * we now have to do an explicit refresh of the table and chart preview. The
+         * same interlock that prevented mutual recursion during the GUI->Chart update
+         * prevents Chart->GUI updates from re-calling this method.
+         */
+        try {
+            updateGUIFromChart();
+        } catch (SQLException ex) {
+            logger.info("Chart->GUI update failed", ex);
+            chartError.setText("Update failed: " + ex);
+            chartError.setVisible(true);
         }
     }
 
