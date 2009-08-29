@@ -30,7 +30,9 @@ import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.AbstractButton;
 import javax.swing.Action;
@@ -199,49 +201,29 @@ public class ChartPanel implements WabitPanel {
      */
     private final PropertyChangeListener chartListener = new PropertyChangeListener() {
 
+        /**
+         * Set of properties that are ignored with regards to marking this chart
+         * panel as having unsaved changes.
+         */
+        private final Set<String> ignorableProperties = new HashSet<String>();
+        {
+            ignorableProperties.add("unfilteredResultSet");
+        }
+        
         public void propertyChange(PropertyChangeEvent evt) {
-            chartHasChanges = true; // FIXME some property changes need to be ignored
+            logger.debug(
+                    "Got chart property change: \""+evt.getPropertyName()+"\" " +
+                    		evt.getOldValue() + " -> " + evt.getNewValue());
+            if (!ignorableProperties.contains(evt.getPropertyName())) {
+                chartHasChanges = true;
+            }
+            
             try {
                 updateGUIFromChart();
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
         }
-//            if ("type".equals(evt.getPropertyName())) {
-//                switch (chart.getType()) {
-//                case BAR:
-//                case CATEGORY_LINE:
-//                    xaxisNameField.setVisible(false);
-//                    xaxisNameLabel.setVisible(false);
-//                    currentHeaderCellRenderer = 
-//                        new CategoryChartRendererTableCellRenderer(
-//                                resultTable.getTableHeader(), defaultHeaderCellRenderer);
-//                    resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
-//                    break;
-//                case LINE:
-//                case SCATTER:
-//                    currentHeaderCellRenderer =
-//                        new XYChartRendererCellRenderer(
-//                                resultTable.getTableHeader(), defaultHeaderCellRenderer);
-//                    resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
-//                    xaxisNameField.setVisible(true);
-//                    xaxisNameLabel.setVisible(true);
-//                    break;
-//                default:
-//                    throw new IllegalStateException(
-//                            "Unknown chart type " + chartTypeComboBox.getSelectedItem());
-//                }
-//                if(queryComboBox.getSelectedItem() != null) {
-//                    final WabitObject selectedItem = (WabitObject) queryComboBox.getSelectedItem();
-//                    try {
-//                        updateEditor(selectedItem);
-//                    } catch (SQLException e1) {
-//                        throw new RuntimeException(e1);
-//                    }
-//                }
-//            }
-//        }
-        
     };
 
     /**
