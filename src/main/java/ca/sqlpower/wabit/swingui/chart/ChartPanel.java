@@ -20,16 +20,23 @@
 package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
+import javax.swing.AbstractButton;
 import javax.swing.Action;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -38,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -54,7 +62,6 @@ import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
@@ -71,14 +78,19 @@ public class ChartPanel implements WabitPanel {
     static final Logger logger = Logger.getLogger(ChartPanel.class);
 
     /**
+     * Key for client property stored in the chart chooser toggle buttons.
+     */
+    private static final String CHART_TYPE_PROP_KEY = ChartPanel.class.getName() + ".CHART_TYPE_PROP_KEY";
+
+    private final Icon BAR_CHART_ICON = new ImageIcon(ChartPanel.class.getResource("/icons/32x32/chart-bar.png"));
+    private final Icon LINE_CHART_ICON = new ImageIcon(ChartPanel.class.getResource("/icons/32x32/chart-line.png"));
+    private final Icon PIE_CHART_ICON = new ImageIcon(ChartPanel.class.getResource("/icons/32x32/chart-pie.png"));
+    private final Icon SCATTER_CHART_ICON = new ImageIcon(ChartPanel.class.getResource("/icons/32x32/chart-scatter.png"));
+    
+    /**
      * The panel that holds the chart editor UI.
      */
     private final JPanel panel = new JPanel();
-
-    /**
-     * Holds the chart object's name.
-     */
-    private final JTextField nameField = new JTextField();
 
     /**
      * Contains all the queries in the workspace. This will let the user
@@ -108,20 +120,6 @@ public class ChartPanel implements WabitPanel {
      * category and which ones are series.
      */
     private final JTable resultTable = new EditableJTable();
-
-    /**
-     * This is an error/warning label for the result table. If something 
-     * goes wrong in a query, this result label will display a message.
-     */
-    private final JLabel resultTableLabel = new JLabel();
-
-    /**
-     * Holds all of the chart types that the {@link ChartRenderer} can generate
-     * and display.
-     * <p>
-     * This will eventually change to buttons to select the desired chart type.
-     */
-    private final JComboBox chartTypeComboBox;
 
     /**
      * Holds the chart's legend position.
@@ -157,12 +155,6 @@ public class ChartPanel implements WabitPanel {
      * a chart.
      */
     private ChartTableHeaderCellRenderer currentHeaderCellRenderer;
-
-    /**
-     * This scroll pane shows a table that allows users to edit the values
-     * in the chart.
-     */
-    private JScrollPane tableScrollPane;
 
     /**
      * The data model for this component.
@@ -251,8 +243,8 @@ public class ChartPanel implements WabitPanel {
     private final Action refreshDataAction;
 
     /**
-     * Listens to all the combo boxes, and updates the chart object when
-     * appropriate.
+     * Listens to all the combo boxes, and updates the chart object whenever an
+     * event comes in.
      */
     private final ItemListener genericItemListener = new ItemListener() {
         public void itemStateChanged(ItemEvent e) {
@@ -260,6 +252,16 @@ public class ChartPanel implements WabitPanel {
         }
     };
 
+    /**
+     * Listens to anything that can produce an action event (such as a button),
+     * and updates the chart object whenever an event comes in.
+     */
+    private final ActionListener genericActionListener = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            updateChartFromGUI();
+        }
+    };
+    
     public ChartPanel(WabitSwingSession session, final Chart chart) {
         WabitWorkspace workspace = session.getWorkspace();
         this.chart = chart;
@@ -274,14 +276,11 @@ public class ChartPanel implements WabitPanel {
         queries.addAll(workspace.getOlapQueries());
         queryComboBox = new JComboBox(queries.toArray());
         
-        chartTypeComboBox = new JComboBox(ExistingChartTypes.values());
         legendPositionComboBox = new JComboBox(LegendPosition.values());
-        nameField.getDocument().addDocumentListener(documentChangeHandler);
         yaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
         xaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
 
         queryComboBox.addItemListener(genericItemListener);
-        chartTypeComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
         
         buildUI();
@@ -292,9 +291,9 @@ public class ChartPanel implements WabitPanel {
             chart.refreshData(); // TODO check if this is necessary (it probably is)
             updateGUIFromChart();
         } catch (Exception ex) {
-            resultTableLabel.setText(
+            chartError.setText(
                     "Execution of query \"" + chart.getQuery() + "\" failed: " + ex.getMessage());
-            resultTableLabel.setVisible(true);
+            chartError.setVisible(true);
         }
 
     }
@@ -308,11 +307,10 @@ public class ChartPanel implements WabitPanel {
         if (updating) return;
         try {
             updating = true;
-            nameField.setText(chart.getName());
             yaxisNameField.setText(chart.getYaxisName());
             xaxisNameField.setText(chart.getXaxisName());
             queryComboBox.setSelectedItem(chart.getQuery());
-            chartTypeComboBox.setSelectedItem(chart.getType());
+            setSelectedChartType(chart.getType());
             
             if (currentHeaderCellRenderer != null) {
                 currentHeaderCellRenderer.cleanup();
@@ -336,8 +334,8 @@ public class ChartPanel implements WabitPanel {
 
             CachedRowSet rs = chart.getUnfilteredResultSet();
             if (rs == null) {
-                resultTableLabel.setText("The selected query \"" + chart.getQuery() + "\" returns no results.");
-                resultTableLabel.setVisible(true);
+                chartError.setText("The selected query \"" + chart.getQuery() + "\" returns no results.");
+                chartError.setVisible(true);
                 return;
             }
 
@@ -345,8 +343,8 @@ public class ChartPanel implements WabitPanel {
             resultTable.setModel(model);
             resultTable.setDefaultRenderer(Object.class, new ChartTableCellRenderer()); // TODO provide filter to renderer
 
-            resultTableLabel.setText("");
-            resultTableLabel.setVisible(false);
+            chartError.setText("");
+            chartError.setVisible(false);
 
             updateChartPreview();
 
@@ -377,36 +375,25 @@ public class ChartPanel implements WabitPanel {
     private void buildUI() {
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout(
-                        "pref, 5dlu, pref:grow",
-                        "pref, pref, pref, pref, fill:max(25; pref):grow, fill:max(25; pref):grow, pref"),
-                        new FormDebugPanel());
-        builder.append("Name", nameField);
-        builder.nextLine();
-        builder.append("Type", chartTypeComboBox);
-        builder.nextLine();
-        builder.append("Query", queryComboBox);
-        builder.nextLine();
-        builder.append(resultTableLabel, 3);
-        builder.nextLine();
-        tableScrollPane = new JScrollPane(resultTable);
-        tableScrollPane.setPreferredSize(new Dimension(0, 0));
+                        "pref, 3dlu, pref:grow, 3dlu, pref:grow",
+                        "pref, 3dlu, fill:0:grow, 3dlu, fill:0:grow"),
+                new FormDebugPanel());
+        
+        builder.append("Query", queryComboBox, 3);
+        builder.nextRow();
+
+        builder.append(new JLabel("Chart header legend goes here"));// TODO
+        
+        JScrollPane tableScrollPane = new JScrollPane(resultTable);
         builder.append(tableScrollPane, 3);
-        builder.nextLine();
+        builder.nextRow();
         
         JPanel chartAndErrorPanel = new JPanel(new BorderLayout());
         chartAndErrorPanel.add(chartError, BorderLayout.NORTH);
-        final JScrollPane chartScrollPane = new JScrollPane(chartPanel);
-        chartScrollPane.setPreferredSize(new Dimension(0, 0));
-        chartAndErrorPanel.add(chartScrollPane, BorderLayout.CENTER);
+        chartAndErrorPanel.add(chartPanel, BorderLayout.CENTER);
         builder.append(chartAndErrorPanel, 3);
         
-        builder.nextLine();
-        builder.append("Legend Postion", legendPositionComboBox);
-        builder.nextLine();
-        builder.append("Y Axis Label", yaxisNameField);
-        builder.nextLine();
-        builder.append(xaxisNameLabel, xaxisNameField);
-        builder.nextLine();
+        builder.append(buildChartPrefsPanel());
         
         // XXX The following code proliferation pains me. I've opened a bug.
         JToolBar toolBar = new JToolBar();
@@ -418,6 +405,17 @@ public class ChartPanel implements WabitPanel {
         refreshButton.putClientProperty("JButton.buttonType", "toolbar");
         toolBar.add(refreshButton);
         toolBar.setFloatable(false);
+
+        toolBar.addSeparator();
+        toolBar.add(makeChartTypeButton("Bar", ExistingChartTypes.BAR, BAR_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Category Line", ExistingChartTypes.CATEGORY_LINE, LINE_CHART_ICON));
+
+        toolBar.addSeparator();
+        toolBar.add(makeChartTypeButton("Line", ExistingChartTypes.LINE, LINE_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Scatter", ExistingChartTypes.SCATTER, SCATTER_CHART_ICON));
+        
+//        toolBar.addSeparator();
+        // TODO pie
         
         JToolBar wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
@@ -434,6 +432,93 @@ public class ChartPanel implements WabitPanel {
         panel.setLayout(new BorderLayout());
         panel.add(builder.getPanel(), BorderLayout.CENTER);
         panel.add(mainbar, BorderLayout.NORTH);
+    }
+
+    /**
+     * Contains all the toggle buttons that are for choosing the chart type.
+     * Each button in this group has a client property indicating the {@link ExistingChartTypes} constant it represents.
+     * 
+     */
+    ButtonGroup chartTypeButtonGroup = new ButtonGroup();
+
+    /**
+     * Subroutine of {@link #buildUI()}. Makes a chart type toggle button and
+     * adds it to the button group.
+     * 
+     * @param caption The text to appear under the button
+     * @param type The type of chart the buttons should select
+     * @param icon The icon for the button
+     * @return A button properly configured for the new-look Wabit toolbar.
+     */
+    private JToggleButton makeChartTypeButton(
+            String caption, ExistingChartTypes type, Icon icon) {
+        JToggleButton b = new JToggleButton(caption, icon);
+        b.putClientProperty(CHART_TYPE_PROP_KEY, type);
+        chartTypeButtonGroup.add(b);
+        
+        b.setVerticalTextPosition(SwingConstants.BOTTOM);
+        b.setHorizontalTextPosition(SwingConstants.CENTER);
+        
+        // Removes button borders on OS X 10.5
+        b.putClientProperty("JButton.buttonType", "toolbar");
+
+        b.addActionListener(genericActionListener);
+        
+        return b;
+    }
+
+    private ExistingChartTypes getSelectedChartType() {
+        for (Enumeration<AbstractButton> buttons = chartTypeButtonGroup.getElements();
+                buttons.hasMoreElements(); ) {
+            AbstractButton b = buttons.nextElement();
+            if (chartTypeButtonGroup.isSelected(b.getModel())) {
+                ExistingChartTypes ct = (ExistingChartTypes) b.getClientProperty(CHART_TYPE_PROP_KEY);
+                logger.debug("Found selected chart type " + ct);
+                return ct;
+            }
+        }
+        
+        logger.debug("Didn't find any selected chart buttons. Returning null.");
+        return null;
+    }
+    
+    /**
+     * Selects the appropriate button in {@link #chartTypeButtonGroup}.
+     * 
+     * @param type The type of chart to select the button of.
+     */
+    private void setSelectedChartType(ExistingChartTypes type) {
+        for (Enumeration<AbstractButton> buttons = chartTypeButtonGroup.getElements();
+        buttons.hasMoreElements(); ) {
+            AbstractButton b = buttons.nextElement();
+            ExistingChartTypes ct = (ExistingChartTypes) b.getClientProperty(CHART_TYPE_PROP_KEY);
+            if (ct == type) {
+                chartTypeButtonGroup.setSelected(b.getModel(), true);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("I can't find a button for chart type " + type);
+    }
+
+    /**
+     * Subroutine of {@link #buildUI()}. Creates the form that appears to the
+     * right of the JFreeChart preview.
+     */
+    private Component buildChartPrefsPanel() {
+        DefaultFormBuilder builder = new DefaultFormBuilder(
+                new FormLayout("pref, 3dlu, pref:grow"),
+                new FormDebugPanel());
+
+        builder.append("Legend Postion", legendPositionComboBox);
+        builder.nextLine();
+        
+        builder.append("Y Axis Label", yaxisNameField);
+        builder.nextLine();
+        
+        builder.append(xaxisNameLabel, xaxisNameField);
+        builder.nextLine();
+
+        return builder.getPanel();
     }
 
     public boolean hasUnsavedChanges() {
@@ -468,13 +553,12 @@ public class ChartPanel implements WabitPanel {
         if (updating) return;
         try {
             updating = true;
-            chart.setName(nameField.getText());
             try {
                 chart.defineQuery((WabitObject) queryComboBox.getSelectedItem());
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-            chart.setType((ExistingChartTypes) chartTypeComboBox.getSelectedItem());
+            chart.setType(getSelectedChartType());
             chart.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
             chart.setYaxisName(yaxisNameField.getText());
             chart.setXaxisName(xaxisNameField.getText());
