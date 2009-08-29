@@ -51,6 +51,8 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED) {
+                columnRoleBox.removeItemListener(this);
+                
                 // XXX this could be done better by storing column when showing popup
                 final int columnIndexAtX =
                     tableHeader.getColumnModel().getColumnIndexAtX(columnRoleBox.getX());
@@ -70,6 +72,10 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED) {
+                xAxisBox.removeItemListener(this);
+                
+                logger.debug("x axis item on JCB@" + System.identityHashCode(e.getSource()) + " changed to " + e.getItem());
+                
                 // XXX this could be done better by storing column when showing popup
                 final ChartColumn changedColumn = columnNamesInOrder.get(
                         tableHeader.getColumnModel().getColumnIndexAtX(xAxisBox.getX()));
@@ -97,7 +103,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      * This is the component used by the mouse handler to produce a popup menu
      * when someone clicks the "x axis" area of the table header.
      * <p>
-     * This box contains items of type String.
+     * This box contains items of type String (they're column names).
      */
     private final JComboBox xAxisBox;
 
@@ -132,14 +138,12 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         
         columnRoleBox = new JComboBox(ColumnRole.values());
         columnRoleBox.removeItem(ColumnRole.CATEGORY); // not legal for XY charts
-        columnRoleBox.addItemListener(columnRoleChangeListener);
         
         xAxisBox = new JComboBox();
         numericAndDateCols = findNumericAndDateCols();
         for (String colName : numericAndDateCols) {
             xAxisBox.addItem(colName);
         }
-        xAxisBox.addItemListener(xAxisValuesChangeListener);
     }
 
     /**
@@ -164,19 +168,30 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 logger.debug("Didn't pass the skill-testing question");
                 return;
             }
+            
             final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
+            final ChartColumn chartColumn;
             if (column < 0) {
                 logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
                 return;
+            } else {
+                chartColumn = columnNamesInOrder.get(column);
+                logger.debug("Making box for column " + column + " (" + chartColumn + ")");
             }
-            ChartColumn chartColumn = columnNamesInOrder.get(column);
             
             final JComboBox clickedBox;
-            int yPosition = 0;
-            if (e.getY() < new JComboBox().getPreferredSize().getHeight()) {
+            final int comboBoxHeight = columnRoleBox.getPreferredSize().height;
+            int yPosition;
+            if (e.getY() < comboBoxHeight) {
+                yPosition = 0;
                 clickedBox = columnRoleBox;
                 clickedBox.setSelectedItem(chartColumn);
-            } else if (e.getY() < new JComboBox().getPreferredSize().getHeight() * 2) {
+                
+                // this has to be attached after setting the selected item
+                columnRoleBox.addItemListener(columnRoleChangeListener);
+                
+            } else if (e.getY() < comboBoxHeight * 2) {
+                yPosition = comboBoxHeight;
                 if (chartColumn.getRoleInChart() == ColumnRole.SERIES) {
                     ChartColumn xAxis = chartColumn.getXAxisIdentifier();
                     clickedBox = xAxisBox;
@@ -185,21 +200,23 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                     } else {
                         clickedBox.setSelectedItem(null);
                     }
+
+                    // this has to be attached after setting the selected item
+                    xAxisBox.addItemListener(xAxisValuesChangeListener);
+
                 } else {
-                    clickedBox = null;
+                    return;
                 }
             } else {
-                clickedBox = null;
+                return;
             }
-            
-            if (clickedBox == null) return;
             
             tableHeader.add(clickedBox);
             clickedBox.setBounds(
                     chartPanel.getXPositionOfColumn(tableHeader.getColumnModel(), column),
                     yPosition,
                     tableHeader.getColumnModel().getColumn(column).getWidth(),
-                    clickedBox.getHeight());
+                    clickedBox.getPreferredSize().height);
             clickedBox.setPopupVisible(true);
             
             // TODO this could be set up once in the constructor (for each box)

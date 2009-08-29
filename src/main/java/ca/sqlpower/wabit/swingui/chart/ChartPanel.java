@@ -515,11 +515,12 @@ public class ChartPanel implements WabitPanel {
      * Returns the leading X coordinate (within the table of data) of the given
      * column. This is a helper method for the table header cell renderers.
      */
-    int getXPositionOfColumn(TableColumnModel model, int columnIndex) {
+    int getXPositionOfColumn(final TableColumnModel model, final int columnIndex) {
         int sum = 0;
-        for(int i = 0; i < columnIndex; i ++) {
+        for (int i = 0; i < columnIndex; i++) {
             sum += model.getColumn(i).getWidth();
         }
+        logger.debug("X position of column " + columnIndex + " is " + sum + " according to " + model);
         return sum;
     }
 
