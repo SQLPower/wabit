@@ -283,6 +283,8 @@ public class ChartPanel implements WabitPanel {
         queryComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
         
+        chartError.setVisible(false);
+        
         buildUI();
 
         chart.addPropertyChangeListener(chartListener);
@@ -365,8 +367,10 @@ public class ChartPanel implements WabitPanel {
             logger.debug("Created new JFree chart: " + newJFreeChart);
             chartPanel.setChart(newJFreeChart);
             chartError.setText("");
+            chartError.setVisible(false);
         } catch (Exception ex) {
             chartError.setText("<html>Failed to create chart:<br>" + ex);
+            chartError.setVisible(true);
             logger.warn("Failed to create a chart.", ex);
             chartPanel.setChart(null);
         }
