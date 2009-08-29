@@ -267,7 +267,7 @@ public class Chart extends AbstractWabitObject {
 
     /**
      * Refreshes the current result set in this chart. This should be called
-     * automatically whenever the data provider claims it new/different data,
+     * automatically whenever the data provider claims it has new/different data,
      * but you can call it yourself if you want the query to run.
      * <p>
      * This method can fire a property change event for "unfilteredResultSet".
@@ -499,6 +499,8 @@ public class Chart extends AbstractWabitObject {
     /**
      * The query MUST be a query type that is allowed in the chart: either a
      * {@link QueryCache} or an {@link OlapQuery}.
+     * <p>
+     * You'll probably want to call {@link #refreshData()} after defining a new query.
      * 
      * @param newQuery
      * @throws IllegalArgumentException if the query is not of a supported type.

@@ -575,10 +575,13 @@ public class ChartPanel implements WabitPanel {
         if (updating) return;
         try {
             updating = true;
-            try {
-                chart.defineQuery((WabitObject) queryComboBox.getSelectedItem());
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+            if (queryComboBox.getSelectedItem() != chart.getQuery()) {
+                try {
+                    chart.defineQuery((WabitObject) queryComboBox.getSelectedItem());
+                    chart.refreshData();
+                } catch (Exception ex) {
+                    showError(ex);
+                }
             }
             chart.setType(getSelectedChartType());
             chart.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
