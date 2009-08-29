@@ -165,6 +165,10 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 return;
             }
             final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
+            if (column < 0) {
+                logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
+                return;
+            }
             ChartColumn chartColumn = columnNamesInOrder.get(column);
             
             final JComboBox clickedBox;

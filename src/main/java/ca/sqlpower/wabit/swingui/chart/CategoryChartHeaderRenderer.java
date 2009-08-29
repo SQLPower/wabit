@@ -96,7 +96,10 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 return;
             }
             final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
-            
+            if (column < 0) {
+                logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
+                return;
+            }
             final JComboBox rolePopupBox = makeRoleBox(column);
             tableHeader.add(rolePopupBox);
             rolePopupBox.setBounds(
