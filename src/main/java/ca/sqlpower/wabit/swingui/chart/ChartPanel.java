@@ -206,9 +206,6 @@ public class ChartPanel implements WabitPanel {
             }
         }
 //            if ("type".equals(evt.getPropertyName())) {
-//                if (currentHeaderCellRenderer != null) {
-//                    currentHeaderCellRenderer.cleanup();
-//                }
 //                switch (chart.getType()) {
 //                case BAR:
 //                case CATEGORY_LINE:
@@ -316,6 +313,11 @@ public class ChartPanel implements WabitPanel {
             xaxisNameField.setText(chart.getXaxisName());
             queryComboBox.setSelectedItem(chart.getQuery());
             chartTypeComboBox.setSelectedItem(chart.getType());
+            
+            if (currentHeaderCellRenderer != null) {
+                currentHeaderCellRenderer.cleanup();
+            }
+
             if (chart.getType() == ExistingChartTypes.BAR || chart.getType() == ExistingChartTypes.CATEGORY_LINE) {
                 currentHeaderCellRenderer = new CategoryChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
