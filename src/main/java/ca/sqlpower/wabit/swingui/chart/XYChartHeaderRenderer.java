@@ -53,13 +53,9 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 columnRoleBox.removeItemListener(this);
                 
-                // XXX this could be done better by storing column when showing popup
-                final int columnIndexAtX =
-                    tableHeader.getColumnModel().getColumnIndexAtX(columnRoleBox.getX());
-                ChartColumn identifier = columnNamesInOrder.get(columnIndexAtX);
-                identifier.setRoleInChart((ColumnRole) e.getItem());
+                currentColumn.setRoleInChart((ColumnRole) e.getItem());
                 if (((ColumnRole) e.getItem()) == ColumnRole.NONE) {
-                    identifier.setXAxisIdentifier(null);
+                    currentColumn.setXAxisIdentifier(null);
                 }
                 chartPanel.updateChartFromGUI();
                 tableHeader.repaint();
@@ -76,10 +72,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 
                 logger.debug("x axis item on JCB@" + System.identityHashCode(e.getSource()) + " changed to " + e.getItem());
                 
-                // XXX this could be done better by storing column when showing popup
-                final ChartColumn changedColumn = columnNamesInOrder.get(
-                        tableHeader.getColumnModel().getColumnIndexAtX(xAxisBox.getX()));
-                changedColumn.setXAxisIdentifier(new ChartColumn((String) e.getItem()));
+                currentColumn.setXAxisIdentifier(new ChartColumn((String) e.getItem()));
                 chartPanel.updateChartFromGUI();
                 tableHeader.repaint();
             }
@@ -115,6 +108,12 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 
     private List<ChartColumn> columnNamesInOrder;
 
+    /**
+     * This gets set just before displaying a combo box. It's a reliable way for the
+     * item listeners to figure out which chart column to modify.
+     */
+    private ChartColumn currentColumn;
+    
     public XYChartHeaderRenderer(
             ChartPanel chartPanel, JTableHeader tableHeader,
             TableCellRenderer defaultTableCellRenderer) throws SQLException {
@@ -178,6 +177,8 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 chartColumn = columnNamesInOrder.get(column);
                 logger.debug("Making box for column " + column + " (" + chartColumn + ")");
             }
+            
+            currentColumn = chartColumn;
             
             final JComboBox clickedBox;
             final int comboBoxHeight = columnRoleBox.getPreferredSize().height;
