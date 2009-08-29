@@ -200,11 +200,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 setupForChart(r, (Chart) wo);
             } else if (wo instanceof ChartColumn) {
                 ChartColumn cc = (ChartColumn) wo;
-                if (cc.getRoleInChart() != ColumnRole.NONE) {
-                    r.setText(cc.getName() + " (" + cc.getRoleInChart() + ")");
-                } else {
-                    r.setText(cc.getName());
-                }
+                r.setText(cc.toString());
                 r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
             } else if (wo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);

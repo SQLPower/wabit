@@ -110,4 +110,17 @@ public class ChartColumn extends AbstractWabitObject {
         return result;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getColumnName());
+        if (getRoleInChart() != ColumnRole.NONE) {
+            sb.append(" (").append(getRoleInChart());
+            if (getXAxisIdentifier() != null) {
+                sb.append(" vs. ").append(getXAxisIdentifier());
+            }
+            sb.append(")");
+        }
+        return sb.toString();
+    }
 }
