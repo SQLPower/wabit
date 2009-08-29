@@ -137,6 +137,8 @@ public class ChartPanel implements WabitPanel {
      * The label that holds any errors encountered while attempting to create a
      * chart from the query. It should disappear when the chart has been created
      * successfully, but reappear if there's an error.
+     * <p>
+     * To modify this value (that is, set or clear it), use the {@link #showError()} method.
      */
     private final JLabel chartError = new JLabel();
 
@@ -283,7 +285,7 @@ public class ChartPanel implements WabitPanel {
         queryComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
         
-        chartError.setVisible(false);
+        showError(null);
         
         buildUI();
 
@@ -293,11 +295,31 @@ public class ChartPanel implements WabitPanel {
             chart.refreshData(); // TODO check if this is necessary (it probably is)
             updateGUIFromChart();
         } catch (Exception ex) {
-            chartError.setText(
-                    "Execution of query \"" + chart.getQuery() + "\" failed: " + ex.getMessage());
-            chartError.setVisible(true);
+            showError(ex);
         }
 
+    }
+
+    /**
+     * Displays an error in the chart preview area. The given message replaces
+     * any previously existing message. If query execution or anything else
+     * fails, this is the appropriate way to hand it.
+     * 
+     * @param ex
+     *            The exception to show. If null, the error component will
+     *            become invisible.
+     */
+    private void showError(Exception ex) {
+        if (ex != null) {
+            logger.info("Showing exception message in chart editor", ex);
+            chartError.setText(
+                    "<html><h2>Charting Failed</h2>" +
+                    "<p>" + ex.getMessage());
+            chartError.setVisible(true);
+        } else {
+            chartError.setText(null);
+            chartError.setVisible(false);
+        }
     }
 
     /**
@@ -336,17 +358,16 @@ public class ChartPanel implements WabitPanel {
 
             CachedRowSet rs = chart.getUnfilteredResultSet();
             if (rs == null) {
-                chartError.setText("The selected query \"" + chart.getQuery() + "\" returns no results.");
-                chartError.setVisible(true);
+                showError(new RuntimeException(
+                        "The selected query \"" + chart.getQuery() + "\" returns no results."));
                 return;
             }
 
+            showError(null);
+            
             final ResultSetTableModel model = new ResultSetTableModel(rs);
             resultTable.setModel(model);
             resultTable.setDefaultRenderer(Object.class, new ChartTableCellRenderer()); // TODO provide filter to renderer
-
-            chartError.setText("");
-            chartError.setVisible(false);
 
             updateChartPreview();
 
@@ -366,12 +387,9 @@ public class ChartPanel implements WabitPanel {
             JFreeChart newJFreeChart = ChartSwingUtil.createChartFromQuery(chart);
             logger.debug("Created new JFree chart: " + newJFreeChart);
             chartPanel.setChart(newJFreeChart);
-            chartError.setText("");
-            chartError.setVisible(false);
+            showError(null);
         } catch (Exception ex) {
-            chartError.setText("<html>Failed to create chart:<br>" + ex);
-            chartError.setVisible(true);
-            logger.warn("Failed to create a chart.", ex);
+            showError(ex);
             chartPanel.setChart(null);
         }
     }
@@ -581,9 +599,7 @@ public class ChartPanel implements WabitPanel {
         try {
             updateGUIFromChart();
         } catch (SQLException ex) {
-            logger.info("Chart->GUI update failed", ex);
-            chartError.setText("Update failed: " + ex);
-            chartError.setVisible(true);
+            showError(ex);
         }
     }
 
