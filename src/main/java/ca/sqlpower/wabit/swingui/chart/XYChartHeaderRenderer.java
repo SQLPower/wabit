@@ -187,7 +187,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 yPosition = 0;
                 if (numericAndDateCols.contains(chartColumn.getName())) {
                     clickedBox = columnRoleBox;
-                    clickedBox.setSelectedItem(chartColumn);
+                    clickedBox.setSelectedItem(chartColumn.getRoleInChart());
 
                     // this has to be attached after setting the selected item
                     columnRoleBox.addItemListener(columnRoleChangeListener);
