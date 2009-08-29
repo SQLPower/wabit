@@ -25,6 +25,9 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -83,6 +86,29 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon CHART_LINE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-line-16.png"));
     public static final Icon CHART_PIE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-pie-16.png")); //TODO ADD ME
 
+    /** Category ChartColumn. Also available in {@link #CHART_COL_ROLE_ICONS}. */
+    public static final Icon CHART_COL_CATEGORY = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-category-16.png"));
+
+    /** Series ChartColumn. Also available in {@link #CHART_COL_ROLE_ICONS}. */
+    public static final Icon CHART_COL_SERIES = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-series-16.png"));
+
+    /** Unused (NONE) ChartColumn. Also available in {@link #CHART_COL_ROLE_ICONS}. */
+    public static final Icon CHART_COL_NONE = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-unused-16.png"));
+
+    /** Mapping of ColumnRole types to their respective icons. */
+    public static final Map<ColumnRole, Icon> CHART_COL_ROLE_ICONS;
+    static {
+        EnumMap<ColumnRole, Icon> m = new EnumMap<ColumnRole, Icon>(ColumnRole.class);
+        m.put(ColumnRole.CATEGORY, CHART_COL_CATEGORY);
+        m.put(ColumnRole.SERIES, CHART_COL_SERIES);
+        m.put(ColumnRole.NONE, CHART_COL_NONE);
+        CHART_COL_ROLE_ICONS = Collections.unmodifiableMap(m);
+    }
+
+    /**
+     * Series of transparent icons that make the throbber animation overlay for
+     * any tree node.
+     */
     private static final Icon[] THROBBER_OVERLAYS;
     static {
         final int overlayFrameCount = 8;
@@ -96,11 +122,13 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     
     private final Olap4JTreeCellRenderer delegateOlap4jRenderer = new Olap4JTreeCellRenderer();
     private final DBTreeCellRenderer delegateSQLTreeCellRenderer = new DBTreeCellRenderer();
+    
     /**
      * Current frame number to use for the "busy bagde" ("throbber overlay").
      * 
      * @see #nextBusyBadgeFrame()
      * @see #createBusyIcon()
+     * @see #THROBBER_OVERLAYS
      */
     private int busyBadgeFrameNum;
     
@@ -177,6 +205,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 } else {
                     r.setText(cc.getName());
                 }
+                r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
             } else if (wo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
             }
