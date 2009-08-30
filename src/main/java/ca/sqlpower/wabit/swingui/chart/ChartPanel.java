@@ -54,6 +54,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
@@ -292,7 +293,7 @@ public class ChartPanel implements WabitPanel {
         chart.addPropertyChangeListener(chartListener);
 
         try {
-            chart.refreshData(); // TODO check if this is necessary (it probably is)
+            chart.refreshData();
             updateGUIFromChart();
         } catch (Exception ex) {
             showError(ex);
@@ -371,7 +372,12 @@ public class ChartPanel implements WabitPanel {
             
             final ResultSetTableModel model = new ResultSetTableModel(rs);
             resultTable.setModel(model);
-            resultTable.setDefaultRenderer(Object.class, new ChartTableCellRenderer()); // TODO provide filter to renderer
+            ChartTableCellRenderer cellRenderer = new ChartTableCellRenderer(chart);
+            for (Enumeration<TableColumn> tableCols = resultTable.getColumnModel().getColumns();
+                    tableCols.hasMoreElements(); ) {
+                TableColumn tc = tableCols.nextElement();
+                tc.setCellRenderer(cellRenderer);
+            }
 
             updateChartPreview();
 
