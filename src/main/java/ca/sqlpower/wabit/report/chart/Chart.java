@@ -616,6 +616,9 @@ public class Chart extends AbstractWabitObject {
             // it would be nice to cache this, but we'd need a notification mechanism
             // for flushing the cache every time the dependant data changes
             List<ChartColumn> categoryColumns = findCategoryColumns();
+            if (categoryColumns.isEmpty()) {
+                return true;
+            }
             
             int nullCategories = 0;
             int repeatedMembers = 0;
