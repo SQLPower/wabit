@@ -396,14 +396,12 @@ public class Chart extends AbstractWabitObject {
                 return null;
             }
 
-            switch (type) {
-            case BAR:
-            case CATEGORY_LINE:
+            switch (type.getDatasetType()) {
+            case CATEGORY:
                 return DatasetUtil.createCategoryDataset(
                         chartColumns, rs,
                         findCategoryColumns());
-            case LINE:
-            case SCATTER:
+            case XY:
                 return DatasetUtil.createSeriesCollection(
                         chartColumns, rs);
             default :
