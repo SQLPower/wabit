@@ -230,13 +230,20 @@ public class Chart extends AbstractWabitObject {
      * the current {@link #resultSetFilter} before being returned.
      * 
      * @return The current result set that should be charted, filtered through
-     *         {@link #resultSetFilter}. If this chart's underlying query is
-     *         null, this method returns null.
+     *         {@link #resultSetFilter}. If {@link #refreshData()} has not been
+     *         called on this chart instance since its creation or since the
+     *         most recent call to {@link #defineQuery(WabitObject)}, this
+     *         method returns null.
      * @see #getUnfilteredResultSet()
      */
     public ResultSet getResultSet()
         throws SQLException, QueryInitializationException, InterruptedException {
+        
         ResultSet rs = getUnfilteredResultSet();
+        if (rs == null) {
+            return null;
+        }
+        
         if (resultSetFilter == null) {
             return rs;
         } else {
@@ -258,13 +265,19 @@ public class Chart extends AbstractWabitObject {
      * show all the rows and visually indicate which ones are being used in the
      * chart and which are not.
      * 
-     * @return The unfiltered version of the current result set. If this chart's
-     *         underlying query is null, this method returns null.
+     * @return The unfiltered version of the current result set. If
+     *         {@link #refreshData()} has not been called on this chart instance
+     *         since its creation or since the most recent call to
+     *         {@link #defineQuery(WabitObject)}, this method returns null.
      * @throws SQLException
      * @see #getResultSet()
      */
     public CachedRowSet getUnfilteredResultSet() throws SQLException {
-        return unfilteredResults.createShared();
+        if (unfilteredResults == null) {
+            return null;
+        } else {
+            return unfilteredResults.createShared();
+        }
     }
 
     /**
