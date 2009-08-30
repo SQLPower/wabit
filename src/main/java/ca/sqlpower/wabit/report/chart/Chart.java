@@ -158,6 +158,8 @@ public class Chart extends AbstractWabitObject {
      */
     private CachedRowSet unfilteredResults;
 
+    private double xAxisLabelRotation;
+
     /**
      * Creates a new chart with a new unique ID.
      */
@@ -640,10 +642,30 @@ public class Chart extends AbstractWabitObject {
     }
 
     /**
-     * Returns the desired rotation for the X-axis category/item labels. 0 means horizontal;
-     * -90 means read bottom to top; 90 means read top to bottom.
+     * Returns the desired rotation for the X-axis category/item labels. 0 means
+     * horizontal; -90 means read bottom to top; 90 means read top to bottom.
      */
     public double getXaxisLabelRotation() {
-        return 45; // TODO make proper; save/load in file
-    };
+        return xAxisLabelRotation;
+    }
+
+    /**
+     * Sets the desired rotation for the X-axis category/item labels. 0 means
+     * horizontal; -90 means read bottom to top; 90 means read top to bottom.
+     * <p>
+     * Fires a property change if the new value differs from the existing value.
+     * 
+     * @param xAxisLabelRotation
+     *            The desired rotation. Must be between -90 and 90 inclusive.
+     */
+    public void setXAxisLabelRotation(double xAxisLabelRotation) {
+        if (xAxisLabelRotation < -90.0 || xAxisLabelRotation > 90.0) {
+            throw new IllegalArgumentException(
+                    "Rotation " + xAxisLabelRotation +
+                    " is outside the range [-90.0 .. 90.0]");
+        }
+        double oldValue = this.xAxisLabelRotation;
+        this.xAxisLabelRotation = xAxisLabelRotation;
+        firePropertyChange("xAxisLabelRotation", oldValue, xAxisLabelRotation);
+    }
 }

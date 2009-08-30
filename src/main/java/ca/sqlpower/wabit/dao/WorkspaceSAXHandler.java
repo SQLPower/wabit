@@ -641,6 +641,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     chart.setYaxisName(aval);
                 } else if (aname.equals("x-axis-name")) {
                     chart.setXaxisName(aval);
+                } else if (aname.equals("x-axis-label-rotation")) {
+                    chart.setXAxisLabelRotation(Double.parseDouble(aval));
                 } else if (aname.equals("type")) {
                     chart.setType(ExistingChartTypes.valueOf(aval));
                 } else if (aname.equals("legend-position")) {

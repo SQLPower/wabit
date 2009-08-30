@@ -97,17 +97,19 @@ public class ChartSwingUtil {
             JFreeChart categoryChart = createCategoryChart(c);
             logger.debug("Made a new category chart: " + categoryChart);
             
-            double rotationRads = Math.toRadians(c.getXaxisLabelRotation());
-            CategoryLabelPositions clp;
-            if (Math.abs(rotationRads) < 0.01) {
-                clp = CategoryLabelPositions.STANDARD;
-            } else if (rotationRads < 0) {
-                clp = CategoryLabelPositions.createDownRotationLabelPositions(-rotationRads);
-            } else {
-                clp = CategoryLabelPositions.createUpRotationLabelPositions(rotationRads);
+            if (categoryChart != null) {
+                double rotationRads = Math.toRadians(c.getXaxisLabelRotation());
+                CategoryLabelPositions clp;
+                if (Math.abs(rotationRads) < 0.05) {
+                    clp = CategoryLabelPositions.STANDARD;
+                } else if (rotationRads < 0) {
+                    clp = CategoryLabelPositions.createUpRotationLabelPositions(-rotationRads);
+                } else {
+                    clp = CategoryLabelPositions.createDownRotationLabelPositions(rotationRads);
+                }
+                CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
+                domainAxis.setCategoryLabelPositions(clp);
             }
-            CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
-            domainAxis.setCategoryLabelPositions(clp);
             
             chart = categoryChart;
         } else if (chartType.getType().equals(DatasetTypes.XY)) {

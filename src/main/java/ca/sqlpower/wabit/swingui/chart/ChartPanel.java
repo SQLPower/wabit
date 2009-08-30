@@ -45,12 +45,15 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableCellRenderer;
@@ -117,6 +120,11 @@ public class ChartPanel implements WabitPanel {
      */
     private final JLabel xaxisNameLabel = new JLabel("X Axis");
 
+    /**
+     * Slider for the rotation of the x-axis tick labels.
+     */
+    private final JSlider xaxisLabelRotationSlider = new JSlider(-90, 90);
+    
     /**
      * The table that shows values returned from the queries. The headers
      * added to this table will allow users to define which column is the
@@ -202,6 +210,11 @@ public class ChartPanel implements WabitPanel {
         }
     };
 
+    private ChangeListener genericChangeHandler = new ChangeListener() {
+        public void stateChanged(ChangeEvent e) {
+            updateChartFromGUI();
+        }
+    };
     /**
      * Listens to changes in the chart (this component's data model) and updates
      * the GUI when appropriate.
@@ -289,6 +302,8 @@ public class ChartPanel implements WabitPanel {
         yaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
         xaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
 
+        xaxisLabelRotationSlider.addChangeListener(genericChangeHandler);
+        
         queryComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
         
@@ -343,6 +358,8 @@ public class ChartPanel implements WabitPanel {
                 yaxisNameField.setText(chart.getYaxisName());
                 xaxisNameField.setText(chart.getXaxisName());
             }
+            
+            xaxisLabelRotationSlider.setValue((int) chart.getXaxisLabelRotation());
             
             queryComboBox.setSelectedItem(chart.getQuery());
             setSelectedChartType(chart.getType());
@@ -562,6 +579,8 @@ public class ChartPanel implements WabitPanel {
         builder.append(xaxisNameLabel, xaxisNameField);
         builder.nextLine();
 
+        builder.append("Label Rotation", xaxisLabelRotationSlider);
+        
         return builder.getPanel();
     }
 
@@ -609,7 +628,7 @@ public class ChartPanel implements WabitPanel {
             chart.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
             chart.setYaxisName(yaxisNameField.getText());
             chart.setXaxisName(xaxisNameField.getText());
-            
+            chart.setXAxisLabelRotation(xaxisLabelRotationSlider.getValue());
             
         } finally {
             updating = false;

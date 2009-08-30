@@ -536,7 +536,8 @@ public class WorkspaceXMLDAO {
         printAttribute("name", chart.getName());
         printAttribute("uuid", chart.getUUID());
         printAttribute("y-axis-name", chart.getYaxisName());
-        printAttribute("x-axis-name" , chart.getXaxisName());
+        printAttribute("x-axis-name", chart.getXaxisName());
+        printAttribute("x-axis-label-rotation", chart.getXaxisLabelRotation());
         if (chart.getType() != null) {
             printAttribute("type", chart.getType().name());
         }
