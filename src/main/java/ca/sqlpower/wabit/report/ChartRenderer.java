@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.report;
 
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Collections;
@@ -67,15 +68,28 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing) {
 	    if (!chart.getMissingIdentifiers().isEmpty()) {
-	        int fontHeight = g.getFontMetrics().getHeight();
-	        int startingYPos = (int) ((contentBox.getHeight() - fontHeight) / 2);
-	        String errorString = "There are columns missing from the query but used in the chart.";
-            g.drawString(errorString, (int) ((contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2), startingYPos);
-	        errorString = "Edit the query to update the columns.";
-	        g.drawString(errorString, (int) ((contentBox.getWidth() - g.getFontMetrics().stringWidth(errorString)) / 2), fontHeight + startingYPos);
+	        renderError(g, contentBox,
+	                "There are columns missing from the query but used in the chart.",
+	                "To fix this, you can edit the chart or its query.",
+	                "Chart: " + chart.getName(),
+	                "Query: " + (chart.getQuery() == null ? "not set" : chart.getQuery().getName()));
+	        renderError(g, contentBox);
 	        return false;
 	    }
-	        
+	    
+	    try {
+	        if (chart.getUnfilteredResultSet() == null) {
+	            // TODO has to be on a background thread!
+	            chart.refreshData();
+	        }
+	    } catch (Exception ex) {
+	        logger.info("Chart data error", ex);
+	        renderError(g, contentBox,
+	                "Failed to refresh chart's data:",
+	                ex.toString()
+	                );
+	    }
+	    
 		JFreeChart jFreeChart = null;
 		try {
 		    jFreeChart = ChartSwingUtil.createChartFromQuery(chart);
@@ -90,6 +104,21 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 		}
 		return false;
 	}
+
+	// XXX this should be commonly available to all content renderers
+    private void renderError(Graphics2D g, ContentBox contentBox, String ... lines) {
+        FontMetrics fm = g.getFontMetrics();
+        int fontHeight = fm.getHeight();
+        int y = (int) ( (contentBox.getHeight() / 2) - (lines.length * fontHeight / 2) );
+        for (String line : lines) {
+            int x = (int) ((contentBox.getWidth() - fm.stringWidth(line)) / 2);
+            if (x < 0) {
+                x = 0;
+            }
+            g.drawString(line, x, y);
+            y += fm.getHeight();
+        }
+    }
 
 	public void resetToFirstPage() {
 		//do nothing.
