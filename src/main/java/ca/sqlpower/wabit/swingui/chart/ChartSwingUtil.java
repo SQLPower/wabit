@@ -48,8 +48,8 @@ import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
-import ca.sqlpower.wabit.report.chart.DatasetTypes;
-import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.DatasetType;
+import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 
 /**
@@ -80,7 +80,7 @@ public class ChartSwingUtil {
      */
     public static JFreeChart createChartFromQuery(Chart c) throws SQLException, QueryInitializationException, InterruptedException {
         logger.debug("Creating JFreeChart for Wabit chart " + c);
-        ExistingChartTypes chartType = c.getType();
+        ChartType chartType = c.getType();
         
         if (c.getResultSet() == null) {
             logger.debug("Returning null (chart's result set was null)");
@@ -93,7 +93,7 @@ public class ChartSwingUtil {
         }
         
         JFreeChart chart;
-        if (chartType.getDatasetType().equals(DatasetTypes.CATEGORY)) {
+        if (chartType.getDatasetType().equals(DatasetType.CATEGORY)) {
             JFreeChart categoryChart = createCategoryChart(c);
             logger.debug("Made a new category chart: " + categoryChart);
             
@@ -112,7 +112,7 @@ public class ChartSwingUtil {
             }
             
             chart = categoryChart;
-        } else if (chartType.getDatasetType().equals(DatasetTypes.XY)) {
+        } else if (chartType.getDatasetType().equals(DatasetType.XY)) {
             JFreeChart xyChart = createXYChart(c);
             logger.debug("Made a new XY chart: " + xyChart);
             chart = xyChart;
@@ -141,7 +141,7 @@ public class ChartSwingUtil {
      */
     private static JFreeChart createCategoryChart(Chart c) {
         
-        if (c.getType().getDatasetType() != DatasetTypes.CATEGORY) {
+        if (c.getType().getDatasetType() != DatasetType.CATEGORY) {
             throw new IllegalStateException(
                     "Chart is not currently set up as a category chart " +
                     "(it is a " + c.getType() + ")");
@@ -204,7 +204,7 @@ public class ChartSwingUtil {
      * @return A JFreeChart that represents the dataset given.
      */
     private static JFreeChart createCategoryChartFromDataset( 
-            CategoryDataset dataset, ExistingChartTypes chartType, LegendPosition legendPosition, 
+            CategoryDataset dataset, ChartType chartType, LegendPosition legendPosition, 
             String chartName, String yaxisName, String xaxisName) {
         
         if (chartType == null || dataset == null) {
@@ -216,9 +216,9 @@ public class ChartSwingUtil {
         ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
         BarRenderer.setDefaultBarPainter(new StandardBarPainter());
         
-        if (chartType == ExistingChartTypes.BAR) {
+        if (chartType == ChartType.BAR) {
             chart = ChartFactory.createBarChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
-        } else if (chartType == ExistingChartTypes.CATEGORY_LINE) {
+        } else if (chartType == ChartType.CATEGORY_LINE) {
             chart = ChartFactory.createLineChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
         } else {
             throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
@@ -252,7 +252,7 @@ public class ChartSwingUtil {
      * @return A chart based on the data in the query of the given type.
      */
     private static JFreeChart createXYChart(Chart c) {
-        if (c.getType().getDatasetType() != DatasetTypes.XY) {
+        if (c.getType().getDatasetType() != DatasetType.XY) {
             throw new IllegalStateException(
                     "Chart is not currently set up as an XY chart " +
                     "(it is a " + c.getType() + ")");
@@ -306,16 +306,16 @@ public class ChartSwingUtil {
      * @return A chart of the specified chartType based on the given dataset.
      */
     private static JFreeChart createChartFromXYDataset(XYDataset xyCollection,
-            ExistingChartTypes chartType, LegendPosition legendPosition, 
+            ChartType chartType, LegendPosition legendPosition, 
             String chartName, String yaxisName, String xaxisName) {
         boolean showLegend = !legendPosition.equals(LegendPosition.NONE);
         JFreeChart chart;
         ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
         BarRenderer.setDefaultBarPainter(new StandardBarPainter());
-        if (chartType.equals(ExistingChartTypes.LINE)) {
+        if (chartType.equals(ChartType.LINE)) {
             chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, 
                     PlotOrientation.VERTICAL, showLegend, true, false);
-        } else if (chartType.equals(ExistingChartTypes.SCATTER)) {
+        } else if (chartType.equals(ChartType.SCATTER)) {
             chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, 
                     PlotOrientation.VERTICAL, showLegend, true, false);
         } else {
@@ -342,7 +342,7 @@ public class ChartSwingUtil {
         for (int i = 0; i < xyLineSeriesSize; i++) {
             //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
             xyirenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
-            if (chartType.equals(ExistingChartTypes.SCATTER)) {
+            if (chartType.equals(ChartType.SCATTER)) {
                 BasicStroke circle = new BasicStroke();
                 xyirenderer.setSeriesShape(i, circle.createStrokedShape(
                         new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0)));

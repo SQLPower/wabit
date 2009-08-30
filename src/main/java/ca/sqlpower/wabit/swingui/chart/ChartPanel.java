@@ -70,7 +70,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
-import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -371,10 +371,10 @@ public class ChartPanel implements WabitPanel {
                 currentHeaderCellRenderer.cleanup();
             }
 
-            if (chart.getType() == ExistingChartTypes.BAR || chart.getType() == ExistingChartTypes.CATEGORY_LINE) {
+            if (chart.getType() == ChartType.BAR || chart.getType() == ChartType.CATEGORY_LINE) {
                 currentHeaderCellRenderer = new CategoryChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
-            } else if (chart.getType() == ExistingChartTypes.LINE || chart.getType() == ExistingChartTypes.SCATTER) {
+            } else if (chart.getType() == ChartType.LINE || chart.getType() == ChartType.SCATTER) {
                 currentHeaderCellRenderer = new XYChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
             }
@@ -480,12 +480,12 @@ public class ChartPanel implements WabitPanel {
         toolBar.add(revertButton);
 
         toolBar.addSeparator();
-        toolBar.add(makeChartTypeButton("Bar", ExistingChartTypes.BAR, BAR_CHART_ICON));
-        toolBar.add(makeChartTypeButton("Category Line", ExistingChartTypes.CATEGORY_LINE, LINE_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Bar", ChartType.BAR, BAR_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Category Line", ChartType.CATEGORY_LINE, LINE_CHART_ICON));
 
         toolBar.addSeparator();
-        toolBar.add(makeChartTypeButton("Line", ExistingChartTypes.LINE, LINE_CHART_ICON));
-        toolBar.add(makeChartTypeButton("Scatter", ExistingChartTypes.SCATTER, SCATTER_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Line", ChartType.LINE, LINE_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Scatter", ChartType.SCATTER, SCATTER_CHART_ICON));
         
 //        toolBar.addSeparator();
         // TODO pie
@@ -509,7 +509,7 @@ public class ChartPanel implements WabitPanel {
 
     /**
      * Contains all the toggle buttons that are for choosing the chart type.
-     * Each button in this group has a client property indicating the {@link ExistingChartTypes} constant it represents.
+     * Each button in this group has a client property indicating the {@link ChartType} constant it represents.
      * 
      */
     ButtonGroup chartTypeButtonGroup = new ButtonGroup();
@@ -524,7 +524,7 @@ public class ChartPanel implements WabitPanel {
      * @return A button properly configured for the new-look Wabit toolbar.
      */
     private JToggleButton makeChartTypeButton(
-            String caption, ExistingChartTypes type, Icon icon) {
+            String caption, ChartType type, Icon icon) {
         JToggleButton b = new JToggleButton(caption, icon);
         b.putClientProperty(CHART_TYPE_PROP_KEY, type);
         chartTypeButtonGroup.add(b);
@@ -540,12 +540,12 @@ public class ChartPanel implements WabitPanel {
         return b;
     }
 
-    private ExistingChartTypes getSelectedChartType() {
+    private ChartType getSelectedChartType() {
         for (Enumeration<AbstractButton> buttons = chartTypeButtonGroup.getElements();
                 buttons.hasMoreElements(); ) {
             AbstractButton b = buttons.nextElement();
             if (chartTypeButtonGroup.isSelected(b.getModel())) {
-                ExistingChartTypes ct = (ExistingChartTypes) b.getClientProperty(CHART_TYPE_PROP_KEY);
+                ChartType ct = (ChartType) b.getClientProperty(CHART_TYPE_PROP_KEY);
                 logger.debug("Found selected chart type " + ct);
                 return ct;
             }
@@ -560,11 +560,11 @@ public class ChartPanel implements WabitPanel {
      * 
      * @param type The type of chart to select the button of.
      */
-    private void setSelectedChartType(ExistingChartTypes type) {
+    private void setSelectedChartType(ChartType type) {
         for (Enumeration<AbstractButton> buttons = chartTypeButtonGroup.getElements();
         buttons.hasMoreElements(); ) {
             AbstractButton b = buttons.nextElement();
-            ExistingChartTypes ct = (ExistingChartTypes) b.getClientProperty(CHART_TYPE_PROP_KEY);
+            ChartType ct = (ChartType) b.getClientProperty(CHART_TYPE_PROP_KEY);
             if (ct == type) {
                 chartTypeButtonGroup.setSelected(b.getModel(), true);
                 return;

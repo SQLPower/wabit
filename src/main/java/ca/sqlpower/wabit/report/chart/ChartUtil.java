@@ -69,7 +69,7 @@ public class ChartUtil {
     public static void setDefaults(@Nonnull Chart chart) {
         if (chart.getType() == null) {
             return;
-        } else if (chart.getType().getDatasetType() == DatasetTypes.CATEGORY) {
+        } else if (chart.getType().getDatasetType() == DatasetType.CATEGORY) {
             chart.setXAxisLabelRotation(-45.0);
             if (chart.getQuery() instanceof OlapQuery) {
                 // policy: -last string column (deepest level) is the only category
@@ -102,7 +102,7 @@ public class ChartUtil {
                     }
                 }
             }
-        } else if (chart.getType().getDatasetType() == DatasetTypes.XY) {
+        } else if (chart.getType().getDatasetType() == DatasetType.XY) {
             // policy: -first numeric or date column is X axis
             //         -all subsequent numeric columns are Y values plotted against it
             ChartColumn xAxisCol = null;

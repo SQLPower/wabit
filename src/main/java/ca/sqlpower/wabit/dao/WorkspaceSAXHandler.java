@@ -100,7 +100,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
-import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 
 /**
@@ -649,7 +649,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 } else if (aname.equals("x-axis-label-rotation")) {
                     chart.setXAxisLabelRotation(Double.parseDouble(aval));
                 } else if (aname.equals("type")) {
-                    chart.setType(ExistingChartTypes.valueOf(aval));
+                    chart.setType(ChartType.valueOf(aval));
                 } else if (aname.equals("legend-position")) {
                     chart.setLegendPosition(LegendPosition.valueOf(aval));
                 } else if (aname.equals("query-id")) {

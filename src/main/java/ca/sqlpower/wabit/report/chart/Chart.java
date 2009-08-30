@@ -74,7 +74,7 @@ public class Chart extends AbstractWabitObject {
     /**
      * This is the current style of chart the user has made.
      */
-    private ExistingChartTypes type;
+    private ChartType type;
     
     /**
      * The position of the legend in relation to the chart. This
@@ -373,7 +373,7 @@ public class Chart extends AbstractWabitObject {
      * 
      * @return A JFreeChart dataset; either XYDataSet or CategoryDataSet.
      * @see #setQuery()
-     * @see #setType(ExistingChartTypes)
+     * @see #setType(ChartType)
      */
     public Dataset createDataset() {
         try {
@@ -448,15 +448,15 @@ public class Chart extends AbstractWabitObject {
     /**
      * Returns the currently-selected chart type.
      */
-    public ExistingChartTypes getType() {
+    public ChartType getType() {
         return type;
     }
 
     /**
      * Selects a new chart type for this chart.
      */
-    public void setType(ExistingChartTypes newType) {
-        ExistingChartTypes oldType = this.type;
+    public void setType(ChartType newType) {
+        ChartType oldType = this.type;
         this.type = newType;
         firePropertyChange("type", oldType, newType);
     }

@@ -63,7 +63,7 @@ import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
-import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.olap.Olap4JTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
@@ -230,16 +230,16 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     }
 
     private void setupForChart(DefaultTreeCellRenderer r, Chart chart) {
-        ExistingChartTypes chartType = chart.getType();
+        ChartType chartType = chart.getType();
         if (chartType == null) {
             r.setIcon(CHART_ICON);
-        } else if (chartType.equals(ExistingChartTypes.BAR)) {
+        } else if (chartType.equals(ChartType.BAR)) {
             r.setIcon(CHART_BAR_ICON);
-        } else if (chartType.equals(ExistingChartTypes.CATEGORY_LINE)) {
+        } else if (chartType.equals(ChartType.CATEGORY_LINE)) {
             r.setIcon(CHART_LINE_ICON);
-        } else if (chartType.equals(ExistingChartTypes.SCATTER)) {
+        } else if (chartType.equals(ChartType.SCATTER)) {
             r.setIcon(CHART_SCATTER_ICON);
-        } else if (chartType.equals(ExistingChartTypes.LINE)) {
+        } else if (chartType.equals(ChartType.LINE)) {
             r.setIcon(CHART_LINE_ICON);
         } else {
             //TODO when pie charts are added change this

@@ -20,9 +20,21 @@
 package ca.sqlpower.wabit.report.chart;
 
 /**
- * This is the list of supported datasets in the chart at current.
+ * The types of charts the Wabit knows how to deal with.
  */
-public enum DatasetTypes {
-    CATEGORY,
-    XY
+public enum ChartType {
+    BAR(DatasetType.CATEGORY),
+    CATEGORY_LINE(DatasetType.CATEGORY),
+    LINE(DatasetType.XY),
+    SCATTER(DatasetType.XY);
+    
+    private final DatasetType type;
+
+    private ChartType(DatasetType type) {
+        this.type = type;
+    }
+
+    public DatasetType getDatasetType() {
+        return type;
+    }
 }

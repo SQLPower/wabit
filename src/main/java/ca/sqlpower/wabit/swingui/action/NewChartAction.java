@@ -30,7 +30,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
-import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
+import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
@@ -76,7 +76,7 @@ public class NewChartAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         Chart chart = new Chart();
         
-        chart.setType(ExistingChartTypes.BAR);
+        chart.setType(ChartType.BAR);
         
         if (dataProvider != null) {
             try {
