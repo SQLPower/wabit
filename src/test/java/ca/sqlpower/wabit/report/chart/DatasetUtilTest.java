@@ -33,6 +33,7 @@ import org.jfree.data.category.CategoryDataset;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
 
 /**
  * Tests for the dataset utilities in DatasetUtil.
@@ -69,8 +70,8 @@ public class DatasetUtilTest extends TestCase {
         
         
         List<ChartColumn> columnNamesInOrder = new ArrayList<ChartColumn>(); 
-        final ChartColumn categoryIdentifier = new ChartColumn("category");
-        final ChartColumn seriesIdentifier = new ChartColumn("series");
+        final ChartColumn categoryIdentifier = new ChartColumn("category", DataType.TEXT);
+        final ChartColumn seriesIdentifier = new ChartColumn("series", DataType.NUMERIC);
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
         categoryIdentifier.setRoleInChart(ColumnRole.CATEGORY);
@@ -110,9 +111,9 @@ public class DatasetUtilTest extends TestCase {
         
         
         List<ChartColumn> columnNamesInOrder = new ArrayList<ChartColumn>(); 
-        final ChartColumn categoryIdentifier = new ChartColumn("category");
-        final ChartColumn category2Identifier = new ChartColumn("category2");
-        final ChartColumn seriesIdentifier = new ChartColumn("series");
+        final ChartColumn categoryIdentifier = new ChartColumn("category", DataType.TEXT);
+        final ChartColumn category2Identifier = new ChartColumn("category2", DataType.TEXT);
+        final ChartColumn seriesIdentifier = new ChartColumn("series", DataType.NUMERIC);
         columnNamesInOrder.add(categoryIdentifier);
         columnNamesInOrder.add(seriesIdentifier);
         categoryIdentifier.setRoleInChart(ColumnRole.CATEGORY);

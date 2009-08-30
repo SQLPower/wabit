@@ -549,30 +549,28 @@ public class WorkspaceXMLDAO {
         }
         xml.niprintln(out, ">");
         xml.indent++;
-        xml.println(out, "<chart-col-names-in-order>");
+        for (ChartColumn col : chart.getColumns()) {
+            saveChartColumn(col);
+        }
+        xml.println(out, "<missing-columns>");
         xml.indent++;
-        for (ChartColumn colIdentifier : chart.getColumns()) {
-            xml.print(out, "<chart-col-names");
-            saveColumnIdentifier(out, colIdentifier, "");
-            printAttribute("data-type", colIdentifier.getRoleInChart().name());
-            saveColumnIdentifier(out, colIdentifier.getXAxisIdentifier(), "x-axis-");
-            xml.niprintln(out, "/>");
+        for (ChartColumn missingCol : chart.getMissingIdentifiers()) {
+            saveChartColumn(missingCol);
         }
         xml.indent--;
-        xml.println(out, "</chart-col-names-in-order>");
-        xml.println(out, "<missing-identifiers>");
-        xml.indent++;
-        for (ChartColumn identifier : chart.getMissingIdentifiers()) {
-            xml.print(out, "<missing-identifier");
-            saveColumnIdentifier(out, identifier, "");
-            xml.niprintln(out, "/>");
-        }
-        xml.indent--;
-        xml.println(out, "</missing-identifiers>");
+        xml.println(out, "</missing-columns>");
 
         xml.indent--;
         xml.println(out, "</chart>");
 	}
+
+    private void saveChartColumn(ChartColumn col) {
+        xml.print(out, "<chart-column");
+        saveColumnIdentifier(out, col, "");
+        printAttribute("role", col.getRoleInChart().name());
+        saveColumnIdentifier(out, col.getXAxisIdentifier(), "x-axis-");
+        xml.niprintln(out, "/>");
+    }
 	
 	private void saveWabitImage(WabitImage wabitImage) {
 	    xml.print(out, "<wabit-image");
@@ -618,16 +616,16 @@ public class WorkspaceXMLDAO {
 	}
 
     /**
-     * This is a helper method for saving charts. This saves ColumnIdentifiers
-     * used in charts to define what column is used and how. This will only save
-     * the {@link ChartColumn} as an attribute of the current xml element
+     * This is a helper method for saving charts, for saving ChartColumns. Only
+     * saves the {@link ChartColumn} as an attribute of the current xml element
      * it is in, not as an entirely new element. A prefix to each of the values
      * can be given to distinguish between column identifiers in cases where
      * multiples are saved in one element.
      */
-    private void saveColumnIdentifier(PrintWriter out, ChartColumn identifier, String namePrefix) {
-        if (identifier == null) return;
-        printAttribute(namePrefix + "column-name", identifier.getColumnName());
+    private void saveColumnIdentifier(PrintWriter out, ChartColumn col, String namePrefix) {
+        if (col == null) return;
+        printAttribute(namePrefix + "name", col.getColumnName());
+        printAttribute(namePrefix + "data-type", col.getDataType().name());
     }
 	
     /**

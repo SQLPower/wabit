@@ -243,6 +243,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * unless we are within a &lt;chart&gt; element.
      */
     private Chart chart;
+
+    /**
+     * Gets set to true when inside a missing-columns element.
+     */
+    private boolean readingMissingChartCols;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of workspace
@@ -684,7 +689,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 }
             }
 
-        } else if (name.equals("chart-col-names")) {
+        } else if (name.equals("chart-column")) {
             ChartColumn colIdentifier = loadColumnIdentifier(attributes, "");
             if (colIdentifier == null) {
                 throw new IllegalStateException("The chart " + chart.getName() + " with uuid " + chart.getUUID() + " has a missing column identifier when ordering columns and cannot be loaded.");
@@ -695,7 +700,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 String aval = attributes.getValue(i);
                 if (aname.equals("name")) {
                     //already handled
-                } else if (aname.equals("data-type")) {
+                } else if (aname.equals("role")) {
                     colIdentifier.setRoleInChart(ColumnRole.valueOf(aval));
                 } else if (aname.matches("x-axis-.*")) {
                     ChartColumn xAxisIdentifier = loadColumnIdentifier(attributes, "x-axis-");
@@ -703,11 +708,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 }
             }
             
-            chart.addChartColumn(colIdentifier);
+            if (readingMissingChartCols) {
+                chart.addMissingIdentifier(colIdentifier);
+            } else {
+                chart.addChartColumn(colIdentifier);
+            }
         
-        } else if (name.equals("missing-identifier")) {
-            ChartColumn colIdentifier = loadColumnIdentifier(attributes, "");
-            chart.addMissingIdentifier(colIdentifier);
+        } else if (name.equals("missing-columns")) {
+            readingMissingChartCols = true;
 
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
@@ -1107,19 +1115,17 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      *            the prefix string to apply to every attribute name when
      *            looking up its value. This is intended for use when more than
      *            one column identifier is defined in attributes of a single XML element.
+     * @throws SAXException if any mandatory attributes are missing
      */
-    private ChartColumn loadColumnIdentifier(Attributes attributes, String prefix) {
-        String colName;
-        colName = attributes.getValue(prefix + "column-name");
-        ChartColumn colIdentifier = null;
-        if (colName != null) {
-            colIdentifier = new ChartColumn(colName); 
-        }
-        if (colIdentifier == null) {
-            throw new IllegalStateException(
-                    "The chart " + chart.getName() + " with uuid " + chart.getUUID() +
-                    " has a missing column identifier and cannot be loaded.");
-        }
+    private ChartColumn loadColumnIdentifier(Attributes attributes, String prefix)
+    throws SAXException {
+        
+        String colName = attributes.getValue(prefix + "name");
+        String dataTypeName = attributes.getValue(prefix + "data-type");
+        checkMandatory("name", colName);
+        checkMandatory("data-type", dataTypeName);
+        ChartColumn.DataType dataType = ChartColumn.DataType.valueOf(dataTypeName);
+        ChartColumn colIdentifier = new ChartColumn(colName, dataType);
         return colIdentifier;
     }
 	
@@ -1210,6 +1216,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	
     	if (name.equals("wabit")) {
     	    context.setLoading(false);
+    	    
     	} else if (name.equals("project")) {
     	    WabitObject initialView = session.getWorkspace();
     		for (WabitObject obj : session.getWorkspace().getChildren()) {
@@ -1223,11 +1230,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		//See bug 2040.
     		session.getWorkspace().setEditorPanelModel(session.getWorkspace());
 //    		session.getWorkspace().setEditorPanelModel(initialView);
+    		
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID(), cache.getQuery().getDatabase(), container.getName(), ((TableContainer) container).getSchema(), ((TableContainer) container).getCatalog(), containerItems);
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
     		cache.getQuery().addTable(table);
+    		
     	} else if (name.equals("content-result-set")) {
     		ResultSetRenderer newRSRenderer = new ResultSetRenderer(rsRenderer.getQuery(), columnInfoList);
     		newRSRenderer.setBodyFont(rsRenderer.getBodyFont());
@@ -1237,6 +1246,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		newRSRenderer.setBackgroundColour(rsRenderer.getBackgroundColour());
     		newRSRenderer.setBorderType(rsRenderer.getBorderType());
     		contentBox.setContentRenderer(newRSRenderer);
+    		
     	} else if (name.equals("image-renderer")) {
     	    //This was loading an image for 1.1.2 and older.
     		byte[] byteArray = new Base64().decode(byteStream.toByteArray());
@@ -1254,6 +1264,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		    }
     		}
 			imageRenderer = null;
+			
     	} else if (name.equals("wabit-image")) {
             byte[] byteArray = new Base64().decode(byteStream.toByteArray());
             try {
@@ -1263,6 +1274,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 throw new RuntimeException(e);
             }
             currentWabitImage = null;
+            
+        } else if (name.equals("missing-columns")) {
+            readingMissingChartCols = false;
+            
         } else if (name.equals("olap-cube")
     	        || name.equals("olap4j-query")
     	        || name.equals("olap4j-axis") 

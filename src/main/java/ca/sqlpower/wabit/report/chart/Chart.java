@@ -317,7 +317,8 @@ public class Chart extends AbstractWabitObject {
             if (existing != null) {
                 newCols.add(existing);
             } else {
-                newCols.add(new ChartColumn(columnName));
+                int columnType = rsmd.getColumnType(i);
+                newCols.add(new ChartColumn(columnName, columnType));
             }
         }
         

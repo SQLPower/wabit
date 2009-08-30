@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
+import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
 
 /**
  * Makes headers for the result set table for line and scatter charts.
@@ -72,7 +73,8 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 
                 logger.debug("x axis item on JCB@" + System.identityHashCode(e.getSource()) + " changed to " + e.getItem());
                 
-                currentColumn.setXAxisIdentifier(new ChartColumn((String) e.getItem()));
+                currentColumn.setXAxisIdentifier(
+                        new ChartColumn((String) e.getItem(), DataType.NUMERIC));
                 chartPanel.updateChartFromGUI();
                 tableHeader.repaint();
             }

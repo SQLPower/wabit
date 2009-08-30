@@ -34,7 +34,7 @@ public enum ExistingChartTypes {
         this.type = type;
     }
 
-    public DatasetTypes getType() {
+    public DatasetTypes getDatasetType() {
         return type;
     }
 }

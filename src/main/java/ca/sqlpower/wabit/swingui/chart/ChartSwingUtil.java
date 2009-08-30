@@ -93,7 +93,7 @@ public class ChartSwingUtil {
         }
         
         JFreeChart chart;
-        if (chartType.getType().equals(DatasetTypes.CATEGORY)) {
+        if (chartType.getDatasetType().equals(DatasetTypes.CATEGORY)) {
             JFreeChart categoryChart = createCategoryChart(c);
             logger.debug("Made a new category chart: " + categoryChart);
             
@@ -112,13 +112,13 @@ public class ChartSwingUtil {
             }
             
             chart = categoryChart;
-        } else if (chartType.getType().equals(DatasetTypes.XY)) {
+        } else if (chartType.getDatasetType().equals(DatasetTypes.XY)) {
             JFreeChart xyChart = createXYChart(c);
             logger.debug("Made a new XY chart: " + xyChart);
             chart = xyChart;
         } else {
             throw new IllegalStateException(
-                    "Unknown chart dataset type " + chartType.getType());
+                    "Unknown chart dataset type " + chartType.getDatasetType());
         }
         
         return chart;
@@ -141,7 +141,7 @@ public class ChartSwingUtil {
      */
     private static JFreeChart createCategoryChart(Chart c) {
         
-        if (c.getType().getType() != DatasetTypes.CATEGORY) {
+        if (c.getType().getDatasetType() != DatasetTypes.CATEGORY) {
             throw new IllegalStateException(
                     "Chart is not currently set up as a category chart " +
                     "(it is a " + c.getType() + ")");
@@ -252,7 +252,7 @@ public class ChartSwingUtil {
      * @return A chart based on the data in the query of the given type.
      */
     private static JFreeChart createXYChart(Chart c) {
-        if (c.getType().getType() != DatasetTypes.XY) {
+        if (c.getType().getDatasetType() != DatasetTypes.XY) {
             throw new IllegalStateException(
                     "Chart is not currently set up as an XY chart " +
                     "(it is a " + c.getType() + ")");
