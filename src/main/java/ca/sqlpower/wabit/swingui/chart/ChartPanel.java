@@ -69,6 +69,7 @@ import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
@@ -263,6 +264,7 @@ public class ChartPanel implements WabitPanel {
     private volatile boolean skipTextFieldRefresh = false;
     
     private final Action refreshDataAction;
+    private final Action revertToDefaultsAction;
 
     /**
      * Listens to all the combo boxes, and updates the chart object whenever an
@@ -289,6 +291,7 @@ public class ChartPanel implements WabitPanel {
         this.chart = chart;
         
         refreshDataAction = new RefreshDataAction(chart, panel);
+        revertToDefaultsAction = new RevertToDefaultsAction(this);
         
         resultTable.getTableHeader().setReorderingAllowed(false);
         defaultHeaderCellRenderer = resultTable.getTableHeader().getDefaultRenderer();
@@ -349,7 +352,7 @@ public class ChartPanel implements WabitPanel {
      * the state of the editor. This will set up the correct result set as well
      * as display the correct editor in a new edit state.
      */
-    private void updateGUIFromChart() throws SQLException {
+    void updateGUIFromChart() throws SQLException {
         if (updating) return;
         try {
             updating = true;
@@ -458,6 +461,8 @@ public class ChartPanel implements WabitPanel {
         
         // XXX The following code proliferation pains me. I've opened a bug.
         JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+
         JButton refreshButton = new JButton(refreshDataAction);
         refreshButton.setText("Refresh");
         refreshButton.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -465,7 +470,14 @@ public class ChartPanel implements WabitPanel {
         // Removes button borders on OS X 10.5
         refreshButton.putClientProperty("JButton.buttonType", "toolbar");
         toolBar.add(refreshButton);
-        toolBar.setFloatable(false);
+
+        JButton revertButton = new JButton(revertToDefaultsAction);
+        revertButton.setText("Set Defaults");
+        revertButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        revertButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        // Removes button borders on OS X 10.5
+        revertButton.putClientProperty("JButton.buttonType", "toolbar");
+        toolBar.add(revertButton);
 
         toolBar.addSeparator();
         toolBar.add(makeChartTypeButton("Bar", ExistingChartTypes.BAR, BAR_CHART_ICON));
@@ -620,11 +632,17 @@ public class ChartPanel implements WabitPanel {
                 try {
                     chart.defineQuery((WabitObject) queryComboBox.getSelectedItem());
                     chart.refreshData();
+                    ChartUtil.setDefaults(chart);
                 } catch (Exception ex) {
                     showError(ex);
                 }
             }
-            chart.setType(getSelectedChartType());
+            
+            if (getSelectedChartType() != chart.getType()) {
+                chart.setType(getSelectedChartType());
+                ChartUtil.setDefaults(chart);
+            }
+            
             chart.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
             chart.setYaxisName(yaxisNameField.getText());
             chart.setXaxisName(xaxisNameField.getText());

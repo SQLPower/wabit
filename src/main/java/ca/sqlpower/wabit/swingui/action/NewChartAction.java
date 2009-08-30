@@ -29,6 +29,8 @@ import javax.swing.ImageIcon;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartUtil;
+import ca.sqlpower.wabit.report.chart.ExistingChartTypes;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
@@ -46,8 +48,8 @@ public class NewChartAction extends AbstractAction {
     private final WabitObject dataProvider;
 
     /**
-     * Creates an action which, when invoked, creates new chart with no default
-     * query, and adds it to the workspace.
+     * Creates an action which, when invoked, creates new chart with the given
+     * default query, and adds it to the workspace.
      * 
      * @param session
      *            The session whose workspace the new chart will belong to.
@@ -73,17 +75,22 @@ public class NewChartAction extends AbstractAction {
 
     public void actionPerformed(ActionEvent e) {
         Chart chart = new Chart();
-        chart.setName("New Chart");
+        
+        chart.setType(ExistingChartTypes.BAR);
         
         if (dataProvider != null) {
             try {
                 chart.setName(dataProvider.getName() + " Chart");
                 chart.defineQuery(dataProvider);
-            } catch (SQLException ex) {
+                chart.refreshData();
+                ChartUtil.setDefaults(chart);
+            } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(
                         session.getTree(), "Failed to create chart", ex);
                 return;
             }
+        } else {
+            chart.setName("New Chart");
         }
         
         session.getWorkspace().addChart(chart);

@@ -19,7 +19,13 @@
 
 package ca.sqlpower.wabit.report.chart;
 
+import java.util.Iterator;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
 
 /**
  * A bucket of static goodness for dealing with the chart API.
@@ -49,5 +55,77 @@ public class ChartUtil {
             sb.append(CATEGORY_SEPARATOR + names.get(i));
         }
         return sb.toString();
+    }
+    
+    /**
+     * Sets the given chart to its default settings. The particular defaults chosen
+     * depend on the chart's current type. All other settings are subject to change.
+     * <p>
+     * Note: with a little thought, we could move this behaviour into the DatasetTypes
+     * enum. That would be better design.
+     * 
+     * @param chart The chart to set to a useful default configuration.
+     */
+    public static void setDefaults(@Nonnull Chart chart) {
+        if (chart.getType() == null) {
+            return;
+        } else if (chart.getType().getDatasetType() == DatasetTypes.CATEGORY) {
+            chart.setXAxisLabelRotation(-45.0);
+            if (chart.getQuery() instanceof OlapQuery) {
+                // policy: -last string column (deepest level) is the only category
+                //         -all numeric columns are series
+                //         -not sure what to do with date columns
+                ChartColumn lastStringCol = null;
+                for (ChartColumn cc : chart.getColumns()) {
+                    if (cc.getDataType() == DataType.TEXT) {
+                        cc.setRoleInChart(ColumnRole.NONE);
+                        lastStringCol = cc;
+                    } else if (cc.getDataType() == DataType.NUMERIC) {
+                        cc.setRoleInChart(ColumnRole.SERIES);
+                    } else {
+                        cc.setRoleInChart(ColumnRole.NONE);
+                    }
+                }
+                if (lastStringCol != null) {
+                    lastStringCol.setRoleInChart(ColumnRole.CATEGORY);
+                }
+            } else {
+                // policy: -all string and date columns are category
+                //         -all numeric columns are series
+                for (ChartColumn cc : chart.getColumns()) {
+                    if (cc.getDataType() == DataType.TEXT || cc.getDataType() == DataType.DATE) {
+                        cc.setRoleInChart(ColumnRole.CATEGORY);
+                    } else if (cc.getDataType() == DataType.NUMERIC) {
+                        cc.setRoleInChart(ColumnRole.SERIES);
+                    } else {
+                        cc.setRoleInChart(ColumnRole.NONE);
+                    }
+                }
+            }
+        } else if (chart.getType().getDatasetType() == DatasetTypes.XY) {
+            // policy: -first numeric or date column is X axis
+            //         -all subsequent numeric columns are Y values plotted against it
+            ChartColumn xAxisCol = null;
+            Iterator<ChartColumn> ccit = chart.getColumns().iterator();
+            while (ccit.hasNext()) {
+                ChartColumn cc = ccit.next();
+                cc.setRoleInChart(ColumnRole.NONE);
+                if (cc.getDataType() == DataType.NUMERIC || cc.getDataType() == DataType.DATE) {
+                    xAxisCol = cc;
+                    break;
+                }
+            }
+            while (ccit.hasNext()) {
+                ChartColumn cc = ccit.next();
+                if (cc.getDataType() == DataType.NUMERIC) {
+                    cc.setRoleInChart(ColumnRole.SERIES);
+                    cc.setXAxisIdentifier(xAxisCol);
+                } else {
+                    cc.setRoleInChart(ColumnRole.NONE);
+                }
+            }
+        } else {
+            throw new UnsupportedOperationException("Unknown chart type " + chart.getType());
+        }
     }
 }
