@@ -141,7 +141,15 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         if (object1Ordinal < object2Ordinal) return -1;
         if (object1Ordinal > object2Ordinal) return 1;
         
-        int nameCompare = compareObject1.getName().compareTo(compareObject2.getName());
+        String name1 = compareObject1.getName();
+        String name2 = compareObject2.getName();
+        if (name1 == null) {
+            throw new NullPointerException("Null name on wabit object " + compareObject1);
+        }
+        if (name2 == null) {
+            throw new NullPointerException("Null name on wabit object " + compareObject2);
+        }
+        int nameCompare = name1.compareTo(name2);
         if (nameCompare != 0) return nameCompare;
         
         return compareObject1.getUUID().compareTo(compareObject2.getUUID());

@@ -157,6 +157,7 @@ public class Page extends AbstractWabitObject {
      * Copy constructor
      */
     public Page(Page page) {
+        setName(page.getName());
     	this.orientation = page.orientation;
     	this.width = page.width;
     	this.height = page.height;
