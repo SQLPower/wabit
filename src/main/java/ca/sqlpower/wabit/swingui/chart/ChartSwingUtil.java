@@ -30,12 +30,17 @@ import org.apache.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
 
 import ca.sqlpower.swingui.ColourScheme;
@@ -87,18 +92,34 @@ public class ChartSwingUtil {
             return null;
         }
         
+        JFreeChart chart;
         if (chartType.getType().equals(DatasetTypes.CATEGORY)) {
             JFreeChart categoryChart = createCategoryChart(c);
             logger.debug("Made a new category chart: " + categoryChart);
-            return categoryChart;
+            
+            double rotationRads = Math.toRadians(c.getXaxisLabelRotation());
+            CategoryLabelPositions clp;
+            if (Math.abs(rotationRads) < 0.01) {
+                clp = CategoryLabelPositions.STANDARD;
+            } else if (rotationRads < 0) {
+                clp = CategoryLabelPositions.createDownRotationLabelPositions(-rotationRads);
+            } else {
+                clp = CategoryLabelPositions.createUpRotationLabelPositions(rotationRads);
+            }
+            CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
+            domainAxis.setCategoryLabelPositions(clp);
+            
+            chart = categoryChart;
         } else if (chartType.getType().equals(DatasetTypes.XY)) {
             JFreeChart xyChart = createXYChart(c);
             logger.debug("Made a new XY chart: " + xyChart);
-            return xyChart;
+            chart = xyChart;
         } else {
             throw new IllegalStateException(
                     "Unknown chart dataset type " + chartType.getType());
         }
+        
+        return chart;
     }
 
     /**
@@ -299,6 +320,16 @@ public class ChartSwingUtil {
             throw new IllegalArgumentException("Unknown chart type " + chartType + " for an XY dataset.");
         }
         if (chart == null) return null;
+        XYPlot plot = (XYPlot) chart.getPlot();
+        
+        // XXX the following instance check is brittle; there are many ways to represent a time
+        // series in JFreeChart. This check uses knowledge of the inner workings of DatasetUtil.
+        if (xyCollection instanceof TimePeriodValuesCollection) {
+            logger.debug("Switching x-axis to date axis so labels render properly");
+            plot.setDomainAxis(new DateAxis(xaxisName));
+            // TODO user-settable date format
+            // axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+        }
         
         if (legendPosition != LegendPosition.NONE) {
             chart.getLegend().setPosition(legendPosition.getRectangleEdge());
@@ -315,6 +346,7 @@ public class ChartSwingUtil {
                         new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0)));
             }
         }
+        
         setTransparentChartBackground(chart);
         return chart;
     }

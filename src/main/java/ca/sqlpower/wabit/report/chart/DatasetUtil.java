@@ -152,6 +152,7 @@ class DatasetUtil {
             throw new RuntimeException(e);
         }
         if (allNumeric) {
+            logger.debug("Creating a new XYSeriesCollection dataset");
             XYSeriesCollection xyCollection = new XYSeriesCollection();
             for (ChartColumn chartCol : columnNamesInOrder) {
                 ChartColumn xAxisColIdentifier = chartCol.getXAxisIdentifier();
@@ -171,6 +172,7 @@ class DatasetUtil {
             }
             return xyCollection;
         } else if (allDate) {
+            logger.debug("Creating a new TimePeriodValuesCollection dataset");
             TimePeriodValuesCollection timeCollection = new TimePeriodValuesCollection();
             for (ChartColumn chartCol : columnNamesInOrder) {
                 ChartColumn xAxisColIdentifier = chartCol.getXAxisIdentifier();
@@ -182,9 +184,13 @@ class DatasetUtil {
                     while (resultSet.next()) {
                         int columnType = resultSet.getMetaData().getColumnType(resultSet.findColumn(xAxisColIdentifier.getColumnName()));
                         if (columnType == Types.DATE) {
-                            newSeries.add(new FixedMillisecond(resultSet.getDate(xAxisColIdentifier.getColumnName())), resultSet.getDouble(((ChartColumn) chartCol).getColumnName()));
+                            newSeries.add(new FixedMillisecond(
+                                    resultSet.getDate(xAxisColIdentifier.getColumnName())),
+                                    resultSet.getDouble(((ChartColumn) chartCol).getColumnName()));
                         } else if (columnType == Types.TIMESTAMP){
-                            newSeries.add(new FixedMillisecond(resultSet.getTimestamp(xAxisColIdentifier.getColumnName())), resultSet.getDouble(((ChartColumn) chartCol).getColumnName()));
+                            newSeries.add(new FixedMillisecond(
+                                    resultSet.getTimestamp(xAxisColIdentifier.getColumnName())),
+                                    resultSet.getDouble(((ChartColumn) chartCol).getColumnName()));
                         }
                     }
                 } catch (SQLException e) {

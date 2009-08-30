@@ -637,5 +637,13 @@ public class Chart extends AbstractWabitObject {
             return nullCategories + repeatedMembers < categoryColumns.size();
         }
         
+    }
+
+    /**
+     * Returns the desired rotation for the X-axis category/item labels. 0 means horizontal;
+     * -90 means read bottom to top; 90 means read top to bottom.
+     */
+    public double getXaxisLabelRotation() {
+        return 45; // TODO make proper; save/load in file
     };
 }
