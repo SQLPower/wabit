@@ -3,6 +3,7 @@ package ca.sqlpower.wabit.swingui.chart;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -15,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.event.PopupMenuEvent;
@@ -211,4 +214,15 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         return chartColumns;
     }
 
+    public JComponent getHeaderLegendComponent() {
+        JPanel p = new JPanel(new BorderLayout());
+        int comboBoxHeight = new JComboBox().getPreferredSize().height;
+        
+        JLabel label1 = new JLabel("Role in Chart");
+        label1.setPreferredSize(new Dimension(label1.getPreferredSize().width, comboBoxHeight));
+
+        p.add(label1, BorderLayout.NORTH);
+        
+        return p;
+    }
 }

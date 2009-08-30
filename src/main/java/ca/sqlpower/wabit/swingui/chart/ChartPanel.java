@@ -162,6 +162,12 @@ public class ChartPanel implements WabitPanel {
     private ChartTableHeaderCellRenderer currentHeaderCellRenderer;
 
     /**
+     * The header legend of the current table header renderer gets put in the
+     * NORTH segment of this panel.
+     */
+    private JComponent headerLegendContainer = new JPanel(new BorderLayout());
+
+    /**
      * The data model for this component.
      */
     final Chart chart;
@@ -353,6 +359,12 @@ public class ChartPanel implements WabitPanel {
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
             }
 
+            headerLegendContainer.removeAll();
+            headerLegendContainer.add(
+                    currentHeaderCellRenderer.getHeaderLegendComponent(), BorderLayout.NORTH);
+            headerLegendContainer.revalidate();
+            headerLegendContainer.repaint();
+            
             resultTable.getTableHeader().repaint(); // XXX probably unnecessary now
             
             if(chart.getLegendPosition() != null) {
@@ -414,7 +426,7 @@ public class ChartPanel implements WabitPanel {
         builder.append("Query", queryComboBox, 3);
         builder.nextRow();
 
-        builder.append(new JLabel("Chart header legend goes here"));// TODO
+        builder.append(headerLegendContainer );
         
         JScrollPane tableScrollPane = new JScrollPane(resultTable);
         builder.append(tableScrollPane, 3);

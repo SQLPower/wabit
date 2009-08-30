@@ -353,4 +353,19 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         return columnNamesInOrder;
     }
 
+    public JComponent getHeaderLegendComponent() {
+        JPanel p = new JPanel(new BorderLayout());
+        int comboBoxHeight = new JComboBox().getPreferredSize().height;
+        
+        JLabel label1 = new JLabel("Role in Chart");
+        label1.setPreferredSize(new Dimension(label1.getPreferredSize().width, comboBoxHeight));
+
+        JLabel label2 = new JLabel("Plot Against");
+        label2.setPreferredSize(new Dimension(label2.getPreferredSize().width, comboBoxHeight));
+
+        p.add(label1, BorderLayout.NORTH);
+        p.add(label2, BorderLayout.CENTER);
+        
+        return p;
+    }
 }

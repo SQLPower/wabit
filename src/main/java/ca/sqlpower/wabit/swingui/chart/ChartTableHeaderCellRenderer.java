@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.swingui.chart;
 
 import java.util.List;
 
+import javax.swing.JComponent;
+
 import ca.sqlpower.swingui.table.CleanupTableCellRenderer;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 
@@ -35,4 +37,9 @@ interface ChartTableHeaderCellRenderer extends CleanupTableCellRenderer {
      */
     List<ChartColumn> getChartColumns();
 
+    /**
+     * Returns a component that can be placed beside the header (usually to the
+     * left) to explain what the various rows of controls in the header mean.
+     */
+    JComponent getHeaderLegendComponent();
 }
