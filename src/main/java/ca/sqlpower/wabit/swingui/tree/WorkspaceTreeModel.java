@@ -48,6 +48,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
@@ -387,40 +388,56 @@ public class WorkspaceTreeModel implements TreeModel {
         treeModelListeners.remove(l);
     }
 
-    protected void fireTreeNodesInserted(TreeModelEvent e) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Firing treeNodesInserted event: " + e);
-        }
-        for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
-            treeModelListeners.get(i).treeNodesInserted(e);
-        }
+    protected void fireTreeNodesInserted(final TreeModelEvent e) {
+        SPSUtils.runOnSwingThread(new Runnable() {
+            public void run() {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Firing treeNodesInserted event: " + e);
+                }
+                for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
+                    treeModelListeners.get(i).treeNodesInserted(e);
+                }
+            }
+        });
     }
 
-    protected void fireTreeNodesRemoved(TreeModelEvent e) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Firing treeNodesRemoved event " + e);
-        }
-        for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
-            treeModelListeners.get(i).treeNodesRemoved(e);
-        }
+    protected void fireTreeNodesRemoved(final TreeModelEvent e) {
+        SPSUtils.runOnSwingThread(new Runnable() {
+            public void run() {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Firing treeNodesRemoved event " + e);
+                }
+                for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
+                    treeModelListeners.get(i).treeNodesRemoved(e);
+                }
+            }
+        });
     }
 
-    protected void fireTreeNodesChanged(TreeModelEvent e) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("firing TreeNodesChanged. source=" + e.getSource());
-        }
-        for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
-            treeModelListeners.get(i).treeNodesChanged(e);
-        }
+    protected void fireTreeNodesChanged(final TreeModelEvent e) {
+        SPSUtils.runOnSwingThread(new Runnable() {
+            public void run() {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("firing TreeNodesChanged. source=" + e.getSource());
+                }
+                for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
+                    treeModelListeners.get(i).treeNodesChanged(e);
+                }
+            }
+        });
     }
 
-    protected void fireTreeStructureChanged(TreeModelEvent e) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("firing TreeStructuredChanged. source=" + e.getSource());
-        }
-        for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
-            treeModelListeners.get(i).treeStructureChanged(e);
-        }
+    protected void fireTreeStructureChanged(final TreeModelEvent e) {
+        SPSUtils.runOnSwingThread(new Runnable() {
+            public void run() {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("firing TreeStructuredChanged. source=" + e.getSource());
+                }
+                for (int i = treeModelListeners.size() - 1; i >= 0; i--) {
+                    treeModelListeners.get(i).treeStructureChanged(e);
+                }
+            }
+        });
     }
     
     /**
