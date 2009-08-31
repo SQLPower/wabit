@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import javax.swing.JComponent;
+
 import ca.sqlpower.swingui.DataEntryPanel;
 
 /**
@@ -30,14 +32,18 @@ import ca.sqlpower.swingui.DataEntryPanel;
 public interface WabitPanel extends DataEntryPanel {
 
 	/**
-	 * This will maximize or unmaximize the editor panel.
-	 */
-	void maximizeEditor();
-
-	/**
 	 * Returns a suitable string that can be used in the title of a containing
 	 * window or frame. Usually describes what the panel contains. (ex.
 	 * "Query Editor" or "Report Editor")
 	 */
 	String getTitle();
+
+    /**
+     * Returns the component (often a JTree or JList, but can be anything) that
+     * contains all the workspace items that can be dragged into this editor.
+     * 
+     * @return The component as described above, or null if nothing can be
+     *         dropped on this panel.
+     */
+	JComponent getSourceComponent();
 }

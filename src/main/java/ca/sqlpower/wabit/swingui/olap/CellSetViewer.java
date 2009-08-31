@@ -109,7 +109,14 @@ public class CellSetViewer {
     	slicerScrollPane = new JScrollPane();
     	slicerScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
     	slicerScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        table = new JTable();
+        
+    	table = new JTable() {
+            @Override
+            protected void configureEnclosingScrollPane() {
+                // we do this manually, and the default behaviour ruins our setup
+            }
+        };
+        
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);

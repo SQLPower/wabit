@@ -217,9 +217,9 @@ public class WabitWelcomeScreen {
             public boolean applyChanges() {
                 return true;
             }
-        
-            public void maximizeEditor() {
-                //do nothing
+
+            public JComponent getSourceComponent() {
+                return null;
             }
 
 			public String getTitle() {

@@ -63,9 +63,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
@@ -288,12 +286,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
      */
 	private final CursorManager cursorManager;
 
-	/**
-	 * This split pane will split the layout editor between the page layout
-	 * and the list of queries that can be dragged into the layout.
-	 */
-	private JSplitPane mainSplitPane;
-	
 	private final AbstractAction addLabelAction = new AbstractAction("",  LayoutPanel.CREATE_BOX_ICON){
 		public void actionPerformed(ActionEvent e) {
 			setMouseState(MouseStates.CREATE_LABEL);
@@ -348,6 +340,10 @@ public class LayoutPanel implements WabitPanel, MouseState {
 			canvas.repaint();
 		}
 	};
+
+    private PScrollPane canvasScrollPane;
+
+    private JList sourceList;
 	
     public LayoutPanel(final WabitSwingSession session, final Layout layout) {
         this.session = session;
@@ -451,20 +447,15 @@ public class LayoutPanel implements WabitPanel, MouseState {
         	toolBarBuilder.add(new PDFAction(session, toolBarBuilder.getToolbar(), layout), "Print PDF");
         }
 
-        PScrollPane canvasScrollPane = new PScrollPane(canvas);
+        canvasScrollPane = new PScrollPane(canvas);
 		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
         
-        mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplitPane.setOneTouchExpandable(true);
-        mainSplitPane.setResizeWeight(1);
-        mainSplitPane.add(canvasScrollPane, JSplitPane.LEFT);
-        
-        final JList queryList = new JList(new DraggableWabitObjectListModel(session.getWorkspace()));
-        queryList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        sourceList = new JList(new DraggableWabitObjectListModel(session.getWorkspace()));
+        sourceList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         // TODO factor out the guts of WorkspaceTreeCellRenderer so this can be less ugly
-        queryList.setCellRenderer(new DefaultListCellRenderer() {
+        sourceList.setCellRenderer(new DefaultListCellRenderer() {
             final JTree dummyTree = new JTree();
             final WorkspaceTreeCellRenderer delegate = new WorkspaceTreeCellRenderer();
         	@Override
@@ -476,13 +467,13 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		});
         
         DragSource ds = new DragSource();
-		ds.createDefaultDragGestureRecognizer(queryList, DnDConstants.ACTION_COPY, new DragGestureListener() {
+		ds.createDefaultDragGestureRecognizer(sourceList, DnDConstants.ACTION_COPY, new DragGestureListener() {
 			public void dragGestureRecognized(DragGestureEvent dge) {
-				if (queryList.getSelectedValues() == null || queryList.getSelectedValues().length <= 0) {
+				if (sourceList.getSelectedValues() == null || sourceList.getSelectedValues().length <= 0) {
 					return;
 				}
 				List<WabitObject> queries = new ArrayList<WabitObject>();
-				for (Object q : queryList.getSelectedValues()) {
+				for (Object q : sourceList.getSelectedValues()) {
 					queries.add((WabitObject) q);
 				}
 				Transferable dndTransferable = new ReportQueryTransferable(queries);
@@ -493,10 +484,8 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		});
 		new DropTarget(canvas, new QueryDropListener());
 		
-        mainSplitPane.add(new JScrollPane(queryList), JSplitPane.RIGHT);
-                
         panel = new JPanel(new BorderLayout());
-        panel.add(mainSplitPane, BorderLayout.CENTER);
+        panel.add(canvasScrollPane, BorderLayout.CENTER);
         panel.add(toolBarBuilder.getToolbar(), BorderLayout.NORTH);
         
         panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
@@ -574,18 +563,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		return cursorManager;
 	}
 
-	public JSplitPane getSplitPane() {
-		return mainSplitPane;
-	}
-
-	public void maximizeEditor() {
-		if (mainSplitPane.getDividerLocation() == mainSplitPane.getMaximumDividerLocation()) {
-			mainSplitPane.setDividerLocation(mainSplitPane.getLastDividerLocation());
-		} else {
-			mainSplitPane.setDividerLocation(mainSplitPane.getMaximumDividerLocation());
-		}
-	}
-	
 	public String getTitle() {
 		if (layout instanceof Report) {
 			return "Report Editor - " + layout.getName();
@@ -596,6 +573,10 @@ public class LayoutPanel implements WabitPanel, MouseState {
 					"Layout panel only supports Layout's of " +
 					"type Report and Template not of type " + layout.getClass());
 		}
+	}
+	
+	public JComponent getSourceComponent() {
+	    return sourceList;
 	}
 	
 	/**

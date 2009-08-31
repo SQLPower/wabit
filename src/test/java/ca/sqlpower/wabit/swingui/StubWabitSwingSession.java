@@ -38,9 +38,7 @@ import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.StubWabitSession;
-import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 
@@ -49,7 +47,7 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
  */
 public class StubWabitSwingSession implements WabitSwingSession {
 	
-	WabitSessionContext context = new StubWabitSessionContext();
+	WabitSwingSessionContext context = new StubWabitSwingSessionContext();
 	private WabitSession delegateSession;
 	
 	public StubWabitSwingSession() {
@@ -59,7 +57,7 @@ public class StubWabitSwingSession implements WabitSwingSession {
 		delegateSession.getWorkspace().setSession(this);
 	}
 
-	public WabitSessionContext getContext() {
+	public WabitSwingSessionContext getContext() {
 		return context;
 	}
 

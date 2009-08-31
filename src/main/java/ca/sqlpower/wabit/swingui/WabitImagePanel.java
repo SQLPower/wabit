@@ -331,10 +331,6 @@ public class WabitImagePanel implements WabitPanel {
         }
     }
 
-    public void maximizeEditor() {
-        //no-op
-    }
-
     public boolean applyChanges() {
         cleanup();
         return true;
@@ -359,4 +355,8 @@ public class WabitImagePanel implements WabitPanel {
     public String getTitle() {
 		return "Image Viewer - " + image.getName();
 	}
+    
+    public JComponent getSourceComponent() {
+        return null;
+    }
 }

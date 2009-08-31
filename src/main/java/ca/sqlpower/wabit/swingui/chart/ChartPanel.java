@@ -470,7 +470,7 @@ public class ChartPanel implements WabitPanel {
                 new FormLayout(
                         "pref, 3dlu, pref:grow, 3dlu, pref:grow",
                         "pref, 3dlu, fill:0:grow, 3dlu, fill:0:grow"),
-                new FormDebugPanel());
+                logger.isDebugEnabled() ? new FormDebugPanel() : new JPanel());
         
         builder.append("Query", queryComboBox, 3);
         builder.nextRow();
@@ -610,7 +610,7 @@ public class ChartPanel implements WabitPanel {
     private Component buildChartPrefsPanel() {
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout("pref, 3dlu, pref:grow"),
-                new FormDebugPanel());
+                logger.isDebugEnabled() ? new FormDebugPanel() : new JPanel());
 
         builder.append("Legend Postion", legendPositionComboBox);
         builder.nextLine();
@@ -696,11 +696,12 @@ public class ChartPanel implements WabitPanel {
     }
 
     public String getTitle() {
-        return "Chart Editor";
+        return "Chart Editor - " + chart.getName();
     }
 
-    public void maximizeEditor() {
-        // no op
+    public JComponent getSourceComponent() {
+        // nothing drags onto this
+        return null;
     }
     
     public Chart getChart() {

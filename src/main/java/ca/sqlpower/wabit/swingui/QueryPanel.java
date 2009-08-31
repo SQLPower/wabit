@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
@@ -147,6 +148,15 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private static final Object EXPAND_ACTION = "expandAction";
     
+	private static final Preferences prefs = Preferences.userNodeForPackage(QueryPanel.class);
+
+	/**
+	 * Prefs key for the horizontal split pane's divider location.
+	 * <p>
+	 * The value stored under this key is an <code>int</code>.
+	 */
+    private static final String RESULTS_DIVIDER_LOCATON_KEY = "QueryPanel.RESULTS_DIVIDER_LOCATON";
+	
 	/**
 	 * This is a listModel that just returns the row Number for the rowHeaderRender
 	 */
@@ -316,12 +326,6 @@ public class QueryPanel implements WabitPanel {
 	private final JSplitPane mainSplitPane;
 	
 	/**
-	 * This is the TopRight SplitPane of wabbit that divides the QueryTabbedPen and the dragTree
-	 * with comboBox
-	 */
-	private final JSplitPane rightTopPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-
-	/**
 	 * This is the root of the JTree on the right of the query builder. This
 	 * will let the user drag and drop components into the query.
 	 */
@@ -455,9 +459,11 @@ public class QueryPanel implements WabitPanel {
 	};
 
 	private final ExportWabitObjectAction<QueryCache> exportQueryAction;
+
+    private JPanel dragTreePanel;
 	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
-		logger.debug("Constructing new query panel.");
+		logger.debug("Constructing new QueryPanel@" + System.identityHashCode(this));
 		this.session = session;
 		context = (WabitSwingSessionContext) session.getContext();
 		mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -675,6 +681,15 @@ public class QueryPanel implements WabitPanel {
     	
 		buildUI();
 
+		/*
+		 * Default split pane size is 3/4-1/4 of the screen height or else
+		 * the results won't be visible and the user won't see them update
+		 */
+		mainSplitPane.setDividerLocation(
+		        prefs.getInt(
+		                RESULTS_DIVIDER_LOCATON_KEY,
+		                (int) (session.getContext().getFrame().getHeight() * 3 / 4)));
+
 	}
 
 	
@@ -787,7 +802,7 @@ public class QueryPanel implements WabitPanel {
     	final JLabel whereText = new JLabel("Where:");
     	
     	final JPanel topPanel = new JPanel(new BorderLayout());
-    	topPanel.add(rightTopPane, BorderLayout.CENTER);
+    	topPanel.add(queryPenAndTextTabPane, BorderLayout.CENTER);
     	
     	wabitBar = new JToolBar();
         wabitBar.setFloatable(false);
@@ -873,16 +888,10 @@ public class QueryPanel implements WabitPanel {
     	        0));
     	southPanelBuilder.append(resultPane, 7);
     	
-    	JPanel rightTreePanel = new JPanel(new BorderLayout());
-    	rightTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
-    	rightTreePanel.add(reportComboBox, BorderLayout.NORTH);
-    	
-    	rightTopPane.setOneTouchExpandable(true);
-    	rightTopPane.setResizeWeight(1);
-    	rightTopPane.add(queryPenAndTextTabPane, JSplitPane.LEFT);
-    	rightTopPane.add(rightTreePanel, JSplitPane.RIGHT);
-    	rightTreePanel.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
-
+    	dragTreePanel = new JPanel(new BorderLayout());
+    	dragTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
+    	dragTreePanel.add(reportComboBox, BorderLayout.NORTH);
+    	dragTreePanel.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
     	
     	mainSplitPane.setOneTouchExpandable(true);
     	mainSplitPane.setResizeWeight(1);
@@ -899,6 +908,7 @@ public class QueryPanel implements WabitPanel {
                         && !queryCache.isScriptModified()
                         && !disableAutoExecute) {
                 	executeQueryInCache();
+                    mainSplitPane.removeHierarchyListener(this);
                 }
             }
         });
@@ -1092,10 +1102,6 @@ public class QueryPanel implements WabitPanel {
 		return mainSplitPane;
 	}
 	
-	public JSplitPane getTopRightSplitPane() {
-		return rightTopPane;
-	}
-	
 	public SQLObjectRoot getRootNode() {
 		return rootNode;
 	}
@@ -1103,14 +1109,14 @@ public class QueryPanel implements WabitPanel {
 
 	public boolean applyChanges() {
 		//Changes are currently always done immediately. If we add a save button this will change.
-		disconnect();
+		cleanup();
 		return true;
 	}
 
 
 	public void discardChanges() {
 		//Changes are currently always done immediately. If we add a save button this will change.
-		disconnect();
+		cleanup();
 	}
 
 
@@ -1121,9 +1127,11 @@ public class QueryPanel implements WabitPanel {
 	
 	/**
 	 * Disconnects all listeners in the query cache. Also closes any open database
-	 * connections.
+	 * connections and updates prefs.
 	 */
-	private void disconnect() {
+	private void cleanup() {
+	    logger.debug("QueryPanel@" + System.identityHashCode(this) + " is cleaning up");
+	    prefs.putInt(RESULTS_DIVIDER_LOCATON_KEY, mainSplitPane.getDividerLocation());
 		queryController.disconnect();
 		queryCache.getQuery().removeQueryChangeListener(queryListener);
 		logger.debug("Removed the query panel change listener on the query cache");
@@ -1137,19 +1145,9 @@ public class QueryPanel implements WabitPanel {
 			throw new RuntimeException(e);
 		}
 		queryPen.cleanup();
+        logger.debug("QueryPanel@" + System.identityHashCode(this) + " cleanup done");
 	}
 
-	public void maximizeEditor() {
-		if (mainSplitPane.getDividerLocation() == mainSplitPane.getMaximumDividerLocation() 
-				&& rightTopPane.getDividerLocation() == rightTopPane.getMaximumDividerLocation()) {
-			mainSplitPane.setDividerLocation(mainSplitPane.getLastDividerLocation());
-			rightTopPane.setDividerLocation(rightTopPane.getLastDividerLocation());
-		} else {
-			mainSplitPane.setDividerLocation(mainSplitPane.getMaximumDividerLocation());
-			rightTopPane.setDividerLocation(rightTopPane.getMaximumDividerLocation());
-		}
-	}
-	
 	/**
 	 * Returns the queryUIComponents used in this query panel for testing purposes.
 	 */
@@ -1157,9 +1155,12 @@ public class QueryPanel implements WabitPanel {
 		return queryUIComponents;
 	}
 
-
 	public String getTitle() {
 		return "Query Editor - " + queryCache.getName();
+	}
+	
+	public JComponent getSourceComponent() {
+	    return dragTreePanel;
 	}
 	
 	/**

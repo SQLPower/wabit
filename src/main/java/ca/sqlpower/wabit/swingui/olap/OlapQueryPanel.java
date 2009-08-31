@@ -55,7 +55,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
@@ -464,14 +463,8 @@ public class OlapQueryPanel implements WabitPanel {
 		queryPanels.add("GUI", viewComponent);
         queryPanels.add("MDX", textQueryPanel);
         
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setLeftComponent(queryPanels);
-        splitPane.setRightComponent(dragTreePanel);
-        splitPane.setDividerLocation(splitPane.getWidth() - dragTreePanel.getMinimumSize().width);
-        splitPane.setResizeWeight(1);
-        
         queryAndResultsPanel = new JPanel(new BorderLayout());
-        queryAndResultsPanel.add(splitPane, BorderLayout.CENTER);
+        queryAndResultsPanel.add(queryPanels, BorderLayout.CENTER);
         queryAndResultsPanel.add(guiToolBar, BorderLayout.NORTH);
     }
     
@@ -537,11 +530,6 @@ public class OlapQueryPanel implements WabitPanel {
         return new JScrollPane(mdxTextArea);
     }
     
-    public void maximizeEditor() {
-        // TODO Auto-generated method stub
-
-    }
-
     public boolean applyChanges() {
         cleanup();
         return true;
@@ -767,6 +755,10 @@ public class OlapQueryPanel implements WabitPanel {
     public String getTitle() {
 		return "OLAP Query Editor - " + query.getName();
 	}
+    
+    public JComponent getSourceComponent() {
+        return dragTreePanel;
+    }
     
     /**
      * Modifies the button to have their label text at the bottom

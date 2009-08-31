@@ -420,6 +420,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Added new SQLDatabase to map. New map contents:");
+                for (Map.Entry<SPDataSource, SQLDatabase> ent : databases.entrySet()) {
+                    logger.debug(ent.getKey() + " -> " + ent.getValue());
+                }
+            }
         }
         return db;
     }

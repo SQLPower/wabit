@@ -82,4 +82,6 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
      */
     boolean hasUnsavedChanges();
 
+    // override narrows return type
+    public WabitSwingSessionContext getContext();
 }

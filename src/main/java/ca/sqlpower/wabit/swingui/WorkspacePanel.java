@@ -394,11 +394,11 @@ public class WorkspacePanel implements WabitPanel {
 		return false;
 	}
 
-	public void maximizeEditor() {
-		//Do nothing, the workspace panel is always maximized.
-	}
-
 	public String getTitle() {
 		return "Workspace - " + session.getWorkspace().getName();
+	}
+	
+	public JComponent getSourceComponent() {
+	    return null;
 	}
 }

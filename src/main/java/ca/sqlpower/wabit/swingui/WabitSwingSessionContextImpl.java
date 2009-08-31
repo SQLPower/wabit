@@ -35,6 +35,7 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -64,11 +65,13 @@ import javax.jmdns.JmDNS;
 import javax.naming.NamingException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -77,6 +80,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
@@ -175,15 +179,20 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import edu.umd.cs.findbugs.annotations.OverrideMustInvoke;
+
 /**
  * This is the swing version of the WabitSessionContext. Swing specific operations for
  * the context will be done in this implementation 
  */
 public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
-    private static final String SEARCH_TAB = "Select Search Tab";
+    private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
 
-	private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
+    /**
+     * Action map key for the "select search tab" (accel-F) action.
+     */
+    private static final String SEARCH_TAB = "Select Search Tab";
     
     public static final String EXAMPLE_WORKSPACE_URL = "/ca/sqlpower/wabit/example_workspace.wabit";
     
@@ -207,18 +216,170 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     public static final Icon OPEN_WABIT_ICON = new ImageIcon(
             WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/workspace-16.png"));
     
-    private static final int DEFAULT_DIVIDER_LOC = 50;
+    /**
+     * Default width of the session tree (left hand side of the main divider).
+     */
+    private static final int DEFAULT_TREE_WIDTH = 220;
+
+    /**
+     * Prefs key for source list style. Value is the name of one of the
+     * {@link SourceListStyle} enum constants.
+     */
+    private static final String SOURCE_LIST_STYLE = "WabitSwingSessionContext.sourceListStyle";
     
     /**
-     * A constant for storing the location of the query dividers in prefs.
+     * Prefs key for the location of the source list split pane divider.
+     * 
+     * XXX should store source list component's width in case user shrinks the frame!
+     * (change the key value when making this change)
      */
-    private static final String QUERY_DIVIDER_LOCATON = "QueryDividerLocaton";
+    private static final String SOURCE_LIST_DIVIDER_LOCATON =
+        "WabitSwingSessionContext.sourceList.dividerLoc";
 
     /**
-     * A constant for storing the location of the divider for layouts in prefs.
+     * Prefs key for source list dialog's x coordinate.
      */
-    private static final String LAYOUT_DIVIDER_LOCATION = "LayoutDividerLocation";
+    private static final String SOURCE_LIST_DIALOG_X =
+        "WabitSwingSessionContext.sourceListDialog.x";
+    
+    /**
+     * Prefs key for source list dialog's y coordinate.
+     */
+    private static final String SOURCE_LIST_DIALOG_Y = 
+        "WabitSwingSessionContext.sourceListDialog.y";
+    
+    /**
+     * Prefs key for source list dialog's width.
+     */
+    private static final String SOURCE_LIST_DIALOG_WIDTH =
+        "WabitSwingSessionContext.sourceListDialog.width";
+    
+    /**
+     * Prefs key for source list dialog's height.
+     */
+    private static final String SOURCE_LIST_DIALOG_HEIGHT =
+        "WabitSwingSessionContext.sourceListDialog.height";
 
+    /**
+     * All the ways the source list can be present in the GUI.
+     */
+    public enum SourceListStyle {
+        /**
+         * Source list appears in a split pane to the right of the editor.
+         */
+        DOCKED("Docked") {
+            @Override
+            void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
+                super.apply(context, wabitPanel);
+                
+                context.sourceListDialog.setVisible(false);
+                
+                JComponent sourceComponent = wabitPanel.getSourceComponent();
+                JComponent panel = wabitPanel.getPanel();
+                
+                if (sourceComponent != null) {
+                    JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+                    sp.setLeftComponent(panel);
+                    sp.setRightComponent(new JScrollPane(sourceComponent));
+                    sp.setDividerLocation(context.prefs.getInt(
+                            WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
+                            context.frame.getWidth() * 3 / 4));
+
+                    context.wabitPane.setRightComponent(sp);
+                } else {
+                    context.wabitPane.setRightComponent(panel);
+                }
+            }
+        },
+        
+        /**
+         * Source list appears in its own dialog.
+         */
+        FLOATING("Floating") {
+            @Override
+            void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
+                super.apply(context, wabitPanel);
+                context.sourceListDialog.setContentPane(
+                        new JScrollPane(wabitPanel.getSourceComponent()));
+                context.sourceListDialog.setVisible(true);
+                context.wabitPane.setRightComponent(wabitPanel.getPanel());
+            }
+        },
+        
+        /**
+         * Source list is not visible at all.
+         */
+        HIDDEN("Hidden") {
+            @Override
+            void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
+                super.apply(context, wabitPanel);
+                context.sourceListDialog.setVisible(false);
+                context.wabitPane.setRightComponent(wabitPanel.getPanel());
+            }
+        };
+        
+        private final String localizedName;
+
+        private SourceListStyle(String localizedName) {
+            this.localizedName = localizedName;
+            
+        }
+        
+        @OverrideMustInvoke
+        void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
+            context.sourceListStyle = this;
+            context.prefs.put(SOURCE_LIST_STYLE, name());
+        }
+
+        /**
+         * Creates a JMenuItem for this source list style. When the menu item is
+         * activated, it applies the appropriate style to the given context.
+         * 
+         * @param context
+         *            The session context the menu item belongs to (and operates
+         *            upon).
+         * @param sourceListStyleGroup
+         *            The button group to add the menu item to (for mutual
+         *            exclusion).
+         * @return
+         */
+        public JMenuItem makeMenuItem(
+                final WabitSwingSessionContextImpl context,
+                ButtonGroup sourceListStyleGroup) {
+            JRadioButtonMenuItem mi =
+                new JRadioButtonMenuItem(getLocalizedName() + " Source List");
+            sourceListStyleGroup.add(mi);
+            mi.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    apply(context, context.currentEditorPanel);
+                }
+            });
+            return mi;
+        }
+        
+        /**
+         * Returns the localized text associated with this source list style.
+         */
+        public String getLocalizedName() {
+            return localizedName;
+        }
+    }
+
+    /**
+     * The current source list preference. Never null, but doesn't apply when
+     * the current editor panel is null or the current editor panel has a null
+     * source list component.
+     */
+    private SourceListStyle sourceListStyle;
+
+    /**
+     * When the source list is floating, it appears in this dialog. This dialog
+     * is never null (unless the session is headless), but it will be hidden
+     * when there is no floating source list to display. It gets disposed when
+     * this session context is closed.
+     */
+    private final JDialog sourceListDialog;
+    
     /**
      * This is a simple {@link SwingWorkerRegistry} implementation for the
      * context to track workers involved with loading files. It would be useful
@@ -298,11 +459,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 * This is the main frame of the context.
 	 */
 	private final JFrame frame;
-	
-	/**
-	 * This is the main split pane that shows the tree on the left of the split
-	 * and the current editor on the right of the split.
-	 */
+
+    /**
+     * This is the main split pane that shows the tree on the left of the split
+     * and the current editor on the right of the split.
+     */
 	private final JSplitPane wabitPane;
 	
 	/**
@@ -319,13 +480,13 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 * This is the status label at the bottom of one of the windows.
 	 */
 	private final JLabel statusLabel;
-	
-	/**
-     * This is the current panel to the right of the JTree showing the parts of the 
-     * workspace. This will allow editing the currently selected element in the JTree.
+
+    /**
+     * This is the current WabitPanel that provides the editor component and the
+     * source list. Must be set via {@link #createEditorPanel(WabitObject)}.
      */
     private WabitPanel currentEditorPanel;
-    
+
     /**
      * This tabbed pane contains all of the trees for each swing session in the context.
      */
@@ -490,7 +651,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
         frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + getName());
         
-
+        try {
+            sourceListStyle = SourceListStyle.valueOf(
+                    prefs.get(SOURCE_LIST_STYLE, SourceListStyle.DOCKED.name()));
+        } catch (IllegalArgumentException e) {
+            logger.warn("Bad value for " + SOURCE_LIST_STYLE + " preference. Defaulting.");
+            sourceListStyle = SourceListStyle.DOCKED;
+        }
+        
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
         treeTabbedPane = new JTabbedPane();
@@ -580,9 +748,30 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         prefsAction = new ShowWabitApplicationPreferencesAction(frame, getPrefs());
         
+        
         if (!headless) {
+            sourceListDialog = new JDialog(frame);
+            
             buildUI();
+            
+            // doing this after buildUI() so we can base defaults on frame's bounds
+            sourceListDialog.setBounds(
+                    prefs.getInt(SOURCE_LIST_DIALOG_X, frame.getX() + frame.getWidth() - DEFAULT_TREE_WIDTH),
+                    prefs.getInt(SOURCE_LIST_DIALOG_Y, frame.getY()),
+                    prefs.getInt(SOURCE_LIST_DIALOG_WIDTH, DEFAULT_TREE_WIDTH),
+                    prefs.getInt(SOURCE_LIST_DIALOG_HEIGHT, frame.getHeight() / 2));
+            
+            sourceListDialog.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    sourceListDialog.setVisible(false);
+                    SourceListStyle.DOCKED.apply(WabitSwingSessionContextImpl.this, currentEditorPanel);
+                }
+            });
+            
             macOSXRegistration();
+        } else {
+            sourceListDialog = null;
         }
 	}
 	
@@ -1023,7 +1212,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         leftPanel.add(toolBar, BorderLayout.NORTH);
         leftPanel.add(treeTabbedPane, BorderLayout.CENTER);
         
-        wabitPane.add(leftPanel, JSplitPane.LEFT);
+        wabitPane.setLeftComponent(leftPanel);
         
         //prefs
         if(prefs.get("MainDividerLocaton", null) != null) {
@@ -1134,13 +1323,22 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         menuBar.add(viewMenu);
         JMenuItem maxEditor = new JMenuItem(new AbstractAction("Maximize Editor") {
             public void actionPerformed(ActionEvent e) {
-                if (currentEditorPanel != null) {
-                    currentEditorPanel.maximizeEditor();
+                if (wabitPane.getDividerLocation() != 0) {
+                    wabitPane.setDividerLocation(0);
+                } else {
+                    wabitPane.setDividerLocation(wabitPane.getLastDividerLocation());
                 }
             }
         });
         maxEditor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK));
         viewMenu.add(maxEditor);
+        
+        viewMenu.addSeparator();
+        
+        ButtonGroup sourceListStyleGroup = new ButtonGroup();
+        for (SourceListStyle sls : SourceListStyle.values()) {
+            viewMenu.add(sls.makeMenuItem(this, sourceListStyleGroup));
+        }
         
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic('h');
@@ -1180,6 +1378,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     
     public boolean setEditorPanel() {
         if (isLoading()) return false;
+        logger.debug("setEditorPanel() starting");
         if (!removeEditorPanel()) {
             return false;
         }
@@ -1191,13 +1390,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 String[] dividerLocations = prefs.get("MainDividerLocaton", null).split(",");
                 dividerLoc = Integer.parseInt(dividerLocations[0]);
             } else {
-                dividerLoc = DEFAULT_DIVIDER_LOC;
+                dividerLoc = DEFAULT_TREE_WIDTH;
             }
         }
         
-        if (currentEditorPanel != null) {
-            wabitPane.remove(currentEditorPanel.getPanel());
-        }
+        // JSplitPane.setRightComponent() will remove the right component magically
         
         WabitObject entryPanelModel = null;
         if (getActiveSession() != null) {
@@ -1205,8 +1402,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
         
         currentEditorPanel = createEditorPanel(entryPanelModel);
-        
-        wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
+
+        sourceListStyle.apply(this, currentEditorPanel);
         wabitPane.setDividerLocation(dividerLoc);
         frame.setTitle(currentEditorPanel.getTitle());
         // TODO Select the proper panel in the wabit tree
@@ -1218,47 +1415,33 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * the panel to edit the model object given.
      */
     private WabitPanel createEditorPanel(WabitObject entryPanelModel) {
+        logger.debug("createEditorPanel() starting");
         if (getActiveSession() == null) {
             currentEditorPanel = welcomeScreen.getPanel();
         } else if (entryPanelModel instanceof QueryCache) {
-            QueryPanel queryPanel = new QueryPanel(getActiveSwingSession(), (QueryCache) entryPanelModel);
-            if (prefs.get(QUERY_DIVIDER_LOCATON, null) != null) {
-                String[] dividerLocations = prefs.get(QUERY_DIVIDER_LOCATON, null).split(",");
-                queryPanel.getTopRightSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[0]));
-                queryPanel.getFullSplitPane().setDividerLocation(Integer.parseInt(dividerLocations[1]));
-            } else {
-                //Setting the lower half of the split initially to 1/4 of the screen
-                //height or else the results won't be visible and the user won't see
-                //them update
-                queryPanel.getFullSplitPane().setDividerLocation(
-                        (int) (wabitPane.getHeight() * 3 / 4));
-            }
-            currentEditorPanel = queryPanel;
+            currentEditorPanel = new QueryPanel(getActiveSwingSession(), (QueryCache) entryPanelModel);
         } else if (entryPanelModel instanceof OlapQuery) {
-            OlapQueryPanel panel = new OlapQueryPanel(getActiveSwingSession(), wabitPane, (OlapQuery) entryPanelModel);
-            currentEditorPanel = panel;
+            currentEditorPanel = new OlapQueryPanel(getActiveSwingSession(), wabitPane, (OlapQuery) entryPanelModel);
         } else if (entryPanelModel instanceof Chart) {
-            ChartPanel panel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
-            currentEditorPanel = panel;
+            currentEditorPanel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
         } else if (entryPanelModel instanceof WabitImage) {
-            WabitImagePanel panel = new WabitImagePanel((WabitImage) entryPanelModel, this);
-            currentEditorPanel = panel;
+            currentEditorPanel = new WabitImagePanel((WabitImage) entryPanelModel, this);
         } else if (entryPanelModel instanceof Layout) {
-            LayoutPanel rlPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
-            if (prefs.get(LAYOUT_DIVIDER_LOCATION, null) != null) {
-                rlPanel.getSplitPane().setDividerLocation(Integer.parseInt(prefs.get(LAYOUT_DIVIDER_LOCATION, null)));
-            }
-            currentEditorPanel = rlPanel;
+            currentEditorPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
         } else if (entryPanelModel instanceof WabitWorkspace) {
             currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
         } else {
-            if (entryPanelModel instanceof WabitObject && ((WabitObject) entryPanelModel).getParent() != null) {
+            if (entryPanelModel instanceof WabitObject 
+                    && ((WabitObject) entryPanelModel).getParent() != null) {
                 currentEditorPanel = createEditorPanel(((WabitObject) entryPanelModel).getParent()); 
             } else {
                 throw new IllegalStateException("Unknown model for the defined types of entry panels. " +
                         "The type is " + entryPanelModel.getClass());
             }
         }
+        
+        sourceListStyle.apply(this, currentEditorPanel);
+        
         return currentEditorPanel;
     }
     
@@ -1269,6 +1452,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * unsaved changes).
      */
     private boolean removeEditorPanel() {
+        logger.debug("removeEditorPanel() starting");
         if (currentEditorPanel != null && currentEditorPanel.hasUnsavedChanges()) {
             int retval = JOptionPane.showConfirmDialog(frame, "There are unsaved changes. Discard?", 
                     "Discard changes", JOptionPane.YES_NO_OPTION);
@@ -1276,16 +1460,21 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 return false;
             }
         }
+        
         if (currentEditorPanel != null) {
-            if (currentEditorPanel instanceof QueryPanel) {
-                QueryPanel query = (QueryPanel)currentEditorPanel;
-                prefs.put(QUERY_DIVIDER_LOCATON, String.format("%d,%d", 
-                        query.getTopRightSplitPane().getDividerLocation(), 
-                        query.getFullSplitPane().getDividerLocation()));
-            } else if (currentEditorPanel instanceof LayoutPanel) {
-                prefs.put(LAYOUT_DIVIDER_LOCATION, String.format("%d", 
-                        ((LayoutPanel) currentEditorPanel).getSplitPane().getDividerLocation()));
+            
+            if (wabitPane.getRightComponent() instanceof JSplitPane) {
+                JSplitPane sp = (JSplitPane) wabitPane.getRightComponent();
+                prefs.putInt(SOURCE_LIST_DIVIDER_LOCATON, sp.getDividerLocation());
             }
+            
+            if (sourceListDialog != null) {
+                prefs.putInt(SOURCE_LIST_DIALOG_X, sourceListDialog.getX());
+                prefs.putInt(SOURCE_LIST_DIALOG_Y, sourceListDialog.getY());
+                prefs.putInt(SOURCE_LIST_DIALOG_WIDTH, sourceListDialog.getWidth());
+                prefs.putInt(SOURCE_LIST_DIALOG_HEIGHT, sourceListDialog.getHeight());
+            }
+            logger.debug("removeEditorPanel() calling discardChanges()");
             currentEditorPanel.discardChanges();
         }
         return true;
