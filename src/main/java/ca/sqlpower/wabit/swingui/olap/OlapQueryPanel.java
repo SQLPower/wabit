@@ -87,6 +87,9 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.query.Query;
 
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
+
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -380,8 +383,7 @@ public class OlapQueryPanel implements WabitPanel {
         dragTreePanel = new JPanel(new MigLayout(
                 "fill",
                 "[fill,grow 1]",
-                "[ | | grow,fill ]"));
-        dragTreePanel.add(databaseComboBox, "wrap");
+                "[ | grow,fill ]"));
         dragTreePanel.add(cubeChooserButton, "grow 0,left,wrap");
         dragTreePanel.add(new JScrollPane(cubeTree), "spany, wrap");
         
@@ -465,7 +467,13 @@ public class OlapQueryPanel implements WabitPanel {
         
         queryAndResultsPanel = new JPanel(new BorderLayout());
         queryAndResultsPanel.add(queryPanels, BorderLayout.CENTER);
-        queryAndResultsPanel.add(guiToolBar, BorderLayout.NORTH);
+        
+        JPanel toolbarPanel = new JPanel(new BorderLayout());
+        toolbarPanel.add(guiToolBar, BorderLayout.NORTH);
+        DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref"));
+        builder.append("Database Connections", databaseComboBox);
+        toolbarPanel.add(builder.getPanel(), BorderLayout.CENTER);
+        queryAndResultsPanel.add(toolbarPanel, BorderLayout.NORTH);
     }
     
     /**

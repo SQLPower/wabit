@@ -317,6 +317,10 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private JTree dragTree;
 	
+	/**
+	 * NOTE: This is the combo box for database connections. Not sure why it's called
+	 * a report combo box.
+	 */
 	private JComboBox reportComboBox;
 
 	/**
@@ -816,11 +820,16 @@ public class QueryPanel implements WabitPanel {
     	queryPenToolBar.add(wabitBar, BorderLayout.EAST);
 		queryPenToolBar.setFloatable(false);
     	
+		JPanel toolbarPanel = new JPanel(new BorderLayout());
     	if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
-    		topPanel.add(sqlToolBar, BorderLayout.NORTH);
+    	    toolbarPanel.add(sqlToolBar, BorderLayout.NORTH);
     	} else {
-    		topPanel.add(queryPenToolBar, BorderLayout.NORTH);
+    	    toolbarPanel.add(queryPenToolBar, BorderLayout.NORTH);
     	}
+    	DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref"));
+        builder.append("Database Connection", reportComboBox);
+        toolbarPanel.add(builder.getPanel(), BorderLayout.CENTER);
+        topPanel.add(toolbarPanel, BorderLayout.NORTH);
     	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -890,7 +899,6 @@ public class QueryPanel implements WabitPanel {
     	
     	dragTreePanel = new JPanel(new BorderLayout());
     	dragTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
-    	dragTreePanel.add(reportComboBox, BorderLayout.NORTH);
     	dragTreePanel.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
     	
     	mainSplitPane.setOneTouchExpandable(true);
