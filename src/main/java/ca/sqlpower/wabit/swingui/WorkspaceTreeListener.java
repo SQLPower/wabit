@@ -169,7 +169,6 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							"Delete Data Source", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
 		                    new Object[] {"Delete All", "Replace", "Cancel"}, null);
 		            if (response == 0) {
-		            	session.getWorkspace().removeDataSource((WabitDataSource)item);
 		            	if (wabitDS.getSPDataSource() instanceof JDBCDataSource) {
 			                //A temporary list is used instead of directly using session.getWorkspace().getQueries()
 			            	//to prevent a ConcurrentModificationException
@@ -192,6 +191,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			            		}
 			            	}
 		            	}
+		            	session.getWorkspace().removeDataSource((WabitDataSource)item);
 		            } else if (response == 1) {
 		            	List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
 		            	dsTypes.add(Olap4jDataSource.class);
