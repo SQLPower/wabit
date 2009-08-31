@@ -206,6 +206,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * executeQuery method should be called to populate this result set
      * and this value should be set back to null when rendering the result
      * set is finished.
+     * <p>
+     * Note: This can be null when painting if the result set returned
+     * by the query is null.
      */
     private CachedRowSet paintingRS = null;
     
@@ -213,6 +216,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
      * This result set should only be used when printing. If printing is not being
      * done then this result set should be null. This result set will contain the entire
      * result of the query instead of just a result set limited by a row limit.
+     * <p>
+     * Note: This can be null when painting if the result set returned
+     * by the query is null.
      */
     private CachedRowSet printingResultSet = null;
 
@@ -341,15 +347,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
         ResultSet executedRs = null;
+        paintingRS = null;
         executeException = null;
 		try {
             executedRs = query.fetchResultSet();
+            if (executedRs == null) {
+                return;
+            }
             initColumns(executedRs);
             if (executedRs instanceof CachedRowSet) {
-            	paintingRS = ((CachedRowSet) executedRs).createShared();
+                paintingRS = ((CachedRowSet) executedRs).createShared();
             } else {
-            	paintingRS = new CachedRowSet();
-            	paintingRS.populate(executedRs);
+                paintingRS = new CachedRowSet();
+                paintingRS.populate(executedRs);
             }
         } catch (Exception ex) {
             executeException = ex;
@@ -506,6 +516,25 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             	logger.debug(ste);
             }
         }
+        renderMessage(g, contentBox, errorMessage);
+        
+        return false;
+    }
+
+    /**
+     * Helper method for rendering a list of strings in the middle of the
+     * content box. Used for rendering a message to the user if the result set
+     * cannot be displayed for any reason.
+     * 
+     * @param g
+     *            The graphics to draw into.
+     * @param contentBox
+     *            The context box that defines the bounds that can be drawn in.
+     * @param errorMessage
+     *            The list of strings that will be displayed as a message.
+     */
+    private void renderMessage(Graphics2D g, ContentBox contentBox,
+            List<String> errorMessage) {
         FontMetrics fm = g.getFontMetrics();
         int width =  (int) contentBox.getWidth();
         int height = (int) contentBox.getHeight();
@@ -517,14 +546,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
             int textWidth = fm.stringWidth(text);
             g.drawString(text, width/2 - textWidth/2, y);
         }
-        
-        return false;
     }
 
     public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
     	CachedRowSet rs = this.paintingRS;
     	if (printing) {
     		rs = printingResultSet;
+    	}
+    	
+    	if (rs == null) {
+    	    renderMessage(g, contentBox, 
+    	            Collections.singletonList("The result set from " 
+    	                    + query.getName() + " is empty."));
+    	    return false;
     	}
     	
     	RowComparator comparator = new RowComparator();
@@ -883,4 +917,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 			executeException = ex;
 		}
 	}
+
+    /**
+     * Returns the exception that occurred when executing the statement that
+     * returns the result set to be rendered. Returns null if there was no
+     * exception.
+     * <p>
+     * Package private for testing.
+     */
+	Exception getExecuteException() {
+        return executeException;
+    }
 }

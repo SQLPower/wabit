@@ -23,6 +23,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.sql.Connection;
@@ -226,4 +227,34 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         assertEquals(0, ci3.getWidth());
     }
 
+    /**
+     * This tests that calling execute on an empty query will not throw
+     * an NPE.
+     */
+    public void testExecuteEmptyQueryWithoutException() throws Exception {
+        QueryCache cache = new QueryCache(stubMapping);
+        cache.setDataSource(db.getDataSource());
+        ResultSetRenderer renderer = new ResultSetRenderer(cache);
+     
+        assertNull(renderer.getExecuteException());
+        
+        renderer.executeQuery();
+        
+        System.out.println(renderer.getExecuteException());
+        assertNull(renderer.getExecuteException());
+    }
+    
+    /**
+     * Tests calling renderSuccess with a null result set works without
+     * throwing any exceptions.
+     */
+    public void testRenderSuccessWithEmptyRS() throws Exception {
+        QueryCache cache = new QueryCache(stubMapping);
+        cache.setDataSource(db.getDataSource());
+        ResultSetRenderer renderer = new ResultSetRenderer(cache);
+        
+        Image image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = (Graphics2D) image.getGraphics();
+        renderer.renderSuccess(g, new ContentBox(), 1, 1, false);
+    }
 }
