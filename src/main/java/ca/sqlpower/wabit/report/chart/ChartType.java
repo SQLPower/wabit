@@ -24,6 +24,7 @@ package ca.sqlpower.wabit.report.chart;
  */
 public enum ChartType {
     BAR(DatasetType.CATEGORY),
+    PIE(DatasetType.CATEGORY),
     CATEGORY_LINE(DatasetType.CATEGORY),
     LINE(DatasetType.XY),
     SCATTER(DatasetType.XY);

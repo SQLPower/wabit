@@ -33,6 +33,10 @@ import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.MultiplePiePlot;
+import org.jfree.chart.plot.PieLabelLinkStyle;
+import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -42,14 +46,15 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.util.TableOrder;
 
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetType;
-import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 
 /**
@@ -107,8 +112,11 @@ public class ChartSwingUtil {
                 } else {
                     clp = CategoryLabelPositions.createDownRotationLabelPositions(rotationRads);
                 }
-                CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
-                domainAxis.setCategoryLabelPositions(clp);
+                
+                if (categoryChart.getPlot() instanceof CategoryPlot) {
+                    CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
+                    domainAxis.setCategoryLabelPositions(clp);
+                }
             }
             
             chart = categoryChart;
@@ -217,9 +225,20 @@ public class ChartSwingUtil {
         BarRenderer.setDefaultBarPainter(new StandardBarPainter());
         
         if (chartType == ChartType.BAR) {
-            chart = ChartFactory.createBarChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+            chart = ChartFactory.createBarChart(
+                    chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL,
+                    showLegend, true, false);
+            
+        } else if (chartType == ChartType.PIE) {
+            chart = ChartFactory.createMultiplePieChart3D(
+                    chartName, dataset, TableOrder.BY_ROW,
+                    showLegend, true, false);
+            
         } else if (chartType == ChartType.CATEGORY_LINE) {
-            chart = ChartFactory.createLineChart(chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL, showLegend, true, false);
+            chart = ChartFactory.createLineChart(
+                    chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL,
+                    showLegend, true, false);
+            
         } else {
             throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
         }
@@ -230,16 +249,28 @@ public class ChartSwingUtil {
             chart.getTitle().setPadding(4,4,15,4);
         }
         
-        CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
-        int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
-        for (int i = 0; i < seriesSize; i++) {
-            //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-            renderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
+        if (chart.getPlot() instanceof CategoryPlot) {
+            CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
+            int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
+            for (int i = 0; i < seriesSize; i++) {
+                //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
+                renderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
+            }
+            
+            if (renderer instanceof BarRenderer) {
+                BarRenderer barRenderer = (BarRenderer) renderer;
+                barRenderer.setShadowVisible(false);
+            }
+        } else if (chart.getPlot() instanceof MultiplePiePlot) {
+            MultiplePiePlot mplot = (MultiplePiePlot) chart.getPlot();
+            PiePlot plot = (PiePlot) mplot.getPieChart().getPlot();
+            plot.setLabelLinkStyle(PieLabelLinkStyle.CUBIC_CURVE);
+            if (showLegend) {
+                // for now, legend and items labels are mutually exclusive. Could make this a user pref.
+                plot.setLabelGenerator(null);
+            }
         }
-        if (renderer instanceof BarRenderer) {
-            BarRenderer barRenderer = (BarRenderer) renderer;
-            barRenderer.setShadowVisible(false);
-        }
+        
         setTransparentChartBackground(chart);
         return chart;
     }

@@ -74,14 +74,19 @@ public class ChartUtil {
             if (chart.getQuery() instanceof OlapQuery) {
                 // policy: -last string column (deepest level) is the only category
                 //         -all numeric columns are series
+                //           -except pie charts, where only the first eligible column is a series
                 //         -not sure what to do with date columns
+                boolean wantMoreSeries = true;
                 ChartColumn lastStringCol = null;
                 for (ChartColumn cc : chart.getColumns()) {
                     if (cc.getDataType() == DataType.TEXT) {
                         cc.setRoleInChart(ColumnRole.NONE);
                         lastStringCol = cc;
-                    } else if (cc.getDataType() == DataType.NUMERIC) {
+                    } else if (cc.getDataType() == DataType.NUMERIC && wantMoreSeries) {
                         cc.setRoleInChart(ColumnRole.SERIES);
+                        if (chart.getType() == ChartType.PIE) {
+                            wantMoreSeries = false;
+                        }
                     } else {
                         cc.setRoleInChart(ColumnRole.NONE);
                     }

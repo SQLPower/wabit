@@ -235,6 +235,8 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             r.setIcon(CHART_ICON);
         } else if (chartType.equals(ChartType.BAR)) {
             r.setIcon(CHART_BAR_ICON);
+        } else if (chartType.equals(ChartType.PIE)) {
+            r.setIcon(CHART_PIE_ICON);
         } else if (chartType.equals(ChartType.CATEGORY_LINE)) {
             r.setIcon(CHART_LINE_ICON);
         } else if (chartType.equals(ChartType.SCATTER)) {
@@ -242,10 +244,8 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         } else if (chartType.equals(ChartType.LINE)) {
             r.setIcon(CHART_LINE_ICON);
         } else {
-            //TODO when pie charts are added change this
-            throw new UnsupportedOperationException("The pie chart icon needs to be added to the tree model");
-            // r.setIcon(CHART_ICON); 
-            // r.setIcon(CHART_PIE_ICON);
+            logger.warn("Using generic icon for unknown chart type " + chartType);
+            r.setIcon(CHART_ICON); 
         }
         r.setText(chart.getName());
     }

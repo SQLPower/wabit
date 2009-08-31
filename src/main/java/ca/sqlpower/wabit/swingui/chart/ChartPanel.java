@@ -71,6 +71,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ChartType;
+import ca.sqlpower.wabit.report.chart.DatasetType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -371,10 +372,10 @@ public class ChartPanel implements WabitPanel {
                 currentHeaderCellRenderer.cleanup();
             }
 
-            if (chart.getType() == ChartType.BAR || chart.getType() == ChartType.CATEGORY_LINE) {
+            if (chart.getType().getDatasetType() == DatasetType.CATEGORY) {
                 currentHeaderCellRenderer = new CategoryChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
-            } else if (chart.getType() == ChartType.LINE || chart.getType() == ChartType.SCATTER) {
+            } else if (chart.getType().getDatasetType() == DatasetType.XY) {
                 currentHeaderCellRenderer = new XYChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
             }
@@ -481,6 +482,7 @@ public class ChartPanel implements WabitPanel {
 
         toolBar.addSeparator();
         toolBar.add(makeChartTypeButton("Bar", ChartType.BAR, BAR_CHART_ICON));
+        toolBar.add(makeChartTypeButton("Pie", ChartType.PIE, PIE_CHART_ICON));
         toolBar.add(makeChartTypeButton("Category Line", ChartType.CATEGORY_LINE, LINE_CHART_ICON));
 
         toolBar.addSeparator();
