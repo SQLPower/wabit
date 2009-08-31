@@ -111,10 +111,12 @@ public class WorkspaceXMLDAO {
      *                to rename all the tags that had "graph" in their name to use "chart"
      *                instead. This change is not backward compatible; all charts in reports will
      *                be lost.
+     *  <dt>1.2.1 <dd>Moved the text in user-defined queries and the text in report labels
+     *                into their own text tag to preserve newline characters.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 2, 0); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 2, 1); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
     
     /**
@@ -799,9 +801,9 @@ public class WorkspaceXMLDAO {
 		}
 		
 		if (data.isScriptModified()) {
-			xml.print(out, "<query-string");
-			printAttribute("string", data.generateQuery());
-			xml.niprintln(out, "/>");		
+			xml.print(out, "<text>");
+			xml.niprint(out, SQLPowerUtils.escapeXML(data.generateQuery()));
+			xml.niprintln(out, "</text>");		
 		}
 
 		xml.indent--;

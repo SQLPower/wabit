@@ -130,6 +130,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 * This is the current query being loaded in from the file.
 	 */
 	private QueryCache cache;
+
+    /**
+     * If true the text contained by the current tag being loaded will be placed in the
+     * {@link #byteStream} output stream.
+     */
+	private boolean loadingText = false;
 	
 	/**
 	 * This maps all of the currently loaded Items with their UUIDs. This
@@ -606,6 +612,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
         	cache.getQuery().defineUserModifiedQuery(queryString);
+        } else if (name.equals("text") && parentIs("query")) {
+            byteStream = new ByteArrayOutputStream();
+            loadingText = true;
         } else if (name.equals("olap-query")) {
             loadOlapQuery(attributes);
         } else if (name.equals("olap-cube") || name.equals("olap4j-query") || name.equals("olap4j-axis")
@@ -825,6 +834,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
          	}
         } else if (name.equals("text") && parentIs("content-label")) {
          	byteStream = new ByteArrayOutputStream();
+         	loadingText = true;
         } else if (name.equals("image-renderer")) {
         	imageRenderer = new ImageRenderer();
         	contentBox.setContentRenderer(imageRenderer);
@@ -1290,6 +1300,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	    
         } else if (name.equals("text") && parentIs("content-label")) {
             ((Label) contentBox.getContentRenderer()).setText(byteStream.toString());
+            loadingText = false;
+        } else if (name.equals("text") && parentIs("query")) {
+            cache.getQuery().defineUserModifiedQuery(byteStream.toString());
+            loadingText = false;
         }
     	
     	xmlContext.pop();
@@ -1300,9 +1314,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		throws SAXException {
         if (isCancelled()) throw new CancellationException();
         
-    	if (imageRenderer != null || currentWabitImage != null
-    	        || (contentBox != null && contentBox.getContentRenderer() != null &&
-    	                contentBox.getContentRenderer() instanceof Label)) {
+    	if (imageRenderer != null || currentWabitImage != null || loadingText) {
     		for (int i = start; i < start+length; i++) {
     		    byteStream.write((byte)ch[i]);
     		}
