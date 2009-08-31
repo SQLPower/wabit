@@ -299,9 +299,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             @Override
             void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
                 super.apply(context, wabitPanel);
-                context.sourceListDialog.setContentPane(
-                        new JScrollPane(wabitPanel.getSourceComponent()));
-                context.sourceListDialog.setVisible(true);
+                
+                JComponent sourceComponent = wabitPanel.getSourceComponent();
+                if (sourceComponent != null) {
+                    context.sourceListDialog.setContentPane(
+                            new JScrollPane(sourceComponent));
+                    context.sourceListDialog.setTitle("Source List - " + wabitPanel.getTitle());
+                    context.sourceListDialog.setVisible(true);
+                } else {
+                    context.sourceListDialog.setVisible(false);
+                }
                 safelySetRightComponent(context.wabitPane, wabitPanel.getPanel());
             }
         },
