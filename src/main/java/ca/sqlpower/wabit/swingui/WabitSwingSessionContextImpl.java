@@ -1209,18 +1209,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         wabitPane.add(currentEditorPanel.getPanel(), JSplitPane.RIGHT);
         wabitPane.setDividerLocation(dividerLoc);
         frame.setTitle(currentEditorPanel.getTitle());
-        
-        // The execute query currently needs to be done after the panel is added
-        // to the split pane, because it requires a Graphics2D object to get a
-        // FontMetrics to use to calculate optimal column widths in the
-        // CellSetViewer. If done before, the Graphics2D object is null.
-        if (currentEditorPanel instanceof OlapQueryPanel) {
-            try {
-                ((OlapQuery) entryPanelModel).execute();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
         // TODO Select the proper panel in the wabit tree
         return true;
     }
