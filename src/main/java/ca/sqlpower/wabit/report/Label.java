@@ -230,5 +230,9 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     	variableContext = ((Layout)getParent().getParent().getParent()).getVarContext(); //XXX not good.
         return variableContext;
     }
+
+	public void refresh() {
+		// Labels don't need refreshing, so no-op
+	}
     
 }

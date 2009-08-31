@@ -667,4 +667,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }        
     }
 
+	public void refresh() {
+		//TODO: Implement cellset refresh
+	}
+
 }

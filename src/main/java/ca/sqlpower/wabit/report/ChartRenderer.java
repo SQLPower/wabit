@@ -157,4 +157,8 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
     public @Nonnull Chart getChart() {
         return chart;
     }
+
+	public void refresh() {
+		//TODO: Implement chart refresh
+	}
 }

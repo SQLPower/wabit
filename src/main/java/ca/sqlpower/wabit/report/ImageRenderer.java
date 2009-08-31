@@ -197,4 +197,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 		return preservingAspectRatio;
 	}
 
+	public void refresh() {
+		// no-op for now, but if the image file changes, perhaps there's a use for it? 
+	}
 }

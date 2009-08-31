@@ -873,4 +873,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
     public boolean isPrintingGrandTotals() {
         return printingGrandTotals;
     }
+
+	public void refresh() {
+		try {
+			// Force the query to get a new result set
+			query.executeStatement();
+		} catch (SQLException ex) {
+			executeException = ex;
+		}
+		executeQuery();
+	}
 }

@@ -339,8 +339,11 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		
 	private final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
 		public void actionPerformed(ActionEvent e) {
-			// TODO: Implement query data refresh
-			JOptionPane.showMessageDialog(LayoutPanel.this.panel, "When implemented, this will refresh the data from all queries");
+			for (Page page: layout.getChildren()) {
+				for (ContentBox content: page.getContentBoxes()){
+					content.getContentRenderer().refresh();
+				}
+			}
 		}
 	};
 	
