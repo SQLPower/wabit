@@ -122,7 +122,10 @@ public class Chart extends AbstractWabitObject {
             SPSUtils.runOnSwingThread(new Runnable() {
                 public void run() {
                     try {
-                        setUnfilteredResultSet(OlapUtils.toResultSet(e.getCellSet()));
+                        final CellSet cellSet = e.getCellSet();
+                        if (cellSet != null) {
+                            setUnfilteredResultSet(OlapUtils.toResultSet(cellSet));
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
