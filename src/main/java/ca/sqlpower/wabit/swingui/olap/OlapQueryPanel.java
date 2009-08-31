@@ -94,6 +94,7 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.Messages;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;
@@ -596,7 +597,12 @@ public class OlapQueryPanel implements WabitPanel {
         } else {
             cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
         }
-        OlapGuiUtil.asyncExecute(query, session);
+        boolean autoExecuteDisabled = session.getContext().getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+		if (!autoExecuteDisabled) {
+			OlapGuiUtil.asyncExecute(query, session);
+		} else {
+			cellSetViewer.showMessage(query, "Query auto-execute is disabled. Press 'Execute' button to execute the query.");
+		}
     }
     
     /**
