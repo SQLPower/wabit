@@ -416,7 +416,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 
     public SQLDatabase getDatabase(JDBCDataSource dataSource) {
         SQLDatabase db = databases.get(dataSource);
-        if (db == null) {
+        if (db == null && dataSource != null) {
             dataSource = new JDBCDataSource(dataSource);  // defensive copy for cache key
             db = new SQLDatabase(dataSource);
             databases.put(dataSource, db);
