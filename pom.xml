@@ -528,7 +528,7 @@
 											supporturl="http://www.sqlpower.ca/forum"
 											customprocname="false"
 											stayalive="false"
-											icon="src/main/resources/icons/wabit.ico">
+											icon="src/main/installer/installer-w.ico">
 										<singleInstance
 											mutexName="Wabit Installer"
 											windowTitle="Wabit Installer"
