@@ -169,7 +169,11 @@ public class SmartTreeTransferable implements Transferable {
 					wabitObjectsToExport.add((WabitObject) object);
 				}
 			}
-			File file = new File(wabitObjectsToExport.get(0).getName() + ".wabit");
+			
+			File wabitTmpDir = new File(System.getProperty("java.io.tmpdir"), "wabit");
+			wabitTmpDir.mkdir();
+			File file = new File(wabitTmpDir, wabitObjectsToExport.get(0).getName() + ".wabit");
+			file.deleteOnExit();
 			FileOutputStream byteOut = new FileOutputStream(file);
 			WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, context);
 			dao.save(wabitObjectsToExport);
