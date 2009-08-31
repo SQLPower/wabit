@@ -165,7 +165,7 @@
         platforms:</para>
 
         <informaltable frame="all" id="supported_db_table">
-          <tgroup cols="2">
+          <tgroup cols="3">
             <thead>
               <row>
                 <entry>
