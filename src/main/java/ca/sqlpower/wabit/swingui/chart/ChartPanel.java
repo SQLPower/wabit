@@ -67,6 +67,7 @@ import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
@@ -317,13 +318,18 @@ public class ChartPanel implements WabitPanel {
 
         chart.addPropertyChangeListener(chartListener);
 
-        try {
-            chart.refreshData();
-            updateGUIFromChart();
-        } catch (Exception ex) {
-            showError(ex);
+        boolean disableAutoExecute = session.getContext().getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+		
+        if (!disableAutoExecute) {
+        	try {
+        		chart.refreshData();
+        		updateGUIFromChart();
+        	} catch (Exception ex) {
+        		showError(ex);
+        	}
+        } else {
+        	showMessage("Query auto-execute is diabled.", "Press the 'Refresh' button to query chart data.");
         }
-
     }
 
     /**
@@ -348,6 +354,28 @@ public class ChartPanel implements WabitPanel {
         }
     }
 
+	/**
+	 * Displays an informational message in the chart preview area. For
+	 * displaying an error message from an Exception, use
+	 * {@link #showError(Exception)} instead.
+	 * 
+	 * @param header A short summary message that will be displayed in a header
+	 * @param message More detailed message text
+	 */
+    private void showMessage(String header, String message) {
+        if (message != null) {
+            logger.info("Showing message in chart editor:" + message);
+            chartError.setText(
+                    "<html>" +
+                    "<h2>" + header + "</h2>" +
+                    "<p>" + message + "</p></html>");
+            chartError.setVisible(true);
+        } else {
+            chartError.setText(null);
+            chartError.setVisible(false);
+        }
+    }
+    
     /**
      * When any aspect of the chart changes, this method should be called to set
      * the state of the editor. This will set up the correct result set as well
