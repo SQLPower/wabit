@@ -39,8 +39,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -118,12 +120,15 @@ public class WorkspaceXMLDAO {
 	//                                         UPDATE HISTORY!!!!!
     static final Version FILE_VERSION = new Version(1, 2, 1); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
-    
+
     /**
-     * Each edge is made up of a parent {@link WabitObject} and a child {@link WabitObject}.
-     * The edge goes in the direction from the parent to the child.
+     * Each edge is made up of a parent {@link WabitObject} and a child
+     * {@link WabitObject}. The edge goes in the direction from the parent to
+     * the child.
+     * <p>
+     * Package private for testing.
      */
-    private class ProjectGraphModelEdge {
+    static class ProjectGraphModelEdge {
         
         private final WabitObject parent;
         private final WabitObject child;
@@ -159,12 +164,15 @@ public class WorkspaceXMLDAO {
             return result;
         }
     }
-    
+
     /**
-     * This graph takes a {@link WabitObject} for its root and makes a graph model that represents
-     * all of the root's dependencies. The root is included in the dependencies.
+     * This graph takes a {@link WabitObject} for its root and makes a graph
+     * model that represents all of the root's dependencies. The root is
+     * included in the dependencies.
+     * <p>
+     * Package private for testing.
      */
-    private class ProjectGraphModel implements GraphModel<WabitObject, ProjectGraphModelEdge> {
+    static class ProjectGraphModel implements GraphModel<WabitObject, ProjectGraphModelEdge> {
         
         private final WabitObject root;
 
@@ -179,10 +187,10 @@ public class WorkspaceXMLDAO {
         public Collection<ProjectGraphModelEdge> getEdges() {
             Set<ProjectGraphModelEdge> allEdges = new HashSet<ProjectGraphModelEdge>();
             allEdges.addAll(getOutboundEdges(root));
-            Collection<ProjectGraphModelEdge> outboundEdges = getOutboundEdges(root);
+            Queue<ProjectGraphModelEdge> outboundEdges = 
+                new LinkedList<ProjectGraphModelEdge>(getOutboundEdges(root));
             while (!outboundEdges.isEmpty()) {
-                ProjectGraphModelEdge edge = outboundEdges.iterator().next();
-                outboundEdges.remove(edge);
+                ProjectGraphModelEdge edge = outboundEdges.remove();
                 if (allEdges.contains(edge)) continue;
                 allEdges.add(edge);
                 outboundEdges.addAll(getOutboundEdges(edge.getChild()));
@@ -200,10 +208,9 @@ public class WorkspaceXMLDAO {
         public Collection<WabitObject> getNodes() {
             Set<WabitObject> allNodes = new HashSet<WabitObject>();
             allNodes.add(root);
-            Collection<WabitObject> adjacentNodes = getAdjacentNodes(root);
+            Queue<WabitObject> adjacentNodes = new LinkedList<WabitObject>(getAdjacentNodes(root));
             while (!adjacentNodes.isEmpty()) {
-                WabitObject node = adjacentNodes.iterator().next();
-                adjacentNodes.remove(node);
+                WabitObject node = adjacentNodes.remove();
                 if (allNodes.contains(node)) continue;
                 allNodes.add(node);
                 adjacentNodes.addAll(getAdjacentNodes(node));
