@@ -107,7 +107,6 @@ import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.bouncycastle.asn1.pkcs.SafeBag;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.DataSourceCollection;
