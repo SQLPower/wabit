@@ -279,6 +279,12 @@ public class OlapQueryPanel implements WabitPanel {
      * An Action for executing the MDX text of a query.
      */
 	private Action executeMdxAction;
+
+	/**
+	 * This button will let the user choose a different cube for this query.
+	 * A pop-up will be displayed containing the available cubes.
+	 */
+    private JButton cubeChooserButton;
     
     public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
         this.parentComponent = parentComponent;
@@ -341,7 +347,7 @@ public class OlapQueryPanel implements WabitPanel {
             }
         });
         
-        final JButton cubeChooserButton = new JButton("Choose Cube...");
+        cubeChooserButton = new JButton("Choose Cube...");
         cubeChooserButton.addActionListener(new AbstractAction() {
         
             public void actionPerformed(ActionEvent e) {
@@ -383,8 +389,7 @@ public class OlapQueryPanel implements WabitPanel {
         dragTreePanel = new JPanel(new MigLayout(
                 "fill",
                 "[fill,grow 1]",
-                "[ | grow,fill ]"));
-        dragTreePanel.add(cubeChooserButton, "grow 0,left,wrap");
+                "[ grow,fill ]"));
         dragTreePanel.add(new JScrollPane(cubeTree), "spany, wrap");
         
         query.addOlapQueryListener(queryListener);
@@ -470,8 +475,15 @@ public class OlapQueryPanel implements WabitPanel {
         
         JPanel toolbarPanel = new JPanel(new BorderLayout());
         toolbarPanel.add(guiToolBar, BorderLayout.NORTH);
-        DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref"));
+        DefaultFormBuilder builder = new DefaultFormBuilder(
+                new FormLayout("pref, 5dlu, pref, 5dlu, pref, 5dlu, pref"));
         builder.append("Database Connections", databaseComboBox);
+        if (query.getCurrentCube() != null) {
+            builder.append(query.getCurrentCube().getName());
+        } else {
+            builder.append("");
+        }
+        builder.append(cubeChooserButton);
         toolbarPanel.add(builder.getPanel(), BorderLayout.CENTER);
         queryAndResultsPanel.add(toolbarPanel, BorderLayout.NORTH);
     }
