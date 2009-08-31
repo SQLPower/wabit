@@ -107,6 +107,7 @@ import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.pkcs.SafeBag;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -285,9 +286,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                             WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
                             context.frame.getWidth() * 3 / 4));
 
-                    context.wabitPane.setRightComponent(sp);
+                    safelySetRightComponent(context.wabitPane, sp);
                 } else {
-                    context.wabitPane.setRightComponent(panel);
+                    safelySetRightComponent(context.wabitPane, panel);
                 }
             }
         },
@@ -302,7 +303,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 context.sourceListDialog.setContentPane(
                         new JScrollPane(wabitPanel.getSourceComponent()));
                 context.sourceListDialog.setVisible(true);
-                context.wabitPane.setRightComponent(wabitPanel.getPanel());
+                safelySetRightComponent(context.wabitPane, wabitPanel.getPanel());
             }
         },
         
@@ -314,7 +315,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
                 super.apply(context, wabitPanel);
                 context.sourceListDialog.setVisible(false);
-                context.wabitPane.setRightComponent(wabitPanel.getPanel());
+                safelySetRightComponent(context.wabitPane, wabitPanel.getPanel());
             }
         };
         
@@ -362,6 +363,21 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
          */
         public String getLocalizedName() {
             return localizedName;
+        }
+
+        /**
+         * Changes the right-hand component of the given scroll panel to
+         * <code>c</code> without moving the divider location.
+         * 
+         * @param sp
+         *            The scrollpane whose right component to replace with c.
+         * @param c
+         *            The component to add to sp.
+         */
+        protected void safelySetRightComponent(JSplitPane sp, JComponent c) {
+            int oldDividerLoc = sp.getDividerLocation();
+            sp.setRightComponent(c);
+            sp.setDividerLocation(oldDividerLoc);
         }
     }
 
