@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
@@ -159,6 +161,14 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
     }
 
 	public void refresh() {
-		//TODO: Implement chart refresh
+		try {
+			chart.refreshData();
+		} catch (SQLException e) {
+			throw new RuntimeException("Error while running chart query", e);
+		} catch (QueryInitializationException e) {
+			throw new RuntimeException("Error while initializing OLAP query", e);
+		} catch (InterruptedException e) {
+			throw new RuntimeException("Chart renderer was interrupted while refreshing data.", e);
+		}
 	}
 }

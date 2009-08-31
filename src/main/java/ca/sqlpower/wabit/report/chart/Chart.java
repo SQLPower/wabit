@@ -292,6 +292,8 @@ public class Chart extends AbstractWabitObject {
         if (query == null) {
             setUnfilteredResultSet(null);
         } else if (query instanceof QueryCache) {
+        	// force query to clear result set to prevent getting a stale cached resultset
+        	((QueryCache) query).executeStatement(); 
             setUnfilteredResultSet(((QueryCache) query).fetchResultSet());
         } else if (query instanceof OlapQuery) {
             final OlapQuery olapQuery = (OlapQuery) query;

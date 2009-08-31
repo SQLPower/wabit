@@ -878,9 +878,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
 		try {
 			// Force the query to get a new result set
 			query.executeStatement();
+			executeQuery();
 		} catch (SQLException ex) {
 			executeException = ex;
 		}
-		executeQuery();
 	}
 }

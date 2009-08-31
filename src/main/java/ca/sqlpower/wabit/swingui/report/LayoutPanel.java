@@ -342,8 +342,10 @@ public class LayoutPanel implements WabitPanel, MouseState {
 			for (Page page: layout.getChildren()) {
 				for (ContentBox content: page.getContentBoxes()){
 					content.getContentRenderer().refresh();
+					//TODO: Catch exceptions and call a new ReportContentRenderer 'renderError' method
 				}
 			}
+			canvas.repaint();
 		}
 	};
 	
