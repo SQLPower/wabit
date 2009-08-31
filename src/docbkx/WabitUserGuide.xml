@@ -83,44 +83,69 @@
       </imageobject>
     </mediaobject>
 
-    <para>The welcome screen is shown to the user</para>
+    <section id="welcome_screen.opening_a_workspace">
+      <title>Opening a Workspacew</title>
 
-    <itemizedlist>
-      <listitem>
-        <para>when opening Wabit for the first time</para>
-      </listitem>
+      <para>The welcome screen is shown to the user</para>
 
-      <listitem>
-        <para>when Wabit is not opening up an existing workspace</para>
-      </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>when opening Wabit for the first time</para>
+        </listitem>
 
-      <listitem>
-        <para>when the current Wabit workspace has been closed</para>
-      </listitem>
-    </itemizedlist>
+        <listitem>
+          <para>when Wabit is not opening up an existing workspace</para>
+        </listitem>
 
-    <para>From this screen, the user can choose to create a new workspace,
-    load an existing one, or explore a demo workspace provided with Wabit. The
-    user can also access the user guide from this screen or simply quit the
-    application.</para>
+        <listitem>
+          <para>when the current Wabit workspace has been closed</para>
+        </listitem>
+      </itemizedlist>
 
-    <para>To create a new workspace, click the create new workspace button
-    which will take you to a list of your data sources. You can either choose
-    an existing data source to use as a database connection or create a new
-    one. For more information on creating a database connection see <xref
-    linkend="setup_database" />. After selecting your data source, click on
-    the start button to create queries and reports(layouts) based on that
-    database connection.</para>
+      <para>From this screen, the user can choose to create a new workspace,
+      load an existing one, or explore a demo workspace provided with Wabit.
+      The user can also access the user guide from this screen or simply quit
+      the application.</para>
 
-    <para>To open an existing workspace, click the open existing workspace
-    button which will then ask you to locate the workspace you want to
-    load.</para>
+      <para>To create a new workspace, click the create new workspace button
+      which will take you to a list of your data sources. You can either
+      choose an existing data source to use as a database connection or create
+      a new one. For more information on creating a database connection see
+      <xref linkend="setup_database" />. After selecting your data source,
+      click on the start button to create queries and reports based on that
+      database connection.</para>
 
-    <para>To open the demo workspace, click the open demo workspace button.
-    The demo workspace is for new users to get a feel of the application and
-    its potential. It includes a database connection which contains a few
-    tables for the user to play around with. A few queries and reports have
-    been designed to display the application's different features.</para>
+      <para>To open an existing workspace, click the open existing workspace
+      button which will then ask you to locate the workspace you want to
+      load.</para>
+
+      <para>To open the demo workspace, click the open demo workspace button.
+      The demo workspace is for new users to get a feel of the application and
+      its potential. It includes a database connection which contains a few
+      tables for the user to play around with. A few queries and reports have
+      been designed to display the application's different features.</para>
+
+      <para>It is also possible to have multiple workspaces open at the same
+      time. Once you have either created a new workspace, or opened an
+      existing one, you can then open the file menu and select 'New Workspace'
+      or 'Open Workspace'. You can toggle between the workspaces and the
+      search feature by selecting the desired tab at the top of the workspace
+      tree.</para>
+    </section>
+
+    <section id="welcome_screen.search">
+      <title>Search</title>
+
+      <para>The search feature, found in the workspace tree area (left side),
+      allows you to search for matches within all of your opened workspaces.
+      If you do not have at least one workspace open, it will not return any
+      results. For performance reasons, OLAP connections and unvisited
+      relational database objects (schemas, tables, columns) are not included
+      in searches. You can also form more complicated search criteria by
+      selecting the drop down arrow on the right side of the search text box.
+      You can then modify your query to search for substrings, exact matches,
+      or even regular expressions.</para>
+    </section>
   </chapter>
 
   <chapter id="workspace_page">
@@ -295,8 +320,9 @@
 
         <para>Before creating a connection, you must define the general
         settings for the database platform. Wabit already contains the general
-        settings for the most common databases. For more information, see
-        <xref linkend="setup_database.database_types" /> .</para>
+        settings for the most common databases. If you want to set up your own
+        custom database connection, see <xref
+        linkend="setup_database.database_types" /> .</para>
 
         <section id="setup_database.connections.create">
           <title>Creating a New Database Connection</title>
@@ -731,6 +757,13 @@
       <section id="setup_database_olap_xmla">
         <title>Connecting to an OLAP server</title>
 
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="src\docbkx\images\OlapConnectionExternal.png"
+                       format="PNG" width="5in" />
+          </imageobject>
+        </mediaobject>
+
         <para>To connect to an external OLAP server:</para>
 
         <orderedlist>
@@ -768,6 +801,13 @@
 
       <section id="setup_database_olap_mondrian">
         <title>Connecting to the integrated Mondrian server</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="src\docbkx\images\OlapConnectionInternal.png"
+                       format="PNG" width="5in" />
+          </imageobject>
+        </mediaobject>
 
         <para>Wabit comes with an integrated Mondrian Server. In order to use
         it you must first setup a connection to the relational data source
@@ -905,7 +945,7 @@
           <para><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/chart.png" format="PNG"
-                           width="0.40in" />
+                           width="0.20in" />
               </imageobject>
             </inlinemediaobject> - generate a chart based on the current
           query.</para>
@@ -1308,6 +1348,49 @@
       </orderedlist>
     </section>
 
+    <section id="navigate_olap_query">
+      <title>Navigating OLAP Queries</title>
+
+      <para>Right clicking on a dimension element will give you some or all of
+      the following options, depending on the level the element is in.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Remove Hierarchy: Removes the selected hierarchy.</para>
+        </listitem>
+
+        <listitem>
+          <para>Exclude Member: This Member will be excluded. You have to
+          select "Clear all Exclusions" to include the item again.</para>
+        </listitem>
+
+        <listitem>
+          <para>Exclude Children: All Children of this member will be
+          excluded. You have to select "Clear all Exclusions" to include the
+          children again.</para>
+        </listitem>
+
+        <listitem>
+          <para>Clear all Exclusions: Clears all Exclusions.</para>
+        </listitem>
+
+        <listitem>
+          <para>Drill Replace: The current element will be set as your top
+          element.</para>
+        </listitem>
+
+        <listitem>
+          <para>Drill Up to...: The element drilled up to will be set as your
+          top element.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>You can also add filters to your OLAP query by dragging in
+      dimensions, hierarchies, measures and members into the bottom filter
+      axis. By filtering your OLAP query, you will only see results which meet
+      the filter criteria.</para>
+    </section>
+
     <section id="query_olap_mdx">
       <title>The MDX query viewer</title>
 
@@ -1320,36 +1403,98 @@
   </chapter>
 
   <chapter id="charts">
-    <title>Charts</title>
+    <title>To create a new graphical representation of your data with Wabit,
+    right-click the Charts folder in the workspace tree and select 'New
+    Chart'. You will then be shown a screen where you can customize your
+    chart.</title>
 
     <mediaobject>
       <imageobject>
-        <imagedata fileref="src/docbkx/images/report_layout.png" format="PNG"
+        <imagedata fileref="src/docbkx/images/charts.png" format="PNG"
                    width="6in" />
       </imageobject>
     </mediaobject>
 
-    <para>This is a text area. Booya!</para>
+    <para>Click the following toolbar buttons to...</para>
 
-    <para>Currently Wabit supports the following graphs:</para>
+    <orderedlist>
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/refresh.png" format="PNG"
+                       width="0.20in" />
+          </imageobject>
+        </inlinemediaobject> - refresh the chart to be syncronized with the
+      query it was built upon.</listitem>
 
-    <itemizedlist>
       <listitem>
-        <para>Bar</para>
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/undo_button.png"
+                         width="0.20in" />
+            </imageobject>
+          </inlinemediaobject> - Wabit sets the chart properties to their
+        default values (Strings are set to category, and numerics are set to
+        series).</para>
+      </listitem>
+
+      <listitem><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/chart-bar.png" format="PNG"
+                       width="0.20in" />
+          </imageobject>
+        </inlinemediaobject> - bar graph.</listitem>
+
+      <listitem>
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/chart-pie.png"
+                         width="0.20in" />
+            </imageobject>
+          </inlinemediaobject> - pie chart.</para>
       </listitem>
 
       <listitem>
-        <para>Line</para>
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/chart-line.png"
+                         format="PNG" width="0.20in" />
+            </imageobject>
+          </inlinemediaobject> - category line graph.</para>
       </listitem>
 
       <listitem>
-        <para>Category Line</para>
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/chart-line.png"
+                         format="PNG" width="0.20in" />
+            </imageobject>
+          </inlinemediaobject> - line graph.</para>
       </listitem>
 
       <listitem>
-        <para>Scatter</para>
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/chart-scatter.png"
+                         format="PNG" width="0.20in" />
+            </imageobject>
+          </inlinemediaobject> - scatter plot graph.</para>
       </listitem>
-    </itemizedlist>
+    </orderedlist>
+
+    <para>After you select the type of graph you would like to create by
+    clicking on one of the five icons, you can then select which query you
+    would like this chart to be based upon by using the query drop down menu.
+    Once a new query and chart type have been selected, you will be able to
+    see the chart in the preview window at the bottom left corner. To change
+    the chart design, you can can set the role in the chart for each column of
+    the query. If the column is made up of alphabetic characters, you can
+    assign it to be a category for the chart. If the query column is numeric,
+    then it can be assigned to either a series or a category for the chart.
+    When you are working with either a line or scatter plot graph, you must
+    set the numeric series to be plotted, as well as the numeric series with
+    which it will be plotted against. Finally, the labels on the chart
+    (legend, x-axis label, y-axis label, and label rotation) can be configured
+    using the form in the bottom right corner of the screen.</para>
   </chapter>
 
   <chapter id="images">
@@ -1362,7 +1507,15 @@
       </imageobject>
     </mediaobject>
 
-    <para>This will be the text area!</para>
+    <para>Adding images to a workspace, which can then be incorporated into
+    reports, is easy with Wabit. Right-click the Images folder in the
+    workspace tree, and choose 'New Image'. You can then either drab an image
+    file into Wabit from a different source (eg. an image file from a file
+    explorer window) or you can click anywhere on the image layout screen
+    which will give you an option to browse for images. When you navigate to
+    the desired photo, simple click the open button and it will be added to
+    your workspace. You can rename or copy the image by right-clicking its
+    name in the workspace tree and selecting the appripriate command.</para>
   </chapter>
 
   <chapter id="templates">
@@ -1370,10 +1523,19 @@
 
     <mediaobject>
       <imageobject>
-        <imagedata fileref="src/docbkx/images/report_layout.png" format="PNG"
+        <imagedata fileref="src/docbkx/images/template.png" format="PNG"
                    width="6in" />
       </imageobject>
     </mediaobject>
+
+    <para>Templates are used for setting up commonly used layouts for your
+    reports. To start a new report template, right-click the templates folder
+    in the workspace tree, and select 'New Template'. You can then modify the
+    template by adding images, content boxes, labels, page properties, etc..
+    Once you complete the layout, you can then create a report based on this
+    template by right-clicking the Reports folder in the workspace tree and
+    select 'New Report'. You will then be prompted to choose a report layout
+    based on the templates you had previously created.</para>
   </chapter>
 
   <chapter id="report_layout">
@@ -1460,7 +1622,7 @@
       <listitem><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/export.png" format="PNG"
-                       width="0.40in" />
+                       width="0.20in" />
           </imageobject>
         </inlinemediaobject> - export the report the to a new Wabit
       workspace.</listitem>
