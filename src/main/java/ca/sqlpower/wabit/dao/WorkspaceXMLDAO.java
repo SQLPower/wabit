@@ -406,14 +406,18 @@ public class WorkspaceXMLDAO {
 						Label label = (Label) box.getContentRenderer();
 						xml.print(out, "<content-label");
 						printAttribute("name", label.getName());
-						printAttribute("text", label.getText());
 						printAttribute("horizontal-align", label.getHorizontalAlignment().name());
 						printAttribute("vertical-align", label.getVerticalAlignment().name());
 						if (label.getBackgroundColour() != null) {
 							printAttribute("bg-colour", label.getBackgroundColour().getRGB());
 						}
 						xml.niprintln(out, ">");
+						xml.indent++;
+						xml.print(out, "<text>");
+						xml.niprint(out, SQLPowerUtils.escapeXML(label.getText()));
+						xml.niprintln(out, "</text>");
 						saveFont(label.getFont());
+						xml.indent--;
 						xml.println(out, "</content-label>");
 					} else if (box.getContentRenderer() instanceof ResultSetRenderer) {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();

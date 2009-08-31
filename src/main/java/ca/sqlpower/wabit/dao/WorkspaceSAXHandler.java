@@ -823,6 +823,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <content-label>: " + aname + "=" + aval);
         		}
          	}
+        } else if (name.equals("text") && parentIs("content-label")) {
+         	byteStream = new ByteArrayOutputStream();
         } else if (name.equals("image-renderer")) {
         	imageRenderer = new ImageRenderer();
         	contentBox.setContentRenderer(imageRenderer);
@@ -1285,6 +1287,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	        || name.equals("olap4j-selection")
     	        || name.equals("olap4j-exclusion")) {
     	    olapQuery.appendElement("/".concat(name),new AttributesImpl());
+    	    
+        } else if (name.equals("text") && parentIs("content-label")) {
+            ((Label) contentBox.getContentRenderer()).setText(byteStream.toString());
         }
     	
     	xmlContext.pop();
@@ -1295,7 +1300,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		throws SAXException {
         if (isCancelled()) throw new CancellationException();
         
-    	if (imageRenderer != null || currentWabitImage != null) {
+    	if (imageRenderer != null || currentWabitImage != null
+    	        || (contentBox != null && contentBox.getContentRenderer() != null &&
+    	                contentBox.getContentRenderer() instanceof Label)) {
     		for (int i = start; i < start+length; i++) {
     		    byteStream.write((byte)ch[i]);
     		}
