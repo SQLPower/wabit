@@ -66,12 +66,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
-import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -98,8 +96,7 @@ import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
-import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
+import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
 import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
@@ -393,31 +390,16 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		zoomToFitAction.putValue(Action.SHORT_DESCRIPTION, "Zoom to fit");
 		
 		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
-        JToolBar toolbar = new JToolBar();
-        toolbar.setFloatable(false);
-       
-        JButton button = new JButton(refreshDataAction);
-        setupToolBarButtonLabel(button, "Refresh");
-        toolbar.add(button);
-        toolbar.addSeparator();
-        
-		button = new JButton(addContentBoxAction);
-        setupToolBarButtonLabel(button, "Content Box");
-        toolbar.add(button);
-        
-        button = new JButton(addLabelAction);
-        setupToolBarButtonLabel(button, "Label");
-        toolbar.add(button);
-        
-        button = new JButton(addHorizontalGuideAction);
-        setupToolBarButtonLabel(button, "H. Guide");
-        toolbar.add(button);
-        
-        button = new JButton(addVerticalGuideAction);
-        setupToolBarButtonLabel(button, "V. Guide");
-        toolbar.add(button);
-        
-        toolbar.addSeparator();
+		
+		WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
+		toolBarBuilder.add(refreshDataAction, "Refresh");
+		toolBarBuilder.addSeparator();
+		toolBarBuilder.add(addContentBoxAction, "Content Box");
+		toolBarBuilder.add(addLabelAction, "Label");
+		toolBarBuilder.add(addHorizontalGuideAction, "H. Guide");
+		toolBarBuilder.add(addVerticalGuideAction, "V. Guide");
+        toolBarBuilder.addSeparator();
+
         JPanel zoomPanel = new JPanel(new BorderLayout());
         zoomPanel.add(new JLabel(WabitIcons.ZOOM_OUT_ICON_16), BorderLayout.WEST);
         final int defaultSliderValue = 500;
@@ -444,56 +426,26 @@ public class LayoutPanel implements WabitPanel, MouseState {
         zoomPanel.add(zoomSlider, BorderLayout.CENTER);
 		zoomPanel.add(new JLabel(WabitIcons.ZOOM_IN_ICON_16), BorderLayout.EAST);
         zoomPanel.setMaximumSize(new Dimension((int)zoomSlider.getPreferredSize().getWidth(), 200));
-        toolbar.add(zoomPanel);
-        button = new JButton(zoomToFitAction);
-        setupToolBarButtonLabel(button, "Zoom to Fit");
-        toolbar.add(button);
-        toolbar.addSeparator();
+        toolBarBuilder.add(zoomPanel);
+        toolBarBuilder.add(zoomToFitAction, "Zoom To Fit");
+        toolBarBuilder.addSeparator();
         
         if (layout instanceof Template) {
-	        button = new JButton(new ReportFromTemplateAction(session, (Template) layout));
-	        button.setIcon(CreateLayoutFromQueryAction.ADD_LAYOUT_ICON);
-	        setupToolBarButtonLabel(button, "Create Report");
-	        toolbar.add(button);
-	        toolbar.addSeparator();
+        	toolBarBuilder.add(new ReportFromTemplateAction(session, (Template) layout), "Create Report");
+	        toolBarBuilder.addSeparator();
         }
         
-        button = new JButton(new PageFormatAction(layout.getPage()));
-        setupToolBarButtonLabel(button, "Page Settings");
-        toolbar.add(button);
-        
-		button = new JButton(new ExportWabitObjectAction<Layout>(session,
-				layout, WabitIcons.EXPORT_ICON_32,
-				"Export Report to Wabit file"));
-        setupToolBarButtonLabel(button, "Export");
-        toolbar.add(button);
+        toolBarBuilder.add(new PageFormatAction(layout.getPage()), "Page Settings");
+        toolBarBuilder.add(new ExportWabitObjectAction<Layout>(session,
+				layout, WabitIcons.EXPORT_ICON_32, "Export Report to Wabit file"), 
+				"Export");
 
         if (layout instanceof Report) {
-        	button = new JButton(new PrintPreviewAction(parentFrame, layout));
-        	setupToolBarButtonLabel(button, "Preview");
-        	toolbar.add(button);
-
-        	button = new JButton(new PrintAction(layout, toolbar, session));
-        	setupToolBarButtonLabel(button, "Print");
-        	toolbar.add(button);
-
-        	button = new JButton(new PDFAction(session, toolbar, layout));
-        	setupToolBarButtonLabel(button, "Print PDF");
-        	toolbar.add(button);
+        	toolBarBuilder.add(new PrintPreviewAction(parentFrame, layout), "Preview");
+        	toolBarBuilder.add(new PrintAction(layout, toolBarBuilder.getToolbar(), session), "Print");
+        	toolBarBuilder.add(new PDFAction(session, toolBarBuilder.getToolbar(), layout), "Print PDF");
         }
-        
-        JToolBar wabitBar = new JToolBar();
-        wabitBar.setFloatable(false);
-        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
-		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		wabitBar.add(forumButton);
-        
-        JToolBar mainbar = new JToolBar();
-        mainbar.setLayout(new BorderLayout());
-        mainbar.add(toolbar, BorderLayout.CENTER);
-        mainbar.add(wabitBar, BorderLayout.EAST);
-        mainbar.setFloatable(false);
-        
+
         PScrollPane canvasScrollPane = new PScrollPane(canvas);
 		canvasScrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
@@ -540,7 +492,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
                 
         panel = new JPanel(new BorderLayout());
         panel.add(mainSplitPane, BorderLayout.CENTER);
-        panel.add(mainbar, BorderLayout.NORTH);
+        panel.add(toolBarBuilder.getToolbar(), BorderLayout.NORTH);
         
         panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelBoxCreateAction.getClass());

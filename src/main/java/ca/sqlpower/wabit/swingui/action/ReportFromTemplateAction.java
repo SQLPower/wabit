@@ -35,7 +35,7 @@ public class ReportFromTemplateAction extends AbstractAction {
 	private final Template template;
 
     public ReportFromTemplateAction(WabitSwingSession session, Template template) {
-        super("New Report on " + template.getName());
+        super("New Report on " + template.getName(), CreateLayoutFromQueryAction.ADD_LAYOUT_ICON);
 		this.session = session;
 		this.template = template;
     }
