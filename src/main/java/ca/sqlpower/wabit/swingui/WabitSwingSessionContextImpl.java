@@ -350,6 +350,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             JRadioButtonMenuItem mi =
                 new JRadioButtonMenuItem(getLocalizedName() + " Source List");
             sourceListStyleGroup.add(mi);
+            if (context.sourceListStyle == this) {
+                // doing this before adding the action listener seems wise
+                mi.setSelected(true);
+            }
             mi.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     apply(context, context.currentEditorPanel);
