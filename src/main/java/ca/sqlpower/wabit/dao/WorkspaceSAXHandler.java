@@ -1296,11 +1296,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         if (isCancelled()) throw new CancellationException();
         
     	if (imageRenderer != null || currentWabitImage != null) {
-    		logger.debug("Starting characters at " + start + " and ending at " + length);
     		for (int i = start; i < start+length; i++) {
     		    byteStream.write((byte)ch[i]);
     		}
-    		logger.debug("Byte stream has " + byteStream.toString());
+    		if (logger.isDebugEnabled()) {
+    		    logger.debug("Starting characters at " + start + " and ending at " + length);
+    		    logger.debug("Byte stream has " + byteStream.toString());
+    		}
     	}
     }
 
