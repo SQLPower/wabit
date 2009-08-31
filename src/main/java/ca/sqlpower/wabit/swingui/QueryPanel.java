@@ -893,10 +893,12 @@ public class QueryPanel implements WabitPanel {
 
 		mainSplitPane.addHierarchyListener(new HierarchyListener() {
             public void hierarchyChanged(HierarchyEvent e) {
+            	boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
                 if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) > 0
                         && mainSplitPane.getParent() != null
-                        && !queryCache.isScriptModified()) {
-                    executeQueryInCache();
+                        && !queryCache.isScriptModified()
+                        && !disableAutoExecute) {
+                	executeQueryInCache();
                 }
             }
         });
