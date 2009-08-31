@@ -64,17 +64,18 @@ public class WabitApplicationPreferencesPanel implements DataEntryPanel {
 		prefs.getBoolean("", true);
 		panel = new JPanel(new MigLayout());
 		disableAutoExecute = new JCheckBox("Disable automatic execution of queries", 
-				prefs.getBoolean(WabitSessionContext.DISABLE_AUTO_EXECUTE, false));
+				prefs.getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false));
 		panel.add(disableAutoExecute, "span");
 	}
 	
 	public boolean applyChanges() {
-		prefs.putBoolean(WabitSessionContext.DISABLE_AUTO_EXECUTE, disableAutoExecute.isSelected());
+		boolean selected = disableAutoExecute.isSelected();
+		prefs.putBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, selected);
 		return true;
 	}
 
 	public void discardChanges() {
-		disableAutoExecute.setSelected(prefs.getBoolean(WabitSessionContext.DISABLE_AUTO_EXECUTE, false));
+		disableAutoExecute.setSelected(prefs.getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false));
 	}
 
 	public JComponent getPanel() {

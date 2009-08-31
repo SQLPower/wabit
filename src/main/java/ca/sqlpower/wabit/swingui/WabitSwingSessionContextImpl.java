@@ -578,7 +578,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
         });
         
-        prefsAction = new ShowWabitApplicationPreferencesAction(frame, prefs);
+        prefsAction = new ShowWabitApplicationPreferencesAction(frame, getPrefs());
         
         if (!headless) {
             buildUI();

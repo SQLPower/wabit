@@ -59,7 +59,7 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
     /**
      * A constant for storing the global preference for disabling automatic execution of queries
      */
-    public static final String DISABLE_AUTO_EXECUTE = "disableAutoExecute";
+    public static final String DISABLE_QUERY_AUTO_EXECUTE = "disableQueryAutoExecute";
     
 	DataSourceCollection<SPDataSource> getDataSources();
 	

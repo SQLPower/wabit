@@ -108,6 +108,7 @@ import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
@@ -345,8 +346,10 @@ public class QueryPanel implements WabitPanel {
         }
 
         private void executeQuery() {
-            if (!inCompoundEdit
-                    && queryCache.isAutomaticallyExecuting()) {
+            boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+			if (!inCompoundEdit
+                    && queryCache.isAutomaticallyExecuting() 
+                    && !disableAutoExecute) {
                 executeQueryInCache();
             }
         }
