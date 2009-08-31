@@ -50,6 +50,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Report;
@@ -58,9 +59,9 @@ import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
 import ca.sqlpower.wabit.swingui.action.CopyImageAction;
-import ca.sqlpower.wabit.swingui.action.CopyReportAction;
 import ca.sqlpower.wabit.swingui.action.CopyOlapDatasource;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
+import ca.sqlpower.wabit.swingui.action.CopyReportAction;
 import ca.sqlpower.wabit.swingui.action.CopyTemplateAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
@@ -68,8 +69,8 @@ import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
-import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
+import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
@@ -254,6 +255,29 @@ public class WorkspaceTreeListener extends MouseAdapter {
                     final WabitImage image = (WabitImage) item;
                     session.getWorkspace().removeImage(image);
                     removeLayoutPartsDependentOnImage(image);
+                } else {
+                    return;
+                }
+		    } else if (item instanceof Chart) {
+		        int response = JOptionPane.showOptionDialog(context.getFrame(), 
+		                "By deleting this chart, " +
+                        "you will be deleting layout parts dependent on it\n" +
+                        "Do you want to proceed with deleting?", "Delete Chart", 
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, 
+                        new Object[] {"Ok", "Cancel"}, null);
+                if(response == 0) {
+                    final Chart chart = (Chart) item;
+                    for (Report layout : session.getWorkspace().getReports()) {
+                        List<ContentBox> cbList = 
+                            new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
+                        for (ContentBox cb : cbList) {
+                            if (cb.getContentRenderer() instanceof ChartRenderer 
+                                    && ((ChartRenderer) cb.getContentRenderer()).getChart() == chart) {
+                                layout.getPage().removeContentBox(cb);
+                            }
+                        }
+                    }
+                    session.getWorkspace().removeChart(chart);
                 } else {
                     return;
                 }
