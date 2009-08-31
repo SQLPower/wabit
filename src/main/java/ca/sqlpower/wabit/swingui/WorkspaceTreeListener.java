@@ -70,6 +70,7 @@ import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
 import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
+import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
@@ -376,6 +377,12 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newTemplate);
 				}
 			} else {
+			    if (lastPathComponent instanceof WabitObject) {
+			        menu.add(new JMenuItem(new ShowEditorAction(session.getWorkspace(),
+			                (WabitObject) lastPathComponent)));
+			        menu.addSeparator();
+			    }
+			    
 				if (lastPathComponent instanceof WabitDataSource) {
 					SPDataSource ds = ((WabitDataSource) lastPathComponent).getSPDataSource();
 					if (ds instanceof JDBCDataSource) {
