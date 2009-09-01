@@ -1404,7 +1404,7 @@
 
   <chapter id="charts">
     <title>Charts</title>
-    
+
     <para>To create a new graphical representation of your data with Wabit,
     right-click the Charts folder in the workspace tree and select 'New
     Chart'. You will then be shown a screen where you can customize your
@@ -1412,7 +1412,7 @@
 
     <mediaobject>
       <imageobject>
-        <imagedata fileref="src/docbkx/images/charts.png" format="PNG"
+        <imagedata fileref="src/docbkx/images/chart_screen.png" format="PNG"
                    width="6in" />
       </imageobject>
     </mediaobject>
@@ -1487,16 +1487,19 @@
     clicking on one of the five icons, you can then select which query you
     would like this chart to be based upon by using the query drop down menu.
     Once a new query and chart type have been selected, you will be able to
-    see the chart in the preview window at the bottom left corner. To change
-    the chart design, you can can set the role in the chart for each column of
-    the query. If the column is made up of alphabetic characters, you can
-    assign it to be a category for the chart. If the query column is numeric,
-    then it can be assigned to either a series or a category for the chart.
-    When you are working with either a line or scatter plot graph, you must
-    set the numeric series to be plotted, as well as the numeric series with
-    which it will be plotted against. Finally, the labels on the chart
-    (legend, x-axis label, y-axis label, and label rotation) can be configured
-    using the form in the bottom right corner of the screen.</para>
+    see the chart in the preview window at the bottom left corner.</para>
+
+    <para>To change the chart design, you can can set the role in the chart
+    for each column of the query. If the column is made up of alphabetic
+    characters, you can assign it to be a category for the chart. If the query
+    column is numeric, then it can be assigned to either a series or a
+    category for the chart. When you are working with either a line or scatter
+    plot graph, you must set the numeric series to be plotted, as well as the
+    numeric series with which it will be plotted against.</para>
+
+    <para>Finally, the labels on the chart (legend, x-axis label, y-axis
+    label, and label rotation) can be configured using the form in the bottom
+    right corner of the screen.</para>
   </chapter>
 
   <chapter id="images">
