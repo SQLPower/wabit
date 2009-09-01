@@ -1403,10 +1403,12 @@
   </chapter>
 
   <chapter id="charts">
-    <title>To create a new graphical representation of your data with Wabit,
+    <title>Charts</title>
+    
+    <para>To create a new graphical representation of your data with Wabit,
     right-click the Charts folder in the workspace tree and select 'New
     Chart'. You will then be shown a screen where you can customize your
-    chart.</title>
+    chart.</para>
 
     <mediaobject>
       <imageobject>
