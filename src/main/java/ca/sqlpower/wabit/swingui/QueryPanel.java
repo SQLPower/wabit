@@ -820,7 +820,7 @@ public class QueryPanel implements WabitPanel {
     	queryPenToolBar.add(wabitBar, BorderLayout.EAST);
 		queryPenToolBar.setFloatable(false);
     	
-		JPanel toolbarPanel = new JPanel(new BorderLayout());
+		final JPanel toolbarPanel = new JPanel(new BorderLayout());
     	if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
     	    toolbarPanel.add(sqlToolBar, BorderLayout.NORTH);
     	} else {
@@ -855,8 +855,8 @@ public class QueryPanel implements WabitPanel {
 						queryPen.getGlobalWhereText().setVisible(true);
 						groupingCheckBox.setVisible(true);
 						whereText.setVisible(true);
-						topPanel.remove(sqlToolBar);
-						topPanel.add(queryPenToolBar, BorderLayout.NORTH);
+						toolbarPanel.remove(sqlToolBar);
+						toolbarPanel.add(queryPenToolBar, BorderLayout.NORTH);
 						queryPenToolBar.repaint();
 					}
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
@@ -864,8 +864,8 @@ public class QueryPanel implements WabitPanel {
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);
-					topPanel.remove(queryPenToolBar);
-					topPanel.add(sqlToolBar, BorderLayout.NORTH);
+					toolbarPanel.remove(queryPenToolBar);
+					toolbarPanel.add(sqlToolBar, BorderLayout.NORTH);
 					sqlToolBar.repaint();
 				}
 				executeQueryInCache();
