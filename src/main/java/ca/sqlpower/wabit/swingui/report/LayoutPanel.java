@@ -61,8 +61,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
@@ -343,7 +343,17 @@ public class LayoutPanel implements WabitPanel, MouseState {
 
     private PScrollPane canvasScrollPane;
 
-    private JList sourceList;
+    /**
+     * The component that acts as a drag source, holding everything that can be
+     * dragged into the current report.
+     */
+    private final JList sourceList;
+    
+    /**
+     * Scroll pane that contains {@link #sourceList}. This is the value
+     * returned by {@link #getSourceComponent()}.
+     */
+    private final JScrollPane sourceListScrollPane;
 	
     public LayoutPanel(final WabitSwingSession session, final Layout layout) {
         this.session = session;
@@ -452,6 +462,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		canvasScrollPane.getHorizontalScrollBar().setUnitIncrement(10);
         
         sourceList = new JList(new DraggableWabitObjectListModel(session.getWorkspace()));
+        sourceListScrollPane = new JScrollPane(sourceList);
         sourceList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         // TODO factor out the guts of WorkspaceTreeCellRenderer so this can be less ugly
@@ -576,7 +587,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 	}
 	
 	public JComponent getSourceComponent() {
-	    return sourceList;
+	    return sourceListScrollPane;
 	}
 	
 	/**

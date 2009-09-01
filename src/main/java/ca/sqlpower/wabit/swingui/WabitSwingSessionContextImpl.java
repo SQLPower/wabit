@@ -337,7 +337,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 if (sourceComponent != null) {
                     JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
                     sp.setLeftComponent(panel);
-                    sp.setRightComponent(new JScrollPane(sourceComponent));
+                    sp.setRightComponent(sourceComponent);
                     sp.setDividerLocation(context.prefs.getInt(
                             WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
                             context.frame.getWidth() * 3 / 4));
@@ -359,8 +359,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 
                 JComponent sourceComponent = wabitPanel.getSourceComponent();
                 if (sourceComponent != null) {
-                    context.sourceListDialog.setContentPane(
-                            new JScrollPane(sourceComponent));
+                    context.sourceListDialog.setContentPane(sourceComponent);
                     context.sourceListDialog.setTitle("Source List - " + wabitPanel.getTitle());
                     context.sourceListDialog.setVisible(true);
                 } else {

@@ -317,6 +317,12 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private JTree dragTree;
 	
+    /**
+     * Wraps {@link #dragTree}. This is the component returned by
+     * {@link #getSourceComponent()}.
+     */
+    private JScrollPane dragTreeScrollPane;
+
 	/**
 	 * NOTE: This is the combo box for database connections. Not sure why it's called
 	 * a report combo box.
@@ -464,8 +470,6 @@ public class QueryPanel implements WabitPanel {
 
 	private final ExportWabitObjectAction<QueryCache> exportQueryAction;
 
-    private JPanel dragTreePanel;
-	
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new QueryPanel@" + System.identityHashCode(this));
 		this.session = session;
@@ -897,9 +901,8 @@ public class QueryPanel implements WabitPanel {
     	        0));
     	southPanelBuilder.append(resultPane, 7);
     	
-    	dragTreePanel = new JPanel(new BorderLayout());
-    	dragTreePanel.add(new JScrollPane(dragTree),BorderLayout.CENTER);
-    	dragTreePanel.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
+    	dragTreeScrollPane = new JScrollPane(dragTree);
+    	dragTreeScrollPane.setMinimumSize(new Dimension(DBTreeCellRenderer.DB_ICON.getIconWidth() * 3, 0));
     	
     	mainSplitPane.setOneTouchExpandable(true);
     	mainSplitPane.setResizeWeight(1);
@@ -1168,7 +1171,7 @@ public class QueryPanel implements WabitPanel {
 	}
 	
 	public JComponent getSourceComponent() {
-	    return dragTreePanel;
+	    return dragTreeScrollPane;
 	}
 	
 	/**

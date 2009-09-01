@@ -41,6 +41,8 @@ public interface WabitPanel extends DataEntryPanel {
     /**
      * Returns the component (often a JTree or JList, but can be anything) that
      * contains all the workspace items that can be dragged into this editor.
+     * The component will <i>not</i> be wrapped in a scroll pane; you get to do
+     * this yourself if your component needs one.
      * 
      * @return The component as described above, or null if nothing can be
      *         dropped on this panel.

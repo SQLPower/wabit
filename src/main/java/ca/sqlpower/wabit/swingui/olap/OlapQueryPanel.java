@@ -78,8 +78,6 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.undo.UndoManager;
 
-import net.miginfocom.swing.MigLayout;
-
 import org.apache.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.olap4j.CellSet;
@@ -213,6 +211,12 @@ public class OlapQueryPanel implements WabitPanel {
      * it and dropped on an editor.
      */
     private final JTree cubeTree;
+
+    /**
+     * The scroll pane that contains {@link #cubeTree}. This is the component
+     * returned by {@link #getSourceComponent()}.
+     */
+    private final JScrollPane cubeTreeScrollPane;
     
     /**
      * This listener is attached to the underlying query being displayed by this
@@ -281,12 +285,6 @@ public class OlapQueryPanel implements WabitPanel {
         }
         
     };
-    
-    /**
-     * This panel contains the cube drag tree as well as a way to choose
-     * a connection and cube to drag from.
-     */
-    private final JPanel dragTreePanel;
     
     /**
      * This toolbar is placed at the top of the olap query editor.
@@ -414,11 +412,7 @@ public class OlapQueryPanel implements WabitPanel {
         
         session.getWorkspace().addDatabaseListChangeListener(dbListChangeListener);
         
-        dragTreePanel = new JPanel(new MigLayout(
-                "fill",
-                "[fill,grow 1]",
-                "[ grow,fill ]"));
-        dragTreePanel.add(new JScrollPane(cubeTree), "spany, wrap");
+        cubeTreeScrollPane = new JScrollPane(cubeTree);
         
         query.addOlapQueryListener(queryListener);
         
@@ -805,7 +799,7 @@ public class OlapQueryPanel implements WabitPanel {
 	}
     
     public JComponent getSourceComponent() {
-        return dragTreePanel;
+        return cubeTreeScrollPane;
     }
     
     /**
