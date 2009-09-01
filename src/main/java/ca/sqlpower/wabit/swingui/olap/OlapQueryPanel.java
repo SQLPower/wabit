@@ -38,6 +38,8 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +54,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -87,9 +90,6 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.query.Query;
 
-import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.layout.FormLayout;
-
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -109,6 +109,9 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
 
 public class OlapQueryPanel implements WabitPanel {
     
@@ -224,6 +227,21 @@ public class OlapQueryPanel implements WabitPanel {
             });
         }
     };
+
+    /**
+     * This updates the displayed name of the query when it changes.
+     */
+    private final PropertyChangeListener queryPropertyListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("currentCube")) {
+                if (query.getCurrentCube() != null) {
+                    cubeNameLabel.setText(query.getCurrentCube().getName());
+                } else {
+                    cubeNameLabel.setText("");
+                }
+            }
+        }
+    };
     
     /**
      * This is the {@link JButton} which will reset the Olap4j {@link Query} in the table below.
@@ -285,6 +303,12 @@ public class OlapQueryPanel implements WabitPanel {
 	 * A pop-up will be displayed containing the available cubes.
 	 */
     private JButton cubeChooserButton;
+
+    /**
+     * This JLabel is used to display the name of the currently selected
+     * cube in the query.
+     */
+    private final JLabel cubeNameLabel = new JLabel();
     
     public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
         this.parentComponent = parentComponent;
@@ -292,6 +316,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.session = session;
         final JFrame parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
         cellSetViewer = new CellSetViewer(session, query);
+        query.addPropertyChangeListener(queryPropertyListener);
         
         this.undoManager  = new UndoManager();
         cubeTree = new JTree();
@@ -334,9 +359,12 @@ public class OlapQueryPanel implements WabitPanel {
         databaseComboBox.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 Object item = e.getItem();
-                if (item instanceof Olap4jDataSource) {
-                    query.setOlapDataSource((Olap4jDataSource) item);
+                if (item instanceof Olap4jDataSource && e.getStateChange() == ItemEvent.SELECTED) {
                     try {
+                        if (query.getCurrentCube() != null) {
+                            query.reset();
+                        }
+                        query.setOlapDataSource((Olap4jDataSource) item);
                         setCurrentCube(null);
                     } catch (SQLException ex) {
                         throw new RuntimeException(
@@ -478,10 +506,9 @@ public class OlapQueryPanel implements WabitPanel {
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout("pref, 5dlu, pref, 5dlu, pref, 5dlu, pref"));
         builder.append("Database Connections", databaseComboBox);
+        builder.append(cubeNameLabel);
         if (query.getCurrentCube() != null) {
-            builder.append(query.getCurrentCube().getName());
-        } else {
-            builder.append("");
+            cubeNameLabel.setText(query.getCurrentCube().getName());
         }
         builder.append(cubeChooserButton);
         toolbarPanel.add(builder.getPanel(), BorderLayout.CENTER);
@@ -569,6 +596,7 @@ public class OlapQueryPanel implements WabitPanel {
      * the panel is being disposed.
      */
     private void cleanup() {
+        query.removePropertyChangeListener(queryPropertyListener);
         query.removeOlapQueryListener(queryListener);
         session.getWorkspace().removeDatabaseListChangeListener(dbListChangeListener);
     }
