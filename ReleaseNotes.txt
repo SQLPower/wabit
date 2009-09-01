@@ -1,5 +1,42 @@
 Wabit Release Notes
 
+Noteworthy Changes in 0.9.8
+
+  Relational Queries
+    * Added a setting to stop queires from executing automatically. Now queries
+      will be executed only by user choice if this setting is enabled.
+
+  Olap Queries
+    * Added a filter to the Olap queries.
+    
+  Images
+    * Images are now outside of reports. The same image can be added to multiple
+      reports.
+      
+  Charts
+    * Charts are now created outside of reports. The same chart can be added
+      to multiple reports.
+    * Changed the UI for charts to improve the layout of information.
+    * Added pie charts.
+    
+  Templates
+    * There are now templates in Wabit. Users can define their own layout of 
+      components and reuse the templates for multiple reports.
+      
+  Reports
+    * The content in boxes in the report can now be replaced by dropping one object
+      onto the content box that is already filled.
+    * Added a print preview to reports. The entire report can be viewed this way before
+      printing or creating a PDF.
+    * Fixed the page type of the report layout.
+  
+  Overall
+    * There are now multiple workspaces in the same Wabit window. The workspaces can be
+      navigated by tabs.
+    * Added a workspace search that will search across all workspaces open in Wabit.
+    * The drag tree can now be undocked from the right of the editor. It can also be hidden.
+      With this the workspace tree can be dragged from.
+
 Noteworthy Changes in 0.9.7
   Charts
     * Support for creating Line, Bar, and Scatter charts based off of 
