@@ -13,6 +13,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JComboBox;
@@ -333,6 +334,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
     private List<String> findNumericAndDateCols() throws SQLException {
         // XXX it would be better to store data type in column identifiers
         ResultSet rs = chartPanel.getChart().getUnfilteredResultSet();
+        if (rs == null) return Collections.emptyList();
         ResultSetMetaData rsmd = rs.getMetaData();
         List<String> cols = new ArrayList<String>();
         for (int i = 1; i <= rsmd.getColumnCount(); i++) {
