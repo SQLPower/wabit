@@ -991,7 +991,12 @@ public class QueryPanel implements WabitPanel {
 		toolbarBuilder.add(exportAction, "Export");
 	    toolbarBuilder.addSeparator();
 
-	    Action resetAction = queryPen.getResetAction();
+	    final Action resetAction = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                queryCache.getQuery().reset();
+                queryCache.cancel();
+            }
+        };
 	    toolbarBuilder.add(resetAction, "Reset", RESET_ICON);
 	    Action createJoinAction = queryPen.getJoinAction();
 		toolbarBuilder.add(createJoinAction, "Join", CREATE_JOIN_ICON);
