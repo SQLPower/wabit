@@ -211,7 +211,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * The icon for the "Open Demonstration Workspace" button.
      */
     private static final Icon OPEN_DEMO_ICON = new ImageIcon(
-            WabitWelcomeScreen.class.getClassLoader().getResource("icons/workspace-demo-16.png"));
+            WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/workspace-demo-16.png"));
     
     public static final Icon OPEN_WABIT_ICON = new ImageIcon(
             WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/workspace-16.png"));
@@ -1285,7 +1285,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JMenuItem openDemoMenuItem = new JMenuItem(new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {
         		try {
-        			final URI resource = WabitWelcomeScreen.class.getResource(
+        			final URI resource = WabitSwingSessionContextImpl.class.getResource(
         					EXAMPLE_WORKSPACE_URL).toURI();
         			OpenWorkspaceAction.loadFiles(WabitSwingSessionContextImpl.this, resource);
         		} catch (URISyntaxException ex) {

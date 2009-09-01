@@ -41,11 +41,13 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
+import ca.sqlpower.wabit.report.chart.Chart;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -56,7 +58,9 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         if (valueType.equals(WabitObject.class)) {
             newValue = new StubWabitObject();
         } else if (valueType.equals(WabitDataSource.class)) {
-            newValue = new WabitDataSource(new JDBCDataSource(new PlDotIni()));
+            final JDBCDataSource ds = new JDBCDataSource(new PlDotIni());
+            ds.setName("test");
+            newValue = new WabitDataSource(ds);
         } else if (valueType.equals(QueryCache.class)) {
             newValue = new QueryCache(new SQLDatabaseMapping() {
                 public SQLDatabase getDatabase(JDBCDataSource ds) {
@@ -139,6 +143,10 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             }
         } else if (valueType.equals(WabitSession.class)) {
             newValue = new StubWabitSession(new StubWabitSessionContext());
+        } else if (valueType.equals(Chart.class)) {
+            newValue = new Chart();
+        } else if (valueType.equals(Template.class)) {
+            newValue = new Template("Some name");
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

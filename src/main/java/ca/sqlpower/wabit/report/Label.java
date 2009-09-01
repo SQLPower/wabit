@@ -226,6 +226,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         return Collections.emptyList();
     }
 
+    //XXX Should the getter be setting the property it is getting?
     public VariableContext getVariableContext() {
     	variableContext = ((Layout)getParent().getParent().getParent()).getVarContext(); //XXX not good.
         return variableContext;

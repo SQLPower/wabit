@@ -61,7 +61,7 @@ public class DemoDatabaseTest extends TestCase {
             }
         };
         
-        InputStream in = WabitWelcomeScreen.class.getResourceAsStream("/ca/sqlpower/wabit/example_workspace.wabit");
+        InputStream in = DemoDatabaseTest.class.getResourceAsStream("/ca/sqlpower/wabit/example_workspace.wabit");
         OpenWorkspaceXMLDAO workspaceDAO = new OpenWorkspaceXMLDAO(context, in, 0);
         workspaceDAO.openWorkspaces();
     }

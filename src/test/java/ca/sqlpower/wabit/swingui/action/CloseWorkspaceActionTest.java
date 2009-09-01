@@ -29,7 +29,7 @@ public class CloseWorkspaceActionTest extends TestCase {
 
     public void testClose() throws Exception {
         WabitSwingSessionContext context = new WabitSwingSessionContextImpl(
-                new WabitSessionContextImpl(false, false), true);
+                new WabitSessionContextImpl(false, false), false);
         WabitSession session = context.createSession();
         context.registerChildSession(session);
         context.setActiveSession(session);

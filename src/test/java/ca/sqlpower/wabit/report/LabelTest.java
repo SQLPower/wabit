@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Collections;
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.TestingVariableContext;
 import ca.sqlpower.wabit.WabitObject;
@@ -40,5 +43,9 @@ public class LabelTest extends AbstractWabitObjectTest {
         return label;
     }
 
+    @Override
+    public Set<String> getPropertiesToIgnoreForEvents() {
+        return Collections.singleton("variableContext");
+    }
     
 }

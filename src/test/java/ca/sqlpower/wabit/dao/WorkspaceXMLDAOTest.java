@@ -274,7 +274,6 @@ public class WorkspaceXMLDAOTest extends TestCase {
 		Container constantsContainer = query.getQuery().getConstantsContainer();
 		StringItem constantItem = new StringItem("Constant");
 		constantsContainer.addItem(constantItem);
-		query.getQuery().addItem(constantItem);
 		setAllSetters(constantItem, getPropertiesToIgnore());
 
 		//TODO: implement the rest of this test case for the commented out sections of 

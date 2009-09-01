@@ -30,7 +30,9 @@ public class JDBCDataSourceTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        ds = new WabitDataSource(new JDBCDataSource(new PlDotIni()));
+        final JDBCDataSource spds = new JDBCDataSource(new PlDotIni());
+        spds.setName("test");
+        ds = new WabitDataSource(spds);
     }
     
     @Override
