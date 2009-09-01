@@ -720,7 +720,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		StyleConstants.setAlignment(attribs , StyleConstants.ALIGN_CENTER);  
 		explainText.setParagraphAttributes(attribs,true);
 		searchPanel.add(searchTextArea.getPanel(), BorderLayout.NORTH);
-		explainText.setText("For performance reasons, OLAP" +
+		explainText.setText("For performance reasons, OLAP " +
 				"connections and unvisited relational database objects (schemas," +
 				"tables, columns) will not be included in searches.");
 		explainText.setEditable(false);
