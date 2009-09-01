@@ -81,19 +81,6 @@ public class QueryController {
 		}
 	};
 	
-	private final PropertyChangeListener tableItemListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals(Container.CONTAINTER_ITEM_ADDED)) {
-				Item item = (Item)evt.getNewValue();
-				query.addItem(item);
-				logger.debug("Item " + item + " added to the query cache");
-			} else if (evt.getPropertyName().equals(Container.CONTAINER_ITEM_REMOVED)) {
-				Item item = (Item)evt.getOldValue();
-				query.removeItem(item);
-			}
-		}
-	};
-
 	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
@@ -287,7 +274,6 @@ public class QueryController {
 		this.zoomSlider = zoomSlider;
 		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(whereListener);
-		pen.addQueryListener(tableItemListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
 		queryText.getDocument().addDocumentListener(queryTextListener);
 		zoomSlider.addChangeListener(zoomListener );
@@ -300,7 +286,6 @@ public class QueryController {
 	public void disconnect() {
 		pen.removeQueryListener(fromChangeListener);
 		pen.removeQueryListener(whereListener);
-		pen.removeQueryListener(tableItemListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);
 		queryText.getDocument().removeDocumentListener(queryTextListener);
 		zoomSlider.removeChangeListener(zoomListener);

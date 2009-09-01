@@ -70,7 +70,6 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListModel;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.JTableHeader;
@@ -122,6 +121,80 @@ import com.jgoodies.forms.layout.FormLayout;
 
 public class QueryPanel implements WabitPanel {
 	
+    /**
+     * The icon added to actions that change the editor to the next
+     * query that was executed in the list of queries executed. This
+     * of course only works if there is a next query.
+     */
+    private static final ImageIcon NEXT_QUERY_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/next.png"));
+
+    /**
+     * This icon is added to actions that export the query.
+     */
+    private static final ImageIcon EXPORT_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/export.png"));
+    
+    /**
+     * The icon added to actions that resets the query pen.
+     */
+    private static final ImageIcon RESET_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/cancel.png"));
+    
+    /**
+     * The icon added to actions that allow users to create a join between two
+     * columns in two different tables.
+     */
+    private static final ImageIcon CREATE_JOIN_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/join.png"));
+    
+    /**
+     * Icon added to actions that create a chart based on the current query.
+     */
+    private static final ImageIcon CREATE_CHART_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/chart.png"));
+    
+    /**
+     * Icon added to actions that execute the current query.
+     */
+    private static final ImageIcon EXECUTE_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/run.png"));
+    
+    /**
+     * Icon on actions that reverses the last change to the editor.
+     */
+    private static final ImageIcon UNDO_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/undo.png"));
+    
+    /**
+     * Icon on actions that repeats the last action that was undone.
+     */
+    private static final ImageIcon REDO_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/redo.png"));
+    
+    /**
+     * Icon for the action to stop the query from executing.
+     */
+    private static final ImageIcon STOP_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/stop.png"));
+    
+    /**
+     * Icon added to actions that will change the editor to display the 
+     * query executed just before the current query.
+     */
+    private static final ImageIcon PREV_QUERY_ICON = 
+        new ImageIcon(QueryPanel.class.getClassLoader().getResource(
+                "icons/32x32/previous.png"));
+    
 	private static final Logger logger = Logger.getLogger(QueryPanel.class);
 	
 	private static final String SQL_TEXT_TAB_HEADING = "SQL";
@@ -470,6 +543,27 @@ public class QueryPanel implements WabitPanel {
 
 	private final ExportWabitObjectAction<QueryCache> exportQueryAction;
 
+    private JPanel dragTreePanel;
+
+    /**
+     * This action does the exporting of the query to a file or straight text.
+     */
+    private Action exportAction = new AbstractAction("Export", EXPORT_ICON) {
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() instanceof JButton) {
+                JButton source = (JButton) e.getSource();
+                JPopupMenu popupMenu = new JPopupMenu();
+                JMenuItem menuItem = new JMenuItem(exportQueryAction);
+                menuItem.setText("Export Query to Workspace file");
+                popupMenu.add(menuItem);
+                menuItem = new JMenuItem(new ExportSQLScriptAction(session, queryCache));
+                menuItem.setText("Export Query to SQL Script");
+                popupMenu.add(menuItem);
+                popupMenu.show(source, 0, source.getHeight());
+            }
+        }
+    };
+    
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new QueryPanel@" + System.identityHashCode(this));
 		this.session = session;
@@ -487,7 +581,9 @@ public class QueryPanel implements WabitPanel {
                 queryCache.getQuery(),
                 WabitSwingSessionContextImpl.FORUM_ACTION);
 		queryPen.setExecuteIcon((ImageIcon) WabitIcons.RUN_ICON_32);
-		queryPen.setQueryPenToolBar(createQueryPenToolBar(queryPen));
+		WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
+		createGUIQueryPenToolBar(toolBarBuilder);
+		queryPen.setQueryPenToolBar(toolBarBuilder.getToolbar());
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
 		
 		exportQueryAction = new ExportWabitObjectAction<QueryCache>(session,
@@ -705,91 +801,10 @@ public class QueryPanel implements WabitPanel {
 		JTabbedPane resultPane = queryUIComponents.getResultTabPane();
 
 		queryToolPanel = new JPanel(new BorderLayout());
-		JToolBar queryToolBar = new JToolBar();
-		queryToolBar.setFloatable(false);
-		JButton prevQueryButton = queryUIComponents.getPrevQueryButton();
-		prevQueryButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/previous.png")));
-		prevQueryButton.setToolTipText("Previous Executed Query");
-		setupToolBarButtonLabel(prevQueryButton, "Prev. Query");
-		queryToolBar.add(prevQueryButton);
-		JButton nextQueryButton = queryUIComponents.getNextQueryButton();
-		nextQueryButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/next.png")));
-		nextQueryButton.setToolTipText("Next Executed Query");
-		setupToolBarButtonLabel(nextQueryButton, "Next Query");
-		queryToolBar.add(nextQueryButton);
-		queryToolBar.addSeparator();
-		JButton executeButton = queryUIComponents.getExecuteButton();
-		ImageIcon executeIcon = new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/run.png"));
-		executeButton.setIcon(executeIcon);
-		executeButton.setToolTipText(executeButton.getText());
-		setupToolBarButtonLabel(executeButton, "Execute");
-		queryToolBar.add(executeButton);
-		queryUIComponents.getStopButton().setAction(new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-				queryCache.cancel();
-			}
-		});
-		queryUIComponents.getStopButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/stop.png")));
-		queryUIComponents.getStopButton().setToolTipText(queryUIComponents.getStopButton().getText());
-		setupToolBarButtonLabel(queryUIComponents.getStopButton(), "Stop");
-		queryToolBar.add(queryUIComponents.getStopButton());
-		queryToolBar.addSeparator();
-		queryUIComponents.getClearButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/cancel.png")));
-		queryUIComponents.getClearButton().setToolTipText(queryUIComponents.getClearButton().getText());
-		setupToolBarButtonLabel(queryUIComponents.getClearButton(), "Clear");
-		queryToolBar.add(queryUIComponents.getClearButton());
-		queryUIComponents.getUndoButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/undo.png")));
-		queryUIComponents.getUndoButton().setToolTipText(queryUIComponents.getUndoButton().getText());
-		setupToolBarButtonLabel(queryUIComponents.getUndoButton(), "Undo");
-		queryToolBar.add(queryUIComponents.getUndoButton());
-		queryUIComponents.getRedoButton().setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/redo.png")));
-		queryUIComponents.getRedoButton().setToolTipText(queryUIComponents.getRedoButton().getText());
-		setupToolBarButtonLabel(queryUIComponents.getRedoButton(), "Redo");
-		queryToolBar.add(queryUIComponents.getRedoButton());
-		queryToolBar.addSeparator();
-		JButton exportButton = new JButton(new AbstractAction() {
-			public void actionPerformed(ActionEvent e) {
-	    		if (e.getSource() instanceof JButton) {
-	    			JButton source = (JButton) e.getSource();
-	    			JPopupMenu popupMenu = new JPopupMenu();
-	    			JMenuItem menuItem = new JMenuItem(exportQueryAction);
-	    			menuItem.setText("Export Query to Workspace file");
-	    			popupMenu.add(menuItem);
-	    			menuItem = new JMenuItem(new ExportSQLScriptAction(session, queryCache));
-	    			menuItem.setText("Export Query to SQL Script");
-	    			popupMenu.add(menuItem);
-	    			popupMenu.show(source, 0, source.getHeight());
-	    		}
-			}
-		});
-		exportButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/export.png")));
-		exportButton.setToolTipText("Export");
-		setupToolBarButtonLabel(exportButton, "Export");
-		queryToolBar.add(exportButton);
-		queryToolBar.addSeparator();
-		JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
-		setupToolBarButtonLabel(createLayoutButton, "Create Report");
-		queryToolBar.add(createLayoutButton);
-		JButton createChartButton = new JButton(new NewChartAction(session, queryCache));
-		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
-		setupToolBarButtonLabel(createChartButton, "Create Chart");
-		queryToolBar.add(createChartButton);
-		JButton propertiesButton = new JButton(new ShowQueryPropertiesAction(queryCache, context.getFrame()));
-		setupToolBarButtonLabel(propertiesButton, "Properties");
-		queryToolBar.add(propertiesButton);
+		WabitToolBarBuilder sqlToolBarBuilder = new WabitToolBarBuilder();
+		updateToolBarToTextPen(sqlToolBarBuilder);
+		final JToolBar sqlToolBar = sqlToolBarBuilder.getToolbar();
 		
-		JToolBar wabitBar = new JToolBar();
-        wabitBar.setFloatable(false);
-        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
-		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		wabitBar.add(forumButton);
-        
-        final JToolBar sqlToolBar = new JToolBar();
-        sqlToolBar.setLayout(new BorderLayout());
-        sqlToolBar.add(queryToolBar, BorderLayout.CENTER);
-        sqlToolBar.add(wabitBar, BorderLayout.EAST);
-		sqlToolBar.setFloatable(false);
-        
 		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
@@ -812,17 +827,7 @@ public class QueryPanel implements WabitPanel {
     	final JPanel topPanel = new JPanel(new BorderLayout());
     	topPanel.add(queryPenAndTextTabPane, BorderLayout.CENTER);
     	
-    	wabitBar = new JToolBar();
-        wabitBar.setFloatable(false);
-        forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
-		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		wabitBar.add(forumButton);
-    	
-    	final JToolBar queryPenToolBar = new JToolBar();
-    	queryPenToolBar.setLayout(new BorderLayout());
-    	queryPenToolBar.add(queryPen.getQueryPenToolBar(), BorderLayout.CENTER);
-    	queryPenToolBar.add(wabitBar, BorderLayout.EAST);
-		queryPenToolBar.setFloatable(false);
+    	final JToolBar queryPenToolBar = queryPen.getQueryPenToolBar();
     	
 		final JPanel toolbarPanel = new JPanel(new BorderLayout());
     	if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
@@ -924,62 +929,86 @@ public class QueryPanel implements WabitPanel {
             }
         });
 	}
-	
-	private JToolBar createQueryPenToolBar(QueryPen pen) {
-	    JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
-	    toolBar.setFloatable(false);
-	    
-	    JButton playPenExecuteButton = pen.getPlayPenExecuteButton();
-	    setupToolBarButtonLabel(playPenExecuteButton, "Execute");
-		toolBar.add(playPenExecuteButton);
-	    toolBar.addSeparator();
 
-	    JButton exportButton = new JButton(new AbstractAction() {
+	/**
+	 * This will modify the given tool bar to contain the buttons necessary to
+	 * use the text editor of the query panel.
+	 */
+    private void updateToolBarToTextPen(WabitToolBarBuilder toolBarBuilder) {
+		JButton prevQueryButton = queryUIComponents.getPrevQueryButton();
+		toolBarBuilder.add(prevQueryButton, "Prev. Query", PREV_QUERY_ICON);
+		JButton nextQueryButton = queryUIComponents.getNextQueryButton();
+		toolBarBuilder.add(nextQueryButton, "Next Query", NEXT_QUERY_ICON);
+		toolBarBuilder.addSeparator();
+		JButton executeButton = queryUIComponents.getExecuteButton();
+		toolBarBuilder.add(executeButton, "Execute", EXECUTE_ICON);
+
+		queryUIComponents.getStopButton().setAction(new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
-	    		if (e.getSource() instanceof JButton) {
-	    			JButton source = (JButton) e.getSource();
-	    			JPopupMenu popupMenu = new JPopupMenu();
-					JMenuItem menuItem = new JMenuItem(exportQueryAction);
-	    			menuItem.setText("Export Query to Workspace file");
-	    			popupMenu.add(menuItem);
-	    			menuItem = new JMenuItem(new ExportSQLScriptAction(session, queryCache));
-	    			menuItem.setText("Export Query to SQL Script");
-	    			popupMenu.add(menuItem);
-	    			popupMenu.show(source, 0, source.getHeight());
-	    		}
+				queryCache.cancel();
 			}
 		});
-		exportButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/export.png")));
-		exportButton.setToolTipText("Export");
-		setupToolBarButtonLabel(exportButton, "Export");
-		toolBar.add(exportButton);
-	    toolBar.addSeparator();
+		toolBarBuilder.add(queryUIComponents.getStopButton(), "Stop", STOP_ICON);
+		
+		toolBarBuilder.addSeparator();
+		
+		JButton clearButton = queryUIComponents.getClearButton();
+		toolBarBuilder.add(clearButton, "Clear", RESET_ICON);
+		JButton undoButton = queryUIComponents.getUndoButton();
+		toolBarBuilder.add(undoButton, "Undo", UNDO_ICON);
+		JButton redoButton = queryUIComponents.getRedoButton();
+		toolBarBuilder.add(redoButton, "Redo", REDO_ICON);
+		toolBarBuilder.addSeparator();
+		
+		toolBarBuilder.add(exportAction, "Export", EXPORT_ICON);
+		toolBarBuilder.addSeparator();
+		
+		toolBarBuilder.add(
+		        new CreateLayoutFromQueryAction(session.getWorkspace(), 
+		                queryCache, queryCache.getName()),
+		                "Create Report");
+		toolBarBuilder.add(new NewChartAction(session, queryCache), "Create Chart", 
+		        CREATE_CHART_ICON);
+		toolBarBuilder.add(new ShowQueryPropertiesAction(queryCache, context.getFrame()),
+		        "Properties");
+    }
+
+    /**
+     * This will add all of the necessary actions to the given tool bar. Before
+     * any actions are added the tool bar will have all of its current buttons
+     * and separators removed.
+     * 
+     * @param toolbarBuilder
+     *            The tool bar to modify. The tool bar will contain all of the
+     *            buttons necessary for editing the GUI query editor.
+     */
+	private void createGUIQueryPenToolBar(WabitToolBarBuilder toolbarBuilder) {
+	    toolbarBuilder.clear();
 	    
-	    JButton deleteButton = pen.getDeleteButton();
-	    deleteButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/cancel.png")));
-	    setupToolBarButtonLabel(deleteButton, "Delete");
-	    toolBar.add(deleteButton);
-	    JButton createJoinButton = pen.getCreateJoinButton();
-		createJoinButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/join.png")));
-		setupToolBarButtonLabel(createJoinButton, "Join");
-		toolBar.add(createJoinButton);
-	    toolBar.addSeparator();
-	    JPanel zoomSliderContainer = pen.getZoomSliderContainer();
-		toolBar.add(zoomSliderContainer);
-	    toolBar.addSeparator();
+	    toolbarBuilder.add(queryPen.getExecuteQueryAction(), "Execute", 
+	            WabitIcons.RUN_ICON_32);
+	    toolbarBuilder.addSeparator();
+
+		toolbarBuilder.add(exportAction, "Export");
+	    toolbarBuilder.addSeparator();
+
+	    Action resetAction = queryPen.getResetAction();
+	    toolbarBuilder.add(resetAction, "Reset", RESET_ICON);
+	    Action createJoinAction = queryPen.getJoinAction();
+		toolbarBuilder.add(createJoinAction, "Join", CREATE_JOIN_ICON);
+	    toolbarBuilder.addSeparator();
+	    JPanel zoomSliderContainer = queryPen.getZoomSliderContainer();
+		toolbarBuilder.add(zoomSliderContainer);
+	    toolbarBuilder.addSeparator();
 	        
-	    JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), queryCache, queryCache.getName()));
-	    setupToolBarButtonLabel(createLayoutButton, "Create Report");
-	    toolBar.add(createLayoutButton);
-        JButton createChartButton = new JButton(new NewChartAction(session, queryCache));
-		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
-		setupToolBarButtonLabel(createChartButton, "Create Chart");
-		toolBar.add(createChartButton);
-	    JButton queryPropertiesButton = new JButton(new ShowQueryPropertiesAction(queryCache, context.getFrame()));
-	    setupToolBarButtonLabel(queryPropertiesButton, "Properties");
-	    toolBar.add(queryPropertiesButton);
-	    
-	    return toolBar;
+	    Action createLayoutAction = new CreateLayoutFromQueryAction(
+	            session.getWorkspace(), queryCache, queryCache.getName());
+	    toolbarBuilder.add(createLayoutAction, "Create Report");
+		toolbarBuilder.add(new NewChartAction(session, queryCache), "Create Chart", 
+		        CREATE_CHART_ICON);
+	    Action showPropertiesAction = 
+	        new ShowQueryPropertiesAction(queryCache, context.getFrame());
+	    toolbarBuilder.add(showPropertiesAction, "Properties");
 	}
 	
 	/**

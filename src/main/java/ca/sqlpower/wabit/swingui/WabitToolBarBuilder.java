@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
@@ -77,14 +78,50 @@ public class WabitToolBarBuilder {
 	 * @param text
 	 *            The text to set as the button's label
 	 */
-	public void add(Action a, String text) {
-		JButton button = new JButton(a);
-		button.setVerticalTextPosition(SwingConstants.BOTTOM);
-		button.setHorizontalTextPosition(SwingConstants.CENTER);
-		// Remove button borders in OS X Leopard (and hopefully future OS X releases)
-		button.putClientProperty("JButton.buttonType", "toolbar");
-		button.setText(text);
-		buttonBar.add(button);
+    public void add(Action a, String text) {
+        add(a, text, null);
+    }
+
+    /**
+     * Add an Action that will be added as a button to the toolbar. If the icon
+     * is not null it will be placed on the button.
+     * 
+     * @param a
+     *            The Action which to add to the ToolBar
+     * @param text
+     *            The text to set as the button's label
+     * @param icon
+     *            The icon that will be placed on the button. If this is null
+     *            then the icon defined in the action will be used.
+     */
+	public void add(Action a, String text, Icon icon) {
+		add(new JButton(a), text, icon);
+	}
+
+    /**
+     * Add a button that will be added as a button to the toolbar. This method
+     * will change the look of the given button to have its text below the icon
+     * among other things. If the icon is not null it will be placed on the
+     * button.
+     * 
+     * @param button
+     *            The button which to add to the ToolBar
+     * @param text
+     *            The text to set as the button's label
+     * @param icon
+     *            The icon that will be placed on the button. If this is null
+     *            then the icon defined in the action will be used.
+     */
+	public void add(JButton button, String text, Icon icon) {
+	    if (icon != null) {
+	        button.setIcon(icon);
+	    }
+	    button.setVerticalTextPosition(SwingConstants.BOTTOM);
+	    button.setHorizontalTextPosition(SwingConstants.CENTER);
+	    // Remove button borders in OS X Leopard (and hopefully future OS X releases)
+	    button.putClientProperty("JButton.buttonType", "toolbar");
+	    button.setText(text);
+	    buttonBar.add(button);
 	}
 	
 	/**
@@ -100,4 +137,13 @@ public class WabitToolBarBuilder {
 	public void addSeparator() {
 		buttonBar.addSeparator();
 	}
+
+    /**
+     * This will remove all of the buttons from the button bar of this tool bar.
+     * This will not remove the forum button.
+     */
+    public void clear() {
+        buttonBar.removeAll();
+    }
+
 }
