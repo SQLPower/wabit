@@ -578,8 +578,7 @@ public class QueryPanel implements WabitPanel {
         };
         queryPen = new QueryPen(
                 queryPenExecuteButtonAction,
-                queryCache.getQuery(),
-                WabitSwingSessionContextImpl.FORUM_ACTION);
+                queryCache.getQuery());
 		queryPen.setExecuteIcon((ImageIcon) WabitIcons.RUN_ICON_32);
 		WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
 		createGUIQueryPenToolBar(toolBarBuilder);
