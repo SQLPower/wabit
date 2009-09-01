@@ -627,7 +627,9 @@ public class ChartPanel implements WabitPanel {
     }
 
     public boolean hasUnsavedChanges() {
-        return chartHasChanges;
+        //TODO replace the false with the chartHasChanges flag
+        //when fixing bug 2002.
+        return false;
     }
 
     public JComponent getPanel() {
@@ -637,6 +639,7 @@ public class ChartPanel implements WabitPanel {
     public void discardChanges() {
         logger.debug("Discarding changes");
         cleanup();
+        updateChartFromGUI(); //TODO remove this when fixing bug 2002.
     }
 
     public boolean applyChanges() {
