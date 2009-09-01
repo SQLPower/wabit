@@ -105,7 +105,6 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
@@ -125,6 +124,7 @@ import ca.sqlpower.swingui.SearchTextField;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.action.ForumAction;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
@@ -221,6 +221,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private static final int DEFAULT_TREE_WIDTH = 220;
 
+    private static final String MAIN_DIVIDER_LOCATION = "WabitSwingSessionContext.mainDividerLocation";
+    
     /**
      * Prefs key for source list style. Value is the name of one of the
      * {@link SourceListStyle} enum constants.
@@ -259,6 +261,61 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private static final String SOURCE_LIST_DIALOG_HEIGHT =
         "WabitSwingSessionContext.sourceListDialog.height";
+
+    private final class MaximizeEditorAction extends AbstractAction implements PropertyChangeListener {
+        
+        private boolean maximized = false;
+        private int originalDividerLocation;
+        
+        private MaximizeEditorAction() {
+            putValue(ACCELERATOR_KEY,
+                    KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK));
+            updateName();
+        }
+
+        private void updateName() {
+            if (maximized) {
+                putValue(NAME, "Reveal Tree");
+            } else {
+                putValue(NAME, "Maximize Editor");
+            }
+        }
+        public void actionPerformed(ActionEvent e) {
+            if (maximized) {
+                wabitPane.setDividerLocation(originalDividerLocation);
+                maximized = false;
+            } else {
+                originalDividerLocation = wabitPane.getDividerLocation();
+                wabitPane.setDividerLocation(0);
+                maximized = true;
+                wabitPane.addPropertyChangeListener("dividerLocation", this);
+            }
+            updateName();
+        }
+
+        public void propertyChange(PropertyChangeEvent evt) {
+            SQLPowerUtils.logPropertyChange(logger, "Split Pane Moved" , evt);
+            int newLoc = ((Number) evt.getNewValue()).intValue();
+            
+            /* the split pane may readjust itself when we try to move it all the
+             * way left. We'll ignore any movements that leave it smaller than it
+             * was initially.
+             */
+            if (newLoc >= originalDividerLocation) {
+                maximized = false;
+                wabitPane.removePropertyChangeListener("dividerLocation", this);
+                updateName();
+            }
+        }
+        
+        public boolean isEditorMaximized() {
+            return maximized;
+        }
+        
+        public int getOriginalDividerLocation() {
+            return originalDividerLocation;
+        }
+    }
 
     /**
      * All the ways the source list can be present in the GUI.
@@ -610,6 +667,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     	}
     };
     
+    private MaximizeEditorAction maximizeEditorAction = new MaximizeEditorAction();
+
     /**
      * This is the model of the search JTree, it is just a default tree model
      * that we add {@link DefaultMutableTreeNode}s to.
@@ -1240,11 +1299,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         wabitPane.setLeftComponent(leftPanel);
         
-        //prefs
-        if(prefs.get("MainDividerLocaton", null) != null) {
-            String[] dividerLocations = prefs.get("MainDividerLocaton", null).split(",");
-            wabitPane.setDividerLocation(Integer.parseInt(dividerLocations[0]));
-        }
+        wabitPane.setDividerLocation(prefs.getInt(MAIN_DIVIDER_LOCATION, DEFAULT_TREE_WIDTH));
         
         DefaultFormBuilder statusBarBuilder = new DefaultFormBuilder(
                 new FormLayout("pref:grow, 4dlu, pref, 2dlu, max(50dlu; pref), 4dlu, pref"));
@@ -1347,17 +1402,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JMenu viewMenu = new JMenu("View");
         viewMenu.setMnemonic('v');
         menuBar.add(viewMenu);
-        JMenuItem maxEditor = new JMenuItem(new AbstractAction("Maximize Editor") {
-            public void actionPerformed(ActionEvent e) {
-                if (wabitPane.getDividerLocation() != 0) {
-                    wabitPane.setDividerLocation(0);
-                } else {
-                    wabitPane.setDividerLocation(wabitPane.getLastDividerLocation());
-                }
-            }
-        });
-        maxEditor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK));
-        viewMenu.add(maxEditor);
+        viewMenu.add(new JMenuItem(maximizeEditorAction));
         
         viewMenu.addSeparator();
         
@@ -1412,12 +1457,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         if (currentEditorPanel != null) {
             dividerLoc = wabitPane.getDividerLocation();
         } else {
-            if(prefs.get("MainDividerLocaton", null) != null) {
-                String[] dividerLocations = prefs.get("MainDividerLocaton", null).split(",");
-                dividerLoc = Integer.parseInt(dividerLocations[0]);
-            } else {
-                dividerLoc = DEFAULT_TREE_WIDTH;
-            }
+            dividerLoc = prefs.getInt(MAIN_DIVIDER_LOCATION, DEFAULT_TREE_WIDTH);
         }
         
         // JSplitPane.setRightComponent() will remove the right component magically
@@ -1524,12 +1564,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
         
         try {
-            prefs.put("MainDividerLocaton", String.format("%d", wabitPane.getDividerLocation()));
+            if (maximizeEditorAction.isEditorMaximized()) {
+                prefs.putInt(MAIN_DIVIDER_LOCATION, maximizeEditorAction.getOriginalDividerLocation());
+            } else {
+                prefs.putInt(MAIN_DIVIDER_LOCATION, wabitPane.getDividerLocation());
+            }
             prefs.put("frameBounds", String.format("%d,%d,%d,%d", frame.getX(), frame.getY(),
                     frame.getWidth(), frame.getHeight()));
             prefs.flush();
         } catch (BackingStoreException ex) {
-            logger.log(Level.WARN,"Failed to flush preferences", ex);
+            logger.warn("Failed to flush preferences", ex);
         }
         
         if (hasUnsavedChanges()) {
