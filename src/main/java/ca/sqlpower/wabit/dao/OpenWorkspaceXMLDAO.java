@@ -215,22 +215,31 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
             final WabitWorkspace workspace = session.getWorkspace();
             int importObjectCount = 0;
             for (WabitSession importingSession : saxHandler.getSessions()) {
-                for (WabitObject importObject : importingSession.getWorkspace().getChildren()) {
+                final WabitWorkspace importingWorkspace = importingSession.getWorkspace();
+                for (WabitObject importObject : importingWorkspace.getChildren()) {
                     if (importObject instanceof WabitDataSource) {
                         if (!session.getWorkspace().dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
+                            importingWorkspace.removeDataSource((WabitDataSource) importObject);
                             workspace.addDataSource((WabitDataSource) importObject);
                         }
                     } else if (importObject instanceof QueryCache) {
+                        importingWorkspace.removeQuery(
+                                (QueryCache) importObject, importingSession);
                         workspace.addQuery((QueryCache) importObject, session);
                     } else if (importObject instanceof OlapQuery) {
+                        importingWorkspace.removeOlapQuery((OlapQuery) importObject);
                         workspace.addOlapQuery((OlapQuery) importObject);
                     } else if (importObject instanceof WabitImage) {
+                        importingWorkspace.removeImage((WabitImage) importObject);
                         workspace.addImage((WabitImage) importObject);
                     } else if (importObject instanceof Chart) {
+                        importingWorkspace.removeChart((Chart) importObject);
                         workspace.addChart((Chart) importObject);
                     } else if (importObject instanceof Report) {
+                        importingWorkspace.removeReport((Report) importObject);
                         workspace.addReport((Report) importObject);
                     } else if (importObject instanceof Template) {
+                        importingWorkspace.removeTemplate((Template) importObject);
                     	workspace.addTemplate((Template) importObject);
                     } else {
                         throw new IllegalStateException("Cannot import the WabitObject type " + importObject.getClass());
