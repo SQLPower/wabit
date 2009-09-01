@@ -328,15 +328,17 @@ public class Chart extends AbstractWabitObject {
         // synchronize chart columns with new result set
         List<ChartColumn> oldCols = new ArrayList<ChartColumn>(chartColumns);
         List<ChartColumn> newCols = new ArrayList<ChartColumn>();
-        ResultSetMetaData rsmd = rs.getMetaData();
-        for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-            String columnName = rsmd.getColumnName(i);
-            ChartColumn existing = findByName(oldCols, columnName);
-            if (existing != null) {
-                newCols.add(existing);
-            } else {
-                int columnType = rsmd.getColumnType(i);
-                newCols.add(new ChartColumn(columnName, columnType));
+        if (rs != null) {
+            ResultSetMetaData rsmd = rs.getMetaData();
+            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+                String columnName = rsmd.getColumnName(i);
+                ChartColumn existing = findByName(oldCols, columnName);
+                if (existing != null) {
+                    newCols.add(existing);
+                } else {
+                    int columnType = rsmd.getColumnType(i);
+                    newCols.add(new ChartColumn(columnName, columnType));
+                }
             }
         }
         
