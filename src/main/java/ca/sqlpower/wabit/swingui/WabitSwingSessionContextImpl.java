@@ -1325,7 +1325,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         
         JMenuItem closeMenuItem = new JMenuItem(new CloseWorkspaceAction(this));
-        closeMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.META_DOWN_MASK));
+        closeMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         fileMenu.add(closeMenuItem);
         fileMenu.addSeparator();
         
