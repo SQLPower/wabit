@@ -84,7 +84,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
@@ -572,7 +571,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     /**
      * This tabbed pane contains all of the trees for each swing session in the context.
      */
-    private final JTabbedPane treeTabbedPane;
+    private final StackedTabComponent stackedTabPane;
     
     /**
      * This is the limit of all result sets in Wabit. Changing this spinner
@@ -745,14 +744,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
-        treeTabbedPane = new JTabbedPane();
-        treeTabbedPane.setDropTarget(new DropTarget(treeTabbedPane, treeTabDropTargetListener));
+        stackedTabPane = new StackedTabComponent();
+        stackedTabPane.setDropTarget(new DropTarget(stackedTabPane, treeTabDropTargetListener));
 
         Action selectSearchTabAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent arg0) {
         		// Choose the search tab. This, of course, assumes that the
 				// Search Tab is always at index 0.
-        		treeTabbedPane.setSelectedIndex(0);
+        		stackedTabPane.setSelectedIndex(0);
         		// This seems to improve the chances of requestFocusInWindow succeeding...
         		SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
@@ -761,9 +760,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         		});
         	}
         };
-        InputMap inputMap = treeTabbedPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        InputMap inputMap = stackedTabPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), SEARCH_TAB);
-        treeTabbedPane.getActionMap().put(SEARCH_TAB, selectSearchTabAction);
+        stackedTabPane.getActionMap().put(SEARCH_TAB, selectSearchTabAction);
         
         searchTreeRoot = new DefaultMutableTreeNode();
         searchTreeModel = new DefaultTreeModel(searchTreeRoot);
@@ -789,7 +788,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
 		searchScrollPane.setViewportView(explainText);
 		searchPanel.add(searchScrollPane, BorderLayout.CENTER);
-		treeTabbedPane.addTab("Search", searchPanel);
+		stackedTabPane.addTab("Search", searchPanel);
 		TreeSelectionListener searchTreeSelectionListener = new TreeSelectionListener() {
 			public void valueChanged(TreeSelectionEvent e) {
 				TreePath pathToSelection = e.getNewLeadSelectionPath();
@@ -1058,9 +1057,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
 		public void drop(DropTargetDropEvent dtde) {
 			Point mouseLocation = dtde.getLocation();
-			int tabIndex = treeTabbedPane.indexAtLocation(mouseLocation.x, mouseLocation.y);
+			int tabIndex = stackedTabPane.indexAtLocation(mouseLocation.x, mouseLocation.y);
 			if (tabIndex == -1 || tabIndex == 0) return; //The search tab should always have an index of 0
-			treeTabbedPane.setSelectedIndex(tabIndex);
+			stackedTabPane.setSelectedIndex(tabIndex);
 			
 			ByteArrayOutputStream byteOut;
 			Transferable transferable = dtde.getTransferable();
@@ -1181,7 +1180,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 //	}
 	
 	public void deregisterChildSession(WabitSession child) {
-	    treeTabbedPane.removeTabAt(getSessions().indexOf(child) + 1);
+		stackedTabPane.removeTabAt(getSessions().indexOf(child) + 1);
 	    child.getWorkspace().removePropertyChangeListener(nameChangeListener);
 	    delegateContext.deregisterChildSession(child);
 	}
@@ -1278,23 +1277,23 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         for (WabitSession session : getSessions()) {
             JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree());
-			treeTabbedPane.addTab(session.getWorkspace().getName(), new JScrollPane(brandedTree));
+            stackedTabPane.addTab(session.getWorkspace().getName(), new JScrollPane(brandedTree));
         }
         final ChangeListener tabChangeListener = new ChangeListener() {
         
             public void stateChanged(ChangeEvent e) {
-                final int selectedIndex = treeTabbedPane.getSelectedIndex();
-                if (treeTabbedPane.indexOfTab("Search") == selectedIndex) return;
+                final int selectedIndex = stackedTabPane.getSelectedIndex();
+                if (stackedTabPane.indexOfTab("Search") == selectedIndex) return;
                 if (selectedIndex >= 0) {
                     setActiveSession((WabitSwingSession) getSessions().get(selectedIndex - 1));
                     setEditorPanel();
                 }
             }
         };
-        treeTabbedPane.addChangeListener(tabChangeListener);
+        stackedTabPane.addChangeListener(tabChangeListener);
         
         leftPanel.add(toolBar, BorderLayout.NORTH);
-        leftPanel.add(treeTabbedPane, BorderLayout.CENTER);
+        leftPanel.add(stackedTabPane, BorderLayout.CENTER);
         
         wabitPane.setLeftComponent(leftPanel);
         
@@ -1685,8 +1684,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     		if (evt.getPropertyName().equals("name")) {
     			WabitSession sourceSession = ((WabitWorkspace) evt.getSource()).getSession();
 				int index = getSessions().indexOf(sourceSession) + 1;
-    			treeTabbedPane.setTitleAt(index, (String) evt.getNewValue());
-    			treeTabbedPane.repaint();
+				stackedTabPane.setTitleAt(index, (String) evt.getNewValue());
+				stackedTabPane.repaint();
     		}
     	}
     };
@@ -1695,8 +1694,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         delegateContext.registerChildSession(child);
         JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree());
 		child.getWorkspace().addPropertyChangeListener(nameChangeListener);
-		treeTabbedPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree));
-		treeTabbedPane.setSelectedIndex(treeTabbedPane.getTabCount() - 1);
+		stackedTabPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree));
+		stackedTabPane.setSelectedIndex(stackedTabPane.getTabCount() - 1);
     }
 
     public Preferences getPrefs() {
@@ -1733,7 +1732,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     public void setActiveSession(WabitSession activeSession) {
         WabitSession oldSession = delegateContext.getActiveSession();
         delegateContext.setActiveSession(activeSession);
-        treeTabbedPane.setSelectedIndex(getSessions().indexOf(activeSession) + 1);
+        stackedTabPane.setSelectedIndex(getSessions().indexOf(activeSession) + 1);
         if (oldSession != activeSession) {
             setEditorPanel();
         }
