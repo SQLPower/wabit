@@ -64,8 +64,12 @@ public class ChartGradientPainter {
         BufferedImage img = makeGradientImage(g);
         g.drawImage(img, x, y, width, baseline, 0, 0, img.getWidth(), img.getHeight(), null);
         g.drawImage(img, x, baseline, width, height, 0, 0, img.getWidth(), img.getHeight(), null);
-        
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, origInterpolation);
+
+        // some systems (OS X 10.4.11 on PPC) leave this hint null by default, but
+        // don't let us set it back to null!
+        if (origInterpolation != null) {
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, origInterpolation);
+        }
     }
 
     /**
