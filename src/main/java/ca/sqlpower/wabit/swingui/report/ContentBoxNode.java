@@ -80,6 +80,11 @@ public class ContentBoxNode extends PNode implements ReportNode {
         public void mouseClicked(PInputEvent event) {
             super.mouseClicked(event);
             if (event.getClickCount() == 2) {
+                if (contentBox.getContentRenderer() == null) {
+                    Label newLabel = new Label();
+                    contentBox.setContentRenderer(newLabel);
+                }
+                
                 DataEntryPanel propertiesPanel = getPropertiesPanel();
                 if (propertiesPanel != null) {
                     String propertiesPanelName = "Properties for " + contentBox.getName();
@@ -146,6 +151,15 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	});
         	delete.setText("Delete");
         	menu.add(delete);
+        	
+        	JMenuItem clear = new JMenuItem(new AbstractAction() {
+                public void actionPerformed(ActionEvent e) {
+                    contentBox.setContentRenderer(null);
+                }
+            });
+        	clear.setText("Clear");
+        	menu.add(clear);
+        	
         	final PCanvas canvas = (PCanvas) e.getComponent();
         	Point2D position = e.getCanvasPosition();
 			menu.show(canvas, (int) position.getX(), (int) position.getY());
