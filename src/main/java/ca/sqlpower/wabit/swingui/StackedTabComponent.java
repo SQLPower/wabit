@@ -280,7 +280,15 @@ public class StackedTabComponent extends JComponent {
 	public int indexAtLocation(int x, int y) {
 		for (int i = 0; i < tabs.size(); i++) {
 			StackedTab tab = tabs.get(i);
-			if (tab.label.contains(x, y) || tab.subComponent.contains(x, y)) {
+			int xRelativeToLabel = x - tab.label.getX();
+			int yRelativeToLabel = y - tab.label.getY();
+			boolean labelContains = tab.label.contains(xRelativeToLabel, yRelativeToLabel);
+			
+			int xRelativeToSubComp = x - tab.subComponent.getX();
+			int yRelativeToSubComp = y - tab.subComponent.getY();
+			boolean subcompContains = tab.subComponent.contains(xRelativeToSubComp, yRelativeToSubComp);
+			
+			if (labelContains || subcompContains) {
 				return i;
 			}
 		}
