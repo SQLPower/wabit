@@ -151,7 +151,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		}
 
 		public void dragOver(DropTargetDragEvent dtde) {
-			Point2D point = canvas.getCamera().localToView(dtde.getLocation());
+			Point2D point = dtde.getLocation();
 			PPickPath path = canvas.getCamera().pick(point.getX(), point.getY(), 1);
 			PNode node =  path.getPickedNode();
 			if (node == focusedCBNode) return;
