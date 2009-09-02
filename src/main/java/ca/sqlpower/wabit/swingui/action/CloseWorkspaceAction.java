@@ -41,7 +41,12 @@ public class CloseWorkspaceAction extends AbstractAction {
     
     public void actionPerformed(ActionEvent e) {
         if (context.getActiveSession() == null) return;
-        if (context.getActiveSwingSession().hasUnsavedChanges()) {
+        checkUnsavedChanges(context);
+        closeActiveWorkspace(context);
+    }
+
+    public static void checkUnsavedChanges(WabitSwingSessionContext context) {
+    	if (context.getActiveSwingSession().hasUnsavedChanges()) {
             int response = JOptionPane.showOptionDialog(context.getFrame(),
                     "You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
@@ -59,9 +64,8 @@ public class CloseWorkspaceAction extends AbstractAction {
                 if (!isClosing) return;
             }
         }
-        closeActiveWorkspace(context);
     }
-
+    
     public static void closeActiveWorkspace(WabitSwingSessionContext context) {
         context.deregisterChildSession(context.getActiveSession());
         context.getActiveSession().close();

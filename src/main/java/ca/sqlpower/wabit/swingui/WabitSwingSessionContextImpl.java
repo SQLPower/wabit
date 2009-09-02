@@ -744,7 +744,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
-        stackedTabPane = new StackedTabComponent();
+        stackedTabPane = new StackedTabComponent(this);
         stackedTabPane.setDropTarget(new DropTarget(stackedTabPane, treeTabDropTargetListener));
 
         Action selectSearchTabAction = new AbstractAction() {
@@ -788,7 +788,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
 		searchScrollPane.setViewportView(explainText);
 		searchPanel.add(searchScrollPane, BorderLayout.CENTER);
-		stackedTabPane.addTab("Search", searchPanel);
+		stackedTabPane.addTab("Search", searchPanel, false);
 		TreeSelectionListener searchTreeSelectionListener = new TreeSelectionListener() {
 			public void valueChanged(TreeSelectionEvent e) {
 				TreePath pathToSelection = e.getNewLeadSelectionPath();
@@ -1277,7 +1277,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         for (WabitSession session : getSessions()) {
             JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree());
-            stackedTabPane.addTab(session.getWorkspace().getName(), new JScrollPane(brandedTree));
+            stackedTabPane.addTab(session.getWorkspace().getName(), new JScrollPane(brandedTree), true);
         }
         final ChangeListener tabChangeListener = new ChangeListener() {
         
@@ -1694,7 +1694,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         delegateContext.registerChildSession(child);
         JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree());
 		child.getWorkspace().addPropertyChangeListener(nameChangeListener);
-		stackedTabPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree));
+		stackedTabPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree), true);
 		stackedTabPane.setSelectedIndex(stackedTabPane.getTabCount() - 1);
     }
 

@@ -30,14 +30,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
+import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 
 /**
  * A custom JComponent to implement the idea of a 'stack' of tabs. The idea is
@@ -69,6 +73,7 @@ public class StackedTabComponent extends JComponent {
 	private final Border UNSELECTED_LABEL_BORDER = BorderFactory.createLineBorder(new Color(187, 187, 187), 1);
 	private final Border SELECTED_OR_HOVERING_OVER_LABEL_BORDER = BorderFactory.createLineBorder(new Color(255, 99, 0), 1);
 	
+	private static final Icon closeIcon = new ImageIcon(StackedTab.class.getClassLoader().getResource("ca/sqlpower/swingui/querypen/close-16.png"));
 	
 	/**
 	 * A list of tabs that this component currently contains
@@ -87,7 +92,10 @@ public class StackedTabComponent extends JComponent {
 	 */
 	private List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
 	
-	public StackedTabComponent() {
+	private final WabitSwingSessionContext context;
+	
+	public StackedTabComponent(WabitSwingSessionContext context) {
+		this.context = context;
 		setLayout(new MigLayout("flowy, hidemode 3, fill, ins 0, gap 0 0", "", ""));
 	}
 	
@@ -105,12 +113,16 @@ public class StackedTabComponent extends JComponent {
 		/**
 		 * A JLabel which represents the tab itself
 		 */
-		private JLabel label;
+		private JLabel titleLabel;
 		
 		/**
 		 * The {@link Component} contained by this tab
 		 */
 		private final Component subComponent;
+
+		private final JLabel closeIconComponent;
+		
+		private final JComponent tabComponent;
 
 		/**
 		 * Creates a new StackedTab with the given title and containing the
@@ -120,10 +132,31 @@ public class StackedTabComponent extends JComponent {
 		 *            The title to give to this tab
 		 * @param component
 		 *            The {@link Component} that this tab will contain
+		 * @param closeable
+		 *            If true, then renders the close button. If false, doesn't.
 		 */
-		public StackedTab(String title, Component component) {
+		public StackedTab(String title, Component component, boolean closeable) {
 			this.title = title;
-			label = new JLabel(title) {
+			tabComponent = new JPanel(new MigLayout("hidemode 3, fill, ins 0, gap 0 0", "", ""));
+			if (closeable) {
+				closeIconComponent = new JLabel(closeIcon) {
+					@Override
+					protected void paintComponent(Graphics g) {
+						Graphics2D g2 = (Graphics2D)g;
+						Color topColor = (StackedTab.this == selectedTab) ? SELECTED_TAB_GRADIENT_TOP : UNSELECTED_TAB_RADIENT_TOP; 
+						Color bottomColor = (StackedTab.this == selectedTab) ? SELECTED_TAB_GRADIENT_BOTTOM : UNSELECTED_TAB_GRADIENT_BOTTOM;
+						GradientPaint gp = new GradientPaint(0, 0, topColor, 0, getHeight(), bottomColor);
+						g2.setPaint(gp);
+						g2.fillRect(0, 0, getWidth(), tabComponent.getHeight());
+						super.paintComponent(g);
+					}
+				};
+				closeIconComponent.setVisible(false);
+			} else {
+				closeIconComponent = null;
+			}
+				
+			titleLabel = new JLabel(" " + title) {
 				// Override paintComponent to give it a gradient background
 				@Override
 				protected void paintComponent(Graphics g) {
@@ -132,49 +165,66 @@ public class StackedTabComponent extends JComponent {
 					Color bottomColor = (StackedTab.this == selectedTab) ? SELECTED_TAB_GRADIENT_BOTTOM : UNSELECTED_TAB_GRADIENT_BOTTOM;
 					GradientPaint gp = new GradientPaint(0, 0, topColor, 0, getHeight(), bottomColor);
 					g2.setPaint(gp);
-					g2.fillRect(0, 0, StackedTabComponent.this.getWidth(), getHeight());
+					g2.fillRect(0, 0, StackedTabComponent.this.getWidth(), tabComponent.getHeight());
 					super.paintComponent(g);
 				}
 			};
+			tabComponent.add(titleLabel, "grow 100 0, push 100 0");
+			if (closeIconComponent != null) {
+				tabComponent.add(closeIconComponent, "grow 0 0, push 0 0");
+			}
 			
-			label.addMouseListener(new MouseListener() {
+			tabComponent.addMouseListener(new MouseListener() {
 				public void mouseClicked(MouseEvent e) {
 					// Use mousePressed or mouseReleased events instead
 				}
 
 				public void mouseEntered(MouseEvent e) {
+					if (closeIconComponent != null) {
+						closeIconComponent.setVisible(true);
+					}
 					if (StackedTab.this != selectedTab) {
-						label.setBorder(SELECTED_OR_HOVERING_OVER_LABEL_BORDER);
+						tabComponent.setBorder(SELECTED_OR_HOVERING_OVER_LABEL_BORDER);
 					}
 				}
 
 				public void mouseExited(MouseEvent e) {
+					if (closeIconComponent != null) {
+						closeIconComponent.setVisible(false);
+					}
 					if (StackedTab.this != selectedTab) {
-						label.setBorder(UNSELECTED_LABEL_BORDER);
+						tabComponent.setBorder(UNSELECTED_LABEL_BORDER);
 					}
 				}
 
 				public void mousePressed(MouseEvent e) {
 					setSelectedIndex(tabs.indexOf(StackedTab.this));
+					if (closeIconComponent != null) {
+						int relativeX = e.getX() - closeIconComponent.getX();
+						int relativeY = e.getY() - closeIconComponent.getY();
+						if (closeIconComponent.contains(relativeX, relativeY)) {
+							CloseWorkspaceAction.checkUnsavedChanges(context);
+							CloseWorkspaceAction.closeActiveWorkspace(context);
+						}
+					}
 				}
 
 				public void mouseReleased(MouseEvent e) {
 					// do nothing?
 				}
-				
 			});
 			
-			label.setBorder(UNSELECTED_LABEL_BORDER);
+			tabComponent.setBorder(UNSELECTED_LABEL_BORDER);
 			
 			this.subComponent = component;
 		}
 	}
 	
-	public void addTab(String title, Component comp) {
-		final StackedTab tab = new StackedTab(title, comp);
+	public void addTab(String title, Component comp, boolean closeable) {
+		final StackedTab tab = new StackedTab(title, comp, closeable);
 		tab.subComponent.setVisible(false);
 		tabs.add(tab);
-		add(tab.label, "grow 100 0, push 100 0");
+		add(tab.tabComponent, "grow 100 0, push 100 0");
 		add(tab.subComponent, "grow 100 100, push 100 100");
 	}
 	
@@ -187,14 +237,14 @@ public class StackedTabComponent extends JComponent {
 		StackedTab oldTab = selectedTab;
 		if (oldTab != null){
 			oldTab.subComponent.setVisible(false);
-			oldTab.label.setBorder(UNSELECTED_LABEL_BORDER);
+			oldTab.tabComponent.setBorder(UNSELECTED_LABEL_BORDER);
 		}
 		if (i < 0 || i >= tabs.size()) {
 			selectedTab = null;
 		} else {
 			selectedTab = tabs.get(i);
 			selectedTab.subComponent.setVisible(true);
-			selectedTab.label.setBorder(SELECTED_OR_HOVERING_OVER_LABEL_BORDER);
+			selectedTab.tabComponent.setBorder(SELECTED_OR_HOVERING_OVER_LABEL_BORDER);
 		}
 		StackedTabComponent.this.repaint();
 		if (oldTab != selectedTab) {
@@ -280,7 +330,7 @@ public class StackedTabComponent extends JComponent {
 	public void removeTabAt(int i) {
 		StackedTab removedTab = tabs.get(i);
 		if (removedTab != null) {
-			remove(removedTab.label);
+			remove(removedTab.tabComponent);
 			remove(removedTab.subComponent);
 		}
 		tabs.remove(i);
@@ -298,13 +348,13 @@ public class StackedTabComponent extends JComponent {
 	public int indexAtLocation(int x, int y) {
 		for (int i = 0; i < tabs.size(); i++) {
 			StackedTab tab = tabs.get(i);
-			int xRelativeToLabel = x - tab.label.getX();
-			int yRelativeToLabel = y - tab.label.getY();
-			boolean labelContains = tab.label.contains(xRelativeToLabel, yRelativeToLabel);
+			int xRelativeToLabel = x - tab.tabComponent.getX();
+			int yRelativeToLabel = y - tab.tabComponent.getY();
+			boolean labelContains = tab.tabComponent.contains(xRelativeToLabel, yRelativeToLabel);
 			
-			int xRelativeToSubComp = x - tab.subComponent.getX();
-			int yRelativeToSubComp = y - tab.subComponent.getY();
-			boolean subcompContains = tab.subComponent.contains(xRelativeToSubComp, yRelativeToSubComp);
+			int xRelativeToSubComp = x - tab.tabComponent.getX();
+			int yRelativeToSubComp = y - tab.tabComponent.getY();
+			boolean subcompContains = tab.tabComponent.contains(xRelativeToSubComp, yRelativeToSubComp);
 			
 			if (labelContains || subcompContains) {
 				return i;
