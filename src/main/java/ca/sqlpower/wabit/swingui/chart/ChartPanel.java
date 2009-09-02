@@ -145,7 +145,7 @@ public class ChartPanel implements WabitPanel {
      * user has selected from the result table. This chart should look
      * identical to what would be shown on a report.
      */
-    private final org.jfree.chart.ChartPanel chartPanel = new org.jfree.chart.ChartPanel(null);
+    private final org.jfree.chart.ChartPanel chartPanel = new WabitJFreeChartPanel(null);
 
     /**
      * The label that holds any errors encountered while attempting to create a

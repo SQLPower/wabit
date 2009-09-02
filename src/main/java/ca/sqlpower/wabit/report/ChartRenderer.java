@@ -30,6 +30,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.apache.log4j.Logger;
+import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -37,6 +38,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
 
 /**
@@ -99,7 +101,21 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
 			    g.drawString("Empty Chart", 0, g.getFontMetrics().getHeight());
 			    return false;
 			}
-			jFreeChart.draw(g, new Rectangle2D.Double(0, 0, contentBox.getWidth(), contentBox.getHeight()));
+
+			Rectangle2D area = new Rectangle2D.Double(
+			        0, 0, contentBox.getWidth(), contentBox.getHeight());
+
+			// first pass establishes rendering info but draws nothing
+			ChartRenderingInfo info = new ChartRenderingInfo();
+			Graphics2D dummyGraphics = (Graphics2D) g.create(0, 0, 0, 0);
+            jFreeChart.draw(dummyGraphics, area, info);
+			dummyGraphics.dispose();
+			
+			// now for real
+			Rectangle2D plotArea = info.getPlotInfo().getDataArea();
+            ChartGradientPainter.paintChartGradient(g, area, (int) plotArea.getMaxY());
+			jFreeChart.draw(g, area);
+            
 		} catch (Exception e) {
 		    logger.error("Error while rendering chart", e);
 		    g.drawString("Could not render chart: " + e.getMessage(), 0, g.getFontMetrics().getHeight());

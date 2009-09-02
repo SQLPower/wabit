@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.geom.Ellipse2D;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,22 +32,27 @@ import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.MultiplePiePlot;
 import org.jfree.chart.plot.PieLabelLinkStyle;
 import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.GradientPaintTransformType;
+import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.StandardGradientPaintTransformer;
 import org.jfree.util.TableOrder;
 
-import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
@@ -70,6 +74,14 @@ public class ChartSwingUtil {
      * make an instance of this class.
      */
     private ChartSwingUtil() {/* don't */}
+
+    /**
+     * The stroke that gets used for horizontal and vertical grid lines in all
+     * charts that need them.
+     */
+    private static final BasicStroke GRIDLINE_STROKE = new BasicStroke(
+            .5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+            0f, new float[] {.5f, 7f}, 0f);
 
     /**
      * Creates a JFreeChart based on the current query results produced by the
@@ -129,7 +141,76 @@ public class ChartSwingUtil {
                     "Unknown chart dataset type " + chartType.getDatasetType());
         }
         
+        makeChartNice(chart);
+        
         return chart;
+    }
+
+    /**
+     * Creates a panel for the demo (used by SuperDemo.java).
+     *
+     * @return A panel.
+     */
+    public static void makeChartNice(JFreeChart chart) {
+        Plot plot = chart.getPlot();
+        chart.setBackgroundPaint(null);
+        chart.setBorderStroke(new BasicStroke(1f));
+        chart.setBorderPaint(new Color(0xDDDDDD));
+        chart.setBorderVisible(true);
+        
+        // overall plot
+        plot.setOutlinePaint(null);
+        plot.setInsets(new RectangleInsets(20, 20, 20, 20)); // also the overall chart panel
+        plot.setBackgroundPaint(null);
+        plot.setDrawingSupplier(new WabitDrawingSupplier());
+        
+        // legend
+        LegendTitle legend = chart.getLegend();
+        if (legend != null) {
+            legend.setBorder(0, 0, 0, 0);
+            legend.setBackgroundPaint(null);
+        }
+
+        if (plot instanceof CategoryPlot) {
+            CategoryPlot cplot = (CategoryPlot) plot;
+            
+            CategoryItemRenderer renderer = cplot.getRenderer();
+            if (renderer instanceof BarRenderer) {
+                BarRenderer brenderer = (BarRenderer) renderer;
+
+                brenderer.setBarPainter(new StandardBarPainter());
+                brenderer.setDrawBarOutline(false);
+                brenderer.setShadowVisible(false);
+
+                brenderer.setGradientPaintTransformer(
+                        new StandardGradientPaintTransformer(
+                                GradientPaintTransformType.HORIZONTAL));
+                
+            } else if (renderer instanceof LineAndShapeRenderer) {
+                // it's all taken care of by WabitDrawingSupplier
+                
+            } else {
+                logger.warn("I don't know how to make " + renderer + " pretty. Leaving ugly.");
+            }
+            
+            cplot.setRangeGridlinePaint(Color.BLACK);
+            cplot.setRangeGridlineStroke(GRIDLINE_STROKE);
+            
+            // axes
+            for (int i = 0; i < cplot.getDomainAxisCount(); i++) {
+                CategoryAxis axis = cplot.getDomainAxis(i);
+                axis.setAxisLineVisible(false);
+            }
+            
+            for (int i = 0; i < cplot.getRangeAxisCount(); i++) {
+                ValueAxis axis = cplot.getRangeAxis(i);
+                axis.setAxisLineVisible(false);
+            }
+
+        }
+        
+        // TODO pie
+        
     }
 
     /**
@@ -249,19 +330,7 @@ public class ChartSwingUtil {
             chart.getTitle().setPadding(4,4,15,4);
         }
         
-        if (chart.getPlot() instanceof CategoryPlot) {
-            CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
-            int seriesSize = chart.getCategoryPlot().getDataset().getRowCount();
-            for (int i = 0; i < seriesSize; i++) {
-                //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-                renderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
-            }
-            
-            if (renderer instanceof BarRenderer) {
-                BarRenderer barRenderer = (BarRenderer) renderer;
-                barRenderer.setShadowVisible(false);
-            }
-        } else if (chart.getPlot() instanceof MultiplePiePlot) {
+        if (chart.getPlot() instanceof MultiplePiePlot) {
             MultiplePiePlot mplot = (MultiplePiePlot) chart.getPlot();
             PiePlot plot = (PiePlot) mplot.getPieChart().getPlot();
             plot.setLabelLinkStyle(PieLabelLinkStyle.CUBIC_CURVE);
@@ -271,7 +340,6 @@ public class ChartSwingUtil {
             }
         }
         
-        setTransparentChartBackground(chart);
         return chart;
     }
 
@@ -341,8 +409,6 @@ public class ChartSwingUtil {
             String chartName, String yaxisName, String xaxisName) {
         boolean showLegend = !legendPosition.equals(LegendPosition.NONE);
         JFreeChart chart;
-        ChartFactory.setChartTheme(StandardChartTheme.createLegacyTheme());
-        BarRenderer.setDefaultBarPainter(new StandardBarPainter());
         if (chartType.equals(ChartType.LINE)) {
             chart = ChartFactory.createXYLineChart(chartName, xaxisName, yaxisName, xyCollection, 
                     PlotOrientation.VERTICAL, showLegend, true, false);
@@ -350,7 +416,8 @@ public class ChartSwingUtil {
             chart = ChartFactory.createScatterPlot(chartName, xaxisName, yaxisName, xyCollection, 
                     PlotOrientation.VERTICAL, showLegend, true, false);
         } else {
-            throw new IllegalArgumentException("Unknown chart type " + chartType + " for an XY dataset.");
+            throw new IllegalArgumentException(
+                    "Unknown chart type " + chartType + " for an XY dataset.");
         }
         if (chart == null) return null;
         XYPlot plot = (XYPlot) chart.getPlot();
@@ -364,30 +431,7 @@ public class ChartSwingUtil {
             // axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
         }
         
-        if (legendPosition != LegendPosition.NONE) {
-            chart.getLegend().setPosition(legendPosition.getRectangleEdge());
-            chart.getTitle().setPadding(4,4,15,4);
-        }
-        final XYItemRenderer xyirenderer = chart.getXYPlot().getRenderer();
-        int xyLineSeriesSize = chart.getXYPlot().getDataset().getSeriesCount();
-        for (int i = 0; i < xyLineSeriesSize; i++) {
-            //XXX:AS LONG AS THERE ARE ONLY 10 SERIES!!!!
-            xyirenderer.setSeriesPaint(i, ColourScheme.BREWER_SET19.get(i));
-            if (chartType.equals(ChartType.SCATTER)) {
-                BasicStroke circle = new BasicStroke();
-                xyirenderer.setSeriesShape(i, circle.createStrokedShape(
-                        new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0)));
-            }
-        }
-        
-        setTransparentChartBackground(chart);
         return chart;
-    }
-    
-    private static void setTransparentChartBackground(JFreeChart chart) {
-        chart.setBackgroundPaint(new Color(255,255,255,0));
-        chart.getPlot().setBackgroundPaint(new Color(255,255,255,0));   
-        chart.getPlot().setBackgroundAlpha(0.0f);
     }
     
 }
