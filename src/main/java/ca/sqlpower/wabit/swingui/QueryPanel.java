@@ -491,7 +491,7 @@ public class QueryPanel implements WabitPanel {
 	/**
 	 * This is the panel that holds the text editor for the query.
 	 */
-	private JPanel queryToolPanel;
+	private JComponent queryToolPanel;
 
 	/**
 	 * The field that will search for a given string across all result sets simultaneously.
@@ -543,8 +543,6 @@ public class QueryPanel implements WabitPanel {
 
 	private final ExportWabitObjectAction<QueryCache> exportQueryAction;
 
-    private JPanel dragTreePanel;
-
     /**
      * This action does the exporting of the query to a file or straight text.
      */
@@ -563,6 +561,16 @@ public class QueryPanel implements WabitPanel {
             }
         }
     };
+
+    /**
+     * This toolbar builder is a permanent fixture of the query panel, but it
+     * does get cleared out and refilled with different actions whenever we
+     * switch views between the GUI (querypen) and the textual SQL editor.
+     * 
+     * @see #changeToTextToolBar()
+     * @see #changeToGUIToolBar()
+     */
+    private final WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
     
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new QueryPanel@" + System.identityHashCode(this));
@@ -580,9 +588,7 @@ public class QueryPanel implements WabitPanel {
                 queryPenExecuteButtonAction,
                 queryCache.getQuery());
 		queryPen.setExecuteIcon((ImageIcon) WabitIcons.RUN_ICON_32);
-		WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
-		createGUIQueryPenToolBar(toolBarBuilder);
-		queryPen.setQueryPenToolBar(toolBarBuilder.getToolbar());
+		changeToGUIToolBar();
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
 		
 		exportQueryAction = new ExportWabitObjectAction<QueryCache>(session,
@@ -799,12 +805,9 @@ public class QueryPanel implements WabitPanel {
 	private void buildUI() {
 		JTabbedPane resultPane = queryUIComponents.getResultTabPane();
 
-		queryToolPanel = new JPanel(new BorderLayout());
-		WabitToolBarBuilder sqlToolBarBuilder = new WabitToolBarBuilder();
-		updateToolBarToTextPen(sqlToolBarBuilder);
-		final JToolBar sqlToolBar = sqlToolBarBuilder.getToolbar();
+		changeToGUIToolBar();
 		
-		queryToolPanel.add(new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true),BorderLayout.CENTER);
+		queryToolPanel = new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
 		queryCache.getQuery().addQueryChangeListener(queryListener);
@@ -826,18 +829,8 @@ public class QueryPanel implements WabitPanel {
     	final JPanel topPanel = new JPanel(new BorderLayout());
     	topPanel.add(queryPenAndTextTabPane, BorderLayout.CENTER);
     	
-    	final JToolBar queryPenToolBar = queryPen.getQueryPenToolBar();
-    	
-		final JPanel toolbarPanel = new JPanel(new BorderLayout());
-    	if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
-    	    toolbarPanel.add(sqlToolBar, BorderLayout.NORTH);
-    	} else {
-    	    toolbarPanel.add(queryPenToolBar, BorderLayout.NORTH);
-    	}
     	DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref"));
         builder.append("Database Connection", reportComboBox);
-        toolbarPanel.add(builder.getPanel(), BorderLayout.CENTER);
-        topPanel.add(toolbarPanel, BorderLayout.NORTH);
     	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -863,18 +856,14 @@ public class QueryPanel implements WabitPanel {
 						queryPen.getGlobalWhereText().setVisible(true);
 						groupingCheckBox.setVisible(true);
 						whereText.setVisible(true);
-						toolbarPanel.remove(sqlToolBar);
-						toolbarPanel.add(queryPenToolBar, BorderLayout.NORTH);
-						queryPenToolBar.repaint();
+						changeToGUIToolBar();
 					}
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);
-					toolbarPanel.remove(queryPenToolBar);
-					toolbarPanel.add(sqlToolBar, BorderLayout.NORTH);
-					sqlToolBar.repaint();
+					changeToTextToolBar();
 				}
 				executeQueryInCache();
 			}
@@ -933,7 +922,9 @@ public class QueryPanel implements WabitPanel {
 	 * This will modify the given tool bar to contain the buttons necessary to
 	 * use the text editor of the query panel.
 	 */
-    private void updateToolBarToTextPen(WabitToolBarBuilder toolBarBuilder) {
+    private void changeToTextToolBar() {
+        toolBarBuilder.clear();
+        
 		JButton prevQueryButton = queryUIComponents.getPrevQueryButton();
 		toolBarBuilder.add(prevQueryButton, "Prev. Query", PREV_QUERY_ICON);
 		JButton nextQueryButton = queryUIComponents.getNextQueryButton();
@@ -981,15 +972,16 @@ public class QueryPanel implements WabitPanel {
      *            The tool bar to modify. The tool bar will contain all of the
      *            buttons necessary for editing the GUI query editor.
      */
-	private void createGUIQueryPenToolBar(WabitToolBarBuilder toolbarBuilder) {
-	    toolbarBuilder.clear();
+	private void changeToGUIToolBar() {
 	    
-	    toolbarBuilder.add(queryPen.getExecuteQueryAction(), "Execute", 
+	    toolBarBuilder.clear();
+	    
+	    toolBarBuilder.add(queryPen.getExecuteQueryAction(), "Execute", 
 	            WabitIcons.RUN_ICON_32);
-	    toolbarBuilder.addSeparator();
+	    toolBarBuilder.addSeparator();
 
-		toolbarBuilder.add(exportAction, "Export");
-	    toolbarBuilder.addSeparator();
+		toolBarBuilder.add(exportAction, "Export");
+	    toolBarBuilder.addSeparator();
 
 	    final Action resetAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
@@ -997,22 +989,22 @@ public class QueryPanel implements WabitPanel {
                 queryCache.cancel();
             }
         };
-	    toolbarBuilder.add(resetAction, "Reset", RESET_ICON);
+	    toolBarBuilder.add(resetAction, "Reset", RESET_ICON);
 	    Action createJoinAction = queryPen.getJoinAction();
-		toolbarBuilder.add(createJoinAction, "Join", CREATE_JOIN_ICON);
-	    toolbarBuilder.addSeparator();
+		toolBarBuilder.add(createJoinAction, "Join", CREATE_JOIN_ICON);
+	    toolBarBuilder.addSeparator();
 	    JPanel zoomSliderContainer = queryPen.getZoomSliderContainer();
-		toolbarBuilder.add(zoomSliderContainer);
-	    toolbarBuilder.addSeparator();
+		toolBarBuilder.add(zoomSliderContainer);
+	    toolBarBuilder.addSeparator();
 	        
 	    Action createLayoutAction = new CreateLayoutFromQueryAction(
 	            session.getWorkspace(), queryCache, queryCache.getName());
-	    toolbarBuilder.add(createLayoutAction, "Create Report");
-		toolbarBuilder.add(new NewChartAction(session, queryCache), "Create Chart", 
+	    toolBarBuilder.add(createLayoutAction, "Create Report");
+		toolBarBuilder.add(new NewChartAction(session, queryCache), "Create Chart", 
 		        CREATE_CHART_ICON);
 	    Action showPropertiesAction = 
 	        new ShowQueryPropertiesAction(queryCache, context.getFrame());
-	    toolbarBuilder.add(showPropertiesAction, "Properties");
+	    toolBarBuilder.add(showPropertiesAction, "Properties");
 	}
 	
 	/**
@@ -1207,15 +1199,7 @@ public class QueryPanel implements WabitPanel {
 	    return dragTreeScrollPane;
 	}
 	
-	/**
-	 * Adds a text label with the given label String, and sets it at the bottom
-	 * center of the button
-	 */
-	private void setupToolBarButtonLabel(JButton button, String label) {
-		button.setText(label);
-		button.setHorizontalTextPosition(SwingConstants.CENTER);
-		button.setVerticalTextPosition(SwingConstants.BOTTOM);
-		// Removes button borders on OS X 10.5
-		button.putClientProperty("JButton.buttonType", "toolbar");
-	}
+    public JToolBar getToolbar() {
+        return toolBarBuilder.getToolbar();
+    }
 }

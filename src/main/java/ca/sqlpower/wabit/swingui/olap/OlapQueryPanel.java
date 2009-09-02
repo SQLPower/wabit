@@ -68,7 +68,6 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.UndoableEditEvent;
@@ -103,7 +102,7 @@ import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportWabitObjectAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
@@ -152,11 +151,6 @@ public class OlapQueryPanel implements WabitPanel {
      */
     private final OlapQuery query;
     
-    /**
-     * This is the JComponent that emcompasses the entire view.
-     */
-    private JPanel queryAndResultsPanel = null;
-
     private static final Object UNDO_MDX_EDIT = "Undo MDX Edit";
 
     private static final Object REDO_MDX_EDIT = "Redo MDX Edit";
@@ -173,6 +167,8 @@ public class OlapQueryPanel implements WabitPanel {
 	 * undo and redo changes to a typed query.
 	 */
     private final UndoManager undoManager;
+    
+    private final WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
     
     /**
      * This action handles the undo of text editing on the {@link #mdxTextArea}
@@ -287,11 +283,6 @@ public class OlapQueryPanel implements WabitPanel {
     };
     
     /**
-     * This toolbar is placed at the top of the olap query editor.
-     */
-    private JToolBar olapPanelToolbar;
-
-    /**
      * An Action for executing the MDX text of a query.
      */
 	private Action executeMdxAction;
@@ -307,6 +298,11 @@ public class OlapQueryPanel implements WabitPanel {
      * cube in the query.
      */
     private final JLabel cubeNameLabel = new JLabel();
+
+    /**
+     * The overall UI for this component. This is what {@link #getPanel()} returns.
+     */
+    private JPanel panel;
     
     public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
         this.parentComponent = parentComponent;
@@ -427,9 +423,8 @@ public class OlapQueryPanel implements WabitPanel {
             throw new RuntimeException(e);
         }
         queryPanels = new JTabbedPane();
-        olapPanelToolbar = new JToolBar(JToolBar.HORIZONTAL);
-        olapPanelToolbar.setFloatable(false);
-        JButton executeButton = new JButton(new AbstractAction("Execute", WabitIcons.RUN_ICON_32) {
+
+        Action executeAction = new AbstractAction("Execute", WabitIcons.RUN_ICON_32) {
 			public void actionPerformed(ActionEvent e) {
 				if (queryPanels.getSelectedComponent() == textQueryPanel) {
 					executeMdxAction.actionPerformed(e);
@@ -437,30 +432,20 @@ public class OlapQueryPanel implements WabitPanel {
 					OlapGuiUtil.asyncExecute(query, session);
 				}
 			}
-		});
-        setupButton(executeButton);
-        olapPanelToolbar.add(executeButton);
-        olapPanelToolbar.add(resetQueryButton);
-        olapPanelToolbar.addSeparator();
+		};
+        toolBarBuilder.add(executeAction);
+        toolBarBuilder.add(resetQueryButton);
+        toolBarBuilder.addSeparator();
         
-		JButton exportOlapQueryButton = new JButton(
-				new ExportWabitObjectAction<OlapQuery>(session, query,
-						WabitIcons.EXPORT_ICON_32,
-						"Export OLAP Query to Wabit file"));
-		exportOlapQueryButton.setText("Export");
-		setupButton(exportOlapQueryButton);
-		olapPanelToolbar.add(exportOlapQueryButton);
+		ExportWabitObjectAction<OlapQuery> exportAction =
+		    new ExportWabitObjectAction<OlapQuery>(
+		            session, query, WabitIcons.EXPORT_ICON_32,
+		            "Export OLAP Query to Wabit file");
+        toolBarBuilder.add(exportAction, "Export...");
 		
-        JButton createLayoutButton = new JButton(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()));
-        createLayoutButton.setText("Create Report");
-        setupButton(createLayoutButton);
-        olapPanelToolbar.add(createLayoutButton);
+        toolBarBuilder.add(new CreateLayoutFromQueryAction(session.getWorkspace(), query, query.getName()), "Create Report");
         
-        JButton createChartButton = new JButton(new NewChartAction(session, query));
-		createChartButton.setIcon(new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
-		createChartButton.setText("Create Chart");
-		setupButton(createChartButton);
-		olapPanelToolbar.add(createChartButton);
+		toolBarBuilder.add(new NewChartAction(session, query), "Create Chart", new ImageIcon(QueryPanel.class.getClassLoader().getResource("icons/32x32/chart.png")));
 		
         final JCheckBox nonEmptyRowsCheckbox = new JCheckBox("Omit Empty Rows");
         nonEmptyRowsCheckbox.setSelected(query.isNonEmpty());
@@ -474,29 +459,12 @@ public class OlapQueryPanel implements WabitPanel {
                 }
             }
         });
-        olapPanelToolbar.add(nonEmptyRowsCheckbox);
-        
-        JToolBar wabitBar = new JToolBar();
-		wabitBar.setFloatable(false);
-		JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
-		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		wabitBar.add(forumButton);
-        
-        final JToolBar guiToolBar = new JToolBar();
-		guiToolBar.setLayout(new BorderLayout());
-		guiToolBar.add(olapPanelToolbar, BorderLayout.CENTER);
-		guiToolBar.add(wabitBar, BorderLayout.EAST);
-		guiToolBar.setFloatable(false);
+        toolBarBuilder.add(nonEmptyRowsCheckbox);
         
         final JComponent viewComponent = cellSetViewer.getViewComponent();
 		queryPanels.add("GUI", viewComponent);
         queryPanels.add("MDX", textQueryPanel);
         
-        queryAndResultsPanel = new JPanel(new BorderLayout());
-        queryAndResultsPanel.add(queryPanels, BorderLayout.CENTER);
-        
-        JPanel toolbarPanel = new JPanel(new BorderLayout());
-        toolbarPanel.add(guiToolBar, BorderLayout.NORTH);
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout("pref, 5dlu, pref, 5dlu, pref, 5dlu, pref"));
         builder.append("Database Connections", databaseComboBox);
@@ -505,8 +473,10 @@ public class OlapQueryPanel implements WabitPanel {
             cubeNameLabel.setText(query.getCurrentCube().getName());
         }
         builder.append(cubeChooserButton);
-        toolbarPanel.add(builder.getPanel(), BorderLayout.CENTER);
-        queryAndResultsPanel.add(toolbarPanel, BorderLayout.NORTH);
+        
+        panel = new JPanel(new BorderLayout());
+        panel.add(builder.getPanel(), BorderLayout.NORTH);
+        panel.add(queryPanels, BorderLayout.CENTER);
     }
     
     /**
@@ -596,10 +566,10 @@ public class OlapQueryPanel implements WabitPanel {
     }
 
     public JComponent getPanel() {
-        if (queryAndResultsPanel == null) {
+        if (panel == null) {
             buildUI();
         }
-        return queryAndResultsPanel;
+        return panel;
     }
 
     public boolean hasUnsavedChanges() {
@@ -802,13 +772,7 @@ public class OlapQueryPanel implements WabitPanel {
         return cubeTreeScrollPane;
     }
     
-    /**
-     * Modifies the button to have their label text at the bottom
-     * and centered, and (in OS X 10.5), to have no button border
-     */
-    private void setupButton(JButton button) {
-    	button.setVerticalTextPosition(SwingConstants.BOTTOM);
-    	button.setHorizontalTextPosition(SwingConstants.CENTER);
-    	button.putClientProperty("JButton.buttonType", "toolbar");
+    public JToolBar getToolbar() {
+        return toolBarBuilder.getToolbar();
     }
 }

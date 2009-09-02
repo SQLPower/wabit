@@ -56,7 +56,7 @@ public class RevertToDefaultsAction extends AbstractAction {
      * @param chart The chart to refresh. Must not be null.
      */
     public RevertToDefaultsAction(@Nonnull ChartPanel chartPanel) {
-        super("Refresh", ICON);
+        super("Restore Defaults", ICON);
         this.chartPanel = chartPanel;
         this.dialogOwner = chartPanel.getPanel();
     }

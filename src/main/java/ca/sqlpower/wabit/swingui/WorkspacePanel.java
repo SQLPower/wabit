@@ -43,6 +43,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
@@ -401,4 +402,8 @@ public class WorkspacePanel implements WabitPanel {
 	public JComponent getSourceComponent() {
 	    return null;
 	}
+
+    public JToolBar getToolbar() {
+        return null;
+    }
 }

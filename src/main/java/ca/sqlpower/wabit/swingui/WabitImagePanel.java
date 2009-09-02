@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
@@ -53,14 +52,11 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
-import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -87,12 +83,9 @@ public class WabitImagePanel implements WabitPanel {
      */
     private final WabitImage image;
     
-    /**
-     * The panel that allows editing a WabitImage.
-     */
-    private final JPanel panel = new JPanel();
+    private final WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
     
-    private final Action browseForImageAction = new AbstractAction("", new ImageIcon(WabitImagePanel.class.getClassLoader().getResource("icons/32x32/open.png"))) {
+    private final Action browseForImageAction = new AbstractAction("Replace...", new ImageIcon(WabitImagePanel.class.getClassLoader().getResource("icons/32x32/open.png"))) {
     
         public void actionPerformed(ActionEvent e) {
             showImageBrowser();   
@@ -225,33 +218,10 @@ public class WabitImagePanel implements WabitPanel {
         this.image = image;
         this.context = context;
 
-        JToolBar toolBar = new JToolBar();
-        JButton browseButton = new JButton(browseForImageAction);
-        browseButton.setText("Replace...");
-        browseButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        browseButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        // Removes button borders on OS X 10.5
-        browseButton.putClientProperty("JButton.buttonType", "toolbar");
-        toolBar.add(browseButton);
-        toolBar.setFloatable(false);
-        
-        JToolBar wabitBar = new JToolBar();
-        wabitBar.setFloatable(false);
-        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
-		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		wabitBar.add(forumButton);
-		
-		JToolBar mainbar = new JToolBar();
-        mainbar.setLayout(new BorderLayout());
-        mainbar.add(toolBar, BorderLayout.CENTER);
-        mainbar.add(wabitBar, BorderLayout.EAST);
-        mainbar.setFloatable(false);
+        toolBarBuilder.add(browseForImageAction);
         
         imagePanel = new JPanel(new MigLayout("align 50% 50%"));
         
-        panel.setLayout(new BorderLayout());
-        panel.add(mainbar, BorderLayout.NORTH);
-        panel.add(imagePanel, BorderLayout.CENTER);
         imagePanel.setBackground(Color.WHITE);
         imagePanel.add(imageLabel);
         
@@ -345,7 +315,7 @@ public class WabitImagePanel implements WabitPanel {
     }
 
     public JComponent getPanel() {
-        return panel;
+        return imagePanel;
     }
 
     public boolean hasUnsavedChanges() {
@@ -358,5 +328,9 @@ public class WabitImagePanel implements WabitPanel {
     
     public JComponent getSourceComponent() {
         return null;
+    }
+    
+    public JToolBar getToolbar() {
+        return toolBarBuilder.getToolbar();
     }
 }

@@ -71,12 +71,24 @@ public class WabitToolBarBuilder {
 	}
 	
 	/**
-	 * Add an Action that will be added as a button to the toolbar.
+	 * Adds an Action as a button to the toolbar.
+	 * 
+	 * @param action
+	 *             The Action to add to the toolbar. Its name will be the button's label
+	 */
+	public void add(Action action) {
+        add(action, null);
+        
+    }
+	
+	/**
+	 * Adds an Action as a button to the toolbar.
 	 * 
 	 * @param a
-	 *            The Action which to add to the ToolBar
+	 *            The Action to add to the toolbar
 	 * @param text
 	 *            The text to set as the button's label
+	 *            If text is null, toolbar button will get name from <code>a</code>
 	 */
     public void add(Action a, String text) {
         add(a, text, null);
@@ -89,7 +101,8 @@ public class WabitToolBarBuilder {
      * @param a
      *            The Action which to add to the ToolBar
      * @param text
-     *            The text to set as the button's label
+     *            The text to set as the button's label.
+     *            If text is null, ToolBar button will get name from <code>a</code>
      * @param icon
      *            The icon that will be placed on the button. If this is null
      *            then the icon defined in the action will be used.
@@ -107,7 +120,8 @@ public class WabitToolBarBuilder {
      * @param button
      *            The button which to add to the ToolBar
      * @param text
-     *            The text to set as the button's label
+     *            The text to set as the button's label.
+     *            If null, the button's text will not be changed.
      * @param icon
      *            The icon that will be placed on the button. If this is null
      *            then the icon defined in the action will be used.
@@ -120,7 +134,9 @@ public class WabitToolBarBuilder {
 	    button.setHorizontalTextPosition(SwingConstants.CENTER);
 	    // Remove button borders in OS X Leopard (and hopefully future OS X releases)
 	    button.putClientProperty("JButton.buttonType", "toolbar");
-	    button.setText(text);
+	    if (text != null) {
+	        button.setText(text);
+	    }
 	    buttonBar.add(button);
 	}
 	

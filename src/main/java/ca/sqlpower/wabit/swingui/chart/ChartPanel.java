@@ -77,6 +77,7 @@ import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.debug.FormDebugPanel;
@@ -100,6 +101,15 @@ public class ChartPanel implements WabitPanel {
      * The panel that holds the chart editor UI.
      */
     private final JPanel panel = new JPanel();
+    
+    /**
+     * Contains all the toggle buttons that are for choosing the chart type.
+     * Each button in this group has a client property indicating the {@link ChartType} constant it represents.
+     * 
+     */
+    ButtonGroup chartTypeButtonGroup = new ButtonGroup();
+
+    private final WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
 
     /**
      * Contains all the queries in the workspace. This will let the user
@@ -470,7 +480,7 @@ public class ChartPanel implements WabitPanel {
                 new FormLayout(
                         "pref, 3dlu, pref:grow, 3dlu, pref:grow",
                         "pref, 3dlu, fill:0:grow, 3dlu, fill:0:grow"),
-                logger.isDebugEnabled() ? new FormDebugPanel() : new JPanel());
+                panel);
         
         builder.append("Query", queryComboBox, 3);
         builder.nextRow();
@@ -488,61 +498,19 @@ public class ChartPanel implements WabitPanel {
         
         builder.append(buildChartPrefsPanel());
         
-        // XXX The following code proliferation pains me. I've opened a bug.
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+        toolBarBuilder.add(refreshDataAction);
+        toolBarBuilder.add(revertToDefaultsAction);
 
-        JButton refreshButton = new JButton(refreshDataAction);
-        refreshButton.setText("Refresh");
-        refreshButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        refreshButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        // Removes button borders on OS X 10.5
-        refreshButton.putClientProperty("JButton.buttonType", "toolbar");
-        toolBar.add(refreshButton);
+        toolBarBuilder.addSeparator();
+        toolBarBuilder.add(makeChartTypeButton("Bar", ChartType.BAR, BAR_CHART_ICON));
+        toolBarBuilder.add(makeChartTypeButton("Pie", ChartType.PIE, PIE_CHART_ICON));
+        toolBarBuilder.add(makeChartTypeButton("Category Line", ChartType.CATEGORY_LINE, LINE_CHART_ICON));
 
-        JButton revertButton = new JButton(revertToDefaultsAction);
-        revertButton.setText("Set Defaults");
-        revertButton.setVerticalTextPosition(SwingConstants.BOTTOM);
-        revertButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        // Removes button borders on OS X 10.5
-        revertButton.putClientProperty("JButton.buttonType", "toolbar");
-        toolBar.add(revertButton);
-
-        toolBar.addSeparator();
-        toolBar.add(makeChartTypeButton("Bar", ChartType.BAR, BAR_CHART_ICON));
-        toolBar.add(makeChartTypeButton("Pie", ChartType.PIE, PIE_CHART_ICON));
-        toolBar.add(makeChartTypeButton("Category Line", ChartType.CATEGORY_LINE, LINE_CHART_ICON));
-
-        toolBar.addSeparator();
-        toolBar.add(makeChartTypeButton("Line", ChartType.LINE, LINE_CHART_ICON));
-        toolBar.add(makeChartTypeButton("Scatter", ChartType.SCATTER, SCATTER_CHART_ICON));
-        
-//        toolBar.addSeparator();
-        // TODO pie
-        
-        JToolBar wabitBar = new JToolBar();
-        wabitBar.setFloatable(false);
-        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
-        forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-        wabitBar.add(forumButton);
-        
-        JToolBar mainbar = new JToolBar();
-        mainbar.setLayout(new BorderLayout());
-        mainbar.add(toolBar, BorderLayout.CENTER);
-        mainbar.add(wabitBar, BorderLayout.EAST);
-        mainbar.setFloatable(false);
-
-        panel.setLayout(new BorderLayout());
-        panel.add(builder.getPanel(), BorderLayout.CENTER);
-        panel.add(mainbar, BorderLayout.NORTH);
+        toolBarBuilder.addSeparator();
+        toolBarBuilder.add(makeChartTypeButton("Line", ChartType.LINE, LINE_CHART_ICON));
+        toolBarBuilder.add(makeChartTypeButton("Scatter", ChartType.SCATTER, SCATTER_CHART_ICON));
     }
 
-    /**
-     * Contains all the toggle buttons that are for choosing the chart type.
-     * Each button in this group has a client property indicating the {@link ChartType} constant it represents.
-     * 
-     */
-    ButtonGroup chartTypeButtonGroup = new ButtonGroup();
 
     /**
      * Subroutine of {@link #buildUI()}. Makes a chart type toggle button and
@@ -722,6 +690,10 @@ public class ChartPanel implements WabitPanel {
         }
         logger.debug("X position of column " + columnIndex + " is " + sum + " according to " + model);
         return sum;
+    }
+
+    public JToolBar getToolbar() {
+        return toolBarBuilder.getToolbar();
     }
 
 

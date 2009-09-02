@@ -64,6 +64,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
@@ -271,10 +272,13 @@ public class LayoutPanel implements WabitPanel, MouseState {
 
 	}
 
-	private final JPanel panel;
+	private final JPanel panel = new JPanel(new BorderLayout());
+;
 	private final PCanvas canvas;
 	private final PageNode pageNode;
 	private final Layout layout;
+	
+	private final WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
 
 	/**
 	 * The mouse state in this LayoutPanel.
@@ -402,7 +406,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		
 		canvas.addInputEventListener(new CreateNodeEventHandler(session, this));
 		
-		WabitToolBarBuilder toolBarBuilder = new WabitToolBarBuilder();
 		toolBarBuilder.add(refreshDataAction, "Refresh");
 		toolBarBuilder.addSeparator();
 		toolBarBuilder.add(addContentBoxAction, "Content Box");
@@ -453,8 +456,8 @@ public class LayoutPanel implements WabitPanel, MouseState {
 
         if (layout instanceof Report) {
         	toolBarBuilder.add(new PrintPreviewAction(parentFrame, layout), "Preview");
-        	toolBarBuilder.add(new PrintAction(layout, toolBarBuilder.getToolbar(), session), "Print");
-        	toolBarBuilder.add(new PDFAction(session, toolBarBuilder.getToolbar(), layout), "Print PDF");
+        	toolBarBuilder.add(new PrintAction(layout, panel, session), "Print");
+        	toolBarBuilder.add(new PDFAction(session, panel, layout), "Print PDF");
         }
 
         canvasScrollPane = new PScrollPane(canvas);
@@ -495,9 +498,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		});
 		new DropTarget(canvas, new QueryDropListener());
 		
-        panel = new JPanel(new BorderLayout());
         panel.add(canvasScrollPane, BorderLayout.CENTER);
-        panel.add(toolBarBuilder.getToolbar(), BorderLayout.NORTH);
         
         panel.getActionMap().put(cancelBoxCreateAction.getClass(), cancelBoxCreateAction);
         panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), cancelBoxCreateAction.getClass());
@@ -616,4 +617,8 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		logger.debug("camera x = " + x + ", camera y = " + y);
 		canvas.getCamera().setViewOffset(x, y);
 	}
+	
+	public JToolBar getToolbar() {
+        return toolBarBuilder.getToolbar();
+    }
 }

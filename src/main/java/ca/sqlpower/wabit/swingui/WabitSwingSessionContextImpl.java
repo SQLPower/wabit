@@ -61,6 +61,8 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jmdns.JmDNS;
 import javax.naming.NamingException;
 import javax.swing.AbstractAction;
@@ -341,9 +343,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                             WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
                             context.frame.getWidth() * 3 / 4));
 
-                    safelySetRightComponent(context.wabitPane, sp);
+                    safelySetRightComponent(context.wabitPane, wabitPanel.getToolbar(), sp);
                 } else {
-                    safelySetRightComponent(context.wabitPane, panel);
+                    safelySetRightComponent(context.wabitPane, wabitPanel.getToolbar(), panel);
                 }
             }
         },
@@ -364,7 +366,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 } else {
                     context.sourceListDialog.setVisible(false);
                 }
-                safelySetRightComponent(context.wabitPane, wabitPanel.getPanel());
+                safelySetRightComponent(context.wabitPane, wabitPanel.getToolbar(), wabitPanel.getPanel());
             }
         },
         
@@ -376,7 +378,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
                 super.apply(context, wabitPanel);
                 context.sourceListDialog.setVisible(false);
-                safelySetRightComponent(context.wabitPane, wabitPanel.getPanel());
+                safelySetRightComponent(context.wabitPane, wabitPanel.getToolbar(), wabitPanel.getPanel());
             }
         };
         
@@ -435,13 +437,30 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
          * <code>c</code> without moving the divider location.
          * 
          * @param sp
-         *            The scrollpane whose right component to replace with c.
+         *            The split pane whose right component to replace with c.
+         *            Null not permitted.
+         * @param toolBar
+         *            The toolbar that should appear at the top of the
+         *            right-hand component. Null means not to show a toolbar.
          * @param c
-         *            The component to add to sp.
+         *            The component to add to sp. Null not permitted.
          */
-        protected void safelySetRightComponent(JSplitPane sp, JComponent c) {
+        protected void safelySetRightComponent(
+                @Nonnull JSplitPane sp,
+                @Nullable JToolBar toolBar,
+                @Nonnull JComponent c) {
+            
             int oldDividerLoc = sp.getDividerLocation();
-            sp.setRightComponent(c);
+            
+            if (toolBar != null) {
+                JPanel p = new JPanel(new BorderLayout());
+                p.add(toolBar, BorderLayout.NORTH);
+                p.add(c, BorderLayout.CENTER);
+                sp.setRightComponent(p);
+            } else {
+                sp.setRightComponent(c);
+            }
+            
             sp.setDividerLocation(oldDividerLoc);
         }
     }

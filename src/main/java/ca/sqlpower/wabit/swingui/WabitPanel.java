@@ -19,7 +19,9 @@
 
 package ca.sqlpower.wabit.swingui;
 
+import javax.annotation.Nullable;
 import javax.swing.JComponent;
+import javax.swing.JToolBar;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 
@@ -37,6 +39,11 @@ public interface WabitPanel extends DataEntryPanel {
 	 * "Query Editor" or "Report Editor")
 	 */
 	String getTitle();
+	
+	/**
+	 * Returns the toolbar. A null value means not to render the toolbar.
+	 */
+	@Nullable JToolBar getToolbar();
 
     /**
      * Returns the component (often a JTree or JList, but can be anything) that
