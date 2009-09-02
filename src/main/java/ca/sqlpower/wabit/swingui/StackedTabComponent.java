@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -169,9 +170,11 @@ public class StackedTabComponent extends JComponent {
 					super.paintComponent(g);
 				}
 			};
-			tabComponent.add(titleLabel, "grow 100 0, push 100 0");
+			
+			titleLabel.setMinimumSize(new Dimension(getMinimumSize().width, closeIcon.getIconHeight()));
+			tabComponent.add(titleLabel, "grow 100 100, push 100 100");
 			if (closeIconComponent != null) {
-				tabComponent.add(closeIconComponent, "grow 0 0, push 0 0");
+				tabComponent.add(closeIconComponent, "grow 0 100, push 0 100");
 			}
 			
 			tabComponent.addMouseListener(new MouseListener() {
@@ -203,6 +206,12 @@ public class StackedTabComponent extends JComponent {
 						int relativeX = e.getX() - closeIconComponent.getX();
 						int relativeY = e.getY() - closeIconComponent.getY();
 						if (closeIconComponent.contains(relativeX, relativeY)) {
+							// XXX: Since the context linstens to this
+							// StackedTabComponent with a ChangeListener,
+							// there's probably a way to notify the context to
+							// close a workspace through that or another
+							// listener. Then CloseWorkspaceAction doesn't have
+							// to expose another public static method.
 							CloseWorkspaceAction.checkUnsavedChanges(context);
 							CloseWorkspaceAction.closeActiveWorkspace(context);
 						}
