@@ -209,6 +209,15 @@ public class ChartSwingUtil {
 
         }
         
+        if (plot instanceof MultiplePiePlot){
+            MultiplePiePlot mpplot = (MultiplePiePlot) plot;
+            JFreeChart pchart = mpplot.getPieChart();
+            PiePlot pplot = (PiePlot) pchart.getPlot();
+            pplot.setBackgroundPaint(null);
+            pplot.setOutlinePaint(null);
+            pplot.setCircular(true);
+        }
+        
         // TODO pie
         
     }
