@@ -79,7 +79,7 @@ public class StackedTabComponent extends JComponent {
 	private List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
 	
 	public StackedTabComponent() {
-		setLayout(new MigLayout("flowy, hidemode 3, fill", "", ""));
+		setLayout(new MigLayout("flowy, hidemode 3, fill, ins 0", "", ""));
 	}
 	
 	/**
