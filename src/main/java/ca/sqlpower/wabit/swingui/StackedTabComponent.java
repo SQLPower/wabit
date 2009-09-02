@@ -29,9 +29,11 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -60,6 +62,13 @@ public class StackedTabComponent extends JComponent {
 	 */
 	private static final Color UNSELECTED_TAB_RADIENT_TOP = new Color(221, 221, 221);
 	private static final Color UNSELECTED_TAB_GRADIENT_BOTTOM = new Color(204, 204, 204);
+	
+	/**
+	 * Set of border colours for tabs (unselected and selected)
+	 */
+	private final Border UNSELECTED_LABEL_BORDER = BorderFactory.createLineBorder(new Color(187, 187, 187), 1);
+	private final Border SELECTED_OR_HOVERING_OVER_LABEL_BORDER = BorderFactory.createLineBorder(new Color(255, 99, 0), 1);
+	
 	
 	/**
 	 * A list of tabs that this component currently contains
@@ -102,7 +111,7 @@ public class StackedTabComponent extends JComponent {
 		 * The {@link Component} contained by this tab
 		 */
 		private final Component subComponent;
-		
+
 		/**
 		 * Creates a new StackedTab with the given title and containing the
 		 * given {@link Component}
@@ -134,11 +143,15 @@ public class StackedTabComponent extends JComponent {
 				}
 
 				public void mouseEntered(MouseEvent e) {
-					// TODO: provide visual feedback?
+					if (StackedTab.this != selectedTab) {
+						label.setBorder(SELECTED_OR_HOVERING_OVER_LABEL_BORDER);
+					}
 				}
 
 				public void mouseExited(MouseEvent e) {
-					// TODO: provide visual feedback?				
+					if (StackedTab.this != selectedTab) {
+						label.setBorder(UNSELECTED_LABEL_BORDER);
+					}
 				}
 
 				public void mousePressed(MouseEvent e) {
@@ -150,6 +163,9 @@ public class StackedTabComponent extends JComponent {
 				}
 				
 			});
+			
+			label.setBorder(UNSELECTED_LABEL_BORDER);
+			
 			this.subComponent = component;
 		}
 	}
@@ -171,12 +187,14 @@ public class StackedTabComponent extends JComponent {
 		StackedTab oldTab = selectedTab;
 		if (oldTab != null){
 			oldTab.subComponent.setVisible(false);
+			oldTab.label.setBorder(UNSELECTED_LABEL_BORDER);
 		}
 		if (i < 0 || i >= tabs.size()) {
 			selectedTab = null;
 		} else {
 			selectedTab = tabs.get(i);
 			selectedTab.subComponent.setVisible(true);
+			selectedTab.label.setBorder(SELECTED_OR_HOVERING_OVER_LABEL_BORDER);
 		}
 		StackedTabComponent.this.repaint();
 		if (oldTab != selectedTab) {
