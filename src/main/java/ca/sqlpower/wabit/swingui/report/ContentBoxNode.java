@@ -198,7 +198,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
      */
     private WabitChildListener contentRendererListener = new WabitChildListener() {
 		public void wabitChildRemoved(WabitChildEvent e) {
-			//do nothing 
+			setSwingContentRenderer(null);
 		}
 		
 		public void wabitChildAdded(WabitChildEvent e) {
