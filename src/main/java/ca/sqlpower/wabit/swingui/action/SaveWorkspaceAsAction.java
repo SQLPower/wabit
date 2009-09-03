@@ -64,6 +64,15 @@ import com.rc.retroweaver.runtime.Collections;
  * sessions to user selected files.
  */
 public class SaveWorkspaceAsAction extends AbstractAction {
+	
+    /**
+     * This exception is used to show exceptions during saving. 
+     */
+    public static class SaveException extends Exception {
+        public SaveException(String message) {
+            super(message);
+        }
+    }
     
     private static final Logger logger = Logger.getLogger(SaveWorkspaceAsAction.class);
     
@@ -93,19 +102,44 @@ public class SaveWorkspaceAsAction extends AbstractAction {
     public static boolean save(WabitSwingSessionContext context, WabitSwingSession session) {
         if (session == null) return false;
         
-        JFileChooser fc = new JFileChooser(session.getCurrentURIAsFile());
-        fc.setDialogTitle("Select the directory to save " 
-        		+ session.getWorkspace().getName() + " to.");
-        fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
-        
-        int fcChoice = fc.showSaveDialog(context.getFrame());
+        boolean promptForFile = true;
+        File selectedFile = null;
+        while (promptForFile) {
+            JFileChooser fc = new JFileChooser(session.getCurrentURIAsFile());
+            fc.setDialogTitle("Select the directory to save " 
+                    + session.getWorkspace().getName() + " to.");
+            fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
 
-        if (fcChoice != JFileChooser.APPROVE_OPTION) {
-            return false;
+            int fcChoice = fc.showSaveDialog(context.getFrame());
+
+            if (fcChoice != JFileChooser.APPROVE_OPTION) {
+                return false;
+            }
+
+            selectedFile = fc.getSelectedFile();
+            if (selectedFile.exists()) {
+                int response = JOptionPane.showConfirmDialog(context.getFrame(), 
+                        "The file " + selectedFile.getName() + " already exists, overwrite?", 
+                        "File exists", 
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (response == JOptionPane.YES_OPTION) {
+                    promptForFile = false;
+                }
+            } else {
+                promptForFile = false;
+            }
         }
         
-        File selectedFile = fc.getSelectedFile();
-        selectedFile = saveSessionToFile(context, session, selectedFile);
+        try {
+            selectedFile = saveSessionToFile(context, session, selectedFile);
+        } catch (SaveException e) {
+            JOptionPane.showMessageDialog(context.getFrame(),
+                    e.getMessage(), "Error on Saving",
+                    JOptionPane.ERROR_MESSAGE);
+            context.setStatusMessage(e.getMessage());
+            return false;
+        }
         context.setStatusMessage("Saved " + session.getWorkspace().getName() + " to " +
                 selectedFile.getName());
         
@@ -128,7 +162,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
      */
     @SuppressWarnings("unchecked")
     static File saveSessionToFile(WabitSwingSessionContext context,
-            WabitSwingSession session, File selectedFile) {
+            WabitSwingSession session, File selectedFile) throws SaveException {
         int lastIndexOfDecimal = selectedFile.getName().lastIndexOf(".");
         if (lastIndexOfDecimal < 0 || 
                 !selectedFile.getName().substring(lastIndexOfDecimal).equals(
@@ -136,12 +170,52 @@ public class SaveWorkspaceAsAction extends AbstractAction {
             selectedFile = new File(selectedFile.getAbsoluteFile() + WABIT_FILE_EXTENSION);
         }
         try {
-        	session.getWorkspace().setName(selectedFile.getName().replaceAll(".wabit", ""));
-            final FileOutputStream out = new FileOutputStream(selectedFile);
+            session.getWorkspace().setName(selectedFile.getName().replaceAll(".wabit", ""));
+            
+            if (selectedFile.exists() && !selectedFile.canWrite()) {
+                // write problems with wabit file will muck up the save process
+                throw new SaveException( 
+                        "problem saving project -- cannot write to " +
+                        selectedFile.getAbsolutePath());
+            }
+            File backupFile = new File(selectedFile.getParent(), selectedFile.getName()+"~");
+            
+            File tempFile = null;
+            tempFile = new File(selectedFile.getParent(),"tmp___" + selectedFile.getName());
+            
+            final FileOutputStream out = new FileOutputStream(tempFile);
             WorkspaceXMLDAO workspaceSaver = new WorkspaceXMLDAO(out, context);
             workspaceSaver.save(Collections.singletonList(session.getWorkspace()));
             out.flush();
             out.close();
+            
+            // Do the rename dance.
+            // This is a REALLY bad place for failure (especially if we've made the user wait several hours to save
+            // a large project), so we MUST check failures from renameto (both places!)
+            boolean fstatus = false;
+            fstatus = backupFile.delete();
+            logger.debug("deleting backup~ file: " + fstatus);
+
+            // If this is a brand new project, the old file does not yet exist, no point trying to rename it.
+            // But if it already existed, renaming current to backup must succeed, or we give up.
+            if (selectedFile.exists()) {
+                fstatus = selectedFile.renameTo(backupFile);
+                logger.debug("rename current file to backupFile: " + fstatus);
+                if (!fstatus) {
+                    throw new SaveException(
+                            "Cannot rename current file to backup. Project in " 
+                            + tempFile.toString() + ". The file " + session.getCurrentURIAsFile() 
+                            + " contains the old project.");
+                }
+            }
+            fstatus = tempFile.renameTo(selectedFile);
+            if (!fstatus) {
+                throw new SaveException(
+                        "Cannot rename current file to backup. Project in " 
+                        + tempFile.toString() + ". The file " + session.getCurrentURIAsFile() 
+                        + " contains the old project.");
+            }
+            logger.debug("rename tempFile to current file: " + fstatus);
         } catch (FileNotFoundException e1) {
             throw new RuntimeException(e1);
         } catch (IOException e) {
@@ -172,7 +246,15 @@ public class SaveWorkspaceAsAction extends AbstractAction {
         for (Map.Entry<WabitSwingSession, URI> entry : prompt.getSessionFiles().entrySet()) {
             try {
                 File file = new File(entry.getValue());
-                file = saveSessionToFile(context, entry.getKey(), file);
+                try {
+                    file = saveSessionToFile(context, entry.getKey(), file);
+                } catch (SaveException e) {
+                    JOptionPane.showMessageDialog(context.getFrame(),
+                            e.getMessage(), "Error on Saving",
+                            JOptionPane.ERROR_MESSAGE);
+                    context.setStatusMessage(e.getMessage());
+                    return false;
+                }
                 savedStringBuffer.append(" " + entry.getKey().getWorkspace().getName() 
                         + " to " + file.getName());
             } catch (IllegalArgumentException e) {

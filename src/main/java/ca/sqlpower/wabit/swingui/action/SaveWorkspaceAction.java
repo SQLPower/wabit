@@ -23,12 +23,14 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 
 import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
 
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction.SaveException;
 
 /**
  * This will save the active session in the context to the file where the user
@@ -85,7 +87,15 @@ public class SaveWorkspaceAction extends AbstractAction {
         } else {
             if (session.getCurrentURI().toString().contains(
                         WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL)) return true;
-            SaveWorkspaceAsAction.saveSessionToFile(context, session, session.getCurrentURIAsFile());
+            try {
+				SaveWorkspaceAsAction.saveSessionToFile(context, session, session.getCurrentURIAsFile());
+			} catch (SaveException e) {
+                JOptionPane.showMessageDialog(context.getFrame(),
+                		e.getMessage(), "Error on Saving",
+                		JOptionPane.ERROR_MESSAGE);
+                context.setStatusMessage(e.getMessage());
+                return false;
+			}
             context.setStatusMessage("Saved " + session.getWorkspace().getName() + " to " +
                     targetFile.getName());
             return true;
@@ -119,7 +129,15 @@ public class SaveWorkspaceAction extends AbstractAction {
             	if (swingSession.getCurrentURI().toString().contains(
             			WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL)) continue;
 
-            	SaveWorkspaceAsAction.saveSessionToFile(context, swingSession, swingSession.getCurrentURIAsFile());
+            	try {
+					SaveWorkspaceAsAction.saveSessionToFile(context, swingSession, swingSession.getCurrentURIAsFile());
+				} catch (SaveException e) {
+                    JOptionPane.showMessageDialog(context.getFrame(),
+                    		e.getMessage(), "Error on Saving",
+                    		JOptionPane.ERROR_MESSAGE);
+                    context.setStatusMessage(e.getMessage());
+                    return false;
+				}
             	statusMessage.append(session.getWorkspace().getName() + " to " + 
             			swingSession.getCurrentURIAsFile().getName() + " ");
             }
