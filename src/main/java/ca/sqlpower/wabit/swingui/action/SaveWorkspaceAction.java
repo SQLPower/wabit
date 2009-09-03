@@ -104,28 +104,25 @@ public class SaveWorkspaceAction extends AbstractAction {
      *         otherwise.
      */
     public static boolean saveAllSessions(WabitSwingSessionContext context) {
-        for (WabitSession session : context.getSessions()) {
-            WabitSwingSession swingSession = (WabitSwingSession) session;
-			if (swingSession.getCurrentURIAsFile() == null ||
-            		(swingSession.getCurrentURI() != null &&
-            		swingSession.hasUnsavedChanges() &&
-        			swingSession.getCurrentURI().toString().contains(
-        			WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL))) {
-                return SaveWorkspaceAsAction.saveAllSessions(context);
-            }
-        }
-        
         StringBuffer statusMessage = new StringBuffer("Saved ");
         for (WabitSession session : context.getSessions()) {
             //If the example workspace has unsaved changes so it needs to be saved
             //the user should be prompted above for a file location.
             final WabitSwingSession swingSession = (WabitSwingSession) session;
-            if (swingSession.getCurrentURI().toString().contains(
-                    WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL)) continue;
-            
-            SaveWorkspaceAsAction.saveSessionToFile(context, swingSession, swingSession.getCurrentURIAsFile());
-            statusMessage.append(session.getWorkspace().getName() + " to " + 
-                    swingSession.getCurrentURIAsFile().getName() + " ");
+            if (swingSession.getCurrentURIAsFile() == null ||
+            		(swingSession.getCurrentURI() != null &&
+            		swingSession.hasUnsavedChanges() &&
+        			swingSession.getCurrentURI().toString().contains(
+        			WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL))) {
+                SaveWorkspaceAsAction.save(context, swingSession);
+            } else {
+            	if (swingSession.getCurrentURI().toString().contains(
+            			WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL)) continue;
+
+            	SaveWorkspaceAsAction.saveSessionToFile(context, swingSession, swingSession.getCurrentURIAsFile());
+            	statusMessage.append(session.getWorkspace().getName() + " to " + 
+            			swingSession.getCurrentURIAsFile().getName() + " ");
+            }
         }
         context.setStatusMessage(statusMessage.toString());
         return true;

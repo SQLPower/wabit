@@ -94,7 +94,8 @@ public class SaveWorkspaceAsAction extends AbstractAction {
         if (session == null) return false;
         
         JFileChooser fc = new JFileChooser(session.getCurrentURIAsFile());
-        fc.setDialogTitle("Select the directory to save to.");
+        fc.setDialogTitle("Select the directory to save " 
+        		+ session.getWorkspace().getName() + " to.");
         fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
         
         int fcChoice = fc.showSaveDialog(context.getFrame());
