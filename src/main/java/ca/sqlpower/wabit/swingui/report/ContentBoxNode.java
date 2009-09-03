@@ -28,6 +28,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
 import javax.swing.AbstractAction;
 import javax.swing.JDialog;
@@ -73,6 +74,14 @@ public class ContentBoxNode extends PNode implements ReportNode {
     private boolean paintBorders = false;
     
     private boolean showDropInfo = false;
+    
+    /**
+     * The simple property change support object to fire basic property changes
+     * from the content box node. This is different from the piccolo property
+     * changes on this object as piccolo sends property codes with the change
+     * event which is not needed for the simpler properties of this content box.
+     */
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private PInputEventListener inputHandler = new PInputManager() {
         
@@ -215,6 +224,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 	 * add a listener on the content box to listen for changes to the contentrenderer
 	 */
 	private void setSwingContentRenderer(ReportContentRenderer renderer) {
+	    SwingContentRenderer oldSwingRenderer = swingRenderer;
 		if (swingRenderer != null) {
 			removeInputEventListener(swingRenderer);
 		}
@@ -237,6 +247,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		if (swingRenderer != null) {
 			addInputEventListener(swingRenderer);
 		}
+		pcs.firePropertyChange(new PropertyChangeEvent(this, "swingRenderer", oldSwingRenderer,
+		        swingRenderer));
 	}
 	
 	private final LayoutPanel parentPanel;
@@ -386,7 +398,25 @@ public class ContentBoxNode extends PNode implements ReportNode {
         }
     }
     
-    public PInputEventListener getInputHandler() {
+    public PInputEventListener getKeyboardListener() {
+        if (swingRenderer != null) {
+            return swingRenderer;
+        }
     	return inputHandler;
+    }
+    
+    /**
+     * Adds a property change listener that listens to content box specific
+     * properties. This is different from the property change listener that you
+     * can add to listen to piccolo property changes. Piccolo property changes
+     * come with a property code that is not necessary for ContentBoxNode property
+     * changes.
+     */
+    public void addContentBoxPropertyChangeListener(PropertyChangeListener l) {
+        pcs.addPropertyChangeListener(l);
+    }
+    
+    public void removeContentBoxPropertyChangeListener(PropertyChangeListener l) {
+        pcs.removePropertyChangeListener(l);
     }
 }

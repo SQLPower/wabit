@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PInputManager;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PDimension;
@@ -37,9 +40,25 @@ import edu.umd.cs.piccolox.util.PBoundsLocator;
  * while they are being dragged.
  */
 public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
-
-    @SuppressWarnings("unused")
+    
     private static final Logger logger = Logger.getLogger(GuideAwareSelectionEventHandler.class);
+    
+    /**
+     * This object tracks the current object with the keyboard focus.
+     */
+    private Object keyboardFocusObject = this; 
+    
+    /**
+     * This listens for changes to the content box's swing renderer to update the
+     * keyboard listener if the renderer changes.
+     */
+    private final PropertyChangeListener contentBoxRendererListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("swingRenderer")) {
+                setKeyboardFocus(true, keyboardFocusObject);
+            }
+        }
+    };
     
     private double snapThreshold = 7;
 
@@ -52,7 +71,7 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
         super(marqueeParent, selectableParent);
 		this.canvas = canvas;
     }
-
+    
     /**
      * Overrides the normal drag handler to implement snap-to-guide behaviour.
      */
@@ -99,32 +118,29 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
         if (! (node instanceof GuideNode)) {
             super.select(node);
         }
-        System.out.println("Guide is " + node);
-        if (node instanceof ContentBoxNode) {
-        	super.select(node);
-        }
+        logger.debug("Guide is " + node);
+        setKeyboardFocus(true, node);
     }
     
     @Override
     public void unselect(PNode arg0) {
     	super.unselect(arg0);
-    	canvas.getRoot().getDefaultInputManager().
-    		setKeyboardFocus(this);
+    	setKeyboardFocus(false, arg0);
     }
     
     @SuppressWarnings("unchecked")
 	@Override
     public void unselect(Collection arg0) {
     	super.unselect(arg0);
-    	canvas.getRoot().getDefaultInputManager().
-		setKeyboardFocus(this);
+		for (Object o : arg0) {
+		    setKeyboardFocus(false, o);
+		}
     }
     
     @Override
     public void unselectAll() {
     	super.unselectAll();
-    	canvas.getRoot().getDefaultInputManager().
-		setKeyboardFocus(this);
+    	setKeyboardFocus(true, this);
     }
     
     /**
@@ -157,5 +173,44 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
             }
         }
         return guides;
+    }
+
+    /**
+     * This sets the keyboard focus appropriately depending on the object
+     * gaining or losing focus and if it is actually gaining or losing focus.
+     * 
+     * @param isSelecting
+     *            True if the given object is being selected. False if the given
+     *            object is losing focus.
+     * @param itemBeingSelected
+     *            The object gaining or losing focus.
+     */
+    private void setKeyboardFocus(boolean isSelecting, Object itemBeingSelected) {
+        PInputManager inputManager = canvas.getRoot().getDefaultInputManager();
+        if (isSelecting) {
+            if (keyboardFocusObject instanceof ContentBoxNode) {
+                ((ContentBoxNode) keyboardFocusObject).removeContentBoxPropertyChangeListener(
+                        contentBoxRendererListener);
+            }
+            
+            if (itemBeingSelected instanceof ContentBoxNode) {
+                ContentBoxNode cbNode = (ContentBoxNode) itemBeingSelected;
+                inputManager.setKeyboardFocus(cbNode.getKeyboardListener());
+                keyboardFocusObject = itemBeingSelected;
+                cbNode.addContentBoxPropertyChangeListener(contentBoxRendererListener);
+            } else {
+                inputManager.setKeyboardFocus(this);
+                keyboardFocusObject = this;
+            }
+        } else {
+            if (itemBeingSelected == keyboardFocusObject) {
+                if (keyboardFocusObject instanceof ContentBoxNode) {
+                    ((ContentBoxNode) keyboardFocusObject).removeContentBoxPropertyChangeListener(
+                            contentBoxRendererListener);
+                }
+                inputManager.setKeyboardFocus(this);
+                keyboardFocusObject = this;
+            }
+        }
     }
 }
