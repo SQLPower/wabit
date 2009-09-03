@@ -475,7 +475,9 @@ public class ChartPanel implements WabitPanel {
     }
 
     private void buildUI() {
-        panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.GRAY), 
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout(
                         "pref, 3dlu, pref:grow, 3dlu, pref:grow",
