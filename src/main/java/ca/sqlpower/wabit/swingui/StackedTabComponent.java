@@ -296,6 +296,7 @@ public class StackedTabComponent extends JComponent {
 		final StackedTab tab = tabs.get(index);	
 		if (tab != null) {
 			tab.title = newValue;
+			tab.titleLabel.setText(" " + newValue);
 		}
 	}
 

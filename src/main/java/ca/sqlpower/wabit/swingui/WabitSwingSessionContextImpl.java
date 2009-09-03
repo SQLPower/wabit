@@ -1705,7 +1705,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     			WabitSession sourceSession = ((WabitWorkspace) evt.getSource()).getSession();
 				int index = getSessions().indexOf(sourceSession) + 1;
 				stackedTabPane.setTitleAt(index, (String) evt.getNewValue());
-				stackedTabPane.repaint();
     		}
     	}
     };
