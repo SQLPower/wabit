@@ -115,6 +115,11 @@ public class CellSetViewer {
             protected void configureEnclosingScrollPane() {
                 // we do this manually, and the default behaviour ruins our setup
             }
+            
+            @Override
+            protected void unconfigureEnclosingScrollPane() {
+            	 // we do this manually, and the default behaviour ruins our setup
+            }
         };
         
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
