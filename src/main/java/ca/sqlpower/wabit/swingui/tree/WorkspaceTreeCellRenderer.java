@@ -19,12 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.tree;
 
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
@@ -55,15 +50,15 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
-import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
-import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ChartType;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.olap.Olap4JTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
@@ -251,20 +246,9 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     }
 
 	private void setupForWabitImage(WorkspaceTreeCellRenderer r, WabitObject wo) {
-		final Image wabitImage = ((WabitImage) wo).getImage();
-		if (wabitImage != null) {
-		    final int width = DB_ICON.getIconWidth();
-		    final int height = DB_ICON.getIconHeight();
-		    final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-		    Graphics2D g = image.createGraphics();
-		    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
-		            RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		    g.drawImage(wabitImage, 0, 0, width, height, new Color(0xffffffff, true), null);
-		    g.dispose();
-		
-		    final ImageIcon icon = new ImageIcon(image);
-		    r.setIcon(icon);
+		final Icon wabitIcon = ((WabitImage) wo).getImageAsIcon();
+		if (wabitIcon != null) {
+		    r.setIcon(wabitIcon);
 		}
 		r.setText(wo.getName());
 	}

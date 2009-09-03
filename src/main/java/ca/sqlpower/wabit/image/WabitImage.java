@@ -19,9 +19,16 @@
 
 package ca.sqlpower.wabit.image;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -33,9 +40,16 @@ public class WabitImage extends AbstractWabitObject {
     
     private Image image;
     
+    /**
+     * This will cache the image as a 16x16 icon for use in trees, lists, and other
+     * places.
+     */
+    private Icon imageAsIcon;
+    
     public WabitImage(WabitImage wabitImage) {
     	super();
     	image = wabitImage.getImage();
+    	setImageAsIcon();
     }
     
     public WabitImage() {
@@ -49,11 +63,38 @@ public class WabitImage extends AbstractWabitObject {
     public void setImage(Image image) {
         Image oldImage = this.image;
         this.image = image;
+        setImageAsIcon();
         firePropertyChange("image", oldImage, image);
+    }
+
+    /**
+     * This will cache the current image in this object as an icon.
+     */
+    private void setImageAsIcon() {
+        if (image != null) {
+            final int width = 16;
+            final int height = 16;
+            final BufferedImage bufferedImage = 
+                new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+            Graphics2D g = bufferedImage.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g.drawImage(image, 0, 0, width, height, new Color(0xffffffff, true), null);
+            g.dispose();
+        
+            imageAsIcon = new ImageIcon(bufferedImage);
+        } else {
+            imageAsIcon = null;
+        }
     }
     
     public Image getImage() {
         return image;
+    }
+    
+    public Icon getImageAsIcon() {
+        return imageAsIcon;
     }
     
     public boolean allowsChildren() {
