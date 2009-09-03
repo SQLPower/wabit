@@ -831,6 +831,7 @@ public class QueryPanel implements WabitPanel {
     	
     	DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref"));
         builder.append("Database Connection", reportComboBox);
+        topPanel.add(builder.getPanel(), BorderLayout.NORTH);
     	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
