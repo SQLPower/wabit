@@ -46,6 +46,18 @@ public class ImageRenderer extends AbstractWabitObject implements
 	private WabitImage image;
 
 	private String filename;
+	
+	/**
+	 * If the image is preserving the aspect ratio then this will decide
+	 * its position in the content box horizontally.
+	 */
+	private HorizontalAlignment hAlign = HorizontalAlignment.CENTER;
+	
+	/**
+	 * If the image is preserving the aspect ratio then this will decide
+	 * its position in the content box vertically.
+	 */
+	private VerticalAlignment vAlign = VerticalAlignment.MIDDLE;
 
 	/**
 	 * If this is true then the image will be displayed with its aspect ratio
@@ -125,7 +137,37 @@ public class ImageRenderer extends AbstractWabitObject implements
 			height = (int) contentBox.getHeight();
 		}
 		
-		g.drawImage(image.getImage(), 0, 0, width, height, null);
+		int x = 0;
+		if (isPreservingAspectRatio()) {
+		    switch (getHAlign()) {
+    		    case LEFT:
+    		        x = 0;
+    		        break;
+    		    case CENTER:
+    		        x = (int) (contentBox.getWidth() - width) / 2;
+    		        break;
+    		    case RIGHT:
+    		        x = (int) (contentBox.getWidth() - width);
+    		        break;
+		    }
+		}
+		
+		int y = 0;
+		if (isPreservingAspectRatio()) {
+		    switch (getVAlign()) {
+    		    case TOP:
+    		        y = 0;
+    		        break;
+    		    case MIDDLE:
+    		        y = (int) ((contentBox.getHeight() - height) / 2);
+    		        break;
+    		    case BOTTOM:
+    		        y = (int) (contentBox.getHeight() - height);
+    		        break;
+		    }
+		}
+		
+		g.drawImage(image.getImage(), x, y, width, height, null);
 		logger.debug("Image rendered");
 		return false;
 	}
@@ -190,7 +232,9 @@ public class ImageRenderer extends AbstractWabitObject implements
 	}
 
 	public void setPreservingAspectRatio(boolean preservingAspectRatio) {
+	    boolean oldValue = this.preservingAspectRatio;
 		this.preservingAspectRatio = preservingAspectRatio;
+		firePropertyChange("preservingAspectRatio", oldValue, preservingAspectRatio);
 	}
 
 	public boolean isPreservingAspectRatio() {
@@ -200,4 +244,24 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public void refresh() {
 		// no-op for now, but if the image file changes, perhaps there's a use for it? 
 	}
+
+    public void setHAlign(HorizontalAlignment hAlign) {
+        HorizontalAlignment oldAlign = this.hAlign;
+        this.hAlign = hAlign;
+        firePropertyChange("hAlign", oldAlign, hAlign);
+    }
+
+    public HorizontalAlignment getHAlign() {
+        return hAlign;
+    }
+
+    public void setVAlign(VerticalAlignment vAlign) {
+        VerticalAlignment oldAlign = this.vAlign;
+        this.vAlign = vAlign;
+        firePropertyChange("vAlign", oldAlign, vAlign);
+    }
+
+    public VerticalAlignment getVAlign() {
+        return vAlign;
+    }
 }

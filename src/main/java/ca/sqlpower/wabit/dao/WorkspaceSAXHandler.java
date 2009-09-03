@@ -837,6 +837,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
          	loadingText = true;
         } else if (name.equals("image-renderer")) {
         	imageRenderer = new ImageRenderer();
+        	
+        	//Old image renderers always had the image in the top left. If
+        	//the file is new it will have the horizontal and vertical alignments
+        	//set.
+        	imageRenderer.setHAlign(HorizontalAlignment.LEFT);
+        	imageRenderer.setVAlign(VerticalAlignment.TOP);
+        	
         	contentBox.setContentRenderer(imageRenderer);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -857,6 +864,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		} else if (aname.equals("preserving-aspect-ratio")) {
         			imageRenderer.setPreservingAspectRatio(
         					Boolean.valueOf(aval));
+        		} else if (aname.equals("h-align")) {
+        		    imageRenderer.setHAlign(HorizontalAlignment.valueOf(aval));
+        		} else if (aname.equals("v-align")) {
+        		    imageRenderer.setVAlign(VerticalAlignment.valueOf(aval));
         		} else {
         			logger.warn("Unexpected attribute of <image-renderer>: " + aname + "=" + aval);
         		}

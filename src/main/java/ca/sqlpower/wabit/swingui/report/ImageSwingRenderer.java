@@ -19,68 +19,140 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.ListCellRenderer;
-import javax.swing.ListSelectionModel;
+import javax.swing.JRadioButton;
+import javax.swing.JToggleButton;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
+import ca.sqlpower.wabit.report.VerticalAlignment;
+import ca.sqlpower.wabit.swingui.Icons;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
 public class ImageSwingRenderer implements SwingContentRenderer {
     
+    @SuppressWarnings("unused")
     private static final Logger logger = Logger.getLogger(ImageSwingRenderer.class);
 
     private static class ImageEntryPanel implements DataEntryPanel {
         
         private final JPanel panel;
-        private JList imageList;
-        private int startingImageIndex;
-        private ListCellRenderer oldCellRenderer;
+        private JRadioButton preserveAspectButton;
+        private JRadioButton scaleImageButton;
+        private JToggleButton alignTop;
+        private JToggleButton alignMiddle;
+        private JToggleButton alignBottom;
+        private JToggleButton alignLeft;
+        private JToggleButton alignCentre;
+        private JToggleButton alignRight;
         private final ImageRenderer renderer;
         
         public ImageEntryPanel(WabitWorkspace workspace, ImageRenderer renderer) {
             this.renderer = renderer;
-            panel = new JPanel(new BorderLayout());
-            imageList = new JList(workspace.getImages().toArray());
             
-            oldCellRenderer = imageList.getCellRenderer();
-            imageList.setCellRenderer(new ListCellRenderer() {
+            JLabel scalingModeLabel = new JLabel("Scaling Mode");
             
-                public Component getListCellRendererComponent(JList list, Object value,
-                        int index, boolean isSelected, boolean cellHasFocus) {
-                    Component comp = 
-                        oldCellRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                    if (comp instanceof JLabel) {
-                        ((JLabel) comp).setText(((WabitObject) value).getName());
-                    }
-                    return comp;
-                }
-            });
-            startingImageIndex = workspace.getImages().indexOf(renderer.getImage());
-            imageList.setSelectedIndex(startingImageIndex);
-            imageList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            panel.add(new JLabel("Select the desired image below"), BorderLayout.NORTH);
-            panel.add(new JScrollPane(imageList), BorderLayout.CENTER);
-            logger.debug("Created the image entry panel.");
+            ButtonGroup resizeModeButtonGroup = new ButtonGroup();
+            preserveAspectButton = new JRadioButton("Preserve Aspect");
+            scaleImageButton = new JRadioButton("Stretch");
+            resizeModeButtonGroup.add(preserveAspectButton);
+            resizeModeButtonGroup.add(scaleImageButton);
+            preserveAspectButton.setSelected(renderer.isPreservingAspectRatio());
+            scaleImageButton.setSelected(!renderer.isPreservingAspectRatio());
+            
+            JLabel alignmentLabel = new JLabel("Alignment");
+            
+            ButtonGroup vAlignButtonGroup = new ButtonGroup();
+            alignTop = new JToggleButton(Icons.TOP_ALIGN_ICON);
+            alignMiddle = new JToggleButton(Icons.MIDDLE_ALIGN_ICON);
+            alignBottom = new JToggleButton(Icons.BOTTOM_ALIGN_ICON);
+            vAlignButtonGroup.add(alignTop);
+            vAlignButtonGroup.add(alignMiddle);
+            vAlignButtonGroup.add(alignBottom);
+            switch (renderer.getVAlign()) {
+                case TOP:
+                    alignTop.setSelected(true);
+                    break;
+                case MIDDLE:
+                    alignMiddle.setSelected(true);
+                    break;
+                case BOTTOM:
+                    alignBottom.setSelected(true);
+                    break;
+            }
+            
+            ButtonGroup hAlignButtonGroup = new ButtonGroup();
+            alignLeft = new JToggleButton(Icons.LEFT_ALIGN_ICON);
+            alignCentre = new JToggleButton(Icons.CENTRE_ALIGN_ICON);
+            alignRight = new JToggleButton(Icons.RIGHT_ALIGN_ICON);
+            hAlignButtonGroup.add(alignLeft);
+            hAlignButtonGroup.add(alignCentre);
+            hAlignButtonGroup.add(alignRight);
+            switch (renderer.getHAlign()) {
+                case LEFT:
+                    alignLeft.setSelected(true);
+                    break;
+                case CENTER:
+                    alignCentre.setSelected(true);
+                    break;
+                case RIGHT:
+                    alignRight.setSelected(true);
+                    break;
+            }
+
+            panel = new JPanel(new MigLayout());
+            panel.add(scalingModeLabel, "wrap, span");
+            panel.add(scaleImageButton, "gapbefore 10px, wrap, span");
+            panel.add(preserveAspectButton, "gapbefore 10px, wrap, span");
+            panel.add(alignmentLabel, "gapbefore 40px");
+            panel.add(alignLeft);
+            panel.add(alignCentre);
+            panel.add(alignRight);
+            panel.add(alignTop, "gapbefore unrelated");
+            panel.add(alignMiddle);
+            panel.add(alignBottom);
+            
         }
         
         public boolean hasUnsavedChanges() {
-            return !(startingImageIndex == imageList.getSelectedIndex());
+            if (scaleImageButton.isSelected() && renderer.isPreservingAspectRatio()) return true;
+            if (preserveAspectButton.isSelected() && !renderer.isPreservingAspectRatio()) return true;
+            if (renderer.isPreservingAspectRatio()) {
+                switch (renderer.getHAlign()) {
+                    case LEFT:
+                        if (!alignLeft.isSelected()) return true;
+                        break;
+                    case CENTER:
+                        if (!alignCentre.isSelected()) return true;
+                        break;
+                    case RIGHT:
+                        if(!alignRight.isSelected()) return true;
+                        break;
+                }
+                switch (renderer.getVAlign()) {
+                    case TOP:
+                        if (!alignTop.isSelected()) return true;
+                        break;
+                    case MIDDLE:
+                        if (!alignMiddle.isSelected()) return true;
+                        break;
+                    case BOTTOM:
+                        if (!alignBottom.isSelected()) return true;
+                        break;
+                }
+            }
+            return false;
         }
     
         public JComponent getPanel() {
@@ -92,7 +164,25 @@ public class ImageSwingRenderer implements SwingContentRenderer {
         }
     
         public boolean applyChanges() {
-            renderer.setImage((WabitImage) imageList.getSelectedValue());
+            if (scaleImageButton.isSelected()) {
+                renderer.setPreservingAspectRatio(false);
+            } else if (preserveAspectButton.isSelected()) {
+                renderer.setPreservingAspectRatio(true);
+                if (alignLeft.isSelected()) {
+                    renderer.setHAlign(HorizontalAlignment.LEFT);
+                } else if (alignCentre.isSelected()) {
+                    renderer.setHAlign(HorizontalAlignment.CENTER);
+                } else if (alignRight.isSelected()) {
+                    renderer.setHAlign(HorizontalAlignment.RIGHT);
+                }
+                if (alignTop.isSelected()) {
+                    renderer.setVAlign(VerticalAlignment.TOP);
+                } else if (alignMiddle.isSelected()) {
+                    renderer.setVAlign(VerticalAlignment.MIDDLE);
+                } else if (alignBottom.isSelected()) {
+                    renderer.setVAlign(VerticalAlignment.BOTTOM);
+                }
+            }
             return true;
         }
     };

@@ -115,10 +115,11 @@ public class WorkspaceXMLDAO {
      *                be lost.
      *  <dt>1.2.1 <dd>Moved the text in user-defined queries and the text in report labels
      *                into their own text tag to preserve newline characters.
+     *  <dt>1.2.2 <dd>Added the horizontal and vertical alignment properties to the image renderer.
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 2, 1); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version(1, 2, 2); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -487,6 +488,8 @@ public class WorkspaceXMLDAO {
 						}
 						printAttribute("preserving-aspect-ratio", 
 								imgRenderer.isPreservingAspectRatio());
+						printAttribute("h-align", imgRenderer.getHAlign().name());
+						printAttribute("v-align", imgRenderer.getVAlign().name());
 						xml.niprint(out, ">");
 						out.println("</image-renderer>");
 						
