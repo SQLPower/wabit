@@ -711,6 +711,24 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private final JTree searchTree = new JTree();
     
     /**
+     * This action selects the search tab which will let users search all of
+     * the workspaces at the same time.
+     */
+    private final Action selectSearchTabAction = new AbstractAction("Search") {
+        public void actionPerformed(ActionEvent arg0) {
+            // Choose the search tab. This, of course, assumes that the
+            // Search Tab is always at index 0.
+            stackedTabPane.setSelectedIndex(0);
+            // This seems to improve the chances of requestFocusInWindow succeeding...
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    searchTextArea.getTextField().requestFocusInWindow();
+                }
+            });
+        }
+    };
+    
+    /**
      * This is the cell renderer in the search tree, it basically just gets
      * the object out of the {@link DefaultMutableTreeNode} class that is in
      * the tree and passes that object (which will be something that the
@@ -768,19 +786,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         stackedTabPane = new StackedTabComponent(this);
         stackedTabPane.setDropTarget(new DropTarget(stackedTabPane, treeTabDropTargetListener));
 
-        Action selectSearchTabAction = new AbstractAction() {
-        	public void actionPerformed(ActionEvent arg0) {
-        		// Choose the search tab. This, of course, assumes that the
-				// Search Tab is always at index 0.
-        		stackedTabPane.setSelectedIndex(0);
-        		// This seems to improve the chances of requestFocusInWindow succeeding...
-        		SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						searchTextArea.getTextField().requestFocusInWindow();
-					}
-        		});
-        	}
-        };
         InputMap inputMap = stackedTabPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), SEARCH_TAB);
         stackedTabPane.getActionMap().put(SEARCH_TAB, selectSearchTabAction);
@@ -1416,6 +1421,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             fileMenu.addSeparator();
             fileMenu.add(exitAction);
         }
+        
+        JMenu editMenu = new JMenu("Edit");
+        editMenu.setMnemonic('e');
+        menuBar.add(editMenu);
+        final JMenuItem searchMenuItem = new JMenuItem(selectSearchTabAction);
+        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, 
+                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        editMenu.add(searchMenuItem);
         
         JMenu viewMenu = new JMenu("View");
         viewMenu.setMnemonic('v');
