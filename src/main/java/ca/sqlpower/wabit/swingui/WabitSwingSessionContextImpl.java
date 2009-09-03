@@ -1796,6 +1796,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * @throws Exception if startup fails
      */
     public static void main(final String[] args) throws Exception {
+        SPSUtils.setMasterIcon(FRAME_ICON);
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
