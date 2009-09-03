@@ -273,7 +273,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
                         for (ContentBox cb : cbList) {
                             if (cb.getContentRenderer() instanceof ChartRenderer 
                                     && ((ChartRenderer) cb.getContentRenderer()).getChart() == chart) {
-                                layout.getPage().removeContentBox(cb);
+                                cb.setContentRenderer(null);
                             }
                         }
                     }
@@ -296,9 +296,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		    for (Report layout : session.getWorkspace().getReports()) {
                 List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
                 for (ContentBox cb : cbList) {
-                    if (cb.getContentRenderer() instanceof ImageRenderer && ((ImageRenderer) cb.getContentRenderer()).getImage() == image) {
-                        int layoutIndex = session.getWorkspace().getReports().indexOf(layout);
-                        session.getWorkspace().getReports().get(layoutIndex).getPage().removeContentBox(cb);
+                    if (cb.getContentRenderer() instanceof ImageRenderer && 
+                            ((ImageRenderer) cb.getContentRenderer()).getImage() == image) {
+                        cb.setContentRenderer(null);
                     }
                 }
             }
@@ -315,16 +315,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			for (ca.sqlpower.wabit.report.Layout layout : allLayouts) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
-				    if(cb.getContentRenderer() instanceof ResultSetRenderer && ((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
-				    	int layoutIndex;
-				    	if (layout instanceof Report) { 
-				    		layoutIndex = session.getWorkspace().getReports().indexOf(layout);
-				    		session.getWorkspace().getReports().get(layoutIndex).getPage().removeContentBox(cb);
-				    	} else if (layout instanceof Template) {
-				    		layoutIndex = session.getWorkspace().getTemplates().indexOf(layout);
-				    		session.getWorkspace().getTemplates().get(layoutIndex).getPage().removeContentBox(cb);
-				    	}
-						
+				    if(cb.getContentRenderer() instanceof ResultSetRenderer 
+				            && ((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
+				    	cb.setContentRenderer(null);
 					}
 				}
 			}
@@ -341,8 +334,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			for (ca.sqlpower.wabit.report.Layout layout : allLayouts) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
-				    if(cb.getContentRenderer() instanceof CellSetRenderer &&((CellSetRenderer) cb.getContentRenderer()).getOlapQuery() == query) {
-				    	layout.getPage().removeContentBox(cb);
+				    if(cb.getContentRenderer() instanceof CellSetRenderer &&
+				            ((CellSetRenderer) cb.getContentRenderer()).getOlapQuery() == query) {
+				    	cb.setContentRenderer(null);
 					}
 				}
 			}
