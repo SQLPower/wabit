@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -36,10 +37,10 @@ import java.util.Set;
 
 import javax.swing.AbstractButton;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -51,7 +52,6 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -70,13 +70,12 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ChartType;
+import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.DatasetType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -476,6 +475,7 @@ public class ChartPanel implements WabitPanel {
     }
 
     private void buildUI() {
+        panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout(
                         "pref, 3dlu, pref:grow, 3dlu, pref:grow",

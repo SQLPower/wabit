@@ -475,6 +475,7 @@ public class OlapQueryPanel implements WabitPanel {
         builder.append(cubeChooserButton);
         
         panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         panel.add(builder.getPanel(), BorderLayout.NORTH);
         panel.add(queryPanels, BorderLayout.CENTER);
     }
