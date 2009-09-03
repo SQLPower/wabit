@@ -53,6 +53,7 @@ import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
+import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
@@ -267,7 +268,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
                         new Object[] {"Ok", "Cancel"}, null);
                 if(response == 0) {
                     final Chart chart = (Chart) item;
-                    for (Report layout : session.getWorkspace().getReports()) {
+                    List<Layout> allLayouts = new ArrayList<Layout>();
+                    allLayouts.addAll(session.getWorkspace().getReports());
+                    allLayouts.addAll(session.getWorkspace().getTemplates());
+                    for (Layout layout : allLayouts) {
                         List<ContentBox> cbList = 
                             new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
                         for (ContentBox cb : cbList) {
@@ -293,7 +297,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
          * Removes any content boxes dependent on the image passed to the method.
          */
 		private void removeLayoutPartsDependentOnImage(WabitImage image) {
-		    for (Report layout : session.getWorkspace().getReports()) {
+		    List<Layout> allLayouts = new ArrayList<Layout>();
+		    allLayouts.addAll(session.getWorkspace().getReports());
+		    allLayouts.addAll(session.getWorkspace().getTemplates());
+		    for (Layout layout : allLayouts) {
                 List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
                 for (ContentBox cb : cbList) {
                     if (cb.getContentRenderer() instanceof ImageRenderer && 
@@ -309,10 +316,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		 * @param query
 		 */
 		private void removeLayoutPartsDependentOnQuery(QueryCache query) {
-			List<ca.sqlpower.wabit.report.Layout> allLayouts = new ArrayList<ca.sqlpower.wabit.report.Layout>();
+			List<Layout> allLayouts = new ArrayList<Layout>();
 			allLayouts.addAll(session.getWorkspace().getReports());
 			allLayouts.addAll(session.getWorkspace().getTemplates());
-			for (ca.sqlpower.wabit.report.Layout layout : allLayouts) {
+			for (Layout layout : allLayouts) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
 				    if(cb.getContentRenderer() instanceof ResultSetRenderer 
@@ -328,10 +335,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		 * @param query
 		 */
 		private void removeLayoutPartsDependentOnOlapQuery(OlapQuery query) {
-			List<ca.sqlpower.wabit.report.Layout> allLayouts = new ArrayList<ca.sqlpower.wabit.report.Layout>();
+			List<Layout> allLayouts = new ArrayList<Layout>();
 			allLayouts.addAll(session.getWorkspace().getReports());
 			allLayouts.addAll(session.getWorkspace().getTemplates());
-			for (ca.sqlpower.wabit.report.Layout layout : allLayouts) {
+			for (Layout layout : allLayouts) {
 				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
 				for(ContentBox cb : cbList) {
 				    if(cb.getContentRenderer() instanceof CellSetRenderer &&
