@@ -67,6 +67,7 @@ import javax.jmdns.JmDNS;
 import javax.naming.NamingException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -337,6 +338,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 
                 if (sourceComponent != null) {
                     JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+                    sp.setBorder(BorderFactory.createEmptyBorder());
                     sp.setLeftComponent(panel);
                     sp.setRightComponent(sourceComponent);
                     sp.setDividerLocation(context.prefs.getInt(
