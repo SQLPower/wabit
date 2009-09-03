@@ -728,6 +728,7 @@ public class CellSetTableHeaderComponent extends JComponent {
 
             public void mouseClicked(MouseEvent e) {
                 // hey you: don't implement "click" behaviour here. Use mousePressed() or mouseReleased().
+            	maybeShowPopup(e, selectedMember);
             }
 
             public void mouseEntered(MouseEvent e) {
@@ -739,15 +740,32 @@ public class CellSetTableHeaderComponent extends JComponent {
             }
 
             public void mousePressed(MouseEvent e) {
-            	maybeShowPopup(e, selectedMember, true);
+            	boolean showedPopup = maybeShowPopup(e, selectedMember);
+            	if (!showedPopup && selectedMember != null && e.getButton() == MouseEvent.BUTTON1) {
+            		try {
+            			query.toggleMember(selectedMember);
+            			execute(query);
+            		} catch (Exception ex) {
+            			throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
+            		}
+            	}
             }
             
             public void mouseReleased(MouseEvent e) {
-            	maybeShowPopup(e, selectedMember, false);
+            	maybeShowPopup(e, selectedMember);
             }
 
-			private void maybeShowPopup(MouseEvent e,
-					final Member clickedOnMember, boolean isMousePressed) {
+			/**
+			 * Shows a pop-up menu if the MouseEvent is a pop-up trigger for the
+			 * running platform.
+			 * 
+			 * @param e
+			 *            The MouseEvent
+			 * @param clickedOnMember
+			 *            The Member being clicked on
+			 * @return True if MouseEvent was a pop-up trigger. False if not.
+			 */
+			private boolean maybeShowPopup(MouseEvent e, final Member clickedOnMember) {
 				if (e.isPopupTrigger()) {
 			        WabitSwingSession session = evilDigUpSession();
 			        if (session == null) {
@@ -794,18 +812,13 @@ public class CellSetTableHeaderComponent extends JComponent {
 						}
 					}
 					popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
-				} else if (selectedMember != null && !isMousePressed && e.getButton() == MouseEvent.BUTTON1) {
-            		try {
-            			query.toggleMember(selectedMember);
-            			execute(query);
-            		} catch (Exception ex) {
-            			throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
-            		}
+					return true;
 				}
+				return false;
 			}
 
             public void mouseDragged(MouseEvent e) {
-                // don't care
+            	maybeShowPopup(e, selectedMember);
             }
         };
         
