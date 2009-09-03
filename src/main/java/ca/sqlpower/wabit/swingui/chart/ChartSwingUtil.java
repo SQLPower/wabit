@@ -21,11 +21,15 @@ package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.geom.Rectangle2D;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
@@ -33,10 +37,13 @@ import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.labels.PieToolTipGenerator;
+import org.jfree.chart.labels.StandardPieToolTipGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.MultiplePiePlot;
 import org.jfree.chart.plot.PieLabelLinkStyle;
 import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.PiePlot3DGradient;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -45,10 +52,15 @@ import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.urls.PieURLGenerator;
+import org.jfree.chart.urls.StandardPieURLGenerator;
 import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.general.PieDataset;
 import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.GradientPaintTransformType;
+import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.StandardGradientPaintTransformer;
 import org.jfree.util.TableOrder;
@@ -152,7 +164,7 @@ public class ChartSwingUtil {
      * @return A panel.
      */
     public static void makeChartNice(JFreeChart chart) {
-        Plot plot = chart.getPlot();
+    	Plot plot = chart.getPlot();
         chart.setBackgroundPaint(null);
         chart.setBorderStroke(new BasicStroke(1f));
         chart.setBorderPaint(new Color(0xDDDDDD));
@@ -210,16 +222,33 @@ public class ChartSwingUtil {
         }
         
         if (plot instanceof MultiplePiePlot){
-            MultiplePiePlot mpplot = (MultiplePiePlot) plot;
-            JFreeChart pchart = mpplot.getPieChart();
-            PiePlot pplot = (PiePlot) pchart.getPlot();
-            pplot.setBackgroundPaint(null);
-            pplot.setOutlinePaint(null);
-            pplot.setCircular(true);
-        }
-        
-        // TODO pie
-        
+        	MultiplePiePlot mpplot = (MultiplePiePlot) plot;
+        	JFreeChart pchart = mpplot.getPieChart();
+        	PiePlot3DGradient pplot = (PiePlot3DGradient) pchart.getPlot();
+        	pplot.setBackgroundPaint(null);
+        	pplot.setOutlinePaint(null);
+        	
+        	pplot.setFaceGradientPaintTransformer(new StandardGradientPaintTransformer(GradientPaintTransformType.HORIZONTAL));
+        	pplot.setSideGradientPaintTransformer(new StandardGradientPaintTransformer(GradientPaintTransformType.HORIZONTAL));
+        	
+        	CategoryDataset data = mpplot.getDataset();
+        	Color[][] colours = WabitDrawingSupplier.SERIES_COLOURS;
+        	
+        	//Set all colours
+        	for (int i = 0; i < colours.length; i++) {
+            	if (data.getColumnCount() >= i+1) {
+            		pplot.setSectionOutlinePaint(data.getColumnKey(i), null);
+            		GradientPaint gradient = new GradientPaint(
+            			0, 0f, colours[i][0],
+            			100, 0f, colours[i][1]);
+            		pplot.setSectionPaint(data.getColumnKey(i), gradient);
+            		gradient = new GradientPaint(
+                			0, 0f, colours[i][1],
+                			100, 0f, colours[i][0]);
+            		pplot.setSidePaint(data.getColumnKey(i), gradient);
+            	}
+            }
+        }        
     }
 
     /**
@@ -320,7 +349,7 @@ public class ChartSwingUtil {
                     showLegend, true, false);
             
         } else if (chartType == ChartType.PIE) {
-            chart = ChartFactory.createMultiplePieChart3D(
+            chart = createPieChart(
                     chartName, dataset, TableOrder.BY_ROW,
                     showLegend, true, false);
             
@@ -350,6 +379,63 @@ public class ChartSwingUtil {
         }
         
         return chart;
+    }
+    
+    /**
+     * Creates a chart that displays multiple 3D pie plots that have a GradientPaintTransformer.  
+     * The chart object returned by this method uses a {@link MultiplePiePlot} instance as the plot.
+     *
+     * @param title  the chart title (<code>null</code> permitted).
+     * @param dataset  the dataset (<code>null</code> permitted).
+     * @param order  the order that the data is extracted (by row or by column)
+     *               (<code>null</code> not permitted).
+     * @param legend  include a legend?
+     * @param tooltips  generate tooltips?
+     * @param urls  generate URLs?
+     *
+     * @return A chart.
+     */
+    private static JFreeChart createPieChart(String title,
+    		CategoryDataset dataset,
+    		TableOrder order,
+    		boolean legend,
+    		boolean tooltips,
+    		boolean urls) {
+
+    	if (order == null) {
+    		throw new IllegalArgumentException("Null 'order' argument.");
+    	}
+    	MultiplePiePlot plot = new MultiplePiePlot(dataset);
+    	plot.setDataExtractOrder(order);
+    	plot.setBackgroundPaint(null);
+    	plot.setOutlineStroke(null);
+
+    	JFreeChart pieChart = new JFreeChart(new PiePlot3DGradient(null));
+    	TextTitle seriesTitle = new TextTitle("Series Title",
+    			new Font("SansSerif", Font.BOLD, 12));
+    	seriesTitle.setPosition(RectangleEdge.BOTTOM);
+    	pieChart.setTitle(seriesTitle);
+    	pieChart.removeLegend();
+    	pieChart.setBackgroundPaint(null);
+    	plot.setPieChart(pieChart);
+
+    	if (tooltips) {
+    		PieToolTipGenerator tooltipGenerator
+    		= new StandardPieToolTipGenerator();
+    		PiePlot pp = (PiePlot) plot.getPieChart().getPlot();
+    		pp.setToolTipGenerator(tooltipGenerator);
+    	}
+
+    	if (urls) {
+    		PieURLGenerator urlGenerator = new StandardPieURLGenerator();
+    		PiePlot pp = (PiePlot) plot.getPieChart().getPlot();
+    		pp.setURLGenerator(urlGenerator);
+    	}
+
+    	JFreeChart chart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT,
+    			plot, legend);
+    	return chart;
+
     }
 
     /**
