@@ -591,18 +591,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
 	    return sourceListScrollPane;
 	}
 	
-	/**
-	 * Adds a text label with the given label String, and sets it at the bottom
-	 * center of the button
-	 */
-	private void setupToolBarButtonLabel(JButton button, String label) {
-		button.setText(label);
-		button.setHorizontalTextPosition(SwingConstants.CENTER);
-		button.setVerticalTextPosition(SwingConstants.BOTTOM);
-		// Removes button borders on OS X 10.5
-		button.putClientProperty("JButton.buttonType", "toolbar");
-	}
-	
 	private void zoomToFit() {
 		Rectangle rect = canvas.getVisibleRect();
 		Page page = pageNode.getModel();
