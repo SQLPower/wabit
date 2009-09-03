@@ -1297,8 +1297,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JPanel leftPanel = new JPanel(new BorderLayout());
         
         for (WabitSession session : getSessions()) {
-            JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) session).getTree());
-            stackedTabPane.addTab(session.getWorkspace().getName(), new JScrollPane(brandedTree), true);
+            stackedTabPane.addTab(session.getWorkspace().getName(), new JScrollPane(((WabitSwingSession) session).getTree()), true);
         }
         final ChangeListener tabChangeListener = new ChangeListener() {
         
@@ -1713,9 +1712,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     public void registerChildSession(WabitSession child) {
         delegateContext.registerChildSession(child);
-        JPanel brandedTree = SPSUtils.getBrandedTreePanel(((WabitSwingSession) child).getTree());
 		child.getWorkspace().addPropertyChangeListener(nameChangeListener);
-		stackedTabPane.addTab(child.getWorkspace().getName(), new JScrollPane(brandedTree), true);
+		stackedTabPane.addTab(child.getWorkspace().getName(), new JScrollPane(((WabitSwingSession) child).getTree()), true);
 		stackedTabPane.setSelectedIndex(stackedTabPane.getTabCount() - 1);
     }
 
