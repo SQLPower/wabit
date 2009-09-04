@@ -349,7 +349,7 @@ public class ChartPanel implements WabitPanel {
         		showError(ex);
         	}
         } else {
-        	showMessage("Query auto-execute is diabled.", "Press the 'Refresh' button to query chart data.");
+        	showMessage("Query auto-execute is disabled.", "Press the 'Refresh' button to query chart data.");
         }
     }
 
