@@ -59,7 +59,7 @@ Good luck with the release!
 
 Making the new release available
 *Upload generic, mac, and windows binaries to Google Code
-*Upload user guide (PDF format) to Google Code
+*Upload user guide (PDF format) to Google Code NOTE! Add the version number to the file!
 *(Introduce and...) Upload source code snapshot to Google Code
 *Deprecate all Google Code files related to the previous release
 *(Create and...) Upload the dist directory to the SQL Power web server on pag 
