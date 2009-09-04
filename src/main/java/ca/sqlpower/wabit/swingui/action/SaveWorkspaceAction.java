@@ -130,7 +130,9 @@ public class SaveWorkspaceAction extends AbstractAction {
             		swingSession.hasUnsavedChanges() &&
         			swingSession.getCurrentURI().toString().contains(
         			WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL))) {
-                SaveWorkspaceAsAction.save(context, swingSession);
+                if (!SaveWorkspaceAsAction.save(context, swingSession)) {
+                    return false;
+                }
             } else {
             	if (swingSession.getCurrentURI().toString().contains(
             			WabitSwingSessionContextImpl.EXAMPLE_WORKSPACE_URL)) continue;
