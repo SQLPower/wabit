@@ -57,6 +57,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Pattern;
@@ -1118,24 +1120,27 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					throw new RuntimeException(e1);
 				}
 				List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
-				String wabitDataSourcesBeingExported = "";
+				
+				Set<String> wabitDataSourcesBeingExported = new TreeSet<String>();
 				for (int i = 0; i < transferData.length; i++) {
 					if (transferData[i] instanceof WabitDataSource) {
-						wabitDataSourcesBeingExported += (((WabitDataSource) transferData[i]).getName() + "\n");
+						wabitDataSourcesBeingExported.add(((WabitDataSource) transferData[i]).getName());
 					} else {
 						WabitObject wo = (WabitObject) transferData[i];
 						wabitObjectsToExport.add(wo);
-						wabitDataSourcesBeingExported += getDatasourceDependencies(wo);
+						wabitDataSourcesBeingExported.add(getDatasourceDependencies(wo));
 					}
 				}
 				boolean shouldContinue = false;
-				if (!wabitDataSourcesBeingExported.equals("")) {
-					wabitDataSourcesBeingExported = wabitDataSourcesBeingExported.substring(0, wabitDataSourcesBeingExported.lastIndexOf("\n"));
-					UserPrompter up = upf.createUserPrompter("WARNING: By performing the following export you are exposing your database\n" +
+				if (wabitDataSourcesBeingExported.size() > 0) {
+					StringBuilder promptMessage = new StringBuilder("WARNING: By performing the following export you are exposing your database\n" +
 							" credentials to all users who have access to the workspace being dragged into. This \n" +
-							"is safe if you are meerly transferring the data to another local workspace but please use\n" +
-							" caution before transferring these over to a server. The following connections are being transferred: \n" +
-							wabitDataSourcesBeingExported + ".",
+							"is safe if you are merely transferring the data to another local workspace but please use\n" +
+							" caution before transferring these over to a server. The following connections are being transferred: \n");
+					for (String dataSource: wabitDataSourcesBeingExported) {
+						promptMessage.append(dataSource).append("\n");
+					}
+					UserPrompter up = upf.createUserPrompter(promptMessage.toString(),
 							UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.OK, true,
 							"Continue", "Cancel");
 					UserPromptResponse response = up.promptUser();
