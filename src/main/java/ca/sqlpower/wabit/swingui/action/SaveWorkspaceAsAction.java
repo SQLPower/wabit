@@ -116,7 +116,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
                 return false;
             }
 
-            selectedFile = fc.getSelectedFile();
+            selectedFile = updateFileName(fc.getSelectedFile());
             if (selectedFile.exists()) {
                 int response = JOptionPane.showConfirmDialog(context.getFrame(), 
                         "The file " + selectedFile.getName() + " already exists, overwrite?", 
@@ -163,12 +163,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
     @SuppressWarnings("unchecked")
     static File saveSessionToFile(WabitSwingSessionContext context,
             WabitSwingSession session, File selectedFile) throws SaveException {
-        int lastIndexOfDecimal = selectedFile.getName().lastIndexOf(".");
-        if (lastIndexOfDecimal < 0 || 
-                !selectedFile.getName().substring(lastIndexOfDecimal).equals(
-                        WABIT_FILE_EXTENSION)) {
-            selectedFile = new File(selectedFile.getAbsoluteFile() + WABIT_FILE_EXTENSION);
-        }
+        selectedFile = updateFileName(selectedFile);
         try {
             session.getWorkspace().setName(selectedFile.getName().replaceAll(".wabit", ""));
             
@@ -228,6 +223,27 @@ public class SaveWorkspaceAsAction extends AbstractAction {
         return selectedFile;
     }
 
+    /**
+     * This is a simple helper method to get a file with the correct Wabit
+     * extension placed at the end of it.
+     * 
+     * @param file
+     *            The file that needs to have the Wabit extension appended if it
+     *            does not exist.
+     * @return A file, which may be a different object from the given file, that
+     *         will have the Wabit extension appended to it if the current file
+     *         does not have the extension.
+     */
+    private static File updateFileName(File file) {
+        int lastIndexOfDecimal = file.getName().lastIndexOf(".");
+        if (lastIndexOfDecimal < 0 || 
+                !file.getName().substring(lastIndexOfDecimal).equals(
+                        WABIT_FILE_EXTENSION)) {
+            return new File(file.getAbsoluteFile() + WABIT_FILE_EXTENSION);
+        }
+        return file;
+    }
+    
     /**
      * This method will save all of the sessions in the context to their files.
      * Before the sessions are saved the user will be prompted with a dialog
