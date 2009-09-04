@@ -232,13 +232,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		childSessions.remove(child);
 		child.removeSessionLifecycleListener(sessionLifecycleListener);
 		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
-		if (childSessions.isEmpty() && getDataSources() != null && getPlDotIniPath() != null) {
-			try {
-				getDataSources().write(new File(getPlDotIniPath()));
-	        } catch (IOException e) {
-	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
-	        }
-		}
 		
 		if (terminateWhenLastSessionCloses && childSessions.isEmpty()) {
 			System.exit(0);
@@ -275,6 +268,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	}
 
 	public void close() {
+	    if (getDataSources() != null && getPlDotIniPath() != null) {
+	        try {
+	            getDataSources().write(new File(getPlDotIniPath()));
+	        } catch (IOException e) {
+	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
+	        }
+	    }
 		prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
 		if (jmdns != null) {
 			jmdns.close();
