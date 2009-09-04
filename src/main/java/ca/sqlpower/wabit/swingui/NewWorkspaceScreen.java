@@ -22,6 +22,11 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -32,6 +37,8 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -45,6 +52,9 @@ import com.jgoodies.forms.layout.FormLayout;
 public class NewWorkspaceScreen {
 	
 	private static Logger logger = Logger.getLogger(NewWorkspaceScreen.class);
+	
+	public static final String TEMPLATES_WORKSPACE_URL = 
+	    "/ca/sqlpower/wabit/templates_workspace.wabit";
 	
 	/**
 	 * The new session that needs a starting data source added to it.
@@ -108,6 +118,22 @@ public class NewWorkspaceScreen {
 	        @Override
 	        public void windowClosed(WindowEvent e) {
 	            if (databaseAdded) {
+	                WabitObject currentEditor = session.getWorkspace().getEditorPanelModel();
+	                try {
+	                    final URI resource = WabitSwingSessionContextImpl.class.getResource(
+	                            TEMPLATES_WORKSPACE_URL).toURI();
+	                    URL importURL = resource.toURL();
+	                    URLConnection urlConnection = importURL.openConnection();
+	                    InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+	                    final OpenWorkspaceXMLDAO workspaceLoader = 
+	                        new OpenWorkspaceXMLDAO(context, in, urlConnection.getContentLength());
+	                    workspaceLoader.importWorkspaces(session);
+	                } catch (Exception ex) {
+	                    throw new RuntimeException("Cannot find the templates file at " +
+	                    		"location " + TEMPLATES_WORKSPACE_URL);
+	                }
+	                session.getWorkspace().setEditorPanelModel(currentEditor);
+	                
 	                context.registerChildSession(session);
 	            }
 	            session.getWorkspace().removeDatabaseListChangeListener(workspaceDataSourceListener);
