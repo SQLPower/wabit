@@ -40,6 +40,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -76,6 +77,7 @@ import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
+import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
 
 /**
  * This listener is the main listener on the workspace tree in Wabit.
@@ -463,7 +465,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					//TODO Rename, Delete, Copy
 				}
 				
-				if (!(lastPathComponent instanceof ContentBox)) {
+				if (!(lastPathComponent instanceof ContentBox) && 
+						!(lastPathComponent instanceof SQLObject) &&
+						!(lastPathComponent instanceof Olap4jTreeObject)) {
 					menu.add(new EditCellAction(tree));
 					menu.add(new DeleteFromTreeAction(lastPathComponent));
 				}
@@ -499,7 +503,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			menu.add(newTemplate);
 			menu.add(newReport);
 		}
-		if (!(lastPathComponent instanceof ContentBox)) {
+		if (!(lastPathComponent instanceof ContentBox) && 
+				!(lastPathComponent instanceof SQLObject) &&
+				!(lastPathComponent instanceof Olap4jTreeObject)) {
 			menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 	}
