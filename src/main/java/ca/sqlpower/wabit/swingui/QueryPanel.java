@@ -48,6 +48,7 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractListModel;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -830,6 +831,7 @@ public class QueryPanel implements WabitPanel {
     	topPanel.add(queryPenAndTextTabPane, BorderLayout.CENTER);
     	
     	DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 5dlu, pref"));
+    	builder.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
         builder.append("Database Connection", reportComboBox);
         topPanel.add(builder.getPanel(), BorderLayout.NORTH);
     	
