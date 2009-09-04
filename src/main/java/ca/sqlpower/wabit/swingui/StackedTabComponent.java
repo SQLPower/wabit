@@ -217,8 +217,9 @@ public class StackedTabComponent extends JComponent {
 							// close a workspace through that or another
 							// listener. Then CloseWorkspaceAction doesn't have
 							// to expose another public static method.
-							CloseWorkspaceAction.checkUnsavedChanges(context);
-							CloseWorkspaceAction.closeActiveWorkspace(context);
+							if (CloseWorkspaceAction.checkUnsavedChanges(context)) {
+							    CloseWorkspaceAction.closeActiveWorkspace(context);
+							}
 						}
 					}
 				}

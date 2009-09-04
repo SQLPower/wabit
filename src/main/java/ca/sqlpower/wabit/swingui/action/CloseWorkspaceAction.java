@@ -41,29 +41,35 @@ public class CloseWorkspaceAction extends AbstractAction {
     
     public void actionPerformed(ActionEvent e) {
         if (context.getActiveSession() == null) return;
-        checkUnsavedChanges(context);
-        closeActiveWorkspace(context);
+        if (checkUnsavedChanges(context)) {
+            closeActiveWorkspace(context);
+        }
     }
 
-    public static void checkUnsavedChanges(WabitSwingSessionContext context) {
+    /**
+     * Prompts the user if there are unsaved changes if they really want to
+     * close. Returns true if we should close the active workspace.
+     */
+    public static boolean checkUnsavedChanges(WabitSwingSessionContext context) {
     	if (context.getActiveSwingSession().hasUnsavedChanges()) {
             int response = JOptionPane.showOptionDialog(context.getFrame(),
                     "You have unsaved changes. Do you want to save?", "Unsaved Changes", //$NON-NLS-1$ //$NON-NLS-2$
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
                     new Object[] {"Don't Save", "Cancel", "Save"}, "Save"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             if (response == 0) {
-                //we are closing
+                return true;
             } else if (response == JOptionPane.CLOSED_OPTION || response == 1) {
                 context.setEditorPanel();
-                return;
+                return false;
             } else {
                 boolean isClosing = true;
                 if (!SaveWorkspaceAction.save(context, context.getActiveSwingSession())) {
                     isClosing = false;
                 }
-                if (!isClosing) return;
+                return isClosing;
             }
         }
+    	return true;
     }
     
     public static void closeActiveWorkspace(WabitSwingSessionContext context) {
