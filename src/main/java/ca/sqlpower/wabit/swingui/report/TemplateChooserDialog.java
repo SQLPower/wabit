@@ -94,10 +94,10 @@ public class TemplateChooserDialog extends JDialog {
 			previewButton.setIcon(previewIcon);
 			previewPanel.add(previewButton, "wrap");
 			previewPanel.add(new JLabel(t.getName()), "");
-			if (i == 3) {
-				panel.add(previewPanel, "wrap");
+			if (i % 3 == 0) {
+				panel.add(previewPanel, "align 50% top, wrap");
 			} else {
-				panel.add(previewPanel);
+				panel.add(previewPanel, "align 50% top");
 			}
 		}
 		JScrollPane scrollPane = new JScrollPane(panel);
