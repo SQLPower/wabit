@@ -317,7 +317,6 @@ public class OlapQueryPanel implements WabitPanel {
         cubeTree.setRootVisible(false);
         cubeTree.setCellRenderer(new Olap4JTreeCellRenderer());
         cubeTree.setUI(new MultiDragTreeUI());
-        cubeTree.updateUI(); //This seems to fix some L&F problems that linux has with the BasicTreeUI
         cubeTree.setBackground(Color.WHITE);
         DragSource ds = new DragSource();
         ds.createDefaultDragGestureRecognizer(cubeTree, DnDConstants.ACTION_COPY, new CubeTreeDragGestureListener());
