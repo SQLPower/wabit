@@ -19,8 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,18 +46,6 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
      * This object tracks the current object with the keyboard focus.
      */
     private Object keyboardFocusObject = this; 
-    
-    /**
-     * This listens for changes to the content box's swing renderer to update the
-     * keyboard listener if the renderer changes.
-     */
-    private final PropertyChangeListener contentBoxRendererListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
-            if (evt.getPropertyName().equals("swingRenderer")) {
-                setKeyboardFocus(true, keyboardFocusObject);
-            }
-        }
-    };
     
     private double snapThreshold = 7;
 
@@ -188,29 +175,36 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
     private void setKeyboardFocus(boolean isSelecting, Object itemBeingSelected) {
         PInputManager inputManager = canvas.getRoot().getDefaultInputManager();
         if (isSelecting) {
-            if (keyboardFocusObject instanceof ContentBoxNode) {
-                ((ContentBoxNode) keyboardFocusObject).removeContentBoxPropertyChangeListener(
-                        contentBoxRendererListener);
-            }
-            
             if (itemBeingSelected instanceof ContentBoxNode) {
-                ContentBoxNode cbNode = (ContentBoxNode) itemBeingSelected;
-                inputManager.setKeyboardFocus(cbNode.getKeyboardListener());
+                super.select((ContentBoxNode) itemBeingSelected);
                 keyboardFocusObject = itemBeingSelected;
-                cbNode.addContentBoxPropertyChangeListener(contentBoxRendererListener);
             } else {
                 inputManager.setKeyboardFocus(this);
                 keyboardFocusObject = this;
             }
         } else {
             if (itemBeingSelected == keyboardFocusObject) {
-                if (keyboardFocusObject instanceof ContentBoxNode) {
-                    ((ContentBoxNode) keyboardFocusObject).removeContentBoxPropertyChangeListener(
-                            contentBoxRendererListener);
-                }
                 inputManager.setKeyboardFocus(this);
                 keyboardFocusObject = this;
             }
         }
+    }
+    
+    @Override
+    public void keyPressed(PInputEvent e) {
+        if (keyboardFocusObject instanceof ContentBoxNode) {
+            ((ContentBoxNode) keyboardFocusObject).getKeyboardListener()
+                .processEvent(e, KeyEvent.KEY_PRESSED);
+        }
+        super.keyPressed(e);
+    }
+    
+    @Override
+    public void keyReleased(PInputEvent event) {
+        if (keyboardFocusObject instanceof ContentBoxNode) {
+            ((ContentBoxNode) keyboardFocusObject).getKeyboardListener()
+                .processEvent(event, KeyEvent.KEY_RELEASED);
+        }
+        super.keyReleased(event);
     }
 }
