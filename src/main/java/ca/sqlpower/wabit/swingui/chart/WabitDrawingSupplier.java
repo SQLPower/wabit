@@ -38,10 +38,10 @@ public class WabitDrawingSupplier implements DrawingSupplier {
      * An array of gradient specifications for bar colours. Each gradient spec
      * is itself an array with two entries: start colour and end colour.
      */
-    static final Color[][] SERIES_COLOURS =
+    public static final Color[][] SERIES_COLOURS =
     {
-        { new Color(0xFFBF00), new Color(0xFF7F00) },
         { new Color(0x0060B6), new Color(0x003399) },
+        { new Color(0xFFBF00), new Color(0xFF7F00) },
         { new Color(0x00A33D), new Color(0x006B33) },
         { new Color(0xBF0000), new Color(0x8F0000) },
         { new Color(0x885997), new Color(0x602169) },
