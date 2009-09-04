@@ -308,9 +308,12 @@ public class ChartPanel implements WabitPanel {
             updateChartFromGUI();
         }
     };
+
+	private final WabitSwingSession session;
     
     public ChartPanel(WabitSwingSession session, final Chart chart) {
-        WabitWorkspace workspace = session.getWorkspace();
+        this.session = session;
+		WabitWorkspace workspace = session.getWorkspace();
         this.chart = chart;
         
         refreshDataAction = new RefreshDataAction(chart, panel);
@@ -339,19 +342,22 @@ public class ChartPanel implements WabitPanel {
 
         chart.addPropertyChangeListener(chartListener);
 
-        boolean disableAutoExecute = session.getContext().getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
-		
-        if (!disableAutoExecute) {
-        	try {
-        		chart.refreshData();
-        		updateGUIFromChart();
-        	} catch (Exception ex) {
-        		showError(ex);
-        	}
-        } else {
-        	showMessage("Query auto-execute is disabled.", "Press the 'Refresh' button to query chart data.");
-        }
+        boolean disableAutoExecute = isAutoExecuteDisabled();
+
+		try {
+			if (!disableAutoExecute) {
+				chart.refreshData();
+			}
+			updateGUIFromChart();
+		} catch (Exception ex) {
+			showError(ex);
+		}
     }
+
+	private boolean isAutoExecuteDisabled() {
+		// XXX: instead of grabbing the prefs, session context should have a method for retrieving this preference
+		return session.getContext().getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+	}
 
     /**
      * Displays an error in the chart preview area. The given message replaces
@@ -471,8 +477,13 @@ public class ChartPanel implements WabitPanel {
 
             CachedRowSet rs = chart.getUnfilteredResultSet();
             if (rs == null) {
-                showError(new RuntimeException(
+            	if (isAutoExecuteDisabled()) {
+            		showMessage("Query auto-execute is disabled.",
+            		"Press the 'Refresh' button to query chart data.");
+            	} else {
+            		showError(new RuntimeException(
                         "The selected query \"" + chart.getQuery() + "\" returns no results."));
+            	}
                 return;
             }
 
