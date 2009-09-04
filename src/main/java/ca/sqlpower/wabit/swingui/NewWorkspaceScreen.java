@@ -53,8 +53,8 @@ public class NewWorkspaceScreen {
 	
 	private static Logger logger = Logger.getLogger(NewWorkspaceScreen.class);
 	
-	public static final String TEMPLATES_WORKSPACE_URL = 
-	    "/ca/sqlpower/wabit/templates_workspace.wabit";
+	public static final String NEW_WORKSPACE_URL = 
+	    "/ca/sqlpower/wabit/new_workspace.wabit";
 	
 	/**
 	 * The new session that needs a starting data source added to it.
@@ -121,7 +121,7 @@ public class NewWorkspaceScreen {
 	                WabitObject currentEditor = session.getWorkspace().getEditorPanelModel();
 	                try {
 	                    final URI resource = WabitSwingSessionContextImpl.class.getResource(
-	                            TEMPLATES_WORKSPACE_URL).toURI();
+	                            NEW_WORKSPACE_URL).toURI();
 	                    URL importURL = resource.toURL();
 	                    URLConnection urlConnection = importURL.openConnection();
 	                    InputStream in = new BufferedInputStream(urlConnection.getInputStream());
@@ -130,7 +130,7 @@ public class NewWorkspaceScreen {
 	                    workspaceLoader.importWorkspaces(session);
 	                } catch (Exception ex) {
 	                    throw new RuntimeException("Cannot find the templates file at " +
-	                    		"location " + TEMPLATES_WORKSPACE_URL);
+	                    		"location " + NEW_WORKSPACE_URL);
 	                }
 	                session.getWorkspace().setEditorPanelModel(currentEditor);
 	                
