@@ -86,6 +86,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         
         final JDBCDataSource replacementDS = new JDBCDataSource(plIni); 
+        replacementDS.setParentType(newDS.getParentType());
         replacementDS.setName("Replacement DS");
         WabitSessionContext context = new StubWabitSessionContext() {
             @Override
