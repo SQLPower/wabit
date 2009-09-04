@@ -1414,7 +1414,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         JMenuItem databaseConnectionManager = new JMenuItem(new AbstractAction("Database Connection Manager...") {
             public void actionPerformed(ActionEvent e) {
-                getActiveSwingSession().getDbConnectionManager().showDialog(getFrame());
+            	WabitSwingSession activeSwingSession = getActiveSwingSession();
+            	if (activeSwingSession != null) {
+            		getActiveSwingSession().getDbConnectionManager().showDialog(getFrame());
+            	} else {
+					// XXX: Temporary fix until setActiveSession() fires
+					// property change events so that we can disable this action
+					// instead.
+            		JOptionPane.showMessageDialog(frame, "Please open a workspace first in order to see\n" +
+            				"which database connections are available");
+            	}
             }
         });
         fileMenu.add(databaseConnectionManager);
@@ -1772,6 +1781,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         if (oldSession != activeSession) {
             setEditorPanel();
         }
+        //XXX: Fire a property changed event. Mainly so actions that don't work on null active sessions can disable themselves.
     }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {

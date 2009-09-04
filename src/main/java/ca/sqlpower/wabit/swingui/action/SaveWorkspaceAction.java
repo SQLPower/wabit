@@ -55,7 +55,13 @@ public class SaveWorkspaceAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        save(context, context.getActiveSwingSession());
+		// XXX: Later on, disable this action instead if activeSwingSession is
+		// null. Probably need activeSwingSession to fire property change events
+		// first.
+        WabitSwingSession activeSwingSession = context.getActiveSwingSession();
+        if (activeSwingSession != null) {
+        	save(context, activeSwingSession);
+        }
     }
 
     /**
