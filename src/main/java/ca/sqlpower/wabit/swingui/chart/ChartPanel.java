@@ -122,6 +122,12 @@ public class ChartPanel implements WabitPanel {
     private final JTextField yaxisNameField = new JTextField();
 
     /**
+     * A label for the y axis field. This is a member variable so we can make
+     * the label invisible when the field is not needed.
+     */
+    private final JLabel yaxisNameLabel = new JLabel("Y Axis Label");
+    
+    /**
      * Holds the chart's X axis label.
      */
     private final JTextField xaxisNameField = new JTextField();
@@ -130,12 +136,18 @@ public class ChartPanel implements WabitPanel {
      * A label for the x axis field. This is a member variable so we can make
      * the label invisible when the field is not needed.
      */
-    private final JLabel xaxisNameLabel = new JLabel("X Axis");
+    private final JLabel xaxisNameLabel = new JLabel("X Axis Label");
 
     /**
      * Slider for the rotation of the x-axis tick labels.
      */
     private final JSlider xaxisLabelRotationSlider = new JSlider(-90, 90);
+    
+    /**
+     * A label for the x axis rotation slider. This is a member variable so we can make
+     * the label invisible when the field is not needed.
+     */
+    private final JLabel xaxisLabelRotationLabel = new JLabel("Label Rotation");
     
     /**
      * The table that shows values returned from the queries. The headers
@@ -412,9 +424,35 @@ public class ChartPanel implements WabitPanel {
             if (chart.getType().getDatasetType() == DatasetType.CATEGORY) {
                 currentHeaderCellRenderer = new CategoryChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
+                
+                //Set control components visibility based on chart type
+                if (chart.getType() == ChartType.PIE){
+                	xaxisNameLabel.setVisible(false);
+                	xaxisNameField.setVisible(false);
+                	yaxisNameLabel.setVisible(false);
+                	yaxisNameField.setVisible(false);
+                	xaxisLabelRotationLabel.setVisible(false);
+                	xaxisLabelRotationSlider.setVisible(false);
+                }
+                else{
+                	xaxisNameLabel.setVisible(true);
+                	xaxisNameField.setVisible(true);
+                	yaxisNameLabel.setVisible(true);
+                	yaxisNameField.setVisible(true);
+                	xaxisLabelRotationLabel.setVisible(true);
+                	xaxisLabelRotationSlider.setVisible(true);
+                }
+                
             } else if (chart.getType().getDatasetType() == DatasetType.XY) {
                 currentHeaderCellRenderer = new XYChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
                 resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
+                
+                xaxisNameLabel.setVisible(true);
+            	xaxisNameField.setVisible(true);
+            	yaxisNameLabel.setVisible(true);
+            	yaxisNameField.setVisible(true);
+                xaxisLabelRotationLabel.setVisible(false);
+                xaxisLabelRotationSlider.setVisible(false);
             }
 
             headerLegendContainer.removeAll();
@@ -585,13 +623,13 @@ public class ChartPanel implements WabitPanel {
         builder.append("Legend Postion", legendPositionComboBox);
         builder.nextLine();
         
-        builder.append("Y Axis Label", yaxisNameField);
+        builder.append(yaxisNameLabel, yaxisNameField);
         builder.nextLine();
         
         builder.append(xaxisNameLabel, xaxisNameField);
         builder.nextLine();
 
-        builder.append("Label Rotation", xaxisLabelRotationSlider);
+        builder.append(xaxisLabelRotationLabel, xaxisLabelRotationSlider);
         
         return builder.getPanel();
     }
