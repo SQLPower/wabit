@@ -139,7 +139,7 @@ public class FolderNode {
             name = "Images";
             break;
 		case REPORTS:
-			name = "Reports";
+			name = "Reports & Dashboards";
 			break;
 		case TEMPLATES:
 			name = "Templates";
