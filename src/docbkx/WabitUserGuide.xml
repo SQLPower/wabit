@@ -743,7 +743,7 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="src\docbkx\images\OLAPDataSourceProperties.png"
+          <imagedata fileref="src/docbkx/images/OLAPDataSourceProperties.png"
                      format="PNG" width="5in" />
         </imageobject>
       </mediaobject>
@@ -759,7 +759,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="src\docbkx\images\OlapConnectionExternal.png"
+            <imagedata fileref="src/docbkx/images/OlapConnectionExternal.png"
                        format="PNG" width="5in" />
           </imageobject>
         </mediaobject>
@@ -804,7 +804,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="src\docbkx\images\OlapConnectionInternal.png"
+            <imagedata fileref="src/docbkx/images/OlapConnectionInternal.png"
                        format="PNG" width="5in" />
           </imageobject>
         </mediaobject>
