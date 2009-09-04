@@ -56,7 +56,6 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.InputMap;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -68,7 +67,6 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -86,6 +84,7 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
@@ -337,8 +336,11 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		public void actionPerformed(ActionEvent e) {
 			for (Page page: layout.getChildren()) {
 				for (ContentBox content: page.getContentBoxes()){
-					content.getContentRenderer().refresh();
-					//TODO: Catch exceptions and call a new ReportContentRenderer 'renderError' method
+					ReportContentRenderer r = content.getContentRenderer();
+					if (r != null) {
+						r.refresh();
+						//TODO: Catch exceptions and call a new ReportContentRenderer 'renderError' method
+					}
 				}
 			}
 			canvas.repaint();
