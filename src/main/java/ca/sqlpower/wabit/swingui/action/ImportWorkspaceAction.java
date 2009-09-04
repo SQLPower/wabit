@@ -28,14 +28,12 @@ import java.io.FileNotFoundException;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
-import ca.sqlpower.util.UserPrompter.UserPromptOptions;
-import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.swingui.OpenProgressWindow;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -59,8 +57,8 @@ public class ImportWorkspaceAction extends AbstractAction {
 	    final WabitSwingSession session = context.getActiveSwingSession();
 	    
 	    if (session == null) {
-            context.createUserPrompter("Select a workspace to import into.", UserPromptType.MESSAGE, 
-                    UserPromptOptions.OK, UserPromptResponse.OK, null);
+	        JOptionPane.showMessageDialog(context.getFrame(), "Select a workspace to import " +
+	        		"into.", "Select a workspace", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 	    
