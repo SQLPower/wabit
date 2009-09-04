@@ -125,7 +125,8 @@ public class CellSetViewer {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(Color.WHITE);
-        showMessage(query, "No query defined");
+        showMessage(query, "Query not initialized. Press execute or drag in dimensions or " +
+        		"measures.");
         viewerComponent.add(scrollPane, BorderLayout.CENTER);
         viewerComponent.add(slicerScrollPane, BorderLayout.SOUTH);
     }
