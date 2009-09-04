@@ -7,7 +7,7 @@
   <bookinfo>
     <title id="book">Wabit User Guide</title>
 
-    <subtitle>Version 0.9.8</subtitle>
+    <subtitle>Version 0.9.9</subtitle>
 
     <mediaobject>
       <imageobject id="wabit_logo">
@@ -43,7 +43,7 @@
       many kinds of queries and reports. These queries and reports can then be
       exported for use in other workspaces or printed.</para>
 
-      <para>This user guide is based on Wabit version 0.9.8</para>
+      <para>This user guide is based on Wabit version 0.9.9</para>
     </section>
 
     <section id="intro.audience">
@@ -84,7 +84,7 @@
     </mediaobject>
 
     <section id="welcome_screen.opening_a_workspace">
-      <title>Opening a Workspacew</title>
+      <title>Opening a Workspace</title>
 
       <para>The welcome screen is shown to the user</para>
 
@@ -336,8 +336,8 @@
             </listitem>
 
             <listitem>
-              <para>Click the <guibutton>New...</guibutton> button, and then
-              select 'Database connection..'</para>
+              <para>Click the <guibutton>Add...</guibutton> button, and then
+              select 'Database connection...'</para>
             </listitem>
 
             <listitem>
@@ -634,7 +634,7 @@
             <listitem>
               <para>Next, you must define the location of the JDBC driver for
               the database type. For more information, see the section
-              following<xref
+              following <xref
               linkend="setup_database.database_types.jdbc_driver" /> .</para>
             </listitem>
 
@@ -773,11 +773,11 @@
           </listitem>
 
           <listitem>
-            <para>Click on the 'New' button.</para>
+            <para>Click on the 'Add...' button.</para>
           </listitem>
 
           <listitem>
-            <para>Click on 'OLAP Connection...'.</para>
+            <para>Click on 'OLAP connection...'.</para>
           </listitem>
 
           <listitem>
@@ -826,7 +826,7 @@
           </listitem>
 
           <listitem>
-            <para>Click on the 'New' button.</para>
+            <para>Click on the 'Add...' button.</para>
           </listitem>
 
           <listitem>
@@ -910,8 +910,8 @@
               <imagedata fileref="src/docbkx/images/delete_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
-          </inlinemediaobject> - delete all highlighted tables in the query
-        pen (Shortcut: The delete key).</listitem>
+          </inlinemediaobject> - reset the query.
+        </listitem>
 
         <listitem><inlinemediaobject>
             <imageobject>
@@ -1116,7 +1116,7 @@
       </section>
 
       <section id="query_builder.results.search">
-        <title>Seach in results</title>
+        <title>Search in results</title>
 
         <para>The current results can be searched on using the search field.
         Although this field does not modify the query it can be used to find
@@ -1211,32 +1211,28 @@
           </inlinemediaobject> - export the current query to a new Wabit
         workspace file, or to a new SQL script file.</listitem>
 
-        <listitem>
-          <para><inlinemediaobject>
+        <listitem><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/report_from_query_button.png"
-                           format="PNG" width="0.02in" />
+                           format="PNG" width="0.20in" />
               </imageobject>
             </inlinemediaobject> - generate a report of the current
-          query.</para>
-        </listitem>
+          query.</listitem>
 
-        <listitem>
-          <para><inlinemediaobject>
+        <listitem><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/page_setup_button.png"
                            format="PNG" width="0.20in" />
               </imageobject>
-            </inlinemediaobject> - access the query properties panel.</para>
-        </listitem>
+            </inlinemediaobject> - access the query properties panel.</listitem>
       </orderedlist>
 
       <para>The SQL text editor in the query builder will allow any free
       formed SQL statement to be executed. If changes were made to the
       graphical builder then the text editor will start with a query generated
-      from the graphical builder.<emphasis>If the text of the query is
+      from the graphical builder. <emphasis>If the text of the query is
       modified then the graphical editor will not be accessible unless the
-      changes to the text are discarded. </emphasis> In later releases it may
+      changes to the text are discarded.</emphasis> In later releases it may
       be possible to go freely between the graphical and textual editors.
       Queries created or modified in the text editor can also be exported and
       have report layouts created from them.</para>
@@ -1276,7 +1272,7 @@
                 <imagedata fileref="src/docbkx/images/reset.png"
                            width="0.20in" />
               </imageobject>
-            </inlinemediaobject> - Reset the query.</para>
+            </inlinemediaobject> - reset the query.</para>
         </listitem>
 
         <listitem><inlinemediaobject>
@@ -1293,7 +1289,7 @@
                 <imagedata fileref="src/docbkx/images/report_from_query_button.png"
                            width="0.20in" />
               </imageobject>
-            </inlinemediaobject> - Create a report based on the current
+            </inlinemediaobject> - create a report based on the current
           query.</para>
         </listitem>
 
@@ -1330,8 +1326,8 @@
         </listitem>
 
         <listitem>
-          <para>Click on the button 'Select cube', which is found in the cube
-          explorer (right side), to select the cube you want to use in your
+          <para>Click on the button 'Choose cube...', which is found in the cube
+          explorer (beside Database Connections), to select the cube you want to use in your
           query.</para>
         </listitem>
 
@@ -1358,6 +1354,10 @@
         <listitem>
           <para>Remove Hierarchy: Removes the selected hierarchy.</para>
         </listitem>
+        
+        <listitem>
+          <para>Clear All Exclusions: Clears all Exclusions.</para>
+        </listitem>
 
         <listitem>
           <para>Exclude Member: This Member will be excluded. You have to
@@ -1371,16 +1371,12 @@
         </listitem>
 
         <listitem>
-          <para>Clear all Exclusions: Clears all Exclusions.</para>
-        </listitem>
-
-        <listitem>
           <para>Drill Replace: The current element will be set as your top
           element.</para>
         </listitem>
 
         <listitem>
-          <para>Drill Up to...: The element drilled up to will be set as your
+          <para>Drill up to...: The element drilled up to will be set as your
           top element.</para>
         </listitem>
       </itemizedlist>
@@ -1425,7 +1421,7 @@
             <imagedata fileref="src/docbkx/images/refresh.png" format="PNG"
                        width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - refresh the chart to be syncronized with the
+        </inlinemediaobject> - refresh the chart to be synchronized with the
       query it was built upon.</listitem>
 
       <listitem>
@@ -1520,7 +1516,7 @@
     which will give you an option to browse for images. When you navigate to
     the desired photo, simple click the open button and it will be added to
     your workspace. You can rename or copy the image by right-clicking its
-    name in the workspace tree and selecting the appripriate command.</para>
+    name in the workspace tree and selecting the appropriate command.</para>
   </chapter>
 
   <chapter id="templates">
@@ -1561,8 +1557,8 @@
             <imagedata fileref="src/docbkx/images/refresh.png" format="PNG"
                        valign="bottom" width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - refresh the report to syncronize it with the
-      queries it is based apon.</listitem>
+        </inlinemediaobject> - refresh the report to synchronize it with the
+      queries it is based upon.</listitem>
 
       <listitem>
         <para><inlinemediaobject>
@@ -1734,7 +1730,7 @@
 
               <row>
                 <entry>
-                  <para>Null String</para>
+                  <para>Null string</para>
                 </entry>
 
                 <entry>
@@ -1781,7 +1777,7 @@
 
               <row>
                 <entry>
-                  <para>Column Info</para>
+                  <para>Column info</para>
                 </entry>
 
                 <entry>
@@ -1789,7 +1785,7 @@
                   Each column can have the column name, size and alignment
                   modified. Columns can also have formatting specified for
                   numeric and date columns and numeric columns can also be
-                  sub-totaled. Each column can also be defined to break on new
+                  sub-totalled. Each column can also be defined to break on new
                   values. Every time a new value appears in a column that is
                   defined to break a space with a horizontal line separator
                   will appear in the report. The column name and value will be
@@ -1869,7 +1865,7 @@
 
               <row>
                 <entry>
-                  <para>Body format</para>
+                  <para>Body Format</para>
                 </entry>
 
                 <entry>
@@ -2102,9 +2098,9 @@
         To remove a content box from a guide drag it away from the guide
         quickly. Guides can also be inserted into a report to help layout
         different components. Guides can be added by clicking on the
-        horizontal or vertical guide button in the tool bar and then clicking
+        horizontal or vertical guide button in the toolbar and then clicking
         on the report. Now that the report is finished it can be exported to a
-        PDF file or printed from the tool bar.</para>
+        PDF file or printed from the toolbar.</para>
       </section>
     </section>
   </chapter>
