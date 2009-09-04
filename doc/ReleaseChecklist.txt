@@ -15,7 +15,7 @@ Good luck with the release!
 
 
 *Comment out all the logging configs set to DEBUG (leave the RootLogger at INFO)
-*Update the wabit.properties file in the pom.xml to reflect the correct
+*Update the install.xml and the pom.xml version numbers to reflect the correct
  release number.  Normally, this will mean setting the suffix to "" for a full
  release, or "beta", "rc1", etc for a pre-release.
 *Update the doc/ReleaseNotes.txt file with the latest features and bugfixes.
