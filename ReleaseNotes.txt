@@ -1,5 +1,21 @@
 Wabit Release Notes
 
+Noteworthy Changes in 0.9.9
+
+  User Interface
+    * Changed the tabs of trees to stacked tabs.
+    
+  Charts
+    * The charts look have been improved and now look glossy.
+    
+  Reports
+    * Changed the image properties panel to allow users to stretch the image or
+      change the image's alignment.
+    
+  Overall
+    * The user guide has been updated with new screen shots
+    * Minor bug fixes.
+
 Noteworthy Changes in 0.9.8
 
   Relational Queries
