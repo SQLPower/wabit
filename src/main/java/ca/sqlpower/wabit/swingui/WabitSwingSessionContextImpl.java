@@ -130,6 +130,7 @@ import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.action.ForumAction;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
@@ -537,7 +538,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private final WabitSessionContext delegateContext;
 
-    private final SwingUIUserPrompterFactory upf = new SwingUIUserPrompterFactory(null);
+    private final UserPrompterFactory upf;
 
     /**
      * This is a preference that stores the absolute file location of each file
@@ -758,6 +759,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	private JTextPane explainText = new JTextPane();
 	private JScrollPane searchScrollPane = new JScrollPane();
 
+	/**
+	 * If true then the frame is not going to be shown and the context should act
+	 * as though there is no UI.
+	 */
+    private final boolean headless;
+
     
 	/**
 	 * @param terminateWhenLastSessionCloses
@@ -768,9 +775,31 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 *            Set to true to not create any GUI objects when the context
 	 *            starts. This stops the welcome screen from being created.
 	 */
-	public WabitSwingSessionContextImpl(WabitSessionContext delegateContext, boolean headless)
+    public WabitSwingSessionContextImpl(WabitSessionContext delegate, boolean headless) 
+            throws IOException, SQLObjectException {
+        this(delegate, headless,  new SwingUIUserPrompterFactory(null));
+    }
+
+    /**
+     * @param terminateWhenLastSessionCloses
+     *            Set to true if the context should stop the app when the last
+     *            session is closed. If false the app will have to be closed in
+     *            a way other than closing all of the sessions.
+     * @param headless
+     *            Set to true to not create any GUI objects when the context
+     *            starts. This stops the welcome screen from being created.
+     * @param upd
+     *            A user prompter factory that will be used to display
+     *            appropriate prompts to the user. This can be set if a
+     *            non-default prompt is desired for places like saving. This
+     *            cannot be null.
+     */
+	public WabitSwingSessionContextImpl(WabitSessionContext delegateContext, boolean headless, 
+	        UserPrompterFactory upf)
 			throws IOException, SQLObjectException {
+	    this.upf = upf;
 		this.delegateContext = delegateContext;
+        this.headless = headless;
         Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		
         frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + getName());
@@ -857,10 +886,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
         });
         
-        prefsAction = new ShowWabitApplicationPreferencesAction(frame, getPrefs());
-        
-        
         if (!headless) {
+            prefsAction = new ShowWabitApplicationPreferencesAction(frame, getPrefs());
+            
             sourceListDialog = new JDialog(frame);
             
             buildUI();
@@ -883,6 +911,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             macOSXRegistration();
         } else {
             sourceListDialog = null;
+            prefsAction = null;
         }
 	}
 	
@@ -1119,56 +1148,83 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				} catch (Exception e1) {
 					throw new RuntimeException(e1);
 				}
-				List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
-				
-				Set<String> wabitDataSourcesBeingExported = new TreeSet<String>();
+				List<WabitObject> wabitObjects = new ArrayList<WabitObject>();
 				for (int i = 0; i < transferData.length; i++) {
-					if (transferData[i] instanceof WabitDataSource) {
-						wabitDataSourcesBeingExported.add(((WabitDataSource) transferData[i]).getName());
-					} else {
-						WabitObject wo = (WabitObject) transferData[i];
-						wabitObjectsToExport.add(wo);
-						wabitDataSourcesBeingExported.add(getDatasourceDependencies(wo));
-					}
+				    wabitObjects.add((WabitObject) transferData[i]);
 				}
-				boolean shouldContinue = false;
-				if (wabitDataSourcesBeingExported.size() > 0) {
-					StringBuilder promptMessage = new StringBuilder("WARNING: By performing the following export you are exposing your database\n" +
-							" credentials to all users who have access to the workspace being dragged into. This \n" +
-							"is safe if you are merely transferring the data to another local workspace but please use\n" +
-							" caution before transferring these over to a server. The following connections are being transferred: \n");
-					for (String dataSource: wabitDataSourcesBeingExported) {
-						promptMessage.append(dataSource).append("\n");
-					}
-					UserPrompter up = upf.createUserPrompter(promptMessage.toString(),
-							UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.OK, true,
-							"Continue", "Cancel");
-					UserPromptResponse response = up.promptUser();
-					shouldContinue = response.equals(UserPromptResponse.OK);
-				} else {
-					shouldContinue = true;
-				}
-				if (!shouldContinue) return;
-				byteOut = new ByteArrayOutputStream();
-				WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, delegateContext);
-				dao.save(wabitObjectsToExport);
-				try {
-					byteOut.flush();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				byte[] outByteArray = byteOut.toByteArray();
-				ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
-				OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
-				open.importWorkspaces(getActiveSession());
+				
+				boolean importSuccessful = importIntoActiveSession(wabitObjects);
+				dtde.dropComplete(importSuccessful);
 			}
 			
 		}
-		
+
 		public void dropActionChanged(DropTargetDragEvent dtde) {
 			//don't care
 		}
 	}
+	
+	/**
+     * Helper method for dropping wabit objects onto the tree in Wabit.
+     * The given Wabit objects will be added to the active session. If
+     * there are data sources in the source the user will be prompted
+     * that security information will be transferred to the other workspace.
+     * <p>
+     * This is package private for testing
+     *  
+     * @param transferData An array of WabitObjects to add to the active workspace.
+     * @return True if the drop was successful, false otherwise.
+     */
+    boolean importIntoActiveSession(List<WabitObject> transferData) {
+        ByteArrayOutputStream byteOut;
+        List<WabitObject> wabitObjectsToExport = new ArrayList<WabitObject>();
+        
+        Set<String> wabitDataSourcesBeingExported = new TreeSet<String>();
+        for (int i = 0; i < transferData.size(); i++) {
+            WabitObject wo = (WabitObject) transferData.get(i);
+            wabitObjectsToExport.add(wo);
+            if (transferData.get(i) instanceof WabitDataSource) {
+                wabitDataSourcesBeingExported.add(wo.getName());
+            } else {
+                wabitDataSourcesBeingExported.add(getDatasourceDependencies(wo));
+            }
+        }
+        boolean shouldContinue = false;
+        if (wabitDataSourcesBeingExported.size() > 0) {
+            StringBuilder promptMessage = new StringBuilder("WARNING: By performing the following export you are exposing your database\n" +
+                    " credentials to all users who have access to the workspace being dragged into. This \n" +
+                    "is safe if you are merely transferring the data to another local workspace but please use\n" +
+                    " caution before transferring these over to a server. The following connections are being transferred: \n");
+            for (String dataSource: wabitDataSourcesBeingExported) {
+                promptMessage.append(dataSource).append("\n");
+            }
+            UserPrompter up = upf.createUserPrompter(promptMessage.toString(),
+                    UserPromptType.BOOLEAN, UserPromptOptions.OK_CANCEL, UserPromptResponse.OK, true,
+                    "Continue", "Cancel");
+            UserPromptResponse response = up.promptUser();
+            shouldContinue = response.equals(UserPromptResponse.OK);
+        } else {
+            shouldContinue = true;
+        }
+        if (!shouldContinue) return false;
+        
+        byteOut = new ByteArrayOutputStream();
+        WorkspaceXMLDAO dao = new WorkspaceXMLDAO(byteOut, delegateContext);
+        dao.save(wabitObjectsToExport);
+        try {
+            byteOut.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Importing " + byteOut.toString() + " to " + getActiveSession());
+        }
+        byte[] outByteArray = byteOut.toByteArray();
+        ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
+        OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
+        open.importWorkspaces(getActiveSession());
+        return true;
+    }
 	
 	/**
 	 * This is a recursive function which returns a \n delimited string of all of the
@@ -1493,6 +1549,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     }
     
     public boolean setEditorPanel() {
+        if (headless) return true;
         if (isLoading()) return false;
         logger.debug("setEditorPanel() starting");
         if (!removeEditorPanel()) {
