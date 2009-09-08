@@ -437,7 +437,9 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     public synchronized void reset() throws SQLException {
     	slicerMember = null;
     	hierarchiesInUse = new HashMap<QueryDimension, Hierarchy>();
-    	setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
+    	if (getCurrentCube() != null){
+    		setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
+    	}
     }
 
 	/**
