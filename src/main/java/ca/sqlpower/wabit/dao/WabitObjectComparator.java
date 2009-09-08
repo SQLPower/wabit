@@ -144,10 +144,10 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         String name1 = compareObject1.getName();
         String name2 = compareObject2.getName();
         if (name1 == null) {
-            throw new NullPointerException("Null name on wabit object " + compareObject1);
+            throw new NullPointerException("Null name on wabit object " + compareObject1 + " of type " + compareObject1.getClass());
         }
         if (name2 == null) {
-            throw new NullPointerException("Null name on wabit object " + compareObject2);
+            throw new NullPointerException("Null name on wabit object " + compareObject2 + " of type " + compareObject2.getClass());
         }
         int nameCompare = name1.compareTo(name2);
         if (nameCompare != 0) return nameCompare;
