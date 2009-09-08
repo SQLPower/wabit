@@ -45,6 +45,11 @@ public interface ReportContentRenderer extends WabitObject {
 		
 		private final Color colour;
 		private final String colourName;
+		
+		/**
+		 * Background Colour for a newly created Label.
+		 */
+		public final static BackgroundColours DEFAULT_BACKGROUND_COLOUR = BackgroundColours.WHITE;
 
 		private BackgroundColours(Color colour, String colourName) {
 			this.colour = colour;

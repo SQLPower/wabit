@@ -297,6 +297,9 @@ public class ContentBoxNode extends PNode implements ReportNode {
     	if (contentRenderer != null && contentRenderer.getBackgroundColour() != null) {
     		setPaint(contentRenderer.getBackgroundColour());
     	}
+    	else{
+    		setPaint(null);
+    	}
         super.paint(paintContext);
         PCamera camera = paintContext.getCamera();
         Graphics2D g2 = paintContext.getGraphics();

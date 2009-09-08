@@ -74,6 +74,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public Label(String text) {
         this.text = text;
         setName("Label");
+        setBackgroundColour(BackgroundColours.DEFAULT_BACKGROUND_COLOUR.getColour());
     }
     
     /**
