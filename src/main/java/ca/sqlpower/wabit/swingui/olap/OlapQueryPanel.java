@@ -466,7 +466,8 @@ public class OlapQueryPanel implements WabitPanel {
         
         DefaultFormBuilder builder = new DefaultFormBuilder(
                 new FormLayout("pref, 5dlu, pref, 5dlu, pref, 5dlu, pref"));
-        builder.append("Database Connections", databaseComboBox);
+        builder.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
+        builder.append("OLAP Connections", databaseComboBox);
         builder.append(cubeNameLabel);
         if (query.getCurrentCube() != null) {
             cubeNameLabel.setText(query.getCurrentCube().getName());
