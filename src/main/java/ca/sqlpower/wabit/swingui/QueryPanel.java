@@ -589,7 +589,6 @@ public class QueryPanel implements WabitPanel {
                 queryPenExecuteButtonAction,
                 queryCache.getQuery());
 		queryPen.setExecuteIcon((ImageIcon) WabitIcons.RUN_ICON_32);
-		changeToGUIToolBar();
 		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
 		
 		exportQueryAction = new ExportWabitObjectAction<QueryCache>(session,
@@ -805,8 +804,6 @@ public class QueryPanel implements WabitPanel {
 	
 	private void buildUI() {
 		JTabbedPane resultPane = queryUIComponents.getResultTabPane();
-
-		changeToGUIToolBar();
 		
 		queryUIComponents.getQueryArea().setLineWrap(true);
 		queryToolPanel = new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true);
@@ -835,6 +832,12 @@ public class QueryPanel implements WabitPanel {
     	builder.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
         builder.append("Database Connection", reportComboBox);
         topPanel.add(builder.getPanel(), BorderLayout.NORTH);
+        
+        if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent()) {
+        	changeToGUIToolBar();
+        } else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
+        	changeToTextToolBar();
+        }
     	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
