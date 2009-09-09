@@ -92,9 +92,11 @@ public class ChartTableCellRenderer extends DefaultTableCellRenderer {
              * every column, but it's really not an issue. Keep in mind the JTable is
              * only going to ask us to render the cells that are currently visible on
              * screen.
+             * 
+             * The null check merely stops an ugly exception, but won't clean up the interface
              */
             try {
-                if (chart.getUnfilteredResultSet().wouldPass(row + 1, chart.getResultSetFilter())) {
+                if (chart.getUnfilteredResultSet() == null || chart.getUnfilteredResultSet().wouldPass(row + 1, chart.getResultSetFilter())) {
                     setBackground(defaultBackground);
                 } else {
                     setBackground(filteredOutRowBackground);
