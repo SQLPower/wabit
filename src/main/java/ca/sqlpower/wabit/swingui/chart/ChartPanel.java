@@ -481,6 +481,8 @@ public class ChartPanel implements WabitPanel {
             		showMessage("Query auto-execute is disabled.",
             		"Press the 'Refresh' button to query chart data.");
             	} else {
+            		resultTable.repaint();
+                	updateChartPreview();
             		showError(new RuntimeException(
                         "The selected query \"" + chart.getQuery() + "\" returns no results."));
             	}

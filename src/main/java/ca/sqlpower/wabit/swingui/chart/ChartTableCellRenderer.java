@@ -70,6 +70,15 @@ public class ChartTableCellRenderer extends DefaultTableCellRenderer {
         
         super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         
+        // Remove the result set if the query is producing null
+        try {
+			if (chart.getUnfilteredResultSet() == null){
+				return null;
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+        
         if (value instanceof Number) {
             setText(numberFormat.format(value));
             setHorizontalAlignment(RIGHT);
@@ -92,11 +101,9 @@ public class ChartTableCellRenderer extends DefaultTableCellRenderer {
              * every column, but it's really not an issue. Keep in mind the JTable is
              * only going to ask us to render the cells that are currently visible on
              * screen.
-             * 
-             * The null check merely stops an ugly exception, but won't clean up the interface
              */
             try {
-                if (chart.getUnfilteredResultSet() == null || chart.getUnfilteredResultSet().wouldPass(row + 1, chart.getResultSetFilter())) {
+                if (chart.getUnfilteredResultSet().wouldPass(row + 1, chart.getResultSetFilter())) {
                     setBackground(defaultBackground);
                 } else {
                     setBackground(filteredOutRowBackground);

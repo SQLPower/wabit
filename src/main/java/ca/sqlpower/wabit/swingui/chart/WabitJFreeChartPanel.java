@@ -44,6 +44,10 @@ public class WabitJFreeChartPanel extends ChartPanel {
 
     @Override
     public void paintComponent(Graphics g) {
+    	if (getChart() == null){
+    		return;
+    	}
+    	
         Graphics2D g2 = (Graphics2D) g;
 
         float baseline = getXaxisBaseline();

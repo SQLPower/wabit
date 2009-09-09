@@ -166,6 +166,9 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         	newHeader.add(makeRoleBox(column), BorderLayout.NORTH);
         	newHeader.add(defaultComponent, BorderLayout.SOUTH);
         }
+        else{
+        	newHeader.setBackground(Color.WHITE);
+        }
 
         return newHeader;
     }
