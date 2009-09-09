@@ -19,15 +19,27 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.JToolBar.Separator;
 import javax.swing.border.EmptyBorder;
+
+import net.miginfocom.swing.MigLayout;
+
+import org.apache.log4j.Logger;
 
 /**
  * A lot of the JToolBars that were being added to Wabit were coded with a lot
@@ -40,23 +52,205 @@ import javax.swing.border.EmptyBorder;
  * JToolBars in the Wabit application doesn't require so much repeated code.
  */
 public class WabitToolBarBuilder {
-	private JToolBar toolBar;
-	private JToolBar wabitToolBar;
+    
+    private static final Logger logger = Logger.getLogger(WabitToolBarBuilder.class);
+    
+    private static final ImageIcon MORE_ICON = 
+        new ImageIcon(WabitToolBarBuilder.class.getClassLoader().getResource("icons/more-16.png"));
+    
+    /**
+    * Taken from http://forums.sun.com/thread.jspa?forumID=256&threadID=405848
+    * posted by camickr
+    * <p>
+    * Modifications made to improve component layout. A component can be added with
+    * the constraint {@value #RIGHT_IMAGE_CONSTRAINT} to be placed on the far right of the
+    * tool bar. 
+    * 
+    * @author subanark
+    */
+    private class ExpandLayout implements java.awt.LayoutManager {
+        public static final String RIGHT_IMAGE_CONSTRAINT = "RIGHT_IMAGE_CONSTRAINT";
+        
+        private Component rightComponent;
+        
+        private JPopupMenu extenderPopup = new JPopupMenu();
+        private JButton extenderButton = new JButton(new PopupAction());
+     
+        /** Creates a new instance of ExpandLayout */
+        public ExpandLayout() {
+            extenderPopup.setLayout(new MigLayout("wrap 1, align 50% 50%"));
+        }
+     
+        /** If the layout manager uses a per-component string,
+        * adds the component <code>comp</code> to the layout,
+        * associating it
+        * with the string specified by <code>name</code>.
+        *
+        * @param name the string to be associated with the component
+        * @param comp the component to be added
+        */
+        public void addLayoutComponent(String name, Component comp) {
+            if (RIGHT_IMAGE_CONSTRAINT.equals(name)) {
+                rightComponent = comp;
+            }
+        }
+     
+        /**
+        * Lays out the specified container.
+        * @param parent the container to be laid out
+        */
+        public void layoutContainer(Container parent) {
+            //  Position all buttons in the container
+            
+            resetParent(parent);
+     
+            Insets insets = parent.getInsets();
+            int x = insets.left;
+            int spaceUsed = insets.right + insets.left;
+            
+            if (rightComponent != null) {
+                spaceUsed += rightComponent.getPreferredSize().getWidth();
+            }
+            
+            //Find what components fit in the available space
+            int componentCountThatFits = 0;
+            for (; componentCountThatFits < parent.getComponentCount(); componentCountThatFits++) {
+                Component aComponent = parent.getComponent(componentCountThatFits);
+                if (aComponent == rightComponent) continue; //don't add to space estimate
+                int componentWidth = aComponent.getPreferredSize().width;
+                spaceUsed += componentWidth;  
+                if (spaceUsed > parent.getSize().getWidth()) {
+                    spaceUsed -= componentWidth;
+                    break;
+                }
+            }
+            if (componentCountThatFits < parent.getComponentCount()
+                    && spaceUsed + extenderButton.getWidth() > parent.getSize().getWidth()) {
+                componentCountThatFits--;
+            }
+     
+            //position buttons being added to the tool bar.
+            for (int i = 0; i < componentCountThatFits; i++ ) {
+                Component aComponent = parent.getComponent(i);
+                if (aComponent == rightComponent) continue; //add last
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Component " + aComponent.getClass() + " number " + i + " has " +
+                    		"preferred size " + aComponent.getPreferredSize());
+                }
+                aComponent.setSize(aComponent.getPreferredSize());
+                if (aComponent instanceof Separator) {
+                    aComponent.setSize(aComponent.getWidth(), parent.getHeight());
+                }
+                aComponent.setLocation(x, (parent.getHeight() - aComponent.getHeight()) / 2);
+                int componentWidth = aComponent.getPreferredSize().width;
+                x += componentWidth;
+            }
+            
+            if (rightComponent != null) {
+                rightComponent.setSize(rightComponent.getPreferredSize());
+                rightComponent.setLocation(parent.getWidth() - insets.right - rightComponent.getWidth(), 
+                        (parent.getHeight() - rightComponent.getHeight()) / 2);
+            }
+     
+            //  All the buttons won't fit, add extender button
+     
+            if (componentCountThatFits < parent.getComponentCount()) {
+                add(extenderButton);
+                extenderButton.setSize( extenderButton.getPreferredSize() );
+                extenderButton.setLocation(x, 
+                        parent.getHeight() - extenderButton.getHeight() - insets.bottom);
+            }
+     
+            //  Remove buttons that don't fit and add to the popup menu
+     
+            for (int i = parent.getComponentCount() - 2; i >= componentCountThatFits; i--) {
+                Component aComponent = parent.getComponent(i);
+                if (aComponent == rightComponent) continue;
+                parent.remove(i);
+                extenderPopup.add(aComponent, "align 50% 50%", 0);
+            }
+        }
+     
+        /**
+        * Calculates the minimum size dimensions for the specified
+        * container, given the components it contains.
+        * @param parent the component to be laid out
+        * @see #preferredLayoutSize
+        */
+        public Dimension minimumLayoutSize(Container parent) {
+            return extenderButton.getMinimumSize();
+        }
+     
+        /** Calculates the preferred size dimensions for the specified
+        * container, given the components it contains.
+        * @param parent the container to be laid out
+        *
+        * @see #minimumLayoutSize
+        */
+        public Dimension preferredLayoutSize(Container parent) {
+            //  Move all components to the container and remove the extender button
+     
+            resetParent(parent);
+     
+            //  Calculate the width of all components in the container
+     
+            Dimension d = new Dimension();
+            d.width += parent.getInsets().right + parent.getInsets().left;
+     
+            for (int i = 0; i < parent.getComponents().length; i++) {
+                d.width += parent.getComponent(i).getPreferredSize().width;
+                d.height = Math.max(d.height,parent.getComponent(i).getPreferredSize().height);
+            }
+     
+            d.height += parent.getInsets().top + parent.getInsets().bottom + 5;
+            return d;
+        }
+
+        private void resetParent(Container parent) {
+            parent.remove(extenderButton);
+     
+            while (extenderPopup.getComponentCount() > 0) {
+                Component aComponent = extenderPopup.getComponent(0);
+                extenderPopup.remove(aComponent);
+                parent.add(aComponent);
+            }
+        }
+     
+        /** Removes the specified component from the layout.
+        * @param comp the component to be removed
+        */
+        public void removeLayoutComponent(Component comp) {
+            if (comp == rightComponent) {
+                rightComponent = null;
+            }
+        }
+     
+        protected class PopupAction extends AbstractAction {
+            public PopupAction() {
+                super("", MORE_ICON);
+            }
+     
+            public void actionPerformed(ActionEvent e) {
+                JComponent component = (JComponent)e.getSource();
+                extenderPopup.show(component,0,component.getHeight());
+            }
+        }
+     
+    }
+    
 	private JToolBar buttonBar;
 	
+	/**
+	 * This is the Wabit logo button that takes the user to the forums.
+	 */
+    private JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+	
 	public WabitToolBarBuilder() {
-		toolBar = new JToolBar();
-		toolBar.setLayout(new BorderLayout());
-		toolBar.setFloatable(false);
-		wabitToolBar = new JToolBar();
-		wabitToolBar.setFloatable(false);
-        JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
-		wabitToolBar.add(forumButton);
 		buttonBar = new JToolBar();
 		buttonBar.setFloatable(false);
-		toolBar.add(wabitToolBar, BorderLayout.EAST);
-		toolBar.add(buttonBar, BorderLayout.WEST);
+		buttonBar.setLayout(new ExpandLayout());
+		buttonBar.add(forumButton, ExpandLayout.RIGHT_IMAGE_CONSTRAINT);
 	}
 	
 	/**
@@ -67,7 +261,7 @@ public class WabitToolBarBuilder {
 	 *         Wabit button at the end.
 	 */
 	public JToolBar getToolbar() {
-		return toolBar;
+		return buttonBar;
 	}
 	
 	/**
@@ -133,10 +327,19 @@ public class WabitToolBarBuilder {
 	    button.setVerticalTextPosition(SwingConstants.BOTTOM);
 	    button.setHorizontalTextPosition(SwingConstants.CENTER);
 	    // Remove button borders in OS X Leopard (and hopefully future OS X releases)
-	    button.putClientProperty("JButton.buttonType", "toolbar");
+        button.putClientProperty("JButton.buttonType", "toolbar");
 	    if (text != null) {
 	        button.setText(text);
 	    }
+	    buttonBar.add(button);
+	}
+	
+	/**
+	 * Add a button to the tool bar. Sets the button type for OSX to remove borders.
+	 */
+	public void add(JButton button) {
+	    // Remove button borders in OS X Leopard (and hopefully future OS X releases)
+	    button.putClientProperty("JButton.buttonType", "toolbar");
 	    buttonBar.add(button);
 	}
 	
