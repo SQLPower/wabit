@@ -61,7 +61,7 @@ import ca.sqlpower.wabit.report.resultset.ResultSetCell;
 /**
  * Renders a JDBC result set using configurable absolute column widths.
  */
-public class ResultSetRenderer extends AbstractWabitObject implements ReportContentRenderer {
+public class ResultSetRenderer extends AbstractWabitObject implements WabitObjectReportRenderer {
     
     private static final Color DRAGGABLE_COL_LINE_COLOUR = new Color(0xcccccc);
     
@@ -322,6 +322,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements ReportCont
         	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
         }
     	setName(resultSetRenderer.getName());
+    }
+    
+    public WabitObject getContent(){
+    	return query;
     }
     
     public void cleanup() {

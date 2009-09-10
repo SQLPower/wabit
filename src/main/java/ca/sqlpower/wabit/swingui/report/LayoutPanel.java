@@ -208,7 +208,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 					isFirstTime = false;
 				} else {
 					contentBox = new ContentBox();
-					cbNode = new ContentBoxNode(parentFrame, session.getWorkspace(), 
+					cbNode = new ContentBoxNode(session, parentFrame, session.getWorkspace(), 
 							LayoutPanel.this, contentBox);
 				}
 

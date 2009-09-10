@@ -45,7 +45,7 @@ import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
  * This class will render a chart from a query's result set in a chart format
  * defined by the user.
  */
-public class ChartRenderer extends AbstractWabitObject implements ReportContentRenderer {
+public class ChartRenderer extends AbstractWabitObject implements WabitObjectReportRenderer {
 	
 	private static final Logger logger = Logger.getLogger(ChartRenderer.class);
 
@@ -66,6 +66,10 @@ public class ChartRenderer extends AbstractWabitObject implements ReportContentR
     
 	public Color getBackgroundColour() {
 		return chart.getBackgroundColour();
+	}
+	
+	public WabitObject getContent(){
+		return chart;
 	}
 
     // TODO we intend to remove this whole method into the SwingUI layer (SwingContentRenderer)

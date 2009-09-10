@@ -57,7 +57,7 @@ public class PageNode extends PNode implements WabitNode {
             } else if (pageChild instanceof ContentBox) {
                 logger.debug("Adding content box node for " + pageChild);
                 ContentBox contentBox = (ContentBox) pageChild;
-				addChild(new ContentBoxNode(((WabitSwingSessionContext) session.getContext()).getFrame(), 
+				addChild(new ContentBoxNode(session, ((WabitSwingSessionContext) session.getContext()).getFrame(), 
                         session.getWorkspace(), parentPanel, contentBox));
             } else {
                 throw new UnsupportedOperationException(

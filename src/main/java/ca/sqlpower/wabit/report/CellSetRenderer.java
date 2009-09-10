@@ -65,7 +65,7 @@ import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.LayoutItem;
  * Renders a CellSet from a MDX query on a report layout.
  */
 public class CellSetRenderer extends AbstractWabitObject implements
-        ReportContentRenderer {
+        WabitObjectReportRenderer {
     
     private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
     
@@ -210,6 +210,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
             logger.warn("Error while executing Olap Query", e);
             errorMessage = "Error when executing query:\n" + e;
         }
+    }
+    
+    public WabitObject getContent(){
+    	return olapQuery;
     }
 
     public void cleanup() {

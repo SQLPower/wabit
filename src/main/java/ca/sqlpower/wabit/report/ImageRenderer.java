@@ -39,7 +39,7 @@ import ca.sqlpower.wabit.image.WabitImage;
  * This class will let users import an image into their layout.
  */
 public class ImageRenderer extends AbstractWabitObject implements
-		ReportContentRenderer {
+		WabitObjectReportRenderer {
 	
 	private static final Logger logger = Logger.getLogger(ImageRenderer.class);
 	
@@ -107,6 +107,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public ImageRenderer(ImageRenderer imageRenderer) {
 		this.image = imageRenderer.getImage();
 		this.filename = imageRenderer.getFilename();
+	}
+	
+	public WabitObject getContent(){
+		return image;
 	}
 
 	public Color getBackgroundColour() {

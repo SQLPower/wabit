@@ -51,6 +51,8 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PInputManager;
@@ -62,6 +64,8 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 public class ContentBoxNode extends PNode implements ReportNode {
 
     private static final Logger logger = Logger.getLogger(ContentBoxNode.class);
+    
+    private final WabitSwingSession session;
     
     private final ContentBox contentBox;
 
@@ -82,7 +86,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
      * event which is not needed for the simpler properties of this content box.
      */
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-
+    
     private PInputEventListener inputHandler = new PInputManager() {
         
         @Override
@@ -151,6 +155,17 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	properties.setText("Properties");
         	menu.add(properties);
         	menu.addSeparator();
+        	
+        	if (contentBox.getContentRenderer() instanceof WabitObjectReportRenderer){
+	        	JMenuItem source = new JMenuItem(new AbstractAction() {
+					public void actionPerformed(ActionEvent e) {
+						session.getWorkspace().setEditorPanelModel(((WabitObjectReportRenderer)contentBox.getContentRenderer()).getContent());
+					}
+	        	});
+	        	source.setText("Go to Editor");
+	        	menu.add(source);
+	        	menu.addSeparator();
+        	}
         	
         	final PNode node = getParent();
         	JMenuItem delete = new JMenuItem(new AbstractAction() {
@@ -253,7 +268,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
 	
 	private final LayoutPanel parentPanel;
 	
-    public ContentBoxNode(Window dialogOwner, WabitWorkspace workspace, LayoutPanel parentPanel, ContentBox contentBox) {
+    public ContentBoxNode(WabitSwingSession session, Window dialogOwner, WabitWorkspace workspace, LayoutPanel parentPanel, ContentBox contentBox) {
+    	this.session = session;
         this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
         this.contentBox = contentBox;
