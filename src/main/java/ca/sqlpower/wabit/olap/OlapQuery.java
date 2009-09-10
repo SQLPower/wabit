@@ -57,6 +57,7 @@ import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
+import org.olap4j.query.SortOrder;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
@@ -731,7 +732,19 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         return (!this.initDone && this.wasLoadedFromXml);
     }
     
-    
+	/**
+	 * Returns the {@link SortOrder} of the given {@link Axis} of the query.
+	 * 
+	 * @param axis
+	 *            The {@link Axis} for which you want to find the SortOrder for
+	 * @return The current {@link SortOrder} of the given {@link Axis}
+	 * @throws QueryInitializationException
+	 *             If there is an error initializing the query
+	 */
+    public synchronized SortOrder getSortOrder(Axis axis) throws QueryInitializationException {
+    	return getMDXQuery().getAxis(axis).getSortOrder();
+    }
+        
     /**
      * Will return the cached XML code that was saved in the original workspace file
      * if and only if the object was no initialized or modified in the meantime.
@@ -934,6 +947,14 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 				includeMember(member);
 			}
 		}
+    }
+    
+	/**
+	 * Sorts the OLAP results on the given {@link Axis} by the given
+	 * {@link Measure} in the given {@link SortOrder}
+	 */
+    public synchronized void sortBy(Axis axis, SortOrder order, Measure measure) throws QueryInitializationException {
+    	getMDXQuery().getAxis(axis).sort(order, measure);
     }
     
 	/**

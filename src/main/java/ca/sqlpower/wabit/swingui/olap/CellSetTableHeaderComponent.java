@@ -81,6 +81,7 @@ import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
+import org.olap4j.query.SortOrder;
 
 import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
@@ -743,10 +744,22 @@ public class CellSetTableHeaderComponent extends JComponent {
             	boolean showedPopup = maybeShowPopup(e, selectedMember);
             	if (!showedPopup && selectedMember != null && e.getButton() == MouseEvent.BUTTON1) {
             		try {
-            			query.toggleMember(selectedMember);
-            			execute(query);
+            			if (selectedMember instanceof Measure) {
+            				Axis sortAxis = axis.getAxisOrdinal() == Axis.ROWS ? Axis.COLUMNS : Axis.ROWS;
+							SortOrder order = query.getSortOrder(sortAxis);
+            				SortOrder newOrder;
+            				if (order == SortOrder.ASC) {
+            					newOrder = SortOrder.DESC;
+            				} else {
+            					newOrder = SortOrder.ASC;
+            				}
+            				query.sortBy(sortAxis, newOrder, (Measure) selectedMember);
+            			} else {
+            				query.toggleMember(selectedMember);
+            			}
+            			OlapGuiUtil.asyncExecute(query, evilDigUpSession());
             		} catch (Exception ex) {
-            			throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
+	            		throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
             		}
             	}
             }
