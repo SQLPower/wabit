@@ -520,7 +520,12 @@ public class ChartPanel implements WabitPanel {
             chartPanel.setChart(newJFreeChart);
             showError(null);
         } catch (Exception ex) {
-            showError(ex);
+            if (ex.getMessage() == null){
+            	showError(new RuntimeException("Unable to create chart from current settings."));
+            }
+            else{
+            	showError(ex);
+            }
             chartPanel.setChart(null);
         }
     }

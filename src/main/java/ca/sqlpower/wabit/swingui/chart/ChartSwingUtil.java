@@ -159,9 +159,10 @@ public class ChartSwingUtil {
     }
 
     /**
-     * Creates a panel for the demo (used by SuperDemo.java).
-     *
-     * @return A panel.
+     * Sets the colours and gradients to be used when painting the given JFreeChart.
+     * 
+     * @param chart
+     * 			The JFreeChart to make nice.
      */
     public static void makeChartNice(JFreeChart chart) {
     	Plot plot = chart.getPlot();
