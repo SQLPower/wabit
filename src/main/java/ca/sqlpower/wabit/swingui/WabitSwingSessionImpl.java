@@ -167,7 +167,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         		} catch (FileNotFoundException e) {
         			throw new RuntimeException(e);
         		}
-        		OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(getContext(), input, (int) file.length());
+        		OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(getContext(), input, file.length());
         		open.importWorkspaces(WabitSwingSessionImpl.this);
 
         	}

@@ -124,9 +124,25 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
     /**
      * The number of bytes in the stream. For use in the monitorable methods.
      */
-    private final int bytesInStream;
+    private final long bytesInStream;
 	
-	public OpenWorkspaceXMLDAO(WabitSessionContext context, InputStream in, int bytesInStream) {
+    /**
+     * Constant specifying that the length of a workspace XML stream is unknown.
+     */
+    public static final long UNKNOWN_STREAM_LENGTH = -1L;
+
+    /**
+     * Creates a new XML DAO for Wabit workspaces.
+     * 
+     * @param context
+     *            The session context to create new sessions in.
+     * @param in
+     *            The input stream of the workspace's XML representation.
+     * @param bytesInStream
+     *            The length of the stream in question. If not known, specify
+     *            {@link #UNKNOWN_STREAM_LENGTH}.
+     */
+	public OpenWorkspaceXMLDAO(WabitSessionContext context, InputStream in, long bytesInStream) {
 		this.context = context;
         this.bytesInStream = bytesInStream;
 		this.in = new CountingInputStream(in);
@@ -288,7 +304,11 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
     }
 
     public Integer getJobSize() {
-        return bytesInStream;
+        if (bytesInStream > 0) {
+            return (int) bytesInStream;
+        } else {
+            return null;
+        }
     }
 
     public String getMessage() {

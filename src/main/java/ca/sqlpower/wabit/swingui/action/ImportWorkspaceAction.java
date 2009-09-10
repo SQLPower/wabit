@@ -80,7 +80,8 @@ public class ImportWorkspaceAction extends AbstractAction {
 
 		try {
 		    final BufferedInputStream in = new BufferedInputStream(new FileInputStream(importFile));
-		    final OpenWorkspaceXMLDAO workspaceLoader = new OpenWorkspaceXMLDAO(context, in, (int) importFile.length());
+		    final OpenWorkspaceXMLDAO workspaceLoader =
+		        new OpenWorkspaceXMLDAO(context, in, importFile.length());
 
 		    SPSwingWorker worker = new SPSwingWorker(session) {
 

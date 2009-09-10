@@ -128,7 +128,8 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         	}
         };
         
-        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in, 0);
+        OpenWorkspaceXMLDAO loadDAO =
+            new OpenWorkspaceXMLDAO(context, in, OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
 	
         final List<WabitSession> loadedWorkspaces = loadDAO.openWorkspaces();
         assertEquals(1, loadedWorkspaces.size());
