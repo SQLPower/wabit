@@ -558,29 +558,44 @@ public class ChartPanel implements WabitPanel {
         
         toolBarBuilder.add(refreshDataAction);
         toolBarBuilder.add(revertToDefaultsAction);
+        
+        //Since the first button on the tool bar will be displayed this size will be the
+        //same as the font size of a displayed button. If the button wasn't being displayed
+        //the font size ends up incorrect
+        float fontSize = toolBarBuilder.getToolbar().getComponentAtIndex(0).getFont().getSize();
 
         toolBarBuilder.addSeparator();
-        toolBarBuilder.add(makeChartTypeButton("Bar", ChartType.BAR, BAR_CHART_ICON));
-        toolBarBuilder.add(makeChartTypeButton("Pie", ChartType.PIE, PIE_CHART_ICON));
-        toolBarBuilder.add(makeChartTypeButton("Category Line", ChartType.CATEGORY_LINE, LINE_CHART_ICON));
+        toolBarBuilder.add(makeChartTypeButton("Bar", ChartType.BAR, BAR_CHART_ICON, fontSize));
+        toolBarBuilder.add(makeChartTypeButton("Pie", ChartType.PIE, PIE_CHART_ICON, fontSize));
+        toolBarBuilder.add(makeChartTypeButton("Category Line", ChartType.CATEGORY_LINE, 
+                LINE_CHART_ICON, fontSize));
 
         toolBarBuilder.addSeparator();
-        toolBarBuilder.add(makeChartTypeButton("Line", ChartType.LINE, LINE_CHART_ICON));
-        toolBarBuilder.add(makeChartTypeButton("Scatter", ChartType.SCATTER, SCATTER_CHART_ICON));
+        toolBarBuilder.add(makeChartTypeButton("Line", ChartType.LINE, LINE_CHART_ICON, fontSize));
+        toolBarBuilder.add(makeChartTypeButton("Scatter", ChartType.SCATTER, 
+                SCATTER_CHART_ICON, fontSize));
     }
-
 
     /**
      * Subroutine of {@link #buildUI()}. Makes a chart type toggle button and
      * adds it to the button group.
      * 
-     * @param caption The text to appear under the button
-     * @param type The type of chart the buttons should select
-     * @param icon The icon for the button
+     * @param caption
+     *            The text to appear under the button
+     * @param type
+     *            The type of chart the buttons should select
+     * @param icon
+     *            The icon for the button
+     * @param fontSize
+     *            the font size for the toggle buttons. The default font size of
+     *            the toggle buttons are different than the default font size of
+     *            JButtons on some platforms. This value should be equal to the
+     *            JButton font size. This is a float as deriving fonts with a size
+     *            takes a float.
      * @return A button properly configured for the new-look Wabit toolbar.
      */
     private JToggleButton makeChartTypeButton(
-            String caption, ChartType type, Icon icon) {
+            String caption, ChartType type, Icon icon, float fontSize) {
         JToggleButton b = new JToggleButton(caption, icon);
         b.putClientProperty(CHART_TYPE_PROP_KEY, type);
         chartTypeButtonGroup.add(b);
@@ -592,6 +607,8 @@ public class ChartPanel implements WabitPanel {
         b.putClientProperty("JButton.buttonType", "toolbar");
 
         b.addActionListener(genericActionListener);
+        
+        b.setFont(b.getFont().deriveFont(fontSize));
         
         return b;
     }
