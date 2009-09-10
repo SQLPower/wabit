@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -113,7 +114,7 @@ public class OpenWorkspaceAction extends AbstractAction {
 	public static void loadFiles(final WabitSwingSessionContext context, final URI ... importFiles) {
 	    final List<InputStream> ins = new ArrayList<InputStream>();
 	    final Map<URI, OpenWorkspaceXMLDAO> workspaceLoaders = new HashMap<URI, OpenWorkspaceXMLDAO>();
-	    List<URI> invalidURIs = new ArrayList<URI>();
+	    List<String> invalidWorkspaces = new ArrayList<String>();
 	    for (URI importFile : importFiles) {
 	    	BufferedInputStream in = null;
 	    	OpenWorkspaceXMLDAO workspaceLoader = null;
@@ -122,19 +123,27 @@ public class OpenWorkspaceAction extends AbstractAction {
 	    	    URLConnection urlConnection = importURL.openConnection();
 	    		in = new BufferedInputStream(urlConnection.getInputStream());
 	    		ins.add(in);
-    			workspaceLoader = new OpenWorkspaceXMLDAO(context, in, urlConnection.getContentLength());
+    			workspaceLoader =
+    			    new OpenWorkspaceXMLDAO(context, in, urlConnection.getContentLength());
     			workspaceLoaders.put(importFile, workspaceLoader);
 	    	} catch (Exception e) {
 	    	    logger.info("Can't deal with URI " + importFile, e);
-	    	    invalidURIs.add(importFile);
+	    	    StringBuilder message = new StringBuilder();
+	    	    message.append(importFile.toString());
+	    	    if (e instanceof FileNotFoundException) {
+	    	        message.append(" (File not found)");
+	    	    } else {
+	    	        message.append(" (").append(e.toString()).append(")");
+	    	    }
+	    	    invalidWorkspaces.add(message.toString());
 	    	}
 	    }
 		
-	    if (!invalidURIs.isEmpty()) {
+	    if (!invalidWorkspaces.isEmpty()) {
 	        StringBuilder message = new StringBuilder();
-	        message.append("The following workspace locations will not be opened:");
-	        for (URI badURI : invalidURIs) {
-	            message.append("\n").append(badURI);
+	        message.append("The following workspace locations cannot be opened:\n");
+	        for (String s : invalidWorkspaces) {
+	            message.append("\n").append(s);
 	        }
 	        JOptionPane.showMessageDialog(
 	                context.getFrame(),
