@@ -88,6 +88,10 @@ public class SaveOLAP4jQuery {
 		        if (axisEntry.getKey().axisOrdinal() == Axis.Standard.ROWS.axisOrdinal()) {
 		            savingClass.printAttribute("non-empty", olapQuery.isNonEmpty());
 		        }
+		        if (axisEntry.getValue().getSortOrder() != null) {
+		        	savingClass.printAttribute("sort-order", axisEntry.getValue().getSortOrder().name());
+		        	savingClass.printAttribute("sort-evaluation-literal", axisEntry.getValue().getSortIdentifierNodeName());
+		        }
 		        xml.niprintln(out, ">");
 		        xml.indent++;
 		        for (QueryDimension dimension : axisEntry.getValue().getDimensions()) {

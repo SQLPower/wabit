@@ -583,6 +583,11 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         			if (entry.get("non-empty") != null) {
         			    setNonEmpty(Boolean.parseBoolean(entry.get("non-empty")));
         			}
+        			if (entry.get("sort-order") != null) {
+        				SortOrder order = SortOrder.valueOf(entry.get("sort-order"));
+        				String sortEvaluationLiteral = entry.get("sort-evaluation-literal");
+        				queryAxis.sort(order, sortEvaluationLiteral);
+        			}
         		} else if (this.rootNodes.get(cpt).equals("olap4j-dimension")) {
         			String dimensionName = entry.get("dimension-name");
         			queryDimension =  localMDXQuery.getDimension(dimensionName);
