@@ -126,6 +126,9 @@ public class Chart extends AbstractWabitObject {
                         if (cellSet != null) {
                             setUnfilteredResultSet(OlapUtils.toResultSet(cellSet));
                         }
+                        else{
+                        	setUnfilteredResultSet(null);
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
