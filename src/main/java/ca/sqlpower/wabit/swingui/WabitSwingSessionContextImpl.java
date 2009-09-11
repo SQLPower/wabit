@@ -109,6 +109,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
@@ -1379,8 +1381,15 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         };
         stackedTabPane.addChangeListener(tabChangeListener);
         
+        JPanel logoPanel = new JPanel(new MigLayout("fill, ins 0, gap 0 0"));
+        JLabel sqlPowerLogoLabel = SPSUtils.getSQLPowerLogoLabel();
+        sqlPowerLogoLabel.setOpaque(false);
+		logoPanel.add(sqlPowerLogoLabel,"grow 0 0, push 0 0");
+        logoPanel.add(new JLabel(), "grow 100 0, push 100 0");
+        
         leftPanel.add(toolBar, BorderLayout.NORTH);
         leftPanel.add(stackedTabPane, BorderLayout.CENTER);
+        leftPanel.add(logoPanel, BorderLayout.SOUTH);
         
         wabitPane.setLeftComponent(leftPanel);
         

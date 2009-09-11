@@ -99,10 +99,6 @@ public class StackedTabComponent extends JComponent {
 	public StackedTabComponent(WabitSwingSessionContext context) {
 		this.context = context;
 		setLayout(new MigLayout("flowy, hidemode 3, fill, ins 0, gap 0 0", "", ""));
-		JLabel sqlpLogo = SPSUtils.getSQLPowerLogoLabel();
-		sqlpLogo.setOpaque(false);
-		add(sqlpLogo, "grow 0 0, push 0 0, dock south");
-		
 	}
 	
 	/**
