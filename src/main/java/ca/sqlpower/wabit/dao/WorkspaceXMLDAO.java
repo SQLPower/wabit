@@ -116,6 +116,7 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.1 <dd>Moved the text in user-defined queries and the text in report labels
      *                into their own text tag to preserve newline characters.
      *  <dt>1.2.2 <dd>Added the horizontal and vertical alignment properties to the image renderer.
+     *  <dt>1.2.3 <dd>Added gratuitous animation flag to charts
      * </dl> 
 	 */
 	//                                         UPDATE HISTORY!!!!!
@@ -554,6 +555,7 @@ public class WorkspaceXMLDAO {
         printAttribute("y-axis-name", chart.getYaxisName());
         printAttribute("x-axis-name", chart.getXaxisName());
         printAttribute("x-axis-label-rotation", chart.getXaxisLabelRotation());
+        printAttribute("gratuitous-animation", chart.isGratuitouslyAnimated());
         if (chart.getType() != null) {
             printAttribute("type", chart.getType().name());
         }

@@ -661,6 +661,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     chart.setType(ChartType.valueOf(aval));
                 } else if (aname.equals("legend-position")) {
                     chart.setLegendPosition(LegendPosition.valueOf(aval));
+                } else if (aname.equals("gratuitous-animation")) {
+                    chart.setGratuitouslyAnimated(Boolean.parseBoolean(aval));
                 } else if (aname.equals("query-id")) {
                     QueryCache query = null;
                     for (QueryCache q : session.getWorkspace().getQueries()) {

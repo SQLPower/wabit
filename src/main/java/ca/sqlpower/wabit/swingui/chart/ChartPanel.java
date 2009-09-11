@@ -41,6 +41,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -79,11 +80,16 @@ import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
+import ca.sqlpower.wabit.swingui.chart.effect.BarChartAnimator;
+import ca.sqlpower.wabit.swingui.chart.effect.ChartAnimation;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.debug.FormDebugPanel;
 import com.jgoodies.forms.layout.FormLayout;
 
+/**
+ * Provides a complete GUI for setting up and modifying a Wabit Chart object.
+ */
 public class ChartPanel implements WabitPanel {
     
     static final Logger logger = Logger.getLogger(ChartPanel.class);
@@ -150,6 +156,11 @@ public class ChartPanel implements WabitPanel {
      * the label invisible when the field is not needed.
      */
     private final JLabel xaxisLabelRotationLabel = new JLabel("Label Rotation");
+
+    /**
+     * Checkbox to control the {@link Chart#isGratuitouslyAnimated()} property.
+     */
+    private JCheckBox gratuitousAnimationCheckbox = new JCheckBox("Gratuitous Animation");
     
     /**
      * The table that shows values returned from the queries. The headers
@@ -312,7 +323,7 @@ public class ChartPanel implements WabitPanel {
     };
 
 	private final WabitSwingSession session;
-    
+
     public ChartPanel(WabitSwingSession session, final Chart chart) {
         this.session = session;
 		WabitWorkspace workspace = session.getWorkspace();
@@ -334,6 +345,8 @@ public class ChartPanel implements WabitPanel {
         xaxisNameField.getDocument().addDocumentListener(documentChangeHandler);
 
         xaxisLabelRotationSlider.addChangeListener(genericChangeHandler);
+        
+        gratuitousAnimationCheckbox.addChangeListener(genericChangeHandler);
         
         queryComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
@@ -421,6 +434,8 @@ public class ChartPanel implements WabitPanel {
             }
             
             xaxisLabelRotationSlider.setValue((int) chart.getXaxisLabelRotation());
+            
+            gratuitousAnimationCheckbox.setSelected(chart.isGratuitouslyAnimated());
             
             queryComboBox.setSelectedItem(chart.getQuery());
             setSelectedChartType(chart.getType());
@@ -530,6 +545,9 @@ public class ChartPanel implements WabitPanel {
             JFreeChart newJFreeChart = ChartSwingUtil.createChartFromQuery(chart);
             logger.debug("Created new JFree chart: " + newJFreeChart);
             chartPanel.setChart(newJFreeChart);
+            if (chart.isGratuitouslyAnimated()) {
+                ChartAnimation.animateIfPossible(newJFreeChart);
+            }
             showError(null);
         } catch (Exception ex) {
             if (ex.getMessage() == null){
@@ -678,6 +696,8 @@ public class ChartPanel implements WabitPanel {
 
         builder.append(xaxisLabelRotationLabel, xaxisLabelRotationSlider);
         
+        builder.append("", gratuitousAnimationCheckbox);
+        
         return builder.getPanel();
     }
 
@@ -735,6 +755,7 @@ public class ChartPanel implements WabitPanel {
             chart.setYaxisName(yaxisNameField.getText());
             chart.setXaxisName(xaxisNameField.getText());
             chart.setXAxisLabelRotation(xaxisLabelRotationSlider.getValue());
+            chart.setGratuitouslyAnimated(gratuitousAnimationCheckbox.isSelected());
             
         } finally {
             updating = false;

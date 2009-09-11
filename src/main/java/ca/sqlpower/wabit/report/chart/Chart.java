@@ -161,7 +161,19 @@ public class Chart extends AbstractWabitObject {
      */
     private CachedRowSet unfilteredResults;
 
+    /**
+     * Rotation amount, in degrees, of the text along the X axis. 0 means
+     * horizontal; negative values mean increasing counterclockwise rotation;
+     * positive values mean increasing clockwise rotation. Valid range is from
+     * -180.0 to 180.0 inclusive.
+     */
     private double xAxisLabelRotation;
+
+    /**
+     * Flag to indicate if meaningless but visually fun animations should be
+     * applied to this chart when it is displayed.
+     */
+    private boolean gratuitouslyAnimated;
 
     /**
      * Creates a new chart with a new unique ID.
@@ -686,5 +698,15 @@ public class Chart extends AbstractWabitObject {
         double oldValue = this.xAxisLabelRotation;
         this.xAxisLabelRotation = xAxisLabelRotation;
         firePropertyChange("xAxisLabelRotation", oldValue, xAxisLabelRotation);
+    }
+
+    public void setGratuitouslyAnimated(boolean gratuitouslyAnimated) {
+        boolean oldValue = this.gratuitouslyAnimated;
+        this.gratuitouslyAnimated = gratuitouslyAnimated;
+        firePropertyChange("gratuitouslyAnimated", oldValue, gratuitouslyAnimated);
+    }
+
+    public boolean isGratuitouslyAnimated() {
+        return gratuitouslyAnimated;
     }
 }
