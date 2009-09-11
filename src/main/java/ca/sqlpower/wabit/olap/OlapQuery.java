@@ -958,6 +958,17 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     }
     
 	/**
+	 * Removes the sort order on the given axis
+	 * 
+	 * @param axis
+	 *            The Axis from which to remove the sort order
+	 * @throws QueryInitializationException
+	 */
+	public synchronized void clearSort(Axis axis) throws QueryInitializationException {
+		getMDXQuery().getAxis(axis).clearSort();
+	}
+    
+	/**
 	 * Checks if the given {@link Member} is already included in the given
 	 * {@link QueryDimension}.
 	 * 

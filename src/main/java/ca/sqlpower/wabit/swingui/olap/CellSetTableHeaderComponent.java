@@ -57,6 +57,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -93,10 +94,12 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.olap.action.ClearExclusionsAction;
+import ca.sqlpower.wabit.swingui.olap.action.ClearSortFromAxisAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillReplaceAction;
 import ca.sqlpower.wabit.swingui.olap.action.DrillUpAction;
 import ca.sqlpower.wabit.swingui.olap.action.ExcludeMemberAction;
 import ca.sqlpower.wabit.swingui.olap.action.RemoveHierarchyAction;
+import ca.sqlpower.wabit.swingui.olap.action.SortByMeasureAction;
 
 /**
  * A Component to be used as the header component in the CellSetViewer.
@@ -789,7 +792,8 @@ public class CellSetTableHeaderComponent extends JComponent {
 					JPopupMenu popUpMenu = new JPopupMenu();
 					popUpMenu.add(new RemoveHierarchyAction(session, query, hierarchy, CellSetTableHeaderComponent.this.axis));
 				    popUpMenu.add(new ClearExclusionsAction(session, query, hierarchy));
-					if (clickedOnMember != null && 
+				    popUpMenu.add(new ClearSortFromAxisAction(session, query, axis.getAxisOrdinal()));
+				    if (clickedOnMember != null && 
 							!(clickedOnMember instanceof Measure)) {
 					    popUpMenu.addSeparator();
 					    popUpMenu.add(new ExcludeMemberAction(
@@ -823,6 +827,22 @@ public class CellSetTableHeaderComponent extends JComponent {
 							throw new RuntimeException(
 									"OLAP error occured while initializing the OLAP query", ex);
 						}
+					} else if (clickedOnMember != null && clickedOnMember instanceof Measure) {
+						 popUpMenu.addSeparator();
+						 Axis sortAxis = axis.getAxisOrdinal() == Axis.ROWS ? Axis.COLUMNS : Axis.ROWS;
+						 JMenuItem sortAsc = new JMenuItem(new SortByMeasureAction(session, "Sort Ascending", query, 
+								 clickedOnMember, sortAxis, SortOrder.ASC));
+						 JMenuItem sortDesc = new JMenuItem(new SortByMeasureAction(session, "Sort Descending", query, 
+								 clickedOnMember, sortAxis, SortOrder.DESC));
+						 JMenuItem sortBAsc = new JMenuItem(new SortByMeasureAction(session, "Sort Ascending (Break Hiearachy)", query, 
+								 clickedOnMember, sortAxis, SortOrder.BASC));
+						 JMenuItem sortBDesc = new JMenuItem(new SortByMeasureAction(session, "Sort Descending (Break Hierarchy)", query, 
+								 clickedOnMember, sortAxis, SortOrder.BDESC));
+						 popUpMenu.add(sortAsc);
+						 popUpMenu.add(sortDesc);
+						 popUpMenu.add(sortBAsc);
+						 popUpMenu.add(sortBDesc);
+						 popUpMenu.addSeparator();
 					}
 					popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
 					return true;
