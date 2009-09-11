@@ -42,6 +42,7 @@ public class ChartAnimation {
      * accepts any given chart.
      */
     private static final ChartAnimatorFactory[] ANIMATOR_FACTORIES = new ChartAnimatorFactory[] {
+        new PieChartAnimatorFactory(),
         new BarChartAnimatorFactory()
     };
 

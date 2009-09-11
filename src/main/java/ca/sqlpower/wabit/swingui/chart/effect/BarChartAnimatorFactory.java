@@ -24,7 +24,7 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.data.Range;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-public class BarChartAnimatorFactory implements ChartAnimatorFactory {
+public class BarChartAnimatorFactory extends AbstractChartAnimatorFactory {
 
     public boolean canAnimate(JFreeChart chart) {
         if (!(chart.getPlot() instanceof CategoryPlot)) {
@@ -40,16 +40,6 @@ public class BarChartAnimatorFactory implements ChartAnimatorFactory {
         return true;
     }
 
-    /**
-     * Number of milliseconds between frames.
-     */
-    private int frameDelay = 20;
-    
-    /**
-     * Number of frames the chart animation should play for.
-     */
-    private int frameCount = 30;
-
     public ChartAnimator createAnimator(JFreeChart chart) throws CantAnimateException {
         DefaultCategoryDataset dataset;
         if (chart.getCategoryPlot().getDataset() instanceof DefaultCategoryDataset) {
@@ -61,9 +51,9 @@ public class BarChartAnimatorFactory implements ChartAnimatorFactory {
         // TODO handle multiple Y axes
         chart.getCategoryPlot().getRangeAxis().setAutoRange(false);
         Range dataRange = chart.getCategoryPlot().getDataRange(chart.getCategoryPlot().getRangeAxis());
-        double stepSize = dataRange.getUpperBound() / ((double) frameCount);
+        double stepSize = dataRange.getUpperBound() / ((double) getFrameCount());
         
-        return new BarChartAnimator(dataset, frameDelay, stepSize);
+        return new BarChartAnimator(dataset, getFrameDelay(), stepSize);
     }
 
 }

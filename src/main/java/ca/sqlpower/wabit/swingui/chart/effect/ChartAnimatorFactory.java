@@ -21,6 +21,10 @@ package ca.sqlpower.wabit.swingui.chart.effect;
 
 import org.jfree.chart.JFreeChart;
 
+/**
+ * Defines the general contract for classes that create animators for JFreeChart
+ * instances.
+ */
 public interface ChartAnimatorFactory {
 
     /**
@@ -48,5 +52,32 @@ public interface ChartAnimatorFactory {
      *             given chart.
      */
     public ChartAnimator createAnimator(JFreeChart chart) throws CantAnimateException;
+
+    /**
+     * Returns the number of milliseconds between frames of the animations
+     * created by this factory.
+     */
+    public int getFrameDelay();
+
+    /**
+     * Sets the number of milliseconds that should be between frames of the
+     * animations created by this factory. Factories have useful defaults, so
+     * you don't need to call this method unless you want to customize the
+     * animation.
+     */
+    public void setFrameDelay(int frameDelay);
+
+    /**
+     * Returns the number of frames that the animations created by this factory
+     * will run for.
+     */
+    public int getFrameCount();
+
+    /**
+     * Sets the number of frames that the animations created by this factory
+     * will run for. Factories have useful defaults, so you don't need to call
+     * this method unless you want to customize the animation.
+     */
+    public void setFrameCount(int frameCount);
     
 }
