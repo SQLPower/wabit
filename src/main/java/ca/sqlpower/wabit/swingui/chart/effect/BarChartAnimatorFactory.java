@@ -21,11 +21,16 @@ package ca.sqlpower.wabit.swingui.chart.effect;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.data.Range;
 import org.jfree.data.category.DefaultCategoryDataset;
+
+import ca.sqlpower.wabit.swingui.chart.effect.interp.BallDropInterpolator;
+import ca.sqlpower.wabit.swingui.chart.effect.interp.EaseOutInterpolator;
+import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
 
 public class BarChartAnimatorFactory extends AbstractChartAnimatorFactory {
 
+    private final Interpolator interpolator = new BallDropInterpolator();//new LinearInterpolator();
+    
     public boolean canAnimate(JFreeChart chart) {
         if (!(chart.getPlot() instanceof CategoryPlot)) {
             return false;
@@ -45,15 +50,13 @@ public class BarChartAnimatorFactory extends AbstractChartAnimatorFactory {
         if (chart.getCategoryPlot().getDataset() instanceof DefaultCategoryDataset) {
             dataset = (DefaultCategoryDataset) chart.getCategoryPlot().getDataset();
         } else {
-            throw new CantAnimateException("Unsupported dataset type " + chart.getCategoryPlot().getDataset());
+            throw new CantAnimateException("Unsupported dataset type " +
+                    chart.getCategoryPlot().getDataset());
         }
-        
-        // TODO handle multiple Y axes
+
         chart.getCategoryPlot().getRangeAxis().setAutoRange(false);
-        Range dataRange = chart.getCategoryPlot().getDataRange(chart.getCategoryPlot().getRangeAxis());
-        double stepSize = dataRange.getUpperBound() / ((double) getFrameCount());
-        
-        return new BarChartAnimator(dataset, getFrameDelay(), stepSize);
+
+        return new BarChartAnimator(dataset, getFrameDelay(), getFrameCount(), interpolator);
     }
 
 }

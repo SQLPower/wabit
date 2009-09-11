@@ -19,23 +19,20 @@
 
 package ca.sqlpower.wabit.swingui.chart.effect;
 
-import java.io.ObjectInputStream.GetField;
-
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.MultiplePiePlot;
-import org.jfree.data.Range;
-import org.jfree.data.category.CategoryDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
+
+import ca.sqlpower.wabit.swingui.chart.effect.interp.EaseOutInterpolator;
+import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
+import ca.sqlpower.wabit.swingui.chart.effect.interp.LinearInterpolator;
 
 public class PieChartAnimatorFactory extends AbstractChartAnimatorFactory {
 
+    private Interpolator spinInterpolator = new EaseOutInterpolator(2);
+    private Interpolator alphaInterpolator = new LinearInterpolator();
+    
     public boolean canAnimate(JFreeChart chart) {
         if (!(chart.getPlot() instanceof MultiplePiePlot)) {
-            return false;
-        }
-        MultiplePiePlot mpplot = (MultiplePiePlot) chart.getPlot();
-        CategoryDataset dataset = mpplot.getDataset();
-        if (!(dataset instanceof DefaultCategoryDataset)) {
             return false;
         }
         return true;
@@ -51,16 +48,9 @@ public class PieChartAnimatorFactory extends AbstractChartAnimatorFactory {
                     "You gave me " + chart.getPlot());
         }
         
-        DefaultCategoryDataset dataset;
-        if (mpplot.getDataset() instanceof DefaultCategoryDataset) {
-            dataset = (DefaultCategoryDataset) mpplot.getDataset();
-        } else {
-            throw new CantAnimateException(
-                    "This animator only works with DefaultCategoryDataset. " +
-                    "You gave me " + mpplot.getDataset());
-        }
-
-        return new PieChartAnimator(mpplot, getFrameDelay(), getFrameCount());
+        return new PieChartAnimator(
+                mpplot, getFrameDelay(), getFrameCount(),
+                spinInterpolator, alphaInterpolator);
     }
 
 }

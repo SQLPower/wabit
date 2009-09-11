@@ -25,32 +25,27 @@ import java.util.List;
 
 import javax.swing.Timer;
 
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.Range;
 import org.jfree.data.category.DefaultCategoryDataset;
+
+import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
 
 public class BarChartAnimator implements ChartAnimator {
 
     private final ActionListener timerHandler = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            boolean changedSomething = false;
+            final double pct = ((double) currentFrame) / ((double) frameCount);
             for (Comparable rowKey : (List<Comparable>) animatingData.getRowKeys()) {
                 for (Comparable colKey : (List<Comparable>) animatingData.getColumnKeys()) {
-                    Number orig = originalData.getValue(rowKey, colKey);
-                    Number anim = animatingData.getValue(rowKey, colKey);
+                    double orig = originalData.getValue(rowKey, colKey).doubleValue();
                     
-                    if (anim.doubleValue() < orig.doubleValue()) {
-                        // TODO proper interpolator
-                        animatingData.setValue(
-                                Math.min(anim.doubleValue() + stepSize, orig.doubleValue()),
-                                rowKey, colKey);
-                        changedSomething = true;
-                    }
+                    animatingData.setValue(
+                            interpolator.value(0.0, orig, pct), rowKey, colKey);
                 }
             }
-            if (!changedSomething || stepSize <= 0) {
+            if (currentFrame >= frameCount) {
                 stopAnimation();
             }
+            currentFrame++;
         }
     };
 
@@ -58,15 +53,17 @@ public class BarChartAnimator implements ChartAnimator {
     private final DefaultCategoryDataset originalData;
     private final Timer timer;
 
-    /**
-     * Actual number to add to the data value in each frame. This is calculated
-     * based on {@link #stepPercent} and the actual data values in the chart.
-     */
-    private final double stepSize;
+    private final int frameCount;
+    private int currentFrame;
+    
+    private final Interpolator interpolator;
 
-    public BarChartAnimator(DefaultCategoryDataset dataset, int frameDelay, double stepSize) {
-        this.stepSize = stepSize;
+    public BarChartAnimator(
+            DefaultCategoryDataset dataset, int frameDelay,
+            int frameCount, Interpolator interpolator) {
         animatingData = dataset;
+        this.frameCount = frameCount;
+        this.interpolator = interpolator;
         try {
             originalData = (DefaultCategoryDataset) animatingData.clone();
         } catch (CloneNotSupportedException impossible) {

@@ -30,6 +30,8 @@ import org.jfree.chart.plot.MultiplePiePlot;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DatasetChangeEvent;
 
+import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
+
 public class PieChartAnimator implements ChartAnimator {
 
     private static final Logger logger = Logger.getLogger(PieChartAnimator.class);
@@ -38,17 +40,18 @@ public class PieChartAnimator implements ChartAnimator {
         public void actionPerformed(ActionEvent e) {
             JFreeChart pieChart = mpplot.getPieChart();
             PiePlot plot = (PiePlot) pieChart.getPlot();
-            angle += angleStep;
-            if (angle >= finalAngle) {
-                angle = finalAngle; 
-                stopAnimation();
-            }
-            plot.setStartAngle(angle);
             
+            final double pct = ((double) frame) / ((double) frameCount);
+            plot.setStartAngle(spinInterpolator.value(initialAngle, finalAngle, pct));
+            plot.setForegroundAlpha((float) alphaInterpolator.value(0.0, 1.0, pct));
             // need to trigger a repaint, because the pie plot is just a stamper
             mpplot.datasetChanged(new DatasetChangeEvent(pieChart, mpplot.getDataset()));
             
-            logger.debug("Changed pie chart angle to " + angle);
+            if (frame >= frameCount) {
+                stopAnimation();
+            }
+            
+            frame++;
         }
     };
     
@@ -57,18 +60,27 @@ public class PieChartAnimator implements ChartAnimator {
     private final MultiplePiePlot mpplot;
     
     private final double finalAngle = 90.0;
-    private final double initialAngle = 0.0;
-    private double angle = 0;
-    private final double angleStep;
+    private final double initialAngle = -45.0;
+    private final Interpolator spinInterpolator;
+
+    private final int frameCount;
+    private int frame;
+
+    private final Interpolator alphaInterpolator;
     
-    public PieChartAnimator(MultiplePiePlot mpplot, int frameDelay, int frameCount) {
+    public PieChartAnimator(
+            MultiplePiePlot mpplot, int frameDelay,
+            int frameCount, Interpolator spinInterpolator,
+            Interpolator alphaInterpolator) {
         this.mpplot = mpplot;
+        this.frameCount = frameCount;
+        this.spinInterpolator = spinInterpolator;
+        this.alphaInterpolator = alphaInterpolator;
         timer = new Timer(frameDelay, frameHandler);
-        angleStep = (finalAngle - initialAngle) / (double) frameCount;
     }
 
     public void startAnimation() {
-        angle = initialAngle;
+        frame = 0;
         timer.start();
     }
 
