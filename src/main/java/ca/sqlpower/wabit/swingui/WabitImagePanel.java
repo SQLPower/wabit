@@ -124,8 +124,13 @@ public class WabitImagePanel implements WabitPanel {
                     dtde.acceptDrop(DnDConstants.ACTION_COPY);
                     List<?> fileList = (List<?>) t.getTransferData(DataFlavor.javaFileListFlavor);
                     final ImageIcon droppedImage = new ImageIcon(((File) fileList.get(0)).toURL());
-                    image.setImage(droppedImage.getImage());
-                    success = true;
+                    //Check if file is not an image
+                    if (droppedImage.getIconWidth() == -1){
+                    	success = false;
+                    } else{
+                    	image.setImage(droppedImage.getImage());
+                    	success = true;
+                    }
                 } else if (t.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                     dtde.acceptDrop(DnDConstants.ACTION_COPY);
                     final Image droppedImage = (Image) t.getTransferData(DataFlavor.imageFlavor);
