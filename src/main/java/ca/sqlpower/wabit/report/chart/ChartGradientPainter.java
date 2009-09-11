@@ -91,7 +91,9 @@ public class ChartGradientPainter {
             int b = (TOP_BRIGHTNESS + i) & 0xff;
             int rgb = 0xff000000 | (b << 16) | (b << 8) | b;
             gradient[i] = rgb;
-            logger.debug(String.format("Set pixel %d to %x", i, gradient[i]));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Set pixel %d to %x", i, gradient[i]));
+            }
         }
         img.setRGB(0, 0, 1, img.getHeight(), gradient, 0, 1);
         return img;
