@@ -842,7 +842,6 @@ public class CellSetTableHeaderComponent extends JComponent {
 						 popUpMenu.add(sortDesc);
 						 popUpMenu.add(sortBAsc);
 						 popUpMenu.add(sortBDesc);
-						 popUpMenu.addSeparator();
 					}
 					popUpMenu.show(HierarchyComponent.this, e.getX(), e.getY());
 					return true;
