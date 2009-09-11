@@ -407,7 +407,7 @@ public class Chart extends AbstractWabitObject {
             case CATEGORY:
                 return DatasetUtil.createCategoryDataset(
                         chartColumns, rs,
-                        findCategoryColumns());
+                        findRoleColumns(ColumnRole.CATEGORY));
             case XY:
                 return DatasetUtil.createSeriesCollection(
                         chartColumns, rs);
@@ -608,18 +608,18 @@ public class Chart extends AbstractWabitObject {
     }
 
     /**
-     * Returns a list of the identifiers for all columns labeled as category
-     * columns in a bar chart. If there are no category columns, an empty list
+     * Returns a list of the identifiers for all columns labeled as a given
+     * role in a bar chart. If there are no such columns, an empty list
      * will be returned. If multiple columns are selected, the values in each
      * column will be appended to each other to create the value's name. The
      * returned column identifiers will be ordered the same as in the
      * columnNamesInOrder list, which gives users the ability to define the
      * column name order.
      */
-    public List<ChartColumn> findCategoryColumns() {
+    public List<ChartColumn> findRoleColumns(ColumnRole role) {
         List<ChartColumn> categoryColumnNames = new ArrayList<ChartColumn>();
         for (ChartColumn identifier : chartColumns) {
-            if (identifier.getRoleInChart().equals(ColumnRole.CATEGORY)) {
+            if (identifier.getRoleInChart().equals(role)) {
                 categoryColumnNames.add(identifier);
             }
         }
@@ -636,7 +636,7 @@ public class Chart extends AbstractWabitObject {
             
             // it would be nice to cache this, but we'd need a notification mechanism
             // for flushing the cache every time the dependant data changes
-            List<ChartColumn> categoryColumns = findCategoryColumns();
+            List<ChartColumn> categoryColumns = findRoleColumns(ColumnRole.CATEGORY);
             if (categoryColumns.isEmpty()) {
                 return true;
             }

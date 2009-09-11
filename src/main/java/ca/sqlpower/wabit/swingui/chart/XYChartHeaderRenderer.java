@@ -257,7 +257,6 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
     public Component getTableCellRendererComponent(JTable table,
             Object value, boolean isSelected, boolean hasFocus, int row,
             final int column) {
-    	try{
 	        Component defaultComponent = defaultTableCellRenderer.getTableCellRendererComponent(
 	                table, value, isSelected, hasFocus, row, column);
 	        final JPanel newHeader = new JPanel(new BorderLayout());
@@ -266,9 +265,6 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 	        newHeader.add(makeXAxisBox(chartColumn), BorderLayout.CENTER);
 	        newHeader.add(defaultComponent, BorderLayout.SOUTH);
 	        return newHeader;
-    	} catch (IndexOutOfBoundsException e){ //Thrown if query is changed to a blank query
-        	return null;
-        }
     }
 
     /**

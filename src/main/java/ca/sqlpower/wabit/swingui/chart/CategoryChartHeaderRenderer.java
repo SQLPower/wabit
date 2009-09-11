@@ -162,14 +162,8 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         
         JPanel newHeader = new JPanel(new BorderLayout());
         JComboBox roleBox = makeRoleBox(column);
-        if (roleBox != null){
-        	newHeader.add(makeRoleBox(column), BorderLayout.NORTH);
-        	newHeader.add(defaultComponent, BorderLayout.SOUTH);
-        }
-        else{
-        	newHeader.setBackground(Color.WHITE);
-        }
-
+        newHeader.add(roleBox, BorderLayout.NORTH);
+        newHeader.add(defaultComponent, BorderLayout.SOUTH);
         return newHeader;
     }
 
@@ -198,8 +192,6 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
             if (!SQL.isNumeric(rs.getMetaData().getColumnType(rsColumnIndex))) {
                 roleBox.removeItem(ColumnRole.SERIES);
             }
-        } catch (IndexOutOfBoundsException e){ //Thrown if query is changed to a blank query
-        	return null;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

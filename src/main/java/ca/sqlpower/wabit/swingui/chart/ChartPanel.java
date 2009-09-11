@@ -56,6 +56,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
@@ -72,6 +73,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitPanel;
@@ -483,6 +485,7 @@ public class ChartPanel implements WabitPanel {
             	} else {
             		resultTable.repaint();
                 	updateChartPreview();
+                	resultTable.setModel(new DefaultTableModel());
             		showError(new RuntimeException(
                         "The selected query \"" + chart.getQuery() + "\" returns no results."));
             	}
@@ -515,6 +518,15 @@ public class ChartPanel implements WabitPanel {
      */
     private void updateChartPreview() {
         try {
+        	if (chart.findRoleColumns(ColumnRole.CATEGORY).isEmpty() && 
+        			(chart.getType() == ChartType.BAR
+        					|| chart.getType() == ChartType.PIE
+        					|| chart.getType() == ChartType.CATEGORY_LINE)) {
+        		throw new RuntimeException("Chart has no category.");
+        	}
+        	if (chart.findRoleColumns(ColumnRole.SERIES).isEmpty()) {
+        		throw new RuntimeException("Chart has no series.");
+        	}
             JFreeChart newJFreeChart = ChartSwingUtil.createChartFromQuery(chart);
             logger.debug("Created new JFree chart: " + newJFreeChart);
             chartPanel.setChart(newJFreeChart);

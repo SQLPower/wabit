@@ -294,7 +294,7 @@ public class ChartSwingUtil {
             return null;
         }
         
-        List<ChartColumn> categoryColumns = c.findCategoryColumns();
+        List<ChartColumn> categoryColumns = c.findRoleColumns(ColumnRole.CATEGORY);
         List<String> categoryColumnNames = new ArrayList<String>();
         for (ChartColumn identifier : categoryColumns) {
             categoryColumnNames.add(identifier.getName());
