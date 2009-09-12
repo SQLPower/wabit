@@ -39,10 +39,17 @@ public interface Interpolator {
      *            The value that will be returned when pct == 1.0
      * @param pct
      *            A value between 0.0 and 1.0 that indicates how far
-     *            "along the way" the interpolated value should be.
-     *            Values outside the range 0.0..1.0 produce undefined results.
-     * @return An interpolated value calculated according to the particular
-     *         Interpolator in use.
+     *            "along the way" the interpolated value should be. Values
+     *            outside the range 0.0..1.0 produce undefined results.
+     * @return An interpolated value for the given parameters. When
+     *         <code>pct</code>=0.0, the
+     *         value of <code>start</code> is returned. When
+     *         <code>pct</code>=1.0, the value of <code>end</code> is returned.
+     *         For values of <code>pct</code> between 0.0 and 1.0, the returned
+     *         value is calculated according to the particular Interpolator in
+     *         use. In general, it is not guaranteed to lie between
+     *         <code>start</code> and <code>end</code> (some interpolators may
+     *         "overshoot" either endpoint then come back to it).
      */
     public double value(double start, double end, double pct);
     

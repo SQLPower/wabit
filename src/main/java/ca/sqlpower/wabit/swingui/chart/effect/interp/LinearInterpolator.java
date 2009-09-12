@@ -19,6 +19,13 @@
 
 package ca.sqlpower.wabit.swingui.chart.effect.interp;
 
+import net.jcip.annotations.Immutable;
+
+/**
+ * Simple implementation of a linear interpolator. Produces the same results as
+ * a {@link PolynomialInterpolator} with a degree of 1.
+ */
+@Immutable
 public class LinearInterpolator implements Interpolator {
 
     public double value(double start, double end, double pct) {

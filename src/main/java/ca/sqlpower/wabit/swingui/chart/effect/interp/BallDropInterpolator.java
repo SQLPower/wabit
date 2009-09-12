@@ -53,6 +53,8 @@
 
 package ca.sqlpower.wabit.swingui.chart.effect.interp;
 
+import net.jcip.annotations.Immutable;
+
 /**
  * Produces an effect similar to dropping a ball: initially large, slow
  * oscillations and eventually small fast ones.
@@ -60,6 +62,7 @@ package ca.sqlpower.wabit.swingui.chart.effect.interp;
  * The algorithm for this motion was taken from ActionScript code
  * obtained under the BSD license from http://www.robertpenner.com/easing/
  */
+@Immutable
 public class BallDropInterpolator implements Interpolator {
 
     public double value(double start, double end, double pct) {

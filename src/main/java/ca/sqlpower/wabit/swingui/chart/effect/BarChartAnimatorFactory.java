@@ -24,7 +24,6 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import ca.sqlpower.wabit.swingui.chart.effect.interp.BallDropInterpolator;
-import ca.sqlpower.wabit.swingui.chart.effect.interp.EaseOutInterpolator;
 import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
 
 public class BarChartAnimatorFactory extends AbstractChartAnimatorFactory {
@@ -56,7 +55,7 @@ public class BarChartAnimatorFactory extends AbstractChartAnimatorFactory {
 
         chart.getCategoryPlot().getRangeAxis().setAutoRange(false);
 
-        return new BarChartAnimator(dataset, getFrameDelay(), getFrameCount(), interpolator);
+        return new BarChartAnimator(getFrameCount(), getFrameDelay(), dataset, interpolator);
     }
 
 }

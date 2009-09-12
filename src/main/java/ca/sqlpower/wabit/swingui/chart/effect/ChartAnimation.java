@@ -43,7 +43,8 @@ public class ChartAnimation {
      */
     private static final ChartAnimatorFactory[] ANIMATOR_FACTORIES = new ChartAnimatorFactory[] {
         new PieChartAnimatorFactory(),
-        new BarChartAnimatorFactory()
+        new BarChartAnimatorFactory(),
+        new ScatterChartAnimatorFactory()
     };
 
     /**

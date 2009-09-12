@@ -20,36 +20,33 @@
 package ca.sqlpower.wabit.swingui.chart.effect;
 
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.MultiplePiePlot;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.XYPlot;
 
 import ca.sqlpower.wabit.swingui.chart.effect.interp.PolynomialInterpolator;
 import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
-import ca.sqlpower.wabit.swingui.chart.effect.interp.LinearInterpolator;
 
-public class PieChartAnimatorFactory extends AbstractChartAnimatorFactory {
+public class ScatterChartAnimatorFactory extends AbstractChartAnimatorFactory {
 
-    private Interpolator spinInterpolator = PolynomialInterpolator.easeOutInstance(7);
-    private Interpolator alphaInterpolator = new LinearInterpolator();
+    private Interpolator interpolator = PolynomialInterpolator.easeInInstance();
     
     public boolean canAnimate(JFreeChart chart) {
-        if (!(chart.getPlot() instanceof MultiplePiePlot)) {
+        Plot plot = chart.getPlot();
+        if (!(plot instanceof XYPlot)) {
             return false;
         }
         return true;
     }
 
     public ChartAnimator createAnimator(JFreeChart chart) throws CantAnimateException {
-        MultiplePiePlot mpplot;
-        if (chart.getPlot() instanceof MultiplePiePlot) {
-            mpplot = (MultiplePiePlot) chart.getPlot();
+        XYPlot xyplot;
+        if (chart.getPlot() instanceof XYPlot) {
+            xyplot = (XYPlot) chart.getPlot();
         } else {
             throw new CantAnimateException(
-                    "This animator only works with MultiplePiePlot. " +
-                    "You gave me " + chart.getPlot());
+                    "This animator needs an XYPlot. You gave " + chart.getPlot());
         }
-        
-        return new PieChartAnimator(getFrameCount(), getFrameDelay(),
-                mpplot, spinInterpolator, alphaInterpolator);
+        return new ScatterChartAnimator(getFrameCount(), getFrameDelay(), xyplot, interpolator);
     }
 
 }
