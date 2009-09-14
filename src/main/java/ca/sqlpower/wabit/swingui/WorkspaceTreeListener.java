@@ -441,11 +441,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newOlapQuery);
 					
 					menu.addSeparator();
-					menu.add(new CopyQueryAction(session, (WabitObject) lastPathComponent));
+					menu.add(new CopyQueryAction((WabitObject) lastPathComponent, session, session.getContext().getFrame()));
 				} else if (lastPathComponent instanceof Report) {
 					menu.add(newReport);
 					menu.addSeparator();
-					menu.add(new CopyReportAction((Report) lastPathComponent, session));
+					menu.add(new CopyReportAction((Report) lastPathComponent, session, session.getContext().getFrame()));
 				} else if (lastPathComponent instanceof Template) {
 					JMenuItem item = new JMenuItem(new ReportFromTemplateAction(session, (Template) lastPathComponent));
 					item.setIcon(WabitIcons.REPORT_ICON_16);
@@ -453,12 +453,12 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newTemplate); 
 					
 					menu.addSeparator();
-					menu.add(new CopyTemplateAction((Template) lastPathComponent, session));
+					menu.add(new CopyTemplateAction((Template) lastPathComponent, session, session.getContext().getFrame()));
 				} else if (lastPathComponent instanceof WabitImage) {
 					menu.add(newImage);
 					
 					menu.addSeparator();
-					menu.add(new CopyImageAction(session, (WabitImage) lastPathComponent));
+					menu.add(new CopyImageAction((WabitImage) lastPathComponent, session, session.getContext().getFrame()));
 				} else if (lastPathComponent instanceof Chart) {
 					menu.add(newChart);
 					menu.addSeparator();

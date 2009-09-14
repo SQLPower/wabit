@@ -19,26 +19,24 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
+import java.awt.Window;
 
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.image.WabitImage;
 
-public class CopyImageAction extends AbstractAction {
+public class CopyImageAction extends CopyAction {
 	private WabitSession session;
 	private WabitImage image;
 	
-	public CopyImageAction(WabitSession session, WabitImage image) {
-		super("Copy Image");
+	public CopyImageAction(WabitImage image, WabitSession session, Window dialogOwner) {
+		super(image, dialogOwner);
 		this.session = session;
 		this.image = image;
 	}
 	
-	public void actionPerformed(ActionEvent e) {
+	public void copy(String name) {
 		WabitImage newImage = new WabitImage(image);
-		newImage.setName(image.getName() +  " Copy");
+		newImage.setName(name);
 		session.getWorkspace().addImage(newImage);
 	}
 

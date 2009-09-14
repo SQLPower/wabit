@@ -19,29 +19,25 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
+import java.awt.Window;
 import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
-
-import org.olap4j.OlapException;
 
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
 
 /**
  * This method will copy a given query and add it to the same
  * workspace the first copy was in.
  */
-public class CopyQueryAction extends AbstractAction {
+public class CopyQueryAction extends CopyAction {
 
     private final WabitObject query;
     private final WabitSession session;
 
-    public CopyQueryAction(WabitSession session, WabitObject query) {
-        super("Copy Query");
+    public CopyQueryAction(WabitObject query, WabitSession session, Window dialogOwner) {
+        super(query, dialogOwner);
         this.session = session;
         if (query instanceof QueryCache || query instanceof OlapQuery) {
         	this.query = query;
@@ -52,10 +48,10 @@ public class CopyQueryAction extends AbstractAction {
         }
     }
     
-    public void actionPerformed(ActionEvent e) {
+    public void copy(String name) {
     	if (query instanceof QueryCache) {
 	        QueryCache newQuery = new QueryCache((QueryCache) query, true);
-	        newQuery.setName(newQuery.getName() + " Copy");
+	        newQuery.setName(name);
 	        session.getWorkspace().addQuery(newQuery, session);
     	} else if (query instanceof OlapQuery) {
     		OlapQuery olapQuery;
@@ -64,7 +60,7 @@ public class CopyQueryAction extends AbstractAction {
 			} catch (Exception e1) {
 				throw new RuntimeException("Error copying query", e1);
 			}
-			olapQuery.setName(query.getName() + " Copy");
+			olapQuery.setName(name);
     		session.getWorkspace().addOlapQuery(olapQuery);
 
     	}

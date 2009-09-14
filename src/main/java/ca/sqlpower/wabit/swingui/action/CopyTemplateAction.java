@@ -19,24 +19,23 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
+import java.awt.Window;
 import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
 
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.report.Template;
 
-public class CopyTemplateAction extends AbstractAction {
+public class CopyTemplateAction extends CopyAction {
 	private Template layout;
 	private WabitSession session;
 	
-	public CopyTemplateAction(Template layout, WabitSession session) {
-		super("Copy Template");
+	public CopyTemplateAction(Template layout, WabitSession session, Window dialogOwner) {
+		super(layout, dialogOwner);
 		this.layout = layout;
 		this.session = session;
 	}
 	
-	public void actionPerformed(ActionEvent e) {
+	public void copy(String name) {
 		Template layoutCopy = new Template(layout, session);
 		layoutCopy.setParent(layout.getParent());
 		layoutCopy.setName(layout.getName() + " Copy");
