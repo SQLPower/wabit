@@ -632,6 +632,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (getOlapQuery() == null) return Collections.emptyList();
         return new ArrayList<WabitObject>(Collections.singleton(getOlapQuery()));
     }
+    
+    public void removeDependency(WabitObject dependency) {
+        ((ContentBox) getParent()).setContentRenderer(null);
+    }
 
     /**
      * This method will look for a member located at the given point. If a
@@ -674,5 +678,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	public void refresh() {
 		//TODO: Implement cellset refresh
 	}
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
+    }
 
 }

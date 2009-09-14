@@ -147,14 +147,10 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	}
 
 	public boolean allowsChildren() {
-		return true;
+		return false;
 	}
 
 	public int childPositionOffset(Class<? extends WabitObject> childType) {
-	    if (!childType.equals(ChartColumn.class)) {
-	        throw new IllegalArgumentException("The chart renderer does not contain children" +
-	        		" of type " + childType);
-	    }
 		return 0;
 	}
 
@@ -164,6 +160,10 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
     public List<WabitObject> getDependencies() {
         return Collections.singletonList((WabitObject) chart);
+    }
+    
+    public void removeDependency(WabitObject dependency) {
+        ((ContentBox) getParent()).setContentRenderer(null);
     }
 
     public void cleanup() {
@@ -191,4 +191,9 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 			throw new RuntimeException("Chart renderer was interrupted while refreshing data.", e);
 		}
 	}
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
+    }
 }

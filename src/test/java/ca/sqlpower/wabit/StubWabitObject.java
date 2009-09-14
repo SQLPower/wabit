@@ -72,4 +72,13 @@ public class StubWabitObject implements WabitObject {
         return null;
     }
 
+    public void removeDependency(WabitObject dependency) {
+        //do nothing
+    }
+
+    public boolean removeChild(WabitObject child)
+            throws ObjectDependentException, IllegalArgumentException {
+        return false;
+    }
+
 }

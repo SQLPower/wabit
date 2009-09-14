@@ -34,17 +34,10 @@ import ca.sqlpower.util.Monitorable;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.Report;
-import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.report.chart.Chart;
 
 import com.rc.retroweaver.runtime.Collections;
 
@@ -232,36 +225,7 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
             int importObjectCount = 0;
             for (WabitSession importingSession : saxHandler.getSessions()) {
                 final WabitWorkspace importingWorkspace = importingSession.getWorkspace();
-                for (WabitObject importObject : importingWorkspace.getChildren()) {
-                    if (importObject instanceof WabitDataSource) {
-                        if (!session.getWorkspace().dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
-                            importingWorkspace.removeDataSource((WabitDataSource) importObject);
-                            workspace.addDataSource((WabitDataSource) importObject);
-                        }
-                    } else if (importObject instanceof QueryCache) {
-                        importingWorkspace.removeQuery(
-                                (QueryCache) importObject, importingSession);
-                        workspace.addQuery((QueryCache) importObject, session);
-                    } else if (importObject instanceof OlapQuery) {
-                        importingWorkspace.removeOlapQuery((OlapQuery) importObject);
-                        workspace.addOlapQuery((OlapQuery) importObject);
-                    } else if (importObject instanceof WabitImage) {
-                        importingWorkspace.removeImage((WabitImage) importObject);
-                        workspace.addImage((WabitImage) importObject);
-                    } else if (importObject instanceof Chart) {
-                        importingWorkspace.removeChart((Chart) importObject);
-                        workspace.addChart((Chart) importObject);
-                    } else if (importObject instanceof Report) {
-                        importingWorkspace.removeReport((Report) importObject);
-                        workspace.addReport((Report) importObject);
-                    } else if (importObject instanceof Template) {
-                        importingWorkspace.removeTemplate((Template) importObject);
-                    	workspace.addTemplate((Template) importObject);
-                    } else {
-                        throw new IllegalStateException("Cannot import the WabitObject type " + importObject.getClass());
-                    }
-                    importObjectCount++;
-                }
+                importObjectCount += importingWorkspace.mergeIntoWorkspace(workspace);
             }
             logger.debug("Imported " + importObjectCount + " objects into " + session.getWorkspace().getName());
         } catch (Exception e) {

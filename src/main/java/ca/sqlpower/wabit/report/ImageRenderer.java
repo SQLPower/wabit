@@ -211,6 +211,10 @@ public class ImageRenderer extends AbstractWabitObject implements
         return new ArrayList<WabitObject>(Collections.singleton(getImage()));
     }
     
+    public void removeDependency(WabitObject dependency) {
+        ((ContentBox) getParent()).setContentRenderer(null);
+    }
+    
     @Override
     public void setParent(WabitObject parent) {
     	if (getParent() != parent) {
@@ -267,5 +271,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 
     public VerticalAlignment getVAlign() {
         return vAlign;
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
     }
 }

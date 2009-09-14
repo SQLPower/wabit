@@ -226,6 +226,10 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
     }
+    
+    public void removeDependency(WabitObject dependency) {
+        ((ContentBox) getParent()).setContentRenderer(null);        
+    }
 
     //XXX Should the getter be setting the property it is getting?
     public VariableContext getVariableContext() {
@@ -236,5 +240,10 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 	public void refresh() {
 		// Labels don't need refreshing, so no-op
 	}
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
+    }
     
 }

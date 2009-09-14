@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.SQLObjectItem;
-import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -78,14 +76,12 @@ public class ColumnInfo extends AbstractWabitObject{
 	 * numeric columns should allow subtotals.
 	 */
 	private boolean willSubtotal = false;
-	
-	/**
-	 * This is the alias of the column this information is for. If an Item
-	 * does not exist for the column because the query has been user modified
-	 * then the ColumnInfo will use the alias instead.
-	 * Using the alias instead of the Item can result in lost column information
-	 * if two or more columns have the same name. 
-	 */
+
+    /**
+     * This is the column name as it is in the result set. If you want the
+     * pretty user name of the column get the name of this object. If you want
+     * to access the column in a result set by its column name use this value.
+     */
 	private String columnAlias;
 	
 	public ColumnInfo(Item item, String label) {
@@ -197,6 +193,15 @@ public class ColumnInfo extends AbstractWabitObject{
 
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
+    }
+    
+    public void removeDependency(WabitObject dependency) {
+        //do nothing
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
     }
 
 }

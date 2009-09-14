@@ -51,6 +51,8 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.wabit.WorkspaceGraphModel;
+import ca.sqlpower.wabit.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
@@ -60,9 +62,9 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.WorkspaceXMLDAO.ProjectGraphModel;
-import ca.sqlpower.wabit.dao.WorkspaceXMLDAO.ProjectGraphModelEdge;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.ChartRenderer;
+import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.chart.Chart;
 
@@ -343,83 +345,4 @@ public class WorkspaceXMLDAOTest extends TestCase {
         
 	}
 	
-	/**
-	 * This test confirms that getNodes in the graph model of the workspaceXMLDAO
-	 * returns a correct list of nodes.
-	 * @throws Exception
-	 */
-	public void testGetGraphNodes() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
-        QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
-        
-        OlapQuery query = new OlapQuery(context);
-        workspace.addOlapQuery(query);
-        
-        Chart chart = new Chart();
-        workspace.addChart(chart);
-        chart.defineQuery(cache);
-        
-        Report report = new Report("name");
-        workspace.addReport(report);
-        
-        ProjectGraphModel graphModel = new WorkspaceXMLDAO.ProjectGraphModel(workspace);
-        Collection<WabitObject> nodes = graphModel.getNodes();
-        assertEquals(10, nodes.size());
-        assertTrue(nodes.contains(workspace));
-        assertTrue(nodes.contains(cache));
-        assertTrue(nodes.contains(query));
-        assertTrue(nodes.contains(chart));
-        assertTrue(nodes.contains(report));
-        assertTrue(nodes.contains(report.getPage()));
-        assertEquals(4, report.getPage().getChildren().size());
-        assertTrue(nodes.containsAll(report.getPage().getChildren()));
-    }
-
-    /**
-     * This test confirms that getNodes given a chart will return its query as
-     * well.
-     * 
-     * @throws Exception
-     */
-    public void testGetGraphNodesForChart() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
-        QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
-        
-        Chart chart = new Chart();
-        workspace.addChart(chart);
-        chart.defineQuery(cache);
-        
-        ProjectGraphModel graphModel = new WorkspaceXMLDAO.ProjectGraphModel(chart);
-        Collection<WabitObject> nodes = graphModel.getNodes();
-        assertEquals(2, nodes.size());
-        assertTrue(nodes.contains(cache));
-        assertTrue(nodes.contains(chart));
-    }
-
-    /**
-     * This test confirms that getOutboundEdges given a chart will return its
-     * edge to its query.
-     * 
-     * @throws Exception
-     */
-    public void testGetOutboundEdgesForChart() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
-        QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
-        
-        Chart chart = new Chart();
-        workspace.addChart(chart);
-        chart.defineQuery(cache);
-        
-        ProjectGraphModel graphModel = new WorkspaceXMLDAO.ProjectGraphModel(chart);
-        Collection<ProjectGraphModelEdge> outboundEdges = 
-             graphModel.getOutboundEdges(chart);
-        assertEquals(1, outboundEdges.size());
-        ProjectGraphModelEdge edge = (ProjectGraphModelEdge) outboundEdges.toArray()[0];
-        assertEquals(chart, edge.getParent());
-        assertEquals(cache, edge.getChild());
-    }
-
 }

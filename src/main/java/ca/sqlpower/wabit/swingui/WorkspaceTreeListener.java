@@ -22,15 +22,12 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
 import javax.swing.tree.TreePath;
@@ -42,21 +39,13 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.util.UserPrompter;
-import ca.sqlpower.util.UserPrompter.UserPromptOptions;
-import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.CellSetRenderer;
-import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Report;
-import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
@@ -65,6 +54,7 @@ import ca.sqlpower.wabit.swingui.action.CopyOlapDatasource;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.CopyReportAction;
 import ca.sqlpower.wabit.swingui.action.CopyTemplateAction;
+import ca.sqlpower.wabit.swingui.action.DeleteFromTreeAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
@@ -143,215 +133,6 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		return lastPathComponent;
 	}
 	
-	
-	private class DeleteFromTreeAction extends AbstractAction {
-		
-		Object item ;
-		public DeleteFromTreeAction(Object node) {
-			super("Delete");
-			item = node;
-		}
-
-		public void actionPerformed(ActionEvent e) {
-			
-		    // this whole method needs to be genericized. See bug 2149.
-		    
-			if(item instanceof QueryCache) {
-				int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
-						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
-				if(response == 0) {
-					final QueryCache query = (QueryCache)item;
-					session.getWorkspace().removeQuery(query, session);
-					removeLayoutPartsDependentOnQuery(query);
-				} else {
-					return;
-				}
-			} else if (item instanceof WabitDataSource) {
-				WabitDataSource wabitDS = (WabitDataSource) item;
-				int response = JOptionPane.showOptionDialog(context.getFrame(),
-							"Are you sure you want to delete the data source " + wabitDS.getName() + ", its queries,\n and all report content boxes associated with the data source?", 
-							"Delete Data Source", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
-		                    new Object[] {"Delete All", "Replace", "Cancel"}, null);
-		            if (response == 0) {
-		            	if (wabitDS.getSPDataSource() instanceof JDBCDataSource) {
-			                //A temporary list is used instead of directly using session.getWorkspace().getQueries()
-			            	//to prevent a ConcurrentModificationException
-			            	List <QueryCache> queries = new ArrayList<QueryCache>(session.getWorkspace().getQueries());
-			            	for(QueryCache query : queries) {
-			                	if(item.equals(query.getWabitDataSource())) {
-			                		removeLayoutPartsDependentOnQuery(query);
-			                		session.getWorkspace().removeQuery(query, session);
-			                	}
-			                }
-		            	} else if (wabitDS.getSPDataSource() instanceof Olap4jDataSource) {
-			            	List <OlapQuery> olapQueries = new ArrayList<OlapQuery>(session.getWorkspace().getOlapQueries());
-			            	logger.debug("Workspace has " + olapQueries.size() + " queries");
-			            	for(OlapQuery query : olapQueries) {
-			            		logger.debug("Currently on query '" + query.getName() + "'");
-			            		if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
-			            			logger.debug("Removing this query");
-			            			removeLayoutPartsDependentOnOlapQuery(query);
-			            			session.getWorkspace().removeOlapQuery(query);
-			            		}
-			            	}
-		            	}
-		            	session.getWorkspace().removeDataSource((WabitDataSource)item);
-		            } else if (response == 1) {
-		            	List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
-		            	dsTypes.add(Olap4jDataSource.class);
-		            	dsTypes.add(JDBCDataSource.class);
-		            	UserPrompter dbPrompter = session.getContext().createDatabaseUserPrompter("Replacing " + wabitDS.getName(), dsTypes,
-		            			UserPromptOptions.OK_NOTOK_CANCEL, UserPromptResponse.NOT_OK, null, session.getContext().getDataSources(), 
-		            			"Select Data Source", "Skip Data Source", "Cancel");
-		            	UserPromptResponse getResponseType = dbPrompter.promptUser();
-		        		if (getResponseType == UserPromptResponse.OK || getResponseType == UserPromptResponse.NEW) {
-		        			session.getWorkspace().removeDataSource((WabitDataSource)item);
-		        			SPDataSource ds = (SPDataSource) dbPrompter.getUserSelectedResponse();
-		        			session.getWorkspace().addDataSource(ds);
-		        			if (ds instanceof JDBCDataSource) {
-		        				List <QueryCache> queries = new ArrayList<QueryCache>(session.getWorkspace().getQueries());
-				            	for(QueryCache query : queries) {
-				                	if(item.equals(query.getWabitDataSource())) {
-				                		removeLayoutPartsDependentOnQuery(query);
-				                		int queryIndex = session.getWorkspace().getQueries().indexOf(query);
-										session.getWorkspace().getQueries().get(queryIndex).setDataSource((JDBCDataSource)ds);
-				                	}
-				                }
-		        			} else if (ds instanceof Olap4jDataSource) {
-		        				List <OlapQuery> queries = new ArrayList<OlapQuery>(session.getWorkspace().getOlapQueries());
-				            	for(OlapQuery query : queries) {
-				                	if(wabitDS.getSPDataSource().equals(query.getOlapDataSource())) {
-				                		removeLayoutPartsDependentOnOlapQuery(query);
-				                		int queryIndex = session.getWorkspace().getOlapQueries().indexOf(query);
-										session.getWorkspace().getOlapQueries().get(queryIndex).setOlapDataSource((Olap4jDataSource)ds);
-				                	}
-				                }
-		        			}
-			            	
-		        		} else {
-		        			return;
-		        		}
-		        	} else if (response == JOptionPane.CLOSED_OPTION || response == 2) {
-		            	return;
-		            } 
-		    } else if (item instanceof Report) {
-				session.getWorkspace().removeReport((Report)item);
-		    } else if (item instanceof Template) {
-		    	session.getWorkspace().removeTemplate((Template) item);
-		    } else if (item instanceof OlapQuery) {
-				int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this query, you will be deleting layout parts dependent on it\n" +
-						"Do you want to proceed with deleting?", "Delete Query", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, new Object[] {"Ok", "Cancel"}, null);
-				if(response == 0) {
-					final OlapQuery query = (OlapQuery)item;
-					session.getWorkspace().removeOlapQuery(query);
-					removeLayoutPartsDependentOnOlapQuery(query);
-				} else {
-					return;
-				}
-		    } else if (item instanceof WabitImage) {
-		        int response = JOptionPane.showOptionDialog(context.getFrame(), "By deleting this image, " +
-		        		"you will be deleting layout parts dependent on it\n" +
-                        "Do you want to proceed with deleting?", "Delete Image", 
-                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, 
-                        new Object[] {"Ok", "Cancel"}, null);
-                if(response == 0) {
-                    final WabitImage image = (WabitImage) item;
-                    session.getWorkspace().removeImage(image);
-                    removeLayoutPartsDependentOnImage(image);
-                } else {
-                    return;
-                }
-		    } else if (item instanceof Chart) {
-		        int response = JOptionPane.showOptionDialog(context.getFrame(), 
-		                "By deleting this chart, " +
-                        "you will be deleting layout parts dependent on it\n" +
-                        "Do you want to proceed with deleting?", "Delete Chart", 
-                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, 
-                        new Object[] {"Ok", "Cancel"}, null);
-                if(response == 0) {
-                    final Chart chart = (Chart) item;
-                    List<Layout> allLayouts = new ArrayList<Layout>();
-                    allLayouts.addAll(session.getWorkspace().getReports());
-                    allLayouts.addAll(session.getWorkspace().getTemplates());
-                    for (Layout layout : allLayouts) {
-                        List<ContentBox> cbList = 
-                            new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
-                        for (ContentBox cb : cbList) {
-                            if (cb.getContentRenderer() instanceof ChartRenderer 
-                                    && ((ChartRenderer) cb.getContentRenderer()).getChart() == chart) {
-                                cb.setContentRenderer(null);
-                            }
-                        }
-                    }
-                    session.getWorkspace().removeChart(chart);
-                } else {
-                    return;
-                }
-			} else {
-				logger.debug("This shoudl not Happen");
-				throw new IllegalStateException("Trying to delete a workspace tree object that " +
-						"is unknown. Object is " + item + " and type is " + item.getClass() + ".");
-			}
-			
-		}
-
-        /**
-         * Removes any content boxes dependent on the image passed to the method.
-         */
-		private void removeLayoutPartsDependentOnImage(WabitImage image) {
-		    List<Layout> allLayouts = new ArrayList<Layout>();
-		    allLayouts.addAll(session.getWorkspace().getReports());
-		    allLayouts.addAll(session.getWorkspace().getTemplates());
-		    for (Layout layout : allLayouts) {
-                List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
-                for (ContentBox cb : cbList) {
-                    if (cb.getContentRenderer() instanceof ImageRenderer && 
-                            ((ImageRenderer) cb.getContentRenderer()).getImage() == image) {
-                        cb.setContentRenderer(null);
-                    }
-                }
-            }
-        }
-
-        /**
-		 * Removes any content boxes dependent on the query passed to the method
-		 * @param query
-		 */
-		private void removeLayoutPartsDependentOnQuery(QueryCache query) {
-			List<Layout> allLayouts = new ArrayList<Layout>();
-			allLayouts.addAll(session.getWorkspace().getReports());
-			allLayouts.addAll(session.getWorkspace().getTemplates());
-			for (Layout layout : allLayouts) {
-				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
-				for(ContentBox cb : cbList) {
-				    if(cb.getContentRenderer() instanceof ResultSetRenderer 
-				            && ((ResultSetRenderer) cb.getContentRenderer()).getQuery() == query) {
-				    	cb.setContentRenderer(null);
-					}
-				}
-			}
-		}
-		
-		/**
-		 * Removes any content boxes dependent on the query passed to the method
-		 * @param query
-		 */
-		private void removeLayoutPartsDependentOnOlapQuery(OlapQuery query) {
-			List<Layout> allLayouts = new ArrayList<Layout>();
-			allLayouts.addAll(session.getWorkspace().getReports());
-			allLayouts.addAll(session.getWorkspace().getTemplates());
-			for (Layout layout : allLayouts) {
-				List<ContentBox> cbList = new ArrayList<ContentBox>(layout.getPage().getContentBoxes());
-				for(ContentBox cb : cbList) {
-				    if(cb.getContentRenderer() instanceof CellSetRenderer &&
-				            ((CellSetRenderer) cb.getContentRenderer()).getOlapQuery() == query) {
-				    	cb.setContentRenderer(null);
-					}
-				}
-			}
-		}
-	}
-
 	/**
 	 * This will Display a List of options once you right click on the WorkspaceTree.
 	 */
@@ -465,11 +246,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					//TODO Rename, Delete, Copy
 				}
 				
-				if (!(lastPathComponent instanceof ContentBox) && 
-						!(lastPathComponent instanceof SQLObject) &&
-						!(lastPathComponent instanceof Olap4jTreeObject)) {
+				if (lastPathComponent instanceof WabitObject &&
+				        !(lastPathComponent instanceof ContentBox)) {
 					menu.add(new EditCellAction(tree));
-					menu.add(new DeleteFromTreeAction(lastPathComponent));
+					menu.add(new DeleteFromTreeAction(session.getWorkspace(), 
+					        (WabitObject) lastPathComponent, context.getFrame()));
 				}
 				
 				if (lastPathComponent instanceof QueryCache) {

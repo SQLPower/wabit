@@ -121,4 +121,13 @@ public class Guide extends AbstractWabitObject {
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
     }
+    
+    public void removeDependency(WabitObject dependency) {
+        //do nothing
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
+    }
 }

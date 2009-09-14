@@ -529,6 +529,12 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return new ArrayList<WabitObject>(Collections.singleton(getWabitDataSource()));
     }
     
+    public void removeDependency(WabitObject dependency) {
+        if (dependency.equals(getWabitDataSource())) {
+            setDataSource(null);
+        }
+    }
+    
     /**
      * If this returns true then this query cache is a query that should
      * not be hooked up to listeners. 
@@ -559,6 +565,11 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 
     public boolean isAutomaticallyExecuting() {
         return automaticallyExecuting;
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
     }
 
 }

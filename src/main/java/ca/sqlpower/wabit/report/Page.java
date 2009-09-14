@@ -525,9 +525,25 @@ public class Page extends AbstractWabitObject {
     }
 
     public List<WabitObject> getDependencies() {
-        List<WabitObject> dependencies = new ArrayList<WabitObject>();
-        dependencies.addAll(contentBoxes);
-        dependencies.addAll(guides);
-        return dependencies;
+        return Collections.emptyList();
+    }
+    
+    public void removeDependency(WabitObject dependency) {
+        for (int i = getChildren().size() - 1; i >= 0; i--) {
+            getChildren().get(i).removeDependency(dependency);
+        }
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        if (child instanceof Guide) {
+            return removeGuide((Guide) child);
+        } else if (child instanceof ContentBox) {
+            removeContentBox((ContentBox) child);
+            return true;
+        } else {
+            throw new IllegalArgumentException("Cannot remove children of type " 
+                    + child.getClass() + " from " + getName());
+        }
     }
 }

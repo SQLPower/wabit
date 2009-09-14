@@ -79,8 +79,17 @@ public class WabitDataSource extends AbstractWabitObject {
 	public int hashCode() {
 		return this.dataSource.hashCode();
 	}
+	
+	public void removeDependency(WabitObject dependency) {
+	    //do nothing
+	}
 
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
     }
 }

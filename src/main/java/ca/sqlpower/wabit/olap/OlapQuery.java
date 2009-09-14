@@ -533,6 +533,12 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         return dependencies;
     }
     
+    public void removeDependency(WabitObject dependency) {
+        if (dependency.equals(getOlapDataSource())) {
+            setOlapDataSource(null);
+        }
+    }
+    
     /**
      * This method will initialize the query based upon which data was loaded. This is necessary
      * because if we were to initialize the query during saving and loading exceptions will be thrown
@@ -1059,6 +1065,11 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 	public synchronized void clearExclusions(Hierarchy hierarchy) throws QueryInitializationException {
 		QueryDimension dimension = getMDXQuery().getDimension(hierarchy.getDimension().getName());
 		dimension.clearExclusions();
+	}
+	
+	@Override
+	protected boolean removeChildImpl(WabitObject child) {
+	    return false;
 	}
 
 	// -------------- WabitBackgroundWorker interface --------------

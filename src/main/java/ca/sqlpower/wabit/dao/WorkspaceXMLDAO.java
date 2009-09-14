@@ -34,16 +34,11 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -51,7 +46,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.graph.DepthFirstSearch;
-import ca.sqlpower.graph.GraphModel;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -59,6 +53,8 @@ import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.Version;
+import ca.sqlpower.wabit.WorkspaceGraphModel;
+import ca.sqlpower.wabit.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -124,114 +120,6 @@ public class WorkspaceXMLDAO {
     //                                         UPDATE HISTORY!!??!
 
     /**
-     * Each edge is made up of a parent {@link WabitObject} and a child
-     * {@link WabitObject}. The edge goes in the direction from the parent to
-     * the child.
-     * <p>
-     * Package private for testing.
-     */
-    static class ProjectGraphModelEdge {
-        
-        private final WabitObject parent;
-        private final WabitObject child;
-
-        public ProjectGraphModelEdge(WabitObject parent, WabitObject child) {
-            this.parent = parent;
-            this.child = child;
-        }
-        
-        public WabitObject getParent() {
-            return parent;
-        }
-        
-        public WabitObject getChild() {
-            return child;
-        }
-        
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof ProjectGraphModelEdge) {
-                ProjectGraphModelEdge wabitObject = (ProjectGraphModelEdge) obj;
-                return getParent().equals(wabitObject.getParent()) && getChild().equals(wabitObject.getChild());
-            } else {
-                return false;
-            }
-        }
-        
-        @Override
-        public int hashCode() {
-            int result = 17;
-            result = 37 * result + getParent().hashCode();
-            result = 37 * result + getChild().hashCode();
-            return result;
-        }
-    }
-
-    /**
-     * This graph takes a {@link WabitObject} for its root and makes a graph
-     * model that represents all of the root's dependencies. The root is
-     * included in the dependencies.
-     * <p>
-     * Package private for testing.
-     */
-    static class ProjectGraphModel implements GraphModel<WabitObject, ProjectGraphModelEdge> {
-        
-        private final WabitObject root;
-
-        public ProjectGraphModel(WabitObject root) {
-            this.root = root;
-        }
-
-        public Collection<WabitObject> getAdjacentNodes(WabitObject node) {
-            return node.getDependencies();
-        }
-
-        public Collection<ProjectGraphModelEdge> getEdges() {
-            Set<ProjectGraphModelEdge> allEdges = new HashSet<ProjectGraphModelEdge>();
-            allEdges.addAll(getOutboundEdges(root));
-            Queue<ProjectGraphModelEdge> outboundEdges = 
-                new LinkedList<ProjectGraphModelEdge>(getOutboundEdges(root));
-            while (!outboundEdges.isEmpty()) {
-                ProjectGraphModelEdge edge = outboundEdges.remove();
-                if (allEdges.contains(edge)) continue;
-                allEdges.add(edge);
-                outboundEdges.addAll(getOutboundEdges(edge.getChild()));
-            }
-            return allEdges;
-        }
-
-        public Collection<ProjectGraphModelEdge> getInboundEdges(
-                WabitObject node) {
-            WabitObject parent = node.getParent();
-            if (parent == null) return Collections.emptyList();
-            return Collections.singletonList(new ProjectGraphModelEdge(parent, node));
-        }
-
-        public Collection<WabitObject> getNodes() {
-            Set<WabitObject> allNodes = new HashSet<WabitObject>();
-            allNodes.add(root);
-            Queue<WabitObject> adjacentNodes = new LinkedList<WabitObject>(getAdjacentNodes(root));
-            while (!adjacentNodes.isEmpty()) {
-                WabitObject node = adjacentNodes.remove();
-                if (allNodes.contains(node)) continue;
-                allNodes.add(node);
-                adjacentNodes.addAll(getAdjacentNodes(node));
-            }
-            return allNodes;
-        }
-
-        public Collection<ProjectGraphModelEdge> getOutboundEdges(
-                WabitObject node) {
-            List<ProjectGraphModelEdge> dependencyEdges = new ArrayList<ProjectGraphModelEdge>();
-            for (WabitObject dependency : node.getDependencies()) {
-                dependencyEdges.add(new ProjectGraphModelEdge(node, dependency));
-            }
-            return dependencyEdges;
-        }
-        
-    }
-    
-	/**
 	 * This output stream will be used to  write the workspace to a file.
 	 */
 	private final PrintWriter out;
@@ -296,8 +184,8 @@ public class WorkspaceXMLDAO {
 		        workspaceToDependencies.put((WabitWorkspace) parentWorkspace, workspaceDependencies);
 		    }
 		    
-		    DepthFirstSearch<WabitObject, ProjectGraphModelEdge> dfs = new DepthFirstSearch<WabitObject, ProjectGraphModelEdge>();
-		    dfs.performSearch(new ProjectGraphModel(savingObject));
+		    DepthFirstSearch<WabitObject, WorkspaceGraphModelEdge> dfs = new DepthFirstSearch<WabitObject, WorkspaceGraphModelEdge>();
+		    dfs.performSearch(new WorkspaceGraphModel(parentWorkspace, savingObject, false, false));
 		    List<WabitObject> dependenciesToSave = dfs.getFinishOrder();
 		    for (WabitObject object : dependenciesToSave) {
 		        if (!workspaceDependencies.contains(object)) {

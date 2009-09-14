@@ -169,7 +169,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         }
     }
 
-    public boolean removeDataSource(WabitDataSource ds) {
+    private boolean removeDataSource(WabitDataSource ds) {
     	logger.debug("removing WabitDataSource");
     	int index = dataSources.indexOf(ds);
     	if (index != -1) {
@@ -203,7 +203,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         setEditorPanelModel(query);
     }
 
-    public boolean removeQuery(QueryCache query, WabitSession session) {
+    private boolean removeQuery(QueryCache query, WabitSession session) {
     	int index = queries.indexOf(query);
     	if (index != -1) {
     		query.cleanup();
@@ -227,7 +227,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         setEditorPanelModel(template);
 	}
     
-    public boolean removeTemplate(Template template) {
+    private boolean removeTemplate(Template template) {
     	int index = templates.indexOf(template);
     	if (index != -1) {
     		templates.remove(template);
@@ -249,7 +249,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         setEditorPanelModel(report);
     }
     
-    public boolean removeReport(Report report) {
+    private boolean removeReport(Report report) {
     	int index = reports.indexOf(report);
     	if (index != -1) {
     		reports.remove(report);
@@ -271,7 +271,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         setEditorPanelModel(image);
     }
     
-    public boolean removeImage(WabitImage image) {
+    private boolean removeImage(WabitImage image) {
         int index = images.indexOf(image);
         if (index != -1) {
             images.remove(image);
@@ -297,7 +297,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         setEditorPanelModel(chart);
     }
     
-    public boolean removeChart(Chart chart) {
+    private boolean removeChart(Chart chart) {
         int index = charts.indexOf(chart);
         if (index != -1) {
             charts.remove(chart);
@@ -568,7 +568,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         setEditorPanelModel(newQuery);
     }
 
-    public boolean removeOlapQuery(OlapQuery query) {
+    private boolean removeOlapQuery(OlapQuery query) {
     	int index = olapQueries.indexOf(query);
     	if (index != -1) {
     		olapQueries.remove(query);
@@ -585,9 +585,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public List<OlapQuery> getOlapQueries() {
         return Collections.unmodifiableList(olapQueries);
     }
+    
+    public void removeDependency(WabitObject dependency) {
+        //do nothing
+    }
 
     public List<WabitObject> getDependencies() {
-        return new ArrayList<WabitObject>(getChildren());
+        return Collections.emptyList();
     }
 
     /**
@@ -635,5 +639,72 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
             }
         }
         return null;
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        if (child instanceof WabitDataSource) {
+            return removeDataSource((WabitDataSource) child);
+        } else if (child instanceof QueryCache) {
+            return removeQuery((QueryCache) child, session);
+        } else if (child instanceof OlapQuery) {
+            return removeOlapQuery((OlapQuery) child);
+        } else if (child instanceof WabitImage) {
+            return removeImage((WabitImage) child);
+        } else if (child instanceof Chart) {
+            return removeChart((Chart) child);
+        } else if (child instanceof Template) {
+            return removeTemplate((Template) child);
+        } else if (child instanceof Report) {
+            return removeReport((Report) child);
+        } else {
+            throw new IllegalStateException("Cannot remove child of type " + child.getClass());
+        }
+    }
+
+    /**
+     * This method will merge all of the objects in this workspace into the
+     * given workspace. Once this workspace has been merged in this workspace
+     * can be thrown away as it will have no children and will just be a
+     * leftover husk of what it once was.
+     * 
+     * @param workspace
+     *            The workspace to move all of the current workspace's children
+     *            into.
+     * @return The number of objects imported into the given workspace.
+     */
+    public int mergeIntoWorkspace(WabitWorkspace workspace) {
+        int importObjectCount = 0;
+        for (WabitObject importObject : getChildren()) {
+            if (importObject instanceof WabitDataSource) {
+                if (!session.getWorkspace().dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
+                    removeDataSource((WabitDataSource) importObject);
+                    workspace.addDataSource((WabitDataSource) importObject);
+                }
+            } else if (importObject instanceof QueryCache) {
+                removeQuery((QueryCache) importObject, getSession());
+                workspace.addQuery((QueryCache) importObject, session);
+            } else if (importObject instanceof OlapQuery) {
+                removeOlapQuery((OlapQuery) importObject);
+                workspace.addOlapQuery((OlapQuery) importObject);
+            } else if (importObject instanceof WabitImage) {
+                removeImage((WabitImage) importObject);
+                workspace.addImage((WabitImage) importObject);
+            } else if (importObject instanceof Chart) {
+                removeChart((Chart) importObject);
+                workspace.addChart((Chart) importObject);
+            } else if (importObject instanceof Report) {
+                removeReport((Report) importObject);
+                workspace.addReport((Report) importObject);
+            } else if (importObject instanceof Template) {
+                removeTemplate((Template) importObject);
+                workspace.addTemplate((Template) importObject);
+            } else {
+                throw new IllegalStateException("Cannot import the WabitObject type " + importObject.getClass());
+            }
+            importObjectCount++;
+        }
+        
+        return importObjectCount;
     }
 }

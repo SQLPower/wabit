@@ -22,6 +22,8 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 public interface WabitObject {
 
     void addChildListener(WabitChildListener l);
@@ -42,6 +44,19 @@ public interface WabitObject {
      * this OLAPObject.
      */
     int childPositionOffset(Class<? extends WabitObject> childType);
+
+    /**
+     * Removes the given child object from this object. If the given child is
+     * not an actual child of this object an illegal argument exception will be
+     * thrown. If the child has dependencies and cannot be removed an object
+     * dependent exception will be thrown.
+     * 
+     * @param child
+     *            The object to remove as a child of this object.
+     * @return True if the child was successfully removed. False if the child
+     *         was not removed from this object.
+     */
+    boolean removeChild(WabitObject child) throws ObjectDependentException, IllegalArgumentException;
     
     /**
      * Returns the short name for this object.
@@ -56,9 +71,22 @@ public interface WabitObject {
     String getUUID();
     
     /**
-     * Returns a list of all {@link WabitObject}s that this Wabit object is dependent
-     * on. This is used in exporting to find what Wabit objects to save. If there
-     * are no objects this Wabit object is dependent on an empty list should be returned.
+     * Removes the given object as a dependency of this object. For this object
+     * to no longer be dependent on the given dependency all of its children
+     * must also not be dependent on the given dependency when this method
+     * returns. This may remove this object from its parent if necessary.
+     */
+    void removeDependency(@Nonnull WabitObject dependency);
+
+    /**
+     * Returns a list of all {@link WabitObject}s that this Wabit object is
+     * dependent on. Children of a WabitObject are not dependencies and will not
+     * be returned in this list. If there are no objects this Wabit object is
+     * dependent on an empty list should be returned. These are only the
+     * immediate dependencies of this object. If you want to find the
+     * dependencies of this object's dependencies as well it may be useful to
+     * look at {@link WorkspaceGraphModel} to make a full graph of all of the
+     * dependencies.
      */
     List<WabitObject> getDependencies();
     

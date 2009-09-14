@@ -60,6 +60,7 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.swingui.WabitIcons;
+import ca.sqlpower.wabit.swingui.WorkspaceGraphTreeNodeWrapper;
 import ca.sqlpower.wabit.swingui.olap.Olap4JTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
 
@@ -133,6 +134,11 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     	DefaultTreeCellRenderer r = (DefaultTreeCellRenderer) super.getTreeCellRendererComponent(
     			tree, value, sel, expanded, leaf, row, hasFocus);
         
+    	Object originalValue = value;
+    	if (value instanceof WorkspaceGraphTreeNodeWrapper) {
+    	    value = ((WorkspaceGraphTreeNodeWrapper) value).getWrappedObject();
+    	}
+    	
         if (value instanceof WabitObject) {
             WabitObject wo = (WabitObject) value;
             
@@ -155,13 +161,19 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(WabitIcons.REPORT_ICON_16);
             } else if (wo instanceof Template) {
             	r.setIcon(WabitIcons.TEMPLATE_ICON_16);
-            } else if (wo instanceof ContentBox) {
-                ContentBox cb = (ContentBox) wo;
+            } else if (wo instanceof ContentBox || wo instanceof ReportContentRenderer) {
                 final ReportContentRenderer cbChild;
-                if (cb.getChildren().size() > 0) {
-                    cbChild = (ReportContentRenderer) cb.getChildren().get(0);
+                if (wo instanceof ContentBox) {
+                    ContentBox cb = (ContentBox) wo;
+                    if (cb.getChildren().size() > 0) {
+                        cbChild = (ReportContentRenderer) cb.getChildren().get(0);
+                    } else {
+                        cbChild = null;
+                    }
+                } else if (wo instanceof ReportContentRenderer) {
+                    cbChild = (ReportContentRenderer) wo;
                 } else {
-                    cbChild = null;
+                    throw new IllegalStateException("Cannot render this object.");
                 }
                 
                 if (cbChild == null) {
@@ -219,6 +231,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         	Component delegateComponent = delegateSQLTreeCellRenderer.getTreeCellRendererComponent(tree, value, sel, 
         			expanded, leaf, row, hasFocus);
 			r = (DefaultTreeCellRenderer) delegateComponent;
+        }
+        
+        if (originalValue instanceof WorkspaceGraphTreeNodeWrapper) {
+            r.setText(((WorkspaceGraphTreeNodeWrapper) originalValue).getName());
         }
         
         return r;

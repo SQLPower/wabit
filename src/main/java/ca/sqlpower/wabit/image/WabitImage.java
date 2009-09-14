@@ -112,5 +112,14 @@ public class WabitImage extends AbstractWabitObject {
     public List<WabitObject> getDependencies() {
         return new ArrayList<WabitObject>();
     }
+    
+    public void removeDependency(WabitObject dependency) {
+        //do nothing
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
+    }
 
 }

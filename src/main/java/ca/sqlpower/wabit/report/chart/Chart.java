@@ -475,6 +475,19 @@ public class Chart extends AbstractWabitObject {
         if (query == null) return Collections.emptyList();
         return Collections.singletonList(query);
     }
+    
+    public void removeDependency(WabitObject dependency) {
+        if (dependency.equals(query)) {
+            try {
+                defineQuery(null);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (WabitObject child : getChildren()) {
+            child.removeDependency(dependency);
+        }
+    }
 
     // ============= END of WabitObject implementation
     
@@ -711,5 +724,14 @@ public class Chart extends AbstractWabitObject {
 
     public boolean isGratuitouslyAnimated() {
         return gratuitouslyAnimated;
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        if (getColumns().contains(child)) {
+            throw new IllegalStateException("The children of the renderer are maintained internally." +
+                " There should be no need to remove them outside of this class.");
+        }
+        return false;
     }
 }

@@ -162,6 +162,10 @@ public class ChartColumn extends AbstractWabitObject {
         return Collections.emptyList();
     }
     
+    public void removeDependency(WabitObject dependency) {
+        //do nothing.
+    }
+    
     public String getName() {
         return getColumnName();
     }
@@ -202,5 +206,10 @@ public class ChartColumn extends AbstractWabitObject {
             sb.append(")");
         }
         return sb.toString();
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        return false;
     }
 }

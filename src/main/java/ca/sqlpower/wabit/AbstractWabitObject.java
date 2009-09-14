@@ -164,4 +164,41 @@ public abstract class AbstractWabitObject implements WabitObject {
 	public String getUUID() {
 		return uuid;
 	}
+	
+	public final boolean removeChild(WabitObject child)
+	        throws ObjectDependentException {
+	    if (!getChildren().contains(child)) 
+	        throw new IllegalArgumentException("Child object " + child.getName() 
+	                + " is not a child of " + getName());
+	    
+	    WabitObject topAncestor = this;
+	    while (topAncestor.getParent() != null) {
+	        topAncestor = topAncestor.getParent();
+	    }
+	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, child, false, true);
+	    for (WabitObject graphNode : graph.getNodes()) {
+	        List<WabitObject> ancestors = new ArrayList<WabitObject>();
+	        WabitObject ancestor = graphNode.getParent();
+	        while (ancestor != null) {
+	            ancestors.add(ancestor);
+	            ancestor = ancestor.getParent();
+	        }
+	        if (!graphNode.equals(child) && !ancestors.contains(child)
+	                && !graphNode.equals(topAncestor)) {
+	            throw new ObjectDependentException("The child " + child.getName() + " being" +
+	            		" removed from " + this.getName() + " is depended on by " + graphNode.getName());
+	        }
+	    }
+	    
+	    return removeChildImpl(child);
+	}
+
+    /**
+     * This is the object specific implementation of removeChild. There are
+     * checks in the removeChild method to ensure the child being removed has no
+     * dependencies and is a child of this object.
+     * 
+     * @see #removeChild(WabitObject)
+     */
+	protected abstract boolean removeChildImpl(WabitObject child);
 }

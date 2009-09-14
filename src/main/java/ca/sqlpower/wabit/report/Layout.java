@@ -27,7 +27,6 @@ import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -149,6 +148,12 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         return Collections.singletonList(page);
     }
     
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        throw new IllegalStateException("Cannot currently remove the page from a layout. Need" +
+        		" to implement multi-paging for this functionality.");
+    }
+    
     public boolean allowsChildren() {
     	return true;
     }
@@ -257,8 +262,11 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 	}
 
     public List<WabitObject> getDependencies() {
-        if (page == null) return Collections.emptyList();
-        return new ArrayList<WabitObject>(Collections.singleton(page));
+        return Collections.emptyList();
+    }
+    
+    public void removeDependency(WabitObject dependency) {
+        page.removeDependency(dependency);
     }
 
 }

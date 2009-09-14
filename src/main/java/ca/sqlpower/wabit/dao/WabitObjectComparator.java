@@ -45,6 +45,7 @@ import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
 
 /**
  * This comparator orders the WabitObjects given based on the following
@@ -84,6 +85,7 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         equalObjectsSet.add(OlapQuery.class);
         classOrderList.add(equalObjectsSet);
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Chart.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ChartColumn.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitImage.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Template.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Report.class)));

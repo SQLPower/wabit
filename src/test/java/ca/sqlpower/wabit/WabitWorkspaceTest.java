@@ -32,7 +32,13 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.ChartRenderer;
+import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.swingui.StubWabitSwingSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
@@ -69,11 +75,12 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
                 return null;
             }
         });
+        workspace.setSession(session);
         workspace.addQuery(query, session);
         workspace.setEditorPanelModel(query);
         assertEquals(query, workspace.getEditorPanelModel());
         
-        workspace.removeQuery(query, session);
+        workspace.removeChild(query);
         assertNotSame(query, workspace.getEditorPanelModel());
     }
     
@@ -93,7 +100,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         workspace.setEditorPanelModel(query);
         assertEquals(query, workspace.getEditorPanelModel());
         
-        workspace.removeOlapQuery(query);
+        workspace.removeChild(query);
         assertNotSame(query, workspace.getEditorPanelModel());
     }
     
@@ -108,8 +115,77 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         workspace.setEditorPanelModel(layout);
         assertEquals(layout, workspace.getEditorPanelModel());
         
-        workspace.removeReport(layout);
+        workspace.removeChild(layout);
         assertNotSame(layout, workspace.getEditorPanelModel());
+    }
+
+    /**
+     * Removing a child object that is a dependency should throw an exception
+     * when the remove operation occurs.
+     */
+    public void testRemovingQueryWithDependency() throws Exception {
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        workspace.setSession(session);
+        QueryCache query = new QueryCache(new SQLDatabaseMapping() {
+            public SQLDatabase getDatabase(JDBCDataSource ds) {
+                return null;
+            }
+        });
+        workspace.addQuery(query, session);
+        Chart chart = new Chart();
+        chart.setName("chart");
+        chart.defineQuery(query);
+        workspace.addChart(chart);
+        
+        try {
+            workspace.removeChild(query);
+            fail("The child was removed while there was a chart dependent on it. " +
+            		"Now the chart depends on an unparented object.");
+        } catch (ObjectDependentException e) {
+            //successfully caught the exception.
+        }
+    }
+    
+    /**
+     * A simple test of merging some WabitObjects from one workspace into another.
+     */
+    public void testMergeIntoSession() throws Exception {
+        WabitSwingSession startingSession = new StubWabitSwingSession();
+        WabitWorkspace startingWorkspace = new WabitWorkspace();
+        startingWorkspace.setSession(startingSession);
+        
+        QueryCache query = new QueryCache(new StubWabitSessionContext());
+        startingWorkspace.addQuery(query, startingSession);
+        Chart chart = new Chart();
+        chart.setName("chart");
+        chart.defineQuery(query);
+        startingWorkspace.addChart(chart);
+        Report report = new Report("Report");
+        ContentBox chartContentBox = new ContentBox();
+        chartContentBox.setContentRenderer(new ChartRenderer(chart));
+        report.getPage().addContentBox(chartContentBox);
+        ContentBox queryContentBox = new ContentBox();
+        queryContentBox.setContentRenderer(new ResultSetRenderer(query));
+        report.getPage().addContentBox(queryContentBox);
+        startingWorkspace.addReport(report);
+        
+        WabitSwingSession finishingSession = new StubWabitSwingSession();
+        WabitWorkspace finishingWorkspace = new WabitWorkspace();
+        finishingWorkspace.setSession(finishingSession);
+        
+        assertEquals(3, startingWorkspace.getChildren().size());
+        assertTrue(startingWorkspace.getChildren().contains(query));
+        assertTrue(startingWorkspace.getChildren().contains(chart));
+        assertTrue(startingWorkspace.getChildren().contains(report));
+        assertEquals(0, finishingWorkspace.getChildren().size());
+        
+        startingWorkspace.mergeIntoWorkspace(finishingWorkspace);
+        
+        assertEquals(0, startingWorkspace.getChildren().size());
+        assertEquals(3, finishingWorkspace.getChildren().size());
+        assertTrue(finishingWorkspace.getChildren().contains(query));
+        assertTrue(finishingWorkspace.getChildren().contains(chart));
+        assertTrue(finishingWorkspace.getChildren().contains(report));
     }
 
 }

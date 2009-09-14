@@ -874,8 +874,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         if (query != null) {
             dependencies.add(query);
         }
-        dependencies.addAll(columnInfo);
         return dependencies;
+    }
+    
+    public void removeDependency(WabitObject dependency) {
+        ((ContentBox) getParent()).setContentRenderer(null);
     }
     
     @Override
@@ -931,5 +934,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      */
 	Exception getExecuteException() {
         return executeException;
+    }
+
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        if (columnInfo.contains(child)) {
+            throw new IllegalStateException("The children of the renderer are maintained internally." +
+            		" There should be no need to remove them outside of this class.");
+        }
+        return false;
     }
 }
