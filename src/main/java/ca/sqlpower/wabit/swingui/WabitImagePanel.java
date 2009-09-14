@@ -236,7 +236,9 @@ public class WabitImagePanel implements WabitPanel {
         
             @Override
             public void mouseReleased(MouseEvent e) {
-                showImageBrowser();
+            	if (getImage().getImageAsIcon() == null){
+            		showImageBrowser();
+            	}
             }
         
         });
@@ -337,5 +339,9 @@ public class WabitImagePanel implements WabitPanel {
     
     public JToolBar getToolbar() {
         return toolBarBuilder.getToolbar();
+    }
+    
+    public WabitImage getImage(){
+    	return image;
     }
 }
