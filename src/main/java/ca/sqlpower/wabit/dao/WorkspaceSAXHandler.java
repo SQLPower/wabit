@@ -102,6 +102,7 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.
@@ -1352,6 +1353,19 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
     public void setCancelled(boolean cancelled) {
         this.cancelled.set(cancelled);
+    }
+
+    /**
+     * Marks all sessions that have been loaded by this SAX handler as not
+     * having any unsaved modifications.
+     */
+    public void markLoadedSessionsClean() {
+        for (WabitSession session : sessions) {
+            if (session instanceof WabitSwingSession) {
+                WabitSwingSession swingSession = (WabitSwingSession) session;
+                swingSession.setCurrentURI(swingSession.getCurrentURI());
+            }
+        }
     }
 	
 }
