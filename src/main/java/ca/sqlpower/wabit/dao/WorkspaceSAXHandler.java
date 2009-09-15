@@ -1355,17 +1355,4 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         this.cancelled.set(cancelled);
     }
 
-    /**
-     * Marks all sessions that have been loaded by this SAX handler as not
-     * having any unsaved modifications.
-     */
-    public void markLoadedSessionsClean() {
-        for (WabitSession session : sessions) {
-            if (session instanceof WabitSwingSession) {
-                WabitSwingSession swingSession = (WabitSwingSession) session;
-                swingSession.setCurrentURI(swingSession.getCurrentURI());
-            }
-        }
-    }
-	
 }

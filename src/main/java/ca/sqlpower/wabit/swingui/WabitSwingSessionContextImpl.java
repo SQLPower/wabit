@@ -1803,10 +1803,23 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     	}
     };
 
+    /**
+     * Registers the given child session with this context, marking the child
+     * session as not having any unsaved changes.
+     * 
+     * @param child
+     *            The child session to register. Must be non-null and must be a
+     *            {@link WabitSwingSession}.
+     */
     public void registerChildSession(WabitSession child) {
-        delegateContext.registerChildSession(child);
-		child.getWorkspace().addPropertyChangeListener(nameChangeListener);
-		stackedTabPane.addTab(child.getWorkspace().getName(), new JScrollPane(((WabitSwingSession) child).getTree()), true);
+        WabitSwingSession swingSession = (WabitSwingSession) child;
+        delegateContext.registerChildSession(swingSession);
+        
+        // mark the session clean (this is the correct way, according to interface docs)
+        swingSession.setCurrentURI(swingSession.getCurrentURI());
+        
+        swingSession.getWorkspace().addPropertyChangeListener(nameChangeListener);
+        stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
 		stackedTabPane.setSelectedIndex(stackedTabPane.getTabCount() - 1);
     }
 

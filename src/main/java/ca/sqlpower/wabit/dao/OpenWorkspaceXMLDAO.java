@@ -165,7 +165,6 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 	    } catch (Exception e) {
 	        throw new RuntimeException(e);
 	    } finally {
-	        saxHandler.markLoadedSessionsClean();
 	        context.setLoading(false);
 	    }
 	    finished.set(true);
@@ -192,8 +191,6 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 	            context.registerChildSession(session);
 	        }
 
-	        saxHandler.markLoadedSessionsClean();
-	        
 	        return saxHandler.getSessions();
 	    } finally {
 	        context.setLoading(false);

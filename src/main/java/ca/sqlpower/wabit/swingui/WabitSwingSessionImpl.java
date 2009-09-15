@@ -43,8 +43,10 @@ import java.io.FileNotFoundException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -70,6 +72,7 @@ import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -226,6 +229,14 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      */
 	private class WorkspaceWatcher implements WabitChildListener, PropertyChangeListener {
 
+	    private final Set<String> ignorablePropertyNames = new HashSet<String>();
+	    {
+	        ignorablePropertyNames.add("running");
+	        ignorablePropertyNames.add("editorPanelModel");
+            ignorablePropertyNames.add("zoomLevel");
+            ignorablePropertyNames.add("unfilteredResultSet");
+	    }
+	    
         public WorkspaceWatcher(WabitWorkspace workspace) {
             WabitUtils.listenToHierarchy(workspace, this, this);
         }
@@ -242,7 +253,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
         public void propertyChange(PropertyChangeEvent evt) {
             // TODO probably need to extend this to a set of ignorable property names
-            if (!"running".equals(evt.getPropertyName())) {
+            if (!ignorablePropertyNames.contains(evt.getPropertyName())) {
+                SQLPowerUtils.logPropertyChange(
+                        logger, "Marking workspace dirty because of property change", evt);
                 unsavedChangesExist = true;
             }
         }
