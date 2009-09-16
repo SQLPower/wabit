@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import ca.sqlpower.util.Version;
-import ca.sqlpower.util.VersionFormatException;
+import ca.sqlpower.util.VersionParseException;
 
 public class WabitVersion {
 
@@ -36,7 +36,7 @@ public class WabitVersion {
             wabitProps.load(WabitVersion.class.getResourceAsStream("wabit.properties"));
             versionStr = wabitProps.getProperty("app.version");
             VERSION = new Version(versionStr);
-        } catch (VersionFormatException ex) {
+        } catch (VersionParseException ex) {
             throw new AssertionError("Version properties resource does not contain a valid version number!");
         } catch (IOException e) {
             throw new AssertionError("Version properties resource is missing!");

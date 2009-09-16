@@ -114,9 +114,10 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.2 <dd>Added the horizontal and vertical alignment properties to the image renderer.
      *  <dt>1.2.3 <dd>Added gratuitous animation flag to charts
      * </dl> 
+     * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version(1, 2, 2); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.3"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**

@@ -68,6 +68,7 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
+import ca.sqlpower.util.Version;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
@@ -99,8 +100,8 @@ import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
-import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.ChartType;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
@@ -293,31 +294,41 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		                UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
 		                null, "OK");
 		        up.promptUser();
-		    } else if (versionString.equals("1.0.0")) { // TODO update to new Version class when available
-                UserPrompter up = promptFactory.createUserPrompter(
-                        "The Wabit workspace you are opening is an old version that does not record\n" +
-                        "information about page orientation. All pages will default to portrait orientation.",
-                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
-                        null, "OK");
-                up.promptUser();
-		    } else if (this.minorVersion(versionString)<1) {
-                UserPrompter up = promptFactory.createUserPrompter(
-                        "The Wabit workspace you are opening contains OLAP and/or reports from an.\n" +
-                        "old version of the wabit. These items cannot be loaded and need to be updated\n" +
-                        "to the latest version.",
-                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
-                        null, "OK");
-                up.promptUser();
-		    } else if (versionString.startsWith("1.1.")) { // want to test for <1.2.0
-                UserPrompter up = promptFactory.createUserPrompter(
-                        "The Wabit workspace you are opening was created in an older version of Wabit\n" +
-                        "which stored charts within reports rather than sharing them within the Workspace.\n" +
-                        "Your charts will appear as empty boxes; you will have to re-create them.",
-                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
-                        null, "OK");
-                up.promptUser();
+		    } else {
+		        Version fileVersion = new Version(versionString);
+		        if (fileVersion.equals(new Version("1.0.0"))) {
+		            UserPrompter up = promptFactory.createUserPrompter(
+		                    "The Wabit workspace you are opening is an old version that does not record\n" +
+		                    "information about page orientation. All pages will default to portrait orientation.",
+		                    UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+		                    null, "OK");
+		            up.promptUser();
+		        } else if (fileVersion.compareTo(new Version("1.1.0")) < 0) {
+		            UserPrompter up = promptFactory.createUserPrompter(
+		                    "The Wabit workspace you are opening contains OLAP and/or reports from an.\n" +
+		                    "old version of the wabit. These items cannot be loaded and need to be updated\n" +
+		                    "to the latest version.",
+		                    UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+		                    null, "OK");
+		            up.promptUser();
+		        } else if (fileVersion.compareTo(new Version("1.2.0")) < 0) {
+		            UserPrompter up = promptFactory.createUserPrompter(
+		                    "The Wabit workspace you are opening was created in an older version of Wabit\n" +
+		                    "which stored charts within reports rather than sharing them within the Workspace.\n" +
+		                    "Your charts will appear as empty boxes; you will have to re-create them.",
+		                    UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+		                    null, "OK");
+		            up.promptUser();
+		        } else if (fileVersion.compareTo(WorkspaceXMLDAO.FILE_VERSION) > 0) {
+		            UserPrompter up = promptFactory.createUserPrompter(
+                            "The Wabit workspace you are opening was created in a newer version of Wabit.\n" +
+                            "I will attempt to load this workspace but it is recommended to update Wabit\n" +
+                            "to the latest version.",
+                            UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+                            null, "OK");
+                    up.promptUser();
+		        }
 		    }
-		    // TODO warn if file is newer than expected
 
 		    context.setLoading(true);
         } else if (name.equals("project")) {

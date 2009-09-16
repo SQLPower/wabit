@@ -31,7 +31,9 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.util.DefaultUserPrompter;
+import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.Version;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.QueryCache;
@@ -43,7 +45,25 @@ import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
 
 public class WorkspaceSAXHandlerTest extends TestCase {
+    
+    private class CountingPromptContext extends StubWabitSessionContext {
+        private int timesUserWasPrompted = 0;
+        
+        @Override
+        public UserPrompter createUserPrompter(String question,
+                UserPromptType responseType, UserPromptOptions optionType,
+                UserPromptResponse defaultResponseType, Object defaultResponse,
+                String... buttonNames) {
+            timesUserWasPrompted++;
+            return new DefaultUserPrompterFactory().createUserPrompter(question, responseType, 
+                    optionType, defaultResponseType, defaultResponse, buttonNames);
+        }
 
+        public int getTimesUserWasPrompted() {
+            return timesUserWasPrompted;
+        }
+    }
+    
 	/**
 	 * This is a fake database to be used in testing.
 	 */
@@ -138,4 +158,86 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         QueryCache loadedQuery = (QueryCache) loadedSession.getWorkspace().getQueries().get(0);
         assertEquals(replacementDS, loadedQuery.getQuery().getDatabase().getDataSource());
 	}
+	
+	/**
+	 * If the version number is missing the user should be notified.
+	 */
+	public void testVersionNumberMissing() throws Exception {
+	    CountingPromptContext context = new CountingPromptContext();
+	    
+	    String noVersionProject = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+	        "<wabit wabit-app-version=\"0.9.9\">\n" +
+	        "<project name=\"aaaaa\">\n" +
+	        "</project>\n" +
+	        "</wabit>";
+	    
+	    ByteArrayInputStream in = new ByteArrayInputStream(noVersionProject.getBytes());
+	    
+        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in, 
+                OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
+        
+        loadDAO.openWorkspaces();
+        
+        assertEquals(1, context.getTimesUserWasPrompted());
+    }
+	
+	/**
+     * If the version number's minor version is less than the current version the 
+     * user should be notified.
+     */
+    public void testVersionNumberOlderThanNow() throws Exception {
+        CountingPromptContext context = new CountingPromptContext();
+        
+        Version currentVersion = WorkspaceXMLDAO.FILE_VERSION;
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(currentVersion.getParts()[0]).append(".");
+        buffer.append(((Integer) currentVersion.getParts()[1]) - 1);
+        for (int i = 2; i < currentVersion.getParts().length; i++) {
+            buffer.append(".").append(currentVersion.getParts()[i]);
+        }
+        String noVersionProject = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+            "<wabit export-format=\"" + buffer.toString() + "\" wabit-app-version=\"0.9.9\">\n" +
+            "<project name=\"aaaaa\">\n" +
+            "</project>\n" +
+            "</wabit>";
+        
+        ByteArrayInputStream in = new ByteArrayInputStream(noVersionProject.getBytes());
+        
+        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in, 
+                OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
+        
+        loadDAO.openWorkspaces();
+        
+        assertEquals(1, context.getTimesUserWasPrompted());
+    }
+    
+    /**
+     * If the version number's newer than the current file version that Wabit saves
+     * the user should be notified.
+     */
+    public void testVersionNewerThanNow() throws Exception {
+        CountingPromptContext context = new CountingPromptContext();
+        
+        Version currentVersion = WorkspaceXMLDAO.FILE_VERSION;
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(currentVersion.getParts()[0]).append(".");
+        buffer.append(((Integer) currentVersion.getParts()[1]) + 1);
+        for (int i = 2; i < currentVersion.getParts().length; i++) {
+            buffer.append(".").append(currentVersion.getParts()[i]);
+        }
+        String noVersionProject = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+            "<wabit export-format=\"" + buffer.toString() + "\" wabit-app-version=\"0.9.9\">\n" +
+            "<project name=\"aaaaa\">\n" +
+            "</project>\n" +
+            "</wabit>";
+        
+        ByteArrayInputStream in = new ByteArrayInputStream(noVersionProject.getBytes());
+        
+        OpenWorkspaceXMLDAO loadDAO = new OpenWorkspaceXMLDAO(context, in, 
+                OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
+        
+        loadDAO.openWorkspaces();
+        
+        assertEquals(1, context.getTimesUserWasPrompted());
+    }
 }
