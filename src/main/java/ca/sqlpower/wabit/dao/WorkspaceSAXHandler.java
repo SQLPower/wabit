@@ -1117,13 +1117,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		
 	}
 
-    private int minorVersion(String versionString) {
-        return Integer.parseInt(
-                versionString.substring(
-                        versionString.indexOf('.')+1,
-                        versionString.lastIndexOf('.')));
-    }
-
     private void loadOlapQuery(Attributes attributes) throws SAXException {
         String uuid = attributes.getValue("uuid");
         checkMandatory("uuid", uuid);
