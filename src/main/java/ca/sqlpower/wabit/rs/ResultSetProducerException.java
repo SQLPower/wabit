@@ -17,23 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.olap;
+package ca.sqlpower.wabit.rs;
 
 /**
- * An event listener interface to listen for important events from an
- * {@link OlapQuery} that a listening class may be interested in, particularly
- * UI classes.
+ * A checked exception that can be thrown by result set producers. Typically, an
+ * exception of this type is wrapping an underlying exception such as
+ * SQLException or OlapException.
  */
-public interface OlapQueryListener {
+public class ResultSetProducerException extends Exception {
 
-    /**
-     * Called when {@link OlapQuery#executeOlapQuery()} has finished, and provides a
-     * reference to the cell set produced by the execution of the query.
-     * 
-     * <h2>Thread Safety</h2> If you are consuming this event from a
-     * single-threaded subsystem (such as a Swing user interface), beware that
-     * this event might be delivered on a worker thread!
-     */
-	public void queryExecuted(OlapQueryEvent e);
+    public ResultSetProducerException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ResultSetProducerException(String message) {
+        super(message);
+    }
+
+    public ResultSetProducerException(Throwable cause) {
+        super(cause);
+    }
 
 }

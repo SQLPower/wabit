@@ -17,23 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.olap;
+package ca.sqlpower.wabit.rs;
 
-/**
- * An event listener interface to listen for important events from an
- * {@link OlapQuery} that a listening class may be interested in, particularly
- * UI classes.
- */
-public interface OlapQueryListener {
+public interface ResultSetListener {
 
     /**
-     * Called when {@link OlapQuery#executeOlapQuery()} has finished, and provides a
-     * reference to the cell set produced by the execution of the query.
+     * Called every time a {@link ResultSetProducer}'s execute() method has been
+     * called.
      * 
-     * <h2>Thread Safety</h2> If you are consuming this event from a
-     * single-threaded subsystem (such as a Swing user interface), beware that
-     * this event might be delivered on a worker thread!
+     * @param evt
+     *            The result set event which gives more information about the
+     *            event, including access to the newly-produced result set.
      */
-	public void queryExecuted(OlapQueryEvent e);
-
+    void resultSetProduced(ResultSetProducerEvent evt);
 }

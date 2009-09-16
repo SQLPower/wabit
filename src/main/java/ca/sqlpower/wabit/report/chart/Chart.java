@@ -315,7 +315,7 @@ public class Chart extends AbstractWabitObject {
             setUnfilteredResultSet(((QueryCache) query).fetchResultSet());
         } else if (query instanceof OlapQuery) {
             final OlapQuery olapQuery = (OlapQuery) query;
-            olapQuery.execute(); // results will come to us in an OlapQueryEvent
+            olapQuery.executeOlapQuery(); // results will come to us in an OlapQueryEvent
         } else {
             throw new IllegalStateException("Unknown query type " + query.getClass() + 
             " when trying to create a chart.");

@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.olap;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,9 +66,12 @@ import org.xml.sax.Attributes;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
-import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.ResultSetListener;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
 import ca.sqlpower.xml.XMLHelper;
 
 /**
@@ -98,7 +102,7 @@ import ca.sqlpower.xml.XMLHelper;
  * been added.
  */
 @ThreadSafe
-public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWorker {
+public class OlapQuery extends AbstractWabitObject implements ResultSetProducer {
     
     private static final Logger logger = Logger.getLogger(OlapQuery.class);
     
@@ -208,7 +212,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
 
     /**
      * A semaphore with one permit. This is the mechanism by which we serialize
-     * calls to {@link #execute()}.
+     * calls to {@link #executeOlapQuery()}.
      */
     private final Semaphore executionSemaphore = new Semaphore(1);
     
@@ -218,6 +222,12 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
      */
     @GuardedBy("this")
     private boolean nonEmpty = false;
+    
+    /**
+     * Helps with the ResultSetProducer implementation.
+     */
+    @GuardedBy("this")
+    private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
     /**
      * Creates a new, empty query with no set persistent object ID.
@@ -251,55 +261,59 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
         return currentCube;
     }
 
-	/**
-	 * Executes the current MDX query represented by this object, returning the
-	 * cell set that results from the query's execution.
-	 * <p>
-	 * If this query has not been modified at all since it was last executed,
-	 * this method may return a cached reference to the same cell set as the
-	 * last one it returned. Olap4j CellSet instances can be safely used from
-	 * multiple threads.
-	 * <p>
-	 * Every call to this method results in a CellSetEvent being fired. If the
-	 * query is in a state where it can't be executed (because one or more axes
-	 * is empty), the event will still be fired, but it will deliver a null
-	 * CellSet to listeners. <b>The CellSetEvent is fired while this query is still
-	 * locked against execution, so it is vitally important that CellSetListeners
-	 * do not attempt to re-execute the query in response to any CellSetEvent.</b>
-	 * Such behaviour by CellSetListeners is guaranteed to cause deadlock.
-	 * 
-	 * <h2>Thread safety</h2>
-	 * When the query begins to execute, it obtains this OlapQuery instance's
-	 * monitor, takes a snapshot of the current query state, then releases the
-	 * monitor. Query execution then proceeds while the OlapQuery instance
-	 * itself remains unlocked. This allows other threads (especially the Swing
-	 * GUI) to continue to modify the query while waiting for the results of the
-	 * previous execution.
-	 * <p>
-	 * However, each OlapQuery instance does prevent itself from making
-	 * overlapping execution requests. Calls to execute() are serialized using
-	 * an internal synchronization mechanism. Each call to execute() does not
-	 * take its snapshot of the query state until any previously in-flight
-	 * execution has completed. This increases the chances that several blocked
-	 * calls to execute() will end up executing the same MDX query and will
-	 * therefore return the same cached CellSet rather than each wasting a
-	 * potentially large amount of time executing a query that is no longer
-	 * desired.
-	 * 
-	 * @return The {@link CellSet} result of the execution of the query. If the
-	 *         query has no dimensions in either it's row or column axis
-	 *         however, it will not be able to execute, in which case it returns
-	 *         null and no OlapQueryEvent is fired.
-	 * @throws OlapException
-	 *             If there was a database error
-	 * @throws QueryInitializationException
-	 *             If this query has not yet been initialized and the attempted
-	 *             initialization fails.
-	 * @throws InterruptedException
-	 *             If the calling thread is interrupted while blocked waiting
-	 *             for another call to execute() to complete.
-	 */
-    public CellSet execute() throws OlapException, QueryInitializationException, InterruptedException {
+    /**
+     * Executes the current MDX query represented by this object, returning the
+     * cell set that results from the query's execution.
+     * <p>
+     * If this query has not been modified at all since it was last executed,
+     * this method may return a cached reference to the same cell set as the
+     * last one it returned. Olap4j CellSet instances can be safely used from
+     * multiple threads.
+     * <p>
+     * Every call to this method results in a CellSetEvent being fired. If the
+     * query is in a state where it can't be executed (because one or more axes
+     * is empty), the event will still be fired, but it will deliver a null
+     * CellSet to listeners. <b>The CellSetEvent is fired while this query is still
+     * locked against execution, so it is vitally important that CellSetListeners
+     * do not attempt to re-execute the query in response to any CellSetEvent.</b>
+     * Such behaviour by CellSetListeners is guaranteed to cause deadlock.
+     * 
+     * <h2>Thread safety</h2>
+     * When the query begins to execute, it obtains this OlapQuery instance's
+     * monitor, takes a snapshot of the current query state, then releases the
+     * monitor. Query execution then proceeds while the OlapQuery instance
+     * itself remains unlocked. This allows other threads (especially the Swing
+     * GUI) to continue to modify the query while waiting for the results of the
+     * previous execution.
+     * <p>
+     * However, each OlapQuery instance does prevent itself from making
+     * overlapping execution requests. Calls to execute() are serialized using
+     * an internal synchronization mechanism. Each call to execute() does not
+     * take its snapshot of the query state until any previously in-flight
+     * execution has completed. This increases the chances that several blocked
+     * calls to execute() will end up executing the same MDX query and will
+     * therefore return the same cached CellSet rather than each wasting a
+     * potentially large amount of time executing a query that is no longer
+     * desired.
+     * 
+     * <h2>The name of this method</h2>
+     * This method has a silly name in order for it not to collide with its
+     * companion method, {@link #execute()}, whose name was specified in an interface.
+     *  
+     * @return The {@link CellSet} result of the execution of the query. If the
+     *         query has no dimensions in either it's row or column axis
+     *         however, it will not be able to execute, in which case it returns
+     *         null and no OlapQueryEvent is fired.
+     * @throws OlapException
+     *             If there was a database error
+     * @throws QueryInitializationException
+     *             If this query has not yet been initialized and the attempted
+     *             initialization fails.
+     * @throws InterruptedException
+     *             If the calling thread is interrupted while blocked waiting
+     *             for another call to execute() to complete.
+     */
+    public CellSet executeOlapQuery() throws OlapException, QueryInitializationException, InterruptedException {
         try {
             executionSemaphore.acquire();
             try {
@@ -1049,10 +1063,16 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     	return nonEmpty;
     }
     
+    /* (non-Javadoc)
+     * @see ca.sqlpower.wabit.olap.ResultSetProducer#addOlapQueryListener(ca.sqlpower.wabit.olap.OlapQueryListener)
+     */
     public void addOlapQueryListener(OlapQueryListener listener) {
     	listeners.add(listener);
     }
     
+    /* (non-Javadoc)
+     * @see ca.sqlpower.wabit.olap.ResultSetProducer#removeOlapQueryListener(ca.sqlpower.wabit.olap.OlapQueryListener)
+     */
     public void removeOlapQueryListener(OlapQueryListener listener) {
     	listeners.remove(listener);
     }
@@ -1090,7 +1110,46 @@ public class OlapQuery extends AbstractWabitObject implements WabitBackgroundWor
     public boolean isRunning() {
         return backgroundWorkerRunning;
     }
-
     // -------------- End of WabitBackgroundWorker interface --------------
+
+    // -------------- ResultSetProducer interface --------------
+
+    public synchronized void addResultSetListener(ResultSetListener listener) {
+        rsps.addResultSetListener(listener);
+    }
+
+    public synchronized void removeResultSetListener(ResultSetListener listener) {
+        rsps.removeResultSetListener(listener);
+    }
+
+    /**
+     * Executes the underlying MDX query, causing all the side effects described
+     * in {@link #executeOlapQuery()}, then converts those results to an
+     * {@link OlapResultSet} and notifies the ResultSetListeners with that
+     * converted result.
+     */
+    public ResultSet execute() throws ResultSetProducerException, InterruptedException {
+        try {
+            CellSet cellSet = executeOlapQuery();
+            OlapResultSet results;
+            if (cellSet == null) {
+                results = null;
+            } else {
+                results = new OlapResultSet();
+                results.populate(cellSet);
+            }
+            
+            synchronized (this) {
+                rsps.fireResultSetEvent(results);
+            }
+            
+            return results;
+            
+        } catch (Exception e) {
+            throw new ResultSetProducerException(e);
+        }
+    }
+
+    // -------------- end ResultSetProducer interface --------------
 
 }

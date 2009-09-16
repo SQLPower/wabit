@@ -50,7 +50,7 @@ public class OlapGuiUtil {
 
             @Override
             public void doStuff() throws OlapException, QueryInitializationException, InterruptedException {
-                query.execute();
+                query.executeOlapQuery();
             }
             
             @Override

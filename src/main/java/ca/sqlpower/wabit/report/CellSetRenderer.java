@@ -196,14 +196,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
     				
     				// This code will eventually fire the change and set the cellset
     				// (must be done synchronously--don't use asyncExecute!)
-    				modifiedOlapQuery.execute();
+    				modifiedOlapQuery.executeOlapQuery();
     				
     			} catch (Exception e) {
     				throw new RuntimeException(e);
     			}
             } else if (modifiedOlapQuery.hasCachedXml()) {
             	modifiedOlapQuery.addOlapQueryListener(queryListener);
-            	modifiedOlapQuery.execute();
+            	modifiedOlapQuery.executeOlapQuery();
             }
         	this.initDone=true;
         } catch (Exception e) {
@@ -668,7 +668,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (selectedMember != null) {
             try {
                 modifiedOlapQuery.toggleMember(selectedMember);
-                modifiedOlapQuery.execute();
+                modifiedOlapQuery.executeOlapQuery();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

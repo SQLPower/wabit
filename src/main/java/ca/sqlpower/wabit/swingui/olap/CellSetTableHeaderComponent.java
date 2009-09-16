@@ -1254,7 +1254,7 @@ public class CellSetTableHeaderComponent extends JComponent {
         if (session != null) {
             OlapGuiUtil.asyncExecute(query, session);
         } else {
-            query.execute();
+            query.executeOlapQuery();
         }
     }
 
