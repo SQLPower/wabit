@@ -88,6 +88,17 @@ public class WorkspaceXMLDAO {
 	 * number; it is the version of the file format itself. It is common for the
 	 * version number to change independent of Wabit releases, and this is especially
 	 * important for those using the continuous integration builds to do real work.
+	 * <p>
+     * This is also the version we support reading.
+     * <p>
+     * Forward compatibility policy: It will be allowable to read files with a
+     * newer version, as long as the major and minor version numbers are the
+     * same as the supported version. For example, if the supported version is
+     * 2.3.4, we can read 2.3.5 and 2.3.455, but not 2.4.0.
+     * <p>
+     * Backward compatibility policy: we can read older files that have the same
+     * major version number and the supported minor version or less. There is no
+     * compatibility between major versions.
 	 * 
      * <h2>VERSION CHANGE HISTORY</h2>
      * 

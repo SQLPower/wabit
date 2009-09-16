@@ -23,6 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -239,5 +243,111 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         loadDAO.openWorkspaces();
         
         assertEquals(1, context.getTimesUserWasPrompted());
+    }
+
+    /**
+     * If the file being loaded by the sax handler has a version number whose
+     * major version is later than the current one it should cancel the loading
+     * by throwing a CancellationException.
+     */
+    public void testCancelExceptionOnLaterMajorVersion() throws Exception {
+        CountingPromptContext context = new CountingPromptContext();
+        
+        Version currentVersion = WorkspaceXMLDAO.FILE_VERSION;
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(((Integer) currentVersion.getParts()[0]) + 1);
+        for (int i = 1; i < currentVersion.getParts().length; i++) {
+            buffer.append(".").append(currentVersion.getParts()[i]);
+        }
+        String noVersionProject = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+            "<wabit export-format=\"" + buffer.toString() + "\" wabit-app-version=\"0.9.9\">\n" +
+            "<project name=\"aaaaa\">\n" +
+            "</project>\n" +
+            "</wabit>";
+        
+        ByteArrayInputStream in = new ByteArrayInputStream(noVersionProject.getBytes());
+        
+        SAXParser parser;
+        WorkspaceSAXHandler saxHandler = new WorkspaceSAXHandler(context);
+
+        try {
+            parser = SAXParserFactory.newInstance().newSAXParser();
+            parser.parse(in, saxHandler);
+            fail("The file should not load if the file has a later major or minor version" +
+            		"than the currently supported version.");
+        } catch (CancellationException e) {
+            //do nothing on a cancellation
+        }
+    }
+    
+    /**
+     * If the file being loaded by the sax handler has a version number whose
+     * minor version is later than the current one it should cancel the loading
+     * by throwing a CancellationException.
+     */
+    public void testCancelExceptionOnLaterMinorVersion() throws Exception {
+        CountingPromptContext context = new CountingPromptContext();
+        
+        Version currentVersion = WorkspaceXMLDAO.FILE_VERSION;
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(currentVersion.getParts()[0]).append(".");
+        buffer.append(((Integer) currentVersion.getParts()[1]) + 1);
+        for (int i = 2; i < currentVersion.getParts().length; i++) {
+            buffer.append(".").append(currentVersion.getParts()[i]);
+        }
+        String noVersionProject = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+            "<wabit export-format=\"" + buffer.toString() + "\" wabit-app-version=\"0.9.9\">\n" +
+            "<project name=\"aaaaa\">\n" +
+            "</project>\n" +
+            "</wabit>";
+        
+        ByteArrayInputStream in = new ByteArrayInputStream(noVersionProject.getBytes());
+        
+        SAXParser parser;
+        WorkspaceSAXHandler saxHandler = new WorkspaceSAXHandler(context);
+
+        try {
+            parser = SAXParserFactory.newInstance().newSAXParser();
+            parser.parse(in, saxHandler);
+            fail("The file should not load if the file has a later major or minor version" +
+                    "than the currently supported version.");
+        } catch (CancellationException e) {
+            //do nothing on a cancellation
+        }
+    }
+    
+    /**
+     * If the file being loaded by the sax handler has a version number whose
+     * major version is before than the current one it should cancel the loading
+     * by throwing a CancellationException.
+     */
+    public void testCancelExceptionOnEarlierMajorVersion() throws Exception {
+        CountingPromptContext context = new CountingPromptContext();
+        
+        Version currentVersion = WorkspaceXMLDAO.FILE_VERSION;
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(((Integer) currentVersion.getParts()[0]) - 1);
+        for (int i = 1; i < currentVersion.getParts().length; i++) {
+            buffer.append(".").append(currentVersion.getParts()[i]);
+        }
+        String noVersionProject = "<?xml version='1.0' encoding='UTF-8'?>\n" +
+            "<wabit export-format=\"" + buffer.toString() + "\" wabit-app-version=\"0.9.9\">\n" +
+            "<project name=\"aaaaa\">\n" +
+            "</project>\n" +
+            "</wabit>";
+        
+        ByteArrayInputStream in = new ByteArrayInputStream(noVersionProject.getBytes());
+        
+        SAXParser parser;
+        WorkspaceSAXHandler saxHandler = new WorkspaceSAXHandler(context);
+
+        try {
+            parser = SAXParserFactory.newInstance().newSAXParser();
+            parser.parse(in, saxHandler);
+            fail("The file should not load if the file has a later major or minor version" +
+                    "than the currently supported version.");
+        } catch (CancellationException e) {
+            //do nothing on a cancellation
+        }
     }
 }

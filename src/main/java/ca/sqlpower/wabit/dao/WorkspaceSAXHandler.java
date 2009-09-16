@@ -103,7 +103,6 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.
@@ -256,13 +255,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * Gets set to true when inside a missing-columns element.
      */
     private boolean readingMissingChartCols;
-	
+
     /**
-     * Creates a new SAX handler which is capable of reading in a series of workspace
-     * descriptions from an XML stream. The list of workspaces encountered in the stream become
-     * available as a Wabit Session
-     * @param context
-     * @param promptFactory
+     * Creates a new SAX handler which is capable of reading in a series of
+     * workspace descriptions from an XML stream. The list of workspaces
+     * encountered in the stream become available as a Wabit Session.
+     * 
+     * @param context The context that will create sessions for loading and
+     * creates user prompters if input is required.
      */
 	public WorkspaceSAXHandler(WabitSessionContext context) {
 		this.context = context;
@@ -276,7 +276,16 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	    this(context);
 	    this.serverInfo = serverInfo;
 	}
-	
+
+    /**
+     * Throws a {@link CancellationException} if either the loading of the file
+     * was cancelled by a method call or cancelled internally due to a problem
+     * in the file. If there was a problem with the file this method will notify
+     * the user and another notification does not need to be sent.
+     * <p>
+     * 
+     * @see WorkspaceXMLDAO#FILE_VERSION
+     */
 	@Override
 	public void startElement(String uri, String localName, String name,
 			Attributes attributes) throws SAXException {
@@ -288,6 +297,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
 		if (name.equals("wabit")) {
 		    String versionString = attributes.getValue("export-format");
+		    
+		    //NOTE: For correct versioning behaviour see WorkspaceXMLDAO.FILE_VERSION.
 		    if (versionString == null) {
 		        UserPrompter up = promptFactory.createUserPrompter(
 		                "This Wabit workspace file is very old. It may not read correctly, but I will try my best.",
@@ -296,38 +307,49 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		        up.promptUser();
 		    } else {
 		        Version fileVersion = new Version(versionString);
-		        if (fileVersion.equals(new Version("1.0.0"))) {
-		            UserPrompter up = promptFactory.createUserPrompter(
-		                    "The Wabit workspace you are opening is an old version that does not record\n" +
-		                    "information about page orientation. All pages will default to portrait orientation.",
-		                    UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
-		                    null, "OK");
-		            up.promptUser();
+		        Version fileMajorMinorVersion = new Version(fileVersion, 2);
+		        Version currentMajorMinorVersion = new Version(WorkspaceXMLDAO.FILE_VERSION, 2);
+		        Version fileMajorVersion = new Version(fileVersion, 1);
+		        Version currentMajorVersion = new Version(WorkspaceXMLDAO.FILE_VERSION, 1);
+		        
+		        String message = null;
+		        boolean displayMessage = true;
+		        if (fileMajorVersion.compareTo(currentMajorVersion) < 0) {
+		            message = "The Wabit workspace you are opening is too old to be successfully loaded.\n" +
+                            "An older version of Wabit is required to view the saved workspace.";
+		            setCancelled(true);
+		        } else if (fileVersion.equals(new Version("1.0.0"))) {
+		            message = "The Wabit workspace you are opening is an old version that does not record\n" +
+		                    "information about page orientation. All pages will default to portrait orientation.";
 		        } else if (fileVersion.compareTo(new Version("1.1.0")) < 0) {
-		            UserPrompter up = promptFactory.createUserPrompter(
-		                    "The Wabit workspace you are opening contains OLAP and/or reports from an.\n" +
+		            message = "The Wabit workspace you are opening contains OLAP and/or reports from an.\n" +
 		                    "old version of the wabit. These items cannot be loaded and need to be updated\n" +
-		                    "to the latest version.",
-		                    UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
-		                    null, "OK");
-		            up.promptUser();
+		                    "to the latest version.";
 		        } else if (fileVersion.compareTo(new Version("1.2.0")) < 0) {
-		            UserPrompter up = promptFactory.createUserPrompter(
-		                    "The Wabit workspace you are opening was created in an older version of Wabit\n" +
+		            message = "The Wabit workspace you are opening was created in an older version of Wabit\n" +
 		                    "which stored charts within reports rather than sharing them within the Workspace.\n" +
-		                    "Your charts will appear as empty boxes; you will have to re-create them.",
-		                    UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
-		                    null, "OK");
-		            up.promptUser();
+		                    "Your charts will appear as empty boxes; you will have to re-create them.";
+		        } else if (fileMajorMinorVersion.compareTo(currentMajorMinorVersion) > 0) {
+		            message = "The Wabit workspace you are opening was created in a newer version of Wabit.\n" +
+                            "Due to large changes in the file format this file cannot be loaded without updating " +
+                            "Wabit.";
+                    setCancelled(true);
 		        } else if (fileVersion.compareTo(WorkspaceXMLDAO.FILE_VERSION) > 0) {
-		            UserPrompter up = promptFactory.createUserPrompter(
-                            "The Wabit workspace you are opening was created in a newer version of Wabit.\n" +
+		            message = "The Wabit workspace you are opening was created in a newer version of Wabit.\n" +
                             "I will attempt to load this workspace but it is recommended to update Wabit\n" +
-                            "to the latest version.",
+                            "to the latest version.";
+		        } else {
+		            displayMessage = false;
+		        }
+		        
+		        if (displayMessage) {
+		            UserPrompter up = promptFactory.createUserPrompter(
+                            message,
                             UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
                             null, "OK");
                     up.promptUser();
 		        }
+		        if (isCancelled()) throw new CancellationException();
 		    }
 
 		    context.setLoading(true);
