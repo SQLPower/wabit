@@ -20,17 +20,16 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.event.ActionEvent;
-import java.sql.SQLException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ChartType;
+import ca.sqlpower.wabit.report.chart.ChartUtil;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
@@ -45,7 +44,7 @@ public class NewChartAction extends AbstractAction {
 	
     private final WabitSwingSession session;
 
-    private final WabitObject dataProvider;
+    private final ResultSetProducer dataProvider;
 
     /**
      * Creates an action which, when invoked, creates new chart with the given
@@ -54,10 +53,10 @@ public class NewChartAction extends AbstractAction {
      * @param session
      *            The session whose workspace the new chart will belong to.
      * @param dataProvider
-     *            The QueryCache or OlapQuery that will provide data to the new
+     *            The ResultSetProducer that will provide data to the new
      *            chart. Null means not to set an initial data provider.
      */
-    public NewChartAction(WabitSwingSession session, WabitObject dataProvider) {
+    public NewChartAction(WabitSwingSession session, ResultSetProducer dataProvider) {
         super("New Chart", NEW_CHART_ICON);
         this.session = session;
         this.dataProvider = dataProvider;
@@ -81,8 +80,8 @@ public class NewChartAction extends AbstractAction {
         if (dataProvider != null) {
             try {
                 chart.setName(dataProvider.getName() + " Chart");
-                chart.defineQuery(dataProvider);
-                chart.refreshData();
+                chart.setQuery(dataProvider);
+                dataProvider.execute();
                 ChartUtil.setDefaults(chart);
             } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(

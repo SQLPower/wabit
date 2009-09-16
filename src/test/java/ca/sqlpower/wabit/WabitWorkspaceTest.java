@@ -134,7 +134,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         workspace.addQuery(query, session);
         Chart chart = new Chart();
         chart.setName("chart");
-        chart.defineQuery(query);
+        chart.setQuery(query);
         workspace.addChart(chart);
         
         try {
@@ -158,7 +158,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         startingWorkspace.addQuery(query, startingSession);
         Chart chart = new Chart();
         chart.setName("chart");
-        chart.defineQuery(query);
+        chart.setQuery(query);
         startingWorkspace.addChart(chart);
         Report report = new Report("Report");
         ContentBox chartContentBox = new ContentBox();
@@ -211,7 +211,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         startingWorkspace.addQuery(query, startingSession);
         Chart chart = new Chart();
         chart.setName("chart");
-        chart.defineQuery(query);
+        chart.setQuery(query);
         startingWorkspace.addChart(chart);
         Report report = new Report("Report");
         ContentBox chartContentBox = new ContentBox();

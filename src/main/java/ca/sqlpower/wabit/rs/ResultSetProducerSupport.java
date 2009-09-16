@@ -36,6 +36,12 @@ public class ResultSetProducerSupport {
 
     private final ResultSetProducer eventSource;
     private final List<ResultSetListener> listeners = new ArrayList<ResultSetListener>();
+
+    /**
+     * Count of the number of times the {@link #fireResultSetEvent(ResultSet)}
+     * method has been called.
+     */
+    private long eventsFired;
     
     public ResultSetProducerSupport(@Nonnull ResultSetProducer eventSource) {
         this.eventSource = eventSource;
@@ -60,6 +66,9 @@ public class ResultSetProducerSupport {
     /**
      * Notifies all registered listeners of the new result set. The event's
      * source is the ResuktSetProducer specified to this instance's constructor.
+     * <p>
+     * Calling this method has the side effect of incrementing the eventsFired
+     * property by exactly 1.
      * 
      * @param results
      *            The new result set. If it is already a CachedRowSet, it will
@@ -77,6 +86,7 @@ public class ResultSetProducerSupport {
      *             causes an exception.
      */
     public void fireResultSetEvent(@Nullable ResultSet results) throws SQLException {
+        eventsFired++;
         ResultSetProducerEvent evt;
         if (results instanceof CachedRowSet) {
             evt = new ResultSetProducerEvent(eventSource, (CachedRowSet) results);
@@ -88,5 +98,13 @@ public class ResultSetProducerSupport {
         for (int i = listeners.size() - 1; i >= 0; i--) {
             listeners.get(i).resultSetProduced(evt);
         }
+    }
+
+    /**
+     * Returns the count of how many times
+     * {@link #fireResultSetEvent(ResultSet)} has been called.
+     */
+    public long getEventsFired() {
+        return eventsFired;
     }
 }

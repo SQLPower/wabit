@@ -49,7 +49,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         Chart chart = new Chart();
         workspace.addChart(chart);
-        chart.defineQuery(cache);
+        chart.setQuery(cache);
         
         Report report = new Report("name");
         workspace.addReport(report);
@@ -80,7 +80,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         Chart chart = new Chart();
         workspace.addChart(chart);
-        chart.defineQuery(cache);
+        chart.setQuery(cache);
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, chart, false, false);
         Collection<WabitObject> nodes = graphModel.getNodes();
@@ -102,7 +102,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         Chart chart = new Chart();
         workspace.addChart(chart);
-        chart.defineQuery(cache);
+        chart.setQuery(cache);
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, chart, false, false);
         Collection<WorkspaceGraphModelEdge> outboundEdges = 
@@ -182,7 +182,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         assertEquals(1, outboundEdges.size());
         assertEquals(chart, outboundEdges.toArray(new WorkspaceGraphModelEdge[1])[0].getChild());
         
-        chart.defineQuery(cache);
+        chart.setQuery(cache);
         graphModel = new WorkspaceGraphModel(workspace, report, true, false);
         nodes = graphModel.getNodes();
         assertEquals(3, nodes.size());
@@ -217,7 +217,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         assertEquals(1, outboundEdges.size());
         assertEquals(chartRenderer, outboundEdges.toArray(new WorkspaceGraphModelEdge[1])[0].getChild());
         
-        chart.defineQuery(cache);
+        chart.setQuery(cache);
         graphModel = new WorkspaceGraphModel(workspace, cache, true, true);
         nodes = graphModel.getNodes();
         assertEquals(3, nodes.size());

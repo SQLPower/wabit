@@ -707,7 +707,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     }
                     if (query != null) {
                         try {
-                            chart.defineQuery(query);
+                            chart.setQuery(query);
                         } catch (SQLException e) {
                             throw new RuntimeException("Error loading project while on chart " + chart.getName(), e);
                         }
@@ -721,7 +721,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     }
                     if (olapQuery != null) {
                         try {
-                            chart.defineQuery(olapQuery);
+                            chart.setQuery(olapQuery);
                         } catch (SQLException e) {
                             throw new RuntimeException("Error loading project while on chart renderer " + chart.getName(), e);
                         }

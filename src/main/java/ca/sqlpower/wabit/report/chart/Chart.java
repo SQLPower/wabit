@@ -36,21 +36,17 @@ import org.olap4j.CellSet;
 
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowFilter;
-import ca.sqlpower.sql.RowSetChangeEvent;
-import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.OlapQueryEvent;
-import ca.sqlpower.wabit.olap.OlapQueryListener;
-import ca.sqlpower.wabit.olap.OlapUtils;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.olap.RepeatedMember;
+import ca.sqlpower.wabit.rs.ResultSetListener;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
 
 public class Chart extends AbstractWabitObject {
 
@@ -83,10 +79,9 @@ public class Chart extends AbstractWabitObject {
     private LegendPosition legendPosition = LegendPosition.BOTTOM;
     
     /**
-     * The query the chart is based off of. This can be either a {@link QueryCache}
-     * or an {@link OlapQuery} object.
+     * The source of results this chart uses to create its dataset.
      */
-    private WabitObject query;
+    private ResultSetProducer query;
 
     /**
      * Keeps track of all the columns in the result set, along with the role
@@ -96,40 +91,16 @@ public class Chart extends AbstractWabitObject {
     private final List<ChartColumn> chartColumns = new ArrayList<ChartColumn>();
 
     /**
-     * This change listener watches for changes to the streaming query and refreshes the
-     * chart when a change occurs.
-     */
-    private final RowSetChangeListener queryListener = new RowSetChangeListener() {
-        public void rowAdded(RowSetChangeEvent e) {
-            SPSUtils.runOnSwingThread(new Runnable() {
-                public void run() {
-                    try {
-                        refreshData();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
-        }
-    };
-
-    /**
      * This is a listener placed on OLAP queries to find if columns removed from
      * a query were in use in this chart.
      */
-    private final OlapQueryListener olapQueryChangeListener = new OlapQueryListener() {
-        public void queryExecuted(final OlapQueryEvent e) {
-            SPSUtils.runOnSwingThread(new Runnable() {
+    private final ResultSetListener resultSetListener = new ResultSetListener() {
+        public void resultSetProduced(final ResultSetProducerEvent evt) {
+            SPSUtils.runOnSwingThread(new Runnable() { // FIXME not correct for server-side use!
                 public void run() {
                     try {
-                        final CellSet cellSet = e.getCellSet();
-                        if (cellSet != null) {
-                            setUnfilteredResultSet(OlapUtils.toResultSet(cellSet));
-                        }
-                        else{
-                        	setUnfilteredResultSet(null);
-                        }
-                    } catch (Exception e) {
+                        setUnfilteredResultSet(evt.getResults());
+                    } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -297,35 +268,11 @@ public class Chart extends AbstractWabitObject {
             return unfilteredResults.createShared();
         }
     }
-
-    /**
-     * Refreshes the current result set in this chart. This should be called
-     * automatically whenever the data provider claims it has new/different data,
-     * but you can call it yourself if you want the query to run.
-     * <p>
-     * This method can fire a property change event for "unfilteredResultSet".
-     */
-    public void refreshData()
-    throws SQLException, QueryInitializationException, InterruptedException {
-        if (query == null) {
-            setUnfilteredResultSet(null);
-        } else if (query instanceof QueryCache) {
-        	// force query to clear result set to prevent getting a stale cached resultset
-        	((QueryCache) query).executeStatement(); 
-            setUnfilteredResultSet(((QueryCache) query).fetchResultSet());
-        } else if (query instanceof OlapQuery) {
-            final OlapQuery olapQuery = (OlapQuery) query;
-            olapQuery.executeOlapQuery(); // results will come to us in an OlapQueryEvent
-        } else {
-            throw new IllegalStateException("Unknown query type " + query.getClass() + 
-            " when trying to create a chart.");
-        }
-    }
-
+    
     /**
      * This ultimately the correct and lowest-level way to update the result set
      * that this chart is based on. However, it is easier and more convenient to
-     * call {@link #refreshData()}.
+     * call {@link #getQuery()}.execute().
      * <p>
      * This method fires a property change event for the property
      * "unfilteredResultSet". The result sets it passes around are not recreated
@@ -446,13 +393,6 @@ public class Chart extends AbstractWabitObject {
     @Override
     public void setParent(WabitObject parent) {
         super.setParent(parent);
-        
-        // clean up if we're now detached from the workspace
-        if (parent == null) {
-            if (query instanceof StatementExecutor) {
-                ((StatementExecutor) query).removeRowSetChangeListener(queryListener);
-            }
-        }
     }
 
     public boolean allowsChildren() {
@@ -473,13 +413,13 @@ public class Chart extends AbstractWabitObject {
 
     public List<WabitObject> getDependencies() {
         if (query == null) return Collections.emptyList();
-        return Collections.singletonList(query);
+        return Collections.singletonList((WabitObject) query);
     }
     
     public void removeDependency(WabitObject dependency) {
         if (dependency.equals(query)) {
             try {
-                defineQuery(null);
+                setQuery(null);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -546,45 +486,38 @@ public class Chart extends AbstractWabitObject {
     }
 
     /**
-     * The query MUST be a query type that is allowed in the chart: either a
-     * {@link QueryCache} or an {@link OlapQuery}.
+     * Replaces this chart's source of result sets with the given result set producer,
+     * firing a property change event. The current result set filter will also be set
+     * to an OlapRowFilter or null (depending on newQuery's type) as a side effect of
+     * calling this method.
      * <p>
      * You'll probably want to call {@link #refreshData()} after defining a new query.
      * 
      * @param newQuery
      * @throws IllegalArgumentException if the query is not of a supported type.
      */
-    public void defineQuery(@Nullable WabitObject newQuery) throws SQLException {
-        if (newQuery != null &&
-                !(newQuery instanceof QueryCache || newQuery instanceof OlapQuery)) {
-            throw new IllegalArgumentException(
-                    "Invalid query type for chart: " + newQuery.getClass());
-        }
+    public void setQuery(@Nullable ResultSetProducer newQuery) throws SQLException {
         
         // remove old listeners
-        if (query instanceof StatementExecutor) {
-            if (query != null) {
-                ((StatementExecutor) query).removeRowSetChangeListener(queryListener);
-            }
-        } else if (query instanceof OlapQuery) {
-            if (query != null) {
-                ((OlapQuery) query).removeOlapQueryListener(olapQueryChangeListener);
-            }
-        } else if (query != null) {
-            throw new IllegalStateException(
-                    "Invalid pre-existing query type for chart?! " + query.getClass());
+        if (query != null) {
+            query.removeResultSetListener(resultSetListener);
         }
 
+        ResultSetProducer oldQuery = query;
         query = newQuery;
 
-        // attach new listeners
-        if (newQuery instanceof StatementExecutor) {
-            ((StatementExecutor) newQuery).addRowSetChangeListener(queryListener);
-            setResultSetFilter(null);
-        } else if (newQuery instanceof OlapQuery) {
-            ((OlapQuery) newQuery).addOlapQueryListener(olapQueryChangeListener);
+        if (newQuery instanceof OlapQuery) {
             setResultSetFilter(new OlapRowFilter());
+        } else {
+            setResultSetFilter(null);
         }
+        
+        // attach new listeners
+        if (query != null) {
+            query.addResultSetListener(resultSetListener);
+        }
+        
+        firePropertyChange("query", oldQuery, newQuery);
     }
 
     private void setResultSetFilter(RowFilter resultSetFilter) {
@@ -596,12 +529,12 @@ public class Chart extends AbstractWabitObject {
     public RowFilter getResultSetFilter() {
         return resultSetFilter;
     }
-    
+
     /**
-     * Returns the current query that this chart gets its datasets from. This
-     * could be either a QueryCache or an OlapQuery, or null.
+     * Returns the current query that this chart gets its datasets from. Can be
+     * null.
      */
-    public WabitObject getQuery() {
+    public ResultSetProducer getQuery() {
         return query;
     }
 

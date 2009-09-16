@@ -23,7 +23,6 @@ import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,10 +34,9 @@ import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
+import ca.sqlpower.wabit.rs.ResultSetProducerException;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
 
 /**
@@ -86,9 +84,9 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	    }
 	    
 	    try {
-	        if (chart.getUnfilteredResultSet() == null) {
+	        if (chart.getUnfilteredResultSet() == null && chart.getQuery() != null) {
 	            // TODO has to be on a background thread!
-	            chart.refreshData();
+	            chart.getQuery().execute();
 	        }
 	    } catch (Exception ex) {
 	        logger.info("Chart data error", ex);
@@ -182,14 +180,14 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
 	public void refresh() {
 		try {
-			chart.refreshData();
-		} catch (SQLException e) {
-			throw new RuntimeException("Error while running chart query", e);
-		} catch (QueryInitializationException e) {
-			throw new RuntimeException("Error while initializing OLAP query", e);
+		    if (chart.getQuery() != null) {
+		        chart.getQuery().execute();
+		    }
 		} catch (InterruptedException e) {
 			throw new RuntimeException("Chart renderer was interrupted while refreshing data.", e);
-		}
+		} catch (ResultSetProducerException e) {
+		    throw new RuntimeException(e);
+        }
 	}
 
     @Override

@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.query.Item;
@@ -49,7 +51,6 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
-import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.QueryException;
@@ -57,6 +58,8 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
+import ca.sqlpower.wabit.rs.ResultSetListener;
+import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
 
 /**
  * Renders a JDBC result set using configurable absolute column widths.
@@ -196,6 +199,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     
     /**
      * The query that provides the content data for this renderer.
+     * <p>
+     * TODO: change this to ResultSetProducer
      */
     private final QueryCache query;
     
@@ -255,12 +260,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         }
     };
 
-	/**
-	 * This change listener is placed on {@link CachedRowSet}s to monitor streaming result sets
-	 * to know when a new row is added to the result set.
-	 */
+    /**
+     * This change listener is placed on {@link CachedRowSet}s to monitor
+     * streaming result sets to know when a new row is added to the result set.
+     * It is kept attached to the right row set by {@link #resultSetHandler}.
+     */
 	private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
 		public void rowAdded(RowSetChangeEvent e) {
+		    // XXX this isn't a property change. it's a repaint request.
 			firePropertyChange("resultSetRowAdded", null, e.getRow());
 		}
 	};
@@ -280,16 +287,38 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 		}
 	};
 
-    public ResultSetRenderer(QueryCache query) {
+	// TODO eventually, this will be the thing that triggers a repaint of this
+	// renderer. When we make that change, we'll only depend on ResultSetProducer
+	// and not all of QueryCache.
+	private final class ResultSetHandler implements ResultSetListener {
+	    private CachedRowSet currentRowSet = null;
+	    
+        public void resultSetProduced(ResultSetProducerEvent evt) {
+            cleanup();
+            currentRowSet = evt.getResults();
+            currentRowSet.addRowSetListener(rowSetChangeListener);
+        }
+        
+        /**
+         * Removes the listener on the current row set, if there is one.
+         */
+        public void cleanup() {
+            if (currentRowSet != null) {
+                currentRowSet.removeRowSetListener(rowSetChangeListener);
+            }
+        }
+	}
+	
+	private final ResultSetHandler resultSetHandler = new ResultSetHandler();
+	
+    public ResultSetRenderer(@Nonnull QueryCache query) {
     	this(query, new ArrayList<ColumnInfo>());
     	setName("Result Set: " + query.getName());
     }
     
-    public ResultSetRenderer(QueryCache query, List<ColumnInfo> columnInfoList) {
+    public ResultSetRenderer(@Nonnull QueryCache query, @Nonnull List<ColumnInfo> columnInfoList) {
         this.query = query;
-        if (query != null && query instanceof StatementExecutor) {
-        	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
-        }
+        query.addResultSetListener(resultSetHandler);
 		query.addPropertyChangeListener(queryChangeListener);
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         setName("Result Set: " + query.getName());
@@ -318,9 +347,17 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	}
     	
     	query.addPropertyChangeListener(queryChangeListener);
-        if (query != null && query instanceof StatementExecutor) {
-        	((QueryCache) query).addRowSetChangeListener(rowSetChangeListener);
-        }
+    	query.addResultSetListener(resultSetHandler);
+    	
+    	if (resultSetRenderer.resultSetHandler.currentRowSet != null) {
+    	    try {
+                resultSetHandler.currentRowSet =
+                    resultSetRenderer.resultSetHandler.currentRowSet.createShared();
+            } catch (SQLException wontHappen) {
+                throw new AssertionError(wontHappen);
+            }
+    	}
+    	
     	setName(resultSetRenderer.getName());
     }
     
@@ -329,10 +366,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     }
     
     public void cleanup() {
-    	if (query != null && query instanceof StatementExecutor) {
-        	((QueryCache) query).removeRowSetChangeListener(rowSetChangeListener);
-        }
+        query.removeResultSetListener(resultSetHandler);
     	query.removePropertyChangeListener(queryChangeListener);
+    	resultSetHandler.cleanup();
     }
 
 	/**

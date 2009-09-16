@@ -35,14 +35,23 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      * Executes the current query represented by this object, returning the
      * results from the query's execution.
      * <p>
-     * Every call to this method results in a ResultSetEvent being fired. If the
-     * query is in a state where it can't be executed (because one or more axes
-     * is empty), the event will still be fired, but it will deliver a null
-     * ResultSet to listeners. <b>The ResultSetEvent is allowed to be fired
-     * while the query is locked against execution, so it is vitally important
-     * that ResultSetListeners do not attempt to re-execute the query in
-     * response to any ResultSetEvent.</b> Such behaviour by ResultSetListeners
-     * is unsafe in general, and may cause deadlock.
+     * Every call to this method causes a ResultSetEvent to be fired, whether or
+     * not the call simply returns the same cached results as a previous
+     * invocation.
+     * <p>
+     * If the query is in a state where it can't be executed (because it is not
+     * sufficiently configured to issue a sensible query, or because the
+     * connection to the data source can't be established), the event will still
+     * be fired if it results in a state change from the previous execution
+     * attempt. In these cases, the event will deliver a null ResultSet to
+     * listeners.
+     * <p>
+     * <b>Implementations of ResultSetProducer are allowed to fire the
+     * ResultSetEvent while the query is locked against concurrent and/or
+     * recursive execution, so it is vitally important that ResultSetListeners
+     * do not attempt to re-execute the query in response to any
+     * ResultSetEvent.</b> Such behaviour by ResultSetListeners is unsafe in
+     * general, and may cause deadlock.
      * 
      * @return The results of executing of the query. If the query is not
      *         currently in a state where it can be executed, this method

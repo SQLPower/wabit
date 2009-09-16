@@ -52,7 +52,7 @@ public class DeleteFromTreeActionTest extends TestCase {
         workspace.addQuery(query, session);
         Chart chart = new Chart();
         chart.setName("chart");
-        chart.defineQuery(query);
+        chart.setQuery(query);
         workspace.addChart(chart);
         Report report = new Report("report");
         workspace.addReport(report);
@@ -108,7 +108,7 @@ public class DeleteFromTreeActionTest extends TestCase {
         workspace.addQuery(query, session);
         Chart chart = new Chart();
         chart.setName("chart");
-        chart.defineQuery(query);
+        chart.setQuery(query);
         workspace.addChart(chart);
         Report report = new Report("report");
         workspace.addReport(report);
@@ -136,7 +136,7 @@ public class DeleteFromTreeActionTest extends TestCase {
         //an exception.
         Chart chart2 = new Chart();
         chart2.setName("chart2");
-        chart2.defineQuery(query);
+        chart2.setQuery(query);
         workspace.addChart(chart2);
         
         DeleteFromTreeAction deleteAction = new DeleteFromTreeAction(workspace, query, null);

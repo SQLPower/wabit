@@ -60,7 +60,9 @@ public class RefreshDataAction extends AbstractAction {
 
     public void actionPerformed(ActionEvent e) {
         try {
-            chart.refreshData();
+            if (chart.getQuery() != null) {
+                chart.getQuery().execute();
+            }
         } catch (Exception ex) {
             SPSUtils
             .showExceptionDialogNoReport(dialogOwner, "Refresh failed", ex);

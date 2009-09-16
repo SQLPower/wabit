@@ -36,19 +36,21 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.sql.RowSetChangeEvent;
-import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
+import ca.sqlpower.wabit.rs.ResultSetListener;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
 import ca.sqlpower.wabit.swingui.ExceptionHandler;
 
 /**
  * This method will be able to execute and cache the results of a query. It also
  * delegates some of the methods to the {@link Query} contained in it.
  */
-public class QueryCache extends AbstractWabitObject implements StatementExecutor, WabitBackgroundWorker {
+public class QueryCache extends AbstractWabitObject implements StatementExecutor, ResultSetProducer {
     
     private static final Logger logger = Logger.getLogger(QueryCache.class);
     
@@ -62,6 +64,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     public static final String ROW_LIMIT = "rowLimit";
     
     private final Query query;
+    
+    private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
     private final List<CachedRowSet> resultSets = new ArrayList<CachedRowSet>();
     
@@ -100,24 +104,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
             }
         }
     };
-    
-    /**
-     * This listener will be notified when additional rows are added to a streaming
-     * row set. This listener will then notify the listeners of this query that
-     * a result set has changed.
-     */
-    private final RowSetChangeListener rsChangeListener = new RowSetChangeListener() {
-        public void rowAdded(RowSetChangeEvent e) {
-            for (int i = rowSetChangeListeners.size() - 1; i >= 0; i--) {
-                rowSetChangeListeners.get(i).rowAdded(e);
-            }
-        }
-    };
-    
-    /**
-     * The listeners to be updated from a change to the result set.
-     */
-    private final List<RowSetChangeListener> rowSetChangeListeners = new ArrayList<RowSetChangeListener>();
     
     /**
      * The threads in this list are used to stream queries from a connection into
@@ -221,6 +207,10 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * guaranteed to be scrollable, and does not hold any remote database
      * resources.
      * 
+     * @param fullResultSet
+     *            If true the full result set will be retrieved. If false then a
+     *            limited result set will be retrieved based on the session's
+     *            row limit.
      * @return an in-memory copy of the result set produced by this query
      *         cache's current query. You are not required to close the returned
      *         result set when you are finished with it, but you can if you
@@ -258,7 +248,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
                             public void run() {
                                 try {
                                     Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
-                                    crs.follow(streamingRS, rsChangeListener, getStreamingRowLimit());
+                                    crs.follow(streamingRS, getStreamingRowLimit());
                                 } catch (SQLException e) {
                                     logger.error("Exception while streaming result set", e);
                                 }
@@ -277,7 +267,21 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
                 sqlResult = currentStatement.getMoreResults();
                 hasNext = !((sqlResult == false) && (currentStatement.getUpdateCount() == -1));
             }
+            
+            CachedRowSet resultsToFire;
+            if (resultSets.size() > 0) {
+                // results will be null if the first statement produced an update count,
+                // but that's allowed by the ResultSetProducer interface.
+                resultsToFire = resultSets.get(0);
+            } else {
+                // no statements were executed. ResultSetProducer promises to deliver a
+                // null result set in this case.
+                resultsToFire = null;
+            }
+            rsps.fireResultSetEvent(resultsToFire);
+            
             return initialResult;
+            
         } catch (SQLObjectException e) {
             throw new SQLObjectRuntimeException(e);
         } finally {
@@ -371,11 +375,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     /**
      * Returns the most up to date result set in the query cache. This may
      * execute the query on the database.
-     * 
-     * @param fullResultSet
-     *            If true the full result set will be retrieved. If false then a
-     *            limited result set will be retrieved based on the session's
-     *            row limit.
      */
     public CachedRowSet fetchResultSet() throws SQLException {
         if (!resultSets.isEmpty()) {
@@ -420,14 +419,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return new WabitDataSource(query.getDatabase().getDataSource());
     }
 
-    public void addRowSetChangeListener(RowSetChangeListener l) {
-        rowSetChangeListeners.add(l);
-    }
-
-    public void removeRowSetChangeListener(RowSetChangeListener l) {
-        rowSetChangeListeners.remove(l);        
-    }
-    
     public List<Thread> getStreamingThreads() {
         return Collections.unmodifiableList(streamingThreads);
     }
@@ -579,5 +570,28 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     protected boolean removeChildImpl(WabitObject child) {
         return false;
     }
+
+    // ------------------ ResultSetProducer interface ----------------------
+    public void addResultSetListener(ResultSetListener listener) {
+        rsps.addResultSetListener(listener);
+    }
+
+    public void removeResultSetListener(ResultSetListener listener) {
+        rsps.removeResultSetListener(listener);        
+    }
+
+    public ResultSet execute() throws ResultSetProducerException {
+        try {
+            long eventCount = rsps.getEventsFired();
+            CachedRowSet resultSet = fetchResultSet();
+            if (rsps.getEventsFired() == eventCount) {
+                rsps.fireResultSetEvent(resultSet);
+            }
+            return resultSet;
+        } catch (SQLException e) {
+            throw new ResultSetProducerException(e);
+        }
+    }
+    // ------------------ end ResultSetProducer interface ----------------------
 
 }

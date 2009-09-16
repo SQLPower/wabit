@@ -77,10 +77,10 @@ import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
-import ca.sqlpower.wabit.swingui.chart.effect.BarChartAnimator;
 import ca.sqlpower.wabit.swingui.chart.effect.ChartAnimation;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -360,8 +360,8 @@ public class ChartPanel implements WabitPanel {
         boolean disableAutoExecute = isAutoExecuteDisabled();
 
 		try {
-			if (!disableAutoExecute) {
-				chart.refreshData();
+			if (chart.getQuery() != null && !disableAutoExecute) {
+				chart.getQuery().execute();
 			}
 			updateGUIFromChart();
 		} catch (Exception ex) {
@@ -738,8 +738,8 @@ public class ChartPanel implements WabitPanel {
             updating = true;
             if (queryComboBox.getSelectedItem() != chart.getQuery()) {
                 try {
-                    chart.defineQuery((WabitObject) queryComboBox.getSelectedItem());
-                    chart.refreshData();
+                    chart.setQuery((ResultSetProducer) queryComboBox.getSelectedItem());
+                    chart.getQuery().execute();
                     ChartUtil.setDefaults(chart);
                 } catch (Exception ex) {
                     showError(ex);
