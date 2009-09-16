@@ -205,6 +205,14 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     public boolean executeStatement() throws SQLException {
         return executeStatement(false);
     }
+    
+    @Override
+    public void generateNewUUID() {
+        super.generateNewUUID();
+        if (query != null) {
+            query.generateNewUUID();
+        }
+    }
 
     /**
      * Executes the current SQL query, returning a cached copy of the result set

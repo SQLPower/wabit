@@ -676,6 +676,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public int mergeIntoWorkspace(WabitWorkspace workspace) {
         int importObjectCount = 0;
         for (WabitObject importObject : getChildren()) {
+            generateNewUUIDsForMerge(importObject);
             if (importObject instanceof WabitDataSource) {
                 if (!session.getWorkspace().dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
                     removeDataSource((WabitDataSource) importObject);
@@ -706,5 +707,17 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         }
         
         return importObjectCount;
+    }
+
+    /**
+     * This is a helper method for merging this workspace into another workspace.
+     * The given object and all of it's descendants will have its UUID changed
+     * to a new UUID. 
+     */
+    private void generateNewUUIDsForMerge(WabitObject importObject) {
+        importObject.generateNewUUID();
+        for (WabitObject child : importObject.getChildren()) {
+            generateNewUUIDsForMerge(child);
+        }
     }
 }

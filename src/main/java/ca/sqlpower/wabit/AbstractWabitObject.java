@@ -39,10 +39,10 @@ public abstract class AbstractWabitObject implements WabitObject {
     /**
      * This UUID is for saving and loading to allow saved files to be diff friendly.
      */
-    private final String uuid;
+    private String uuid;
     
     public AbstractWabitObject() {
-    	uuid = "w" + UUID.randomUUID().toString();
+        generateNewUUID();
     }
 
 	/**
@@ -52,10 +52,14 @@ public abstract class AbstractWabitObject implements WabitObject {
 	 */
     public AbstractWabitObject(String uuid) {
     	if (uuid == null) {
-    		this.uuid = "w" + UUID.randomUUID().toString();
+    	    generateNewUUID();
     	} else {
     		this.uuid = uuid;
     	}
+    }
+    
+    public void generateNewUUID() {
+        uuid = "w" + UUID.randomUUID().toString();
     }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {

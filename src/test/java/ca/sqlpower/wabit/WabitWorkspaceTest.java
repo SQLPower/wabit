@@ -187,5 +187,74 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         assertTrue(finishingWorkspace.getChildren().contains(chart));
         assertTrue(finishingWorkspace.getChildren().contains(report));
     }
+    
+    /**
+     * A test of merging some WabitObjects from one workspace into another changes
+     * the UUIDs. This prevents the workspace from gaining duplicate UUIDs.
+     */
+    public void testMergingUpdatesUUIDs() throws Exception {
+        WabitSwingSession startingSession = new StubWabitSwingSession();
+        WabitWorkspace startingWorkspace = new WabitWorkspace();
+        startingWorkspace.setSession(startingSession);
+        
+        Set<String> uniqueUUIDs = new HashSet<String>() {
+            @Override
+            public boolean add(String o) {
+                if (contains(o)) {
+                    fail("The uuid " + o + " already exists " + "and is therefore not unique.");
+                }
+                return super.add(o);
+            }
+        };
+        
+        QueryCache query = new QueryCache(new StubWabitSessionContext());
+        startingWorkspace.addQuery(query, startingSession);
+        Chart chart = new Chart();
+        chart.setName("chart");
+        chart.defineQuery(query);
+        startingWorkspace.addChart(chart);
+        Report report = new Report("Report");
+        ContentBox chartContentBox = new ContentBox();
+        final ChartRenderer chartContentRenderer = new ChartRenderer(chart);
+        chartContentBox.setContentRenderer(chartContentRenderer);
+        report.getPage().addContentBox(chartContentBox);
+        ContentBox queryContentBox = new ContentBox();
+        final ResultSetRenderer resultSetContentRenderer = new ResultSetRenderer(query);
+        queryContentBox.setContentRenderer(resultSetContentRenderer);
+        report.getPage().addContentBox(queryContentBox);
+        startingWorkspace.addReport(report);
+        
+        WorkspaceGraphModel graph = new WorkspaceGraphModel(startingWorkspace, 
+                startingWorkspace, false, false);
+        for (WabitObject o : graph.getNodes()) {
+            System.out.println("Adding object of type " + o.getClass() + " with UUID " + o.getUUID());
+            uniqueUUIDs.add(o.getUUID());
+        }
+        
+        WabitSwingSession finishingSession = new StubWabitSwingSession();
+        WabitWorkspace finishingWorkspace = new WabitWorkspace();
+        finishingWorkspace.setSession(finishingSession);
+        
+        assertEquals(3, startingWorkspace.getChildren().size());
+        assertTrue(startingWorkspace.getChildren().contains(query));
+        assertTrue(startingWorkspace.getChildren().contains(chart));
+        assertTrue(startingWorkspace.getChildren().contains(report));
+        assertEquals(0, finishingWorkspace.getChildren().size());
+        
+        startingWorkspace.mergeIntoWorkspace(finishingWorkspace);
+        
+        assertEquals(0, startingWorkspace.getChildren().size());
+        assertEquals(3, finishingWorkspace.getChildren().size());
+        assertTrue(finishingWorkspace.getChildren().contains(query));
+        assertTrue(finishingWorkspace.getChildren().contains(chart));
+        assertTrue(finishingWorkspace.getChildren().contains(report));
+        
+        WorkspaceGraphModel endGraph = new WorkspaceGraphModel(finishingWorkspace, 
+                finishingWorkspace, false, false);
+        for (WabitObject o : endGraph.getNodes()) {
+            uniqueUUIDs.add(o.getUUID());
+        }
+        
+    }
 
 }

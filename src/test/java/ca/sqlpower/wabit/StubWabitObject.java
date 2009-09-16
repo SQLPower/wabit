@@ -81,4 +81,9 @@ public class StubWabitObject implements WabitObject {
         return false;
     }
 
+    public void generateNewUUID() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

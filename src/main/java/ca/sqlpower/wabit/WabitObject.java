@@ -71,6 +71,12 @@ public interface WabitObject {
     String getUUID();
     
     /**
+     * Sets the UUID of this object to a newly generated UUID. This is necessary
+     * if the object is being cloned or copied to a new workspace.
+     */
+    void generateNewUUID();
+    
+    /**
      * Removes the given object as a dependency of this object. For this object
      * to no longer be dependent on the given dependency all of its children
      * must also not be dependent on the given dependency when this method
