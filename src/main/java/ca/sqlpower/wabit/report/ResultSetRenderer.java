@@ -52,6 +52,7 @@ import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitObject;
@@ -365,10 +366,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	return query;
     }
     
-    public void cleanup() {
+    @Override
+    public CleanupExceptions cleanup() {
         query.removeResultSetListener(resultSetHandler);
     	query.removePropertyChangeListener(queryChangeListener);
     	resultSetHandler.cleanup();
+    	return new CleanupExceptions();
     }
 
 	/**

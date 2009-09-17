@@ -40,6 +40,7 @@ import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.QueryInitializationException;
@@ -666,5 +667,22 @@ public class Chart extends AbstractWabitObject {
                 " There should be no need to remove them outside of this class.");
         }
         return false;
+    }
+    
+    @Override
+    public CleanupExceptions cleanup() {
+        CleanupExceptions exceptions = new CleanupExceptions();
+        try {
+            setQuery(null);
+        } catch (Exception e) {
+            exceptions.add(e);
+        }
+        try {
+            setUnfilteredResultSet(null);
+        } catch (Exception e) {
+            exceptions.add(e);
+        }
+        
+        return exceptions;
     }
 }

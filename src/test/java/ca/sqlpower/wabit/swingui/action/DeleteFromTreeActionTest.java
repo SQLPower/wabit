@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import junit.framework.TestCase;
+import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -75,7 +76,8 @@ public class DeleteFromTreeActionTest extends TestCase {
         
         WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace, query, true, true);
         
-        DeleteFromTreeAction deleteAction = new DeleteFromTreeAction(workspace, query, null);
+        DeleteFromTreeAction deleteAction = new DeleteFromTreeAction(workspace, query, null, 
+                new DefaultUserPrompterFactory());
         
         deleteAction.removeNode(query, graph);
         
@@ -139,7 +141,8 @@ public class DeleteFromTreeActionTest extends TestCase {
         chart2.setQuery(query);
         workspace.addChart(chart2);
         
-        DeleteFromTreeAction deleteAction = new DeleteFromTreeAction(workspace, query, null);
+        DeleteFromTreeAction deleteAction = new DeleteFromTreeAction(workspace, query, null, 
+                new DefaultUserPrompterFactory());
         
         try {
             deleteAction.removeNode(query, graph);

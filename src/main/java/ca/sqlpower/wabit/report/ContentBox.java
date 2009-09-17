@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitObject;
@@ -144,7 +145,12 @@ public class ContentBox extends AbstractWabitObject {
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
-        	oldContentRenderer.cleanup();
+        	CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(oldContentRenderer);
+        	if (getSession() != null) {
+        	    WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
+        	} else {
+        	    WabitUtils.logCleanupErrors(cleanupObject);
+        	}
             WabitUtils.unlistenToHierarchy(oldContentRenderer, rendererChangeHandler, emptyChildListener);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
@@ -252,12 +258,6 @@ public class ContentBox extends AbstractWabitObject {
 		return new Rectangle2D.Double(x, y, width, height);
 	}
 	
-	public void cleanup() {
-		if (contentRenderer != null) {
-			contentRenderer.cleanup();
-		}
-	}
-
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
     }

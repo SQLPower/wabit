@@ -23,9 +23,20 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
+import org.apache.log4j.Logger;
+
+import ca.sqlpower.util.UserPrompter;
+import ca.sqlpower.util.UserPrompterFactory;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class WabitUtils {
+    
+    private static final Logger logger = Logger.getLogger(WabitUtils.class);
 
     /**
      * Adds the given listeners to the hierarchy of Wabit objects rooted at
@@ -118,4 +129,63 @@ public class WabitUtils {
         return ancestors;
     }
 
+    /**
+     * This method will recursively clean up this object and all of its
+     * descendants.
+     * 
+     * @param o
+     *            The object to clean up, including its dependencies.
+     * @return A collection of exceptions and errors that occurred during
+     *         cleanup if any occurred.
+     */
+    public static CleanupExceptions cleanupWabitObject(WabitObject o) {
+        CleanupExceptions exceptions = new CleanupExceptions();
+        exceptions.add(o.cleanup());
+        for (WabitObject child : o.getChildren()) {
+            exceptions.add(cleanupWabitObject(child));
+        }
+        return exceptions;
+    }
+    
+    /**
+     * This method will display the cleanup errors to the user. If the
+     * user prompter factory given is null the errors will be logged instead.
+     */
+    public static void displayCleanupErrors(@Nonnull CleanupExceptions cleanupObject, 
+            UserPrompterFactory upf) {
+        if (upf != null) {
+            if (!cleanupObject.isCleanupSuccessful()) {
+                StringBuffer message = new StringBuffer();
+                message.append("The following errors occurred during closing\n");
+                for (String error : cleanupObject.getErrorMessages()) {
+                    message.append("   " + error + "\n");
+                }
+                for (Exception exception : cleanupObject.getExceptions()) {
+                    message.append("   " + exception.getMessage() + "\n");
+                    logger.error("Exception during cleanup", exception);
+                }
+                UserPrompter up = upf.createUserPrompter(
+                        message.toString(),
+                        UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK,
+                        null, "OK");
+                up.promptUser();
+            }
+        } else {
+            logCleanupErrors(cleanupObject);
+        }
+    }
+
+    /**
+     * Logs the exceptions and errors. This is useful if there is no available
+     * user prompter.
+     */
+    public static void logCleanupErrors(@Nonnull CleanupExceptions cleanupObject) {
+        for (String error : cleanupObject.getErrorMessages()) {
+            logger.debug("Exception during cleanup, " + error);
+        }
+        for (Exception exception : cleanupObject.getExceptions()) {
+            logger.error("Exception during cleanup", exception);
+        }
+    }
+    
 }

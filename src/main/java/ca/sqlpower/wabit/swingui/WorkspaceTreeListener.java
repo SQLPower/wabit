@@ -250,7 +250,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				        !(lastPathComponent instanceof ContentBox)) {
 					menu.add(new EditCellAction(tree));
 					menu.add(new DeleteFromTreeAction(session.getWorkspace(), 
-					        (WabitObject) lastPathComponent, context.getFrame()));
+					        (WabitObject) lastPathComponent, context.getFrame(), context));
 				}
 				
 				if (lastPathComponent instanceof QueryCache) {

@@ -19,8 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -54,15 +52,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     private static final Logger logger = Logger.getLogger(QueryCache.class);
     
-    /**
-     * A {@link PropertyChangeEvent} should fire a property change of this
-     * property when it wishes to notify the {@link Query} that the row
-     * limit has changed. The new value given in the property change should be
-     * the new row limit in {@link Integer} form so the query cache knows how
-     * large of a result to cache.
-     */
-    public static final String ROW_LIMIT = "rowLimit";
-    
     private final Query query;
     
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
@@ -88,22 +77,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * This is only used if {@link Query#streaming} is true.
      */
     private Connection currentConnection; 
-    
-    /**
-     * A change listener to flush the cached row sets on a row limit change.
-     * This listener should be attached to the object that will fire a "rowLimit"
-     * change which would notify components that a new row limit has been set for
-     * queries.
-     */
-    private final PropertyChangeListener rowLimitChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
-            if (evt.getPropertyName().equals(ROW_LIMIT)) {
-                resultSets.clear();
-                updateCounts.clear();
-                query.setRowLimit((Integer) evt.getNewValue());
-            }
-        }
-    };
     
     /**
      * The threads in this list are used to stream queries from a connection into
@@ -394,22 +367,25 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return null;
     }
     
-    public void cleanup() {
+    @Override
+    public CleanupExceptions cleanup() {
+        CleanupExceptions exceptions = new CleanupExceptions();
         if (currentStatement != null) {
             try {
                 currentStatement.cancel();
                 currentStatement.close();
             } catch (SQLException e) {
-                logger.error("Error while closing old streaming statement", e);
+                exceptions.add(e);
             }
         }
         if (currentConnection != null) {
             try {
                 currentConnection.close();
             } catch (SQLException e) {
-                logger.error("Error while closing old streaming connection", e);
+                exceptions.add(e);
             }
         }
+        return exceptions;
     }
     
     public WabitDataSource getWabitDataSource() {
@@ -449,10 +425,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         firePropertyChange("running", wasRunning, isRunning);
     }
     
-    public PropertyChangeListener getRowLimitChangeListener() {
-        return rowLimitChangeListener;
-    }
-
     public String generateQuery() {
         return query.generateQuery();
     }
@@ -569,6 +541,15 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     @Override
     protected boolean removeChildImpl(WabitObject child) {
         return false;
+    }
+    
+    /**
+     * This will set the row limit on the query. This also clears the cache.
+     */
+    public void setRowLimit(int rowLimit) {
+        resultSets.clear();
+        updateCounts.clear();
+        query.setRowLimit(rowLimit);
     }
 
     // ------------------ ResultSetProducer interface ----------------------

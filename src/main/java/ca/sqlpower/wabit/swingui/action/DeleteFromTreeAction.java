@@ -40,8 +40,11 @@ import javax.swing.JTree;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.UserPrompterFactory;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WorkspaceGraphModel;
 import ca.sqlpower.wabit.swingui.WorkspaceGraphTreeModel;
@@ -75,13 +78,29 @@ public class DeleteFromTreeAction extends AbstractAction {
      * This component will have all of the dialogs parented to it.
      */
     private final Component parent;
-    
+
+    /**
+     * Used to properly display messages to the user.
+     */
+    private final UserPrompterFactory upf;
+
+    /**
+     * @param workspace
+     *            The workspace to remove the given node from.
+     * @param node
+     *            The object that is being deleted from the workspace tree.
+     * @param parent
+     *            A parent component to attach dialogs to.
+     * @param upf
+     *            A user prompter to display useful messages to the user.
+     */
     public DeleteFromTreeAction(WabitWorkspace workspace, WabitObject node, 
-            Component parent) {
+            Component parent, UserPrompterFactory upf) {
         super("Delete");
         this.workspace = workspace;
         item = node;
         this.parent = parent;
+        this.upf = upf;
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -220,6 +239,8 @@ public class DeleteFromTreeAction extends AbstractAction {
             dependent.removeDependency(nodeToRemove);
             successfullyRemoved = successfullyRemoved && removeNode(dependent, graph);
         }
+        CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(nodeToRemove);
+        WabitUtils.displayCleanupErrors(cleanupObject, upf);
         if (nodeToRemove.getParent() != null) {
             successfullyRemoved = successfullyRemoved && 
                 nodeToRemove.getParent().removeChild(nodeToRemove);

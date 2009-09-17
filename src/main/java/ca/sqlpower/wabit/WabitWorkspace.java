@@ -198,7 +198,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         queries.add(index, query);
         query.setParent(this);
         query.setDBMapping(session.getContext());
-        session.getContext().addPropertyChangeListener(query.getRowLimitChangeListener());
         fireChildAdded(QueryCache.class, query, index);
         setEditorPanelModel(query);
     }
@@ -208,7 +207,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	if (index != -1) {
     		query.cleanup();
     		queries.remove(query);
-    		session.removePropertyChangeListener(query.getRowLimitChangeListener());
     		fireChildRemoved(QueryCache.class, query, index);
     		if (editorPanelModel == query) {
                 setEditorPanelModel(this);

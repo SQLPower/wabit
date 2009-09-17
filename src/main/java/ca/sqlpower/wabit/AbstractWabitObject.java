@@ -205,4 +205,27 @@ public abstract class AbstractWabitObject implements WabitObject {
      * @see #removeChild(WabitObject)
      */
 	protected abstract boolean removeChildImpl(WabitObject child);
+	
+	/**
+	 * Default cleanup method that does nothing. Override and implement this
+	 * method if cleanup is necessary.
+	 */
+	public CleanupExceptions cleanup() {
+	    return new CleanupExceptions();
+	}
+
+    /**
+     * Helper method to find the session of a WabitObject. This will walk up the
+     * workspace tree to the WabitWorkspace and get its session. If the highest
+     * ancestor is not a WabitWorkspace or the workspace is not attached to a
+     * session this will return null.
+     */
+	protected WabitSession getSession() {
+	    WabitObject ancestor = this;
+	    while (ancestor.getParent() != null) {
+	        ancestor = ancestor.getParent();
+	    }
+	    if (ancestor instanceof WabitWorkspace) return ((WabitWorkspace) ancestor).getSession();
+	    return null;
+	}
 }

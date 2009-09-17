@@ -93,10 +93,6 @@ public class ImageRenderer extends AbstractWabitObject implements
 		}
 	};
 	
-	public void cleanup() {
-		//do nothing
-	}
-	
 	public ImageRenderer() {
 		//default constructor
 	}

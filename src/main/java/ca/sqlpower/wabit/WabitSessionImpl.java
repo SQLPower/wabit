@@ -62,6 +62,9 @@ public class WabitSessionImpl implements WabitSession {
 	}
 
 	public boolean close() {
+	    CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(workspace);
+	    WabitUtils.displayCleanupErrors(cleanupObject, sessionContext);
+	    
     	SessionLifecycleEvent<WabitSession> lifecycleEvent =
     		new SessionLifecycleEvent<WabitSession>(this);
     	for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {

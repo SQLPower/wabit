@@ -86,4 +86,9 @@ public class StubWabitObject implements WabitObject {
         
     }
 
+    public CleanupExceptions cleanup() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

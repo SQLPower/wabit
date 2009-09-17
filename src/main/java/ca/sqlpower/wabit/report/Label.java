@@ -89,10 +89,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     	setName(label.getName());
     }
     
-    public void cleanup() {
-    	//do nothing
-    }
-    
     public Label() {
         this("");
     }

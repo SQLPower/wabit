@@ -882,9 +882,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         getRowLimitSpinner().setValue(1000);
         rowLimitSpinner.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                pcs.firePropertyChange(QueryCache.ROW_LIMIT, oldRowLimitValue, 
-                        ((Integer) rowLimitSpinner.getValue()).intValue());
-                oldRowLimitValue = (Integer) rowLimitSpinner.getValue();
+                //TODO the general row limit will move to the preferences panel
+                //and each query can have an individual row limit seperate from
+                //this row limit.
+                for (WabitSession session : getSessions()) {
+                    for (QueryCache query : session.getWorkspace().getQueries()) {
+                        query.setRowLimit((Integer) rowLimitSpinner.getValue());
+                    }
+                }
             }
         });
         

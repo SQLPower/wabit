@@ -29,7 +29,9 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
@@ -297,7 +299,12 @@ public class Page extends AbstractWabitObject {
         if (removeme.getParent() != this) {
             throw new IllegalStateException("That's not my content box!");
         }
-        removeme.cleanup();
+        CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(removeme);
+        if (getSession() != null) {
+            WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
+        } else {
+            WabitUtils.logCleanupErrors(cleanupObject);
+        }
         int index = contentBoxes.indexOf(removeme);
         if (index != -1) {
         	contentBoxes.remove(removeme);

@@ -52,6 +52,7 @@ import org.olap4j.metadata.Property;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
@@ -216,11 +217,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     	return olapQuery;
     }
 
-    public void cleanup() {
+    @Override
+    public CleanupExceptions cleanup() {
     	if (modifiedOlapQuery != null && !this.initDone) {
     		modifiedOlapQuery.removeOlapQueryListener(queryListener);
     	}
         olapQuery.removePropertyChangeListener(nameListener);
+        return new CleanupExceptions();
     }
 
     public Color getBackgroundColour() {

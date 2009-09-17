@@ -95,5 +95,23 @@ public interface WabitObject {
      * dependencies.
      */
     List<WabitObject> getDependencies();
+
+    /**
+     * Disconnects this object from any other objects it is listening to, closes
+     * any open connections, and performs any other necessary operations to
+     * ensure that this object can be discarded. Once this object has been
+     * cleaned up none of its methods should be called. This method will only
+     * cleanup this object and not its descendants. To clean up this object and
+     * its descendants see {@link WabitUtils#cleanupWabitObject(WabitObject)}.
+     * <p>
+     * Calling cleanup does not mean the object must be disconnected from the
+     * workspace as all objects will be cleaned up when the session is closing.
+     * The object can also still have other objects dependent on it unlike
+     * {@link #removeChild(WabitObject)}.
+     * 
+     * @return A collection of exceptions and errors that occurred during
+     *         cleanup if any occurred.
+     */
+    CleanupExceptions cleanup();
     
 }

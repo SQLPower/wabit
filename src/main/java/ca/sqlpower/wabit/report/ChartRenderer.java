@@ -33,6 +33,7 @@ import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
@@ -164,8 +165,10 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
         ((ContentBox) getParent()).setContentRenderer(null);
     }
 
-    public void cleanup() {
+    @Override
+    public CleanupExceptions cleanup() {
         // TODO unlisten to chart
+        return new CleanupExceptions();
     }
 
     /**
