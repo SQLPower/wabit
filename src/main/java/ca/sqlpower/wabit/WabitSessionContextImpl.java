@@ -284,7 +284,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 				return;
 			}
 		}
-		System.exit(0);
 	}
 	
 	/**

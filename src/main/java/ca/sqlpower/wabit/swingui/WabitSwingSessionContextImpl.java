@@ -1737,6 +1737,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         delegateContext.close();
         
+        System.exit(0);
+        
     }
     
     public JSpinner getRowLimitSpinner() {
