@@ -36,6 +36,8 @@ import org.olap4j.CellSet;
 
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowFilter;
+import ca.sqlpower.sql.RowSetChangeEvent;
+import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.WebColour;
@@ -92,7 +94,7 @@ public class Chart extends AbstractWabitObject {
     private final List<ChartColumn> chartColumns = new ArrayList<ChartColumn>();
 
     /**
-     * This is a listener placed on OLAP queries to find if columns removed from
+     * This is a listener placed on the ResultSetProducer to find if columns removed from
      * a query were in use in this chart.
      */
     private final ResultSetListener resultSetListener = new ResultSetListener() {
@@ -149,6 +151,22 @@ public class Chart extends AbstractWabitObject {
      * applied to this chart when it is displayed.
      */
     private boolean gratuitouslyAnimated;
+
+    /**
+     * List of currently-registered data listeners. This list contains no nulls.
+     */
+    private final List<ChartDataListener> dataListeners = new ArrayList<ChartDataListener>();
+
+    /**
+     * Fires a ChartDataChangedEvent whenever the current unfiltered result set
+     * notifies us about new data. The hooked-upedness of this listener is managed
+     * by {@link #setUnfilteredResultSet(CachedRowSet)}.
+     */
+    private final RowSetChangeListener rowSetListener = new RowSetChangeListener() {
+        public void rowAdded(RowSetChangeEvent e) {
+            fireDataChangedEvent();
+        }
+    };
 
     /**
      * Creates a new chart with a new unique ID.
@@ -278,13 +296,16 @@ public class Chart extends AbstractWabitObject {
      * This method fires a property change event for the property
      * "unfilteredResultSet". The result sets it passes around are not recreated
      * for each listener, so relying on the current row cursor position or
-     * attempting to maniuplate it will lead to unpredictable results.
+     * attempting to manipulate it will lead to unpredictable results.
      * 
      * @param rs
      *            the new unfiltered result set to base the chart data on.
      * @throws SQLException 
      */
     private void setUnfilteredResultSet(CachedRowSet rs) throws SQLException {
+        if (unfilteredResults != null) {
+            unfilteredResults.removeRowSetListener(rowSetListener );
+        }
         CachedRowSet oldUnfilteredResults = unfilteredResults;
         unfilteredResults = rs;
         
@@ -313,6 +334,12 @@ public class Chart extends AbstractWabitObject {
         
         // notifying AFTER the column list has been synchronized with the new query
         firePropertyChange("unfilteredResultSet", oldUnfilteredResults, unfilteredResults);
+        
+        if (unfilteredResults != null) {
+            unfilteredResults.addRowSetListener(rowSetListener);
+        }
+        
+        fireDataChangedEvent();
     }
     
     private static ChartColumn findByName(List<ChartColumn> cols, String name) {
@@ -667,6 +694,44 @@ public class Chart extends AbstractWabitObject {
                 " There should be no need to remove them outside of this class.");
         }
         return false;
+    }
+    
+    /**
+     * Registers the given listener to receive an event every time the dataset
+     * returned by {@link #createDataset()} might be different. These events
+     * typically happen whenever the chart's result set provider changes, as
+     * well as when a streaming query delivers a new row of data.
+     * 
+     * @param l the listener to add. Must not be null.
+     */
+    public void addChartDataListener(@Nonnull ChartDataListener l) {
+        if (l == null) {
+            throw new NullPointerException("Null listener");
+        }
+        dataListeners.add(l);
+    }
+
+    /**
+     * Removes the given listener from the list of parties interested in data
+     * change events. If the given listener was registered multiple times, this
+     * call only removes one of the registrations. If the given listener is not
+     * currently registered, this method has no effect.
+     * 
+     * @param l
+     *            the listener to remove. Null is silently ignored.
+     */
+    public void removeChartDataListener(@Nullable ChartDataListener l) {
+        dataListeners.remove(l);
+    }
+    
+    /**
+     * Delivers a data change notification to all registered listeners.
+     */
+    private void fireDataChangedEvent() {
+        ChartDataChangedEvent evt = new ChartDataChangedEvent(this);
+        for (int i = dataListeners.size() - 1; i >= 0; i--) {
+            dataListeners.get(i).chartDataChanged(evt);
+        }
     }
     
     @Override

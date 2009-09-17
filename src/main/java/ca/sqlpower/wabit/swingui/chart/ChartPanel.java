@@ -72,6 +72,8 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
+import ca.sqlpower.wabit.report.chart.ChartDataListener;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
@@ -252,9 +254,12 @@ public class ChartPanel implements WabitPanel {
             updateChartFromGUI();
         }
     };
+    
     /**
-     * Listens to changes in the chart (this component's data model) and updates
-     * the GUI when appropriate.
+     * Listens to changes in the chart's properties (this component's data
+     * model) and updates the GUI when appropriate. Compare with
+     * {@link #chartDataListener}, which handles events strictly dealing with
+     * the chart's current data (rather than its configuration).
      */
     private final PropertyChangeListener chartListener = new PropertyChangeListener() {
 
@@ -279,6 +284,22 @@ public class ChartPanel implements WabitPanel {
                 updateGUIFromChart();
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
+            }
+        }
+    };
+
+    /**
+     * Listens to changes to the chart's dataset and updates the chart preview
+     * when appropriate. Compare with {@link #chartListener}, which handles
+     * events dealing with the chart's current data (rather than its
+     * configuration).
+     */
+    private final ChartDataListener chartDataListener = new ChartDataListener() {
+        public void chartDataChanged(ChartDataChangedEvent evt) {
+            updateChartPreview();
+            if (resultTable.getModel() instanceof ResultSetTableModel) {
+                ResultSetTableModel rstm = (ResultSetTableModel) resultTable.getModel();
+                rstm.dataChanged();
             }
         }
     };
@@ -359,6 +380,8 @@ public class ChartPanel implements WabitPanel {
 
         boolean disableAutoExecute = isAutoExecuteDisabled();
 
+        chart.addChartDataListener(chartDataListener );
+        
 		try {
 			if (chart.getQuery() != null && !disableAutoExecute) {
 				chart.getQuery().execute();
@@ -726,6 +749,7 @@ public class ChartPanel implements WabitPanel {
 
     private void cleanup() {
         chart.removePropertyChangeListener(chartListener);
+        chart.removeChartDataListener(chartDataListener);
     }
     
     /**

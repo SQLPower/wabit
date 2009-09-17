@@ -224,6 +224,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
                                     crs.follow(streamingRS, getStreamingRowLimit());
                                 } catch (SQLException e) {
                                     logger.error("Exception while streaming result set", e);
+                                } finally {
+                                    setRunning(false);
                                 }
                             }
                         };
