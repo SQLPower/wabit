@@ -53,6 +53,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.tree.TreePath;
 
@@ -618,6 +619,31 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                     it.remove();
                 }
             }
+        }
+    }
+
+    public void runInBackground(final Runnable runner) {
+        SPSwingWorker worker = new SPSwingWorker(this) {
+            
+            @Override
+            public void doStuff() throws Exception {
+                runner.run();
+            }
+
+            @Override
+            public void cleanup() throws Exception {
+                //do nothing
+            }
+            
+        };
+        new Thread(worker).start();
+    }
+
+    public void runInForeground(Runnable runner) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            runner.run();
+        } else {
+            SwingUtilities.invokeLater(runner);
         }
     }
     

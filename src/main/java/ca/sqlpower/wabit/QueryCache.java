@@ -54,6 +54,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     private final Query query;
     
+    @GuardedBy("rsps")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
     private final List<CachedRowSet> resultSets = new ArrayList<CachedRowSet>();
@@ -243,7 +244,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
                 hasNext = !((sqlResult == false) && (currentStatement.getUpdateCount() == -1));
             }
             
-            CachedRowSet resultsToFire;
+            final CachedRowSet resultsToFire;
             if (resultSets.size() > 0) {
                 // results will be null if the first statement produced an update count,
                 // but that's allowed by the ResultSetProducer interface.
@@ -253,7 +254,17 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
                 // null result set in this case.
                 resultsToFire = null;
             }
-            rsps.fireResultSetEvent(resultsToFire);
+            runInForeground(new Runnable() {
+                public void run() {
+                    synchronized(rsps) {
+                        try {
+                            rsps.fireResultSetEvent(resultsToFire);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            });
             
             return initialResult;
             
@@ -556,23 +567,39 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 
     // ------------------ ResultSetProducer interface ----------------------
     public void addResultSetListener(ResultSetListener listener) {
-        rsps.addResultSetListener(listener);
+        synchronized(rsps) {
+            rsps.addResultSetListener(listener);
+        }
     }
 
     public void removeResultSetListener(ResultSetListener listener) {
-        rsps.removeResultSetListener(listener);        
+        synchronized(rsps) {
+            rsps.removeResultSetListener(listener);
+        }
     }
 
     public ResultSet execute() throws ResultSetProducerException {
-        try {
-            long eventCount = rsps.getEventsFired();
-            CachedRowSet resultSet = fetchResultSet();
-            if (rsps.getEventsFired() == eventCount) {
-                rsps.fireResultSetEvent(resultSet);
+        synchronized(rsps) {
+            try {
+                long eventCount = rsps.getEventsFired();
+                final CachedRowSet resultSet = fetchResultSet();
+                if (rsps.getEventsFired() == eventCount) {
+                    runInForeground(new Runnable() {
+                        public void run() {
+                            synchronized(rsps) {
+                                try {
+                                    rsps.fireResultSetEvent(resultSet);
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                    });
+                }
+                return resultSet;
+            } catch (SQLException e) {
+                throw new ResultSetProducerException(e);
             }
-            return resultSet;
-        } catch (SQLException e) {
-            throw new ResultSetProducerException(e);
         }
     }
     // ------------------ end ResultSetProducer interface ----------------------

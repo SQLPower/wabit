@@ -361,10 +361,14 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     }
     
     private void fireQueryExecuted(CellSet cellSet) {
-        OlapQueryEvent e = new OlapQueryEvent(this, cellSet);
-        for (int i = listeners.size() - 1; i >= 0; i--) {
-            listeners.get(i).queryExecuted(e);
-        }
+        final OlapQueryEvent e = new OlapQueryEvent(this, cellSet);
+        runInForeground(new Runnable() {
+            public void run() {
+                for (int i = listeners.size() - 1; i >= 0; i--) {
+                    listeners.get(i).queryExecuted(e);
+                }
+            }
+        });
     }
 
 	/**

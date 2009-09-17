@@ -37,7 +37,11 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.StubWabitSession;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
 
@@ -109,11 +113,20 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
             if (con != null) con.close();
         }
         
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        WabitWorkspace workspace = new WabitWorkspace();
+        workspace.setSession(session);
         QueryCache cache = new QueryCache(stubMapping);
+        workspace.addQuery(cache, session);
+        cache.setDBMapping(stubMapping);
         cache.setDataSource(db.getDataSource());
         cache.getQuery().defineUserModifiedQuery("select * from subtotal_table");
-        
+        assertEquals(db, cache.getQuery().getDatabase());
+
+        Report report = new Report("report");
+        workspace.addReport(report);
         ContentBox cb = new ContentBox();
+        report.getPage().addContentBox(cb);
         cb.setWidth(100);
         cb.setHeight(200);
         ResultSetRenderer renderer = new ResultSetRenderer(cache);
@@ -232,9 +245,20 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
      * an NPE.
      */
     public void testExecuteEmptyQueryWithoutException() throws Exception {
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        WabitWorkspace workspace = new WabitWorkspace();
+        workspace.setSession(session);
         QueryCache cache = new QueryCache(stubMapping);
+        workspace.addQuery(cache, session);
+        cache.setDBMapping(stubMapping);
         cache.setDataSource(db.getDataSource());
+        
+        Report report = new Report("report");
+        workspace.addReport(report);
+        ContentBox cb = new ContentBox();
+        report.getPage().addContentBox(cb);
         ResultSetRenderer renderer = new ResultSetRenderer(cache);
+        cb.setContentRenderer(renderer);
      
         assertNull(renderer.getExecuteException());
         

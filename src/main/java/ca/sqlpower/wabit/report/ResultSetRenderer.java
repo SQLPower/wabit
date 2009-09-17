@@ -268,8 +268,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      */
 	private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
 		public void rowAdded(RowSetChangeEvent e) {
-		    // XXX this isn't a property change. it's a repaint request.
-			firePropertyChange("resultSetRowAdded", null, e.getRow());
+		    if (getParent() != null) {
+		        getParent().repaint();
+		    }
 		}
 	};
 	
@@ -282,9 +283,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 			if (evt.getPropertyName().equals("name")) {
 				setName("Result Set: " + query.getName());
 			}
-			//XXX This is not a property change. It should either be a new event type 
-			//or handle it directly.
-			firePropertyChange(QUERY, null, ResultSetRenderer.this.query);
+			if (getParent() != null) {
+			    getParent().repaint();
+			}
 		}
 	};
 
@@ -297,7 +298,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         public void resultSetProduced(ResultSetProducerEvent evt) {
             cleanup();
             currentRowSet = evt.getResults();
-            currentRowSet.addRowSetListener(rowSetChangeListener);
+            if (currentRowSet != null) {
+                currentRowSet.addRowSetListener(rowSetChangeListener);
+            }
         }
         
         /**

@@ -68,5 +68,45 @@ public interface WabitSession {
      * collection.
      */
     DataSourceCollection<SPDataSource> getDataSources();
-	
+
+    /**
+     * This will force the given runnable to execute in the 'foreground'. If
+     * something is executed in the foreground then the thread that called this
+     * method will pass the runner to the thread that updates the user
+     * interface. Once the Runnable has been passed to the UI thread this method
+     * will continue executing and the runner will be executed when the UI
+     * thread is able to run it.
+     * <p>
+     * In cases where there is no UI, the foreground thread will be the same
+     * thread as the one calling this method. If this is the case the runner
+     * will just have run() called on the same thread. Additionally, if this is
+     * called on the foreground thread then it will be run on this thread is
+     * they are the same.
+     * <p>
+     * If you are calling this from a {@link WabitObject} that extends
+     * {@link AbstractWabitObject} you should use the
+     * {@link AbstractWabitObject#runInForeground(Runnable)} method instead
+     * 
+     * @param runner
+     *            The runnable to run in the foreground.
+     */
+    void runInForeground(Runnable runner);
+
+    /**
+     * This will execute the runnable in a manner that will try to avoid
+     * blocking the user interface. This will be done by creating a new thread
+     * to execute the Runnable on.
+     * <p>
+     * In places where there is no UI this runnable will be executed on this
+     * thread.
+     * <p>
+     * If you are calling this from a {@link WabitObject} that extends
+     * {@link AbstractWabitObject} you should use the
+     * {@link AbstractWabitObject#runInBackground(Runnable)} method instead
+     * 
+     * 
+     * @param runner
+     *            The runnable to run in the background.
+     */
+    void runInBackground(Runnable runner);
 }

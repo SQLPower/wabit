@@ -84,4 +84,21 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
 
     // override narrows return type
     public WabitSwingSessionContext getContext();
+    
+    /**
+     * The runner will be executed on the event dispatch thread. This will block
+     * the UI from responding as long as the runner is running. If a process is
+     * running in the background and we need to fire events or do other work on
+     * the event dispatch thread it can be wrapped in a runnable and passed to here.
+     * The background thread will not block and wait for the runner to complete.
+     */
+    public void runInForeground(Runnable runner);
+
+    /**
+     * Starts this runner on a worker thread that is registered with this swing
+     * session. This helps enforce large running processes occur on a separate
+     * thread than the current one if the current thread is the event dispatch
+     * thread.
+     */
+    public void runInBackground(Runnable runner);
 }

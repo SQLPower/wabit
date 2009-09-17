@@ -49,6 +49,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.RepaintListener;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
@@ -207,6 +208,17 @@ public class ContentBoxNode extends PNode implements ReportNode {
         }
     };
     
+    /**
+     * Listens to repaint requests from the content box and repaints
+     * as necessary.
+     */
+    private final RepaintListener modelRepaintListener = new RepaintListener() {
+        public void requestRepaint() {
+            updateBoundsFromContentBox();
+            repaint();
+        }
+    };
+    
     private final Window dialogOwner;
 
     /**
@@ -280,6 +292,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		contentBox.addChildListener(contentRendererListener);
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
         contentBox.addPropertyChangeListener(modelChangeHandler);
+        contentBox.addRepaintListener(modelRepaintListener);
         addInputEventListener(inputHandler);
         updateBoundsFromContentBox();
 
@@ -398,6 +411,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
     public void cleanup() {
         contentBox.removePropertyChangeListener(modelChangeHandler);
         contentBox.removeChildListener(contentRendererListener);
+        contentBox.removeRepaintListener(modelRepaintListener);
     }
 
     public ContentBox getModel() {

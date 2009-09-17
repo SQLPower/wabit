@@ -23,15 +23,23 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
 public abstract class AbstractWabitObject implements WabitObject {
 
     private static final Logger logger = Logger.getLogger(AbstractWabitObject.class);
-    private final List<WabitChildListener> childListeners = new ArrayList<WabitChildListener>();
+    
+    @GuardedBy("childListeners")
+    private final List<WabitChildListener> childListeners = 
+        Collections.synchronizedList(new ArrayList<WabitChildListener>());
+    
+    @GuardedBy("pcs")
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private WabitObject parent;
     private String name;
@@ -63,27 +71,36 @@ public abstract class AbstractWabitObject implements WabitObject {
     }
     
     public void addPropertyChangeListener(PropertyChangeListener l) {
-        pcs.addPropertyChangeListener(l);
+        synchronized (pcs) {
+            pcs.addPropertyChangeListener(l);
+        }
     }
 
     public void removePropertyChangeListener(PropertyChangeListener l) {
-        pcs.removePropertyChangeListener(l);
+        synchronized (pcs) {
+            pcs.removePropertyChangeListener(l);
+        }
     }
     
     public void addChildListener(WabitChildListener l) {
     	if (l == null) {
     		throw new NullPointerException("Cannot add child listeners that are null.");
     	}
-        childListeners.add(l);
+    	synchronized (childListeners) {
+    	    childListeners.add(l);
+    	}
     }
 
     public void removeChildListener(WabitChildListener l) {
-        childListeners.remove(l);
+        synchronized (childListeners) {
+            childListeners.remove(l);
+        }
     }
 
     /**
      * Fires a child added event to all child listeners. The child should have
-     * been added by the calling code already.
+     * been added by the calling code already. The event will be fired on the
+     * foreground thread defined by the session being used.
      * 
      * @param type
      *            The canonical type of the child being added
@@ -95,16 +112,28 @@ public abstract class AbstractWabitObject implements WabitObject {
      *            event object is constructed).
      */
     protected void fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
-        index += childPositionOffset(type);
-        WabitChildEvent e = new WabitChildEvent(this, type, child, index);
-        for (int i = childListeners.size() - 1; i >= 0; i--) {
-            childListeners.get(i).wabitChildAdded(e);
+        synchronized(childListeners) {
+            if (childListeners.isEmpty()) return;
         }
+        index += childPositionOffset(type);
+        final WabitChildEvent e = new WabitChildEvent(this, type, child, index);
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized(childListeners) {
+                    for (int i = childListeners.size() - 1; i >= 0; i--) {
+                        final WabitChildListener listener = childListeners.get(i);
+                        listener.wabitChildAdded(e);
+                    }
+                }
+            }
+        };
+        runInForeground(runner);
     }
 
     /**
      * Fires a child removed event to all child listeners. The child should have
-     * been removed by the calling code.
+     * been removed by the calling code. The event will be fired on the
+     * foreground thread defined by the session being used.
      * 
      * @param type
      *            The canonical type of the child being removed
@@ -116,28 +145,84 @@ public abstract class AbstractWabitObject implements WabitObject {
      *            before the event object is constructed).
      */
     protected void fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
+        synchronized(childListeners) {
+            if (childListeners.isEmpty()) return;
+        }
         index += childPositionOffset(type);
-        WabitChildEvent e = new WabitChildEvent(this, type, child, index);
-        for (int i = childListeners.size() - 1; i >= 0; i--) {
-            childListeners.get(i).wabitChildRemoved(e);
+        final WabitChildEvent e = new WabitChildEvent(this, type, child, index);
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized(childListeners) {
+                    for (int i = childListeners.size() - 1; i >= 0; i--) {
+                        final WabitChildListener listener = childListeners.get(i);
+                        listener.wabitChildRemoved(e);
+                    }
+                }
+            }
+        };
+        runInForeground(runner);
+    }
+
+    /**
+     * Fires a property change on the foreground thread as defined by the current
+     * session being used.
+     */
+    protected void firePropertyChange(final String propertyName, final boolean oldValue, 
+            final boolean newValue) {
+        synchronized(pcs) {
+            if (pcs.getPropertyChangeListeners().length == 0) return;
         }
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized(pcs) {
+                    pcs.firePropertyChange(propertyName, oldValue, newValue);
+                }
+            }
+        };
+        runInForeground(runner);
     }
 
-    protected void firePropertyChange(String propertyName, boolean oldValue, boolean newValue) {
-        pcs.firePropertyChange(propertyName, oldValue, newValue);
-    }
-
-    protected void firePropertyChange(String propertyName, int oldValue, int newValue) {
-        pcs.firePropertyChange(propertyName, oldValue, newValue);
-    }
-
-    protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Firing property change \"" + propertyName + "\" to " +
-                    pcs.getPropertyChangeListeners().length +
-                    " listeners: " + Arrays.toString(pcs.getPropertyChangeListeners()));
+    /**
+     * Fires a property change on the foreground thread as defined by the current
+     * session being used.
+     */
+    protected void firePropertyChange(final String propertyName, final int oldValue, 
+            final int newValue) {
+        synchronized(pcs) {
+            if (pcs.getPropertyChangeListeners().length == 0) return;
         }
-        pcs.firePropertyChange(propertyName, oldValue, newValue);
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized(pcs) {
+                    pcs.firePropertyChange(propertyName, oldValue, newValue);
+                }
+            }
+        };
+        runInForeground(runner);
+    }
+
+    /**
+     * Fires a property change on the foreground thread as defined by the current
+     * session being used.
+     */
+    protected void firePropertyChange(final String propertyName, final Object oldValue, 
+            final Object newValue) {
+        synchronized(pcs) {
+            if (pcs.getPropertyChangeListeners().length == 0) return;
+            if (logger.isDebugEnabled()) {
+                logger.debug("Firing property change \"" + propertyName + "\" to " +
+                        pcs.getPropertyChangeListeners().length +
+                        " listeners: " + Arrays.toString(pcs.getPropertyChangeListeners()));
+            }
+        }
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized(pcs) {
+                    pcs.firePropertyChange(propertyName, oldValue, newValue);
+                }
+            }
+        };
+        runInForeground(runner);
     }
     
 	public WabitObject getParent() {
@@ -218,14 +303,52 @@ public abstract class AbstractWabitObject implements WabitObject {
      * Helper method to find the session of a WabitObject. This will walk up the
      * workspace tree to the WabitWorkspace and get its session. If the highest
      * ancestor is not a WabitWorkspace or the workspace is not attached to a
-     * session this will return null.
+     * session this will throw a SessionNotFoundException.
      */
 	protected WabitSession getSession() {
 	    WabitObject ancestor = this;
 	    while (ancestor.getParent() != null) {
 	        ancestor = ancestor.getParent();
 	    }
-	    if (ancestor instanceof WabitWorkspace) return ((WabitWorkspace) ancestor).getSession();
-	    return null;
+	    if (ancestor instanceof WabitWorkspace && ((WabitWorkspace) ancestor).getSession() != null) 
+	        return ((WabitWorkspace) ancestor).getSession();
+	    throw new SessionNotFoundException("No session exists for " + getName() + " of type " +
+	            getClass());
+	}
+
+    /**
+     * Calls the runInBackground method on the session this object is attached
+     * to if it exists. If this object is not attached to a session, which can
+     * occur when loading, copying, or creating a new object, the runner will be
+     * run on the current thread due to not being able to run elsewhere. Any
+     * WabitObject that wants to run a runnable in the background should call to
+     * this method instead of to the session.
+     * 
+     * @see WabitSession#runInBackground(Runnable)
+     */
+	protected void runInBackground(Runnable runner) {
+	    try {
+	        getSession().runInBackground(runner);
+	    } catch (SessionNotFoundException e) {
+	        runner.run();
+	    }
+	}
+
+    /**
+     * Calls the runInForeground method on the session this object is attached
+     * to if it exists. If this object is not attached to a session, which can
+     * occur when loading, copying, or creating a new object, the runner will be
+     * run on the current thread due to not being able to run elsewhere. Any
+     * WabitObject that wants to run a runnable in the foreground should call to
+     * this method instead of to the session.
+     * 
+     * @see WabitSession#runInBackground(Runnable)
+     */
+	protected void runInForeground(Runnable runner) {
+	    try {
+	        getSession().runInForeground(runner);
+	    } catch (SessionNotFoundException e) {
+	        runner.run();
+	    }
 	}
 }

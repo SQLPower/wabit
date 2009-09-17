@@ -102,5 +102,13 @@ public class WabitSessionImpl implements WabitSession {
     public DataSourceCollection<SPDataSource> getDataSources() {
         return sessionContext.getDataSources();
     }
+
+    public void runInBackground(Runnable runner) {
+        runner.run();
+    }
+
+    public void runInForeground(Runnable runner) {
+        runner.run();
+    }
 	
 }

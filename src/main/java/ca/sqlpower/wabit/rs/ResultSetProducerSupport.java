@@ -65,7 +65,7 @@ public class ResultSetProducerSupport {
 
     /**
      * Notifies all registered listeners of the new result set. The event's
-     * source is the ResuktSetProducer specified to this instance's constructor.
+     * source is the ResultSetProducer specified to this instance's constructor.
      * <p>
      * Calling this method has the side effect of incrementing the eventsFired
      * property by exactly 1.
@@ -88,7 +88,9 @@ public class ResultSetProducerSupport {
     public void fireResultSetEvent(@Nullable ResultSet results) throws SQLException {
         eventsFired++;
         ResultSetProducerEvent evt;
-        if (results instanceof CachedRowSet) {
+        if (results == null) {
+            evt = new ResultSetProducerEvent(eventSource, null);
+        } else if (results instanceof CachedRowSet) {
             evt = new ResultSetProducerEvent(eventSource, (CachedRowSet) results);
         } else {
             CachedRowSet crs = new CachedRowSet();

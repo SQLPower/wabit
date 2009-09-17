@@ -26,10 +26,28 @@ import javax.annotation.Nonnull;
 
 public interface WabitObject {
 
+    /**
+     * Adds a listener that will be notified when children are added to 
+     * or removed from this object. The events will always be fired
+     * in the foreground.
+     * 
+     * @param l The listener to add.
+     * @see WabitSession#runInForeground(Runnable)
+     */
     void addChildListener(WabitChildListener l);
     void removeChildListener(WabitChildListener l);
+
+    /**
+     * Adds a listener that will be notified when properties of this object are
+     * changed. The events will always be fired in the foreground.
+     * 
+     * @param l
+     *            The listener to add.
+     * @see WabitSession#runInForeground(Runnable)
+     */
     void addPropertyChangeListener(PropertyChangeListener l);
     void removePropertyChangeListener(PropertyChangeListener l);
+    
     WabitObject getParent();
     void setParent(WabitObject parent);
     List<? extends WabitObject> getChildren();

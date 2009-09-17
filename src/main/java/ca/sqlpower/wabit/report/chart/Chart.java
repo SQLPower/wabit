@@ -39,7 +39,6 @@ import ca.sqlpower.sql.RowFilter;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
@@ -99,7 +98,7 @@ public class Chart extends AbstractWabitObject {
      */
     private final ResultSetListener resultSetListener = new ResultSetListener() {
         public void resultSetProduced(final ResultSetProducerEvent evt) {
-            SPSUtils.runOnSwingThread(new Runnable() { // FIXME not correct for server-side use!
+            runInForeground(new Runnable() {
                 public void run() {
                     try {
                         setUnfilteredResultSet(evt.getResults());

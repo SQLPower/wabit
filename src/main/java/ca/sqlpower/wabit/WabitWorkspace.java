@@ -154,8 +154,11 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         this.session = session;
     }
     
+    @Override
     public WabitSession getSession() {
-        return session;
+        if (session != null) return session;
+        throw new SessionNotFoundException("No session exists for " + getName() + " of type " +
+                getClass());
     }
     
     public void addDataSource(WabitDataSource ds) {
@@ -420,23 +423,33 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private void fireAddEvent(SPDataSource dbcs) {
     	logger.debug("firing databaseAddedEvent :");
 		int index = dataSources.size()-1;
-		DatabaseListChangeEvent e = new DatabaseListChangeEvent(this, index, dbcs);
+		final DatabaseListChangeEvent e = new DatabaseListChangeEvent(this, index, dbcs);
     	synchronized(listeners) {
-			for(DatabaseListChangeListener listener : listeners) {
-				logger.debug("\n"+ listener.toString());
-				listener.databaseAdded(e);
-			}
+    	    Runnable runner = new Runnable() {
+                public void run() {
+                    for(DatabaseListChangeListener listener : listeners) {
+                        logger.debug("\n"+ listener.toString());
+                        listener.databaseAdded(e);
+                    }
+                }
+            };
+            runInForeground(runner);
 		}
 	}
 
     private void fireRemoveEvent(int i, SPDataSource dbcs) {
     	logger.debug("firing databaseRemovedEvent:");
-    	DatabaseListChangeEvent e = new DatabaseListChangeEvent(this, i, dbcs);
+    	final DatabaseListChangeEvent e = new DatabaseListChangeEvent(this, i, dbcs);
     	synchronized(listeners) {
-			for(DatabaseListChangeListener listener : listeners) {
-				logger.debug("\n"+ listener.toString());
-				listener.databaseRemoved(e);
-			}
+    	    Runnable runner = new Runnable() {
+                public void run() {
+                    for(DatabaseListChangeListener listener : listeners) {
+                        logger.debug("\n"+ listener.toString());
+                        listener.databaseRemoved(e);
+                    }
+                }
+    	    };
+    	    runInForeground(runner);
 		}
     }
     

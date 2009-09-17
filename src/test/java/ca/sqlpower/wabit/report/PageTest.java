@@ -23,7 +23,11 @@ import java.awt.print.PageFormat;
 import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.StubWabitSession;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 public class PageTest extends AbstractWabitObjectTest {
@@ -36,7 +40,14 @@ public class PageTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        WabitWorkspace workspace = new WabitWorkspace();
+        workspace.setSession(session);
+        Report report = new Report("Report");
+        workspace.addReport(report);
         page = new Page("test page", LETTER_WIDTH, LETTER_HEIGHT, PageOrientation.PORTRAIT);
+        report.page = this.page;
+        page.setParent(report);
     }
     
     @Override

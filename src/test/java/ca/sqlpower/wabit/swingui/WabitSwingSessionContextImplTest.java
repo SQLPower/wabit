@@ -87,6 +87,7 @@ public class WabitSwingSessionContextImplTest extends TestCase {
         WabitSession stubWabitSession = 
             new StubWabitSession(new StubWabitSessionContext());
         WabitWorkspace dummyWorkspace = new WabitWorkspace();
+        dummyWorkspace.setSession(stubWabitSession);
         WabitDataSource ds = new WabitDataSource(jdbcDS);
         dummyWorkspace.addDataSource(ds);
         QueryCache cache = new QueryCache(context);

@@ -158,4 +158,12 @@ public class StubWabitSwingSession implements WabitSwingSession {
     public boolean hasUnsavedChanges() {
         return false;
     }
+
+    public void runInBackground(Runnable runner) {
+        runner.run();
+    }
+
+    public void runInForeground(Runnable runner) {
+        runner.run();
+    }
 }

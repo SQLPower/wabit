@@ -48,6 +48,8 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         workspace = new WabitWorkspace();
+        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        workspace.setSession(session);
     }
     
     @Override
@@ -89,7 +91,6 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * removed the wabit object being edited should be changed.
      */
     public void testRemovingSelectedOlapQueryChangesSelection() throws Exception {
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
         OlapQuery query = new OlapQuery(new OlapConnectionMapping() {
             public OlapConnection createConnection(Olap4jDataSource dataSource)
                     throws SQLException, ClassNotFoundException, NamingException {
@@ -109,7 +110,6 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * removed the wabit object being edited should be changed.
      */
     public void testRemovingSelectedLayoutChangesSelection() throws Exception {
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
         Report layout = new Report("Layout");
         workspace.addReport(layout);
         workspace.setEditorPanelModel(layout);
@@ -161,13 +161,13 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         chart.setQuery(query);
         startingWorkspace.addChart(chart);
         Report report = new Report("Report");
+        startingWorkspace.addReport(report);
         ContentBox chartContentBox = new ContentBox();
         chartContentBox.setContentRenderer(new ChartRenderer(chart));
         report.getPage().addContentBox(chartContentBox);
         ContentBox queryContentBox = new ContentBox();
         queryContentBox.setContentRenderer(new ResultSetRenderer(query));
         report.getPage().addContentBox(queryContentBox);
-        startingWorkspace.addReport(report);
         
         WabitSwingSession finishingSession = new StubWabitSwingSession();
         WabitWorkspace finishingWorkspace = new WabitWorkspace();
@@ -214,6 +214,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         chart.setQuery(query);
         startingWorkspace.addChart(chart);
         Report report = new Report("Report");
+        startingWorkspace.addReport(report);
         ContentBox chartContentBox = new ContentBox();
         final ChartRenderer chartContentRenderer = new ChartRenderer(chart);
         chartContentBox.setContentRenderer(chartContentRenderer);
@@ -222,7 +223,6 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         final ResultSetRenderer resultSetContentRenderer = new ResultSetRenderer(query);
         queryContentBox.setContentRenderer(resultSetContentRenderer);
         report.getPage().addContentBox(queryContentBox);
-        startingWorkspace.addReport(report);
         
         WorkspaceGraphModel graph = new WorkspaceGraphModel(startingWorkspace, 
                 startingWorkspace, false, false);

@@ -163,4 +163,12 @@ public class StubWabitSession implements WabitSession {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    public void runInBackground(Runnable runner) {
+        runner.run();
+    }
+
+    public void runInForeground(Runnable runner) {
+        runner.run();
+    }
 }

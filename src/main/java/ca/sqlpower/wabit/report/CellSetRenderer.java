@@ -50,7 +50,6 @@ import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Property;
 
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
@@ -147,7 +146,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private final OlapQueryListener queryListener = new OlapQueryListener() {
 		public void queryExecuted(final OlapQueryEvent evt) {
-		    SPSUtils.runOnSwingThread(new Runnable() {
+		    runInForeground(new Runnable() {
 		        public void run() {
 		            try {
 		                setCellSet(evt.getCellSet());

@@ -23,6 +23,7 @@ import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,6 +58,12 @@ public class ContentBox extends AbstractWabitObject {
      * The renderer that provides visual content for this box.
      */
     private ReportContentRenderer contentRenderer;
+
+    /**
+     * The listeners that will be notified when this content box makes a request
+     * to repaint.
+     */
+    private final List<RepaintListener> repaintListeners = new ArrayList<RepaintListener>();
     
     private PropertyChangeListener rendererChangeHandler = new PropertyChangeListener() {
 
@@ -65,7 +72,7 @@ public class ContentBox extends AbstractWabitObject {
                     && ((String) evt.getNewValue()).length() > 0) {
                 setName("Content from " + (String) evt.getNewValue());
             }
-            firePropertyChange("content", null, null);
+            repaint();
         }
         
     };
@@ -146,11 +153,7 @@ public class ContentBox extends AbstractWabitObject {
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
         	CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(oldContentRenderer);
-        	if (getSession() != null) {
-        	    WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
-        	} else {
-        	    WabitUtils.logCleanupErrors(cleanupObject);
-        	}
+        	WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
             WabitUtils.unlistenToHierarchy(oldContentRenderer, rendererChangeHandler, emptyChildListener);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
@@ -275,6 +278,28 @@ public class ContentBox extends AbstractWabitObject {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Adds a listener to this object that will be notified when the object
+     * wants to repaint.
+     */
+    public void addRepaintListener(RepaintListener listener) {
+        repaintListeners.add(listener);
+    }
+    
+    public void removeRepaintListener(RepaintListener listener) {
+        repaintListeners.remove(listener);
+    }
+    
+    public void repaint() {
+        runInForeground(new Runnable() {
+            public void run() {
+                for (int i = repaintListeners.size() - 1; i >= 0; i--) {
+                    repaintListeners.get(i).requestRepaint();
+                }
+            }
+        });
     }
 
 }

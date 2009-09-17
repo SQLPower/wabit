@@ -300,11 +300,7 @@ public class Page extends AbstractWabitObject {
             throw new IllegalStateException("That's not my content box!");
         }
         CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(removeme);
-        if (getSession() != null) {
-            WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
-        } else {
-            WabitUtils.logCleanupErrors(cleanupObject);
-        }
+        WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
         int index = contentBoxes.indexOf(removeme);
         if (index != -1) {
         	contentBoxes.remove(removeme);

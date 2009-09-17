@@ -74,6 +74,7 @@ public class NewChartAction extends AbstractAction {
 
     public void actionPerformed(ActionEvent e) {
         Chart chart = new Chart();
+        session.getWorkspace().addChart(chart);
         
         chart.setType(ChartType.BAR);
         
@@ -92,7 +93,6 @@ public class NewChartAction extends AbstractAction {
             chart.setName("New Chart");
         }
         
-        session.getWorkspace().addChart(chart);
     }
 
 }

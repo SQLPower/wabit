@@ -71,6 +71,7 @@ public class ResultSetProducerEvent {
      */
     @Nullable
     public CachedRowSet getResults() {
+        if (results == null) return null;
         try {
             return results.createShared();
         } catch (SQLException cantHappen) {
