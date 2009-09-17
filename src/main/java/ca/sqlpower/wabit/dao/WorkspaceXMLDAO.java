@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,14 +54,14 @@ import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.Version;
-import ca.sqlpower.wabit.WorkspaceGraphModel;
-import ca.sqlpower.wabit.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.WorkspaceGraphModel;
+import ca.sqlpower.wabit.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.SaveOLAP4jQuery;
@@ -160,6 +161,21 @@ public class WorkspaceXMLDAO {
         } catch (UnsupportedEncodingException e) {
             throw new AssertionError("The UTF-8 encoding should always be supported.");
         }
+		xml = new XMLHelper();
+	}
+	
+	/**
+	 * Constructs an XML DAO to print the XML representation of this Workspace
+	 * to the given Writer object.
+	 * 
+	 * @param writer
+	 *            The Writer object to output the Workspace to
+	 * @param context
+	 *            The context that contains the Workspace to be saved
+	 */
+	public WorkspaceXMLDAO(Writer writer, WabitSessionContext context) {
+		this.context = context;
+		this.out = new PrintWriter(new BufferedWriter(writer));
 		xml = new XMLHelper();
 	}
 	
