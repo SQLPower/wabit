@@ -47,8 +47,9 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.SQLGroupFunction;
-import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.querypen.QueryPen;
@@ -262,8 +263,8 @@ public class QueryController {
 	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
-	 * the state of the {@link Query}. The dataSourceComboBox will also have
-	 * a listener added so the {@link Query} can track which database to execute
+	 * the state of the {@link QueryImpl}. The dataSourceComboBox will also have
+	 * a listener added so the {@link QueryImpl} can track which database to execute
 	 * on.
 	 */
 	public QueryController(Query cache, QueryPen pen, JComboBox dataSourceComboBox, JTextComponent textComponent, JSlider zoomSlider) {

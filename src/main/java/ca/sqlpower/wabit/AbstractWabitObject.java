@@ -306,14 +306,7 @@ public abstract class AbstractWabitObject implements WabitObject {
      * session this will throw a SessionNotFoundException.
      */
 	protected WabitSession getSession() {
-	    WabitObject ancestor = this;
-	    while (ancestor.getParent() != null) {
-	        ancestor = ancestor.getParent();
-	    }
-	    if (ancestor instanceof WabitWorkspace && ((WabitWorkspace) ancestor).getSession() != null) 
-	        return ((WabitWorkspace) ancestor).getSession();
-	    throw new SessionNotFoundException("No session exists for " + getName() + " of type " +
-	            getClass());
+	    return WabitUtils.getSession(this);
 	}
 
     /**

@@ -120,8 +120,8 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         workspace.addQuery(cache, session);
         cache.setDBMapping(stubMapping);
         cache.setDataSource(db.getDataSource());
-        cache.getQuery().defineUserModifiedQuery("select * from subtotal_table");
-        assertEquals(db, cache.getQuery().getDatabase());
+        cache.defineUserModifiedQuery("select * from subtotal_table");
+        assertEquals(db, cache.getDatabase());
 
         Report report = new Report("report");
         workspace.addReport(report);

@@ -53,10 +53,10 @@ public class QueryCacheTest extends TestCase {
 	
 	public void testAliasListener() throws Exception {
 		Item item = new StringItem("ItemName");
-		queryCache.getQuery().addItem(item);
+		queryCache.addItem(item);
 		item.setSelected(true);
 		CountingQueryChangeListener listener = new CountingQueryChangeListener();
-		queryCache.getQuery().addQueryChangeListener(listener);
+		queryCache.addQueryChangeListener(listener);
 		String newAlias = "Alias test.";
 		item.setAlias(newAlias);
 		assertEquals(1, listener.getChangeCount());

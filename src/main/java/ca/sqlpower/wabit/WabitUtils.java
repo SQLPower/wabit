@@ -187,5 +187,27 @@ public class WabitUtils {
             logger.error("Exception during cleanup", exception);
         }
     }
+
+    /**
+     * Walks up the parent chain of WabitObjects and returns the WabitSession
+     * that these objects belong to. This can throw a
+     * {@link SessionNotFoundException} if the object is not attached to a
+     * session.
+     * 
+     * @param o
+     *            The object to follow the parent chain.
+     * @return A WabitSession that contains the given WabitObject and all of its
+     *         children.
+     */
+    public static WabitSession getSession(WabitObject o) {
+        WabitObject ancestor = o;
+        while (ancestor.getParent() != null) {
+            ancestor = ancestor.getParent();
+        }
+        if (ancestor instanceof WabitWorkspace && ((WabitWorkspace) ancestor).getSession() != null) 
+            return ((WabitWorkspace) ancestor).getSession();
+        throw new SessionNotFoundException("No session exists for " + o.getName() + " of type " +
+                o.getClass());
+    }
     
 }

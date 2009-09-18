@@ -86,12 +86,12 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.Query;
+import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.QueryCompoundEditEvent;
 import ca.sqlpower.query.SQLGroupFunction;
-import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
@@ -423,7 +423,7 @@ public class QueryPanel implements WabitPanel {
 	    private boolean inCompoundEdit = false;
     
         public void propertyChangeEvent(PropertyChangeEvent evt) {
-            if (evt.getPropertyName() != Query.USER_MODIFIED_QUERY 
+            if (evt.getPropertyName() != QueryImpl.USER_MODIFIED_QUERY 
                     && evt.getPropertyName() != "running") {
                 executeQuery();
             }
@@ -523,7 +523,7 @@ public class QueryPanel implements WabitPanel {
 					i++;
 				}
 				logger.debug("Received column width change on column " + i + " the new width is " + (Integer) evt.getNewValue());
-				Item resizedItem = queryCache.getQuery().getSelectedColumns().get(i);
+				Item resizedItem = queryCache.getSelectedColumns().get(i);
 				resizedItem.setColumnWidth((Integer) evt.getNewValue());
 				
 			}
@@ -587,9 +587,9 @@ public class QueryPanel implements WabitPanel {
         };
         queryPen = new QueryPen(
                 queryPenExecuteButtonAction,
-                queryCache.getQuery());
+                queryCache);
 		queryPen.setExecuteIcon((ImageIcon) WabitIcons.RUN_ICON_32);
-		queryPen.getGlobalWhereText().setText(cache.getQuery().getGlobalWhereClause());
+		queryPen.getGlobalWhereText().setText(cache.getGlobalWhereClause());
 		
 		exportQueryAction = new ExportWabitObjectAction<QueryCache>(session,
 				queryCache, WabitIcons.WABIT_FILE_ICON_16,
@@ -600,8 +600,8 @@ public class QueryPanel implements WabitPanel {
 		        context, mainSplitPane, queryCache);
 		queryUIComponents.setRowLimitSpinner(context.getRowLimitSpinner());
 		queryUIComponents.setShowSearchOnResults(false);
-		queryController = new QueryController(queryCache.getQuery(), queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
-		queryPen.setZoom(queryCache.getQuery().getZoomLevel());
+		queryController = new QueryController(queryCache, queryPen, queryUIComponents.getDatabaseComboBox(), queryUIComponents.getQueryArea(), queryPen.getZoomSlider());
+		queryPen.setZoom(queryCache.getZoomLevel());
 		queuedQueryCache = new ArrayList<QueryCache>();
 		queuedQueryCacheQueries = new ArrayList<String>();
 		reportComboBox = queryUIComponents.getDatabaseComboBox();
@@ -650,7 +650,7 @@ public class QueryPanel implements WabitPanel {
 			}
 		});
 		if (session.getWorkspace().getDataSources().size() != 0) {
-            if (queryCache.getQuery().getDatabase() == null) {
+            if (queryCache.getDatabase() == null) {
             	dragTree.setVisible(false);
         		List<SPDataSource> dataSources = session.getWorkspace().getConnections();
         		List<JDBCDataSource> availableDS = new ArrayList<JDBCDataSource>();
@@ -687,7 +687,7 @@ public class QueryPanel implements WabitPanel {
                 	databaseLazyLoad.run();
                 }
             } else {
-                reportComboBox.setSelectedItem((SPDataSource) queryCache.getQuery().getDatabase().getDataSource());
+                reportComboBox.setSelectedItem((SPDataSource) queryCache.getDatabase().getDataSource());
                 dragTree.setVisible(true);
             }
         } else {
@@ -809,7 +809,7 @@ public class QueryPanel implements WabitPanel {
 		queryToolPanel = new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
-		queryCache.getQuery().addQueryChangeListener(queryListener);
+		queryCache.addQueryChangeListener(queryListener);
     	JPanel playPen = queryPen.createQueryPen();
     	DefaultFormBuilder queryExecuteBuilder = new DefaultFormBuilder(new FormLayout("pref:grow, 10dlu, pref"));
 
@@ -859,7 +859,7 @@ public class QueryPanel implements WabitPanel {
 						//the query in a state where it thinks the user changed the query twice.
 						queryUIComponents.getQueryArea().setText("");
 						
-						queryCache.getQuery().removeUserModifications();
+						queryCache.removeUserModifications();
 						queryPen.getGlobalWhereText().setVisible(true);
 						groupingCheckBox.setVisible(true);
 						whereText.setVisible(true);
@@ -877,11 +877,11 @@ public class QueryPanel implements WabitPanel {
 		});
     	
     	groupingCheckBox = new JCheckBox("Grouping");
-    	groupingCheckBox.setSelected(queryCache.getQuery().isGroupingEnabled());
+    	groupingCheckBox.setSelected(queryCache.isGroupingEnabled());
     	groupingCheckBox.addActionListener(new AbstractAction() {
 
     		public void actionPerformed(ActionEvent e) {
-    			queryCache.getQuery().setGroupingEnabled(groupingCheckBox.isSelected());
+    			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
     			executeQueryInCache();
     		}
     	});
@@ -992,7 +992,7 @@ public class QueryPanel implements WabitPanel {
 
 	    final Action resetAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                queryCache.getQuery().reset();
+                queryCache.reset();
                 queryCache.cancel();
             }
         };
@@ -1073,7 +1073,7 @@ public class QueryPanel implements WabitPanel {
 					havingLabel.setVisible(false);
 				}
 				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-				    final SQLGroupFunction groupBy = cache.getQuery().getSelectedColumns().get(i).getGroupBy();
+				    final SQLGroupFunction groupBy = cache.getSelectedColumns().get(i).getGroupBy();
 					if (!groupBy.equals(SQLGroupFunction.GROUP_BY)) {
                         String groupByAggregate = groupBy.getGroupingName();
 						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate);
@@ -1081,15 +1081,15 @@ public class QueryPanel implements WabitPanel {
 				}
 
 				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-					String havingText = cache.getQuery().getSelectedColumns().get(i).getHaving();
+					String havingText = cache.getSelectedColumns().get(i).getHaving();
 					if (havingText != null) {
 						renderPanel.getTextFields().get(i).setText(havingText);
 					}
 				}
 				
 				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (Item column : cache.getQuery().getOrderByList()) {
-					int columnIndex = cache.getQuery().getSelectedColumns().indexOf(column);
+				for (Item column : cache.getOrderByList()) {
+					int columnIndex = cache.getSelectedColumns().indexOf(column);
 					OrderByArgument arg = column.getOrderBy();
 					if (arg != null && arg != OrderByArgument.NONE) {
 						if (arg == OrderByArgument.ASC) {
@@ -1104,7 +1104,7 @@ public class QueryPanel implements WabitPanel {
 				renderPanel.setSortingStatus(columnSortMap);
 				
 				for (int i = 0; i < t.getColumnCount(); i++) {
-					Integer width = cache.getQuery().getSelectedColumns().get(i).getColumnWidth();
+					Integer width = cache.getSelectedColumns().get(i).getColumnWidth();
 					logger.debug("Width in cache for column " + i + " is " + width);
 					if (width != null) {
 						t.getColumnModel().getColumn(i).setPreferredWidth(width);
@@ -1176,7 +1176,7 @@ public class QueryPanel implements WabitPanel {
 	    logger.debug("QueryPanel@" + System.identityHashCode(this) + " is cleaning up");
 	    prefs.putInt(RESULTS_DIVIDER_LOCATON_KEY, mainSplitPane.getDividerLocation());
 		queryController.disconnect();
-		queryCache.getQuery().removeQueryChangeListener(queryListener);
+		queryCache.removeQueryChangeListener(queryListener);
 		logger.debug("Removed the query panel change listener on the query cache");
 		queryUIComponents.closeConMap();
 		queryUIComponents.disconnectListeners();

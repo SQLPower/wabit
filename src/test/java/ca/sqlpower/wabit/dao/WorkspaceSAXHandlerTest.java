@@ -160,7 +160,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         WabitSession loadedSession = loadedWorkspaces.get(0);
         assertEquals(1, loadedSession.getWorkspace().getQueries().size());
         QueryCache loadedQuery = (QueryCache) loadedSession.getWorkspace().getQueries().get(0);
-        assertEquals(replacementDS, loadedQuery.getQuery().getDatabase().getDataSource());
+        assertEquals(replacementDS, loadedQuery.getDatabase().getDataSource());
 	}
 	
 	/**

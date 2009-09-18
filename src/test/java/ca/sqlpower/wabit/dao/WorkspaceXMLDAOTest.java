@@ -30,7 +30,6 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,16 +44,13 @@ import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
-import ca.sqlpower.query.Query.OrderByArgument;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.wabit.WorkspaceGraphModel;
-import ca.sqlpower.wabit.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -62,11 +58,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.ChartRenderer;
-import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Report;
-import ca.sqlpower.wabit.report.chart.Chart;
 
 public class WorkspaceXMLDAOTest extends TestCase {
 	
@@ -270,18 +262,18 @@ public class WorkspaceXMLDAOTest extends TestCase {
 
 		QueryCache query = new QueryCache(beforeSaveContext);
 		p.addQuery(query, session);
-		setAllSetters(query.getQuery(), getPropertiesToIgnore());
+		setAllSetters(query, getPropertiesToIgnore());
 		query.setDataSource(db.getDataSource());
 		
-		Container constantsContainer = query.getQuery().getConstantsContainer();
+		Container constantsContainer = query.getConstantsContainer();
 		StringItem constantItem = new StringItem("Constant");
 		constantsContainer.addItem(constantItem);
 		setAllSetters(constantItem, getPropertiesToIgnore());
 
 		//TODO: implement the rest of this test case for the commented out sections of 
 		//a query and layouts.
-		TableContainer container = new TableContainer(query.getQuery().getDatabase(), db.getTableByName("wabit_table1"));
-		query.getQuery().addTable(container);
+		TableContainer container = new TableContainer(query.getDatabase(), db.getTableByName("wabit_table1"));
+		query.addTable(container);
 		setAllSetters(container, getPropertiesToIgnore());
 //		query.addJoin(join);
 		
@@ -313,8 +305,8 @@ public class WorkspaceXMLDAOTest extends TestCase {
         
         assertEquals(p.getQueries().size(), loadedSession.getWorkspace().getQueries().size());
         for (int i = 0; i < p.getQueries().size(); i++) {
-        	Query oldQuery = (Query) ((QueryCache) p.getQueries().get(i)).getQuery();
-			Query newQuery = (Query) ((QueryCache) loadedSession.getWorkspace().getQueries().get(i)).getQuery();
+        	Query oldQuery = (Query) ((QueryCache) p.getQueries().get(i));
+			Query newQuery = (Query) ((QueryCache) loadedSession.getWorkspace().getQueries().get(i));
 			assertPropertiesEqual(oldQuery, newQuery, new String[]{"session", "streaming", 
 			        "streamingStatement", "streamingConnection", "timerListener", "dbMapping"});
 			assertEquals(oldQuery.getConstantsContainer().getItems().size(), newQuery.getConstantsContainer().getItems().size());

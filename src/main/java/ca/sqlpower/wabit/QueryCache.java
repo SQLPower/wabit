@@ -19,11 +19,13 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeEvent;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,9 +33,17 @@ import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.QueryChangeEvent;
+import ca.sqlpower.query.QueryChangeListener;
+import ca.sqlpower.query.QueryCompoundEditEvent;
+import ca.sqlpower.query.QueryImpl;
+import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
@@ -46,13 +56,13 @@ import ca.sqlpower.wabit.swingui.ExceptionHandler;
 
 /**
  * This method will be able to execute and cache the results of a query. It also
- * delegates some of the methods to the {@link Query} contained in it.
+ * delegates some of the methods to the {@link QueryImpl} contained in it.
  */
-public class QueryCache extends AbstractWabitObject implements StatementExecutor, ResultSetProducer {
+public class QueryCache extends AbstractWabitObject implements Query, StatementExecutor, ResultSetProducer {
     
     private static final Logger logger = Logger.getLogger(QueryCache.class);
     
-    private final Query query;
+    private final QueryImpl query;
     
     @GuardedBy("rsps")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
@@ -67,7 +77,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * This is the statement currently entering result sets into this query cache.
      * This lets the query cancel a running statement.
      * <p>
-     * This is only used if {@link Query#streaming} is true.
+     * This is only used if {@link QueryImpl#streaming} is true.
      */
     private Statement currentStatement;
     
@@ -75,7 +85,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * This is the connection currently entering result sets into this query cache.
      * This lets the query close a running connection
      * <p>
-     * This is only used if {@link Query#streaming} is true.
+     * This is only used if {@link QueryImpl#streaming} is true.
      */
     private Connection currentConnection; 
     
@@ -114,6 +124,69 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     private int currentExecutionCount = 0;
     
     /**
+     * These are the listeners that want to listen directly to the query that
+     * this object delegates to. The events that get fired to this listener
+     * should have this object as its source instead of the delegate.
+     */
+    @GuardedBy("queryListeners")
+    private final List<QueryChangeListener> queryListeners = new ArrayList<QueryChangeListener>();
+
+    /**
+     * This listener will be added to the query and refire events to the
+     * {@link #queryListeners} list with this object as the source.
+     */
+    private final QueryChangeListener queryChangeListener = new QueryChangeListener() {
+    
+        public void propertyChangeEvent(PropertyChangeEvent evt) {
+            firePropertyChangeEvent(evt);
+        }
+    
+        public void joinRemoved(QueryChangeEvent evt) {
+            fireJoinRemoved(evt);
+        }
+    
+        public void joinPropertyChangeEvent(PropertyChangeEvent evt) {
+            fireJoinPropertyChangeEvent(evt);
+        }
+    
+        public void joinAdded(QueryChangeEvent evt) {
+            fireJoinAdded(evt);
+        }
+    
+        public void itemRemoved(QueryChangeEvent evt) {
+            fireItemRemoved(evt);
+        }
+    
+        public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
+            fireItemPropertyChangeEvent(evt);
+        }
+    
+        public void itemOrderChanged(QueryChangeEvent evt) {
+            fireItemOrderChanged(evt);
+        }
+    
+        public void itemAdded(QueryChangeEvent evt) {
+            fireItemAdded(evt);
+        }
+    
+        public void containerRemoved(QueryChangeEvent evt) {
+            fireContainerRemoved(evt);
+        }
+    
+        public void containerAdded(QueryChangeEvent evt) {
+            fireContainerAdded(evt);
+        }
+    
+        public void compoundEditStarted(QueryCompoundEditEvent evt) {
+            fireCompoundEditStarted(evt);
+        }
+    
+        public void compoundEditEnded(QueryCompoundEditEvent evt) {
+            fireCompoundEditEnded(evt);
+        }
+    };
+    
+    /**
      * This makes a copy of the given query cache. The query in the given query cache
      * has its listeners disconnected to prevent copies from being affected by user
      * actions. This also makes cleanup of copies easier.
@@ -127,7 +200,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * can have its listeners connected to allow using this query cache in the workspace.
      */
     public QueryCache(QueryCache q, boolean connectListeners) {
-        this.query = new Query(q.query, connectListeners);
+        this.query = new QueryImpl(q.query, connectListeners);
+        query.addQueryChangeListener(queryChangeListener);
         
         for (CachedRowSet rs : q.getResultSets()) {
             if (rs == null) {
@@ -147,7 +221,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     }
     
     public QueryCache(String uuid, SQLDatabaseMapping dbMapping) {
-        query = new Query(uuid, dbMapping);
+        query = new QueryImpl(uuid, dbMapping);
+        query.addQueryChangeListener(queryChangeListener);
     }
 
     /**
@@ -166,14 +241,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return executeStatement(false);
     }
     
-    @Override
-    public void generateNewUUID() {
-        super.generateNewUUID();
-        if (query != null) {
-            query.generateNewUUID();
-        }
-    }
-
     /**
      * Executes the current SQL query, returning a cached copy of the result set
      * that is either a subset of the full results, limited by the session's row
@@ -342,10 +409,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return Collections.unmodifiableList(resultSets);
     }
 
-    public String getStatement() {
-        return query.generateQuery();
-    }
-
     public int getUpdateCount() {
         if (resultPosition >= updateCounts.size()) {
             return -1;
@@ -438,26 +501,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         firePropertyChange("running", wasRunning, isRunning);
     }
     
-    public String generateQuery() {
-        return query.generateQuery();
-    }
-    
-    public boolean containsCrossJoins() {
-        return query.containsCrossJoins();
-    }
-
-    public boolean isScriptModified() {
-        return query.isScriptModified();
-    }
-
-    public void setDataSource(JDBCDataSource ds) {
-        query.setDataSource(ds);
-    }
-
-    public void setName(String string) {
-        query.setName(string);
-    }
-
     public boolean allowsChildren() {
         return false;
     }
@@ -471,38 +514,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return Collections.EMPTY_LIST;
     }
 
-    public String getName() {
-        return query.getName();
-    }
-
-    public String getUUID() {
-        return query.getUUID();
-    }
-
-    public SQLDatabaseMapping getDBMapping() {
-        return query.getDbMapping();
-    }
-
-    public void setDBMapping(SQLDatabaseMapping dbMapping) {
-        query.setDBMapping(dbMapping);
-    }
-
-    public int getStreamingRowLimit() {
-        return query.getStreamingRowLimit();
-    }
-
-    public void setStreamingRowLimit(int streamingRowLimit) {
-        query.setStreamingRowLimit(streamingRowLimit);
-    }
-
-    public Query getQuery() {
-        return query;
-    }
-
-    public boolean isStreaming() {
-        return query.isStreaming();
-    }
-    
     @Override
     public String toString() {
         return getName();
@@ -556,15 +567,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return false;
     }
     
-    /**
-     * This will set the row limit on the query. This also clears the cache.
-     */
-    public void setRowLimit(int rowLimit) {
-        resultSets.clear();
-        updateCounts.clear();
-        query.setRowLimit(rowLimit);
-    }
-
     // ------------------ ResultSetProducer interface ----------------------
     public void addResultSetListener(ResultSetListener listener) {
         synchronized(rsps) {
@@ -603,5 +605,369 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         }
     }
     // ------------------ end ResultSetProducer interface ----------------------
+
+    
+    //------------------- start Query interface---------------------------------
+    
+    @Override
+    public void generateNewUUID() {
+        if (query != null) {
+            query.generateNewUUID();
+        }
+    }
+    
+    public String getStatement() {
+        return query.generateQuery();
+    }
+    
+    public String generateQuery() {
+        return query.generateQuery();
+    }
+    
+    public boolean containsCrossJoins() {
+        return query.containsCrossJoins();
+    }
+
+    public boolean isScriptModified() {
+        return query.isScriptModified();
+    }
+
+    public void setDataSource(JDBCDataSource ds) {
+        query.setDataSource(ds);
+    }
+
+    public void setName(String string) {
+        query.setName(string);
+    }
+    
+    public String getName() {
+        return query.getName();
+    }
+
+    public String getUUID() {
+        return query.getUUID();
+    }
+
+    public SQLDatabaseMapping getDBMapping() {
+        return query.getDbMapping();
+    }
+
+    public void setDBMapping(SQLDatabaseMapping dbMapping) {
+        query.setDBMapping(dbMapping);
+    }
+
+    public int getStreamingRowLimit() {
+        return query.getStreamingRowLimit();
+    }
+
+    public void setStreamingRowLimit(int streamingRowLimit) {
+        query.setStreamingRowLimit(streamingRowLimit);
+    }
+
+    public boolean isStreaming() {
+        return query.isStreaming();
+    }
+    
+    /**
+     * This will set the row limit on the query. This also clears the cache.
+     */
+    public void setRowLimit(int rowLimit) {
+        resultSets.clear();
+        updateCounts.clear();
+        query.setRowLimit(rowLimit);
+    }
+    
+    public void addItem(Item col) {
+        query.addItem(col);
+    }
+
+    public void addJoin(SQLJoin join) {
+        query.addJoin(join);
+    }
+
+    public void addQueryChangeListener(QueryChangeListener l) {
+        synchronized(queryListeners) {
+            queryListeners.add(l);        
+        }
+    }
+
+    public void addTable(Container container) {
+        query.addTable(container);
+    }
+
+    public void defineUserModifiedQuery(String query) {
+        this.query.defineUserModifiedQuery(query);
+    }
+
+    public void endCompoundEdit() {
+        query.endCompoundEdit();
+    }
+
+    public Container getConstantsContainer() {
+        return query.getConstantsContainer();
+    }
+
+    public SQLDatabase getDatabase() {
+        return query.getDatabase();
+    }
+
+    public SQLDatabaseMapping getDbMapping() {
+        return query.getDbMapping();
+    }
+
+    public List<Container> getFromTableList() {
+        return query.getFromTableList();
+    }
+
+    public String getGlobalWhereClause() {
+        return query.getGlobalWhereClause();
+    }
+
+    public Collection<SQLJoin> getJoins() {
+        return query.getJoins();
+    }
+
+    public List<Item> getOrderByList() {
+        return query.getOrderByList();
+    }
+
+    public int getRowLimit() {
+        return query.getRowLimit();
+    }
+
+    public List<Item> getSelectedColumns() {
+        return query.getSelectedColumns();
+    }
+
+    public int getZoomLevel() {
+        return query.getZoomLevel();
+    }
+
+    public boolean isGroupingEnabled() {
+        return query.isGroupingEnabled();
+    }
+
+    public void moveItem(Item movedColumn, int toIndex) {
+        query.moveItem(movedColumn, toIndex);
+    }
+
+    public void moveSortedItemToEnd(Item item) {
+        query.moveSortedItemToEnd(item);
+    }
+
+    public Container newConstantsContainer(String uuid) {
+        return query.newConstantsContainer(uuid);
+    }
+
+    public void removeItem(Item col) {
+        query.removeItem(col);
+    }
+
+    public void removeJoin(SQLJoin joinLine) {
+        query.removeJoin(joinLine);
+    }
+
+    public void removeQueryChangeListener(QueryChangeListener l) {
+        synchronized(queryListeners) {
+            queryListeners.remove(l);
+        }
+    }
+
+    public void removeTable(Container table) {
+        query.removeTable(table);
+    }
+
+    public void removeUserModifications() {
+        query.removeUserModifications();
+    }
+
+    public void reset() {
+        query.reset();
+    }
+
+    public void setGlobalWhereClause(String whereClause) {
+        query.setGlobalWhereClause(whereClause);
+    }
+
+    public void setGroupingEnabled(boolean enabled) {
+        query.setGroupingEnabled(enabled);
+    }
+
+    public void setStreaming(boolean streaming) {
+        query.setStreaming(streaming);
+    }
+
+    public void setZoomLevel(int zoomLevel) {
+        query.setZoomLevel(zoomLevel);
+    }
+
+    public void startCompoundEdit(String message) {
+        query.startCompoundEdit(message);
+    }
+    
+    //------------------- end Query interface---------------------------------
+    
+    //------------------- event handling for query delegate-------------------
+    
+    protected void fireJoinAdded(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getJoinChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).joinAdded(newEvent);
+                    }
+                }
+            }
+        });
+    }
+
+    protected void fireJoinRemoved(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getJoinChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).joinRemoved(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireJoinPropertyChangeEvent(final PropertyChangeEvent evt) {
+        final PropertyChangeEvent newEvent = new PropertyChangeEvent(this, 
+                evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).joinPropertyChangeEvent(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void firePropertyChangeEvent(final PropertyChangeEvent evt) {
+        final PropertyChangeEvent newEvent = new PropertyChangeEvent(this, 
+                evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).propertyChangeEvent(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireCompoundEditStarted(final QueryCompoundEditEvent evt) {
+        final QueryCompoundEditEvent newEvent = 
+            QueryCompoundEditEvent.createStartCompoundEditEvent(this, evt.getMessage());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).compoundEditStarted(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireCompoundEditEnded(QueryCompoundEditEvent evt) {
+        final QueryCompoundEditEvent newEvent =
+            QueryCompoundEditEvent.createEndCompoundEditEvent(this);
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).compoundEditEnded(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireItemOrderChanged(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getItemChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).itemOrderChanged(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireItemPropertyChangeEvent(final PropertyChangeEvent evt) {
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).itemPropertyChangeEvent(evt);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireItemAdded(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getItemChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).itemAdded(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireItemRemoved(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getItemChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).itemRemoved(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireContainerRemoved(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getContainerChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).containerRemoved(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    protected void fireContainerAdded(final QueryChangeEvent evt) {
+        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getContainerChanged());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).containerAdded(newEvent);
+                    }
+                }
+            }
+        });
+    }
+    
+    //---------------------end event handling for query delegate--------------
 
 }

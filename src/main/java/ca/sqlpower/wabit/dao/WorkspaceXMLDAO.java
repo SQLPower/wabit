@@ -623,7 +623,7 @@ public class WorkspaceXMLDAO {
 	 * called on it to flush the print writer and close it.
 	 */
 	private void saveQueryCache(QueryCache cache) {
-	    Query data = cache.getQuery();
+	    Query data = cache;
 		xml.print(out, "<query");
 		printAttribute("name", data.getName());
 		printAttribute("uuid", data.getUUID());
