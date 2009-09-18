@@ -125,11 +125,12 @@ public class WorkspaceXMLDAO {
      *                into their own text tag to preserve newline characters.
      *  <dt>1.2.2 <dd>Added the horizontal and vertical alignment properties to the image renderer.
      *  <dt>1.2.3 <dd>Added gratuitous animation flag to charts
+     *  <dt>1.2.4 <dd>Put UUID attribute on every WabitObject element (especially workspace)
      * </dl> 
      * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version("1.2.3"); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.4"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -230,7 +231,7 @@ public class WorkspaceXMLDAO {
 		    WabitWorkspace workspace = entry.getKey();
 		    List<WabitObject> dependenciesToSave = entry.getValue();
 		    xml.print(out, "<project");
-		    printAttribute("name", workspace.getName());
+		    printCommonAttributes(workspace);
 		    if (workspace.getEditorPanelModel() != null) {
 		        printAttribute("editorPanelModel", workspace.getEditorPanelModel().getUUID());
 		    }
@@ -283,7 +284,7 @@ public class WorkspaceXMLDAO {
 				continue;
 			}
 			xml.print(out, "<data-source");
-			printAttribute("name", ds.getName());
+			printCommonAttributes(ds);
 			xml.niprintln(out, "/>");
 		}
 		
@@ -298,16 +299,15 @@ public class WorkspaceXMLDAO {
 	 */
 	private void saveLayout(Layout layout) {
 		xml.print(out, "<layout");
-		printAttribute("name", layout.getName());
+		printCommonAttributes(layout);
 		printAttribute("zoom", layout.getZoomLevel());
 		printAttribute("template", (layout instanceof Template));
-		printAttribute("uuid", layout.getUUID());
 		xml.niprintln(out, ">");
 		xml.indent++;
 		
 		Page page = layout.getPage();
 		xml.print(out, "<layout-page");
-		printAttribute("name", page.getName());
+		printCommonAttributes(page);
 		printAttribute("height", page.getHeight());
 		printAttribute("width", page.getWidth());
 		printAttribute("orientation", page.getOrientation().name());
@@ -319,7 +319,7 @@ public class WorkspaceXMLDAO {
 			if (object instanceof ContentBox) {
 				ContentBox box = (ContentBox) object;
 				xml.print(out, "<content-box");
-				printAttribute("name", box.getName());
+				printCommonAttributes(box);
 				printAttribute("width", box.getWidth());
 				printAttribute("height", box.getHeight());
 				printAttribute("xpos", box.getX());
@@ -332,7 +332,7 @@ public class WorkspaceXMLDAO {
 					if (box.getContentRenderer() instanceof Label) {
 						Label label = (Label) box.getContentRenderer();
 						xml.print(out, "<content-label");
-						printAttribute("name", label.getName());
+						printCommonAttributes(label);
 						printAttribute("horizontal-align", label.getHorizontalAlignment().name());
 						printAttribute("vertical-align", label.getVerticalAlignment().name());
 						if (label.getBackgroundColour() != null) {
@@ -349,8 +349,7 @@ public class WorkspaceXMLDAO {
 					} else if (box.getContentRenderer() instanceof ResultSetRenderer) {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
 						xml.print(out, "<content-result-set");
-						printAttribute("name", rsRenderer.getName());
-						printAttribute("uuid", rsRenderer.getUUID());
+						printCommonAttributes(rsRenderer);
 						printAttribute("query-id", rsRenderer.getQuery().getUUID());
 						printAttribute("null-string", rsRenderer.getNullString());
 						printAttribute("border", rsRenderer.getBorderType().name());
@@ -364,7 +363,7 @@ public class WorkspaceXMLDAO {
 						for (WabitObject rendererChild : rsRenderer.getChildren()) {
 							ColumnInfo ci = (ColumnInfo) rendererChild;
 							xml.print(out, "<column-info");
-							printAttribute("name", ci.getName());
+							printCommonAttributes(ci);
 							printAttribute("width", ci.getWidth());
 							if (ci.getColumnInfoItem() != null) {
 								printAttribute("column-info-item-id", ci.getColumnInfoItem().getUUID());
@@ -399,7 +398,7 @@ public class WorkspaceXMLDAO {
 					} else if (box.getContentRenderer() instanceof ImageRenderer) {
 						ImageRenderer imgRenderer = (ImageRenderer) box.getContentRenderer();
 						xml.print(out, "<image-renderer");
-						printAttribute("name", imgRenderer.getName());
+						printCommonAttributes(imgRenderer);
 						if (imgRenderer.getImage() != null) {
 						    printAttribute("wabit-image-uuid", imgRenderer.getImage().getUUID());
 						}
@@ -413,16 +412,14 @@ public class WorkspaceXMLDAO {
 					} else if (box.getContentRenderer() instanceof ChartRenderer) {
 						ChartRenderer chartRenderer = (ChartRenderer) box.getContentRenderer();
 						xml.print(out, "<chart-renderer");
-						printAttribute("name", chartRenderer.getName());
-						printAttribute("uuid", chartRenderer.getUUID());
+						printCommonAttributes(chartRenderer);
 						printAttribute("chart-uuid", chartRenderer.getChart().getUUID());
 						xml.println(out, " />");
 						
 					} else if (box.getContentRenderer() instanceof CellSetRenderer) {
 					    CellSetRenderer renderer = (CellSetRenderer) box.getContentRenderer();
 					    xml.print(out, "<cell-set-renderer");
-					    printAttribute("name", renderer.getName());
-					    printAttribute("uuid", renderer.getUUID());
+					    printCommonAttributes(renderer);
 					    printAttribute("olap-query-uuid", renderer.getOlapQuery().getUUID());
 					    printAttribute("body-alignment", renderer.getBodyAlignment().toString());
 					    if (renderer.getBodyFormat() != null) {
@@ -448,7 +445,7 @@ public class WorkspaceXMLDAO {
 			} else if (object instanceof Guide) {
 				Guide guide = (Guide) object;
 				xml.print(out, "<guide");
-				printAttribute("name", guide.getName());
+				printCommonAttributes(guide);
 				printAttribute("axis", guide.getAxis().name());
 				printAttribute("offset", guide.getOffset());
 				xml.niprintln(out, "/>");
@@ -465,9 +462,8 @@ public class WorkspaceXMLDAO {
 	}
 	
 	private void saveChart(Chart chart) {
-	    xml.print(out, "<chart ");
-        printAttribute("name", chart.getName());
-        printAttribute("uuid", chart.getUUID());
+	    xml.print(out, "<chart");
+        printCommonAttributes(chart);
         printAttribute("y-axis-name", chart.getYaxisName());
         printAttribute("x-axis-name", chart.getXaxisName());
         printAttribute("x-axis-label-rotation", chart.getXaxisLabelRotation());
@@ -500,7 +496,8 @@ public class WorkspaceXMLDAO {
 
     private void saveChartColumn(ChartColumn col) {
         xml.print(out, "<chart-column");
-        saveColumnIdentifier(out, col, "");
+        printCommonAttributes(col);
+        printAttribute("data-type", col.getDataType().name());
         printAttribute("role", col.getRoleInChart().name());
         saveColumnIdentifier(out, col.getXAxisIdentifier(), "x-axis-");
         xml.niprintln(out, "/>");
@@ -508,8 +505,7 @@ public class WorkspaceXMLDAO {
 	
 	private void saveWabitImage(WabitImage wabitImage) {
 	    xml.print(out, "<wabit-image");
-        printAttribute("name", wabitImage.getName());
-        printAttribute("uuid", wabitImage.getUUID());
+        printCommonAttributes(wabitImage);
         xml.niprint(out, ">");
         xml.indent++;
 	    
@@ -573,12 +569,11 @@ public class WorkspaceXMLDAO {
 	private void saveOlapQuery(OlapQuery query) {
 	    
 	    xml.print(out, "<olap-query");
-        printAttribute("name", query.getName());
-        printAttribute("uuid", query.getUUID());
+        printCommonAttributes(query);
         if (query.getOlapDataSource() != null) {
             printAttribute("data-source", query.getOlapDataSource().getName());
         }
-        xml.println(out, ">");
+        xml.niprintln(out, ">");
         xml.indent++;
         
         if (query.getCurrentCube()!=null &&
@@ -588,7 +583,7 @@ public class WorkspaceXMLDAO {
             printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
             printAttribute("schema", query.getCurrentCube().getSchema().getName());
             printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
-            xml.println(out, "/>");
+            xml.niprintln(out, "/>");
         }
         
         SaveOLAP4jQuery.saveOlap4jQuery(query, xml, out, this);
@@ -625,8 +620,7 @@ public class WorkspaceXMLDAO {
 	private void saveQueryCache(QueryCache cache) {
 	    Query data = cache;
 		xml.print(out, "<query");
-		printAttribute("name", data.getName());
-		printAttribute("uuid", data.getUUID());
+		printCommonAttributes(cache);
 		printAttribute("zoom", data.getZoomLevel());
 		printAttribute("streaming-row-limit", data.getStreamingRowLimit());
 		printAttribute("row-limit", data.getRowLimit());
@@ -736,6 +730,20 @@ public class WorkspaceXMLDAO {
 
 		xml.indent--;
 		xml.println(out, "</query>");
+	}
+	
+	/**
+	 * Prints the attributes that every WabitObject has (name and uuid for example).
+	 * 
+	 * @param o The WabitObject whose attributes to print.
+	 */
+	private void printCommonAttributes(WabitObject o) {
+	    if (o.getName() == null) {
+	        printAttribute("name", "unnamed");
+	    } else {
+	        printAttribute("name", o.getName());
+	    }
+        printAttribute("uuid", o.getUUID());
 	}
 	
 	/**

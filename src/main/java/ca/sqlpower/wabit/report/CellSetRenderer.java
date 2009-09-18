@@ -160,10 +160,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     private boolean initDone = false;
 
-    public CellSetRenderer(OlapQuery olapQuery) {
-        this(olapQuery, null);
-    }
-    
     public CellSetRenderer(CellSetRenderer cellSetRenderer) {
     	this.olapQuery = cellSetRenderer.getOlapQuery();
     	this.modifiedOlapQuery = cellSetRenderer.getModifiedOlapQuery();
@@ -178,8 +174,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     	this.initDone = false;
     }
     
-    public CellSetRenderer(OlapQuery olapQuery, String uuid) {
-        super(uuid);
+    public CellSetRenderer(OlapQuery olapQuery) {
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
         setName(olapQuery.getName());

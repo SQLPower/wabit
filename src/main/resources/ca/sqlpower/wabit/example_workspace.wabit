@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
-<wabit export-format="1.2.2" wabit-app-version="0.9.8">
- <project name="Demo Workspace" editorPanelModel="w4d9c8556-2f8e-4337-95d2-b1a95d2a66ab">
+<wabit export-format="1.2.4" wabit-app-version="0.9.9">
+ <project name="Demo Workspace" uuid="w9f868a71-c10f-4af7-832f-dd3f53c733eb" editorPanelModel="w5e006b77-082a-4f40-ab87-6d016db96033">
   <data-sources>
-   <data-source name="SQL Power Demo Connection"/>
-   <data-source name="World Facts OLAP Connection"/>
+   <data-source name="SQL Power Demo Connection" uuid="wb132f9d1-7aa8-45e4-b704-79e8cc9815c8"/>
+   <data-source name="World Facts OLAP Connection" uuid="w96184b5a-b847-4d44-9bc1-961a83d63dd0"/>
   </data-sources>
   <query name="Highly Rated Actors" uuid="686da08d-05f7-4bd3-b4b3-1ffafc002095" zoom="0" streaming-row-limit="1000" row-limit="1000" grouping-enabled="false" prompt-for-cross-joins="true" automatically-executing="true" data-source="SQL Power Demo Connection">
    <constants uuid="b5033614-c1f0-4fda-bdeb-79c0f3a8d685" xpos="0.0" ypos="0.0">
@@ -104,8 +104,8 @@
    <order-by
  column-id="b7f3fcdd-27e1-4a22-b280-494e1f426096"/>
   </query>
-  <olap-query name="Life Expectancy And GNP Correlation" uuid="w34aa0826-197c-41a3-8361-bef5c5d0ad30" data-source="World Facts OLAP Connection"  >
-   <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"   />
+  <olap-query name="Life Expectancy And GNP Correlation" uuid="w34aa0826-197c-41a3-8361-bef5c5d0ad30" data-source="World Facts OLAP Connection">
+   <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"/>
    <olap4j-query name="GUI Query">
     <olap4j-axis ordinal="1" non-empty="false">
      <olap4j-dimension dimension-name="Geography">
@@ -129,8 +129,8 @@
     </olap4j-axis>
    </olap4j-query>
   </olap-query>
-  <olap-query name="Western Europe GNP Analysis" uuid="w9577bd13-e7fb-4306-882d-03bf095df383" data-source="World Facts OLAP Connection"  >
-   <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"   />
+  <olap-query name="Western Europe GNP Analysis" uuid="w9577bd13-e7fb-4306-882d-03bf095df383" data-source="World Facts OLAP Connection">
+   <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"/>
    <olap4j-query name="GUI Query">
     <olap4j-axis ordinal="1" non-empty="false">
      <olap4j-dimension dimension-name="Geography">
@@ -155,31 +155,31 @@
     </olap4j-axis>
    </olap4j-query>
   </olap-query>
-  <chart  name="Gross National Product" uuid="w717235a9-dfae-4237-90f1-bb268a70f54f" y-axis-name="" x-axis-name="" x-axis-label-rotation="-45.0" type="BAR" legend-position="BOTTOM" query-id="w9577bd13-e7fb-4306-882d-03bf095df383">
-   <chart-column name="Geography Country" data-type="TEXT" role="CATEGORY"/>
-   <chart-column name="Population" data-type="NUMERIC" role="NONE"/>
-   <chart-column name="Gross National Product" data-type="NUMERIC" role="SERIES"/>
+  <chart name="Gross National Product" uuid="w717235a9-dfae-4237-90f1-bb268a70f54f" y-axis-name="" x-axis-name="" x-axis-label-rotation="-45.0" gratuitous-animation="true" type="BAR" legend-position="BOTTOM" query-id="w9577bd13-e7fb-4306-882d-03bf095df383">
+   <chart-column name="Geography Country" uuid="wfe882803-e62a-416f-ad27-a48df96d52db" data-type="TEXT" role="CATEGORY"/>
+   <chart-column name="Population" uuid="w72bcad8d-6d2f-4df3-84fb-9fb6eeabdd0e" data-type="NUMERIC" role="NONE"/>
+   <chart-column name="Gross National Product" uuid="w4cc2a577-e064-4d86-99e0-dd198f9153a1" data-type="NUMERIC" role="SERIES"/>
    <missing-columns>
    </missing-columns>
   </chart>
-  <chart  name="Highly Rated Movies Chart" uuid="w34cbcae8-9642-40c0-a623-5b20e9147284" y-axis-name="" x-axis-name="" x-axis-label-rotation="-31.0" type="BAR" legend-position="BOTTOM" query-id="767072b5-917d-4ae8-9751-ac21bea0ec5e">
-   <chart-column name="TITLE" data-type="TEXT" role="CATEGORY"/>
-   <chart-column name="YEAR" data-type="NUMERIC" role="NONE"/>
-   <chart-column name="RATING" data-type="NUMERIC" role="SERIES"/>
+  <chart name="Highly Rated Movies Chart" uuid="w34cbcae8-9642-40c0-a623-5b20e9147284" y-axis-name="" x-axis-name="" x-axis-label-rotation="-31.0" gratuitous-animation="true" type="BAR" legend-position="BOTTOM" query-id="767072b5-917d-4ae8-9751-ac21bea0ec5e">
+   <chart-column name="TITLE" uuid="w31b80e44-210f-4f70-8952-464ee6d64373" data-type="TEXT" role="CATEGORY"/>
+   <chart-column name="YEAR" uuid="wb71dada3-b4cf-4e40-a1f8-5e0b77302bfa" data-type="NUMERIC" role="NONE"/>
+   <chart-column name="RATING" uuid="w849324bf-e4ce-4519-a8c3-067c2909a0be" data-type="NUMERIC" role="SERIES"/>
    <missing-columns>
    </missing-columns>
   </chart>
-  <chart  name="Life Expectancy vs. GNP" uuid="wfc21edab-b5f7-4fd9-b707-2416609676b1" y-axis-name="Life Expectancy (Years)" x-axis-name="GNP (Millions of Euros)" x-axis-label-rotation="-45.0" type="SCATTER" legend-position="NONE" query-id="w34aa0826-197c-41a3-8361-bef5c5d0ad30">
-   <chart-column name="Geography Country" data-type="TEXT" role="NONE"/>
-   <chart-column name="Life Expectancy" data-type="NUMERIC" role="SERIES" x-axis-name="Gross National Product" x-axis-data-type="NUMERIC"/>
-   <chart-column name="Gross National Product" data-type="NUMERIC" role="NONE"/>
+  <chart name="Life Expectancy vs. GNP" uuid="wfc21edab-b5f7-4fd9-b707-2416609676b1" y-axis-name="Life Expectancy (Years)" x-axis-name="GNP (Millions of Euros)" x-axis-label-rotation="-45.0" gratuitous-animation="true" type="SCATTER" legend-position="NONE" query-id="w34aa0826-197c-41a3-8361-bef5c5d0ad30">
+   <chart-column name="Geography Country" uuid="w2be353cd-9269-4d55-9b3c-a5c775cac612" data-type="TEXT" role="NONE"/>
+   <chart-column name="Life Expectancy" uuid="w66ee295c-a6b4-42d4-920c-81979a0e8f36" data-type="NUMERIC" role="SERIES" x-axis-name="Gross National Product" x-axis-data-type="NUMERIC"/>
+   <chart-column name="Gross National Product" uuid="w1407a590-f457-4858-8bf8-3331e42ae2b3" data-type="NUMERIC" role="NONE"/>
    <missing-columns>
    </missing-columns>
   </chart>
-  <chart  name="Population" uuid="w185634d8-4b05-4aac-b953-0056d7d9ebed" y-axis-name="" x-axis-name="" x-axis-label-rotation="-45.0" type="BAR" legend-position="BOTTOM" query-id="w9577bd13-e7fb-4306-882d-03bf095df383">
-   <chart-column name="Geography Country" data-type="TEXT" role="CATEGORY"/>
-   <chart-column name="Population" data-type="NUMERIC" role="SERIES"/>
-   <chart-column name="Gross National Product" data-type="NUMERIC" role="NONE"/>
+  <chart name="Population" uuid="w185634d8-4b05-4aac-b953-0056d7d9ebed" y-axis-name="" x-axis-name="" x-axis-label-rotation="-45.0" gratuitous-animation="true" type="PIE" legend-position="BOTTOM" query-id="w9577bd13-e7fb-4306-882d-03bf095df383">
+   <chart-column name="Geography Country" uuid="wbf818274-90ce-496e-9ed1-013e41c4ffab" data-type="TEXT" role="CATEGORY"/>
+   <chart-column name="Population" uuid="w3ff403ca-7346-4514-8472-4477813f0a4e" data-type="NUMERIC" role="SERIES"/>
+   <chart-column name="Gross National Product" uuid="wf2e4c7dc-dfa6-40a5-8797-54607359e079" data-type="NUMERIC" role="NONE"/>
    <missing-columns>
    </missing-columns>
   </chart>
@@ -14112,301 +14112,294 @@ xW34x2ePO/e3Cw72ssTb6RsrCTvryeLttG0Rf3Y6ZGLCf3DQu7fXq6fHe3Ii
 cnUlZUP0cGYiQ7RUtLlWKlouFG9X725WPH3c8Oxpw8F+1dpy7sJcxux06u5O
 uVjcsieebmxoeeXlqyiiIU0ykIIYJJD+QrMHGOEmOwUjepH9897R/wHzjo/H
 nThL9wAAAABJRU5ErkJggg==  </wabit-image>
-  <layout name="Dashboard - Landscape" zoom="469" template="true" uuid="w5e006b77-082a-4f40-ab87-6d016db96033">
-   <layout-page name="Default Page" height="612" width="792" orientation="LANDSCAPE">
+  <layout name="Dashboard - Landscape" uuid="w5e006b77-082a-4f40-ab87-6d016db96033" zoom="462" template="true">
+   <layout-page name="Default Page" uuid="w84107a9b-3c5b-46f4-b3b2-86720ae23529" height="612" width="792" orientation="LANDSCAPE">
     <font name="Arial" size="10" style="0"/>
-    <content-box name="Content from Label" width="368.3919493723412" height="55.908994708994754" xpos="41.20240688868147" ypos="16.091005291005278">
+    <content-box name="Content from Label" uuid="wd37a7b0c-b24b-4c4b-9f06-4faad0ef63ab" width="368.3919493723412" height="55.908994708994754" xpos="41.20240688868147" ypos="16.091005291005278">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="wd763c4e2-73c4-4099-b468-478c144e4056" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Dashboard Title</text>
       <font name="Arial" size="30" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_1" width="705.7975931113185" height="19.75379188712521" xpos="41.20240688868147" ypos="566.0">
+    <content-box name="Content from Label_1" uuid="wf4f821c1-cda2-415a-8898-4bd660a84391" width="705.7975931113185" height="19.75379188712521" xpos="41.20240688868147" ypos="566.0">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w52f9321f-599c-4fc0-b588-9ea4018ffb6c" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1">
       <text>Created by ${system_user} on ${now} using WABIT ${wabit_version}</text>
       <font name="Arial" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Empty content box" width="705.7975931113185" height="223.32627865961211" xpos="41.20240688868147" ypos="330.3774250440917">
+    <content-box name="Empty content box" uuid="we8ea14b6-3cad-498a-9dac-763a6dabda76" width="705.7975931113185" height="223.32627865961211" xpos="41.20240688868147" ypos="330.3774250440917">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Empty Content Box" width="232.96934329287308" height="236.55379188712527" xpos="41.20240688868147" ypos="72.0">
+    <content-box name="Empty Content Box" uuid="wa97a88d6-e20b-48d1-baf0-a057f5bf306d" width="232.96934329287308" height="236.55379188712527" xpos="41.20240688868147" ypos="72.0">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Empty Content Box_1" width="446.3732233634189" height="236.55379188712527" xpos="300.6267766365811" ypos="72.0">
+    <content-box name="Empty Content Box_1" uuid="w6a3db9eb-3df3-48b2-922d-29af1ee70a0e" width="446.3732233634189" height="236.55379188712527" xpos="300.6267766365811" ypos="72.0">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Content from null" width="75.12101877788153" height="62.08183421516755" xpos="671.8789812221182" ypos="9.918165784832473">
+    <content-box name="Content from ImageRenderer" uuid="wb39e5ca9-5619-40b3-85cc-f8b32a462f49" width="75.12101877788153" height="62.08183421516755" xpos="671.8789812221182" ypos="9.918165784832473">
      <font name="Arial" size="10" style="0"/>
-     <image-renderer wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="w8707e395-fde5-4532-bdfa-850274817978" wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <guide name="Vertical copy" axis="VERTICAL" offset="41.20240688868147"/>
-    <guide name="Vertical copy_1" axis="VERTICAL" offset="747.0"/>
-    <guide name="Horizontal copy" axis="HORIZONTAL" offset="72.0"/>
-    <guide name="Horizontal copy_1" axis="HORIZONTAL" offset="553.7037037037038"/>
-    <guide name="Horizontal copy_2" axis="HORIZONTAL" offset="566.0"/>
-    <guide name="Horizontal copy_3" axis="HORIZONTAL" offset="308.55379188712527"/>
+    <guide name="Vertical copy" uuid="w900acf8c-a1e9-4628-852f-4a85bf79af75" axis="VERTICAL" offset="41.20240688868147"/>
+    <guide name="Vertical copy_1" uuid="w11a029d8-39d7-4692-8ad3-7e54b7228294" axis="VERTICAL" offset="747.0"/>
+    <guide name="Horizontal copy" uuid="wccb8a07b-610f-44ae-a8fb-6149c1ac9021" axis="HORIZONTAL" offset="72.0"/>
+    <guide name="Horizontal copy_1" uuid="w11db03c3-641f-465d-8bfa-14ba6e6b949b" axis="HORIZONTAL" offset="553.7037037037038"/>
+    <guide name="Horizontal copy_2" uuid="w8c9159dd-b680-401d-ba6c-fbdfaaebba95" axis="HORIZONTAL" offset="566.0"/>
+    <guide name="Horizontal copy_3" uuid="w580f4cc5-9e87-47b9-8eb9-6bc472e3638e" axis="HORIZONTAL" offset="308.55379188712527"/>
    </layout-page>
   </layout>
-  <layout name="Dashboard - Portrait" zoom="362" template="true" uuid="w57ceaaf7-a4c8-48bf-a7b7-0792c750ba49">
-   <layout-page name="Default Page" height="792" width="612" orientation="PORTRAIT">
+  <layout name="Dashboard - Portrait" uuid="w57ceaaf7-a4c8-48bf-a7b7-0792c750ba49" zoom="357" template="true">
+   <layout-page name="Default Page" uuid="wfdc6dd15-ae8e-4ce6-8c39-f2579be081b0" height="792" width="612" orientation="PORTRAIT">
     <font name="Arial" size="10" style="0"/>
-    <content-box name="Content from null" width="96.29074379624998" height="89.95922301949705" xpos="472.70925620375" ypos="29.789635427991584">
+    <content-box name="Content from ImageRenderer" uuid="wd3fef41e-b224-41aa-8d59-6b06a7f53a19" width="96.29074379624998" height="89.95922301949705" xpos="472.70925620375" ypos="29.789635427991584">
      <font name="Arial" size="10" style="0"/>
-     <image-renderer wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="w5e9c750e-64c4-4db6-9f91-2ab70c20d3a5" wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <content-box name="Content from Label" width="527.7975931113185" height="18.93187407890469" xpos="41.20240688868147" ypos="745.0">
+    <content-box name="Content from Label" uuid="w98e99d0c-675e-4122-b21c-998023523e5a" width="527.7975931113185" height="18.93187407890469" xpos="41.20240688868147" ypos="745.0">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="wfae4ef9c-eb7f-4dca-aff5-582c6654ec63" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1">
       <text>Created by ${system_user} on ${now} using WABIT ${wabit_version}</text>
       <font name="Arial" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Empty content box" width="527.7975931113185" height="303.45662100456536" xpos="41.20240688868148" ypos="417.8904109589038">
+    <content-box name="Empty content box" uuid="w9107f4f4-873a-4a63-bd6e-49b84bb9e93a" width="527.7975931113185" height="303.45662100456536" xpos="41.20240688868148" ypos="417.8904109589038">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Empty Content Box" width="234.21843125885584" height="269.2511415525114" xpos="41.20240688868147" ypos="119.74885844748863">
+    <content-box name="Empty Content Box" uuid="wb2c7cd19-cc83-48ea-81ed-cee73e19fb8a" width="234.21843125885584" height="269.2511415525114" xpos="41.20240688868147" ypos="119.74885844748863">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Empty Content Box_1" width="251.34171893008863" height="269.2511415525114" xpos="317.65828106991137" ypos="119.74885844748863">
+    <content-box name="Empty Content Box_1" uuid="w72e2a150-d294-4609-9dcc-7a5a521d430e" width="251.34171893008863" height="269.2511415525114" xpos="317.65828106991137" ypos="119.74885844748863">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Content from Label_1" width="374.3960341247205" height="35.38812785388129" xpos="41.20240688868147" ypos="48.97260273972608">
+    <content-box name="Content from Label_1" uuid="w0603ecd7-5ef0-4b89-a0be-84caf4546e2d" width="374.3960341247205" height="35.38812785388129" xpos="41.20240688868147" ypos="48.97260273972608">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="wad563921-21ec-4e0c-9061-9035b986a5fb" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Dashboard Title</text>
       <font name="Arial" size="30" style="0"/>
      </content-label>
     </content-box>
-    <guide name="Vertical copy" axis="VERTICAL" offset="41.20240688868147"/>
-    <guide name="Vertical copy_1" axis="VERTICAL" offset="569.0"/>
-    <guide name="Horizontal copy" axis="HORIZONTAL" offset="119.74885844748863"/>
-    <guide name="Horizontal copy_1" axis="HORIZONTAL" offset="721.347031963469"/>
-    <guide name="Horizontal copy_2" axis="HORIZONTAL" offset="745.0"/>
-    <guide name="Horizontal copy_3" axis="HORIZONTAL" offset="417.69406392694066"/>
-    <guide name="Horizontal copy_4" axis="HORIZONTAL" offset="389.0"/>
+    <guide name="Vertical copy" uuid="w1375e9b1-c353-4e2c-a1fe-a1073042f1cb" axis="VERTICAL" offset="41.20240688868147"/>
+    <guide name="Vertical copy_1" uuid="wfca33af4-973f-4f27-a856-c05580a6588e" axis="VERTICAL" offset="569.0"/>
+    <guide name="Horizontal copy" uuid="wbac4be98-c5aa-4f01-9794-8664eab19813" axis="HORIZONTAL" offset="119.74885844748863"/>
+    <guide name="Horizontal copy_1" uuid="w256e6d12-b950-4588-8538-2c30d9286c50" axis="HORIZONTAL" offset="721.347031963469"/>
+    <guide name="Horizontal copy_2" uuid="w2576116c-cdc0-4d9d-9ffd-4f55134f7602" axis="HORIZONTAL" offset="745.0"/>
+    <guide name="Horizontal copy_3" uuid="wab470ee6-3875-4814-be14-736cfa7524db" axis="HORIZONTAL" offset="417.69406392694066"/>
+    <guide name="Horizontal copy_4" uuid="w9a1b559a-97f6-4ed9-b75c-d37c452c3162" axis="HORIZONTAL" offset="389.0"/>
    </layout-page>
   </layout>
-  <layout name="Report - Landscape" zoom="469" template="true" uuid="w09d87713-11c5-4c47-9f70-c5cfef40582f">
-   <layout-page name="Default Page" height="612" width="792" orientation="LANDSCAPE">
+  <layout name="Report - Landscape" uuid="w09d87713-11c5-4c47-9f70-c5cfef40582f" zoom="462" template="true">
+   <layout-page name="Default Page" uuid="w0ff8b828-81c3-4416-98cf-c18e37f0076d" height="612" width="792" orientation="LANDSCAPE">
     <font name="Arial" size="10" style="0"/>
-    <content-box name="Content from Label" width="322.5365701836288" height="55.908994708994754" xpos="41.20240688868147" ypos="41.886419753086415">
+    <content-box name="Content from Label" uuid="wa4c0cf6b-b0f3-42a5-b10b-9e3dccd7b920" width="322.5365701836288" height="55.908994708994754" xpos="41.20240688868147" ypos="41.886419753086415">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w8ebbb92d-2d1f-4577-8a5f-dc033250132a" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Report Title</text>
       <font name="Arial" size="36" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_1" width="128.44755680049826" height="20.635626102292765" xpos="618.222222222222" ypos="566.0">
+    <content-box name="Content from Label_1" uuid="w2e39ca3c-f033-44d1-92df-afef33ac0cc0" width="128.44755680049826" height="20.635626102292765" xpos="618.222222222222" ypos="566.0">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="RIGHT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w07b872e7-41c6-4aba-8556-76c32e63a6f8" horizontal-align="RIGHT" vertical-align="MIDDLE" bg-colour="-1">
       <text>PAGE ${page_number} OF ${page_count}</text>
       <font name="Arial" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_2" width="389.18912750285284" height="19.75379188712521" xpos="41.20240688868147" ypos="566.0">
+    <content-box name="Content from Label_2" uuid="w874dc0a0-faf3-41fd-8e91-6b1faa44090a" width="389.18912750285284" height="19.75379188712521" xpos="41.20240688868147" ypos="566.0">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w68ad8ac6-40b1-44db-b794-aab75163c26d" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Created by ${system_user} on ${now} using WABIT ${wabit_version}</text>
       <font name="Arial" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Empty Content Box" width="710.7975931113185" height="455.9082892416227" xpos="41.20240688868148" ypos="97.79541446208117">
+    <content-box name="Empty Content Box" uuid="w5bdee83f-a338-4e61-9d08-5dd131c69f5c" width="710.7975931113185" height="455.9082892416227" xpos="41.20240688868148" ypos="97.79541446208117">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Content from null" width="88.5586679116088" height="71.99999999999999" xpos="663.4413320883912" ypos="25.795414462081183">
+    <content-box name="Content from ImageRenderer" uuid="wbddd3b7c-36e4-48ee-ae8b-4800af9ae4ec" width="88.5586679116088" height="71.99999999999999" xpos="663.4413320883912" ypos="25.795414462081183">
      <font name="Arial" size="10" style="0"/>
-     <image-renderer wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="w89d5f370-4c8a-4bef-8441-e43e4d199d63" wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <guide name="Vertical copy" axis="VERTICAL" offset="41.20240688868147"/>
-    <guide name="Vertical copy_1" axis="VERTICAL" offset="752.0"/>
-    <guide name="Horizontal copy" axis="HORIZONTAL" offset="97.79541446208117"/>
-    <guide name="Horizontal copy_1" axis="HORIZONTAL" offset="553.7037037037038"/>
-    <guide name="Horizontal copy_2" axis="HORIZONTAL" offset="566.0"/>
+    <guide name="Vertical copy" uuid="w1c27b306-a557-41b5-aa0b-d5d69cfaa380" axis="VERTICAL" offset="41.20240688868147"/>
+    <guide name="Vertical copy_1" uuid="w69337c38-9cf4-4ace-8168-bb2cbff9cdb9" axis="VERTICAL" offset="752.0"/>
+    <guide name="Horizontal copy" uuid="w8d2eb7e7-35e9-4445-8e1a-034d4852e669" axis="HORIZONTAL" offset="97.79541446208117"/>
+    <guide name="Horizontal copy_1" uuid="wb1f20b01-9705-479f-9edd-c40302fea4e9" axis="HORIZONTAL" offset="553.7037037037038"/>
+    <guide name="Horizontal copy_2" uuid="w1ae5c5c3-bb87-4a68-a7d0-dfcbbbd3441b" axis="HORIZONTAL" offset="566.0"/>
    </layout-page>
   </layout>
-  <layout name="Report - Portrait" zoom="362" template="true" uuid="wa6f14d7f-b0f3-4133-933f-a255137722a2">
-   <layout-page name="Default Page" height="792" width="612" orientation="PORTRAIT">
+  <layout name="Report - Portrait" uuid="wa6f14d7f-b0f3-4133-933f-a255137722a2" zoom="357" template="true">
+   <layout-page name="Default Page" uuid="wa7ded5ee-a9f6-406b-aba3-30b99f76272d" height="792" width="612" orientation="PORTRAIT">
     <font name="Arial" size="10" style="0"/>
-    <content-box name="Content from Label" width="229.85238763186675" height="47.91812712908607" xpos="41.20240688868147" ypos="35.301050953105744">
+    <content-box name="Content from Label" uuid="w81dd7677-9f4b-4151-92e4-9d045bb3d3a9" width="229.85238763186675" height="47.91812712908607" xpos="41.20240688868147" ypos="35.301050953105744">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w0ddbc51e-7817-4a69-adf0-e2db7b14fdcb" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Report Title</text>
       <font name="Arial" size="36" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_1" width="129.14639449248767" height="19.813708294072246" xpos="439.8536055075123" ypos="745.0">
+    <content-box name="Content from Label_1" uuid="w8adbea1e-d3c2-4157-9260-c28c2b967157" width="129.14639449248767" height="19.813708294072246" xpos="439.8536055075123" ypos="745.0">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="RIGHT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w0ecd1a85-bd2a-4d56-843b-e551612d8155" horizontal-align="RIGHT" vertical-align="MIDDLE" bg-colour="-1">
       <text>PAGE ${page_number} OF ${page_count}</text>
       <font name="Arial" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_2" width="389.18912750285284" height="18.93187407890469" xpos="41.20240688868147" ypos="745.0">
+    <content-box name="Content from Label_2" uuid="wf0d266dc-ba0e-4696-8d7d-0dfd6301fb29" width="389.18912750285284" height="18.93187407890469" xpos="41.20240688868147" ypos="745.0">
      <font name="Arial" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w31f4469c-d51a-4451-a173-a4714c83e9d0" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Created by ${system_user} on ${now} using WABIT ${wabit_version}</text>
       <font name="Arial" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Empty content box" width="527.7975931113185" height="638.1278538812771" xpos="41.20240688868148" ypos="83.21917808219182">
+    <content-box name="Empty content box" uuid="w6603f058-2e86-4bec-bd18-163bccc50c60" width="527.7975931113185" height="638.1278538812771" xpos="41.20240688868148" ypos="83.21917808219182">
      <font name="Arial" size="10" style="0"/>
     </content-box>
-    <content-box name="Content from null" width="84.56621004566212" height="68.48401826484022" xpos="484.4337899543379" ypos="14.735159817351597">
+    <content-box name="Content from ImageRenderer" uuid="w7467ceb8-ca25-46f7-bb72-a15f9a18929d" width="84.56621004566212" height="68.48401826484022" xpos="484.4337899543379" ypos="14.735159817351597">
      <font name="Arial" size="10" style="0"/>
-     <image-renderer wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="w13d9d0d4-5ff1-496f-b4a4-7c546010d020" wabit-image-uuid="we3f378c1-b59e-4340-abf4-d2c78dbaebfb" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <guide name="Vertical copy" axis="VERTICAL" offset="41.20240688868147"/>
-    <guide name="Vertical copy_1" axis="VERTICAL" offset="569.0"/>
-    <guide name="Horizontal copy" axis="HORIZONTAL" offset="83.21917808219182"/>
-    <guide name="Horizontal copy_1" axis="HORIZONTAL" offset="721.347031963469"/>
-    <guide name="Horizontal copy_2" axis="HORIZONTAL" offset="745.0"/>
+    <guide name="Vertical copy" uuid="wc651fead-1de4-47b4-afe1-94195407a813" axis="VERTICAL" offset="41.20240688868147"/>
+    <guide name="Vertical copy_1" uuid="wbf9704aa-2628-4c10-a011-baf65d630137" axis="VERTICAL" offset="569.0"/>
+    <guide name="Horizontal copy" uuid="w8f2f02e8-c06d-4071-be9c-969f2d8c56da" axis="HORIZONTAL" offset="83.21917808219182"/>
+    <guide name="Horizontal copy_1" uuid="w5e958b08-13ce-4602-9103-234a305d9735" axis="HORIZONTAL" offset="721.347031963469"/>
+    <guide name="Horizontal copy_2" uuid="w3d28f586-8166-4655-90bb-88b4f72ddbea" axis="HORIZONTAL" offset="745.0"/>
    </layout-page>
   </layout>
-  <layout name="&quot;Must See&quot; Movies" zoom="362" template="false" uuid="w5011fa5a-2d54-4635-ab9d-192adcbd51e1">
-   <layout-page name="Default Page" height="792" width="612" orientation="PORTRAIT">
+  <layout name="&quot;Must See&quot; Movies" uuid="w5011fa5a-2d54-4635-ab9d-192adcbd51e1" zoom="357" template="false">
+   <layout-page name="Default Page" uuid="w30cb58a3-da0c-4144-9304-131cda609685" height="792" width="612" orientation="PORTRAIT">
     <font name="Dialog" size="8" style="0"/>
-    <content-box name="Content from Result Set: Highly Rated Movies" width="466.8584474885845" height="155.04566210045706" xpos="73.14155251141551" ypos="547.8310502283103">
+    <content-box name="Content from Result Set: Highly Rated Movies" uuid="w59bd10a1-1203-444c-84de-4a76ea05a2f3" width="466.8584474885845" height="155.04566210045706" xpos="73.14155251141551" ypos="547.8310502283103">
      <font name="Dialog" size="8" style="0"/>
-     <content-result-set name="Result Set: Highly Rated Movies" uuid="w046d170f-1c28-4c9b-b3d1-097babd768ed" query-id="767072b5-917d-4ae8-9751-ac21bea0ec5e" null-string="(null)" border="NONE">
+     <content-result-set name="Result Set: Highly Rated Movies" uuid="w3b196778-1ff8-4de3-88fe-ad72a530364e" query-id="767072b5-917d-4ae8-9751-ac21bea0ec5e" null-string="(null)" border="NONE">
       <header-font name="Dialog" size="16" style="1"/>
       <body-font name="Dialog" size="12" style="0"/>
-      <column-info name="TITLE" width="221" column-info-item-id="2326fa50-8a33-4da9-be3a-4637d3b982ec" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
+      <column-info name="TITLE" uuid="wab9b9df3-5dc0-4c1d-9b0d-1b07dcefe24e" width="72" column-info-item-id="2326fa50-8a33-4da9-be3a-4637d3b982ec" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
       </column-info>
-      <column-info name="YEAR" width="163" column-info-item-id="7d4b3450-16fe-41c6-8afa-3c19ab4f0e08" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
+      <column-info name="YEAR" uuid="we6ee25a8-7fe9-4835-895a-0762e2615ca7" width="72" column-info-item-id="7d4b3450-16fe-41c6-8afa-3c19ab4f0e08" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
       </column-info>
-      <column-info name="RATING" width="119" column-info-item-id="b7f3fcdd-27e1-4a22-b280-494e1f426096" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
+      <column-info name="RATING" uuid="w81e422eb-fff1-446f-b7ac-ce23b2bf76ec" width="72" column-info-item-id="b7f3fcdd-27e1-4a22-b280-494e1f426096" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
       </column-info>
      </content-result-set>
     </content-box>
-    <content-box name="Content from Label" width="606.4609796596095" height="80.32420091324202" xpos="1.223744292237418" ypos="42.849315068493155">
+    <content-box name="Content from Label" uuid="w730657f2-f4f4-4e60-bfe9-07d5ebb4a1a8" width="606.4609796596095" height="80.32420091324202" xpos="1.223744292237418" ypos="42.849315068493155">
      <font name="Dialog" size="8" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="wf9d37bce-e2f9-4ccb-ac4f-bd0ea351a194" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1">
       <text>&quot;Must See&quot; Movies</text>
       <font name="Dialog" size="48" style="2"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_1" width="467.1915732669156" height="25.529680365296926" xpos="72.0" ypos="720.0">
+    <content-box name="Content from Label_1" uuid="we8c01f45-cfe7-45d1-9552-43d8997a719a" width="467.1915732669156" height="25.529680365296926" xpos="72.0" ypos="720.0">
      <font name="Dialog" size="8" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w51e6e9cf-3a60-4fde-b512-571044e3e25c" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1">
       <text>Generated on ${now}</text>
       <font name="Dialog" size="8" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Highly Rated Movies Chart" width="468.0" height="312.60730593607303" xpos="72.0" ypos="170.1552511415526">
+    <content-box name="Content from Highly Rated Movies Chart" uuid="wb66823ba-ee4e-4886-ad4c-653602a87387" width="468.0" height="312.60730593607303" xpos="72.0" ypos="170.1552511415526">
      <font name="Dialog" size="8" style="0"/>
      <chart-renderer name="Highly Rated Movies Chart" uuid="waba1e17b-91c9-433d-b950-ee6f4974fce9" chart-uuid="w34cbcae8-9642-40c0-a623-5b20e9147284"      />
     </content-box>
-    <guide name="Vertical guide" axis="VERTICAL" offset="72.0"/>
-    <guide name="Vertical guide_1" axis="VERTICAL" offset="540.0"/>
-    <guide name="Horizontal guide" axis="HORIZONTAL" offset="509.01826484018267"/>
-    <guide name="Horizontal guide_1" axis="HORIZONTAL" offset="720.0"/>
+    <guide name="Vertical guide" uuid="w9e145b27-bbb9-4fb6-b9d3-5f68250cf216" axis="VERTICAL" offset="72.0"/>
+    <guide name="Vertical guide_1" uuid="w9e73764e-f21c-480c-8461-eb937f6b470b" axis="VERTICAL" offset="540.0"/>
+    <guide name="Horizontal guide" uuid="w9aff9f98-3d35-43ad-b83d-d922212f6676" axis="HORIZONTAL" offset="509.01826484018267"/>
+    <guide name="Horizontal guide_1" uuid="wa9135f10-5c62-4d67-97c3-acbcfd5fe46a" axis="HORIZONTAL" offset="720.0"/>
    </layout-page>
   </layout>
-  <layout name="Hollywood Favourites" zoom="362" template="false" uuid="w1d7ba89e-2b73-4137-af44-d017d5c3405b">
-   <layout-page name="Default Page" height="792" width="612" orientation="PORTRAIT">
+  <layout name="Hollywood Favourites" uuid="w1d7ba89e-2b73-4137-af44-d017d5c3405b" zoom="357" template="false">
+   <layout-page name="Default Page" uuid="w9db5ac9d-1670-419d-bf5f-7a85bbdee6b0" height="792" width="612" orientation="PORTRAIT">
     <font name="Dialog" size="8" style="0"/>
-    <content-box name="Content from Label" width="335.6433934807262" height="34.6241140152178" xpos="49.4655458696555" ypos="390.3873595012292">
+    <content-box name="Content from Label" uuid="w88075c16-b70d-4fdd-b591-33672ce24e24" width="335.6433934807262" height="34.6241140152178" xpos="49.4655458696555" ypos="390.3873595012292">
      <font name="Dialog" size="8" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1118482">
+     <content-label name="Label" uuid="waac50fdd-1302-4680-823c-cd6205181862" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1118482">
       <text>Highest Rated Actors &amp; Actresses
 </text>
       <font name="Dialog" size="18" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Result Set: Highly Rated Directors" width="562.5344541303442" height="-173.1070161031206" xpos="49.4655458696555" ypos="238.97514483511463">
+    <content-box name="Content from Result Set: Highly Rated Directors" uuid="w83a3d06b-a9ae-43b1-be9a-530eb44140a2" width="562.5344541303442" height="-173.1070161031206" xpos="49.4655458696555" ypos="238.97514483511463">
      <font name="Dialog" size="8" style="0"/>
-     <content-result-set name="Result Set: Highly Rated Directors" uuid="w5beb6539-9c5b-4f7c-a9f7-26d1f21fb75d" query-id="08abb5e1-0f9e-4d55-9d27-8becb8a58c5d" null-string="(null)" border="NONE">
+     <content-result-set name="Result Set: Highly Rated Directors" uuid="w1ca12280-427e-43f5-89d4-1028a43a6de6" query-id="08abb5e1-0f9e-4d55-9d27-8becb8a58c5d" null-string="(null)" border="NONE">
       <header-font name="Dialog" size="8" style="1"/>
       <body-font name="Dialog" size="8" style="0"/>
-      <column-info name="DIRECTOR" width="106" column-info-item-id="a36497df-82c6-49a9-b4ed-e077d5edd001" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
+     </content-result-set>
+    </content-box>
+    <content-box name="Content from Result Set: Highly Rated Actors" uuid="w2ca46a82-af12-4065-b35c-aca986d1fd2c" width="335.6433934807262" height="269.23906579704055" xpos="49.4655458696555" ypos="426.2014699042413">
+     <font name="Dialog" size="8" style="0"/>
+     <content-result-set name="Result Set: Highly Rated Actors" uuid="w283a53e1-86c4-401b-8a46-eae73872d8c4" query-id="686da08d-05f7-4bd3-b4b3-1ffafc002095" null-string="(null)" border="NONE">
+      <header-font name="Dialog" size="8" style="1"/>
+      <body-font name="Dialog" size="8" style="0"/>
+      <column-info name="FIRST_NAME" uuid="wfae980dc-0a35-4be3-80fa-cbfa1ec1f0be" width="72" column-info-item-id="4bb94b49-aa9f-4fd3-a7e3-a96f521481d2" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
       </column-info>
-      <column-info name="TITLE" width="164" column-info-item-id="55da4a64-ecff-48c7-887f-97a999ae7a3b" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
+      <column-info name="LAST_NAME" uuid="w48775a72-dd4c-4c0e-97cd-b18ba84e5e02" width="72" column-info-item-id="485c181c-8259-4301-9a09-8c17602fe9a2" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
       </column-info>
-      <column-info name="RATING" width="34" column-info-item-id="369ee04c-b6b3-45e0-abce-3a212e29934c" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
+      <column-info name="TITLE" uuid="w19ef5f36-2998-4a9d-90b3-2ca291b0a797" width="72" column-info-item-id="2b1c7c32-6f2a-427f-b6a9-f73e296619cd" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
+      </column-info>
+      <column-info name="RATING" uuid="w23e39696-3110-479c-9830-cdb9d2fea8d0" width="72" column-info-item-id="7d1c3269-7f38-4eab-8c18-2164967faa6d" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
       </column-info>
      </content-result-set>
     </content-box>
-    <content-box name="Content from Result Set: Highly Rated Actors" width="335.6433934807262" height="269.23906579704055" xpos="49.4655458696555" ypos="426.2014699042413">
+    <content-box name="Content from Label_1" uuid="wef23d5c6-99b9-4783-9b6d-7d7cf55c7dca" width="562.5344541303442" height="26.175572519083495" xpos="49.4655458696555" ypos="750.0">
      <font name="Dialog" size="8" style="0"/>
-     <content-result-set name="Result Set: Highly Rated Actors" uuid="w126eeb0a-b74d-4571-b999-fa42b43b585a" query-id="686da08d-05f7-4bd3-b4b3-1ffafc002095" null-string="(null)" border="NONE">
-      <header-font name="Dialog" size="8" style="1"/>
-      <body-font name="Dialog" size="8" style="0"/>
-      <column-info name="FIRST NAME" width="75" column-info-item-id="4bb94b49-aa9f-4fd3-a7e3-a96f521481d2" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
-      </column-info>
-      <column-info name="LAST NAME" width="81" column-info-item-id="485c181c-8259-4301-9a09-8c17602fe9a2" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
-      </column-info>
-      <column-info name="TITLE" width="116" column-info-item-id="2b1c7c32-6f2a-427f-b6a9-f73e296619cd" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
-      </column-info>
-      <column-info name="RATING" width="40" column-info-item-id="7d1c3269-7f38-4eab-8c18-2164967faa6d" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
-       <decimal-format format="#,##0.00"/>
-      </column-info>
-     </content-result-set>
-    </content-box>
-    <content-box name="Content from Label_1" width="562.5344541303442" height="26.175572519083495" xpos="49.4655458696555" ypos="750.0">
-     <font name="Dialog" size="8" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="TOP">
+     <content-label name="Label" uuid="w2a972a87-f7ee-4252-acda-e31476136947" horizontal-align="LEFT" vertical-align="TOP" bg-colour="-1">
       <text>Made with Wabit ${wabit_version} - Free Reporting That Just Works.  http://www.sqlpower.ca/wabit</text>
       <font name="Dialog" size="8" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_2" width="335.6433934807262" height="29.29043802707005" xpos="49.4655458696555" ypos="210.03312250544172">
+    <content-box name="Content from Label_2" uuid="wf45ede31-6c05-4c30-b6d5-41f52b582de2" width="335.6433934807262" height="29.29043802707005" xpos="49.4655458696555" ypos="210.03312250544172">
      <font name="Dialog" size="8" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1118482">
+     <content-label name="Label" uuid="w28aebb61-4fad-48eb-ab5f-b6a121a9a69a" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1118482">
       <text>Highest Rated Directors</text>
       <font name="Dialog" size="18" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_3" width="335.6433934807262" height="123.8546535525555" xpos="49.4655458696555" ypos="53.10723192019979">
+    <content-box name="Content from Label_3" uuid="wfab0ca16-0dad-409e-8e4b-3ed1477b7156" width="335.6433934807262" height="123.8546535525555" xpos="49.4655458696555" ypos="53.10723192019979">
      <font name="Dialog" size="8" style="0"/>
-     <content-label name="Label" horizontal-align="LEFT" vertical-align="MIDDLE">
+     <content-label name="Label" uuid="w1cb5b0fa-a7d0-4c3a-be4e-98dab8f99dd3" horizontal-align="LEFT" vertical-align="MIDDLE" bg-colour="-1">
       <text>Hollywood
 Favourites</text>
       <font name="Dialog" size="48" style="2"/>
      </content-label>
     </content-box>
-    <content-box name="Content from null" width="446.39423076923055" height="302.2831050228311" xpos="409.0815420901083" ypos="390.3873595012292">
+    <content-box name="Content from ImageRenderer" uuid="w8343c487-f71f-4658-bddf-1f5824c70bad" width="446.39423076923055" height="302.2831050228311" xpos="409.0815420901083" ypos="390.3873595012292">
      <font name="Dialog" size="8" style="0"/>
-     <image-renderer wabit-image-uuid="w370c2b7c-f880-4dd3-a63c-b713999763b2" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="wb5729ac4-f2a6-4140-bcc3-2ceef0668153" wabit-image-uuid="w370c2b7c-f880-4dd3-a63c-b713999763b2" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <content-box name="Content from Result Set: Highly Rated Directors_1" width="335.6433934807262" height="111.23483759701101" xpos="49.4655458696555" ypos="239.31348769898747">
+    <content-box name="Content from Result Set: Highly Rated Directors_1" uuid="wa2c3ca41-e514-4299-b203-6e9d79bb59af" width="335.6433934807262" height="111.23483759701101" xpos="49.4655458696555" ypos="239.31348769898747">
      <font name="Dialog" size="8" style="0"/>
-     <content-result-set name="Result Set: Highly Rated Directors" uuid="wfa113cb0-e79e-4451-9a41-d89747988cd4" query-id="08abb5e1-0f9e-4d55-9d27-8becb8a58c5d" null-string="(null)" border="NONE">
+     <content-result-set name="Result Set: Highly Rated Directors" uuid="wb75fa62c-6806-479b-9c67-286babfbeb84" query-id="08abb5e1-0f9e-4d55-9d27-8becb8a58c5d" null-string="(null)" border="NONE">
       <header-font name="Dialog" size="8" style="1"/>
       <body-font name="Dialog" size="8" style="0"/>
-      <column-info name="DIRECTOR" width="126" column-info-item-id="a36497df-82c6-49a9-b4ed-e077d5edd001" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
+      <column-info name="DIRECTOR" uuid="w977009cb-9668-46f9-9851-96b3da470177" width="72" column-info-item-id="a36497df-82c6-49a9-b4ed-e077d5edd001" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
       </column-info>
-      <column-info name="TITLE" width="145" column-info-item-id="55da4a64-ecff-48c7-887f-97a999ae7a3b" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
+      <column-info name="TITLE" uuid="w579c0ff2-88d3-4d36-95e5-40bffa63fc80" width="72" column-info-item-id="55da4a64-ecff-48c7-887f-97a999ae7a3b" horizontal-align="LEFT" data-type="TEXT" group-or-break="NONE" will-subtotal="false">
       </column-info>
-      <column-info name="RATING" width="72" column-info-item-id="369ee04c-b6b3-45e0-abce-3a212e29934c" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
+      <column-info name="RATING" uuid="w404c75eb-9000-440b-a1c4-63151d39d461" width="72" column-info-item-id="369ee04c-b6b3-45e0-abce-3a212e29934c" horizontal-align="LEFT" data-type="NUMERIC" group-or-break="NONE" will-subtotal="false">
       </column-info>
      </content-result-set>
     </content-box>
-    <content-box name="Content from null_1" width="453.0455577558514" height="300.0" xpos="385.10893935038195" ypos="22.945205479452113">
+    <content-box name="Content from ImageRenderer_1" uuid="wab92ea16-8ada-4ab3-b017-8e2a8a0d12c5" width="453.0455577558514" height="300.0" xpos="385.10893935038195" ypos="22.945205479452113">
      <font name="Dialog" size="8" style="0"/>
-     <image-renderer wabit-image-uuid="wb85d6079-2d26-4e0f-8e9d-10f500b708d7" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="w68e02cf4-fbec-4ebc-90e1-81cb744cd051" wabit-image-uuid="wb85d6079-2d26-4e0f-8e9d-10f500b708d7" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <guide name="Vertical guide" axis="VERTICAL" offset="49.4655458696555"/>
-    <guide name="Vertical guide_1" axis="VERTICAL" offset="612.0"/>
-    <guide name="Horizontal guide" axis="HORIZONTAL" offset="53.10723192019979"/>
-    <guide name="Horizontal guide_1" axis="HORIZONTAL" offset="750.0"/>
-    <guide name="Horizontal guide_2" axis="HORIZONTAL" offset="322.9452054794521"/>
-    <guide name="Horizontal guide_3" axis="HORIZONTAL" offset="390.3873595012292"/>
-    <guide name="Vertical copy" axis="VERTICAL" offset="385.10893935038195"/>
+    <guide name="Vertical guide" uuid="w7529fc3e-9ce8-4156-abd0-9b79338b1b54" axis="VERTICAL" offset="49.4655458696555"/>
+    <guide name="Vertical guide_1" uuid="w0073f4d0-1114-43ea-b5bf-8044da10d170" axis="VERTICAL" offset="612.0"/>
+    <guide name="Horizontal guide" uuid="w019fa646-e169-4645-afc1-604e4833a76d" axis="HORIZONTAL" offset="53.10723192019979"/>
+    <guide name="Horizontal guide_1" uuid="wfa0ad04c-a8b3-4cfa-b77e-2f04ffec56b3" axis="HORIZONTAL" offset="750.0"/>
+    <guide name="Horizontal guide_2" uuid="w6c095a71-d88d-457c-bb55-9e96adefe6d1" axis="HORIZONTAL" offset="322.9452054794521"/>
+    <guide name="Horizontal guide_3" uuid="we96bafbb-9fd4-4ff0-863c-2294a6d479b6" axis="HORIZONTAL" offset="390.3873595012292"/>
+    <guide name="Vertical copy" uuid="w1b29e692-b7cc-4003-b163-0894fa05615c" axis="VERTICAL" offset="385.10893935038195"/>
    </layout-page>
   </layout>
-  <layout name="Life Expectancy And GNP Correlation" zoom="469" template="false" uuid="w35feabb1-d692-43f5-83ea-4c8e2bc5c55a">
-   <layout-page name="Default Page" height="612" width="792" orientation="LANDSCAPE">
+  <layout name="Life Expectancy And GNP Correlation" uuid="w35feabb1-d692-43f5-83ea-4c8e2bc5c55a" zoom="462" template="false">
+   <layout-page name="Default Page" uuid="w34a533b3-7617-4f7c-8fe4-45937eb6d08f" height="612" width="792" orientation="LANDSCAPE">
     <font name="Dialog" size="10" style="0"/>
-    <content-box name="Content from Life Expectancy And GNP Correlation" width="569.3506835570049" height="137.78659611992947" xpos="111.64931644299514" ypos="116.31393298059963">
+    <content-box name="Content from Life Expectancy And GNP Correlation" uuid="w63325b07-5416-4f13-8d89-ae097c73f40e" width="569.3506835570049" height="137.78659611992947" xpos="111.64931644299514" ypos="116.31393298059963">
      <font name="Dialog" size="10" style="0"/>
      <cell-set-renderer name="Life Expectancy And GNP Correlation" uuid="wf53107a3-e790-41e9-ac1f-2e7f298de398" olap-query-uuid="w34aa0826-197c-41a3-8361-bef5c5d0ad30" body-alignment="RIGHT"     >
       <olap-header-font name="Dialog" size="12" style="0"/>
       <olap-body-font name="Dialog" size="12" style="0"/>
-      <olap-query uuid="wd616900f-8e49-49b5-b537-5ecc76862626" data-source="World Facts OLAP Connection"      >
-       <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"       />
+      <olap-query name="unnamed" uuid="wd616900f-8e49-49b5-b537-5ecc76862626" data-source="World Facts OLAP Connection">
+       <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"/>
        <olap4j-query name="GUI Query">
         <olap4j-axis ordinal="1" non-empty="false">
          <olap4j-dimension dimension-name="Geography">
@@ -14432,40 +14425,40 @@ Favourites</text>
       </olap-query>
      </cell-set-renderer>
     </content-box>
-    <content-box name="Content from Label" width="791.4285714285728" height="87.2134038800706" xpos="0.0" ypos="0.0">
+    <content-box name="Content from Label" uuid="w7aa1d50f-c7f5-496b-8a41-44dd17cc03ce" width="791.4285714285728" height="87.2134038800706" xpos="0.0" ypos="0.0">
      <font name="Dialog" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1118482">
+     <content-label name="Label" uuid="w0c312f1f-0edc-443e-95c8-7dcfcd9a0b3c" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1118482">
       <text>Life Expectancy And GNP Correlation</text>
       <font name="Dialog" size="30" style="3"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_1" width="569.3506835570049" height="24.0" xpos="111.64931644299514" ypos="564.0">
+    <content-box name="Content from Label_1" uuid="w66396ad3-4fb5-42b2-b1f7-0da61c6519b5" width="569.3506835570049" height="24.0" xpos="111.64931644299514" ypos="564.0">
      <font name="Dialog" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="TOP">
+     <content-label name="Label" uuid="wd84066db-f462-4ba7-9385-ebddc3ce0606" horizontal-align="CENTER" vertical-align="TOP" bg-colour="-1">
       <text>Made with Wabit ${wabit_version} - Free Reporting That Just Works.  http://www.sqlpower.ca/wabit</text>
       <font name="Dialog" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Life Expectancy And GNP Correlation Chart" width="569.3506835570049" height="246.0832310757499" xpos="111.64931644299514" ypos="290.15328521729174">
+    <content-box name="Content from Life Expectancy And GNP Correlation Chart" uuid="w1e4fb1f3-7b9e-4574-9b24-1de8d0bb99df" width="569.3506835570049" height="246.0832310757499" xpos="111.64931644299514" ypos="290.15328521729174">
      <font name="Dialog" size="10" style="0"/>
      <chart-renderer name="Life Expectancy And GNP Correlation Chart" uuid="wf39536df-94f1-47fd-b8ef-ff9617443c5d" chart-uuid="wfc21edab-b5f7-4fd9-b707-2416609676b1"      />
     </content-box>
-    <guide name="Vertical guide" axis="VERTICAL" offset="111.64931644299514"/>
-    <guide name="Vertical guide_1" axis="VERTICAL" offset="681.0"/>
-    <guide name="Horizontal guide" axis="HORIZONTAL" offset="87.21340388007059"/>
-    <guide name="Horizontal guide_1" axis="HORIZONTAL" offset="564.0"/>
+    <guide name="Vertical guide" uuid="we54542da-4cf1-4be0-b93a-19122610c697" axis="VERTICAL" offset="111.64931644299514"/>
+    <guide name="Vertical guide_1" uuid="w26588114-ae8a-4244-b2b3-dec7c505a00f" axis="VERTICAL" offset="681.0"/>
+    <guide name="Horizontal guide" uuid="w74ccd80a-a61d-4eb4-8da2-ac64bf6c542f" axis="HORIZONTAL" offset="87.21340388007059"/>
+    <guide name="Horizontal guide_1" uuid="w5b6c9c63-8364-4e09-acfa-54a1845b27ea" axis="HORIZONTAL" offset="564.0"/>
    </layout-page>
   </layout>
-  <layout name="Western Europe GNP Analysis" zoom="468" template="false" uuid="w4d9c8556-2f8e-4337-95d2-b1a95d2a66ab">
-   <layout-page name="Default Page" height="613" width="794" orientation="LANDSCAPE">
+  <layout name="Western Europe GNP Analysis" uuid="w4d9c8556-2f8e-4337-95d2-b1a95d2a66ab" zoom="461" template="false">
+   <layout-page name="Default Page" uuid="w797eb19f-440f-46eb-8aec-67674167d8cc" height="613" width="794" orientation="LANDSCAPE">
     <font name="Dialog" size="10" style="0"/>
-    <content-box name="Content from Western Europe GNP Analysis" width="289.54770318021156" height="144.43391169097885" xpos="461.45229681978844" ypos="118.72863247863246">
+    <content-box name="Content from Western Europe GNP Analysis" uuid="we573265b-7a08-4e1f-9314-8f73cc541a17" width="289.54770318021156" height="144.43391169097885" xpos="461.45229681978844" ypos="118.72863247863246">
      <font name="Dialog" size="10" style="0"/>
      <cell-set-renderer name="Western Europe GNP Analysis" uuid="w799a39f4-343b-476b-94f9-b84366a4a9d4" olap-query-uuid="w9577bd13-e7fb-4306-882d-03bf095df383" body-alignment="RIGHT"     >
       <olap-header-font name="Dialog" size="10" style="0"/>
       <olap-body-font name="Dialog" size="9" style="0"/>
-      <olap-query uuid="wf51feede-5401-48ae-bb33-ee915ec3a259" data-source="World Facts OLAP Connection"      >
-       <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"       />
+      <olap-query name="unnamed" uuid="wf51feede-5401-48ae-bb33-ee915ec3a259" data-source="World Facts OLAP Connection">
+       <olap-cube catalog="LOCALDB" schema="World" cube-name="World Countries"/>
        <olap4j-query name="GUI Query">
         <olap4j-axis ordinal="1" non-empty="false">
          <olap4j-dimension dimension-name="Geography">
@@ -14492,39 +14485,39 @@ Favourites</text>
       </olap-query>
      </cell-set-renderer>
     </content-box>
-    <content-box name="Content from Label" width="794.2862190812721" height="95.31802120141342" xpos="0.0" ypos="0.0">
+    <content-box name="Content from Label" uuid="w8a0299e6-a290-466a-a5d6-5f264b6f9b69" width="794.2862190812721" height="95.31802120141342" xpos="0.0" ypos="0.0">
      <font name="Dialog" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1118482">
+     <content-label name="Label" uuid="w9ab7d45c-b7d0-41f0-8202-81af4a3cceb0" horizontal-align="CENTER" vertical-align="MIDDLE" bg-colour="-1118482">
       <text>Western Europe GNP Analysis</text>
       <font name="Dialog" size="30" style="3"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Label_1" width="712.0" height="24.0" xpos="39.0" ypos="575.0">
+    <content-box name="Content from Label_1" uuid="w6138987a-2e56-4109-aba0-daa05b1f7894" width="712.0" height="24.0" xpos="39.0" ypos="575.0">
      <font name="Dialog" size="10" style="0"/>
-     <content-label name="Label" horizontal-align="CENTER" vertical-align="TOP">
+     <content-label name="Label" uuid="wdc6f599d-ccb3-4796-a3c2-c05c30070fe8" horizontal-align="CENTER" vertical-align="TOP" bg-colour="-1">
       <text>Made with Wabit ${wabit_version} - Free Reporting That Just Works.  http://www.sqlpower.ca/wabit</text>
       <font name="Dialog" size="10" style="0"/>
      </content-label>
     </content-box>
-    <content-box name="Content from Population" width="287.9647911274566" height="238.51590106007114" xpos="463.0352088725434" ypos="301.48409893992886">
+    <content-box name="Content from Population" uuid="w633a5d4a-948c-436c-9cc5-010fd4dd6efe" width="287.9647911274566" height="238.51590106007114" xpos="463.0352088725434" ypos="301.48409893992886">
      <font name="Dialog" size="10" style="0"/>
      <chart-renderer name="Population" uuid="w94428346-1225-4bda-a60d-efca7f7c9cd2" chart-uuid="w185634d8-4b05-4aac-b953-0056d7d9ebed"      />
     </content-box>
-    <content-box name="Content from GNP" width="408.10613388364027" height="421.27136752136755" xpos="39.0" ypos="118.72863247863246">
+    <content-box name="Content from GNP" uuid="wd9254819-3b2f-4883-b49b-672ba0695a48" width="408.10613388364027" height="421.27136752136755" xpos="39.0" ypos="118.72863247863246">
      <font name="Dialog" size="10" style="0"/>
      <chart-renderer name="GNP" uuid="w3d85b094-af9f-455d-b576-01fbbcb86bc1" chart-uuid="w717235a9-dfae-4237-90f1-bb268a70f54f"      />
     </content-box>
-    <content-box name="Content from null" width="81.31095406360417" height="69.6219081272084" xpos="656.4381625441697" ypos="351.4028268551235">
+    <content-box name="Content from ImageRenderer" uuid="w773d2bd7-b2ab-4d32-8599-bca0a9e328dc" width="81.31095406360417" height="69.6219081272084" xpos="669.6890459363958" ypos="301.5112867249718">
      <font name="Dialog" size="10" style="0"/>
-     <image-renderer wabit-image-uuid="wae5d2277-d7e3-457a-b9c1-ab48d5b95c89" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
+     <image-renderer name="ImageRenderer" uuid="wd4a66812-965d-4494-a48c-b87f6d3f12de" wabit-image-uuid="wae5d2277-d7e3-457a-b9c1-ab48d5b95c89" preserving-aspect-ratio="true" h-align="LEFT" v-align="TOP"></image-renderer>
     </content-box>
-    <guide name="Vertical guide" axis="VERTICAL" offset="39.0"/>
-    <guide name="Vertical guide_1" axis="VERTICAL" offset="751.0"/>
-    <guide name="Horizontal guide" axis="HORIZONTAL" offset="95.31802120141342"/>
-    <guide name="Horizontal guide_1" axis="HORIZONTAL" offset="540.0"/>
-    <guide name="Horizontal copy" axis="HORIZONTAL" offset="263.1625441696113"/>
-    <guide name="Horizontal copy_1" axis="HORIZONTAL" offset="263.1625441696113"/>
-    <guide name="Horizontal copy_2" axis="HORIZONTAL" offset="118.72863247863246"/>
+    <guide name="Vertical guide" uuid="w7e6b1705-bc72-4457-a3dd-b825709778a0" axis="VERTICAL" offset="39.0"/>
+    <guide name="Vertical guide_1" uuid="w671ab3ea-3c8b-400d-9307-37b5469ceb32" axis="VERTICAL" offset="751.0"/>
+    <guide name="Horizontal guide" uuid="wf0758d0d-b683-4c24-bbf0-d9d4a6295dae" axis="HORIZONTAL" offset="95.31802120141342"/>
+    <guide name="Horizontal guide_1" uuid="we6dbc897-7a0b-4623-b067-76702d0d556d" axis="HORIZONTAL" offset="540.0"/>
+    <guide name="Horizontal copy" uuid="w3a2e6383-2d8e-4fc1-a006-b9aa753fef9f" axis="HORIZONTAL" offset="263.1625441696113"/>
+    <guide name="Horizontal copy_1" uuid="wb32ca129-d1b7-44fd-a014-1e4763aa8b3f" axis="HORIZONTAL" offset="263.1625441696113"/>
+    <guide name="Horizontal copy_2" uuid="w2c696e84-32f2-427c-80db-ddb0e3f46ebb" axis="HORIZONTAL" offset="118.72863247863246"/>
    </layout-page>
   </layout>
  </project>

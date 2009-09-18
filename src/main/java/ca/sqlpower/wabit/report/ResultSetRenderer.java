@@ -317,7 +317,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	
     public ResultSetRenderer(@Nonnull QueryCache query) {
     	this(query, new ArrayList<ColumnInfo>());
-    	setName("Result Set: " + query.getName());
     }
     
     public ResultSetRenderer(@Nonnull QueryCache query, @Nonnull List<ColumnInfo> columnInfoList) {

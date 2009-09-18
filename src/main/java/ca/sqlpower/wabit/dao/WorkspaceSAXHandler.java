@@ -73,6 +73,7 @@ import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -103,6 +104,7 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.
@@ -256,6 +258,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      */
     private boolean readingMissingChartCols;
 
+    private boolean nameMandatory;
+
+    private boolean uuidMandatory;
+
     /**
      * Creates a new SAX handler which is capable of reading in a series of
      * workspace descriptions from an XML stream. The list of workspaces
@@ -295,7 +301,11 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
 		xmlContext.push(name);
 
+		final WabitObject createdObject;
+		
 		if (name.equals("wabit")) {
+		    createdObject = null;
+		    
 		    String versionString = attributes.getValue("export-format");
 		    
 		    //NOTE: For correct versioning behaviour see WorkspaceXMLDAO.FILE_VERSION.
@@ -342,6 +352,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		            displayMessage = false;
 		        }
 		        
+		        if (fileVersion.compareTo(new Version("1.2.4")) >= 0) {
+                    nameMandatory = true;
+                    uuidMandatory = true;
+                } else {
+                    nameMandatory = false;
+                    uuidMandatory = false;
+		        }
+		        
 		        if (displayMessage) {
 		            UserPrompter up = promptFactory.createUserPrompter(
                             message,
@@ -359,14 +377,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             } else {
                 session = context.createServerSession(serverInfo);
             }
+            createdObject = session.getWorkspace();
             sessions.add(session);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
 
-                if (aname.equals("name")) {
-                    session.getWorkspace().setName(aval);
-                } else if (aname.equals("editorPanelModel")) {
+                if (aname.equals("editorPanelModel")) {
                     currentEditorPanelModel = aval;
                 } else {
                     logger.warn("Unexpected attribute of <project>: " + aname + "=" + aval);
@@ -394,23 +411,28 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		UserPromptResponse response = prompter.promptUser();
         		if (response == UserPromptResponse.OK || response == UserPromptResponse.NEW) {
         			ds = (SPDataSource) prompter.getUserSelectedResponse();
+        			createdObject = new WabitDataSource(ds);
         			if (!session.getWorkspace().dsAlreadyAdded(ds)) {
         				session.getWorkspace().addDataSource(ds);
         			}
         			oldToNewDSNames.put(dsName, ds.getName());
         		} else if (response == UserPromptResponse.NOT_OK) {
         			ds = null;
+        			createdObject = null;
         		} else {
         			setCancelled(true);
         			context.deregisterChildSession(session);
+        			createdObject = null;
         		}
         	} else if (!session.getWorkspace().dsAlreadyAdded(ds)) {
         		session.getWorkspace().addDataSource(ds);
+        		createdObject = new WabitDataSource(ds);
+        	} else {
+        	    createdObject = null;
         	}
         } else if (name.equals("query")) {
-        	String uuid = attributes.getValue("uuid");
-        	checkMandatory("uuid", uuid);
-        	cache = new QueryCache(uuid, session.getContext());
+        	cache = new QueryCache(session.getContext());
+        	createdObject = cache;
         	
         	String queryName = attributes.getValue("name");
         	cache.setName(queryName);
@@ -457,6 +479,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	}
         	session.getWorkspace().addQuery(cache, session);
         } else if (name.equals("constants")) {
+            createdObject = null;
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
         	Container constants = cache.newConstantsContainer(uuid);
@@ -475,6 +498,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
         	}
         } else if (name.equals("table")) {
+            createdObject = null;
         	String tableName = attributes.getValue("name");
         	String schema = attributes.getValue("schema");
         	String catalog = attributes.getValue("catalog");
@@ -500,6 +524,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	container = table;
         	containerItems = new ArrayList<SQLObjectItem>();
         } else if (name.equals("column")) {
+            createdObject = null;
         	if (parentIs("constants")) {
         		String itemName = attributes.getValue("name");
         		String uuid = attributes.getValue("id");
@@ -566,6 +591,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("A column is being loaded that is not contained by any tables. Parent is " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("join")) {
+            createdObject = null;
         	String leftUUID = attributes.getValue("left-item-id");
         	String rightUUID = attributes.getValue("right-item-id");
         	checkMandatory("left-item-id", leftUUID);
@@ -596,10 +622,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	}
         	cache.addJoin(join);
         } else if (name.equals("select")) {
+            createdObject = null;
         	// Select portion loaded in the "column" part above.
         } else if (name.equals("global-where")) {
+            createdObject = null;
         	cache.setGlobalWhereClause(attributes.getValue("text"));
         } else if (name.equals("group-by-aggregate")) { // For backwards compatibility to Wabit 0.9.6 and older
+            createdObject = null;
         	String uuid = attributes.getValue("column-id");
         	String aggregate = attributes.getValue("aggregate");
         	checkMandatory("column-id", uuid);
@@ -611,6 +640,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	cache.setGroupingEnabled(true);
         	item.setGroupBy(SQLGroupFunction.getGroupType(aggregate));
         } else if (name.equals("having")) { // For backwards compatibility to Wabit 0.9.6 and older
+            createdObject = null;
         	String uuid = attributes.getValue("column-id");
         	String text = attributes.getValue("text");
         	checkMandatory("column-id", uuid);
@@ -622,6 +652,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	cache.setGroupingEnabled(true);
         	item.setHaving(text);
         } else if (name.equals("order-by")) {
+            createdObject = null;
         	String uuid = attributes.getValue("column-id");
         	checkMandatory("column-id", uuid);
          	Item item = uuidToItemMap.get(uuid);
@@ -643,25 +674,24 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	//order and were placed in the query in an incorrect order to sort the columns in.
         	cache.moveSortedItemToEnd(item);
         } else if (name.equals("query-string")) {
+            createdObject = null;
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
         	cache.defineUserModifiedQuery(queryString);
         } else if (name.equals("text") && parentIs("query")) {
+            createdObject = null;
             byteStream = new ByteArrayOutputStream();
             loadingText = true;
         } else if (name.equals("olap-query")) {
-            loadOlapQuery(attributes);
+            createdObject = loadOlapQuery(attributes);
         } else if (name.equals("olap-cube") || name.equals("olap4j-query") || name.equals("olap4j-axis")
         		|| name.equals("olap4j-dimension") || name.equals("olap4j-selection") || name.equals("olap4j-exclusion")) {
             olapQuery.appendElement(name, attributes);
+            createdObject = null;
         } else if (name.equals("wabit-image")) {
-            String wabitImageName = attributes.getValue("name");
-            String wabitImageUUID = attributes.getValue("uuid");
-            currentWabitImage = new WabitImage(wabitImageUUID);
-            currentWabitImage.setName(wabitImageName);
+            currentWabitImage = new WabitImage();
+            createdObject = currentWabitImage;
             session.getWorkspace().addImage(currentWabitImage);
-            
-            progressMessage = session.getWorkspace().getName() + " : loading image " + wabitImageName;
             
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
@@ -675,16 +705,14 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             byteStream = new ByteArrayOutputStream();
             
         } else if (name.equals("chart")) {
-            String uuid = attributes.getValue("uuid");
-            chart = new Chart(uuid);
+            chart = new Chart();
+            createdObject = chart;
             session.getWorkspace().addChart(chart);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
                 if (aname.equals("uuid")) {
                     //already loaded
-                } else if (aname.equals("name")) {
-                    chart.setName(aval);
                 } else if (aname.equals("y-axis-name")) {
                     chart.setYaxisName(aval);
                 } else if (aname.equals("x-axis-name")) {
@@ -736,6 +764,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
         } else if (name.equals("chart-column")) {
             ChartColumn colIdentifier = loadColumnIdentifier(attributes, "");
+            createdObject = colIdentifier;
             if (colIdentifier == null) {
                 throw new IllegalStateException("The chart " + chart.getName() + " with uuid " + chart.getUUID() + " has a missing column identifier when ordering columns and cannot be loaded.");
             }
@@ -761,19 +790,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         
         } else if (name.equals("missing-columns")) {
             readingMissingChartCols = true;
+            createdObject = null;
 
         } else if (name.equals("layout")) {
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
     		if (attributes.getValue("template") == null || !Boolean.parseBoolean(attributes.getValue("template"))) {
-    			layout = new Report(layoutName, attributes.getValue("uuid"));
+    			layout = new Report(layoutName);
     			session.getWorkspace().addReport((Report) layout);
     		} else {
-    			layout = new Template(layoutName, attributes.getValue("uuid"));
+    			layout = new Template(layoutName);
     			session.getWorkspace().addTemplate((Template) layout);
     		}
+    		createdObject = layout;
     		
-    		progressMessage = session.getWorkspace().getName() + " : loading layout " + layoutName;
+    		
     		
           	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -788,9 +819,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
           	}
    
         } else if (name.equals("layout-page")) {
-        	String pageName = attributes.getValue("name");
-        	checkMandatory("name", pageName);
         	Page page = layout.getPage();
+        	createdObject = page;
         	//Remove all guides from the page as they will be loaded in a later
         	//part of this handler.
         	for (WabitObject object : page.getChildren()) {
@@ -798,7 +828,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			page.removeGuide((Guide) object);
         		}
         	}
-			page.setName(pageName);
 			
 			//This sets the orientation before setting the width and height to prevent
 			//a change in the orientation from switching the width and height. If the
@@ -826,10 +855,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
         	}
         } else if (name.equals("content-box")) {
-        	String boxName = attributes.getValue("name");
-        	checkMandatory("name", boxName);
         	contentBox = new ContentBox();
-			contentBox.setName(boxName);
+        	createdObject = contentBox;
         	layout.getPage().addContentBox(contentBox);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -850,12 +877,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
          	}
         } else if (name.equals("content-label")) {
         	Label label = new Label();
+        	createdObject = label;
         	contentBox.setContentRenderer(label);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
         		if (aname.equals("name")) {
-        			label.setName(aval);
+        		    //handled elsewhere
         		} else if (aname.equals("text")) {
         			label.setText(aval);
         		} else if (aname.equals("horizontal-align")) {
@@ -869,11 +897,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
          	}
         } else if (name.equals("text") && parentIs("content-label")) {
+            createdObject = null;
          	byteStream = new ByteArrayOutputStream();
          	loadingText = true;
         } else if (name.equals("image-renderer")) {
         	imageRenderer = new ImageRenderer();
-        	
+        	createdObject = imageRenderer;
         	//Old image renderers always had the image in the top left. If
         	//the file is new it will have the horizontal and vertical alignments
         	//set.
@@ -885,7 +914,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
         		if (aname.equals("name")) {
-        			imageRenderer.setName(aval);
+        			//Handled elsewhere
         		} else if (aname.equals("wabit-image-uuid")) {
         		    for (WabitImage image : session.getWorkspace().getImages()) {
         		        if (image.getUUID().equals(aval)) {
@@ -919,25 +948,18 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                         " to be attached to a chart renderer");
             }
             
-            String uuid = attributes.getValue("uuid");
-            final ChartRenderer chartRenderer;
-            if (uuid == null) {
-                chartRenderer = new ChartRenderer(chart);
-                contentBox.setWidth(100);
-                contentBox.setHeight(100);
-            } else {
-                chartRenderer = new ChartRenderer(uuid, chart);
-            }
+            final ChartRenderer chartRenderer = new ChartRenderer(chart);
+            createdObject = chartRenderer;
             contentBox.setContentRenderer(chartRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
                 if (aname.equals("uuid")) {
-                    // already handled
+                    // handled elsewhere
                 } else if (aname.equals("chart-uuid")) {
                     // already handled
                 } else if (aname.equals("name")) {
-                    chartRenderer.setName(aval);
+                    // handled elsewhere
                 } else {
                     logger.warn("Unexpected attribute of <chart-renderer>: " + aname + "=" + aval);
                 }
@@ -946,21 +968,16 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
-        	QueryCache query = null;
-        	for (QueryCache q : session.getWorkspace().getQueries()) {
-        		if (q.getUUID().equals(queryID)) {
-        			query = q;
-        			break;
-        		}
-        	}
+        	QueryCache query = session.getWorkspace().findByUuid(queryID, QueryCache.class);
         	rsRenderer = new ResultSetRenderer(query);
+        	createdObject = rsRenderer;
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
         		if (aname.equals("query-id")) {
-        			//already loaded
+        			// handled elsewhere
         		} else if (aname.equals("name")) {
-        			rsRenderer.setName(aval);
+        			// handled elsewhere
         		} else if (aname.equals("null-string")) {
         			rsRenderer.setNullString(aval);
         		} else if (aname.equals("bg-colour")) {
@@ -973,21 +990,25 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
         		}
          	}
-			columnInfoList.clear();
+			//columnInfoList.clear();
+         	contentBox.setContentRenderer(rsRenderer);
         } else if (name.equals("header-font")) {
         	if (parentIs("content-result-set")) {
         		rsRenderer.setHeaderFont(loadFont(attributes));
+        		createdObject = null;
         	} else {
         		throw new IllegalStateException("There are no header fonts defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("body-font")) {
         	if (parentIs("content-result-set")) {
+        	    createdObject = null;
         		rsRenderer.setBodyFont(loadFont(attributes));
         	} else {
         		throw new IllegalStateException("There are no body fonts defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("column-info")) {
         	colInfo = null;
+        	createdObject = null; //Not going to set name later, as this may break alias association
         	String colInfoName = attributes.getValue("name");
         	String colInfoItem = attributes.getValue("column-info-item-id");
         	
@@ -1021,6 +1042,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		String aval = attributes.getValue(i);
         		if (aname.equals("column-info-key") || aname.equals("name")) {
         			//already loaded
+        		} else if (aname.equals("uuid")){
+        		    colInfo.setUUID(aval);  
         		} else if (aname.equals("width")) {
         			colInfo.setWidth(Integer.parseInt(aval));
         		} else if (aname.equals("horizontal-align")) {
@@ -1043,6 +1066,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	}
         	columnInfoList.add(colInfo);
         } else if (name.equals("date-format")) {
+            createdObject = null;
         	if (parentIs("column-info")) {
         		String format = attributes.getValue("format");
         		checkMandatory("format", format);
@@ -1051,6 +1075,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("decimal-format")) {
+            createdObject = null;
         	if (parentIs("column-info")) {
         		String format = attributes.getValue("format");
         		checkMandatory("format", format);
@@ -1071,15 +1096,16 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             if (newQuery == null) {
                 throw new NullPointerException("Cannot load workspace due to missing olap query in report.");
             }
-            cellSetRenderer = new CellSetRenderer(newQuery, uuid);
+            cellSetRenderer = new CellSetRenderer(newQuery);
+            createdObject = cellSetRenderer;
             contentBox.setContentRenderer(cellSetRenderer);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
                 if (aname.equals("uuid") || aname.equals("olap-query-uuid")) {
-                    //already loaded
+                    // handled elsewhere
                 } else if (aname.equals("name")) {
-                    cellSetRenderer.setName(aval);
+                    // handled elsewhere
                 } else if (aname.equals("body-alignment")) {
                     cellSetRenderer.setBodyAlignment(HorizontalAlignment.valueOf(aval));
                 } else if (aname.equals("body-format-pattern")) {
@@ -1090,21 +1116,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             }
             
         } else if (name.equals("olap-header-font")) {
+            createdObject = null;
             cellSetRenderer.setHeaderFont(loadFont(attributes));
         } else if (name.equals("olap-body-font")) {
+            createdObject = null;
             cellSetRenderer.setBodyFont(loadFont(attributes));
         } else if (name.equals("guide")) {
-        	String guideName = attributes.getValue("name");
         	String axisName = attributes.getValue("axis");
         	String offsetAmount = attributes.getValue("offset");
         	checkMandatory("axis", axisName);
         	checkMandatory("offset", offsetAmount);
         	Guide guide = new Guide(Axis.valueOf(axisName), Double.parseDouble(offsetAmount));
-        	if(guideName != null) {
-        		guide.setName(guideName);
-        	}
+        	createdObject = guide;
         	layout.getPage().addGuide(guide);
         } else if (name.equals("font")) {
+            createdObject = null;
         	Font font = loadFont(attributes);
         	if (parentIs("layout-page")) {
         		layout.getPage().setDefaultFont(font);
@@ -1113,11 +1139,31 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	} else if (parentIs("content-label")) {
         		((Label) contentBox.getContentRenderer()).setFont(font);
         	}
+        } else {
+            createdObject = null;
+            logger.warn("Unknown object type: " + name);
         }
+		
+		if (createdObject != null){
+		    String valName = attributes.getValue("name");
+		    String valUUID = attributes.getValue("uuid");
+            if (nameMandatory) {
+                checkMandatory("name", valName);
+            }
+            if (uuidMandatory) {
+                checkMandatory("uuid", valUUID);
+            }
+            if (valName != null) {
+                createdObject.setName(valName);
+		    }
+		    createdObject.setUUID(valUUID);
+		    
+		    progressMessage = session.getWorkspace().getName() + ": reading " + valName;
+		}
 		
 	}
 
-    private void loadOlapQuery(Attributes attributes) throws SAXException {
+    private OlapQuery loadOlapQuery(Attributes attributes) throws SAXException {
         String uuid = attributes.getValue("uuid");
         checkMandatory("uuid", uuid);
         olapQuery = new OlapQuery(uuid, session.getContext());
@@ -1152,6 +1198,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                 logger.warn("Unexpected attribute of <olap-query>: " + aname + " = " + aval);
             }
         }
+        return olapQuery;
     }
 
     /**
@@ -1290,17 +1337,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		table.setPosition(container.getPosition());
     		table.setAlias(container.getAlias());
     		cache.addTable(table);
-    		
-    	} else if (name.equals("content-result-set")) {
-    		ResultSetRenderer newRSRenderer = new ResultSetRenderer(rsRenderer.getQuery(), columnInfoList);
-    		newRSRenderer.setBodyFont(rsRenderer.getBodyFont());
-    		newRSRenderer.setHeaderFont(rsRenderer.getHeaderFont());
-    		newRSRenderer.setName(rsRenderer.getName());
-    		newRSRenderer.setNullString(rsRenderer.getNullString());
-    		newRSRenderer.setBackgroundColour(rsRenderer.getBackgroundColour());
-    		newRSRenderer.setBorderType(rsRenderer.getBorderType());
-    		contentBox.setContentRenderer(newRSRenderer);
-    		
     	} else if (name.equals("image-renderer")) {
     	    //This was loading an image for 1.1.2 and older.
     		byte[] byteArray = new Base64().decode(byteStream.toByteArray());

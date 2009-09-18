@@ -50,17 +50,12 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
 	private final Chart chart;
 	
-	public ChartRenderer(String uuid, @Nonnull Chart chart) {
-		super(uuid);
+	public ChartRenderer(@Nonnull Chart chart) {
 		if (chart == null) {
 		    throw new NullPointerException("Null chart not permitted");
 		}
         this.chart = chart;
-		setName(chart.getName());
-	}
-	
-    public ChartRenderer(Chart chart) {
-        this(null, chart);
+		setName("Renderer of: " + chart.getName());
 	}
     
 	public Color getBackgroundColour() {

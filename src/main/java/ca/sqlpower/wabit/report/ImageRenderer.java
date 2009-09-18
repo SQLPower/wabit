@@ -94,13 +94,14 @@ public class ImageRenderer extends AbstractWabitObject implements
 	};
 	
 	public ImageRenderer() {
-		//default constructor
+		setName("ImageRenderer");
 	}
 	
 	/**
 	 * Copy constructor
 	 */
 	public ImageRenderer(ImageRenderer imageRenderer) {
+	    this();
 		this.image = imageRenderer.getImage();
 		this.filename = imageRenderer.getFilename();
 	}

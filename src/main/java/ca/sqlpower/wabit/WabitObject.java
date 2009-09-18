@@ -88,6 +88,8 @@ public interface WabitObject {
     
     String getUUID();
     
+    void setUUID(String uuid);
+    
     /**
      * Sets the UUID of this object to a newly generated UUID. This is necessary
      * if the object is being cloned or copied to a new workspace.

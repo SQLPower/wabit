@@ -67,6 +67,9 @@ public class StubWabitObject implements WabitObject {
 	public String getUUID() {
 		return null;
 	}
+	
+	public void setUUID(String uuid){
+	}
 
     public List<WabitObject> getDependencies() {
         return null;

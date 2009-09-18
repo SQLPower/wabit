@@ -23,6 +23,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import ca.sqlpower.sql.SPDataSource;
 
@@ -32,6 +33,8 @@ import ca.sqlpower.sql.SPDataSource;
  */
 public class WabitDataSource extends AbstractWabitObject {
 
+    private static final String UUID_KEY_NAME = "ca.sqlpower.wabit.WabitDataSource.UUID";
+    
 	/**
 	 * Underlying {@link SPDataSource} object that actually contains all the
 	 * database connection info.
@@ -49,6 +52,39 @@ public class WabitDataSource extends AbstractWabitObject {
 			}
 		});
 	    // TODO listen for changes in DS and rebroadcast the appropriate ones
+	}
+
+    /**
+     * Gets the UUID associated with this instance's data source. This class
+     * does not store its own UUID, as in implementation, these instances are
+     * instantiated and removed often, but the data source they are wrapping
+     * stays constant.
+     * 
+     * @return The UUID, a unique identifying string associated with this instance's
+     *         data source.
+     */
+	@Override
+	public String getUUID(){
+	    String uuid = dataSource.get(UUID_KEY_NAME);
+	    if (uuid == null){
+	        generateNewUUID();
+	        uuid = super.getUUID();
+	        dataSource.put(UUID_KEY_NAME, uuid);
+	    }
+	    return uuid;
+	}
+	
+	/**
+	 * Sets the UUID associated with this instance's data source. This class
+     * does not store its own UUID, as in implementation, these instances are
+     * instantiated and removed often, but the data source they are wrapping
+     * stays constant.
+     * 
+     * @param  The UUID, a unique identifying string associated with this instance's
+     *         data source.
+	 */
+	public void setUUID(String uuid){
+	    dataSource.put(UUID_KEY_NAME, uuid);
 	}
 	
 	public boolean allowsChildren() {

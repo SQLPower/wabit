@@ -132,6 +132,7 @@ public class SaveWorkspaceAsAction extends AbstractAction {
         }
         
         try {
+            session.getWorkspace().generateNewUUID();
             selectedFile = saveSessionToFile(context, session, selectedFile);
         } catch (SaveException e) {
             JOptionPane.showMessageDialog(context.getFrame(),

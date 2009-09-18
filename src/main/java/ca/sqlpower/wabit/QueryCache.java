@@ -217,11 +217,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
     
     public QueryCache(SQLDatabaseMapping dbMapping) {
-        this(null, dbMapping);
-    }
-    
-    public QueryCache(String uuid, SQLDatabaseMapping dbMapping) {
-        query = new QueryImpl(uuid, dbMapping);
+        query = new QueryImpl(dbMapping);
         query.addQueryChangeListener(queryChangeListener);
     }
 
@@ -609,13 +605,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
     //------------------- start Query interface---------------------------------
     
-    @Override
-    public void generateNewUUID() {
-        if (query != null) {
-            query.generateNewUUID();
-        }
-    }
-    
     public String getStatement() {
         return query.generateQuery();
     }
@@ -643,11 +632,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public String getName() {
         return query.getName();
     }
-
-    public String getUUID() {
-        return query.getUUID();
-    }
-
+    
     public SQLDatabaseMapping getDBMapping() {
         return query.getDbMapping();
     }
