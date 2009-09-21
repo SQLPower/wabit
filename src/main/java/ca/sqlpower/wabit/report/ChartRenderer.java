@@ -36,6 +36,8 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
+import ca.sqlpower.wabit.report.chart.ChartDataListener;
 import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
@@ -50,11 +52,18 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
 	private final Chart chart;
 	
+	private final ChartDataListener chartListener = new ChartDataListener() {
+        public void chartDataChanged(ChartDataChangedEvent evt) {
+            getParent().repaint();
+        }
+    };
+	
 	public ChartRenderer(@Nonnull Chart chart) {
 		if (chart == null) {
 		    throw new NullPointerException("Null chart not permitted");
 		}
         this.chart = chart;
+        chart.addChartDataListener(chartListener);
 		setName("Renderer of: " + chart.getName());
 	}
     
@@ -162,7 +171,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
     @Override
     public CleanupExceptions cleanup() {
-        // TODO unlisten to chart
+        chart.removeChartDataListener(chartListener);
         return new CleanupExceptions();
     }
 
@@ -191,5 +200,10 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     @Override
     protected boolean removeChildImpl(WabitObject child) {
         return false;
+    }
+    
+    @Override
+    public ContentBox getParent() {
+        return (ContentBox) super.getParent();
     }
 }
