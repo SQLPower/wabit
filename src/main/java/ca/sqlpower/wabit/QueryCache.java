@@ -615,10 +615,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         return query.getName();
     }
     
-    public SQLDatabaseMapping getDBMapping() {
-        return query.getDbMapping();
-    }
-
     public void setDBMapping(SQLDatabaseMapping dbMapping) {
         query.setDBMapping(dbMapping);
     }
