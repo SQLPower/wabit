@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.olap;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +29,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.Semaphore;
 
 import javax.naming.NamingException;
@@ -66,10 +68,12 @@ import org.xml.sax.Attributes;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
 import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
 import ca.sqlpower.xml.XMLHelper;
@@ -265,6 +269,26 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * Executes the current MDX query represented by this object, returning the
      * cell set that results from the query's execution.
      * <p>
+     * Every call to this method results in a CellSetEvent and a
+     * ResultSetProducerEvent being fired.
+     * 
+     * @throws SQLException
+     *             If the cell set cannot be iterated over or its values cannot
+     *             be retrieved to create a result set based off of the cell
+     *             set.
+     * 
+     * @see #innerExecuteOlapQuery()
+     */
+    public CellSet executeOlapQuery() throws QueryInitializationException, InterruptedException, SQLException {
+        CellSet cellSet = innerExecuteOlapQuery();
+        fireResultSetEvent(cellSet);
+        return cellSet;
+    }
+
+    /**
+     * Executes the current MDX query represented by this object, returning the
+     * cell set that results from the query's execution.
+     * <p>
      * If this query has not been modified at all since it was last executed,
      * this method may return a cached reference to the same cell set as the
      * last one it returned. Olap4j CellSet instances can be safely used from
@@ -313,7 +337,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      *             If the calling thread is interrupted while blocked waiting
      *             for another call to execute() to complete.
      */
-    public CellSet executeOlapQuery() throws OlapException, QueryInitializationException, InterruptedException {
+    private CellSet innerExecuteOlapQuery() throws OlapException, QueryInitializationException, InterruptedException {
         try {
             executionSemaphore.acquire();
             try {
@@ -369,6 +393,43 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
                 }
             }
         });
+    }
+
+    /**
+     * Creates a new {@link ResultSetAndUpdateCountCollection} based on the
+     * given {@link CellSet} and fires a {@link ResultSetProducerEvent}
+     * containing the new results.
+     * 
+     * @param cellSet
+     *            The cell set to wrap in a
+     *            {@link ResultSetAndUpdateCountCollection} to notify listeners
+     *            of new results.
+     * @return The result set collection that was sent to listeners.
+     * @throws SQLException
+     *             If the cellSet is not null and its values cannot be iterated
+     *             over or retrieved.
+     */
+    private ResultSetAndUpdateCountCollection fireResultSetEvent(
+            CellSet cellSet) throws SQLException {
+        OlapResultSet results;
+        if (cellSet == null) {
+            results = null;
+        } else {
+            results = new OlapResultSet();
+            results.populate(cellSet);
+        }
+        
+        final ResultSetAndUpdateCountCollection rsCollection = 
+            new ResultSetAndUpdateCountCollection(results, OlapQuery.this);
+        
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized (this) {
+                    rsps.fireResultSetEvent(rsCollection);
+                }
+            }
+        });
+        return rsCollection;
     }
 
 	/**
@@ -1132,26 +1193,27 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * {@link OlapResultSet} and notifies the ResultSetListeners with that
      * converted result.
      */
-    public ResultSet execute() throws ResultSetProducerException, InterruptedException {
-        try {
-            CellSet cellSet = executeOlapQuery();
-            OlapResultSet results;
-            if (cellSet == null) {
-                results = null;
-            } else {
-                results = new OlapResultSet();
-                results.populate(cellSet);
+    public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
+            InterruptedException {
+        Callable<ResultSetAndUpdateCountCollection> callable = 
+            new Callable<ResultSetAndUpdateCountCollection>() {
+        
+            public ResultSetAndUpdateCountCollection call() throws Exception {
+                try {
+                    CellSet cellSet = executeOlapQuery();
+                    final ResultSetAndUpdateCountCollection rsCollection = fireResultSetEvent(cellSet);
+                    
+                    return rsCollection;
+                    
+                } catch (Exception e) {
+                    throw new ResultSetProducerException(e);
+                }
             }
-            
-            synchronized (this) {
-                rsps.fireResultSetEvent(results);
-            }
-            
-            return results;
-            
-        } catch (Exception e) {
-            throw new ResultSetProducerException(e);
-        }
+        };
+        FutureTask<ResultSetAndUpdateCountCollection> futureTask = 
+            new FutureTask<ResultSetAndUpdateCountCollection>(callable);
+        runInBackground(futureTask);
+        return futureTask;
     }
 
     // -------------- end ResultSetProducer interface --------------

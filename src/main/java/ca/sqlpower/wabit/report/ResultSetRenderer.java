@@ -297,7 +297,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	    
         public void resultSetProduced(ResultSetProducerEvent evt) {
             cleanup();
-            currentRowSet = evt.getResults();
+            currentRowSet = evt.getResults().getFirstNonNullResultSet();
             if (currentRowSet != null) {
                 currentRowSet.addRowSetListener(rowSetChangeListener);
             }
@@ -395,7 +395,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         paintingRS = null;
         executeException = null;
 		try {
-            executedRs = query.fetchResultSet();
+		    //TODO This method should just call query.execute() and the ResultSetHandler
+		    //should set the result set in this class to the query's results. The 
+		    //render report content method should also give a message notifying the user
+		    //that the query is being refreshed.
+            executedRs = query.execute().get().getFirstNonNullResultSet();
             if (executedRs == null) {
                 return;
             }

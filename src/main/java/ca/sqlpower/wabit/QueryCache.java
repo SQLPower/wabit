@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import net.jcip.annotations.GuardedBy;
 
@@ -241,8 +244,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     /**
      * Executes the current SQL query, returning a cached copy of the result
-     * set. The returned copy of the result set is guaranteed to be scrollable,
-     * and does not hold any remote database resources.
+     * set. The returned copy of the result set is guaranteed to be scrollable.
+     * If the query is not streaming it does not hold any remote database
+     * resources. If the query is streaming then the connection and statement
+     * will be held open to continue streaming in values.
      * 
      * @return an in-memory copy of the result set produced by this query
      *         cache's current query. You are not required to close the returned
@@ -296,11 +301,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             boolean initialResult = currentStatement.execute(sql);
             setRsCollection(new ResultSetAndUpdateCountCollection(currentStatement, initialResult, 
                     isStreaming(), getStreamingRowLimit(), this));
-            final CachedRowSet resultsToFire;
+            final ResultSetAndUpdateCountCollection resultsToFire;
             if (rsCollection.getResultSetCount() > 0) {
                 // results will be null if the first statement produced an update count,
                 // but that's allowed by the ResultSetProducer interface.
-                resultsToFire = rsCollection.getFirstResultSet();
+                resultsToFire = rsCollection;
             } else {
                 // no statements were executed. ResultSetProducer promises to deliver a
                 // null result set in this case.
@@ -309,11 +314,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             runInForeground(new Runnable() {
                 public void run() {
                     synchronized(rsps) {
-                        try {
-                            rsps.fireResultSetEvent(resultsToFire);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        }
+                        rsps.fireResultSetEvent(resultsToFire);
                     }
                 }
             });
@@ -414,15 +415,15 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     /**
-     * Returns the most up to date result set in the query cache. This may
+     * Returns the most up to date result sets in the query cache. This may
      * execute the query on the database.
      */
-    public CachedRowSet fetchResultSet() throws SQLException {
+    private ResultSetAndUpdateCountCollection fetchResultSet() throws SQLException {
         if (rsCollection != null && !rsCollection.getResultSets().isEmpty()) {
-            rsCollection.getFirstNonNullResultSet();
+            return rsCollection;
         }
         executeStatement();
-        return rsCollection.getFirstNonNullResultSet();
+        return rsCollection;
     }
     
     @Override
@@ -558,29 +559,33 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         }
     }
 
-    public ResultSet execute() throws ResultSetProducerException {
-        synchronized(rsps) {
-            try {
-                long eventCount = rsps.getEventsFired();
-                final CachedRowSet resultSet = fetchResultSet();
-                if (rsps.getEventsFired() == eventCount) {
-                    runInForeground(new Runnable() {
-                        public void run() {
-                            synchronized(rsps) {
-                                try {
-                                    rsps.fireResultSetEvent(resultSet);
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
+    public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException {
+        Callable<ResultSetAndUpdateCountCollection> callable = new Callable<ResultSetAndUpdateCountCollection>() {
+            public ResultSetAndUpdateCountCollection call() throws Exception {
+                synchronized(rsps) {
+                    try {
+                        long eventCount = rsps.getEventsFired();
+                        final ResultSetAndUpdateCountCollection resultSets = fetchResultSet();
+                        if (rsps.getEventsFired() == eventCount) {
+                            runInForeground(new Runnable() {
+                                public void run() {
+                                    synchronized(rsps) {
+                                        rsps.fireResultSetEvent(resultSets);
+                                    }
                                 }
-                            }
+                            });
                         }
-                    });
+                        return resultSets;
+                    } catch (SQLException e) {
+                        throw new ResultSetProducerException(e);
+                    }
                 }
-                return resultSet;
-            } catch (SQLException e) {
-                throw new ResultSetProducerException(e);
             }
-        }
+        };
+        FutureTask<ResultSetAndUpdateCountCollection> futureTask = 
+            new FutureTask<ResultSetAndUpdateCountCollection>(callable);
+        runInBackground(futureTask);
+        return futureTask;
     }
     // ------------------ end ResultSetProducer interface ----------------------
 

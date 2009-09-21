@@ -19,7 +19,7 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
-import org.olap4j.OlapException;
+import java.sql.SQLException;
 
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
@@ -49,7 +49,7 @@ public class OlapGuiUtil {
         SPSwingWorker worker = new SPSwingWorker(session, query) {
 
             @Override
-            public void doStuff() throws OlapException, QueryInitializationException, InterruptedException {
+            public void doStuff() throws QueryInitializationException, InterruptedException, SQLException {
                 query.executeOlapQuery();
             }
             

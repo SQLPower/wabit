@@ -101,7 +101,7 @@ public class Chart extends AbstractWabitObject {
             runInForeground(new Runnable() {
                 public void run() {
                     try {
-                        setUnfilteredResultSet(evt.getResults());
+                        setUnfilteredResultSet(evt.getResults().getFirstNonNullResultSet());
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }

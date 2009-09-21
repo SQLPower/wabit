@@ -19,10 +19,11 @@
 
 package ca.sqlpower.wabit.rs;
 
-import java.sql.ResultSet;
+import java.util.concurrent.Future;
 
 import javax.annotation.Nonnull;
 
+import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 
 /**
@@ -62,7 +63,8 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      *             If the calling thread is interrupted while blocked waiting
      *             for another call to execute() to complete.
      */
-    ResultSet execute() throws ResultSetProducerException, InterruptedException;
+    Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
+        InterruptedException;
 
     /**
      * Adds the given listener to this result set producer's list of interested

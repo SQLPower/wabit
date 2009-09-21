@@ -55,7 +55,7 @@ public class ResultSetAndUpdateCountCollection {
 
         @Override
         protected void fireRowAdded(final Object[] row, final int rowNum) {
-            queryCache.runInForeground(new Runnable() {
+            parentObject.runInForeground(new Runnable() {
                 public void run() {
                     CachedRowSetWithForegroundEvents.super.fireRowAdded(row, rowNum);
                 }
@@ -105,10 +105,13 @@ public class ResultSetAndUpdateCountCollection {
         ArrayList<StreamingResultSetCollectionListener>();
 
     /**
-     * This {@link QueryCache} is used to fire events on the proper foreground
-     * thread from the cached row sets and this class itself.
+     * This {@link AbstractWabitObject} is used to fire events on the proper
+     * foreground thread from the cached row sets and this class itself. 
+     * If a WabitObject needs to be a parent of this collection and does not
+     * extend {@link AbstractWabitObject} refactor the runInBackground and
+     * runInForeground methods to a more central place.
      */
-    private final QueryCache queryCache;
+    private final AbstractWabitObject parentObject;
 
     /**
      * This constructor will iterate through the statement's results and collect
@@ -134,13 +137,13 @@ public class ResultSetAndUpdateCountCollection {
      * @param streamingRowLimit
      *            The number of rows to retain in the result set that is
      *            streaming values.
-     * @param queryCache
-     *            Uses the query cache's runInForeground method to fire all
+     * @param parent
+     *            Uses the parent's runInForeground method to fire all
      *            events on the foreground thread.
      */
     public ResultSetAndUpdateCountCollection(Statement statement, boolean isNextAResultSet, 
-            boolean isStreaming, final int streamingRowLimit, final QueryCache queryCache) throws SQLException {
-        this.queryCache = queryCache;
+            boolean isStreaming, final int streamingRowLimit, final AbstractWabitObject parent) throws SQLException {
+        this.parentObject = parent;
         boolean hasNext = true;
         while (hasNext) {
             if (isNextAResultSet) {
@@ -158,7 +161,7 @@ public class ResultSetAndUpdateCountCollection {
                             } finally {
                                 activeStreamingQueryCount--;
                                 if (activeStreamingQueryCount == 0) {
-                                    queryCache.runInForeground(new Runnable() {
+                                    parent.runInForeground(new Runnable() {
                                         public void run() {
                                             fireAllStreamingStopped();
                                         }
@@ -184,6 +187,34 @@ public class ResultSetAndUpdateCountCollection {
     }
 
     /**
+     * This will wrap a given result set in a
+     * {@link ResultSetAndUpdateCountCollection}. The result set stored will be
+     * scrollable and contain no resources back to the original result set.
+     * 
+     * @param rs
+     *            The result set to wrap. This cannot be a streaming result set.
+     * @param parentObject
+     *            The parent object to fire events on an appropriate foreground
+     *            thread.
+     * @throws SQLException
+     *             Thrown if there are problems iterating over the result set.
+     */
+    public ResultSetAndUpdateCountCollection(ResultSet rs, AbstractWabitObject parentObject) 
+            throws SQLException {
+        this.parentObject = parentObject;
+        if (rs instanceof CachedRowSet) {
+            cachedRowSets.add((CachedRowSet) rs);
+        } else if (rs != null) {
+            CachedRowSet crs;
+            crs = new CachedRowSet();
+            crs.populate(rs);
+            cachedRowSets.add(crs);
+        } else {
+            cachedRowSets.add(null);
+        }
+    }
+
+    /**
      * Returns a copy of the given result set collection. The cached row sets
      * contained in the copy will be shared copies of the ones in the given
      * collection. The referenced threads in the copy will reference the threads
@@ -195,15 +226,19 @@ public class ResultSetAndUpdateCountCollection {
             ResultSetAndUpdateCountCollection rsCollection) {
         updateCounts.addAll(rsCollection.updateCounts);
         for (CachedRowSet crs : rsCollection.cachedRowSets) {
-            try {
-                cachedRowSets.add(crs.createShared());
-            } catch (SQLException e) {
-                throw new RuntimeException("Exception when creating a shared copy " +
-                		"of a cached row set.", e);
+            if (crs != null) {
+                try {
+                    cachedRowSets.add(crs.createShared());
+                } catch (SQLException e) {
+                    throw new RuntimeException("Exception when creating a shared copy " +
+                            "of a cached row set.", e);
+                }
+            } else {
+                cachedRowSets.add(null);
             }
         }
         streamingThreads.addAll(rsCollection.streamingThreads);
-        queryCache = rsCollection.queryCache;
+        parentObject = rsCollection.parentObject;
     }
 
     /**
@@ -252,11 +287,19 @@ public class ResultSetAndUpdateCountCollection {
     /**
      * Returns the first non-null result set contained in this collection.
      * If there are no non-null result sets in this collection it will return
-     * null.
+     * null. The result set returned will be a shared copy of the result
+     * set returned.
+     * @see CachedRowSet#createShared()
      */
     public CachedRowSet getFirstNonNullResultSet() {
         for (CachedRowSet crs : cachedRowSets) {
-            if (crs != null) return crs;
+            if (crs != null) {
+                try {
+                    return crs.createShared();
+                } catch (SQLException e) {
+                    throw new AssertionError("This should not be possible");
+                }
+            } 
         }
         return null;
     }

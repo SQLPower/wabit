@@ -19,13 +19,12 @@
 
 package ca.sqlpower.wabit.rs;
 
-import java.sql.SQLException;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.jcip.annotations.Immutable;
 import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 
 /**
  * Event object that describes the outcome of a result set producer execution.
@@ -34,7 +33,7 @@ import ca.sqlpower.sql.CachedRowSet;
 public class ResultSetProducerEvent {
 
     private final ResultSetProducer source;
-    private final CachedRowSet results;
+    private final ResultSetAndUpdateCountCollection results;
 
     /**
      * Creates a new event with the given parameters.
@@ -45,7 +44,8 @@ public class ResultSetProducerEvent {
      *            The results themselves. Shared copies will be handed out to
      *            listeners.
      */
-    public ResultSetProducerEvent(ResultSetProducer source, CachedRowSet results) {
+    public ResultSetProducerEvent(ResultSetProducer source, 
+            ResultSetAndUpdateCountCollection results) {
         this.source = source;
         this.results = results;
     }
@@ -60,22 +60,19 @@ public class ResultSetProducerEvent {
     }
 
     /**
-     * Returns a copy of the new result set. The copy has an independent row
-     * cursor and other state (such as wasNull()) but shares the actual
-     * underlying data with (at least) all other invokers of this method.
+     * Returns a copy of the collection of result sets. The copy has a
+     * collection of independent row cursor and other state (such as wasNull())
+     * but shares the actual underlying data with (at least) all other invokers
+     * of this method.
      * 
-     * @return A mostly-independent copy of the new result set, or null if an
-     *         execution was attempted while the result set producer was not in
-     *         a state where it could produce a result set.
+     * @return A copy containing mostly-independent copies of the new result
+     *         sets, or null if an execution was attempted while the result set
+     *         producer was not in a state where it could produce a result set.
      * @see CachedRowSet#createShared()
      */
     @Nullable
-    public CachedRowSet getResults() {
+    public ResultSetAndUpdateCountCollection getResults() {
         if (results == null) return null;
-        try {
-            return results.createShared();
-        } catch (SQLException cantHappen) {
-            throw new AssertionError(cantHappen);
-        }
+        return new ResultSetAndUpdateCountCollection(results);
     }
 }

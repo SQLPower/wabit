@@ -20,14 +20,13 @@
 package ca.sqlpower.wabit.rs;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 
 /**
  * Convenient implementation support for the {@link ResultSetProducer} interface.
@@ -71,7 +70,7 @@ public class ResultSetProducerSupport {
      * property by exactly 1.
      * 
      * @param results
-     *            The new result set. If it is already a CachedRowSet, it will
+     *            The new result sets. If it is already a CachedRowSet, it will
      *            be embedded in the event object as-is; otherwise, it will be
      *            copied into a new CachedRowSet. In the latter case, the row
      *            cursor of <code>results</code> will have been moved to the
@@ -80,22 +79,14 @@ public class ResultSetProducerSupport {
      *            populate properly, the row cursor of <code>results</code>
      *            should be at the <i>beforeFirst</i> position prior to calling
      *            this method.
-     * @throws SQLException
-     *             if the given result set is not already a CachedRowSet, and
-     *             populating the new CachedRowSet from the given ResultSet
-     *             causes an exception.
      */
-    public void fireResultSetEvent(@Nullable ResultSet results) throws SQLException {
+    public void fireResultSetEvent(@Nullable ResultSetAndUpdateCountCollection results) {
         eventsFired++;
         ResultSetProducerEvent evt;
         if (results == null) {
             evt = new ResultSetProducerEvent(eventSource, null);
-        } else if (results instanceof CachedRowSet) {
-            evt = new ResultSetProducerEvent(eventSource, (CachedRowSet) results);
         } else {
-            CachedRowSet crs = new CachedRowSet();
-            crs.populate(results);
-            evt = new ResultSetProducerEvent(eventSource, crs);
+            evt = new ResultSetProducerEvent(eventSource, results);
         }
         for (int i = listeners.size() - 1; i >= 0; i--) {
             listeners.get(i).resultSetProduced(evt);
