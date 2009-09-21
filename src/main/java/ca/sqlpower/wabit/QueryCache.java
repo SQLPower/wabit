@@ -52,7 +52,6 @@ import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
 import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
-import ca.sqlpower.wabit.swingui.ExceptionHandler;
 
 /**
  * This method will be able to execute and cache the results of a query. It also
@@ -67,10 +66,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     @GuardedBy("rsps")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
-    private final List<CachedRowSet> resultSets = new ArrayList<CachedRowSet>();
-    
-    private final List<Integer> updateCounts = new ArrayList<Integer>();
-    
+    /**
+     * The current position in the results if this is being iterated over. This
+     * is used by methods from the StatementExecutor interface.
+     */
     private int resultPosition = 0;
     
     /**
@@ -88,12 +87,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * This is only used if {@link QueryImpl#streaming} is true.
      */
     private Connection currentConnection; 
-    
-    /**
-     * The threads in this list are used to stream queries from a connection into
-     * this query cache.
-     */
-    private final List<Thread> streamingThreads = new ArrayList<Thread>();
     
     /**
      * Tracks if the user should be prompted every time a query is going to
@@ -185,6 +178,31 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             fireCompoundEditEnded(evt);
         }
     };
+
+    /**
+     * A collection of all of the result sets and update counts from the latest
+     * execution of this query. If the result sets in this collection are
+     * streaming then the statement used to execute the query should not be
+     * closed until the streaming has been stopped. This will be null if there
+     * are no available result sets, which can occur at the start of the query
+     * cache creation or if the cache has become stale and needs to re-execute.
+     */
+    private ResultSetAndUpdateCountCollection rsCollection;
+    
+    /**
+     * This listens to {@link #rsCollection} for an event that signals all of
+     * the streaming queries in the collection have stopped streaming. When
+     * all of the streaming queries in this cache have stopped streaming an
+     * event will be fired signalling that this query is no longer running. 
+     */
+    private final StreamingResultSetCollectionListener rsCollectionListener = 
+        new StreamingResultSetCollectionListener() {
+    
+        public void allStreamingStopped(StreamingResultSetCollectionEvent evt) {
+            setRunning(false);
+        }
+    };
+    
     
     /**
      * This makes a copy of the given query cache. The query in the given query cache
@@ -203,16 +221,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         this.query = new QueryImpl(q.query, connectListeners);
         query.addQueryChangeListener(queryChangeListener);
         
-        for (CachedRowSet rs : q.getResultSets()) {
-            if (rs == null) {
-                resultSets.add(null);
-            } else {
-                try {
-                    resultSets.add((CachedRowSet) rs.createShared());
-                } catch (SQLException e) {
-                    throw new RuntimeException("This should not be able to happen", e);
-                }
-            }
+        final ResultSetAndUpdateCountCollection newCollection;
+        if (q.rsCollection != null) {
+            newCollection = new ResultSetAndUpdateCountCollection(q.rsCollection);
+        } else {
+            newCollection = null;
+        }
+        try {
+            setRsCollection(newCollection);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
     
@@ -236,13 +254,15 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean executeStatement() throws SQLException {
         return executeStatement(false);
     }
-    
+
     /**
      * Executes the current SQL query, returning a cached copy of the result set
      * that is either a subset of the full results, limited by the session's row
      * limit, or the full result set. The returned copy of the result set is
-     * guaranteed to be scrollable, and does not hold any remote database
-     * resources.
+     * guaranteed to be scrollable. If the query is not streaming it does not
+     * hold any remote database resources. If the query is streaming then the
+     * connection and statement will be held open to continue streaming in
+     * values.
      * 
      * @param fullResultSet
      *            If true the full result set will be retrieved. If false then a
@@ -258,8 +278,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean executeStatement(boolean fetchFullResults) throws SQLException {
         cancel();
         resultPosition = 0;
-        resultSets.clear();
-        updateCounts.clear();
+        if (rsCollection != null) {
+            setRsCollection(null);
+        }
         if (query.getDatabase() == null || query.getDatabase().getDataSource() == null) {
             throw new NullPointerException("Data source is null.");
         }
@@ -273,45 +294,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 currentStatement.setMaxRows(query.getRowLimit());
             }
             boolean initialResult = currentStatement.execute(sql);
-            boolean sqlResult = initialResult;
-            boolean hasNext = true;
-            while (hasNext) {
-                if (sqlResult) {
-                    final CachedRowSet crs = new CachedRowSet();
-                    if (query.isStreaming()) {
-                        final ResultSet streamingRS = currentStatement.getResultSet();
-                        Thread t = new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
-                                    crs.follow(streamingRS, getStreamingRowLimit());
-                                } catch (SQLException e) {
-                                    logger.error("Exception while streaming result set", e);
-                                } finally {
-                                    setRunning(false);
-                                }
-                            }
-                        };
-                        t.start();
-                        streamingThreads.add(t);
-                    } else {
-                        crs.populate(currentStatement.getResultSet());
-                    }
-                    resultSets.add(crs);
-                } else {
-                    resultSets.add(null);
-                }
-                updateCounts.add(currentStatement.getUpdateCount());
-                sqlResult = currentStatement.getMoreResults();
-                hasNext = !((sqlResult == false) && (currentStatement.getUpdateCount() == -1));
-            }
-            
+            setRsCollection(new ResultSetAndUpdateCountCollection(currentStatement, initialResult, 
+                    isStreaming(), getStreamingRowLimit(), this));
             final CachedRowSet resultsToFire;
-            if (resultSets.size() > 0) {
+            if (rsCollection.getResultSetCount() > 0) {
                 // results will be null if the first statement produced an update count,
                 // but that's allowed by the ResultSetProducer interface.
-                resultsToFire = resultSets.get(0);
+                resultsToFire = rsCollection.getFirstResultSet();
             } else {
                 // no statements were executed. ResultSetProducer promises to deliver a
                 // null result set in this case.
@@ -370,6 +359,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * {@link Statement#cancel()}.
      */
     public void cancel() {
+        if (rsCollection != null) {
+            try {
+                rsCollection.cleanup();
+            } catch (SQLException e) {
+                logger.error("Exception while cleaning up a result set collection", e);
+            }
+        }
         if (currentStatement != null) {
             try {
                 currentStatement.cancel();
@@ -387,7 +383,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 logger.error("Exception while closing old streaming connection", e);
             }
         }
-        streamingThreads.clear();
     }
 
     public ResultSet getResultSet() {
@@ -395,26 +390,27 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
     
     public CachedRowSet getCachedRowSet() {
-        if (resultPosition >= resultSets.size()) {
+        if (resultPosition >= rsCollection.getResultSetCount()) {
             return null;
         }
-        return resultSets.get(resultPosition);
+        return rsCollection.getResultSets().get(resultPosition);
     }
     
     protected List<CachedRowSet> getResultSets() {
-        return Collections.unmodifiableList(resultSets);
+        return Collections.unmodifiableList(rsCollection.getResultSets());
     }
 
     public int getUpdateCount() {
-        if (resultPosition >= updateCounts.size()) {
+        if (resultPosition >= rsCollection.getCountOfUpdateCounts()) {
             return -1;
         }
-        return updateCounts.get(resultPosition);
+        return rsCollection.getUpdateCounts().get(resultPosition);
     }
 
     public boolean getMoreResults() {
         resultPosition++;
-        return resultPosition < resultSets.size() && resultSets.get(resultPosition) != null;
+        return resultPosition < rsCollection.getResultSetCount() && 
+            rsCollection.getResultSets().get(resultPosition) != null;
     }
 
     /**
@@ -422,21 +418,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * execute the query on the database.
      */
     public CachedRowSet fetchResultSet() throws SQLException {
-        if (!resultSets.isEmpty()) {
-            for (CachedRowSet rs : resultSets) {
-                if (rs != null) {
-                    return rs.createShared();
-                }
-            }
-            return null;
+        if (rsCollection != null && !rsCollection.getResultSets().isEmpty()) {
+            rsCollection.getFirstNonNullResultSet();
         }
         executeStatement();
-        for (CachedRowSet rs : resultSets) {
-            if (rs != null) {
-                return rs.createShared();
-            }
-        }
-        return null;
+        return rsCollection.getFirstNonNullResultSet();
     }
     
     @Override
@@ -465,10 +451,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             return null;
         }
         return new WabitDataSource(query.getDatabase().getDataSource());
-    }
-
-    public List<Thread> getStreamingThreads() {
-        return Collections.unmodifiableList(streamingThreads);
     }
 
     public synchronized boolean isRunning() {
@@ -657,8 +639,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * This will set the row limit on the query. This also clears the cache.
      */
     public void setRowLimit(int rowLimit) {
-        resultSets.clear();
-        updateCounts.clear();
+        try {
+            setRsCollection(null);
+        } catch (SQLException e) {
+            throw new RuntimeException("Exception during cleanup of old result sets.", e);
+        }
         query.setRowLimit(rowLimit);
     }
     
@@ -791,6 +776,21 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
     
     //------------------- end Query interface---------------------------------
+    
+    /**
+     * Sets a new result set collection in this class. This will clean up the
+     * previous result set collection which may throw a {@link SQLException}.
+     */
+    private void setRsCollection(ResultSetAndUpdateCountCollection newCollection) throws SQLException {
+        if (rsCollection != null) {
+            rsCollection.cleanup();
+            rsCollection.removeResultSetListener(rsCollectionListener);
+        }
+        rsCollection = newCollection;
+        if (rsCollection != null) {
+            rsCollection.addResultSetListener(rsCollectionListener);
+        }
+    }
     
     //------------------- event handling for query delegate-------------------
     
