@@ -23,7 +23,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import ca.sqlpower.sql.SPDataSource;
 
@@ -44,6 +43,14 @@ public class WabitDataSource extends AbstractWabitObject {
 	public WabitDataSource(SPDataSource ds) {
 	    this.dataSource = ds;
 	    setName(ds.getName());
+	    
+	    String uuid = dataSource.get(UUID_KEY_NAME);
+	    if (uuid == null){
+	        generateNewUUID();
+	        uuid = super.getUUID();
+	        dataSource.put(UUID_KEY_NAME, uuid);
+	    }
+	    
 	    ds.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getPropertyName().equals("name")) {
@@ -66,11 +73,6 @@ public class WabitDataSource extends AbstractWabitObject {
 	@Override
 	public String getUUID(){
 	    String uuid = dataSource.get(UUID_KEY_NAME);
-	    if (uuid == null){
-	        generateNewUUID();
-	        uuid = super.getUUID();
-	        dataSource.put(UUID_KEY_NAME, uuid);
-	    }
 	    return uuid;
 	}
 	

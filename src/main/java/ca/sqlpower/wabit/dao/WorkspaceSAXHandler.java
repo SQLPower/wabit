@@ -1156,7 +1156,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             if (valName != null) {
                 createdObject.setName(valName);
 		    }
-		    createdObject.setUUID(valUUID);
+            if (valUUID != null) {
+                createdObject.setUUID(valUUID);
+            }
 		    
 		    progressMessage = session.getWorkspace().getName() + ": reading " + valName;
 		}
