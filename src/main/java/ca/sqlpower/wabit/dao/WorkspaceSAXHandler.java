@@ -79,6 +79,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.olap.OlapAttributes;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -104,7 +105,6 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.
@@ -225,6 +225,26 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 * when loading up the olapQuery in a report.
 	 */
     private OlapQuery olapQuery;
+    
+    /**
+	 * This is the attributes of the current Olap query being loaded from the
+	 * file. This may be null if no olap query is currently being loaded.
+	 */
+	private OlapAttributes queryAttributes;
+
+	/**
+	 * This is the attributes of the current Olap query axis being loaded from
+	 * the file. This may be null if no olap Query axis is currently being
+	 * loaded.
+	 */
+	private OlapAttributes axisAttributes;
+
+	/**
+	 * This is the attributes of the current Olap query dimension being loaded
+	 * from the file. This may be null if no Olap query dimension is currently
+	 * being loaded.
+	 */
+	private OlapAttributes dimensionAttributes;
 
     /**
      * This is an Olap4j {@link org.olap4j.query.Query} which is currently being
@@ -684,9 +704,40 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             loadingText = true;
         } else if (name.equals("olap-query")) {
             createdObject = loadOlapQuery(attributes);
-        } else if (name.equals("olap-cube") || name.equals("olap4j-query") || name.equals("olap4j-axis")
-        		|| name.equals("olap4j-dimension") || name.equals("olap4j-selection") || name.equals("olap4j-exclusion")) {
-            olapQuery.appendElement(name, attributes);
+        } else if (name.equals("olap-cube")) {
+            OlapAttributes olapAttributes = new OlapAttributes(name);
+            for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
+                olapAttributes.addAttribute(attributes.getQName(cpt), attributes.getValue(cpt));
+            }
+            olapQuery.addAttributes(olapAttributes);
+            createdObject = null;
+        } else if (name.equals("olap4j-query")) {
+        	queryAttributes = new OlapAttributes(name);
+            for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
+                queryAttributes.addAttribute(attributes.getQName(cpt), attributes.getValue(cpt));
+            }
+            olapQuery.addAttributes(queryAttributes);
+            createdObject = null;
+        } else if (name.equals("olap4j-axis")) {
+        	axisAttributes = new OlapAttributes(name);
+            for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
+                axisAttributes.addAttribute(attributes.getQName(cpt), attributes.getValue(cpt));
+            }
+            queryAttributes.addChild(axisAttributes);
+            createdObject = null;
+        } else if (name.equals("olap4j-dimension")) {
+        	dimensionAttributes = new OlapAttributes(name);
+            for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
+                dimensionAttributes.addAttribute(attributes.getQName(cpt), attributes.getValue(cpt));
+            }
+            axisAttributes.addChild(dimensionAttributes);
+            createdObject = null;
+        } else if (name.equals("olap4j-selection") || name.equals("olap4j-exclusion")) {
+        	OlapAttributes selectionAttributes = new OlapAttributes(name);
+            for (int cpt = 0; cpt < attributes.getLength(); cpt++) {
+                selectionAttributes.addAttribute(attributes.getQName(cpt), attributes.getValue(cpt));
+            }
+            dimensionAttributes.addChild(selectionAttributes);
             createdObject = null;
         } else if (name.equals("wabit-image")) {
             currentWabitImage = new WabitImage();
@@ -1370,17 +1421,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("missing-columns")) {
             readingMissingChartCols = false;
             
-        } else if (name.equals("olap-cube")
-    	        || name.equals("olap4j-query")
-    	        || name.equals("olap4j-axis") 
-    	        || name.equals("olap4j-dimension")
-    	        || name.equals("olap4j-selection")
-    	        || name.equals("olap4j-exclusion")) {
-    	    olapQuery.appendElement("/".concat(name),new AttributesImpl());
-    	    
         } else if (name.equals("text") && parentIs("content-label")) {
             ((Label) contentBox.getContentRenderer()).setText(byteStream.toString());
             loadingText = false;
+            
         } else if (name.equals("text") && parentIs("query")) {
             cache.defineUserModifiedQuery(byteStream.toString());
             loadingText = false;

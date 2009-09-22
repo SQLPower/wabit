@@ -20,7 +20,9 @@
 package ca.sqlpower.wabit.olap;
 
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.olap4j.Axis;
 import org.olap4j.query.Query;
@@ -59,9 +61,12 @@ public class SaveOLAP4jQuery {
 	public static void saveOlap4jQuery(OlapQuery olapQuery,
 			XMLHelper xml, PrintWriter out, final WorkspaceXMLDAO savingClass) {
 		
-		if (olapQuery.hasCachedXml()) {
+		if (olapQuery.hasCachedAttributes()) {
 			//The query has not been intialized, write out just the xml
-			olapQuery.writeCachedXml(xml, out);
+			List<OlapAttributes> olapAttributes = olapQuery.getCachedAttributes();
+			for (OlapAttributes att : olapAttributes) {
+                writeAttributeTags(xml, out, att);
+            }
 		} else {
 			Query mdxQuery;
 			try {
@@ -123,5 +128,31 @@ public class SaveOLAP4jQuery {
 	        xml.indent--;
             xml.println(out, "</olap4j-query>");
 		}
+	}
+
+	/**
+	 * Helper method for SaveOlap4jQuery to recursively save cached
+	 * OlapAttributes to the given PrintWriter
+	 */
+	private static void writeAttributeTags(XMLHelper xml, PrintWriter out,
+			OlapAttributes att) {
+		StringBuilder sb = new StringBuilder("");
+		sb.append("<")
+		    .append(att.getName());
+		for (Entry<String,String> attribute : att.getAttributes().entrySet()) {
+		    sb.append(" ")
+		        .append(attribute.getKey())
+		        .append("=\"")
+		        .append(attribute.getValue())
+		        .append("\"");
+		}
+		sb.append(">");
+		xml.println(out, sb.toString());
+		xml.indent++;
+		for (OlapAttributes child : att.getChildren()) {
+			writeAttributeTags(xml, out, child);
+		}
+		xml.indent--;
+		xml.println(out, "</" + att.getName() + ">");
 	}
 }

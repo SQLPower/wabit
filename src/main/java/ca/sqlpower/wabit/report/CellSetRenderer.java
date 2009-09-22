@@ -196,7 +196,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     			} catch (Exception e) {
     				throw new RuntimeException(e);
     			}
-            } else if (modifiedOlapQuery.hasCachedXml()) {
+            } else if (modifiedOlapQuery.hasCachedAttributes()) {
             	modifiedOlapQuery.addOlapQueryListener(queryListener);
             	modifiedOlapQuery.executeOlapQuery();
             }
