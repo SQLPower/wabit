@@ -247,7 +247,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 				}
 				if (focusedCBNode == null) {
 					Point2D location = canvas.getCamera().localToView(dtde.getLocation());
-					cbNode.setBounds(location.getX(), location.getY(), height, width);
+					cbNode.setBounds(location.getX(), location.getY(), width, height);
 					pageNode.addChild(cbNode);
 				}
 			}
