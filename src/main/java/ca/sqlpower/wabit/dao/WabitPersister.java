@@ -138,7 +138,10 @@ public interface WabitPersister {
 	 * Restores the persisted WabitObject back to the state it was in before the
 	 * transaction began (i.e. when the call to {@link #begin()} was made).
 	 * Typically, this would be called if an exception occurs during an atomic
-	 * transaction,
+	 * transaction. In the event that a rollback() is called within a nested
+	 * transaction (that is, a begin() call after another begin call() before
+	 * commit()), then the state of the WabitObjects must be rolled back to the
+	 * state they were in before the highest level transaction began.
 	 */
 	public void rollback();
 }
