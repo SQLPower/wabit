@@ -520,6 +520,8 @@ public class Chart extends AbstractWabitObject {
      * <p>
      * You'll probably want to call {@link #refreshData()} after defining a new query.
      * 
+     * TODO nothing in here throws SQLException, remove it.
+     * 
      * @param newQuery
      * @throws IllegalArgumentException if the query is not of a supported type.
      */

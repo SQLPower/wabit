@@ -88,5 +88,22 @@ public class OlapAttributes {
 	public String getName() {
 		return name;
 	}
+
+	/**
+	 * Returns the String representing the name of the value that can represent
+	 * this attribute uniquely. Returns <code>null</code> if this type attribute
+	 * is always unique
+	 */
+	public String getUniqueTag(){
+		if (name.equals("olap4j-axis")) {
+			return "ordinal";
+		} else if (name.equals("olap4j-dimension")) {
+			return "dimension-name";
+		} else if (name.equals("olap4j-selection") || name.equals("olap4j-exclusion")) {
+			return "unique-member-name";
+		} else {
+			return null;
+		}
+	}
 	
 }

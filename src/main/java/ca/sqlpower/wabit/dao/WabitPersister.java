@@ -62,13 +62,39 @@ public interface WabitPersister {
 	 *             oldValue</li>
 	 *             </ul>
 	 */
-	public void persistProperty(String uuid, String propertyName, Object oldValue, Object newValue) throws WabitPersistenceException;
+	public void persistProperty(String uuid, String propertyName,
+			Object oldValue, Object newValue) throws WabitPersistenceException;
+
+	/**
+	 * Modifies the named property of the specified WabitObject in this
+	 * persister's workspace. This version is an unconditional call, and does
+	 * not check the previous state of the property. To ensure the
+	 * {@link WabitObject}s stay in synch, this method should only be called by
+	 * the Persister representing the master copy of the WabitObject.
+	 * 
+	 * @param uuid
+	 * @param propertyName
+	 * @param newValue
+	 * @throws WabitPersistenceException
+	 *             A general Exception that is thrown if any Exception occurs
+	 *             while persisting the property. It can be used to wrap the
+	 *             specific cause Exception and provide other details like the
+	 *             WabitObject UUID. Some potential exceptional situations
+	 *             include:
+	 *             <ul>
+	 *             <li>The WabitObject UUID is unknown to this persister</li>
+	 *             <li>The given property name does not exist</li>
+	 *             <li>The given property is not writable</li>
+	 *             <li>The property type of the given value does not match the
+	 *             actual property in the object</li>
+	 */
+	public void persistProperty(String uuid, String propertyName, Object newValue) throws WabitPersistenceException;
 
 	/**
 	 * Adds a {@link WabitObject} into the persistent storage. If the
-	 * WabitObject already exists in persistent storage, then it will update the
-	 * existing WabitObject instead of creating a new one. Note that this will
-	 * not persist its properties or any child objects.
+	 * WabitObject already exists in persistent storage, then it will throw an
+	 * exception Note that this will not persist its properties or any child
+	 * objects.
 	 * 
 	 * @param parentUUID
 	 *            The UUID of the parent {@link WabitObject} of the object to
@@ -111,9 +137,14 @@ public interface WabitPersister {
 	
 	/**
 	 * Indicates the start of an atomic transaction of persisting multiple
-	 * {@link WabitObject}s
+	 * {@link WabitObject}s. To be used with a paired call to {@link #commit()}
+	 * @throws WabitPersistenceException
+	 *             A general Exception that is thrown if any Exception occurs
+	 *             while persisting the WabitObject. It can be used to wrap the
+	 *             specific cause Exception and provide other details like the
+	 *             WabitObject UUID.
 	 */
-	public void begin();
+	public void begin() throws WabitPersistenceException;
 
 	/**
 	 * Causes a current {@link WabitObject} persistence transaction to commit
@@ -139,9 +170,14 @@ public interface WabitPersister {
 	 * transaction began (i.e. when the call to {@link #begin()} was made).
 	 * Typically, this would be called if an exception occurs during an atomic
 	 * transaction. In the event that a rollback() is called within a nested
-	 * transaction (that is, a begin() call after another begin call() before
+	 * transaction (that is, a begin() call after another begin() call before
 	 * commit()), then the state of the WabitObjects must be rolled back to the
 	 * state they were in before the highest level transaction began.
+	 * @throws WabitPersistenceException
+	 *             A general Exception that is thrown if any Exception occurs
+	 *             while persisting the WabitObject. It can be used to wrap the
+	 *             specific cause Exception and provide other details like the
+	 *             WabitObject UUID.
 	 */
-	public void rollback();
+	public void rollback() throws WabitPersistenceException;
 }
