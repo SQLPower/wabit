@@ -109,9 +109,6 @@
 							  lib/eigenbase-properties.jar
 							  lib/eigenbase-resgen.jar
 							  lib/eigenbase-xom.jar
-							  lib/httpclient-4.0-beta2.jar
-							  lib/httpcore-4.0.jar
-							  lib/httpmime-4.0-beta2.jar
 							  lib/javacup.jar
 							  lib/jcommon-1.0.15.jar
 							  lib/jfreechart-1.0.12.jar
@@ -704,29 +701,22 @@
 			<classifier>swing</classifier>
 		</dependency>
         <dependency>
-		  	<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcomponents-client</artifactId>
-			<version>4.0-beta2</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/httpclient-4.0-beta2.jar</systemPath>
-        </dependency>
-        <dependency>
 			<groupId>org.apache.james</groupId>
 			<artifactId>apache-mime4j</artifactId>
 			<version>0.5</version>
             <scope>compile</scope>
         </dependency>
-		<dependency>
+        <dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 			<version>1.3</version>
 		</dependency>
-		<dependency>
+        <dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
 			<version>1.1.1</version>
 		</dependency>
-		<dependency>
+        <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
             <version>1.5.1</version>
@@ -750,20 +740,6 @@
             <groupId>net.sf.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>1.8</version>
-        </dependency>
-        <dependency>
-		  	<groupId>org.apache.httpcomponents</groupId>
-		  	<artifactId>httpcomponents-core</artifactId>
-		  	<version>4.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/httpcore-4.0.jar</systemPath>
-        </dependency>
-        <dependency>
-		  	<groupId>org.apache.httpcomponents</groupId>
-		  	<artifactId>httpcomponents-mime</artifactId>
-		  	<version>4.0-beta2</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/httpmime-4.0-beta2.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>pentaho</groupId>
@@ -839,6 +815,33 @@
         	<groupId>com.google.code.findbugs</groupId>
         	<artifactId>jsr305</artifactId>
         	<version>1.3.9</version>
+        	<scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.json</groupId>
+        	<artifactId>json</artifactId>
+        	<version>20090211</version>
+        	<scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.httpcomponents</groupId>
+        	<artifactId>httpmime</artifactId>
+        	<version>4.0</version>
+        	<type>jar</type>
+        	<scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.httpcomponents</groupId>
+        	<artifactId>httpcore</artifactId>
+        	<version>4.0.1</version>
+        	<type>jar</type>
+        	<scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.httpcomponents</groupId>
+        	<artifactId>httpclient</artifactId>
+        	<version>4.0</version>
+        	<type>jar</type>
         	<scope>compile</scope>
         </dependency>
 	</dependencies>
