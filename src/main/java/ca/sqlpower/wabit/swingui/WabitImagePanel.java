@@ -62,6 +62,8 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 
@@ -97,8 +99,8 @@ public class WabitImagePanel implements WabitPanel {
     /**
      * When the image changes this listener will cause the image panel to repaint.
      */
-    private final PropertyChangeListener imageListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
+    private final WabitListener imageListener = new AbstractWabitListener() {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             resetImage();
         }
     };
@@ -253,7 +255,7 @@ public class WabitImagePanel implements WabitPanel {
         
         imagePanel.setBorder(CellSetTableHeaderComponent.ROUNDED_DASHED_BORDER);
         
-        image.addPropertyChangeListener(imageListener);
+        image.addWabitListener(imageListener);
     }
     
     /**
@@ -318,7 +320,7 @@ public class WabitImagePanel implements WabitPanel {
     }
     
     private void cleanup() {
-        image.removePropertyChangeListener(imageListener);
+        image.removeWabitListener(imageListener);
     }
 
     public JComponent getPanel() {

@@ -26,7 +26,6 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,8 +49,10 @@ import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Property;
 
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
@@ -125,12 +126,19 @@ public class CellSetRenderer extends AbstractWabitObject implements
      */
     private final Map<Member, Set<Rectangle>> memberHeaderMap = new HashMap<Member, Set<Rectangle>>();
     
-    private PropertyChangeListener nameListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
+    /**
+     * Updates the name of this renderer if the name of the query backing it
+     * has changed.
+     */
+    private WabitListener nameListener = new AbstractWabitListener() {
+        
+        @Override
+		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("name")) {
 				setName((String) evt.getNewValue());
 			}
 		}
+
     };
     
     /**
@@ -164,7 +172,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     	this.olapQuery = cellSetRenderer.getOlapQuery();
     	this.modifiedOlapQuery = cellSetRenderer.getModifiedOlapQuery();
     	setName(cellSetRenderer.getName());
-    	this.olapQuery.addPropertyChangeListener(nameListener);
+    	this.olapQuery.addWabitListener(nameListener);
     	this.headerFont = cellSetRenderer.headerFont;
     	this.bodyFont = cellSetRenderer.bodyFont;
     	this.bodyAlignment = cellSetRenderer.bodyAlignment;
@@ -178,7 +186,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
         setName(olapQuery.getName());
-        olapQuery.addPropertyChangeListener(nameListener);
+        olapQuery.addWabitListener(nameListener);
     }
     
     public void init() {
@@ -216,7 +224,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     	if (modifiedOlapQuery != null && !this.initDone) {
     		modifiedOlapQuery.removeOlapQueryListener(queryListener);
     	}
-        olapQuery.removePropertyChangeListener(nameListener);
+        olapQuery.removeWabitListener(nameListener);
         return new CleanupExceptions();
     }
 

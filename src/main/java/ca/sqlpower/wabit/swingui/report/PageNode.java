@@ -25,6 +25,8 @@ import java.beans.PropertyChangeListener;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -40,8 +42,11 @@ public class PageNode extends PNode implements WabitNode {
     
     private final Page page;
 
-    private final PropertyChangeListener pageChangeHandler = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
+    /**
+     * Updates this page's bounds based on changes in the model.
+     */
+    private final WabitListener pageChangeHandler = new AbstractWabitListener() {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             logger.debug("Page " + evt.getSource() + ": " + evt.getPropertyName() +
                     " changed " + evt.getOldValue() + " -> " + evt.getNewValue(), new Exception());
             updateBoundsFromPage();
@@ -50,7 +55,7 @@ public class PageNode extends PNode implements WabitNode {
     
     public PageNode(WabitSwingSession session, LayoutPanel parentPanel, Page page) {
         this.page = page;
-        page.addPropertyChangeListener(pageChangeHandler);
+        page.addWabitListener(pageChangeHandler);
         for (WabitObject pageChild : page.getChildren()) {
             if (pageChild instanceof Guide) {
                 addChild(new GuideNode((Guide) pageChild));
@@ -104,7 +109,7 @@ public class PageNode extends PNode implements WabitNode {
     }
 
     public void cleanup() {
-        page.removePropertyChangeListener(pageChangeHandler);
+        page.removeWabitListener(pageChangeHandler);
     }
 
     public Page getModel() {

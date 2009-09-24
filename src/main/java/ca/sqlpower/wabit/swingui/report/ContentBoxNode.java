@@ -40,8 +40,9 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -198,17 +199,6 @@ public class ContentBoxNode extends PNode implements ReportNode {
 	}
     
     /**
-     * Reacts to changes in the content box by repainting this pnode.
-     */
-    private final PropertyChangeListener modelChangeHandler = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
-        	updateBoundsFromContentBox();
-            repaint();
-            
-        }
-    };
-    
-    /**
      * Listens to repaint requests from the content box and repaints
      * as necessary.
      */
@@ -230,18 +220,28 @@ public class ContentBoxNode extends PNode implements ReportNode {
     private final WabitWorkspace workspace;
     
     /**
-     * This is the contentRenderer listener which listens to changes is the 
+     * This is the {@link ContentBox} listener which listens to changes is the
+     * content box that is the model to this swing component. 
      */
-    private WabitChildListener contentRendererListener = new WabitChildListener() {
-		public void wabitChildRemoved(WabitChildEvent e) {
+    private WabitListener contentRendererListener = new AbstractWabitListener() {
+        
+        @Override
+		public void wabitChildRemovedImpl(WabitChildEvent e) {
 			setSwingContentRenderer(null);
 		}
 		
-		public void wabitChildAdded(WabitChildEvent e) {
+		@Override
+		public void wabitChildAddedImpl(WabitChildEvent e) {
 			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
 	        setSwingContentRenderer(renderer);
 
 		}
+
+        @Override
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
+            updateBoundsFromContentBox();
+            repaint();
+        }
 
 	};
     
@@ -289,9 +289,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
         this.workspace = workspace;
         
         setSwingContentRenderer(contentBox.getContentRenderer());
-		contentBox.addChildListener(contentRendererListener);
+		contentBox.addWabitListener(contentRendererListener);
         setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
-        contentBox.addPropertyChangeListener(modelChangeHandler);
         contentBox.addRepaintListener(modelRepaintListener);
         addInputEventListener(inputHandler);
         updateBoundsFromContentBox();
@@ -409,8 +408,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
     }
 
     public void cleanup() {
-        contentBox.removePropertyChangeListener(modelChangeHandler);
-        contentBox.removeChildListener(contentRendererListener);
+        contentBox.removeWabitListener(contentRendererListener);
         contentBox.removeRepaintListener(modelRepaintListener);
     }
 

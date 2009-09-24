@@ -19,8 +19,26 @@
 
 package ca.sqlpower.wabit;
 
+/**
+ * An event that is passed to listeners when a child is added to or removed from
+ * its parent.
+ */
 public class WabitChildEvent {
 
+    /**
+     * The type of event that signals if a child is being added or removed.
+     */
+    public enum EventType {
+        /**
+         * Defines this event to be adding a child to the parent object.
+         */
+        ADDED,
+        
+        /**
+         * Defines this event to be removing a child from the parent object.
+         */
+        REMOVED
+    }
 
     /**
      * The parent that gained or lost a child.
@@ -50,6 +68,12 @@ public class WabitChildEvent {
     private final int index;
 
     /**
+     * Defines if this event is adding a child to its parent or removing the
+     * child from its parent.
+     */
+    private final EventType type;
+
+    /**
      * Creates a new event object that describes adding or removing a single
      * child of the given type to/from a parent.
      * 
@@ -64,11 +88,13 @@ public class WabitChildEvent {
      *            The index of the child that was added or removed (this is the
      *            overall index in the parent, not the index within one child type).
      */
-    public WabitChildEvent(WabitObject source, Class<? extends WabitObject> childType, WabitObject child, int index) {
+    public WabitChildEvent(WabitObject source, Class<? extends WabitObject> childType, 
+            WabitObject child, int index, EventType type) {
         this.source = source;
         this.childType = childType;
         this.child = child;
         this.index = index;
+        this.type = type;
     }
 
     public WabitObject getSource() {
@@ -85,6 +111,10 @@ public class WabitChildEvent {
 
     public int getIndex() {
         return index;
+    }
+    
+    public EventType getType() {
+        return type;
     }
     
     @Override

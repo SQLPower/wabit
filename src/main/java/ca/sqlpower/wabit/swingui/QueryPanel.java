@@ -86,10 +86,9 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
-import ca.sqlpower.query.QueryCompoundEditEvent;
+import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -107,6 +106,7 @@ import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -474,12 +474,12 @@ public class QueryPanel implements WabitPanel {
             executeQuery();
         }
     
-        public void compoundEditEnded(QueryCompoundEditEvent evt) {
+        public void compoundEditEnded(TransactionEvent evt) {
             inCompoundEdit = false;
             executeQuery();
         }
 
-        public void compoundEditStarted(QueryCompoundEditEvent evt) {
+        public void compoundEditStarted(TransactionEvent evt) {
             inCompoundEdit = true;
         }
     };

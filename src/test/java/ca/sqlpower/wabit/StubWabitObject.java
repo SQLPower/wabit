@@ -25,7 +25,7 @@ import java.util.UUID;
 
 public class StubWabitObject implements WabitObject {
 
-    public void addChildListener(WabitChildListener l) {
+    public void addWabitListener(WabitListener l) {
     }
 
     public void addPropertyChangeListener(PropertyChangeListener l) {
@@ -55,7 +55,7 @@ public class StubWabitObject implements WabitObject {
         return null;
     }
 
-    public void removeChildListener(WabitChildListener l) {
+    public void removeWabitListener(WabitListener l) {
     }
 
     public void removePropertyChangeListener(PropertyChangeListener l) {

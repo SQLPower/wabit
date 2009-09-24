@@ -27,7 +27,6 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -51,10 +50,12 @@ import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.QueryException;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
@@ -255,8 +256,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * should receive events when the query changes when it is listening to
 	 * the children of a result set renderer.
 	 */
-	private final PropertyChangeListener parentChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
+	private final WabitListener parentChangeListener = new AbstractWabitListener() {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             clearResultSetLayout();
         }
     };
@@ -278,8 +279,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * This listener will fire a change event when the query changes to signal that
 	 * the result set renderer needs to be repainted.
 	 */
-    private final PropertyChangeListener queryChangeListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
+    private final WabitListener queryChangeListener = new AbstractWabitListener() {
+		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("name")) {
 				setName("Result Set: " + query.getName());
 			}
@@ -322,7 +323,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     public ResultSetRenderer(@Nonnull QueryCache query, @Nonnull List<ColumnInfo> columnInfoList) {
         this.query = query;
         query.addResultSetListener(resultSetHandler);
-		query.addPropertyChangeListener(queryChangeListener);
+		query.addWabitListener(queryChangeListener);
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         setName("Result Set: " + query.getName());
 	}
@@ -349,7 +350,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 			columnInfo.add(newColumnInfo);
     	}
     	
-    	query.addPropertyChangeListener(queryChangeListener);
+    	query.addWabitListener(queryChangeListener);
     	query.addResultSetListener(resultSetHandler);
     	
     	if (resultSetRenderer.resultSetHandler.currentRowSet != null) {
@@ -371,7 +372,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     @Override
     public CleanupExceptions cleanup() {
         query.removeResultSetListener(resultSetHandler);
-    	query.removePropertyChangeListener(queryChangeListener);
+    	query.removeWabitListener(queryChangeListener);
     	resultSetHandler.cleanup();
     	return new CleanupExceptions();
     }
@@ -929,11 +930,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     @Override
     public void setParent(WabitObject parent) {
         if (getParent() != null) {
-            getParent().removePropertyChangeListener(parentChangeListener);
+            getParent().removeWabitListener(parentChangeListener);
         }
         super.setParent(parent);
         if (getParent() != null) {
-            getParent().addPropertyChangeListener(parentChangeListener);
+            getParent().addWabitListener(parentChangeListener);
         }
     }
 

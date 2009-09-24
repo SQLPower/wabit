@@ -19,10 +19,8 @@
 
 package ca.sqlpower.wabit;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -31,16 +29,17 @@ import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.util.TransactionEvent;
+import ca.sqlpower.wabit.WabitChildEvent.EventType;
+
 public abstract class AbstractWabitObject implements WabitObject {
 
     private static final Logger logger = Logger.getLogger(AbstractWabitObject.class);
     
     @GuardedBy("childListeners")
-    private final List<WabitChildListener> childListeners = 
-        Collections.synchronizedList(new ArrayList<WabitChildListener>());
+    private final List<WabitListener> listeners = 
+        Collections.synchronizedList(new ArrayList<WabitListener>());
     
-    @GuardedBy("pcs")
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private WabitObject parent;
     private String name;
     
@@ -78,30 +77,18 @@ public abstract class AbstractWabitObject implements WabitObject {
         uuid = "w" + UUID.randomUUID().toString();
     }
     
-    public void addPropertyChangeListener(PropertyChangeListener l) {
-        synchronized (pcs) {
-            pcs.addPropertyChangeListener(l);
-        }
-    }
-
-    public void removePropertyChangeListener(PropertyChangeListener l) {
-        synchronized (pcs) {
-            pcs.removePropertyChangeListener(l);
-        }
-    }
-    
-    public void addChildListener(WabitChildListener l) {
+    public void addWabitListener(WabitListener l) {
     	if (l == null) {
     		throw new NullPointerException("Cannot add child listeners that are null.");
     	}
-    	synchronized (childListeners) {
-    	    childListeners.add(l);
+    	synchronized (listeners) {
+    	    listeners.add(l);
     	}
     }
 
-    public void removeChildListener(WabitChildListener l) {
-        synchronized (childListeners) {
-            childListeners.remove(l);
+    public void removeWabitListener(WabitListener l) {
+        synchronized (listeners) {
+            listeners.remove(l);
         }
     }
 
@@ -118,24 +105,27 @@ public abstract class AbstractWabitObject implements WabitObject {
      *            The index of the added child within its own child list (this
      *            will be converted to the overall child position before the
      *            event object is constructed).
+     * @return The child event that was fired or null if no event was fired, for
+     *         testing purposes.
      */
-    protected void fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
-        synchronized(childListeners) {
-            if (childListeners.isEmpty()) return;
+    protected WabitChildEvent fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
+        synchronized(listeners) {
+            if (listeners.isEmpty()) return null;
         }
         index += childPositionOffset(type);
-        final WabitChildEvent e = new WabitChildEvent(this, type, child, index);
+        final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.ADDED);
         Runnable runner = new Runnable() {
             public void run() {
-                synchronized(childListeners) {
-                    for (int i = childListeners.size() - 1; i >= 0; i--) {
-                        final WabitChildListener listener = childListeners.get(i);
+                synchronized(listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        final WabitListener listener = listeners.get(i);
                         listener.wabitChildAdded(e);
                     }
                 }
             }
         };
         runInForeground(runner);
+        return e;
     }
 
     /**
@@ -151,86 +141,184 @@ public abstract class AbstractWabitObject implements WabitObject {
      *            The index that the removed child was at within its own child
      *            list (this will be converted to the overall child position
      *            before the event object is constructed).
+     * @return The child event that was fired or null if no event was fired, for
+     *         testing purposes.
      */
-    protected void fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
-        synchronized(childListeners) {
-            if (childListeners.isEmpty()) return;
+    protected WabitChildEvent fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
+        synchronized(listeners) {
+            if (listeners.isEmpty()) return null;
         }
         index += childPositionOffset(type);
-        final WabitChildEvent e = new WabitChildEvent(this, type, child, index);
+        final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.REMOVED);
         Runnable runner = new Runnable() {
             public void run() {
-                synchronized(childListeners) {
-                    for (int i = childListeners.size() - 1; i >= 0; i--) {
-                        final WabitChildListener listener = childListeners.get(i);
+                synchronized(listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        final WabitListener listener = listeners.get(i);
                         listener.wabitChildRemoved(e);
                     }
                 }
             }
         };
         runInForeground(runner);
+        return e;
     }
 
     /**
-     * Fires a property change on the foreground thread as defined by the current
-     * session being used.
+     * Fires a property change on the foreground thread as defined by the
+     * current session being used.
+     * 
+     * @return The property change event that was fired or null if no event was
+     *         fired, for testing purposes.
      */
-    protected void firePropertyChange(final String propertyName, final boolean oldValue, 
+    protected PropertyChangeEvent firePropertyChange(final String propertyName, final boolean oldValue, 
             final boolean newValue) {
-        synchronized(pcs) {
-            if (pcs.getPropertyChangeListeners().length == 0) return;
+        synchronized(listeners) {
+            if (listeners.size() == 0) return null;
         }
+        final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
         Runnable runner = new Runnable() {
             public void run() {
-                synchronized(pcs) {
-                    pcs.firePropertyChange(propertyName, oldValue, newValue);
+                synchronized(listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        listeners.get(i).propertyChange(evt);
+                    }
                 }
             }
         };
         runInForeground(runner);
+        return evt;
     }
 
     /**
-     * Fires a property change on the foreground thread as defined by the current
-     * session being used.
+     * Fires a property change on the foreground thread as defined by the
+     * current session being used.
+     * 
+     * @return The property change event that was fired or null if no event was
+     *         fired, for testing purposes.
      */
-    protected void firePropertyChange(final String propertyName, final int oldValue, 
+    protected PropertyChangeEvent firePropertyChange(final String propertyName, final int oldValue, 
             final int newValue) {
-        synchronized(pcs) {
-            if (pcs.getPropertyChangeListeners().length == 0) return;
+        synchronized(listeners) {
+            if (listeners.size() == 0) return null;
         }
+        final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
         Runnable runner = new Runnable() {
             public void run() {
-                synchronized(pcs) {
-                    pcs.firePropertyChange(propertyName, oldValue, newValue);
+                synchronized(listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        listeners.get(i).propertyChange(evt);
+                    }
                 }
             }
         };
         runInForeground(runner);
+        return evt;
     }
 
     /**
-     * Fires a property change on the foreground thread as defined by the current
-     * session being used.
+     * Fires a property change on the foreground thread as defined by the
+     * current session being used.
+     * 
+     * @return The property change event that was fired or null if no event was
+     *         fired, for testing purposes.
      */
-    protected void firePropertyChange(final String propertyName, final Object oldValue, 
+    protected PropertyChangeEvent firePropertyChange(final String propertyName, final Object oldValue, 
             final Object newValue) {
-        synchronized(pcs) {
-            if (pcs.getPropertyChangeListeners().length == 0) return;
+        synchronized(listeners) {
+            if (listeners.size() == 0) return null;
             if (logger.isDebugEnabled()) {
-                logger.debug("Firing property change \"" + propertyName + "\" to " +
-                        pcs.getPropertyChangeListeners().length +
-                        " listeners: " + Arrays.toString(pcs.getPropertyChangeListeners()));
+                logger.debug("Firing property change \"" + propertyName
+                        + "\" to " + listeners.size() + " listeners: "
+                        + listeners);
             }
         }
+        final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
         Runnable runner = new Runnable() {
             public void run() {
-                synchronized(pcs) {
-                    pcs.firePropertyChange(propertyName, oldValue, newValue);
+                synchronized(listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        listeners.get(i).propertyChange(evt);
+                    }
                 }
             }
         };
         runInForeground(runner);
+        return evt;
+    }
+
+    /**
+     * Fires a transaction started event with a message indicating the
+     * reason/type of the transaction.
+     * 
+     * @return The event that was fired or null if no event was fired, for
+     *         testing purposes.
+     */
+    protected TransactionEvent fireTransactionStarted(final String message) {
+        synchronized (listeners) {
+            if (listeners.size() == 0) return null;            
+        }
+        final TransactionEvent evt = TransactionEvent.createStartTransactionEvent(this, message);
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized (listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        listeners.get(i).transactionStarted(evt);
+                    }
+                }
+            }
+        };
+        runInForeground(runner);
+        return evt;
+    }
+
+    /**
+     * Fires a transaction ended event.
+     * 
+     * @return The event that was fired or null if no event was fired, for
+     *         testing purposes.
+     */
+    protected TransactionEvent fireTransactionEnded() {
+        synchronized (listeners) {
+            if (listeners.size() == 0) return null;            
+        }
+        final TransactionEvent evt = TransactionEvent.createEndTransactionEvent(this);
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized (listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        listeners.get(i).transactionEnded(evt);
+                    }
+                }
+            }
+        };
+        runInForeground(runner);
+        return evt;
+    }
+
+    /**
+     * Fires a transaction rollback event with a message indicating the
+     * reason/type of the rollback.
+     * 
+     * @return The event that was fired or null if no event was fired, for
+     *         testing purposes.
+     */
+    protected TransactionEvent fireTransactionRollback(final String message) {
+        synchronized (listeners) {
+            if (listeners.size() == 0) return null;            
+        }
+        final TransactionEvent evt = TransactionEvent.createRollbackTransactionEvent(this, message);
+        Runnable runner = new Runnable() {
+            public void run() {
+                synchronized (listeners) {
+                    for (int i = listeners.size() - 1; i >= 0; i--) {
+                        listeners.get(i).transactionRollback(evt);
+                    }
+                }
+            }
+        };
+        runInForeground(runner);
+        return evt;
     }
     
 	public WabitObject getParent() {

@@ -36,6 +36,8 @@ import javax.swing.JPopupMenu;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitNode;
@@ -78,7 +80,7 @@ public class GuideNode extends PNode implements WabitNode {
     
     public GuideNode(Guide model) {
         this.model = model;
-        this.model.addPropertyChangeListener(modelChangeHandler);
+        this.model.addWabitListener(modelChangeHandler);
         setPaint(normalColour);
         addInputEventListener(inputEventHandler);
         // Note that guides are pickable so they can get input events, but our
@@ -214,9 +216,12 @@ public class GuideNode extends PNode implements WabitNode {
     	}
     }
     
-    private PropertyChangeListener modelChangeHandler = new PropertyChangeListener() {
+    /**
+     * Adjusts this guide's position and length based on it's model.
+     */
+    private final WabitListener modelChangeHandler = new AbstractWabitListener() {
 
-        public void propertyChange(PropertyChangeEvent evt) {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("offset")) {
                 adjustBoundsForParent();
             }
@@ -277,7 +282,7 @@ public class GuideNode extends PNode implements WabitNode {
     }
 
     public void cleanup() {
-        model.removePropertyChangeListener(modelChangeHandler);
+        model.removeWabitListener(modelChangeHandler);
     }
 
     public Guide getModel() {

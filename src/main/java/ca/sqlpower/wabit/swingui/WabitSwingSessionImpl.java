@@ -79,8 +79,9 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
@@ -228,7 +229,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * for property changes, and handles them appropriately (usually by setting
      * the session's dirty flag).
      */
-	private class WorkspaceWatcher implements WabitChildListener, PropertyChangeListener {
+	private class WorkspaceWatcher extends AbstractWabitListener {
 
 	    private final Set<String> ignorablePropertyNames = new HashSet<String>();
 	    {
@@ -239,20 +240,23 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    }
 	    
         public WorkspaceWatcher(WabitWorkspace workspace) {
-            WabitUtils.listenToHierarchy(workspace, this, this);
+            WabitUtils.listenToHierarchy(workspace, this);
         }
 	    
-        public void wabitChildAdded(WabitChildEvent e) {
-            WabitUtils.listenToHierarchy(e.getChild(), this, this);
+        @Override
+        public void wabitChildAddedImpl(WabitChildEvent e) {
+            WabitUtils.listenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
         }
 
-        public void wabitChildRemoved(WabitChildEvent e) {
-            WabitUtils.unlistenToHierarchy(e.getChild(), this, this);
+        @Override
+        public void wabitChildRemovedImpl(WabitChildEvent e) {
+            WabitUtils.unlistenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
         }
 
-        public void propertyChange(PropertyChangeEvent evt) {
+        @Override
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             // TODO probably need to extend this to a set of ignorable property names
             if (!ignorablePropertyNames.contains(evt.getPropertyName())) {
                 SQLPowerUtils.logPropertyChange(
@@ -337,8 +341,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * update the current editor displayed when the object being edited changes
      * in the workspace.
      */
-    private final PropertyChangeListener workspaceEditorModelListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
+    private final WabitListener workspaceEditorModelListener = new AbstractWabitListener() {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (sessionContext.isLoading()) return;
             if (evt.getPropertyName().equals("editorPanelModel")) {
                 sessionContext.setActiveSession(WabitSwingSessionImpl.this);
@@ -477,7 +481,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         if (getWorkspace().getEditorPanelModel() == null) {
         	getWorkspace().setEditorPanelModel(getWorkspace());
         }
-        getWorkspace().addPropertyChangeListener(workspaceEditorModelListener);
+        getWorkspace().addWabitListener(workspaceEditorModelListener);
         getContext().addPropertyChangeListener(loadingContextListener);
         
         busyBadgeTimer = new Timer(100, new ActionListener() {
@@ -528,7 +532,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    if (!delegateSession.close()) {
 	        return false;
 	    }
-	    getWorkspace().removePropertyChangeListener(workspaceEditorModelListener);
+	    getWorkspace().removeWabitListener(workspaceEditorModelListener);
 	    getContext().removePropertyChangeListener(loadingContextListener);
 	    for (ActiveWorker worker : activeWorkers) {
 	        worker.getWorker().kill();

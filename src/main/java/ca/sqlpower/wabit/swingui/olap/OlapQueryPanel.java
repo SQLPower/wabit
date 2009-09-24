@@ -39,7 +39,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,6 +92,8 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.Messages;
+import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
@@ -231,8 +232,8 @@ public class OlapQueryPanel implements WabitPanel {
     /**
      * This updates the displayed name of the query when it changes.
      */
-    private final PropertyChangeListener queryPropertyListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent evt) {
+    private final WabitListener queryPropertyListener = new AbstractWabitListener() {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("currentCube")) {
                 if (query.getCurrentCube() != null) {
                     cubeNameLabel.setText(query.getCurrentCube().getName());
@@ -310,7 +311,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.session = session;
         final JFrame parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
         cellSetViewer = new CellSetViewer(session, query);
-        query.addPropertyChangeListener(queryPropertyListener);
+        query.addWabitListener(queryPropertyListener);
         
         this.undoManager  = new UndoManager();
         cubeTree = new JTree();
@@ -561,7 +562,7 @@ public class OlapQueryPanel implements WabitPanel {
      * the panel is being disposed.
      */
     private void cleanup() {
-        query.removePropertyChangeListener(queryPropertyListener);
+        query.removeWabitListener(queryPropertyListener);
         query.removeOlapQueryListener(queryListener);
         session.getWorkspace().removeDatabaseListChangeListener(dbListChangeListener);
     }

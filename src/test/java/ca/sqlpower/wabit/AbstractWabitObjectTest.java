@@ -33,7 +33,6 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.testutil.CountingPropertyChangeListener;
 import ca.sqlpower.testutil.NewValueMaker;
 
 /**
@@ -67,9 +66,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      */
     public void testSettingPropertiesFiresEvents() throws Exception {
         
-        CountingPropertyChangeListener listener = new CountingPropertyChangeListener();
+        CountingWabitListener listener = new CountingWabitListener();
         WabitObject wo = getObjectUnderTest();
-        wo.addPropertyChangeListener(listener);
+        wo.addWabitListener(listener);
 
         List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
@@ -104,10 +103,10 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (listener.getPropertyChangeCount() == oldChangeCount + 1) {
                     assertEquals("Property name mismatch for "+property.getName()+ " in "+wo.getClass(),
                             property.getName(),
-                            listener.getLastPropertyChange());
+                            listener.getLastPropertyEvent());
                     assertEquals("New value for "+property.getName()+" was wrong",
                             newVal,
-                            listener.getLastNewValue());  
+                            listener.getLastPropertyEvent().getNewValue());  
                 }
             } catch (InvocationTargetException e) {
                 System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
@@ -125,8 +124,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     public void testAddChildren() throws Exception {
         WabitObject wo = getObjectUnderTest();
 
-        CountingWabitChildListener listener = new CountingWabitChildListener();
-        wo.addChildListener(listener);
+        CountingWabitListener listener = new CountingWabitListener();
+        wo.addWabitListener(listener);
         
         NewValueMaker valueMaker = new WabitNewValueMaker();
         

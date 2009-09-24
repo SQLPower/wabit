@@ -41,7 +41,6 @@ import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
-import ca.sqlpower.query.QueryCompoundEditEvent;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.sql.CachedRowSet;
@@ -51,6 +50,7 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
@@ -173,11 +173,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             fireContainerAdded(evt);
         }
     
-        public void compoundEditStarted(QueryCompoundEditEvent evt) {
+        public void compoundEditStarted(TransactionEvent evt) {
             fireCompoundEditStarted(evt);
         }
     
-        public void compoundEditEnded(QueryCompoundEditEvent evt) {
+        public void compoundEditEnded(TransactionEvent evt) {
             fireCompoundEditEnded(evt);
         }
     };
@@ -849,9 +849,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         });
     }
     
-    protected void fireCompoundEditStarted(final QueryCompoundEditEvent evt) {
-        final QueryCompoundEditEvent newEvent = 
-            QueryCompoundEditEvent.createStartCompoundEditEvent(this, evt.getMessage());
+    protected void fireCompoundEditStarted(final TransactionEvent evt) {
+        final TransactionEvent newEvent = 
+            TransactionEvent.createStartTransactionEvent(this, evt.getMessage());
         runInForeground(new Runnable() {
             public void run() {
                 synchronized(queryListeners) {
@@ -863,9 +863,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         });
     }
     
-    protected void fireCompoundEditEnded(QueryCompoundEditEvent evt) {
-        final QueryCompoundEditEvent newEvent =
-            QueryCompoundEditEvent.createEndCompoundEditEvent(this);
+    protected void fireCompoundEditEnded(TransactionEvent evt) {
+        final TransactionEvent newEvent =
+            TransactionEvent.createEndTransactionEvent(this);
         runInForeground(new Runnable() {
             public void run() {
                 synchronized(queryListeners) {

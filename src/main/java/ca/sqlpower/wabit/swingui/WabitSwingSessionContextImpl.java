@@ -136,9 +136,11 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.ServerListListener;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -1276,7 +1278,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	public void deregisterChildSession(WabitSession child) {
 		stackedTabPane.removeTabAt(getSessions().indexOf(child) + 1);
-	    child.getWorkspace().removePropertyChangeListener(nameChangeListener);
+	    child.getWorkspace().removeWabitListener(nameChangeListener);
 	    delegateContext.deregisterChildSession(child);
 	}
 	
@@ -1800,8 +1802,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return delegateContext.isMacOSX();
     }
 
-    private PropertyChangeListener nameChangeListener = new PropertyChangeListener() {
-    	public void propertyChange(PropertyChangeEvent evt) {
+    /**
+     * Listens for changes to the workspace name and updates the name on the
+     * stacked tab accordingly.
+     */
+    private final WabitListener nameChangeListener = new AbstractWabitListener() {
+    	public void propertyChangeImpl(PropertyChangeEvent evt) {
     		if (evt.getPropertyName().equals("name")) {
     			WabitSession sourceSession = ((WabitWorkspace) evt.getSource()).getSession();
 				int index = getSessions().indexOf(sourceSession) + 1;
@@ -1825,7 +1831,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         // mark the session clean (this is the correct way, according to interface docs)
         swingSession.setCurrentURI(swingSession.getCurrentURI());
         
-        swingSession.getWorkspace().addPropertyChangeListener(nameChangeListener);
+        swingSession.getWorkspace().addWabitListener(nameChangeListener);
         stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
 		stackedTabPane.setSelectedIndex(stackedTabPane.getTabCount() - 1);
     }

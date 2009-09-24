@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.tree;
 
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,9 +48,9 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitChildListener;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -62,8 +61,8 @@ import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.Guide.Axis;
@@ -112,7 +111,7 @@ public class WorkspaceTreeModel implements TreeModel {
         folderList.add(new FolderNode(workspace, FolderType.TEMPLATES));
         folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
-        WabitUtils.listenToHierarchy(workspace, listener, listener);
+        WabitUtils.listenToHierarchy(workspace, listener);
     }
     
     /**
@@ -445,9 +444,10 @@ public class WorkspaceTreeModel implements TreeModel {
 	 * {@link WabitChildEvent} from the business model and 'translates' them
 	 * into {@link TreeModelEvent} for the WorkspaceTreeModel.
 	 */
-    private class WabitTreeModelEventAdapter implements PropertyChangeListener, WabitChildListener {
-
-		public void propertyChange(PropertyChangeEvent evt) {
+    private class WabitTreeModelEventAdapter extends AbstractWabitListener {
+        
+        @Override
+		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			WabitObject node = (WabitObject) evt.getSource();
 			if (!appearsInTree(node)) {
 			    return;
@@ -480,8 +480,9 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesChanged(e);
 		}
 
-		public void wabitChildAdded(WabitChildEvent e) {
-		    WabitUtils.listenToHierarchy(e.getChild(), this, this);
+        @Override
+		public void wabitChildAddedImpl(WabitChildEvent e) {
+		    WabitUtils.listenToHierarchy(e.getChild(), this);
 		    if (!appearsInTree(e.getChild())) {
 		        return;
 		    }
@@ -495,10 +496,9 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesInserted(treeEvent);
 		}
 
-
-
-		public void wabitChildRemoved(WabitChildEvent e) {
-            WabitUtils.unlistenToHierarchy(e.getChild(), this, this);
+        @Override
+		public void wabitChildRemovedImpl(WabitChildEvent e) {
+            WabitUtils.unlistenToHierarchy(e.getChild(), this);
             if (!appearsInTree(e.getChild())) {
                 return;
             }
@@ -552,6 +552,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			
 			return actualIndex;
 		}
+
     }
 
     /**

@@ -27,7 +27,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -68,6 +67,8 @@ import org.jfree.chart.JFreeChart;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
+import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -261,7 +262,7 @@ public class ChartPanel implements WabitPanel {
      * {@link #chartDataListener}, which handles events strictly dealing with
      * the chart's current data (rather than its configuration).
      */
-    private final PropertyChangeListener chartListener = new PropertyChangeListener() {
+    private final WabitListener chartListener = new AbstractWabitListener() {
 
         /**
          * Set of properties that are ignored with regards to marking this chart
@@ -272,7 +273,7 @@ public class ChartPanel implements WabitPanel {
             ignorableProperties.add("unfilteredResultSet");
         }
         
-        public void propertyChange(PropertyChangeEvent evt) {
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             logger.debug(
                     "Got chart property change: \""+evt.getPropertyName()+"\" " +
                     		evt.getOldValue() + " -> " + evt.getNewValue());
@@ -376,7 +377,7 @@ public class ChartPanel implements WabitPanel {
         
         buildUI();
 
-        chart.addPropertyChangeListener(chartListener);
+        chart.addWabitListener(chartListener);
 
         boolean disableAutoExecute = isAutoExecuteDisabled();
 
@@ -748,7 +749,7 @@ public class ChartPanel implements WabitPanel {
     }
 
     private void cleanup() {
-        chart.removePropertyChangeListener(chartListener);
+        chart.removeWabitListener(chartListener);
         chart.removeChartDataListener(chartDataListener);
     }
     

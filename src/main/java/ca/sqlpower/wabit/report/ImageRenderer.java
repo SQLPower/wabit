@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.report;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +30,9 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
 
@@ -82,10 +83,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 	 * {@link #preservingAspectRatio} value based on the
 	 * {@link #preserveAspectRatioWhenResizing} value.
 	 */
-	private final PropertyChangeListener contentBoxResizingListener = 
-		new PropertyChangeListener() {
+	private final WabitListener contentBoxResizingListener = 
+		new AbstractWabitListener() {
 	
-		public void propertyChange(PropertyChangeEvent evt) {
+		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("width") 
 					|| evt.getPropertyName().equals("height")) {
 				setPreservingAspectRatio(isPreserveAspectRatioWhenResizing()); 
@@ -216,11 +217,11 @@ public class ImageRenderer extends AbstractWabitObject implements
     public void setParent(WabitObject parent) {
     	if (getParent() != parent) {
     		if (getParent() != null) {
-    			getParent().removePropertyChangeListener(
+    			getParent().removeWabitListener(
     					contentBoxResizingListener);
     		}
     		if (parent != null) {
-    			parent.addPropertyChangeListener(
+    			parent.addWabitListener(
     					contentBoxResizingListener);
     		}
     	}

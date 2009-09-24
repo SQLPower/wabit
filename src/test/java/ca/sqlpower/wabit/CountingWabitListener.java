@@ -19,15 +19,25 @@
 
 package ca.sqlpower.wabit;
 
+import java.beans.PropertyChangeEvent;
+
+import ca.sqlpower.util.TransactionEvent;
+
 /**
  * A listener implementation that's useful for building unit tests.
  */
-public class CountingWabitChildListener implements WabitChildListener {
+public class CountingWabitListener implements WabitListener {
 
     private int addedCount;
     private int removedCount;
+    private int propertyChangeCount;
+    private int transactionStartCount;
+    private int transactionEndCount;
+    private int transactionRollbackCount;
     
     private WabitChildEvent lastEvent;
+    private PropertyChangeEvent lastPropertyEvent;
+    private TransactionEvent lastTransactionEvent;
     
     /**
      * Counts this added event and keeps a reference to the event object.
@@ -66,5 +76,49 @@ public class CountingWabitChildListener implements WabitChildListener {
      */
     public int getRemovedCount() {
         return removedCount;
+    }
+
+    public void transactionEnded(TransactionEvent e) {
+        transactionEndCount++;
+        lastTransactionEvent = e;
+    }
+
+    public void transactionStarted(TransactionEvent e) {
+        transactionStartCount++;
+        lastTransactionEvent = e;
+    }
+
+    public void propertyChange(PropertyChangeEvent evt) {
+        propertyChangeCount++;
+        lastPropertyEvent = evt;
+    }
+    
+    public int getPropertyChangeCount() {
+        return propertyChangeCount;
+    }
+    
+    public int getTransactionEndCount() {
+        return transactionEndCount;
+    }
+    
+    public int getTransactionStartCount() {
+        return transactionStartCount;
+    }
+    
+    public PropertyChangeEvent getLastPropertyEvent() {
+        return lastPropertyEvent;
+    }
+    
+    public TransactionEvent getLastTransactionEvent() {
+        return lastTransactionEvent;
+    }
+
+    public void transactionRollback(TransactionEvent e) {
+        transactionRollbackCount++;
+        lastTransactionEvent = e;
+    }
+    
+    public int getTransactionRollbackCount() {
+        return transactionRollbackCount;
     }
 }

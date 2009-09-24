@@ -22,15 +22,15 @@ package ca.sqlpower.wabit.report;
 import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitChildListener;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 
@@ -59,38 +59,38 @@ public class ContentBox extends AbstractWabitObject {
      */
     private ReportContentRenderer contentRenderer;
 
-    /**
-     * The listeners that will be notified when this content box makes a request
-     * to repaint.
-     */
-    private final List<RepaintListener> repaintListeners = new ArrayList<RepaintListener>();
+   /**
+    * The listeners that will be notified when this content box makes a request
+    * to repaint.
+    */
+   private final List<RepaintListener> repaintListeners = new ArrayList<RepaintListener>();
     
-    private PropertyChangeListener rendererChangeHandler = new PropertyChangeListener() {
+    /**
+     * This adds and removes listeners from children of the renderer when the
+     * children of a renderer changes. It also fires a repaint request when 
+     * there is a change to the children of this content box.
+     */
+    private final WabitListener childListener = new AbstractWabitListener() {
+        
+        @Override
+		public void wabitChildRemovedImpl(WabitChildEvent e) {
+		    WabitUtils.unlistenToHierarchy(e.getChild(), childListener);
+		}
+		
+        @Override
+		public void wabitChildAddedImpl(WabitChildEvent e) {
+		    WabitUtils.listenToHierarchy(e.getChild(), childListener);
+		}
 
-        public void propertyChange(PropertyChangeEvent evt) {
+        @Override
+        public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("name") && evt.getNewValue() != null 
                     && ((String) evt.getNewValue()).length() > 0) {
                 setName("Content from " + (String) evt.getNewValue());
             }
-            repaint();
+            repaint();           
         }
-        
-    };
 
-    /**
-     * This adds and removes listeners from children of the renderer when the
-     * children of a renderer changes.
-     */
-    private final WabitChildListener emptyChildListener = new WabitChildListener() {
-        
-		public void wabitChildRemoved(WabitChildEvent e) {
-		    WabitUtils.unlistenToHierarchy(e.getChild(), rendererChangeHandler, emptyChildListener);
-		}
-		
-		public void wabitChildAdded(WabitChildEvent e) {
-		    WabitUtils.listenToHierarchy(e.getChild(), rendererChangeHandler, emptyChildListener);
-		}
-		
 	};
     
     public ContentBox() {
@@ -154,7 +154,7 @@ public class ContentBox extends AbstractWabitObject {
         if (oldContentRenderer != null) {
         	CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(oldContentRenderer);
         	WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
-            WabitUtils.unlistenToHierarchy(oldContentRenderer, rendererChangeHandler, emptyChildListener);
+            WabitUtils.unlistenToHierarchy(oldContentRenderer, childListener);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
@@ -168,7 +168,7 @@ public class ContentBox extends AbstractWabitObject {
         		setName("Content from " + contentRenderer.getName());
         	}
             contentRenderer.setParent(this);
-            WabitUtils.listenToHierarchy(contentRenderer, rendererChangeHandler, emptyChildListener);
+            WabitUtils.listenToHierarchy(contentRenderer, childListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         } else {
             setName("Empty content box");
