@@ -88,7 +88,8 @@ public interface WabitPersister {
 	 *             <li>The property type of the given value does not match the
 	 *             actual property in the object</li>
 	 */
-	public void persistProperty(String uuid, String propertyName, Object newValue) throws WabitPersistenceException;
+	public void persistProperty(String uuid, String propertyName,
+			Object newValue) throws WabitPersistenceException;
 
 	/**
 	 * Adds a {@link WabitObject} into the persistent storage. If the
@@ -105,6 +106,9 @@ public interface WabitPersister {
 	 *            (ex. WabitWorkspace)
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject} to actually persist
+	 * @param constructorArgs
+	 *            An {@link Object} varargs needed to pass onto a WabitObject
+	 *            constructor upon instantiation
 	 * @throws WabitPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
@@ -117,7 +121,8 @@ public interface WabitPersister {
 	 *             <li>A WabitObject with the given parent UUID does not exist</li>
 	 *             </ul>
 	 */
-	public void persistObject(String parentUUID, String type, String uuid) throws WabitPersistenceException;
+	public void persistObject(String parentUUID, String type, String uuid,
+			Object... constructorArgs) throws WabitPersistenceException;
 
 	/**
 	 * Removes a WabitObject from persistent storage
@@ -133,11 +138,13 @@ public interface WabitPersister {
 	 *             specific cause Exception and provide other details like the
 	 *             WabitObject UUID.
 	 */
-	public void removeObject(String parentUUID, String uuid) throws WabitPersistenceException;
-	
+	public void removeObject(String parentUUID, String uuid)
+			throws WabitPersistenceException;
+
 	/**
 	 * Indicates the start of an atomic transaction of persisting multiple
 	 * {@link WabitObject}s. To be used with a paired call to {@link #commit()}
+	 * 
 	 * @throws WabitPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
@@ -173,6 +180,7 @@ public interface WabitPersister {
 	 * transaction (that is, a begin() call after another begin() call before
 	 * commit()), then the state of the WabitObjects must be rolled back to the
 	 * state they were in before the highest level transaction began.
+	 * 
 	 * @throws WabitPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
