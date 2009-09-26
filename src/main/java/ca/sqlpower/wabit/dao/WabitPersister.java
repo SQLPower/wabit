@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.dao;
 
+import com.lowagie.text.pdf.codec.Base64.InputStream;
+
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 
@@ -27,6 +29,31 @@ import ca.sqlpower.wabit.WabitWorkspace;
  * which they are persisted is entirely up to the implementation.
  */
 public interface WabitPersister {
+
+	public enum DataType {
+		STRING("String", String.class),
+		INTEGER("Integer", Integer.class),
+		DOUBLE("Double", Double.class),
+		BOOLEAN("Boolean", Boolean.class),
+		REFERENCE("Reference", String.class),
+		PNG_IMG("PNG_IMG", InputStream.class);
+		
+		private final String name;
+		private final Class representation;
+		
+		private DataType(String name, Class representation){
+			this.name = name;
+			this.representation = representation;
+		}
+
+		public String getTypeName() {
+			return name;
+		}
+
+		public Class getRepresentation() {
+			return representation;
+		}
+	}
 
 	/**
 	 * Modifies the named property of the specified WabitObject in this
@@ -42,6 +69,8 @@ public interface WabitPersister {
 	 * @param propertyName
 	 *            The JavaBeans property name of the property that changed, as
 	 *            it would be discovered by the java.beans.Introspector class
+	 * @param propertyType
+	 *            The type, and Java representation, of this property
 	 * @param oldValue
 	 *            The expected previous value of the property
 	 * @param newValue
@@ -63,7 +92,8 @@ public interface WabitPersister {
 	 *             </ul>
 	 */
 	public void persistProperty(String uuid, String propertyName,
-			Object oldValue, Object newValue) throws WabitPersistenceException;
+			DataType propertyType, Object oldValue, Object newValue)
+			throws WabitPersistenceException;
 
 	/**
 	 * Modifies the named property of the specified WabitObject in this
@@ -89,7 +119,8 @@ public interface WabitPersister {
 	 *             actual property in the object</li>
 	 */
 	public void persistProperty(String uuid, String propertyName,
-			Object newValue) throws WabitPersistenceException;
+			DataType propertyType, Object newValue)
+			throws WabitPersistenceException;
 
 	/**
 	 * Adds a {@link WabitObject} into the persistent storage. If the
@@ -121,8 +152,7 @@ public interface WabitPersister {
 	 *             <li>A WabitObject with the given parent UUID does not exist</li>
 	 *             </ul>
 	 */
-	public void persistObject(String parentUUID, String type, String uuid,
-			Object... constructorArgs) throws WabitPersistenceException;
+	public void persistObject(String parentUUID, String type, String uuid) throws WabitPersistenceException;
 
 	/**
 	 * Removes a WabitObject from persistent storage
