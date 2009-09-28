@@ -21,14 +21,28 @@ package ca.sqlpower.wabit.dao;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.codec.binary.Base64;
 
 import com.google.common.collect.Multimap;
 
+import ca.sqlpower.query.Item;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -76,9 +90,9 @@ public class WabitSessionDAO implements WabitPersister {
 
 	private Multimap<String, WabitObjectProperty> persistedProperties;
 
-	private Vector<PersistedWabitObject> persistedObjects;
+	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
 
-	private Map<String, String> objectsToRemove;
+	private Map<String, String> objectsToRemove = new LinkedHashMap<String, String>();
 
 	/**
 	 * A class representing an individual persisted {@link WabitObject}
@@ -261,12 +275,14 @@ public class WabitSessionDAO implements WabitPersister {
 					WabitObject.class);
 
 			if (type.equals(CellSetRenderer.class.toString())) {
-				wo = new CellSetRenderer((OlapQuery) parent); // XXX this may be
-				// incorrect
-			}
-			if (type.equals(Chart.class.toString())) {
+				OlapQuery olapQuery = workspace.findByUuid(getProperty(uuid,
+						"olap-query-uuid", true).toString(), OlapQuery.class);
+				wo = new CellSetRenderer((OlapQuery) olapQuery);
+				((ContentBox) parent).setContentRenderer((CellSetRenderer) wo);
+
+			} else if (type.equals(Chart.class.toString())) {
 				wo = new Chart();
-				workspace.addChart((Chart) wo);
+				((WabitWorkspace) parent).addChart((Chart) wo);
 
 			} else if (type.equals(ChartColumn.class.toString())) {
 				String columnName = getProperty(uuid, "name", true).toString();
@@ -274,14 +290,17 @@ public class WabitSessionDAO implements WabitPersister {
 						uuid, "data-type", true);
 
 				wo = new ChartColumn(columnName, dataType);
+				((Chart) parent).addChartColumn((ChartColumn) wo);
 
 			} else if (type.equals(ChartRenderer.class.toString())) {
-				wo = new ChartRenderer((Chart) parent); // XXX this may be
-				// incorrect
+				Chart chart = workspace.findByUuid(getProperty(uuid,
+						"chart-uuid", true).toString(), Chart.class);
+				wo = new ChartRenderer(chart);
+				((ContentBox) parent).setContentRenderer((ChartRenderer) wo);
 
 			} else if (type.equals(ContentBox.class.toString())) {
 				wo = new ContentBox();
-				// TODO
+				((Page) parent).addContentBox((ContentBox) wo);
 
 			} else if (type.equals(Guide.class.toString())) {
 				Axis axis = Axis.valueOf(getProperty(uuid, "axis", true)
@@ -290,21 +309,25 @@ public class WabitSessionDAO implements WabitPersister {
 						.valueOf(getProperty(uuid, "offset", true).toString());
 
 				wo = new Guide(axis, offset);
+				((Page) parent).addGuide((Guide) wo);
 
 			} else if (type.equals(ImageRenderer.class.toString())) {
 				wo = new ImageRenderer();
+				((ContentBox) parent).setContentRenderer((ImageRenderer) wo);
+
 			} else if (type.equals(Label.class.toString())) {
 				wo = new Label();
+				((ContentBox) parent).setContentRenderer((Label) wo);
+
 			} else if (type.equals(OlapQuery.class.toString())) {
 				wo = new OlapQuery(session.getContext());
-				workspace.addOlapQuery((OlapQuery) wo);
+				((WabitWorkspace) parent).addOlapQuery((OlapQuery) wo);
 
 			} else if (type.equals(QueryCache.class.toString())) {
 				wo = new QueryCache(session.getContext());
-				workspace.addQuery((QueryCache) wo, session);
+				((WabitWorkspace) parent).addQuery((QueryCache) wo, session);
 
 			} else if (type.equals(Page.class.toString())) {
-				// TODO
 				String name = getProperty(uuid, "name", true).toString();
 				int width = Integer.valueOf(getProperty(uuid, "width", true)
 						.toString());
@@ -313,19 +336,22 @@ public class WabitSessionDAO implements WabitPersister {
 				PageOrientation orientation = PageOrientation
 						.valueOf(getProperty(uuid, "orientation", true)
 								.toString());
+
+				//XXX Is this correct?
 				wo = new Page(name, width, height, orientation);
+				((Layout) parent).setPage((Page) wo);
 
 			} else if (type.equals(Report.class.toString())) {
 				String name = getProperty(uuid, "name", true).toString();
 
 				wo = new Report(name);
-				workspace.addReport((Report) wo);
+				((WabitWorkspace) parent).addReport((Report) wo);
 
 			} else if (type.equals(Template.class.toString())) {
 				String name = getProperty(uuid, "name", true).toString();
 
 				wo = new Template(name);
-				workspace.addTemplate((Template) wo);
+				((WabitWorkspace) parent).addTemplate((Template) wo);
 
 			} else if (type.equals(WabitDataSource.class.toString())) {
 				SPDataSource spds = session.getContext().getDataSources()
@@ -333,11 +359,11 @@ public class WabitSessionDAO implements WabitPersister {
 								getProperty(uuid, "name", true).toString());
 
 				wo = new WabitDataSource(spds);
-				workspace.addDataSource((WabitDataSource) wo);
+				((WabitWorkspace) parent).addDataSource((WabitDataSource) wo);
 
 			} else if (type.equals(WabitImage.class.toString())) {
 				wo = new WabitImage();
-				workspace.addImage((WabitImage) wo);
+				((WabitWorkspace) parent).addImage((WabitImage) wo);
 
 			} else {
 				throw new WabitPersistenceException(uuid,
@@ -346,12 +372,11 @@ public class WabitSessionDAO implements WabitPersister {
 
 			if (wo != null) {
 				wo.setUUID(uuid);
-
-				if (parent != null && parent.allowsChildren()) {
-					wo.setParent(parent);
-				}
 			}
+			
 		}
+		
+		persistedObjects.clear();
 	}
 
 	/**
@@ -462,8 +487,10 @@ public class WabitSessionDAO implements WabitPersister {
 				}
 
 			}
-
+			
 		}
+		
+		persistedProperties.clear();
 
 	}
 
@@ -484,14 +511,13 @@ public class WabitSessionDAO implements WabitPersister {
 			try {
 				parent.removeChild(wo);
 			} catch (IllegalArgumentException e) {
-				throw new WabitPersistenceException(uuid,
-						"Could not remove WabitObject from its parent.");
+				throw new WabitPersistenceException(uuid, e);
 			} catch (ObjectDependentException e) {
-				throw new WabitPersistenceException(uuid,
-						"Could not remove WabitObject from its parent.");
+				throw new WabitPersistenceException(uuid, e);
 			}
-
 		}
+		
+		objectsToRemove.clear();
 	}
 
 	/**
@@ -744,7 +770,7 @@ public class WabitSessionDAO implements WabitPersister {
 
 		} else if (propertyName.equals("data-source")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getWabitDataSource(), unconditional);
+					.getWabitDataSource().getName(), unconditional);
 
 			query.setDataSource(session.getWorkspace().getDataSource(
 					newValue.toString(), JDBCDataSource.class));
@@ -753,6 +779,9 @@ public class WabitSessionDAO implements WabitPersister {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
 					+ propertyName);
 		}
+		
+		//TODO Constants container
+		//TODO Table container
 	}
 
 	/**
@@ -779,7 +808,7 @@ public class WabitSessionDAO implements WabitPersister {
 
 		if (propertyName.equals("data-source")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, olapQuery
-					.getOlapDataSource(), unconditional);
+					.getOlapDataSource().getName(), unconditional);
 			olapQuery.setOlapDataSource((Olap4jDataSource) newValue);
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
@@ -830,14 +859,16 @@ public class WabitSessionDAO implements WabitPersister {
 			chart.setGratuitouslyAnimated(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("type")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					chart.getType(), unconditional);
-			chart.setType((ChartType) newValue);
+			validatePropertyValuesIfConditional(uuid, oldValue, chart.getType()
+					.toString(), unconditional);
+			chart.setType(ChartType.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("legend-position")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.getLegendPosition(), unconditional);
-			chart.setLegendPosition((LegendPosition) newValue);
+					.getLegendPosition().name(), unconditional);
+			chart
+					.setLegendPosition(LegendPosition.valueOf(newValue
+							.toString()));
 
 		} else if (propertyName.equals("query-id")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, chart
@@ -886,12 +917,15 @@ public class WabitSessionDAO implements WabitPersister {
 
 		if (propertyName.equals("role")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, chartColumn
-					.getRoleInChart(), unconditional);
-			chartColumn.setRoleInChart((ColumnRole) newValue);
+					.getRoleInChart().name(), unconditional);
+			chartColumn.setRoleInChart(ColumnRole.valueOf(newValue.toString()));
+
 		} else if (propertyName.equals("x-axis-name")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, chartColumn
-					.getXAxisIdentifier(), unconditional);
-			chartColumn.setXAxisIdentifier((ChartColumn) newValue);
+					.getXAxisIdentifier().getName(), unconditional);
+			chartColumn.setXAxisIdentifier(new ChartColumn(newValue.toString(),
+					chartColumn.getDataType()));
+
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
 					+ propertyName);
@@ -921,9 +955,46 @@ public class WabitSessionDAO implements WabitPersister {
 		String uuid = wabitImage.getUUID();
 
 		if (propertyName.equals("image")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, wabitImage
-					.getImage(), unconditional);
-			wabitImage.setImage((Image) newValue);
+			final Image wabitInnerImage = wabitImage.getImage();
+
+			if (wabitInnerImage != null) {
+				BufferedImage image;
+				if (wabitInnerImage instanceof BufferedImage) {
+					image = (BufferedImage) wabitInnerImage;
+				} else {
+					image = new BufferedImage(wabitInnerImage.getWidth(null),
+							wabitInnerImage.getHeight(null),
+							BufferedImage.TYPE_INT_ARGB);
+					final Graphics2D g = image.createGraphics();
+					g.drawImage(wabitInnerImage, 0, 0, null);
+					g.dispose();
+				}
+				if (image != null) {
+					try {
+						ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+						ImageIO.write(image, "PNG", byteStream);
+						byte[] currentByteArray = new Base64()
+								.encode(byteStream.toByteArray());
+
+						InputStream inputStream = (InputStream) oldValue;
+						byte[] oldByteArray = new byte[currentByteArray.length];
+						int size = inputStream.read(oldByteArray);
+
+						if (size == currentByteArray.length
+								&& inputStream.available() > 0) {
+							validatePropertyValuesIfConditional(uuid,
+									oldByteArray, currentByteArray,
+									unconditional);
+							wabitImage.setImage(ImageIO
+									.read((InputStream) newValue));
+
+						}
+
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
@@ -997,13 +1068,13 @@ public class WabitSessionDAO implements WabitPersister {
 
 		} else if (propertyName.equals("orientation")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, page
-					.getOrientation(), unconditional);
+					.getOrientation().name(), unconditional);
 			page.setOrientation(PageOrientation.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("default-font")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, page
-					.getDefaultFont(), unconditional);
-			page.setDefaultFont((Font) newValue);
+					.getDefaultFont().toString(), unconditional);
+			page.setDefaultFont(Font.decode(newValue.toString()));
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
@@ -1107,29 +1178,30 @@ public class WabitSessionDAO implements WabitPersister {
 
 		if (propertyName.equals("olap-query-uuid")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getModifiedOlapQuery(), unconditional);
-			csRenderer.setModifiedOlapQuery((OlapQuery) newValue);
+					.getModifiedOlapQuery().getUUID(), unconditional);
+			csRenderer.setModifiedOlapQuery(session.getWorkspace().findByUuid(
+					newValue.toString(), OlapQuery.class));
 
 		} else if (propertyName.equals("body-alignment")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getBodyAlignment(), unconditional);
+					.getBodyAlignment().toString(), unconditional);
 			csRenderer.setBodyAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("body-format-pattern")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getBodyFormat(), unconditional);
-			csRenderer.setBodyFormat((DecimalFormat) newValue);
+					.getBodyFormat().toString(), unconditional);
+			csRenderer.setBodyFormat(new DecimalFormat(newValue.toString()));
 
 		} else if (propertyName.equals("olap-header-font")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getHeaderFont(), unconditional);
-			csRenderer.setHeaderFont((Font) newValue);
+					.getHeaderFont().toString(), unconditional);
+			csRenderer.setHeaderFont(Font.decode(newValue.toString()));
 
 		} else if (propertyName.equals("olap-body-font")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getBodyFont(), unconditional);
-			csRenderer.setBodyFont((Font) newValue);
+					.getBodyFont().toString(), unconditional);
+			csRenderer.setBodyFont(Font.decode(newValue.toString()));
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
@@ -1173,13 +1245,13 @@ public class WabitSessionDAO implements WabitPersister {
 
 		} else if (propertyName.equals("h-align")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, iRenderer
-					.getHAlign(), unconditional);
+					.getHAlign().name(), unconditional);
 			iRenderer.setHAlign(HorizontalAlignment
 					.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("v-align")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, iRenderer
-					.getVAlign(), unconditional);
+					.getVAlign().name(), unconditional);
 			iRenderer.setVAlign(VerticalAlignment.valueOf(newValue.toString()));
 
 		} else {
@@ -1211,13 +1283,13 @@ public class WabitSessionDAO implements WabitPersister {
 
 		if (propertyName.equals("horizontal-align")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, label
-					.getHorizontalAlignment(), unconditional);
+					.getHorizontalAlignment().name(), unconditional);
 			label.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("vertical-align")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, label
-					.getVerticalAlignment(), unconditional);
+					.getVerticalAlignment().name(), unconditional);
 			label.setVerticalAlignment(VerticalAlignment.valueOf(newValue
 					.toString()));
 
@@ -1228,8 +1300,8 @@ public class WabitSessionDAO implements WabitPersister {
 
 		} else if (propertyName.equals("bg-colour")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, label
-					.getBackgroundColour(), unconditional);
-			label.setBackgroundColour((Color) newValue);
+					.getBackgroundColour().toString(), unconditional);
+			label.setBackgroundColour(Color.decode(newValue.toString()));
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
 					+ propertyName);
@@ -1265,23 +1337,23 @@ public class WabitSessionDAO implements WabitPersister {
 
 		} else if (propertyName.equals("border")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getBorderType(), unconditional);
+					.getBorderType().name(), unconditional);
 			rsRenderer.setBorderType(BorderStyles.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("bg-colour")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getBackgroundColour(), unconditional);
-			rsRenderer.setBackgroundColour((Color) newValue);
+					.getBackgroundColour().toString(), unconditional);
+			rsRenderer.setBackgroundColour(Color.decode(newValue.toString()));
 
 		} else if (propertyName.equals("header-font")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getHeaderFont(), unconditional);
-			rsRenderer.setHeaderFont((Font) newValue);
+					.getHeaderFont().toString(), unconditional);
+			rsRenderer.setHeaderFont(Font.decode(newValue.toString()));
 
 		} else if (propertyName.equals("body-font")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getBodyFont(), unconditional);
-			rsRenderer.setBodyFont((Font) newValue);
+					.getBodyFont().toString(), unconditional);
+			rsRenderer.setBodyFont(Font.decode(newValue.toString()));
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
@@ -1323,19 +1395,19 @@ public class WabitSessionDAO implements WabitPersister {
 
 		} else if (propertyName.equals("horizontal-align")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getHorizontalAlignment(), unconditional);
+					.getHorizontalAlignment().name(), unconditional);
 			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("data-type")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getDataType(), unconditional);
+					.getDataType().name(), unconditional);
 			colInfo.setDataType(ca.sqlpower.wabit.report.DataType
 					.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("group-or-break")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getWillGroupOrBreak(), unconditional);
+					.getWillGroupOrBreak().name(), unconditional);
 			colInfo.setWillGroupOrBreak(GroupAndBreak.valueOf(newValue
 					.toString()));
 
@@ -1345,7 +1417,36 @@ public class WabitSessionDAO implements WabitPersister {
 			colInfo.setWillSubtotal(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("column-info-item-id")) {
-			// TODO
+			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
+					.getColumnInfoItem().getUUID(), unconditional);
+			for (Item item : ((ResultSetRenderer) colInfo.getParent()).getQuery().getSelectedColumns()) {
+				if (item.equals(newValue.toString())) {
+					colInfo.setColumnInfoItem(item);
+					break;
+				}
+			}
+
+		} else if (propertyName.equals("format-type")) {
+			Format formatType = colInfo.getFormat();
+			String newFormatType = newValue.toString();
+			String pattern = "";
+
+			if (formatType instanceof SimpleDateFormat) {
+				validatePropertyValuesIfConditional(uuid, oldValue,
+						"date-format", unconditional);
+				pattern = ((SimpleDateFormat) colInfo.getFormat()).toPattern();
+			} else if (formatType instanceof DecimalFormat) {
+				validatePropertyValuesIfConditional(uuid, oldValue,
+						"decimal-format", unconditional);
+				pattern = ((DecimalFormat) colInfo.getFormat()).toPattern();
+			}
+
+			if (newFormatType.equals("date-format")) {
+				colInfo.setFormat(new SimpleDateFormat(pattern));
+			} else if (newFormatType.equals("decimal-format")) {
+				colInfo.setFormat(new DecimalFormat(pattern));
+			}
+
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
 					+ propertyName);
@@ -1417,7 +1518,8 @@ public class WabitSessionDAO implements WabitPersister {
 	}
 
 	/**
-	 * Rollback all changes to persistent storage to the beginning of the transaction
+	 * Rollback all changes to persistent storage to the beginning of the
+	 * transaction
 	 */
 	public void rollback() {
 		// TODO Auto-generated method stub

@@ -132,6 +132,12 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         return page;
     }
     
+    public void setPage(Page page) {
+    	fireChildRemoved(Page.class, this.page, 0);
+    	fireChildAdded(Page.class, page, 0);
+    	this.page = page;
+    }
+    
     public void setVariable(String name, Object value) {
         varContext.getVars().put(name, value);
     }
