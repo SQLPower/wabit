@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -38,11 +39,15 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.OrderByItemEvent;
 import ca.sqlpower.query.Query;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.QueryImpl;
+import ca.sqlpower.query.QueryItem;
 import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.SelectedItemEvent;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -157,10 +162,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             fireItemPropertyChangeEvent(evt);
         }
     
-        public void itemOrderChanged(QueryChangeEvent evt) {
-            fireItemOrderChanged(evt);
-        }
-    
         public void itemAdded(QueryChangeEvent evt) {
             fireItemAdded(evt);
         }
@@ -179,6 +180,22 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
         public void compoundEditEnded(TransactionEvent evt) {
             fireCompoundEditEnded(evt);
+        }
+
+		public void selectedItemAdded(SelectedItemEvent evt) {
+			fireSelectedItemAdded(evt);
+		}
+
+		public void selectedItemRemoved(SelectedItemEvent evt) {
+			fireSelectedItemRemoved(evt);
+		}
+
+        public void orderByItemAdded(OrderByItemEvent evt) {
+            fireOrderByItemAdded(evt);
+        }
+
+        public void orderByItemRemoved(OrderByItemEvent evt) {
+            fireOrderByItemRemoved(evt);
         }
     };
 
@@ -206,6 +223,31 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         }
     };
     
+    /**
+     * When each container is added to a query cache a WabitObject wrapper is made for 
+     * it and placed in this list to let this query fire Wabit events based on it.
+     */
+    private final List<WabitContainer> containers = new ArrayList<WabitContainer>();
+    
+    /** 
+     * When a join is added to a query cache a WabitObject wrapper is made for it
+     * and placed in this list to let the query fire Wabit events based on it.
+     */
+    private final List<WabitJoin> joins = new ArrayList<WabitJoin>();
+
+	/**
+	 * When a {@link QueryItem} is added to a query cache a
+	 * {@link WabitQueryItem} is made for it and is placed in this list
+	 * to let the query fire Wabit events based on it.
+	 */
+    private final List<WabitQuerySelectedItem> selectedItems = new ArrayList<WabitQuerySelectedItem>();
+
+    /**
+     * When a {@link QueryItem} is added to a query cache to track the order of
+     * ordered columns a {@link WabitQueryItem} is made for it and placed in
+     * this list to let the query fireWabit events based on it.
+     */
+    private final List<WabitQueryOrderByItem> orderByItems = new ArrayList<WabitQueryOrderByItem>();
     
     /**
      * This makes a copy of the given query cache. The query in the given query cache
@@ -235,11 +277,38 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        createWabitObjectWrappers();
     }
     
     public QueryCache(SQLDatabaseMapping dbMapping) {
         query = new QueryImpl(dbMapping);
         query.addQueryChangeListener(queryChangeListener);
+        createWabitObjectWrappers();
+    }
+
+    /**
+     * Helper method for the constructors. This creates WabitObjects based on
+     * the current objects in the query set in the constructor.
+     */
+    private void createWabitObjectWrappers() {
+        WabitContainer constants = new WabitContainer(query.getConstantsContainer());
+        constants.setParent(this);
+        containers.add(constants);
+        for (Container c : query.getFromTableList()) {
+            WabitContainer child = new WabitContainer(c);
+            child.setParent(this);
+			containers.add(child);
+        }
+        for (SQLJoin j : query.getJoins()) {
+            WabitJoin child = new WabitJoin(this, j);
+            child.setParent(this);
+			joins.add(child);
+        }
+        for (QueryItem i : query.getSelectedColumns()) {
+        	WabitQuerySelectedItem child = new WabitQuerySelectedItem(i);
+        	child.setParent(this);
+			selectedItems.add(child);
+        }
     }
 
     /**
@@ -481,16 +550,38 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
     
     public boolean allowsChildren() {
-        return false;
+        return true;
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        return 0;
+        int offset = 0;
+        if (childType.equals(WabitContainer.class)) {
+            return offset;
+        }
+        offset += containers.size();
+        if (childType.equals(WabitJoin.class)) {
+            return offset;
+        } 
+        offset += joins.size();
+        if (childType.equals(WabitQuerySelectedItem.class)) {
+            return offset;
+        }
+        offset += selectedItems.size();
+        if (childType.equals(WabitQueryOrderByItem.class)) {
+            return offset;
+        } 
+        throw new IllegalArgumentException("Unknown child type " + childType + " for " + getName());
     }
 
-    @SuppressWarnings("unchecked")
     public List<? extends WabitObject> getChildren() {
-        return Collections.EMPTY_LIST;
+        List<WabitObject> children = new ArrayList<WabitObject>(containers);
+        children.addAll(joins);
+        children.addAll(selectedItems);
+        children.addAll(orderByItems);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Children of query cache " + getName() + " are " + children);
+        }
+        return Collections.unmodifiableList(children);
     }
 
     @Override
@@ -543,6 +634,17 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     @Override
     protected boolean removeChildImpl(WabitObject child) {
+        if (child instanceof WabitContainer) {
+            query.removeTable(((WabitContainer) child).getDelegate());
+            return true;
+        } else if (child instanceof WabitJoin) {
+            query.removeJoin(((WabitJoin) child).getDelegate());
+            return true;
+        } else if (child instanceof WabitQueryItem) {
+            ((WabitQueryItem) child).getItem().getDelegate().setSelected(false);
+        } else if (child instanceof WabitQueryOrderByItem) {
+            ((WabitQueryOrderByItem) child).getItem().getDelegate().setOrderBy(OrderByArgument.NONE);
+        }
         return false;
     }
     
@@ -608,8 +710,12 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         return query.isScriptModified();
     }
 
-    public void setDataSource(JDBCDataSource ds) {
-        query.setDataSource(ds);
+    public boolean setDataSource(JDBCDataSource ds) {
+        return query.setDataSource(ds);
+    }
+    
+    public boolean setDataSourceWithoutReset(JDBCDataSource dataSource) {
+        return query.setDataSourceWithoutReset(dataSource);
     }
 
     public void setName(String string) {
@@ -698,15 +804,15 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         return query.getJoins();
     }
 
-    public List<Item> getOrderByList() {
-        return query.getOrderByList();
+    public List<QueryItem> getOrderByList() {
+        return Collections.unmodifiableList(query.getOrderByList());
     }
-
+    
     public int getRowLimit() {
         return query.getRowLimit();
     }
 
-    public List<Item> getSelectedColumns() {
+    public List<QueryItem> getSelectedColumns() {
         return query.getSelectedColumns();
     }
 
@@ -776,6 +882,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         query.startCompoundEdit(message);
     }
     
+    public int indexOfSelectedItem(Item item) {
+        return query.indexOfSelectedItem(item);
+    }
+    
     //------------------- end Query interface---------------------------------
     
     /**
@@ -806,6 +916,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        
+        WabitJoin join = new WabitJoin(this, evt.getJoinChanged());
+        join.setParent(this);
+        joins.add(join);
+        fireChildAdded(WabitJoin.class, join, joins.indexOf(join));
     }
 
     protected void fireJoinRemoved(final QueryChangeEvent evt) {
@@ -819,6 +934,22 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        
+        WabitJoin joinToRemove = null;
+        for (WabitJoin join : joins) {
+        	if (join.getDelegate().equals(evt.getJoinChanged())) {
+        		joinToRemove = join;
+        		break;
+        	}
+        }
+        if (joinToRemove == null) {
+        	throw new IllegalStateException("The query has come out of sync with its delegate. " +
+        			"Cannot find a join to match " + evt.getJoinChanged().getName());
+        }
+        
+        int index = joins.indexOf(joinToRemove);
+        joins.remove(joinToRemove);
+        fireChildRemoved(WabitJoin.class, joinToRemove, index);
     }
     
     protected void fireJoinPropertyChangeEvent(final PropertyChangeEvent evt) {
@@ -861,6 +992,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        fireTransactionStarted(evt.getMessage());
     }
     
     protected void fireCompoundEditEnded(TransactionEvent evt) {
@@ -875,19 +1007,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
-    }
-    
-    protected void fireItemOrderChanged(final QueryChangeEvent evt) {
-        final QueryChangeEvent newEvent = new QueryChangeEvent(this, evt.getItemChanged());
-        runInForeground(new Runnable() {
-            public void run() {
-                synchronized(queryListeners) {
-                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
-                        queryListeners.get(i).itemOrderChanged(newEvent);
-                    }
-                }
-            }
-        });
+        fireTransactionEnded();
     }
     
     protected void fireItemPropertyChangeEvent(final PropertyChangeEvent evt) {
@@ -913,6 +1033,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        
+        //This does not need to fire a wabit event for an item being added.
     }
     
     protected void fireItemRemoved(final QueryChangeEvent evt) {
@@ -926,6 +1048,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        
+      //This does not need to fire a wabit event for an item being added.
     }
     
     protected void fireContainerRemoved(final QueryChangeEvent evt) {
@@ -939,6 +1063,23 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        
+        WabitContainer childToRemove = null;
+        for (WabitContainer container : containers) {
+            if (container.getDelegate().equals(evt.getContainerChanged())) {
+                childToRemove = container;
+                break;
+            }
+        }
+        if (childToRemove == null) 
+            throw new IllegalStateException("QueryCache is out of sync with the query it is " +
+            		"delegating to. Cannot find the container " + 
+            		evt.getContainerChanged().getName() + " to remove from the query.");
+        
+        int index = containers.indexOf(childToRemove);
+        containers.remove(childToRemove);
+        
+        fireChildRemoved(WabitContainer.class, childToRemove, index);
     }
     
     protected void fireContainerAdded(final QueryChangeEvent evt) {
@@ -952,8 +1093,115 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        final WabitContainer child = new WabitContainer(evt.getContainerChanged());
+        child.setParent(this);
+        containers.add(child);
+        fireChildAdded(WabitContainer.class, child, containers.indexOf(child));
     }
+    
+    protected void fireSelectedItemAdded(SelectedItemEvent evt) {
+    	final SelectedItemEvent newEvent = new SelectedItemEvent(this, evt.getItemSelected(), 
+    			evt.getIndex(), evt.isSelected());
+    	runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).selectedItemAdded(newEvent);
+                    }
+                }
+            }
+        });
+    	final WabitQuerySelectedItem child = new WabitQuerySelectedItem(evt.getItemSelected());
+    	child.setParent(this);
+    	selectedItems.add(evt.getIndex(), child);
+    	fireChildAdded(WabitQuerySelectedItem.class, child, evt.getIndex());
+    }
+    
+    protected void fireSelectedItemRemoved(SelectedItemEvent evt) {
+    	final SelectedItemEvent newEvent = new SelectedItemEvent(this, evt.getItemSelected(), 
+    			evt.getIndex(), evt.isSelected());
+    	runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).selectedItemRemoved(newEvent);
+                    }
+                }
+            }
+        });
+    	
+    	WabitQuerySelectedItem childToRemove = null;
+        for (WabitQuerySelectedItem item : selectedItems) {
+            if (item.getItem().equals(evt.getItemSelected())) {
+                childToRemove = item;
+                break;
+            }
+        }
+        if (childToRemove == null) 
+            throw new IllegalStateException("QueryCache is out of sync with the query it is " +
+            		"delegating to. Cannot find the selected item " + 
+            		evt.getItemSelected().getDelegate().getName() + " to remove from the query.");
+        
+        int index = selectedItems.indexOf(childToRemove);
+        selectedItems.remove(childToRemove);
+    	
+    	fireChildRemoved(WabitQuerySelectedItem.class, childToRemove, index);
+    }
+    
+    protected void fireOrderByItemAdded(OrderByItemEvent evt) {
+        final OrderByItemEvent newEvent = new OrderByItemEvent(this, evt.getItem(), 
+                evt.getIndex(), evt.isAdded());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).orderByItemAdded(newEvent);
+                    }
+                }
+            }
+        });
+        final WabitQueryOrderByItem child = new WabitQueryOrderByItem(evt.getItem());
+        child.setParent(this);
+        orderByItems.add(evt.getIndex(), child);
+        fireChildAdded(WabitQueryOrderByItem.class, child, evt.getIndex());
+    }
+    
+    protected void fireOrderByItemRemoved(OrderByItemEvent evt) {
+        final OrderByItemEvent newEvent = new OrderByItemEvent(this, evt.getItem(), 
+                evt.getIndex(), evt.isAdded());
+        runInForeground(new Runnable() {
+            public void run() {
+                synchronized(queryListeners) {
+                    for (int i = queryListeners.size() - 1; i >= 0; i--) {
+                        queryListeners.get(i).orderByItemRemoved(newEvent);
+                    }
+                }
+            }
+        });
+        
+        WabitQueryOrderByItem childToRemove = null;
+        for (WabitQueryOrderByItem item : orderByItems) {
+            if (item.getItem().equals(evt.getItem())) {
+                childToRemove = item;
+                break;
+            }
+        }
+        if (childToRemove == null) 
+            throw new IllegalStateException("QueryCache is out of sync with the query it is " +
+                    "delegating to. Cannot find the order by item " + 
+                    evt.getItem().getDelegate().getName() + " to remove from the query.");
+        
+        int index = orderByItems.indexOf(childToRemove);
+        orderByItems.remove(childToRemove);
+        
+        fireChildRemoved(WabitQueryOrderByItem.class, childToRemove, index);
+    }
+
     
     //---------------------end event handling for query delegate--------------
 
+    public List<WabitQuerySelectedItem> getSelectedWabitColumns() {
+        return Collections.unmodifiableList(selectedItems);
+    }
+    
 }

@@ -51,7 +51,6 @@ import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.query.Container;
@@ -478,7 +477,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         				}
         				logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
         			}
-        			cache.setDataSource(ds);
+        			cache.setDataSourceWithoutReset(ds);
         		} else if (aname.equals("zoom")) {
         			cache.setZoomLevel(Integer.parseInt(aval));
         		} else if (aname.equals("streaming-row-limit")) {
@@ -571,7 +570,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             		}
             	}
             	cache.getConstantsContainer().addItem(item);
-            	cache.addItem(item);
             	uuidToItemMap.put(uuid, item);
         	} else if (parentIs("table")) {
         		String itemName = attributes.getValue("name");

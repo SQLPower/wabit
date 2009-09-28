@@ -101,7 +101,7 @@ public class QueryController {
 			query.startCompoundEdit("Handling sort order.");
 			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
 				int sortStatus = sortDecorator.getSortingStatus(i);
-				Item column = query.getSelectedColumns().get(i);
+				Item column = query.getSelectedColumns().get(i).getDelegate();
 				OrderByArgument orderByArgument = column.getOrderBy();
 				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgument == OrderByArgument.NONE)
 						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgument == OrderByArgument.ASC)
@@ -135,7 +135,7 @@ public class QueryController {
 	
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
-				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
+				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource())).getDelegate();
 				column.setGroupBy(SQLGroupFunction.getGroupType((String)e.getNewValue()));
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
@@ -143,7 +143,7 @@ public class QueryController {
 				if (indexOfTextField < 0) {
 					return;
 				}
-				Item item = query.getSelectedColumns().get(indexOfTextField);
+				Item item = query.getSelectedColumns().get(indexOfTextField).getDelegate();
 				item.setHaving(newValue);
 			}
 
@@ -168,7 +168,7 @@ public class QueryController {
 		public void mouseReleased(MouseEvent e) {
 			if (lastTableColumnMove != null) {
 				logger.debug("Moving column in select from " + lastTableColumnMove.getFromIndex() + " to " + lastTableColumnMove.getToIndex());
-				Item movedColumn = query.getSelectedColumns().get(lastTableColumnMove.getFromIndex());
+				Item movedColumn = query.getSelectedColumns().get(lastTableColumnMove.getFromIndex()).getDelegate();
 				query.moveItem(movedColumn, lastTableColumnMove.getToIndex());
 				lastTableColumnMove = null;
 			}

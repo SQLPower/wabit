@@ -56,7 +56,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, workspace, false, false);
         Collection<WabitObject> nodes = graphModel.getNodes();
-        assertEquals(10, nodes.size());
+        assertEquals(15, nodes.size());
         assertTrue(nodes.contains(workspace));
         assertTrue(nodes.contains(cache));
         assertTrue(nodes.contains(query));
@@ -84,7 +84,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, chart, false, false);
         Collection<WabitObject> nodes = graphModel.getNodes();
-        assertEquals(2, nodes.size());
+        assertEquals(7, nodes.size());
         assertTrue(nodes.contains(cache));
         assertTrue(nodes.contains(chart));
     }
@@ -132,7 +132,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         cb2.setContentRenderer(rsr);
         
         WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace, report, false, false);
-        assertEquals(12, graph.getNodes().size());
+        assertEquals(17, graph.getNodes().size());
         Collection<WorkspaceGraphModelEdge> outboundEdgesReport = graph.getOutboundEdges(report);
         assertEquals(1, outboundEdgesReport.size());
         assertEquals(report.getPage(), ((WorkspaceGraphModelEdge) outboundEdgesReport.toArray()[0]).getChild());

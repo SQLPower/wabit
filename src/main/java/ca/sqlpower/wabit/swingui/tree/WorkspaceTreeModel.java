@@ -48,11 +48,13 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitQuerySelectedItem;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -133,6 +135,7 @@ public class WorkspaceTreeModel implements TreeModel {
         if (o instanceof ChartColumn) return true;
         if (o instanceof ContentBox) return true;
         if (o instanceof WabitImage) return true;
+        if (o instanceof WabitQuerySelectedItem) return true;
         return false;
     }
     
@@ -152,6 +155,8 @@ public class WorkspaceTreeModel implements TreeModel {
     	} else if (parentObject instanceof WabitDataSource) {
     		List<Object> children = getWabitDatasourceChildren((WabitDataSource) parentObject);
     		return children.get(index);
+    	} else if (parentObject instanceof QueryCache) {
+    	    return ((QueryCache) parentObject).getSelectedWabitColumns().get(index);
     	} else if (parentObject instanceof SQLObject) {
     		try {
 				return ((SQLObject) parentObject).getChild(index);
@@ -184,6 +189,8 @@ public class WorkspaceTreeModel implements TreeModel {
     		WabitDataSource wds = (WabitDataSource) parent;
 			List<Object> children = getWabitDatasourceChildren(wds);
     		return children.size();
+    	} else if (parent instanceof QueryCache) {
+    	    return ((QueryCache) parent).getSelectedWabitColumns().size();
     	} else if (parent instanceof SQLObject) {
     		try {
 				return ((SQLObject) parent).getChildCount();
@@ -294,6 +301,8 @@ public class WorkspaceTreeModel implements TreeModel {
 			} catch (SQLObjectException e) {
 				throw new RuntimeException(e);
 			}
+    	} else if (parent instanceof QueryCache) {
+    	    return ((QueryCache) parent).getSelectedWabitColumns().indexOf(child);
     	} else if (parent instanceof WabitObject) {
 	        WabitObject wo = (WabitObject) parent;
 	        List<? extends WabitObject> children = wo.getChildren();
@@ -444,10 +453,9 @@ public class WorkspaceTreeModel implements TreeModel {
 	 * {@link WabitChildEvent} from the business model and 'translates' them
 	 * into {@link TreeModelEvent} for the WorkspaceTreeModel.
 	 */
-    private class WabitTreeModelEventAdapter extends AbstractWabitListener {
+    private class WabitTreeModelEventAdapter implements WabitListener {
         
-        @Override
-		public void propertyChangeImpl(PropertyChangeEvent evt) {
+		public void propertyChange(PropertyChangeEvent evt) {
 			WabitObject node = (WabitObject) evt.getSource();
 			if (!appearsInTree(node)) {
 			    return;
@@ -464,7 +472,7 @@ public class WorkspaceTreeModel implements TreeModel {
                 if (actualIndex < 0) {
                     throw new IllegalStateException(
                             "Got an event from a WabitObject that isn't one " +
-                            "of its own parent's children!");
+                            "of its own parent's children! Parent : " + node.getParent().getName());
                 }
 	            int treeIndex = getCorrectIndex(node, actualIndex);
 				e = new TreeModelEvent(this, treePath,
@@ -480,8 +488,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesChanged(e);
 		}
 
-        @Override
-		public void wabitChildAddedImpl(WabitChildEvent e) {
+		public void wabitChildAdded(WabitChildEvent e) {
 		    WabitUtils.listenToHierarchy(e.getChild(), this);
 		    if (!appearsInTree(e.getChild())) {
 		        return;
@@ -496,8 +503,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesInserted(treeEvent);
 		}
 
-        @Override
-		public void wabitChildRemovedImpl(WabitChildEvent e) {
+		public void wabitChildRemoved(WabitChildEvent e) {
             WabitUtils.unlistenToHierarchy(e.getChild(), this);
             if (!appearsInTree(e.getChild())) {
                 return;
@@ -527,6 +533,11 @@ public class WorkspaceTreeModel implements TreeModel {
 		}
 		
 		private int getCorrectIndex(WabitObject wabitObject, final int actualIndex) {
+		    
+		    if (wabitObject instanceof WabitQuerySelectedItem) {
+	            //only displaying the selected items of a QueryCache
+	            return actualIndex - wabitObject.getParent().childPositionOffset(WabitQuerySelectedItem.class);
+	        }
 
 			// Unfortunately, can't use WabitObject.childPositionOffset because
 			// MDX and SQL query objects are mixed in the same folder and therefore
@@ -552,6 +563,19 @@ public class WorkspaceTreeModel implements TreeModel {
 			
 			return actualIndex;
 		}
+
+        public void transactionEnded(TransactionEvent e) {
+            //do nothing
+            
+        }
+
+        public void transactionRollback(TransactionEvent e) {
+            //do nothing            
+        }
+
+        public void transactionStarted(TransactionEvent e) {
+            //do nothing            
+        }
 
     }
 

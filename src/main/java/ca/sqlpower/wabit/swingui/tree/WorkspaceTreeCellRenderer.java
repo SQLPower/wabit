@@ -33,15 +33,18 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.ComposedIcon;
+import ca.sqlpower.swingui.table.Arrow;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitQueryItem;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -81,6 +84,14 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     public static final Icon CHART_SCATTER_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-scatter-16.png"));
     public static final Icon CHART_LINE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-line-16.png"));
     public static final Icon CHART_PIE_ICON = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-pie-16.png")); //TODO ADD ME
+    
+    public static final Icon SQL_COLUMN_ICON = new ImageIcon(
+            WorkspaceTreeCellRenderer.class.getClassLoader().getResource(
+                    "ca/sqlpower/architect/swingui/dbtree/icons/Column16.png"));
+    public static final Icon SORT_ASC_ARROW = new Arrow(false, SQL_COLUMN_ICON.getIconHeight() * 3 / 4, 
+            0, SQL_COLUMN_ICON.getIconHeight() * 3 / 4, SQL_COLUMN_ICON.getIconHeight() / 3);
+    public static final Icon SORT_DESC_ARROW = new Arrow(true, SQL_COLUMN_ICON.getIconHeight() * 3 / 4, 
+            0, SQL_COLUMN_ICON.getIconHeight() * 3 / 4, SQL_COLUMN_ICON.getIconHeight() / 3);
 
     /** Category ChartColumn. Also available in {@link #CHART_COL_ROLE_ICONS}. */
     public static final Icon CHART_COL_CATEGORY = new ImageIcon(WorkspaceTreeCellRenderer.class.getClassLoader().getResource("icons/chart-category-16.png"));
@@ -211,6 +222,22 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
             } else if (wo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
+            } else if (wo instanceof WabitQueryItem) {
+                WabitQueryItem item = (WabitQueryItem) wo;
+                OrderByArgument orderBy = item.getItem().getDelegate().getOrderBy();
+                switch (orderBy) {
+                    case ASC:
+                        r.setIcon(ComposedIcon.getInstance(SQL_COLUMN_ICON, SORT_ASC_ARROW));
+                        break;
+                    case DESC:
+                        r.setIcon(ComposedIcon.getInstance(SQL_COLUMN_ICON, SORT_DESC_ARROW));
+                        break;
+                    case NONE:
+                        r.setIcon(SQL_COLUMN_ICON);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown sort order " + orderBy);
+                }
             }
 
             if (wo instanceof WabitBackgroundWorker) {

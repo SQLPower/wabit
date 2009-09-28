@@ -86,10 +86,13 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.OrderByItemEvent;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.QueryImpl;
+import ca.sqlpower.query.QueryItem;
 import ca.sqlpower.query.SQLGroupFunction;
+import ca.sqlpower.query.SelectedItemEvent;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -458,10 +461,6 @@ public class QueryPanel implements WabitPanel {
             executeQuery();
         }
     
-        public void itemOrderChanged(QueryChangeEvent evt) {
-            executeQuery();
-        }
-    
         public void itemAdded(QueryChangeEvent evt) {
             executeQuery();
         }
@@ -481,6 +480,22 @@ public class QueryPanel implements WabitPanel {
 
         public void compoundEditStarted(TransactionEvent evt) {
             inCompoundEdit = true;
+        }
+
+		public void selectedItemAdded(SelectedItemEvent evt) {
+			executeQuery();
+		}
+
+		public void selectedItemRemoved(SelectedItemEvent evt) {
+			executeQuery();			
+		}
+
+        public void orderByItemAdded(OrderByItemEvent evt) {
+            executeQuery();
+        }
+
+        public void orderByItemRemoved(OrderByItemEvent evt) {
+            executeQuery();
         }
     };
     
@@ -523,7 +538,7 @@ public class QueryPanel implements WabitPanel {
 					i++;
 				}
 				logger.debug("Received column width change on column " + i + " the new width is " + (Integer) evt.getNewValue());
-				Item resizedItem = queryCache.getSelectedColumns().get(i);
+				Item resizedItem = queryCache.getSelectedColumns().get(i).getDelegate();
 				resizedItem.setColumnWidth((Integer) evt.getNewValue());
 				
 			}
@@ -1048,6 +1063,9 @@ public class QueryPanel implements WabitPanel {
 					}
 					removeCacheList.add(c);
 					removeQueryStringList.add(query);
+					if (logger.isDebugEnabled()) {
+					    logger.debug("Removing cache with query: \n" + query);
+					}
 				}
 				for (QueryCache c : removeCacheList) {
 					queuedQueryCache.remove(c);
@@ -1058,7 +1076,7 @@ public class QueryPanel implements WabitPanel {
 				if (cache == null) {
 					// There are no QueryCache objects that define the header for
 					// this table so we cannot add a header.
-					logger.debug("There was no cache matching the table from query " + queryUIComponents.getQueryForJTable(t));
+					logger.debug("There was no cache matching the table from query: \n" + queryUIComponents.getQueryForJTable(t));
 					return;
 				}
 				ComponentCellRenderer renderPanel = (ComponentCellRenderer)t.getTableHeader().getDefaultRenderer();
@@ -1073,7 +1091,7 @@ public class QueryPanel implements WabitPanel {
 					havingLabel.setVisible(false);
 				}
 				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-				    final SQLGroupFunction groupBy = cache.getSelectedColumns().get(i).getGroupBy();
+				    final SQLGroupFunction groupBy = cache.getSelectedColumns().get(i).getDelegate().getGroupBy();
 					if (!groupBy.equals(SQLGroupFunction.GROUP_BY)) {
                         String groupByAggregate = groupBy.getGroupingName();
 						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate);
@@ -1081,16 +1099,20 @@ public class QueryPanel implements WabitPanel {
 				}
 
 				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-					String havingText = cache.getSelectedColumns().get(i).getHaving();
+					String havingText = cache.getSelectedColumns().get(i).getDelegate().getHaving();
 					if (havingText != null) {
 						renderPanel.getTextFields().get(i).setText(havingText);
 					}
 				}
 				
 				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (Item column : cache.getOrderByList()) {
-					int columnIndex = cache.getSelectedColumns().indexOf(column);
-					OrderByArgument arg = column.getOrderBy();
+				for (QueryItem column : cache.getOrderByList()) {
+				    Item item = column.getDelegate();
+					int columnIndex = cache.indexOfSelectedItem(item);
+					if (columnIndex < 0) {
+					    throw new IllegalStateException("Cannot find " + item.getName() + " in " + cache.getName());
+					}
+					OrderByArgument arg = item.getOrderBy();
 					if (arg != null && arg != OrderByArgument.NONE) {
 						if (arg == OrderByArgument.ASC) {
 							columnSortMap.put(columnIndex, TableModelSortDecorator.ASCENDING);
@@ -1104,7 +1126,7 @@ public class QueryPanel implements WabitPanel {
 				renderPanel.setSortingStatus(columnSortMap);
 				
 				for (int i = 0; i < t.getColumnCount(); i++) {
-					Integer width = cache.getSelectedColumns().get(i).getColumnWidth();
+					Integer width = cache.getSelectedColumns().get(i).getDelegate().getColumnWidth();
 					logger.debug("Width in cache for column " + i + " is " + width);
 					if (width != null) {
 						t.getColumnModel().getColumn(i).setPreferredWidth(width);
