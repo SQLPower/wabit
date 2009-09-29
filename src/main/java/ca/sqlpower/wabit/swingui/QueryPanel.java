@@ -112,6 +112,7 @@ import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
 import ca.sqlpower.wabit.swingui.action.ExportSQLScriptAction;
@@ -418,14 +419,20 @@ public class QueryPanel implements WabitPanel {
 	 */
 	private SQLObjectRoot rootNode;
 
-	/**
-	 * This will listen to any change in the query cache and update the results table as needed.
-	 */
+    /**
+     * This will listen to any change in the query cache and update the results
+     * table as needed. 
+     * TODO This should be changed to a {@link WabitListener}
+     * now that there are proper wabit events and objects for the query.
+     */
 	private final QueryChangeListener queryListener = new QueryChangeListener() {
 	    
 	    private boolean inCompoundEdit = false;
     
         public void propertyChangeEvent(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("groupingEnabled")) {
+                groupingCheckBox.setSelected(queryCache.isGroupingEnabled());
+            }
             if (evt.getPropertyName() != QueryImpl.USER_MODIFIED_QUERY 
                     && evt.getPropertyName() != "running") {
                 executeQuery();
