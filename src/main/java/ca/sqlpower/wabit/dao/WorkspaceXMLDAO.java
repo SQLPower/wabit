@@ -45,6 +45,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.olap4j.Axis;
 
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.query.Container;
@@ -65,7 +66,10 @@ import ca.sqlpower.wabit.WorkspaceGraphModel;
 import ca.sqlpower.wabit.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.SaveOLAP4jQuery;
+import ca.sqlpower.wabit.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.olap.WabitOlapExclusion;
+import ca.sqlpower.wabit.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
@@ -127,11 +131,12 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.2 <dd>Added the horizontal and vertical alignment properties to the image renderer.
      *  <dt>1.2.3 <dd>Added gratuitous animation flag to charts
      *  <dt>1.2.4 <dd>Put UUID attribute on every WabitObject element (especially workspace)
+     *  <dt>1.2.5 <dd>Put UUID and name (mostly unused) attribute on OlapQuery child elements
      * </dl> 
      * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version("1.2.4"); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.5"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -568,7 +573,8 @@ public class WorkspaceXMLDAO {
      *      A unique name to append to the start of XML tags
      */
 	private void saveOlapQuery(OlapQuery query) {
-	    
+		query.updateAttributes();
+		
 	    xml.print(out, "<olap-query");
         printCommonAttributes(query);
         if (query.getOlapDataSource() != null) {
@@ -581,16 +587,86 @@ public class WorkspaceXMLDAO {
                 query.getCurrentCube().getSchema()!=null &&
                 query.getCurrentCube().getSchema().getCatalog()!=null) {
             xml.print(out, "<olap-cube");
-            printAttribute("catalog", query.getCurrentCube().getSchema().getCatalog().getName());
-            printAttribute("schema", query.getCurrentCube().getSchema().getName());
-            printAttribute("cube-name", query.getCurrentCube().getName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
+            printAttribute("catalog", query.getCatalogName());
+            printAttribute("schema", query.getSchemaName());
+            printAttribute("cube-name", query.getCubeName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
             xml.niprintln(out, "/>");
         }
         
-        SaveOLAP4jQuery.saveOlap4jQuery(query, xml, out, this);
+        xml.print(out, "<olap4j-query");
+        printAttribute("name", query.getQueryName());
+        xml.niprintln(out, ">");
+        xml.indent++;
+        
+        for (WabitOlapAxis axis : query.getAxes()) {
+        	saveOlapAxis(axis);
+        }
+        
+        xml.indent--;
+        xml.println(out, "</olap4j-query>");
         
         xml.indent--;
 	    xml.println(out, "</olap-query>");
+	}
+	
+	private void saveOlapAxis(WabitOlapAxis axis) {
+		xml.print(out, "<olap4j-axis");
+		printCommonAttributes(axis);
+		printAttribute("ordinal", axis.getOrdinal());
+		
+		if (axis.getOrdinal() == Axis.Standard.ROWS.axisOrdinal()) {
+            printAttribute("non-empty", axis.isNonEmpty());
+        }
+        if (axis.getSortOrder() != null) {
+        	printAttribute("sort-order", axis.getSortOrder());
+        	printAttribute("sort-evaluation-literal", axis.getSortEvaluationLiteral());
+        }
+        xml.niprintln(out, ">");
+        xml.indent++;
+        
+        for (WabitOlapDimension dimension : axis.getDimensions()) {
+        	saveOlapDimension(dimension);
+        }
+        
+        xml.indent--;
+        xml.println(out, "</olap4j-axis>");
+	}
+	
+	private void saveOlapDimension(WabitOlapDimension dimension) {
+		xml.print(out, "<olap4j-dimension");
+        printAttribute("dimension-name", dimension.getName());
+        printCommonAttributes(dimension);
+        xml.niprintln(out, ">");
+        xml.indent++;
+        
+        for (WabitOlapInclusion inclusion : dimension.getInclusions()) {
+        	saveOlapSelection(inclusion);
+        }
+        
+        for (WabitOlapExclusion exclusion : dimension.getExclusions()) {
+        	saveOlapExclusion(exclusion);
+        }
+        
+        xml.indent--;
+        xml.println(out, "</olap4j-dimension>");
+	}
+	
+	private void saveOlapSelection(WabitOlapInclusion selection) {
+		xml.print(out, "<olap4j-selection");
+		printCommonAttributes(selection);
+    	printAttribute("dimension-name", ((WabitOlapDimension) selection.getParent()).getName());
+        printAttribute("unique-member-name", selection.getUniqueMemberName());
+        printAttribute("operator", selection.getOperator());
+        xml.niprintln(out, "/>");
+	}
+	
+	private void saveOlapExclusion(WabitOlapExclusion selection) {
+		xml.print(out, "<olap4j-exclusion");
+		printCommonAttributes(selection);
+    	printAttribute("dimension-name", ((WabitOlapDimension) selection.getParent()).getName());
+        printAttribute("unique-member-name", selection.getUniqueMemberName());
+        printAttribute("operator", selection.getOperator());
+        xml.niprintln(out, "/>");
 	}
 
 	/**
