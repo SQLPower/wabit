@@ -65,12 +65,14 @@ public abstract class AbstractWabitObject implements WabitObject {
     	}
     }
     
-    public void setUUID(String uuid){
+    public void setUUID(String uuid) {
+        String oldUUID = this.uuid;
         if (uuid == null){
             generateNewUUID();
         } else {
             this.uuid = uuid;
         }
+        firePropertyChange("UUID", oldUUID, uuid);
     }
     
     public void generateNewUUID() {

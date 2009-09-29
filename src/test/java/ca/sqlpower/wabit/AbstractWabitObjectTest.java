@@ -103,7 +103,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (listener.getPropertyChangeCount() == oldChangeCount + 1) {
                     assertEquals("Property name mismatch for "+property.getName()+ " in "+wo.getClass(),
                             property.getName(),
-                            listener.getLastPropertyEvent());
+                            listener.getLastPropertyEvent().getPropertyName());
                     assertEquals("New value for "+property.getName()+" was wrong",
                             newVal,
                             listener.getLastPropertyEvent().getNewValue());  
