@@ -36,7 +36,8 @@ public interface WabitPersister {
 		DOUBLE("Double", Double.class),
 		BOOLEAN("Boolean", Boolean.class),
 		REFERENCE("Reference", String.class),
-		PNG_IMG("PNG_IMG", InputStream.class);
+		PNG_IMG("PNG_IMG", InputStream.class),
+		NULL("Null", null);
 		
 		private final String name;
 		private final Class representation;
