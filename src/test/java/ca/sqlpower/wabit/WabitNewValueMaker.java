@@ -39,6 +39,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
+import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Template;
@@ -147,6 +148,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             newValue = new Chart();
         } else if (valueType.equals(Template.class)) {
             newValue = new Template("Some name");
+        } else if (valueType.equals(Page.class)) {
+            newValue = new Page("New page", 10, 20, PageOrientation.LANDSCAPE);
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
