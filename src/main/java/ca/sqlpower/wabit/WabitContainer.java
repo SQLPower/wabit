@@ -35,7 +35,7 @@ import ca.sqlpower.query.Item;
  * {@link WabitListener}s that will be notified appropriately when events happen
  * on the container.
  */
-public class WabitContainer extends AbstractWabitObject {
+public abstract class WabitContainer extends AbstractWabitObject {
 
     /**
      * The container that is delegated to by this object.

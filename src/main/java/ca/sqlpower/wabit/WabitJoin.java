@@ -97,7 +97,7 @@ public class WabitJoin extends AbstractWabitObject {
      */
     private WabitItem findWabitItemByDelegate(QueryCache query, Item delegate) {
         for (WabitObject child : query.getChildren()) {
-            if (child instanceof WabitContainer) {
+            if (child instanceof WabitTableContainer) {
             	for (WabitObject item : child.getChildren()) {
             		if (((WabitItem) item).getDelegate().equals(delegate)) {
             			return (WabitItem) item;

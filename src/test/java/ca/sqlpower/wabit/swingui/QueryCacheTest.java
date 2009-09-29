@@ -35,6 +35,7 @@ import ca.sqlpower.wabit.WabitContainer;
 import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitQueryItem;
+import ca.sqlpower.wabit.WabitTableContainer;
 
 public class QueryCacheTest extends TestCase {
 	
@@ -88,7 +89,7 @@ public class QueryCacheTest extends TestCase {
 		assertEquals(1, listener.getAddedCount());
 		assertEquals(2, queryCache.getChildren().size());
 		WabitObject queryChild = queryCache.getChildren().get(1);
-		assertEquals(WabitContainer.class, queryChild.getClass());
+		assertEquals(WabitTableContainer.class, queryChild.getClass());
 		WabitChildEvent evt = listener.getLastEvent();
 		assertEquals(queryCache, evt.getSource());
 		assertEquals(queryChild, evt.getChild());
@@ -113,7 +114,7 @@ public class QueryCacheTest extends TestCase {
         assertEquals(1, listener.getAddedCount());
         assertEquals(2, queryCache.getChildren().size());
         WabitObject queryChild = queryCache.getChildren().get(1);
-        assertEquals(WabitContainer.class, queryChild.getClass());
+        assertEquals(WabitTableContainer.class, queryChild.getClass());
         
         queryCache.removeTable(container);
         

@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -224,10 +223,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     };
     
     /**
+     * When the constants container is set in the query a WabitObject wrapper is 
+     * set at this variable.
+     */
+    private WabitConstantsContainer constantContainer;
+    
+    /**
      * When each container is added to a query cache a WabitObject wrapper is made for 
      * it and placed in this list to let this query fire Wabit events based on it.
      */
-    private final List<WabitContainer> containers = new ArrayList<WabitContainer>();
+    private final List<WabitTableContainer> containers = new ArrayList<WabitTableContainer>();
     
     /** 
      * When a join is added to a query cache a WabitObject wrapper is made for it
@@ -291,11 +296,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * the current objects in the query set in the constructor.
      */
     private void createWabitObjectWrappers() {
-        WabitContainer constants = new WabitContainer(query.getConstantsContainer());
+        WabitConstantsContainer constants = new WabitConstantsContainer(query.getConstantsContainer());
         constants.setParent(this);
-        containers.add(constants);
+        constantContainer = constants;
         for (Container c : query.getFromTableList()) {
-            WabitContainer child = new WabitContainer(c);
+            WabitTableContainer child = new WabitTableContainer(c);
             child.setParent(this);
 			containers.add(child);
         }
@@ -555,7 +560,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
         int offset = 0;
-        if (childType.equals(WabitContainer.class)) {
+        if (childType.equals(WabitConstantsContainer.class)) {
+            return offset;
+        }
+        offset += 1;
+        if (childType.equals(WabitTableContainer.class)) {
             return offset;
         }
         offset += containers.size();
@@ -634,8 +643,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     @Override
     protected boolean removeChildImpl(WabitObject child) {
-        if (child instanceof WabitContainer) {
-            query.removeTable(((WabitContainer) child).getDelegate());
+        if (child instanceof WabitConstantsContainer) {
+            throw new IllegalStateException("Cannot remove the constants container from this query.");
+        } else if (child instanceof WabitTableContainer) {
+            query.removeTable(((WabitTableContainer) child).getDelegate());
             return true;
         } else if (child instanceof WabitJoin) {
             query.removeJoin(((WabitJoin) child).getDelegate());
@@ -1065,21 +1076,30 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         });
         
         WabitContainer childToRemove = null;
-        for (WabitContainer container : containers) {
+        Class<? extends WabitContainer> classToRemove = null;
+        int index = -1;
+        for (WabitTableContainer container : containers) {
             if (container.getDelegate().equals(evt.getContainerChanged())) {
                 childToRemove = container;
+                classToRemove = WabitTableContainer.class;
+                index = containers.indexOf(childToRemove);
+                containers.remove(childToRemove);
                 break;
             }
+        }
+        if (childToRemove == null && constantContainer.getDelegate().equals(evt.getContainerChanged())) {
+            childToRemove = constantContainer;
+            classToRemove = WabitConstantsContainer.class;
+            index = 0;
+            constantContainer = null;
         }
         if (childToRemove == null) 
             throw new IllegalStateException("QueryCache is out of sync with the query it is " +
             		"delegating to. Cannot find the container " + 
             		evt.getContainerChanged().getName() + " to remove from the query.");
         
-        int index = containers.indexOf(childToRemove);
-        containers.remove(childToRemove);
         
-        fireChildRemoved(WabitContainer.class, childToRemove, index);
+        fireChildRemoved(classToRemove, childToRemove, index);
     }
     
     protected void fireContainerAdded(final QueryChangeEvent evt) {
@@ -1093,10 +1113,23 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
-        final WabitContainer child = new WabitContainer(evt.getContainerChanged());
+        final WabitContainer child;
+        Class<? extends WabitContainer> childClass;
+        int index;
+        if (evt.getContainerChanged().equals(getConstantsContainer())) {
+            constantContainer = new WabitConstantsContainer(evt.getContainerChanged());
+            childClass = WabitConstantsContainer.class;
+            index = 0;
+            child = constantContainer;
+        } else {
+            WabitTableContainer childTable = new WabitTableContainer(evt.getContainerChanged());
+            containers.add(childTable);
+            index = containers.indexOf(childTable);
+            child = childTable;
+            childClass = WabitTableContainer.class;
+        }
         child.setParent(this);
-        containers.add(child);
-        fireChildAdded(WabitContainer.class, child, containers.indexOf(child));
+        fireChildAdded(childClass, child, index);
     }
     
     protected void fireSelectedItemAdded(SelectedItemEvent evt) {
