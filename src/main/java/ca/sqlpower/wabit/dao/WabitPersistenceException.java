@@ -40,7 +40,9 @@ public class WabitPersistenceException extends Exception {
 	 * the {@link WabitObject} that was being persisted.
 	 * 
 	 * @param uuid
-	 *            The UUID of the {@link WabitObject} that was being persisted
+	 *            The UUID of the {@link WabitObject} that was being persisted.
+	 *            If there is no particular WabitObject related to this
+	 *            Exception, null may be passed in instead.
 	 */
 	public WabitPersistenceException(String uuid) {
 		this.uuid = uuid;
@@ -51,7 +53,9 @@ public class WabitPersistenceException extends Exception {
 	 * detailed message
 	 * 
 	 * @param uuid
-	 *            The UUID of the {@link WabitObject} that was being persisted
+	 *            The UUID of the {@link WabitObject} that was being persisted.
+	 *            If there is no particular WabitObject related to this
+	 *            Exception, null may be passed in instead.
 	 * @param message
 	 *            A detailed error message. Can be retrieved with
 	 *            {@link #getMessage()}.
@@ -67,7 +71,9 @@ public class WabitPersistenceException extends Exception {
 	 * Exception that caused this WabitPersistenceException
 	 * 
 	 * @param uuid
-	 *            The UUID of the {@link WabitObject} that was being persisted
+	 *            The UUID of the {@link WabitObject} that was being persisted.
+	 *            If there is no particular WabitObject related to this
+	 *            Exception, null may be passed in instead.
 	 * @param cause
 	 *            A {@link Throwable} that is the specific cause
 	 */
@@ -82,7 +88,9 @@ public class WabitPersistenceException extends Exception {
 	 * a more specific Exception that caused this WabitPersistenceException
 	 * 
 	 * @param uuid
-	 *            The UUID of the {@link WabitObject} that was being persisted
+	 *            The UUID of the {@link WabitObject} that was being persisted.
+	 *            If there is no particular WabitObject related to this
+	 *            Exception, null may be passed in instead.
 	 * @param message
 	 *            A detailed error message. Can be retrieved with
 	 *            {@link #getMessage()}.
