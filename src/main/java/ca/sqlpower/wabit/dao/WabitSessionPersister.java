@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,18 +40,32 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
 
 import com.google.common.collect.Multimap;
 
+import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryItem;
+import ca.sqlpower.query.SQLGroupFunction;
+import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringItem;
+import ca.sqlpower.query.TableContainer;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitColumnItem;
+import ca.sqlpower.wabit.WabitConstantItem;
+import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -82,16 +97,37 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
 /**
  * This class represents a Data Access Object for {@link WabitSession}s.
  */
-public class WabitSessionDAO implements WabitPersister {
+public class WabitSessionPersister implements WabitPersister {
 
+	private static final Logger logger = Logger
+			.getLogger(WabitSessionPersister.class);
+
+	/**
+	 * A {@link WabitSession} to persisted objects and properties onto.
+	 */
 	private WabitSession session;
 
-	private boolean transactionBegun;
+	/**
+	 * A count of transactions, mainly to keep track of nested transactions.
+	 */
+	private int transactionCount = 0;
 
+	/**
+	 * Persisted property buffer, mapping of {@link WabitObject} UUIDs to each
+	 * individual persisted property
+	 */
 	private Multimap<String, WabitObjectProperty> persistedProperties;
 
+	/**
+	 * Persisted {@link WabitObject} buffer, contains all the data that was
+	 * passed into the persistedObject call in the order of insertion
+	 */
 	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
 
+	/**
+	 * {@link WabitObject} removal buffer, mapping of {@link WabitObject} UUIDs
+	 * to their parents
+	 */
 	private Map<String, String> objectsToRemove = new LinkedHashMap<String, String>();
 
 	/**
@@ -238,25 +274,31 @@ public class WabitSessionDAO implements WabitPersister {
 	 * @param session
 	 *            The {@link WabitSession} this DAO should work under
 	 */
-	public WabitSessionDAO(WabitSession session) {
+	public WabitSessionPersister(WabitSession session) {
 		this.session = session;
-		transactionBegun = false;
 	}
 
 	/**
 	 * Begins a transaction
 	 */
 	public void begin() {
-		transactionBegun = true;
+		transactionCount++;
 	}
 
 	/**
 	 * Commits the persisted {@link WabitObject}s, its properties and removals
 	 */
 	public void commit() throws WabitPersistenceException {
+		if (transactionCount <= 0) {
+			throw new WabitPersistenceException(null,
+					"Commit attempted while not in a transaction");
+		}
+
 		commitObjects();
 		commitProperties();
 		commitRemovals();
+
+		transactionCount--;
 	}
 
 	/**
@@ -337,7 +379,6 @@ public class WabitSessionDAO implements WabitPersister {
 						.valueOf(getProperty(uuid, "orientation", true)
 								.toString());
 
-				//XXX Is this correct?
 				wo = new Page(name, width, height, orientation);
 				((Layout) parent).setPage((Page) wo);
 
@@ -353,6 +394,26 @@ public class WabitSessionDAO implements WabitPersister {
 				wo = new Template(name);
 				((WabitWorkspace) parent).addTemplate((Template) wo);
 
+			} else if (type.equals(WabitColumnItem.class.toString())) {
+				String name = getProperty(uuid, "name", true).toString();
+				SQLObjectItem soItem = new SQLObjectItem(name, uuid);
+
+				wo = new WabitColumnItem(soItem);
+				((WabitTableContainer) parent).getDelegate().addItem(soItem);
+
+			} else if (type.equals(WabitConstantsContainer.class.toString())) {
+				Container container = ((QueryCache) parent)
+						.newConstantsContainer(uuid);
+				wo = new WabitConstantsContainer(container);
+
+			} else if (type.equals(WabitConstantItem.class.toString())) {
+				String name = getProperty(uuid, "name", true).toString();
+				StringItem stringItem = new StringItem(name);
+
+				wo = new WabitConstantItem(stringItem);
+				((WabitConstantsContainer) parent).getDelegate().addItem(
+						stringItem);
+
 			} else if (type.equals(WabitDataSource.class.toString())) {
 				SPDataSource spds = session.getContext().getDataSources()
 						.getDataSource(
@@ -365,6 +426,20 @@ public class WabitSessionDAO implements WabitPersister {
 				wo = new WabitImage();
 				((WabitWorkspace) parent).addImage((WabitImage) wo);
 
+			} else if (type.equals(WabitTableContainer.class.toString())) {
+				String name = getProperty(uuid, "name", true).toString();
+				String schema = getProperty(uuid, "schema", true).toString();
+				String catalog = getProperty(uuid, "catalog", true).toString();
+				List<SQLObjectItem> items = null;
+				SQLDatabase db = ((QueryCache) parent).getDatabase();
+
+				// TableContainer tableContainer = new TableContainer(db, db
+				// .getTableByName(name));
+				TableContainer tableContainer = new TableContainer(uuid, db,
+						name, schema, catalog, items);
+				wo = new WabitTableContainer(tableContainer);
+				((QueryCache) parent).addTable(tableContainer);
+
 			} else {
 				throw new WabitPersistenceException(uuid,
 						"Unknown WabitObject type");
@@ -373,9 +448,9 @@ public class WabitSessionDAO implements WabitPersister {
 			if (wo != null) {
 				wo.setUUID(uuid);
 			}
-			
+
 		}
-		
+
 		persistedObjects.clear();
 	}
 
@@ -478,18 +553,31 @@ public class WabitSessionDAO implements WabitPersister {
 				} else if (wo instanceof ResultSetRenderer) {
 					commitResultSetRendererProperty((ResultSetRenderer) wo,
 							propertyName, oldValue, newValue, unconditional);
+				} else if (wo instanceof WabitConstantsContainer) {
+					commitWabitConstantsContainerProperty(
+							(WabitConstantsContainer) wo, propertyName,
+							oldValue, newValue, unconditional);
 				} else if (wo instanceof WabitDataSource) {
 					commitWabitDataSourceProperty((WabitDataSource) wo,
 							propertyName, oldValue, newValue, unconditional);
 				} else if (wo instanceof WabitImage) {
 					commitWabitImageProperty((WabitImage) wo, propertyName,
 							oldValue, newValue, unconditional);
+				} else if (wo instanceof WabitItem) {
+					commitWabitItemProperty((WabitItem) wo, propertyName,
+							oldValue, newValue, unconditional);
+				} else if (wo instanceof WabitTableContainer) {
+					commitWabitTableContainerProperty((WabitTableContainer) wo,
+							propertyName, oldValue, newValue, unconditional);
+				} else {
+					throw new WabitPersistenceException(uuid,
+							"Invalid WabitObject");
 				}
 
 			}
-			
+
 		}
-		
+
 		persistedProperties.clear();
 
 	}
@@ -516,7 +604,7 @@ public class WabitSessionDAO implements WabitPersister {
 				throw new WabitPersistenceException(uuid, e);
 			}
 		}
-		
+
 		objectsToRemove.clear();
 	}
 
@@ -535,7 +623,7 @@ public class WabitSessionDAO implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid)
 			throws WabitPersistenceException {
-		if (!transactionBegun) {
+		if (transactionCount <= 0) {
 			throw new WabitPersistenceException(uuid,
 					"Transaction is not in progress");
 		}
@@ -779,9 +867,108 @@ public class WabitSessionDAO implements WabitPersister {
 			throw new WabitPersistenceException(uuid, "Unknown property: "
 					+ propertyName);
 		}
-		
-		//TODO Constants container
-		//TODO Table container
+	}
+
+	private void commitWabitConstantsContainerProperty(
+			WabitConstantsContainer wabitConstantsContainer,
+			String propertyName, Object oldValue, Object newValue,
+			boolean unconditional) throws WabitPersistenceException {
+		String uuid = wabitConstantsContainer.getUUID();
+		ca.sqlpower.query.Container container = wabitConstantsContainer
+				.getDelegate();
+		Point2D position = container.getPosition();
+
+		if (propertyName.equals("xpos")) {
+			validatePropertyValuesIfConditional(uuid, oldValue,
+					position.getX(), unconditional);
+			container.setPosition(new Point2D.Double(Double.valueOf(newValue
+					.toString()), position.getY()));
+
+		} else if (propertyName.equals("ypos")) {
+			validatePropertyValuesIfConditional(uuid, oldValue,
+					position.getY(), unconditional);
+			container.setPosition(new Point2D.Double(position.getX(), Double
+					.valueOf(newValue.toString())));
+
+		} else {
+			throw new WabitPersistenceException(uuid, "Unknown property: "
+					+ propertyName);
+		}
+	}
+
+	private void commitWabitTableContainerProperty(
+			WabitTableContainer wabitTableContainer, String propertyName,
+			Object oldValue, Object newValue, boolean unconditional)
+			throws WabitPersistenceException {
+		String uuid = wabitTableContainer.getUUID();
+		ca.sqlpower.query.Container container = wabitTableContainer
+				.getDelegate();
+		Point2D position = container.getPosition();
+
+		if (propertyName.equals("xpos")) {
+			validatePropertyValuesIfConditional(uuid, oldValue,
+					position.getX(), unconditional);
+			container.setPosition(new Point2D.Double(Double.valueOf(newValue
+					.toString()), position.getY()));
+
+		} else if (propertyName.equals("ypos")) {
+			validatePropertyValuesIfConditional(uuid, oldValue,
+					position.getY(), unconditional);
+			container.setPosition(new Point2D.Double(position.getX(), Double
+					.valueOf(newValue.toString())));
+
+		} else if (propertyName.equals("alias")) {
+			validatePropertyValuesIfConditional(uuid, oldValue, container
+					.getAlias(), unconditional);
+			container.setAlias(newValue.toString());
+
+		} else {
+			throw new WabitPersistenceException(uuid, "Unknown property: "
+					+ propertyName);
+		}
+		// XXX: Should we allow for changes to the schema or catalog properties?
+	}
+
+	private void commitWabitItemProperty(WabitItem wabitItem,
+			String propertyName, Object oldValue, Object newValue,
+			boolean unconditional) throws WabitPersistenceException {
+		String uuid = wabitItem.getUUID();
+		Item item = wabitItem.getDelegate();
+
+		if (item instanceof SQLObjectItem || item instanceof StringItem) {
+			if (propertyName.equals("alias")) {
+				validatePropertyValuesIfConditional(uuid, oldValue, item
+						.getAlias(), unconditional);
+				item.setAlias(newValue.toString());
+
+			} else if (propertyName.equals("where-text")) {
+				validatePropertyValuesIfConditional(uuid, oldValue, item
+						.getWhere(), unconditional);
+				item.setWhere(newValue.toString());
+
+			} else if (propertyName.equals("group-by")) {
+				validatePropertyValuesIfConditional(uuid, oldValue, item
+						.getGroupBy().name(), unconditional);
+				item.setGroupBy(SQLGroupFunction.valueOf(newValue.toString()));
+
+			} else if (propertyName.equals("having")) {
+				validatePropertyValuesIfConditional(uuid, oldValue, item
+						.getHaving(), unconditional);
+				item.setHaving(newValue.toString());
+
+			} else if (propertyName.equals("order-by")) {
+				validatePropertyValuesIfConditional(uuid, oldValue, item
+						.getOrderBy().name(), unconditional);
+				item.setOrderBy(OrderByArgument.valueOf(newValue.toString()));
+
+			} else {
+				throw new WabitPersistenceException(uuid, "Unknown property: "
+						+ propertyName);
+			}
+		} else {
+			throw new WabitPersistenceException(uuid, "Unknown WabitItem: "
+					+ wabitItem.toString());
+		}
 	}
 
 	/**
@@ -1419,8 +1606,10 @@ public class WabitSessionDAO implements WabitPersister {
 		} else if (propertyName.equals("column-info-item-id")) {
 			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
 					.getColumnInfoItem().getUUID(), unconditional);
-			for (Item item : ((ResultSetRenderer) colInfo.getParent()).getQuery().getSelectedColumns()) {
-				if (item.equals(newValue.toString())) {
+			for (QueryItem queryItem : ((ResultSetRenderer) colInfo.getParent())
+					.getQuery().getSelectedColumns()) {
+				Item item = queryItem.getDelegate();
+				if (item.getUUID().equals(newValue.toString())) {
 					colInfo.setColumnInfoItem(item);
 					break;
 				}
@@ -1496,25 +1685,7 @@ public class WabitSessionDAO implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
-		WabitWorkspace workspace = session.getWorkspace();
-		WabitObject parent = workspace
-				.findByUuid(parentUUID, WabitObject.class);
-		WabitObject wabitObjectToRemove = workspace.findByUuid(uuid,
-				WabitObject.class);
-
-		if (!parent.allowsChildren()
-				|| !parent.getChildren().contains(wabitObjectToRemove)) {
-			throw new WabitPersistenceException(uuid,
-					"The specified WabitObject to remove does not exist within the parent.");
-		}
-
-		try {
-			parent.removeChild(wabitObjectToRemove);
-		} catch (IllegalArgumentException e) {
-			throw new WabitPersistenceException(uuid, e);
-		} catch (ObjectDependentException e) {
-			throw new WabitPersistenceException(uuid, e);
-		}
+		objectsToRemove.put(uuid, parentUUID);
 	}
 
 	/**

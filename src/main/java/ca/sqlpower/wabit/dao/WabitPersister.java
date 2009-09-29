@@ -138,9 +138,6 @@ public interface WabitPersister {
 	 *            (ex. WabitWorkspace)
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject} to actually persist
-	 * @param constructorArgs
-	 *            An {@link Object} varargs needed to pass onto a WabitObject
-	 *            constructor upon instantiation
 	 * @throws WabitPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
