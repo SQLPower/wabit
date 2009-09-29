@@ -20,16 +20,27 @@
 package ca.sqlpower.wabit;
 
 import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
 
 /**
  * This class represents a specific implementation of {@link WabitContainer} that
  * wraps the constants container in a {@link Query}.
  */
-public class WabitConstantsContainer extends WabitContainer {
+public class WabitConstantsContainer extends WabitContainer<WabitConstantItem> {
 
     public WabitConstantsContainer(Container delegate) {
         super(delegate);
+    }
+
+    @Override
+    protected WabitConstantItem createWabitItemChild(Item item) {
+        return new WabitConstantItem(item);
+    }
+
+    @Override
+    protected Class<WabitConstantItem> getChildClass() {
+        return WabitConstantItem.class;
     }
 
 }

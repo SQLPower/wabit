@@ -94,7 +94,7 @@ public class QueryCacheTest extends TestCase {
 		assertEquals(queryCache, evt.getSource());
 		assertEquals(queryChild, evt.getChild());
 		assertEquals(1, evt.getIndex());
-		assertEquals(container, ((WabitContainer) queryChild).getDelegate());
+		assertEquals(container, ((WabitTableContainer) queryChild).getDelegate());
 	}
 	
 	/**
@@ -122,7 +122,7 @@ public class QueryCacheTest extends TestCase {
         assertEquals(1, queryCache.getChildren().size());
         WabitChildEvent evt = listener.getLastEvent();
         assertEquals(queryCache, evt.getSource());
-        assertEquals(container, ((WabitContainer) evt.getChild()).getDelegate());
+        assertEquals(container, ((WabitTableContainer) evt.getChild()).getDelegate());
         assertEquals(1, evt.getIndex());
     }
 	

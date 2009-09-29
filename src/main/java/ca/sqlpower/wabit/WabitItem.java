@@ -30,7 +30,7 @@ import ca.sqlpower.query.Item;
  * This type of {@link Item} wraps any other type of item to let other classes
  * attach {@link WabitListener}s to the delegate.
  */
-public class WabitItem extends AbstractWabitObject {
+public abstract class WabitItem extends AbstractWabitObject {
 	
     /**
      * The delegate to send the method calls to.

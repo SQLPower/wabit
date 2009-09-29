@@ -19,28 +19,15 @@
 
 package ca.sqlpower.wabit;
 
-import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.TableContainer;
 
 /**
- * This class distinguishes a WabitContainer as more specifically containing a
- * {@link TableContainer}.
+ * This {@link WabitItem} is more specific to a column in a table.
  */
-public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
+public class WabitColumnItem extends WabitItem {
 
-    public WabitTableContainer(Container delegate) {
+    public WabitColumnItem(Item delegate) {
         super(delegate);
-    }
-
-    @Override
-    protected WabitColumnItem createWabitItemChild(Item item) {
-        return new WabitColumnItem(item);
-    }
-
-    @Override
-    protected Class<WabitColumnItem> getChildClass() {
-        return WabitColumnItem.class;
     }
 
 }

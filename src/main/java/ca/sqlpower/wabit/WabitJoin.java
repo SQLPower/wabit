@@ -42,12 +42,12 @@ public class WabitJoin extends AbstractWabitObject {
     /**
      * Returns the {@link WabitItem} wrapping the left side of this join.
      */
-    private final WabitItem leftItem;
+    private final WabitColumnItem leftItem;
     
     /**
      * Returns the {@link WabitItem} wrapping the right side of this join.
      */
-    private final WabitItem rightItem;
+    private final WabitColumnItem rightItem;
 
     /**
      * A change listener on the delegate join that re-fires events as
@@ -95,17 +95,17 @@ public class WabitJoin extends AbstractWabitObject {
      * Helper method for the constructor that finds the correct {@link WabitItem}
      * wrapper in the {@link QueryCache} that wraps the given delegate item.
      */
-    private WabitItem findWabitItemByDelegate(QueryCache query, Item delegate) {
+    private WabitColumnItem findWabitItemByDelegate(QueryCache query, Item delegate) {
         for (WabitObject child : query.getChildren()) {
             if (child instanceof WabitTableContainer) {
             	for (WabitObject item : child.getChildren()) {
-            		if (((WabitItem) item).getDelegate().equals(delegate)) {
-            			return (WabitItem) item;
+            		if (((WabitColumnItem) item).getDelegate().equals(delegate)) {
+            			return (WabitColumnItem) item;
             		}
             	}
             }
         }
-        throw new IllegalStateException("The QueryCache is missing a WabitItem for " + 
+        throw new IllegalStateException("The QueryCache is missing a WabitColumnItem for " + 
                 delegate.getName());
     }
     

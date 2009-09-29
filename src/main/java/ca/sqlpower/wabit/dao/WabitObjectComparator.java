@@ -27,9 +27,10 @@ import java.util.List;
 import java.util.Set;
 
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitColumnItem;
+import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitQueryOrderByItem;
@@ -92,7 +93,8 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         classOrderList.add(equalObjectsSet);
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitConstantsContainer.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitTableContainer.class)));
-        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitItem.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitConstantItem.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitColumnItem.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitJoin.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitQuerySelectedItem.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitQueryOrderByItem.class)));

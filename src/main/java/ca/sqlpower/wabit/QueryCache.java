@@ -583,7 +583,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public List<? extends WabitObject> getChildren() {
-        List<WabitObject> children = new ArrayList<WabitObject>(containers);
+        List<WabitObject> children = new ArrayList<WabitObject>();
+        children.add(constantContainer);
+        children.addAll(containers);
         children.addAll(joins);
         children.addAll(selectedItems);
         children.addAll(orderByItems);
