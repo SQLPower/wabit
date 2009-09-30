@@ -222,6 +222,7 @@ public class Chart extends AbstractWabitObject {
             throw new NullPointerException("null column identifier");
         }
         missingColumns.add(ci);
+        fireChildAdded(ChartColumn.class, ci, missingColumns.indexOf(ci));
     }
 
     public Color getBackgroundColour() {

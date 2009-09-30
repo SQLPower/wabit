@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
+import java.text.DecimalFormat;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -32,6 +33,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
+import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -49,6 +51,11 @@ import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.chart.ChartType;
+import ca.sqlpower.wabit.report.chart.ColumnRole;
+import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
 
@@ -150,6 +157,37 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             newValue = new Template("Some name");
         } else if (valueType.equals(Page.class)) {
             newValue = new Page("New page", 10, 20, PageOrientation.LANDSCAPE);
+        } else if (valueType.equals(ChartColumn.class)) {
+            newValue = new ChartColumn("New column", 
+                    ca.sqlpower.wabit.report.chart.ChartColumn.DataType.NUMERIC);
+        } else if (valueType.equals(LegendPosition.class)) {
+            if (oldVal != null && oldVal.equals(LegendPosition.LEFT)) {
+                newValue = LegendPosition.RIGHT;
+            } else {
+                newValue = LegendPosition.LEFT;
+            }
+        } else if (valueType.equals(DecimalFormat.class)) {
+            if (oldVal != null && oldVal.equals(new DecimalFormat("##,##"))) {
+                newValue = new DecimalFormat("##0#");
+            } else {
+                newValue = new DecimalFormat("##,##");
+            }
+        } else if (valueType.equals(ResultSetProducer.class)) {
+            QueryCache query = new QueryCache(new StubSQLDatabaseMapping());
+            query.setName("New query");
+            newValue = query;
+        } else if (valueType.equals(ColumnRole.class)) {
+            if (oldVal != null && oldVal.equals(ColumnRole.CATEGORY)) {
+                newValue = ColumnRole.NONE;
+            } else {
+                newValue = ColumnRole.CATEGORY;
+            }
+        } else if (valueType.equals(ChartType.class)) {
+            if (oldVal != null && oldVal.equals(ChartType.BAR)) {
+                newValue = ChartType.PIE;
+            } else {
+                newValue = ChartType.BAR;
+            }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

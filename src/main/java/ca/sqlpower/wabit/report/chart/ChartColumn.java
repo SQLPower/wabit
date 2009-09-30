@@ -78,7 +78,7 @@ public class ChartColumn extends AbstractWabitObject {
         }
     };
     
-    private ColumnRole role;
+    private ColumnRole roleInChart;
     
     private ChartColumn xAxisIdentifier;
     
@@ -121,13 +121,13 @@ public class ChartColumn extends AbstractWabitObject {
     }
 
     public ColumnRole getRoleInChart() {
-        return role;
+        return roleInChart;
     }
 
     public void setRoleInChart(ColumnRole dataType) {
-        ColumnRole oldType = this.role;
-        this.role = dataType;
-        firePropertyChange("dataType", oldType, dataType);
+        ColumnRole oldType = this.roleInChart;
+        this.roleInChart = dataType;
+        firePropertyChange("roleInChart", oldType, dataType);
     }
 
     public ChartColumn getXAxisIdentifier() {
@@ -137,7 +137,7 @@ public class ChartColumn extends AbstractWabitObject {
     public void setXAxisIdentifier(ChartColumn xAxisIdentifier) {
         ChartColumn oldIdentifier = this.xAxisIdentifier;
         this.xAxisIdentifier = xAxisIdentifier;
-        firePropertyChange("xAxisIdentifier", oldIdentifier, xAxisIdentifier);
+        firePropertyChange("XAxisIdentifier", oldIdentifier, xAxisIdentifier);
     }
     
     public DataType getDataType() {

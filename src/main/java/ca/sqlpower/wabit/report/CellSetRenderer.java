@@ -626,7 +626,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
     
     public void setModifiedOlapQuery(OlapQuery modifiedOlapQuery) {
-        this.modifiedOlapQuery = modifiedOlapQuery; //XXX this may not fire the correct events
+        OlapQuery oldQuery = this.modifiedOlapQuery;
+        this.modifiedOlapQuery = modifiedOlapQuery;
+        firePropertyChange("modifiedOlapQuery", oldQuery, modifiedOlapQuery);
     }
     
     public String getErrorMessage() {
