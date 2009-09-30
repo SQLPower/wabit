@@ -57,7 +57,7 @@ public class WabitJSONPersister implements WabitPersister {
 	public void begin() throws WabitPersistenceException{
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.begin.toString());
+			jsonObject.put("method", WabitPersistMethod.begin);
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
@@ -74,7 +74,7 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.commit.toString());
+			jsonObject.put("method", WabitPersistMethod.commit);
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
@@ -103,7 +103,7 @@ public class WabitJSONPersister implements WabitPersister {
 			Object oldValue, Object newValue) throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.changeProperty.toString());
+			jsonObject.put("method", WabitPersistMethod.changeProperty);
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
@@ -118,7 +118,7 @@ public class WabitJSONPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName, DataType type, Object newValue) throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.persistProperty.toString());
+			jsonObject.put("method", WabitPersistMethod.persistProperty);
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
@@ -133,7 +133,7 @@ public class WabitJSONPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.removeObject.toString());
+			jsonObject.put("method", WabitPersistMethod.removeObject);
 			jsonObject.put("parentUUID", parentUUID);
 			jsonObject.put("uuid", uuid);
 		} catch (JSONException e) {
@@ -143,9 +143,12 @@ public class WabitJSONPersister implements WabitPersister {
 	}
 	
 	public void rollback() throws WabitPersistenceException {
+		if (transactionCount <= 0) {
+			throw new WabitPersistenceException(null, "Rollback attempted while not in a transaction");
+		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.rollback.toString());
+			jsonObject.put("method", WabitPersistMethod.rollback);
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
