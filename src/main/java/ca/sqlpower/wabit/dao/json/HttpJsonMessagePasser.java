@@ -46,7 +46,6 @@ public class HttpJsonMessagePasser extends HttpMessagePasser<JSONObject> {
 		super(serverInfo, wabitWorkspaceUUID);
 	}
 
-	@Override
 	public void send(JSONObject content) throws WabitPersistenceException {
 		String uuid = null;
 		
