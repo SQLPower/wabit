@@ -21,12 +21,12 @@ package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
 
-import junit.framework.TestCase;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.QueryChangeAdapter;
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSessionContext;
@@ -37,7 +37,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitQueryItem;
 import ca.sqlpower.wabit.WabitTableContainer;
 
-public class QueryCacheTest extends TestCase {
+public class QueryCacheTest extends AbstractWabitObjectTest {
 	
 	private class CountingQueryChangeListener extends QueryChangeAdapter {
 	    
@@ -57,7 +57,14 @@ public class QueryCacheTest extends TestCase {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		queryCache = new QueryCache(new StubWabitSessionContext());
+		queryCache = new QueryCache(new StubWabitSessionContext() {
+		});
+		queryCache.setName("Main query");
+	}
+	
+	@Override
+	public WabitObject getObjectUnderTest() {
+	    return queryCache;
 	}
 	
 	public void testAliasListener() throws Exception {

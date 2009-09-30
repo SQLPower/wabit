@@ -465,7 +465,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
     
     public CachedRowSet getCachedRowSet() {
-        if (resultPosition >= rsCollection.getResultSetCount()) {
+        if (rsCollection == null || resultPosition >= rsCollection.getResultSetCount()) {
             return null;
         }
         return rsCollection.getResultSets().get(resultPosition);
@@ -476,13 +476,14 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public int getUpdateCount() {
-        if (resultPosition >= rsCollection.getCountOfUpdateCounts()) {
+        if (rsCollection == null || resultPosition >= rsCollection.getCountOfUpdateCounts()) {
             return -1;
         }
         return rsCollection.getUpdateCounts().get(resultPosition);
     }
 
     public boolean getMoreResults() {
+        if (rsCollection == null) return false;
         resultPosition++;
         return resultPosition < rsCollection.getResultSetCount() && 
             rsCollection.getResultSets().get(resultPosition) != null;
@@ -620,7 +621,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public void setPromptForCrossJoins(boolean promptForCrossJoins) {
+        boolean oldPromptJoins = this.promptForCrossJoins;
         this.promptForCrossJoins = promptForCrossJoins;
+        firePropertyChange("promptForCrossJoins", oldPromptJoins, promptForCrossJoins);
     }
 
     public boolean getPromptForCrossJoins() {
@@ -628,7 +631,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public void setExecuteQueriesWithCrossJoins(boolean executeQueriesWithCrossJoins) {
+        boolean oldExecWithJoin = this.executeQueriesWithCrossJoins;
         this.executeQueriesWithCrossJoins = executeQueriesWithCrossJoins;
+        firePropertyChange("executeQueriesWithCrossJoins", oldExecWithJoin, executeQueriesWithCrossJoins);
     }
 
     public boolean getExecuteQueriesWithCrossJoins() {
@@ -636,7 +641,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public void setAutomaticallyExecuting(boolean automaticallyExecute) {
+        boolean oldAutoExec = this.automaticallyExecuting;
         this.automaticallyExecuting = automaticallyExecute;
+        firePropertyChange("automaticallyExecuting", oldAutoExec, automaticallyExecute);
     }
 
     public boolean isAutomaticallyExecuting() {
@@ -991,6 +998,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         });
+        super.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
     }
     
     protected void fireCompoundEditStarted(final TransactionEvent evt) {
