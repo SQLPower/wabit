@@ -65,7 +65,6 @@ import org.olap4j.query.Selection;
 import org.olap4j.query.SortOrder;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 import org.olap4j.query.Selection.Operator;
-import org.xml.sax.Attributes;
 
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -78,7 +77,6 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
 import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
-import ca.sqlpower.xml.XMLHelper;
 
 /**
  * This is the model of an OLAP query. This will store all values that need to

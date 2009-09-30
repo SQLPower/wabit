@@ -230,7 +230,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 
 	public void setPreserveAspectRatioWhenResizing(
 			boolean preserveAspectRatioWhenResizing) {
+	    boolean oldValue = this.preserveAspectRatioWhenResizing;
 		this.preserveAspectRatioWhenResizing = preserveAspectRatioWhenResizing;
+		firePropertyChange("preserveAspectRatioWhenResizing", oldValue, 
+		        preserveAspectRatioWhenResizing);
 	}
 
 	public boolean isPreserveAspectRatioWhenResizing() {
@@ -254,7 +257,7 @@ public class ImageRenderer extends AbstractWabitObject implements
     public void setHAlign(HorizontalAlignment hAlign) {
         HorizontalAlignment oldAlign = this.hAlign;
         this.hAlign = hAlign;
-        firePropertyChange("hAlign", oldAlign, hAlign);
+        firePropertyChange("HAlign", oldAlign, hAlign);
     }
 
     public HorizontalAlignment getHAlign() {
@@ -264,7 +267,7 @@ public class ImageRenderer extends AbstractWabitObject implements
     public void setVAlign(VerticalAlignment vAlign) {
         VerticalAlignment oldAlign = this.vAlign;
         this.vAlign = vAlign;
-        firePropertyChange("vAlign", oldAlign, vAlign);
+        firePropertyChange("VAlign", oldAlign, vAlign);
     }
 
     public VerticalAlignment getVAlign() {

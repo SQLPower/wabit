@@ -616,6 +616,7 @@ public class OlapQueryPanel implements WabitPanel {
             updateMdxText(query.getMdxText());
         } catch (Exception ex) {
             updateMdxText("Exception thrown while retrieving MDX statement:\n" + ex.getMessage());
+            logger.error("Error while retrieving MDX statement", ex);
         }
     }
     

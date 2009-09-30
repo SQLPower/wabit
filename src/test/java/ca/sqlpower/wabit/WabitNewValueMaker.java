@@ -23,19 +23,24 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
+import java.io.File;
 import java.text.DecimalFormat;
+
+import org.olap4j.metadata.Cube;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
@@ -58,6 +63,30 @@ import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 
 public class WabitNewValueMaker extends GenericNewValueMaker {
+    
+    private PlDotIni plIni;
+    private OlapConnectionPool connectionPool;
+    
+    
+    
+    public WabitNewValueMaker() {
+        plIni = new PlDotIni();
+        try {
+            plIni.read(new File("src/test/java/pl.regression.ini"));
+            final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
+                    Olap4jDataSource.class);
+            if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
+            connectionPool = new OlapConnectionPool(olapDS, 
+                    new SQLDatabaseMapping() {
+                private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
+                public SQLDatabase getDatabase(JDBCDataSource ds) {
+                    return sqlDB;
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public Object makeNewValue(Class<?> valueType, Object oldVal, String propName) {
@@ -187,6 +216,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 newValue = ChartType.PIE;
             } else {
                 newValue = ChartType.BAR;
+            }
+        } else if (valueType.equals(Cube.class)) {
+            try {
+                newValue = connectionPool.getConnection().getSchema().getCubes().get("World Countries");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
