@@ -54,11 +54,10 @@ public class WabitJSONPersister implements WabitPersister {
 		this.messagePasser = messagePasser;
 	}
 	
-	@Override
 	public void begin() throws WabitPersistenceException{
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "begin");
+			jsonObject.put("method", WabitPersistMethod.begin.toString());
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
@@ -69,14 +68,13 @@ public class WabitJSONPersister implements WabitPersister {
 		transactionCount++;
 	}
 
-	@Override
 	public void commit() throws WabitPersistenceException {
 		if (transactionCount <= 0) {
 			throw new WabitPersistenceException(null, "Commit attempted while not in a transaction");
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "commit");
+			jsonObject.put("method", WabitPersistMethod.commit.toString());
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
@@ -87,12 +85,11 @@ public class WabitJSONPersister implements WabitPersister {
 		transactionCount--;
 	}
 
-	@Override
 	public void persistObject(String parentUUID, String type, String uuid)
 			throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "persistObject");
+			jsonObject.put("method", WabitPersistMethod.persistObject.toString());
 			jsonObject.put("parentUUID", parentUUID);
 			jsonObject.put("type", type);
 			jsonObject.put("uuid", uuid);
@@ -102,14 +99,14 @@ public class WabitJSONPersister implements WabitPersister {
 		messagePasser.send(jsonObject);
 	}
 
-	@Override
 	public void persistProperty(String uuid, String propertyName, DataType type,
 			Object oldValue, Object newValue) throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "persistProperty");
-			jsonObject.put("propertyName", propertyName);
+			jsonObject.put("method", WabitPersistMethod.changeProperty.toString());
 			jsonObject.put("uuid", uuid);
+			jsonObject.put("propertyName", propertyName);
+			jsonObject.put("type", type.toString());
 			jsonObject.put("oldValue", oldValue);
 			jsonObject.put("newValue", newValue);
 		} catch (JSONException e) {
@@ -118,13 +115,13 @@ public class WabitJSONPersister implements WabitPersister {
 		messagePasser.send(jsonObject);
 	}
 	
-	@Override
 	public void persistProperty(String uuid, String propertyName, DataType type, Object newValue) throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "persistProperty");
-			jsonObject.put("propertyName", propertyName);
+			jsonObject.put("method", WabitPersistMethod.persistProperty.toString());
 			jsonObject.put("uuid", uuid);
+			jsonObject.put("propertyName", propertyName);
+			jsonObject.put("type", type.toString());
 			jsonObject.put("newValue", newValue);
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
@@ -132,12 +129,11 @@ public class WabitJSONPersister implements WabitPersister {
 		messagePasser.send(jsonObject);
 	};
 	
-	@Override
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "removeObject");
+			jsonObject.put("method", WabitPersistMethod.removeObject.toString());
 			jsonObject.put("parentUUID", parentUUID);
 			jsonObject.put("uuid", uuid);
 		} catch (JSONException e) {
@@ -146,11 +142,10 @@ public class WabitJSONPersister implements WabitPersister {
 		messagePasser.send(jsonObject);
 	}
 	
-	@Override
 	public void rollback() throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", "rollback");
+			jsonObject.put("method", WabitPersistMethod.rollback.toString());
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);

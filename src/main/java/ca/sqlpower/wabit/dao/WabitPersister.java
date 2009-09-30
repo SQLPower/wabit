@@ -57,6 +57,22 @@ public interface WabitPersister {
 	}
 
 	/**
+	 * An enumeration of possible WabitPersister commands. The
+	 * {@link MessagePasser}s and {@link MessageDecoder}s can use this is a
+	 * common reference for the type of persistence methods calls that can be
+	 * sent through messages.
+	 */
+	public enum WabitPersistMethod {
+		begin,
+		commit,
+		persistObject,
+		persistProperty,
+		changeProperty, // Actually refers to persistPropety with old and new values
+		removeObject,
+		rollback
+	}
+	
+	/**
 	 * Modifies the named property of the specified WabitObject in this
 	 * persister's workspace. It may throw an {@link Exception} if the actual
 	 * previous value in persistent storage does not match the expected previous
