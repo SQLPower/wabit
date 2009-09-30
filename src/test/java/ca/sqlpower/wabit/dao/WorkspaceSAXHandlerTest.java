@@ -99,6 +99,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 		p.addDataSource(newDS);
 
 		QueryCache query = new QueryCache(beforeSaveContext);
+		query.setName("name");
 		p.addQuery(query, session);
 		query.setDataSource(newDS);
 		
