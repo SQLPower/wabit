@@ -25,6 +25,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +42,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.olap4j.query.Selection.Operator;
 
 import com.google.common.collect.Multimap;
 
@@ -56,13 +58,16 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitItem;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
@@ -113,6 +118,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private WabitSession session;
 
 	/**
+	 * A {@link WabitPersister} to make persist calls on whenever there is a
+	 * child added/removed or property change event
+	 */
+	private WabitPersister target;
+
+	/**
 	 * A count of transactions, mainly to keep track of nested transactions.
 	 */
 	private int transactionCount = 0;
@@ -142,8 +153,6 @@ public class WabitSessionPersister implements WabitPersister {
 	private class WabitObjectProperty {
 
 		final private String propertyName;
-		final private DataType dataType;
-		final private Object oldValue;
 		final private Object newValue;
 		final private boolean unconditional;
 
@@ -154,21 +163,15 @@ public class WabitSessionPersister implements WabitPersister {
 		 * 
 		 * @param propertyName
 		 *            The name of the property to persist
-		 * @param dataType
-		 *            The data type representation of the property value
-		 * @param oldValue
-		 *            The expected current property value
 		 * @param newValue
 		 *            The property value to persist
 		 * @param unconditional
 		 *            Whether or not to validate if oldValue matches the actual
 		 *            property value before persisting
 		 */
-		private WabitObjectProperty(String propertyName, DataType dataType,
-				Object oldValue, Object newValue, boolean unconditional) {
+		private WabitObjectProperty(String propertyName, Object newValue,
+				boolean unconditional) {
 			this.propertyName = propertyName;
-			this.dataType = dataType;
-			this.oldValue = oldValue;
 			this.newValue = newValue;
 			this.unconditional = unconditional;
 		}
@@ -180,24 +183,6 @@ public class WabitSessionPersister implements WabitPersister {
 		 */
 		public String getPropertyName() {
 			return propertyName;
-		}
-
-		/**
-		 * Accessor for the data type field
-		 * 
-		 * @return The data type representation of the property value
-		 */
-		public DataType getDataType() {
-			return dataType;
-		}
-
-		/**
-		 * Accessor for the expected current property value
-		 * 
-		 * @return The expected current property value
-		 */
-		public Object getOldValue() {
-			return oldValue;
 		}
 
 		/**
@@ -267,7 +252,7 @@ public class WabitSessionPersister implements WabitPersister {
 		 * 
 		 * @return The UUID of the object to persist
 		 */
-		public String getUuid() {
+		public String getUUID() {
 			return uuid;
 		}
 
@@ -279,8 +264,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param session
 	 *            The {@link WabitSession} this DAO should work under
 	 */
-	public WabitSessionPersister(WabitSession session) {
+	public WabitSessionPersister(WabitSession session, WabitPersister target) {
 		this.session = session;
+		this.target = target;
+
+		session.getWorkspace().addWabitListener(new WabitWorkspaceListener());
 	}
 
 	/**
@@ -314,7 +302,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitObjects() throws WabitPersistenceException {
 
 		for (PersistedWabitObject pwo : persistedObjects) {
-			String uuid = pwo.getUuid();
+			String uuid = pwo.getUUID();
 			String type = pwo.getType();
 			WabitWorkspace workspace = session.getWorkspace();
 			WabitObject wo = null;
@@ -432,10 +420,10 @@ public class WabitSessionPersister implements WabitPersister {
 				((WabitWorkspace) parent).addImage((WabitImage) wo);
 
 			} else if (type.equals(WabitOlapAxis.class.toString())) {
-				int ordinal = Integer
-						.valueOf(getProperty(uuid, "ordinal", true).toString());
+				org.olap4j.Axis axis = (org.olap4j.Axis) getProperty(uuid,
+						"ordinal", true);
 
-				wo = new WabitOlapAxis(ordinal);
+				wo = new WabitOlapAxis(axis);
 				((OlapQuery) parent).addAxis((WabitOlapAxis) wo);
 
 			} else if (type.equals(WabitOlapDimension.class.toString())) {
@@ -445,8 +433,8 @@ public class WabitSessionPersister implements WabitPersister {
 				((WabitOlapAxis) parent).addDimension((WabitOlapDimension) wo);
 
 			} else if (type.equals(WabitOlapExclusion.class.toString())) {
-				String operator = getProperty(uuid, "operator", true)
-						.toString();
+				Operator operator = Operator.valueOf(getProperty(uuid,
+						"operator", true).toString());
 				String uniqueMemberName = getProperty(uuid,
 						"unique-member-name", true).toString();
 				wo = new WabitOlapExclusion(operator, uniqueMemberName);
@@ -454,8 +442,8 @@ public class WabitSessionPersister implements WabitPersister {
 						.addExclusion((WabitOlapExclusion) wo);
 
 			} else if (type.equals(WabitOlapInclusion.class.toString())) {
-				String operator = getProperty(uuid, "operator", true)
-						.toString();
+				Operator operator = Operator.valueOf(getProperty(uuid,
+						"operator", true).toString());
 				String uniqueMemberName = getProperty(uuid,
 						"unique-member-name", true).toString();
 				wo = new WabitOlapInclusion(operator, uniqueMemberName);
@@ -469,8 +457,6 @@ public class WabitSessionPersister implements WabitPersister {
 				List<SQLObjectItem> items = null;
 				SQLDatabase db = ((QueryCache) parent).getDatabase();
 
-				// TableContainer tableContainer = new TableContainer(db, db
-				// .getTableByName(name));
 				TableContainer tableContainer = new TableContainer(uuid, db,
 						name, schema, catalog, items);
 				wo = new WabitTableContainer(tableContainer);
@@ -522,6 +508,27 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
+	 * Checks to see if a {@link WabitObject} with a certain UUID exists
+	 * 
+	 * @param uuid
+	 *            The UUID to search for
+	 * @return Whether or not the {@link WabitObject} exists
+	 */
+	private boolean exists(String uuid) {
+		if (!objectsToRemove.containsKey(uuid)) {
+			for (PersistedWabitObject pwo : persistedObjects) {
+				if (uuid.equals(pwo.getUUID())) {
+					return true;
+				}
+			}
+			if (session.getWorkspace().findByUuid(uuid, WabitObject.class) != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Commits the persisted {@link WabitObject} property values
 	 * 
 	 * @throws WabitPersistenceException
@@ -530,90 +537,79 @@ public class WabitSessionPersister implements WabitPersister {
 		WabitWorkspace workspace = session.getWorkspace();
 		WabitObject wo;
 		String propertyName;
-		DataType dataType;
-		Object oldValue, newValue;
-		boolean unconditional;
+		Object newValue;
 
 		for (String uuid : persistedProperties.keySet()) {
 			wo = workspace.findByUuid(uuid, WabitObject.class);
 
 			for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 				propertyName = wop.getPropertyName();
-				dataType = wop.getDataType();
-				oldValue = wop.getOldValue();
 				newValue = wop.getNewValue();
-				unconditional = wop.isUnconditional();
 
 				if (isCommonProperty(propertyName)) {
-					commitCommonProperty(wo, propertyName, oldValue, newValue,
-							unconditional);
+					commitCommonProperty(wo, propertyName, newValue);
 				} else if (wo instanceof CellSetRenderer) {
 					commitCellSetRendererProperty((CellSetRenderer) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof Chart) {
-					commitChartProperty((Chart) wo, propertyName, oldValue,
-							newValue, unconditional);
+					commitChartProperty((Chart) wo, propertyName, newValue);
 				} else if (wo instanceof ChartColumn) {
 					commitChartColumnProperty((ChartColumn) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof ChartRenderer) {
 					commitChartRendererProperty((ChartRenderer) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof ColumnInfo) {
 					commitColumnInfoProperty((ColumnInfo) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof ContentBox) {
 					commitContentBoxProperty((ContentBox) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof Guide) {
-					commitGuideProperty((Guide) wo, propertyName, oldValue,
-							newValue, unconditional);
+					commitGuideProperty((Guide) wo, propertyName, newValue);
 				} else if (wo instanceof ImageRenderer) {
 					commitImageRendererProperty((ImageRenderer) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof Label) {
-					commitLabelProperty((Label) wo, propertyName, oldValue,
-							newValue, unconditional);
+					commitLabelProperty((Label) wo, propertyName, newValue);
 				} else if (wo instanceof Layout) {
-					commitLayoutProperty((Layout) wo, propertyName, oldValue,
-							newValue, unconditional);
+					commitLayoutProperty((Layout) wo, propertyName, newValue);
 				} else if (wo instanceof OlapQuery) {
 					commitOlapQueryProperty((OlapQuery) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof Page) {
-					commitPageProperty((Page) wo, propertyName, oldValue,
-							newValue, unconditional);
+					commitPageProperty((Page) wo, propertyName, newValue);
 				} else if (wo instanceof QueryCache) {
 					commitQueryCacheProperty((QueryCache) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof ResultSetRenderer) {
 					commitResultSetRendererProperty((ResultSetRenderer) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof WabitConstantsContainer) {
 					commitWabitConstantsContainerProperty(
 							(WabitConstantsContainer) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof WabitDataSource) {
 					commitWabitDataSourceProperty((WabitDataSource) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof WabitOlapAxis) {
 					commitWabitOlapAxisProperty((WabitOlapAxis) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof WabitOlapDimension) {
 					commitWabitOlapDimensionProperty((WabitOlapDimension) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof WabitOlapSelection) {
 					commitWabitOlapSelectionProperty((WabitOlapSelection) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else if (wo instanceof WabitImage) {
 					commitWabitImageProperty((WabitImage) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof WabitItem) {
 					commitWabitItemProperty((WabitItem) wo, propertyName,
-							oldValue, newValue, unconditional);
+							newValue);
 				} else if (wo instanceof WabitTableContainer) {
 					commitWabitTableContainerProperty((WabitTableContainer) wo,
-							propertyName, oldValue, newValue, unconditional);
+							propertyName, newValue);
 				} else {
 					throw new WabitPersistenceException(uuid,
 							"Invalid WabitObject");
@@ -668,12 +664,20 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid)
 			throws WabitPersistenceException {
-		if (transactionCount <= 0) {
+		PersistedWabitObject pwo = new PersistedWabitObject(parentUUID, type,
+				uuid);
+
+		if (persistedObjects.contains(pwo)
+				|| session.getWorkspace().findByUuid(uuid, WabitObject.class) != null) {
 			throw new WabitPersistenceException(uuid,
-					"Transaction is not in progress");
+					"A WabitObject with UUID " + uuid + " already exists.");
 		}
 
-		persistedObjects.add(new PersistedWabitObject(parentUUID, type, uuid));
+		persistedObjects.add(pwo);
+
+		if (transactionCount == 0) {
+			commitObjects();
+		}
 
 	}
 
@@ -695,8 +699,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	public void persistProperty(String uuid, String propertyName,
-			ca.sqlpower.wabit.dao.WabitPersister.DataType propertyType,
-			Object oldValue, Object newValue) throws WabitPersistenceException {
+			DataType propertyType, Object oldValue, Object newValue)
+			throws WabitPersistenceException {
 		persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
 				newValue, false);
 	}
@@ -717,8 +721,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	public void persistProperty(String uuid, String propertyName,
-			ca.sqlpower.wabit.dao.WabitPersister.DataType propertyType,
-			Object newValue) throws WabitPersistenceException {
+			DataType propertyType, Object newValue)
+			throws WabitPersistenceException {
 		persistPropertyHelper(uuid, propertyName, propertyType, null, newValue,
 				true);
 	}
@@ -743,36 +747,173 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	private void persistPropertyHelper(String uuid, String propertyName,
-			ca.sqlpower.wabit.dao.WabitPersister.DataType propertyType,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
+			DataType propertyType, Object oldValue, Object newValue,
+			boolean unconditional) throws WabitPersistenceException {
+		if (!exists(uuid)) {
+			throw new WabitPersistenceException(uuid, "WabitObject with UUID "
+					+ uuid + " does not exist.");
+		}
+
+		Object lastPropertyValueFound = null;
+
+		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+			if (propertyName.equals(wop.getPropertyName())) {
+				lastPropertyValueFound = wop.getNewValue();
+				if (wop.isUnconditional() && unconditional) {
+					throw new WabitPersistenceException(
+							uuid,
+							"Cannot make more than one unconditional persist property call in the same transaction.");
+				}
+
+			}
+		}
+
+		if (lastPropertyValueFound != null) {
+			if (!unconditional && !oldValue.equals(lastPropertyValueFound)) {
+				throw new WabitPersistenceException(
+						uuid,
+						"The expected property value \""
+								+ oldValue
+								+ "\" does not match with the actual property value \""
+								+ lastPropertyValueFound + "\"");
+			}
+		} else if (!unconditional) {
+			WabitObject wo = session.getWorkspace().findByUuid(uuid,
+					WabitObject.class);
+			Object propertyValue = null;
+
+			if (isCommonProperty(propertyName)) {
+				propertyValue = getCommonProperty(wo, propertyName);
+			} else if (wo instanceof CellSetRenderer) {
+				propertyValue = getCellSetRendererProperty(
+						(CellSetRenderer) wo, propertyName);
+			} else if (wo instanceof Chart) {
+				propertyValue = getChartProperty((Chart) wo, propertyName);
+			} else if (wo instanceof ChartColumn) {
+				propertyValue = getChartColumnProperty((ChartColumn) wo,
+						propertyName);
+			} else if (wo instanceof ChartRenderer) {
+				propertyValue = getChartRendererProperty((ChartRenderer) wo,
+						propertyName);
+			} else if (wo instanceof ColumnInfo) {
+				propertyValue = getColumnInfoProperty((ColumnInfo) wo,
+						propertyName);
+			} else if (wo instanceof ContentBox) {
+				propertyValue = getContentBoxProperty((ContentBox) wo,
+						propertyName);
+			} else if (wo instanceof Guide) {
+				propertyValue = getGuideProperty((Guide) wo, propertyName);
+			} else if (wo instanceof ImageRenderer) {
+				propertyValue = getImageRendererProperty((ImageRenderer) wo,
+						propertyName);
+			} else if (wo instanceof Label) {
+				propertyValue = getLabelProperty((Label) wo, propertyName);
+			} else if (wo instanceof Layout) {
+				propertyValue = getLayoutProperty((Layout) wo, propertyName);
+			} else if (wo instanceof OlapQuery) {
+				propertyValue = getOlapQueryProperty((OlapQuery) wo,
+						propertyName);
+			} else if (wo instanceof Page) {
+				propertyValue = getPageProperty((Page) wo, propertyName);
+			} else if (wo instanceof QueryCache) {
+				propertyValue = getQueryCacheProperty((QueryCache) wo,
+						propertyName);
+			} else if (wo instanceof ResultSetRenderer) {
+				propertyValue = getResultSetRendererProperty(
+						(ResultSetRenderer) wo, propertyName);
+			} else if (wo instanceof WabitConstantsContainer) {
+				propertyValue = getWabitConstantsContainerProperty(
+						(WabitConstantsContainer) wo, propertyName);
+			} else if (wo instanceof WabitDataSource) {
+				propertyValue = getWabitDataSourceProperty(
+						(WabitDataSource) wo, propertyName);
+			} else if (wo instanceof WabitOlapAxis) {
+				propertyValue = getWabitOlapAxisProperty((WabitOlapAxis) wo,
+						propertyName);
+			} else if (wo instanceof WabitOlapDimension) {
+				propertyValue = getWabitOlapDimensionProperty(
+						(WabitOlapDimension) wo, propertyName);
+			} else if (wo instanceof WabitOlapSelection) {
+				propertyValue = getWabitOlapSelectionProperty(
+						(WabitOlapSelection) wo, propertyName);
+			} else if (wo instanceof WabitImage) {
+				propertyValue = getWabitImageProperty((WabitImage) wo,
+						propertyName);
+
+				// Convert oldValue into a byte array so that it can be compared
+				// with propertyValue
+				final Image wabitInnerImage = ((WabitImage) wo).getImage();
+
+				if (wabitInnerImage != null) {
+					BufferedImage image;
+					if (wabitInnerImage instanceof BufferedImage) {
+						image = (BufferedImage) wabitInnerImage;
+					} else {
+						image = new BufferedImage(wabitInnerImage
+								.getWidth(null), wabitInnerImage
+								.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+						final Graphics2D g = image.createGraphics();
+						g.drawImage(wabitInnerImage, 0, 0, null);
+						g.dispose();
+					}
+					if (image != null) {
+						try {
+							ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+							ImageIO.write(image, "PNG", byteStream);
+							byte[] currentByteArray = (byte[]) propertyValue;
+
+							InputStream inputStream = (InputStream) oldValue;
+							byte[] oldByteArray = new byte[currentByteArray.length];
+							int size = inputStream.read(oldByteArray);
+
+							if (size == currentByteArray.length
+									&& inputStream.available() > 0) {
+								oldValue = oldByteArray;
+
+							} else {
+								throw new WabitPersistenceException(
+										uuid,
+										"The expected property value \""
+												+ oldValue
+												+ "\" does not match with the actual property value \""
+												+ propertyValue + "\"");
+							}
+						} catch (IOException e) {
+							throw new WabitPersistenceException(uuid, e);
+						}
+					} else {
+						throw new WabitPersistenceException(uuid,
+								"Invalid image.");
+					}
+				} else {
+					throw new WabitPersistenceException(uuid, "Invalid image.");
+				}
+
+			} else if (wo instanceof WabitItem) {
+				propertyValue = getWabitItemProperty((WabitItem) wo,
+						propertyName);
+			} else if (wo instanceof WabitTableContainer) {
+				propertyValue = getWabitTableContainerProperty(
+						(WabitTableContainer) wo, propertyName);
+			} else {
+				throw new WabitPersistenceException(uuid, "Invalid WabitObject");
+			}
+
+			if (!oldValue.equals(propertyValue)) {
+				throw new WabitPersistenceException(
+						uuid,
+						"The expected property value \""
+								+ oldValue
+								+ "\" does not match with the actual property value \""
+								+ propertyValue + "\"");
+			}
+		}
 
 		persistedProperties.put(uuid, new WabitObjectProperty(propertyName,
-				propertyType, oldValue, newValue, unconditional));
-	}
+				newValue, unconditional));
 
-	/**
-	 * Validates whether the expected property value and actual property value
-	 * matches, only if it is a conditional persist property call. If the values
-	 * do not match, a {@link WabitPersistenceException} is thrown.
-	 * 
-	 * @param uuid
-	 *            The UUID of the {@link WabitObject} the property value is
-	 *            being persisted upon
-	 * @param expectedValue
-	 *            The expected old property value
-	 * @param actualValue
-	 *            The actual property value
-	 * @param unconditional
-	 *            Whether or not this is an unconditional persist property call
-	 * @throws WabitPersistenceException
-	 */
-	private void validatePropertyValuesIfConditional(String uuid,
-			Object expectedValue, Object actualValue, boolean unconditional)
-			throws WabitPersistenceException {
-		if (!unconditional && !expectedValue.equals(actualValue)) {
-			throw new WabitPersistenceException(uuid, "Expected value is "
-					+ expectedValue + "; actual value is " + actualValue);
+		if (transactionCount == 0) {
+			commitProperties();
 		}
 	}
 
@@ -788,27 +929,73 @@ public class WabitSessionPersister implements WabitPersister {
 		return (propertyName.equals("name") || propertyName.equals("uuid"));
 	}
 
-	private void commitCommonProperty(WabitObject wo, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
+	/**
+	 * Retrieves a common property value from a {@link WabitObject}. The only
+	 * two common properties are "name" and "uuid".
+	 * 
+	 * @param wo
+	 *            The {@link WabitObject} to retrieve the property from
+	 * @param propertyName
+	 *            The property name of the value to retrieve
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getCommonProperty(WabitObject wo, String propertyName)
 			throws WabitPersistenceException {
-		String uuid = wo.getUUID();
-
 		if (propertyName.equals("name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, wo.getName(),
-					unconditional);
-			wo.setName(newValue.toString());
+			return wo.getName();
 		} else if (propertyName.equals("uuid")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, uuid,
-					unconditional);
-			wo.setUUID(newValue.toString());
+			return wo.getUUID();
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(wo.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
 	/**
-	 * Commits a persisted {@link WabitDataSource} property. Currently,
+	 * Commits a persisted {@link WabitObject} common property.
+	 * 
+	 * @param wo
+	 *            The {@link WabitObject} to commit the persisted common
+	 *            property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 */
+	private void commitCommonProperty(WabitObject wo, String propertyName,
+			Object newValue) throws WabitPersistenceException {
+		if (propertyName.equals("name")) {
+			wo.setName(newValue.toString());
+		} else if (propertyName.equals("uuid")) {
+			wo.setUUID(newValue.toString());
+		} else {
+			throw new WabitPersistenceException(wo.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link WabitDataSource} object.
+	 * Currently, uncommon properties cannot be retrieved from this class.
+	 * 
+	 * @param wds
+	 *            The {@link WabitDataSource} object to retrieve the property
+	 *            from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitDataSourceProperty(WabitDataSource wds,
+			String propertyName) throws WabitPersistenceException {
+		throw new WabitPersistenceException(wds.getUUID(), "Invalid property: "
+				+ propertyName);
+	}
+
+	/**
+	 * Commits a persisted {@link WabitDataSource} property. Currently, uncommon
 	 * properties cannot be persisted for this class.
 	 * 
 	 * @param wds
@@ -816,20 +1003,64 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitDataSourceProperty(WabitDataSource wds,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		throw new WabitPersistenceException(wds.getUUID(), "Unknown property: "
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
+		throw new WabitPersistenceException(wds.getUUID(), "Invalid property: "
 				+ propertyName);
+	}
+
+	/**
+	 * Retrieves a property value from a {@link QueryCache} object.
+	 * 
+	 * @param query
+	 *            The {@link QueryCache} object to retrieve the property from.
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getQueryCacheProperty(QueryCache query, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("zoom")) {
+			return query.getZoomLevel();
+
+		} else if (propertyName.equals("streaming-row-limit")) {
+			return query.getStreamingRowLimit();
+
+		} else if (propertyName.equals("row-limit")) {
+			return query.getRowLimit();
+
+		} else if (propertyName.equals("grouping-enabled")) {
+			return query.isGroupingEnabled();
+
+		} else if (propertyName.equals("prompt-for-cross-joins")) {
+			return query.getPromptForCrossJoins();
+
+		} else if (propertyName.equals("automatically-executing")) {
+			return query.isAutomaticallyExecuting();
+
+		} else if (propertyName.equals("global-where")) {
+			return query.getGlobalWhereClause();
+
+		} else if (propertyName.equals("query-text")) {
+			return query.generateQuery();
+
+		} else if (propertyName.equals("execute-queries-with-cross-joins")) {
+			return query.getExecuteQueriesWithCrossJoins();
+
+		} else if (propertyName.equals("data-source")) {
+			return query.getWabitDataSource().getName();
+
+		} else {
+			throw new WabitPersistenceException(query.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+
 	}
 
 	/**
@@ -840,77 +1071,79 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitQueryCacheProperty(QueryCache query,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		String uuid = query.getUUID();
 
 		if (propertyName.equals("zoom")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getZoomLevel(), unconditional);
 			query.setZoomLevel(Integer.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("streaming-row-limit")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getStreamingRowLimit(), unconditional);
 			query.setStreamingRowLimit(Integer.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("row-limit")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getRowLimit(), unconditional);
 			query.setRowLimit(Integer.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("grouping-enabled")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.isGroupingEnabled(), unconditional);
 			query.setGroupingEnabled(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("prompt-for-cross-joins")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getPromptForCrossJoins(), unconditional);
 			query.setPromptForCrossJoins(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("automatically-executing")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.isAutomaticallyExecuting(), unconditional);
 			query.setAutomaticallyExecuting(Boolean
 					.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("global-where")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getGlobalWhereClause(), unconditional);
 			query.setGlobalWhereClause(newValue.toString());
 
 		} else if (propertyName.equals("query-text")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.generateQuery(), unconditional);
 			query.defineUserModifiedQuery(newValue.toString());
 
 		} else if (propertyName.equals("execute-queries-with-cross-joins")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getExecuteQueriesWithCrossJoins(), unconditional);
 			query.setExecuteQueriesWithCrossJoins(Boolean.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("data-source")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, query
-					.getWabitDataSource().getName(), unconditional);
-
 			query.setDataSource(session.getWorkspace().getDataSource(
 					newValue.toString(), JDBCDataSource.class));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
+			throw new WabitPersistenceException(uuid, "Invalid property: "
 					+ propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link WabitConstantsContainer} object.
+	 * 
+	 * @param wabitConstantsContainer
+	 *            The {@link WabitConstantsContainer} to retrieve the property
+	 *            from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitConstantsContainerProperty(
+			WabitConstantsContainer wabitConstantsContainer, String propertyName)
+			throws WabitPersistenceException {
+		Point2D position = wabitConstantsContainer.getDelegate().getPosition();
+
+		if (propertyName.equals("xpos")) {
+			return position.getX();
+
+		} else if (propertyName.equals("ypos")) {
+			return position.getY();
+
+		} else {
+			throw new WabitPersistenceException(wabitConstantsContainer
+					.getUUID(), "Invalid property: " + propertyName);
 		}
 	}
 
@@ -922,39 +1155,61 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            persisted property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitConstantsContainerProperty(
 			WabitConstantsContainer wabitConstantsContainer,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = wabitConstantsContainer.getUUID();
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		ca.sqlpower.query.Container container = wabitConstantsContainer
 				.getDelegate();
 		Point2D position = container.getPosition();
 
 		if (propertyName.equals("xpos")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					position.getX(), unconditional);
 			container.setPosition(new Point2D.Double(Double.valueOf(newValue
 					.toString()), position.getY()));
 
 		} else if (propertyName.equals("ypos")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					position.getY(), unconditional);
 			container.setPosition(new Point2D.Double(position.getX(), Double
 					.valueOf(newValue.toString())));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(wabitConstantsContainer
+					.getUUID(), "Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link WabitTableContainer} object.
+	 * 
+	 * @param wabitTableContainer
+	 *            The {@link WabitTableContainer} to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitTableContainerProperty(
+			WabitTableContainer wabitTableContainer, String propertyName)
+			throws WabitPersistenceException {
+		ca.sqlpower.query.Container container = wabitTableContainer
+				.getDelegate();
+		Point2D position = container.getPosition();
+
+		if (propertyName.equals("xpos")) {
+			return position.getX();
+
+		} else if (propertyName.equals("ypos")) {
+			return position.getY();
+
+		} else if (propertyName.equals("alias")) {
+			return container.getAlias();
+
+		} else {
+			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -966,44 +1221,72 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitTableContainerProperty(
 			WabitTableContainer wabitTableContainer, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
-		String uuid = wabitTableContainer.getUUID();
+			Object newValue) throws WabitPersistenceException {
 		ca.sqlpower.query.Container container = wabitTableContainer
 				.getDelegate();
 		Point2D position = container.getPosition();
 
 		if (propertyName.equals("xpos")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					position.getX(), unconditional);
 			container.setPosition(new Point2D.Double(Double.valueOf(newValue
 					.toString()), position.getY()));
 
 		} else if (propertyName.equals("ypos")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					position.getY(), unconditional);
 			container.setPosition(new Point2D.Double(position.getX(), Double
 					.valueOf(newValue.toString())));
 
 		} else if (propertyName.equals("alias")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, container
-					.getAlias(), unconditional);
 			container.setAlias(newValue.toString());
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link WabitItem} object.
+	 * 
+	 * @param wabitItem
+	 *            The {@link WabitItem} to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitItemProperty(WabitItem wabitItem, String propertyName)
+			throws WabitPersistenceException {
+		String uuid = wabitItem.getUUID();
+		Item item = wabitItem.getDelegate();
+
+		if (item instanceof SQLObjectItem || item instanceof StringItem) {
+			if (propertyName.equals("alias")) {
+				return item.getAlias();
+
+			} else if (propertyName.equals("where-text")) {
+				return item.getWhere();
+
+			} else if (propertyName.equals("group-by")) {
+				return item.getGroupBy().name();
+
+			} else if (propertyName.equals("having")) {
+				return item.getHaving();
+
+			} else if (propertyName.equals("order-by")) {
+				return item.getOrderBy().name();
+
+			} else {
+				throw new WabitPersistenceException(uuid, "Invalid property: "
+						+ propertyName);
+			}
+		} else {
+			throw new WabitPersistenceException(uuid, "Unknown WabitItem: "
+					+ wabitItem.toString());
 		}
 	}
 
@@ -1015,54 +1298,68 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitItemProperty(WabitItem wabitItem,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		String uuid = wabitItem.getUUID();
 		Item item = wabitItem.getDelegate();
 
 		if (item instanceof SQLObjectItem || item instanceof StringItem) {
 			if (propertyName.equals("alias")) {
-				validatePropertyValuesIfConditional(uuid, oldValue, item
-						.getAlias(), unconditional);
 				item.setAlias(newValue.toString());
 
 			} else if (propertyName.equals("where-text")) {
-				validatePropertyValuesIfConditional(uuid, oldValue, item
-						.getWhere(), unconditional);
 				item.setWhere(newValue.toString());
 
 			} else if (propertyName.equals("group-by")) {
-				validatePropertyValuesIfConditional(uuid, oldValue, item
-						.getGroupBy().name(), unconditional);
 				item.setGroupBy(SQLGroupFunction.valueOf(newValue.toString()));
 
 			} else if (propertyName.equals("having")) {
-				validatePropertyValuesIfConditional(uuid, oldValue, item
-						.getHaving(), unconditional);
 				item.setHaving(newValue.toString());
 
 			} else if (propertyName.equals("order-by")) {
-				validatePropertyValuesIfConditional(uuid, oldValue, item
-						.getOrderBy().name(), unconditional);
 				item.setOrderBy(OrderByArgument.valueOf(newValue.toString()));
 
 			} else {
-				throw new WabitPersistenceException(uuid, "Unknown property: "
+				throw new WabitPersistenceException(uuid, "Invalid property: "
 						+ propertyName);
 			}
 		} else {
 			throw new WabitPersistenceException(uuid, "Unknown WabitItem: "
 					+ wabitItem.toString());
+		}
+	}
+
+	/**
+	 * Retrieves a property value from an {@link OlapQuery} object.
+	 * 
+	 * @param olapQuery
+	 *            The {@link OlapQuery} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getOlapQueryProperty(OlapQuery olapQuery, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("data-source")) {
+			return olapQuery.getOlapDataSource().getName();
+		} else if (propertyName.equals("catalog-name")) {
+			return olapQuery.getCatalogName();
+
+		} else if (propertyName.equals("schema-name")) {
+			return olapQuery.getSchemaName();
+
+		} else if (propertyName.equals("cube-name")) {
+			return olapQuery.getCubeName();
+
+		} else {
+			throw new WabitPersistenceException(olapQuery.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1074,81 +1371,90 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitOlapQueryProperty(OlapQuery olapQuery,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = olapQuery.getUUID();
-
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		if (propertyName.equals("data-source")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapQuery
-					.getOlapDataSource().getName(), unconditional);
 			olapQuery.setOlapDataSource((Olap4jDataSource) newValue);
 		} else if (propertyName.equals("catalog-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapQuery
-					.getCatalogName(), unconditional);
 			olapQuery.setCatalogName(newValue.toString());
 
 		} else if (propertyName.equals("schema-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapQuery
-					.getSchemaName(), unconditional);
 			olapQuery.setSchemaName(newValue.toString());
 
 		} else if (propertyName.equals("cube-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapQuery
-					.getCubeName(), unconditional);
 			olapQuery.setCubeName(newValue.toString());
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(olapQuery.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
 	/**
-	 * Commits a persisted {@link WabitOlapSelection} object property
+	 * Retrieves a property value from a {@link WabitOlapSelection} object.
+	 * 
+	 * @param selection
+	 *            The {@link WabitOlapSelection} object to retrieve the property
+	 *            from.
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitOlapSelectionProperty(WabitOlapSelection selection,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("operator")) {
+			return selection.getOperator();
+
+		} else if (propertyName.equals("unique-member-name")) {
+			return selection.getUniqueMemberName();
+
+		} else {
+			throw new WabitPersistenceException(selection.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Commits a persisted {@link WabitOlapSelection} object property.
+	 * Currently, uncommon properties cannot be set.
 	 * 
 	 * @param selection
 	 *            The {@link WabitOlapSelection} object to commit the persisted
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitOlapSelectionProperty(WabitOlapSelection selection,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = selection.getUUID();
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
+		throw new WabitPersistenceException(selection.getUUID(),
+				"Invalid property: " + propertyName);
+	}
 
-		if (propertyName.equals("operator")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, selection
-					.getOperator(), unconditional);
-			selection.setOperator(newValue.toString());
-
-		} else if (propertyName.equals("unique-member-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, selection
-					.getUniqueMemberName(), unconditional);
-			selection.setUniqueMemberName(newValue.toString());
-
-		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
-		}
+	/**
+	 * Retrieve a property value from a WabitOlapDimension objection. Currently,
+	 * there are no uncommon properties to retrieve.
+	 * 
+	 * @param dimension
+	 *            The {@link WabitOlapDimension} to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitOlapDimensionProperty(WabitOlapDimension dimension,
+			String propertyName) throws WabitPersistenceException {
+		throw new WabitPersistenceException(dimension.getUUID(),
+				"Invalid property: " + propertyName);
 	}
 
 	/**
@@ -1159,20 +1465,46 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitOlapDimensionProperty(WabitOlapDimension dimension,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		throw new WabitPersistenceException(dimension.getUUID(),
-				"Unknown property: " + propertyName);
+				"Invalid property: " + propertyName);
+	}
+
+	/**
+	 * Retrieves a property value from a {@link WabitOlapAxis} object.
+	 * 
+	 * @param olapAxis
+	 *            The {@link WabitOlapAxis} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitOlapAxisProperty(WabitOlapAxis olapAxis,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("ordinal")) {
+			return olapAxis.getOrdinal();
+
+		} else if (propertyName.equals("non-empty")) {
+			return olapAxis.isNonEmpty();
+
+		} else if (propertyName.equals("sort-evaluation-literal")) {
+			return olapAxis.getSortEvaluationLiteral();
+
+		} else if (propertyName.equals("sort-order")) {
+			return olapAxis.getSortOrder();
+
+		} else {
+			throw new WabitPersistenceException(olapAxis.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+
 	}
 
 	/**
@@ -1183,43 +1515,64 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitWabitOlapAxisProperty(WabitOlapAxis olapAxis,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = olapAxis.getUUID();
-
-		if (propertyName.equals("ordinal")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapAxis
-					.getOrdinal(), unconditional);
-			olapAxis.setOrdinal(Integer.valueOf(newValue.toString()));
-
-		} else if (propertyName.equals("non-empty")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapAxis
-					.isNonEmpty(), unconditional);
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
+		if (propertyName.equals("non-empty")) {
 			olapAxis.setNonEmpty(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("sort-evaluation-literal")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapAxis
-					.getSortEvaluationLiteral(), unconditional);
 			olapAxis.setSortEvaluationLiteral(newValue.toString());
 
 		} else if (propertyName.equals("sort-order")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, olapAxis
-					.getSortOrder(), unconditional);
 			olapAxis.setSortOrder(newValue.toString());
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(olapAxis.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link Chart} object.
+	 * 
+	 * @param chart
+	 *            The {@link Chart} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getChartProperty(Chart chart, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("x-axis-name")) {
+			return chart.getXaxisName();
+
+		} else if (propertyName.equals("y-axis-name")) {
+			return chart.getYaxisName();
+
+		} else if (propertyName.equals("x-axis-label-rotation")) {
+			return chart.getXaxisLabelRotation();
+
+		} else if (propertyName.equals("gratuitous-animated")) {
+			return chart.isGratuitouslyAnimated();
+
+		} else if (propertyName.equals("type")) {
+			return chart.getType().toString();
+
+		} else if (propertyName.equals("legend-position")) {
+			return chart.getLegendPosition().name();
+
+		} else if (propertyName.equals("query-id")) {
+			return chart.getQuery().getUUID();
+
+		} else {
+			throw new WabitPersistenceException(chart.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1230,56 +1583,35 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The {@link Chart} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitChartProperty(Chart chart, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
+			Object newValue) throws WabitPersistenceException {
 		String uuid = chart.getUUID();
 
 		if (propertyName.equals("x-axis-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.getXaxisName(), unconditional);
 			chart.setXaxisName(newValue.toString());
 
 		} else if (propertyName.equals("y-axis-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.getYaxisName(), unconditional);
 			chart.setYaxisName(newValue.toString());
 
 		} else if (propertyName.equals("x-axis-label-rotation")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.getXaxisLabelRotation(), unconditional);
 			chart.setXAxisLabelRotation(Double.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("gratuitous-animated")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.isGratuitouslyAnimated(), unconditional);
 			chart.setGratuitouslyAnimated(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("type")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart.getType()
-					.toString(), unconditional);
 			chart.setType(ChartType.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("legend-position")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.getLegendPosition().name(), unconditional);
 			chart
 					.setLegendPosition(LegendPosition.valueOf(newValue
 							.toString()));
 
 		} else if (propertyName.equals("query-id")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chart
-					.getQuery().getUUID(), unconditional);
-
 			ResultSetProducer rsProducer = session.getWorkspace().findByUuid(
 					newValue.toString(), ResultSetProducer.class);
 			if (rsProducer == null) {
@@ -1294,9 +1626,34 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
+			throw new WabitPersistenceException(uuid, "Invalid property: "
 					+ propertyName);
 		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link ChartColumn} object.
+	 * 
+	 * @param chartColumn
+	 *            The {@link ChartColumn} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getChartColumnProperty(ChartColumn chartColumn,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("role")) {
+			return chartColumn.getRoleInChart().name();
+
+		} else if (propertyName.equals("x-axis-name")) {
+			return chartColumn.getXAxisIdentifier().getName();
+
+		} else {
+			throw new WabitPersistenceException(chartColumn.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+
 	}
 
 	/**
@@ -1307,57 +1664,28 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitChartColumnProperty(ChartColumn chartColumn,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = chartColumn.getUUID();
-
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		if (propertyName.equals("role")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chartColumn
-					.getRoleInChart().name(), unconditional);
 			chartColumn.setRoleInChart(ColumnRole.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("x-axis-name")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, chartColumn
-					.getXAxisIdentifier().getName(), unconditional);
 			chartColumn.setXAxisIdentifier(new ChartColumn(newValue.toString(),
 					chartColumn.getDataType()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(chartColumn.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
-	/**
-	 * Commits a persisted {@link WabitImage} object property
-	 * 
-	 * @param wabitImage
-	 *            The {@link WabitImage} object to commit the persisted property
-	 *            upon
-	 * @param propertyName
-	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
-	 * @param newValue
-	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
-	 * @throws WabitPersistenceException
-	 */
-	private void commitWabitImageProperty(WabitImage wabitImage,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+	private Object getWabitImageProperty(WabitImage wabitImage,
+			String propertyName) throws WabitPersistenceException {
 		String uuid = wabitImage.getUUID();
 
 		if (propertyName.equals("image")) {
@@ -1382,29 +1710,74 @@ public class WabitSessionPersister implements WabitPersister {
 						byte[] currentByteArray = new Base64()
 								.encode(byteStream.toByteArray());
 
-						InputStream inputStream = (InputStream) oldValue;
-						byte[] oldByteArray = new byte[currentByteArray.length];
-						int size = inputStream.read(oldByteArray);
-
-						if (size == currentByteArray.length
-								&& inputStream.available() > 0) {
-							validatePropertyValuesIfConditional(uuid,
-									oldByteArray, currentByteArray,
-									unconditional);
-							wabitImage.setImage(ImageIO
-									.read((InputStream) newValue));
-
-						}
+						return currentByteArray;
 
 					} catch (IOException e) {
-						throw new RuntimeException(e);
+						throw new WabitPersistenceException(uuid, e);
 					}
+				} else {
+					throw new WabitPersistenceException(uuid, "Invalid image.");
 				}
+			} else {
+				throw new WabitPersistenceException(uuid, "Invalid image.");
 			}
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
+			throw new WabitPersistenceException(uuid, "Invalid property: "
 					+ propertyName);
+		}
+
+	}
+
+	/**
+	 * Commits a persisted {@link WabitImage} object property
+	 * 
+	 * @param wabitImage
+	 *            The {@link WabitImage} object to commit the persisted property
+	 *            upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 */
+	private void commitWabitImageProperty(WabitImage wabitImage,
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
+		String uuid = wabitImage.getUUID();
+
+		if (propertyName.equals("image")) {
+			try {
+				wabitImage.setImage(ImageIO.read((InputStream) newValue));
+			} catch (IOException e) {
+				throw new WabitPersistenceException(uuid,
+						"Cannot set image from InputStream.");
+			}
+
+		} else {
+			throw new WabitPersistenceException(uuid, "Invalid property: "
+					+ propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link Layout} object.
+	 * 
+	 * @param layout
+	 *            The {@link Layout} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getLayoutProperty(Layout layout, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("zoom")) {
+			return layout.getZoomLevel();
+
+		} else {
+			throw new WabitPersistenceException(layout.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1416,28 +1789,48 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitLayoutProperty(Layout layout, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
-		String uuid = layout.getUUID();
-
+			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("zoom")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, layout
-					.getZoomLevel(), unconditional);
 			layout.setZoomLevel(Integer.valueOf(newValue.toString()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(layout.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link Page} object.
+	 * 
+	 * @param page
+	 *            The {@link Page} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getPageProperty(Page page, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("height")) {
+			return page.getHeight();
+
+		} else if (propertyName.equals("width")) {
+			return page.getWidth();
+
+		} else if (propertyName.equals("orientation")) {
+			return page.getOrientation();
+
+		} else if (propertyName.equals("default-font")) {
+			return page.getDefaultFont().toString();
+
+		} else {
+			throw new WabitPersistenceException(page.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1448,43 +1841,57 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The {@link Page} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitPageProperty(Page page, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
-		String uuid = page.getUUID();
-
+			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("height")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, page
-					.getHeight(), unconditional);
 			page.setHeight(Integer.parseInt(newValue.toString()));
 
 		} else if (propertyName.equals("width")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					page.getWidth(), unconditional);
 			page.setWidth(Integer.parseInt(newValue.toString()));
 
 		} else if (propertyName.equals("orientation")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, page
-					.getOrientation().name(), unconditional);
 			page.setOrientation(PageOrientation.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("default-font")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, page
-					.getDefaultFont().toString(), unconditional);
 			page.setDefaultFont(Font.decode(newValue.toString()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(page.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link ContentBox} object.
+	 * 
+	 * @param contentBox
+	 *            The {@link ContentBox} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getContentBoxProperty(ContentBox contentBox,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("height")) {
+			return contentBox.getHeight();
+
+		} else if (propertyName.equals("width")) {
+			return contentBox.getWidth();
+
+		} else if (propertyName.equals("xpos")) {
+			return contentBox.getX();
+
+		} else if (propertyName.equals("ypos")) {
+			return contentBox.getY();
+
+		} else {
+			throw new WabitPersistenceException(contentBox.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1496,44 +1903,46 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitContentBoxProperty(ContentBox contentBox,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = contentBox.getUUID();
-
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		if (propertyName.equals("height")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, contentBox
-					.getHeight(), unconditional);
 			contentBox.setHeight(Double.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("width")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, contentBox
-					.getWidth(), unconditional);
 			contentBox.setWidth(Double.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("xpos")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, contentBox
-					.getX(), unconditional);
 			contentBox.setX(Double.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("ypos")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, contentBox
-					.getY(), unconditional);
 			contentBox.setY(Double.valueOf(newValue.toString()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(contentBox.getUUID(),
+					"Invalid property: " + propertyName);
 		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link ChartRenderer} object.
+	 * Currently, uncommon properties cannot be retrieved from this object.
+	 * 
+	 * @param cRenderer
+	 *            The {@link ChartRenderer} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getChartRendererProperty(ChartRenderer cRenderer,
+			String propertyName) throws WabitPersistenceException {
+		throw new WabitPersistenceException(cRenderer.getUUID(),
+				"Invalid property: " + propertyName);
 	}
 
 	/**
@@ -1544,20 +1953,49 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitChartRendererProperty(ChartRenderer cRenderer,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		throw new WabitPersistenceException(cRenderer.getUUID(),
-				"Unknown property: " + propertyName);
+				"Invalid property: " + propertyName);
+	}
+
+	/**
+	 * Retrieves a property value from a {@link CellSetRenderer} object.
+	 * 
+	 * @param csRenderer
+	 *            The {@link CellSetRenderer} object to retrieve the property
+	 *            from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getCellSetRendererProperty(CellSetRenderer csRenderer,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("olap-query-uuid")) {
+			return csRenderer.getModifiedOlapQuery().getUUID();
+
+		} else if (propertyName.equals("body-alignment")) {
+			return csRenderer.getBodyAlignment().toString();
+
+		} else if (propertyName.equals("body-format-pattern")) {
+			return csRenderer.getBodyFormat().toString();
+
+		} else if (propertyName.equals("olap-header-font")) {
+			return csRenderer.getHeaderFont().toString();
+
+		} else if (propertyName.equals("olap-body-font")) {
+			return csRenderer.getBodyFont().toString();
+
+		} else {
+			throw new WabitPersistenceException(csRenderer.getUUID(),
+					"Invalid property: " + propertyName);
+		}
 	}
 
 	/**
@@ -1568,50 +2006,63 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitCellSetRendererProperty(CellSetRenderer csRenderer,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = csRenderer.getUUID();
-
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		if (propertyName.equals("olap-query-uuid")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getModifiedOlapQuery().getUUID(), unconditional);
 			csRenderer.setModifiedOlapQuery(session.getWorkspace().findByUuid(
 					newValue.toString(), OlapQuery.class));
 
 		} else if (propertyName.equals("body-alignment")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getBodyAlignment().toString(), unconditional);
 			csRenderer.setBodyAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("body-format-pattern")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getBodyFormat().toString(), unconditional);
 			csRenderer.setBodyFormat(new DecimalFormat(newValue.toString()));
 
 		} else if (propertyName.equals("olap-header-font")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getHeaderFont().toString(), unconditional);
 			csRenderer.setHeaderFont(Font.decode(newValue.toString()));
 
 		} else if (propertyName.equals("olap-body-font")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, csRenderer
-					.getBodyFont().toString(), unconditional);
 			csRenderer.setBodyFont(Font.decode(newValue.toString()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(csRenderer.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from an {@link ImageRenderer} object.
+	 * 
+	 * @param iRenderer
+	 *            The {@link ImageRenderer} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getImageRendererProperty(ImageRenderer iRenderer,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("wabit-image-uuid")) {
+			return iRenderer.getImage().getUUID();
+
+		} else if (propertyName.equals("preserving-aspect-ratio")) {
+			return iRenderer.isPreservingAspectRatio();
+
+		} else if (propertyName.equals("h-align")) {
+			return iRenderer.getHAlign().name();
+
+		} else if (propertyName.equals("v-align")) {
+			return iRenderer.getVAlign().name();
+
+		} else {
+			throw new WabitPersistenceException(iRenderer.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1623,46 +2074,61 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitImageRendererProperty(ImageRenderer iRenderer,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = iRenderer.getUUID();
-
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		if (propertyName.equals("wabit-image-uuid")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, iRenderer
-					.getImage().getUUID(), unconditional);
 			iRenderer.setImage(session.getWorkspace().findByUuid(
 					newValue.toString(), WabitImage.class));
 
 		} else if (propertyName.equals("preserving-aspect-ratio")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, iRenderer
-					.isPreservingAspectRatio(), unconditional);
 			iRenderer.setPreservingAspectRatio(Boolean.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("h-align")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, iRenderer
-					.getHAlign().name(), unconditional);
 			iRenderer.setHAlign(HorizontalAlignment
 					.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("v-align")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, iRenderer
-					.getVAlign().name(), unconditional);
 			iRenderer.setVAlign(VerticalAlignment.valueOf(newValue.toString()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(iRenderer.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link Label} object.
+	 * 
+	 * @param label
+	 *            The {@link Label} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getLabelProperty(Label label, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("horizontal-align")) {
+			return label.getHorizontalAlignment().name();
+
+		} else if (propertyName.equals("vertical-align")) {
+			return label.getVerticalAlignment().name();
+
+		} else if (propertyName.equals("text")) {
+			return label.getText();
+
+		} else if (propertyName.equals("bg-colour")) {
+			return label.getBackgroundColour().toString();
+
+		} else {
+			throw new WabitPersistenceException(label.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1673,44 +2139,63 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The {@link Label} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitLabelProperty(Label label, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
-		String uuid = label.getUUID();
-
+			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("horizontal-align")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, label
-					.getHorizontalAlignment().name(), unconditional);
 			label.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("vertical-align")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, label
-					.getVerticalAlignment().name(), unconditional);
 			label.setVerticalAlignment(VerticalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("text")) {
-			validatePropertyValuesIfConditional(uuid, oldValue,
-					label.getText(), unconditional);
 			label.setText(newValue.toString());
 
 		} else if (propertyName.equals("bg-colour")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, label
-					.getBackgroundColour().toString(), unconditional);
 			label.setBackgroundColour(Color.decode(newValue.toString()));
+
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
+			throw new WabitPersistenceException(label.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link ResultSetRenderer} object.
+	 * 
+	 * @param rsRenderer
+	 *            The {@link ResultSetRenderer} object to retrieve the property
+	 *            from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getResultSetRendererProperty(ResultSetRenderer rsRenderer,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("null-string")) {
+			return rsRenderer.getNullString();
+
+		} else if (propertyName.equals("border")) {
+			return rsRenderer.getBorderType().name();
+
+		} else if (propertyName.equals("bg-colour")) {
+			return rsRenderer.getBackgroundColour().toString();
+
+		} else if (propertyName.equals("header-font")) {
+			return rsRenderer.getHeaderFont().toString();
+
+		} else if (propertyName.equals("body-font")) {
+			return rsRenderer.getBodyFont().toString();
+
+		} else {
+			throw new WabitPersistenceException(rsRenderer.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1722,47 +2207,83 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitResultSetRendererProperty(ResultSetRenderer rsRenderer,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
-		String uuid = rsRenderer.getUUID();
-
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		if (propertyName.equals("null-string")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getNullString(), unconditional);
 			rsRenderer.setNullString(newValue.toString());
 
 		} else if (propertyName.equals("border")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getBorderType().name(), unconditional);
 			rsRenderer.setBorderType(BorderStyles.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("bg-colour")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getBackgroundColour().toString(), unconditional);
 			rsRenderer.setBackgroundColour(Color.decode(newValue.toString()));
 
 		} else if (propertyName.equals("header-font")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getHeaderFont().toString(), unconditional);
 			rsRenderer.setHeaderFont(Font.decode(newValue.toString()));
 
 		} else if (propertyName.equals("body-font")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, rsRenderer
-					.getBodyFont().toString(), unconditional);
 			rsRenderer.setBodyFont(Font.decode(newValue.toString()));
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
+			throw new WabitPersistenceException(rsRenderer.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link ColumnInfo} object.
+	 * 
+	 * @param colInfo
+	 *            The {@link ColumnInfo} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getColumnInfoProperty(ColumnInfo colInfo, String propertyName)
+			throws WabitPersistenceException {
+		String uuid = colInfo.getUUID();
+
+		if (propertyName.equals("column-alias")) {
+			return colInfo.getColumnAlias();
+
+		} else if (propertyName.equals("width")) {
+			return colInfo.getWidth();
+
+		} else if (propertyName.equals("horizontal-align")) {
+			return colInfo.getHorizontalAlignment().name();
+
+		} else if (propertyName.equals("data-type")) {
+			return colInfo.getDataType().name();
+
+		} else if (propertyName.equals("group-or-break")) {
+			return colInfo.getWillGroupOrBreak().name();
+
+		} else if (propertyName.equals("will-subtotal")) {
+			return colInfo.getWillSubtotal();
+
+		} else if (propertyName.equals("column-info-item-id")) {
+			return colInfo.getColumnInfoItem().getUUID();
+
+		} else if (propertyName.equals("format-type")) {
+			Format formatType = colInfo.getFormat();
+
+			if (formatType instanceof SimpleDateFormat) {
+				return "date-format";
+			} else if (formatType instanceof DecimalFormat) {
+				return "decimal-format";
+			} else {
+				throw new WabitPersistenceException(uuid,
+						"Invalid format-type: " + formatType.toString());
+			}
+
+		} else {
+			throw new WabitPersistenceException(uuid, "Invalid property: "
 					+ propertyName);
 		}
 	}
@@ -1775,63 +2296,50 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitColumnInfoProperty(ColumnInfo colInfo,
-			String propertyName, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		String uuid = colInfo.getUUID();
-
 		if (propertyName.equals("column-alias")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getColumnAlias(), unconditional);
 			colInfo.setColumnAlias(newValue.toString());
 
 		} else if (propertyName.equals("width")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getWidth(), unconditional);
 			colInfo.setWidth(Integer.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("horizontal-align")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getHorizontalAlignment().name(), unconditional);
 			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("data-type")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getDataType().name(), unconditional);
 			colInfo.setDataType(ca.sqlpower.wabit.report.DataType
 					.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("group-or-break")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getWillGroupOrBreak().name(), unconditional);
 			colInfo.setWillGroupOrBreak(GroupAndBreak.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("will-subtotal")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getWillSubtotal(), unconditional);
 			colInfo.setWillSubtotal(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("column-info-item-id")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, colInfo
-					.getColumnInfoItem().getUUID(), unconditional);
+			boolean found = false;
 			for (QueryItem queryItem : ((ResultSetRenderer) colInfo.getParent())
 					.getQuery().getSelectedColumns()) {
 				Item item = queryItem.getDelegate();
 				if (item.getUUID().equals(newValue.toString())) {
 					colInfo.setColumnInfoItem(item);
+					found = true;
 					break;
 				}
+			}
+			if (!found) {
+				throw new WabitPersistenceException(uuid,
+						"Could not find QueryItem with uuid "
+								+ newValue.toString());
 			}
 
 		} else if (propertyName.equals("format-type")) {
@@ -1840,24 +2348,47 @@ public class WabitSessionPersister implements WabitPersister {
 			String pattern = "";
 
 			if (formatType instanceof SimpleDateFormat) {
-				validatePropertyValuesIfConditional(uuid, oldValue,
-						"date-format", unconditional);
-				pattern = ((SimpleDateFormat) colInfo.getFormat()).toPattern();
+				pattern = ((SimpleDateFormat) formatType).toPattern();
 			} else if (formatType instanceof DecimalFormat) {
-				validatePropertyValuesIfConditional(uuid, oldValue,
-						"decimal-format", unconditional);
-				pattern = ((DecimalFormat) colInfo.getFormat()).toPattern();
+				pattern = ((DecimalFormat) formatType).toPattern();
+			} else {
+				throw new WabitPersistenceException(uuid,
+						"Invalid format-type: " + formatType.toString());
 			}
 
 			if (newFormatType.equals("date-format")) {
 				colInfo.setFormat(new SimpleDateFormat(pattern));
 			} else if (newFormatType.equals("decimal-format")) {
 				colInfo.setFormat(new DecimalFormat(pattern));
+			} else {
+				throw new WabitPersistenceException(uuid,
+						"Invalid format-type: " + formatType.toString());
 			}
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
+			throw new WabitPersistenceException(uuid, "Invalid property: "
 					+ propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link Guide} object.
+	 * 
+	 * @param guide
+	 *            The {@link Guide} object to retrieve the property from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getGuideProperty(Guide guide, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("offset")) {
+			return guide.getOffset();
+
+		} else {
+			throw new WabitPersistenceException(guide.getUUID(),
+					"Invalid property: " + propertyName);
 		}
 	}
 
@@ -1868,29 +2399,19 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The {@link Guide} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
-	 * @param oldValue
-	 *            The expected current property value
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @param unconditional
-	 *            Whether or not to validate oldValue against the actual
-	 *            property value
 	 * @throws WabitPersistenceException
 	 */
 	private void commitGuideProperty(Guide guide, String propertyName,
-			Object oldValue, Object newValue, boolean unconditional)
-			throws WabitPersistenceException {
-		String uuid = guide.getUUID();
-
+			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("offset")) {
-			validatePropertyValuesIfConditional(uuid, oldValue, guide
-					.getOffset(), unconditional);
 			guide.setOffset(Double.valueOf(newValue.toString()));
-		} else {
-			throw new WabitPersistenceException(uuid, "Unknown property: "
-					+ propertyName);
-		}
 
+		} else {
+			throw new WabitPersistenceException(guide.getUUID(),
+					"Invalid property: " + propertyName);
+		}
 	}
 
 	/**
@@ -1904,7 +2425,17 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
+
+		if (!exists(uuid)) {
+			throw new WabitPersistenceException(uuid,
+					"Cannot remove a non-existent WabitObject.");
+		}
+
 		objectsToRemove.put(uuid, parentUUID);
+
+		if (transactionCount == 0) {
+			commitRemovals();
+		}
 	}
 
 	/**
@@ -1914,6 +2445,111 @@ public class WabitSessionPersister implements WabitPersister {
 	public void rollback() {
 		// TODO Auto-generated method stub
 
+	}
+
+	/**
+	 * Accessor for the {@link WabitSession} object.
+	 * 
+	 * @return The {@link WabitSession} object this class refers to
+	 */
+	public WabitSession getWabitSession() {
+		return session;
+	}
+
+	/**
+	 * Accessor for the target {@link WabitPersister} object.
+	 * 
+	 * @return The {@link WabitPersister} object this class targets
+	 */
+	public WabitPersister getTargetPersister() {
+		return target;
+	}
+
+	/**
+	 * Mutator for the {@link WabitSession} object.
+	 * 
+	 * @param session
+	 *            The {@link WabitSession} object to make this class refer to
+	 */
+	public void setWabitSession(WabitSession session) {
+		this.session = session;
+	}
+
+	/**
+	 * Mutator for the target {@link WabitPersister} object.
+	 * 
+	 * @param target
+	 *            The {@link WabitPersister} object to make this class target
+	 */
+	public void setTargetPersister(WabitPersister target) {
+		this.target = target;
+	}
+
+	/**
+	 * An implementation of {@link WabitListener} used exclusively for listening
+	 * to a {@link WabitWorkspace} and its children
+	 */
+	private class WabitWorkspaceListener implements WabitListener {
+
+		public void transactionEnded(TransactionEvent e) {
+			try {
+				target.commit();
+			} catch (WabitPersistenceException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		public void transactionRollback(TransactionEvent e) {
+			try {
+				target.rollback();
+			} catch (WabitPersistenceException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		public void transactionStarted(TransactionEvent e) {
+			try {
+				target.begin();
+			} catch (WabitPersistenceException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		public void wabitChildAdded(WabitChildEvent e) {
+			try {
+				target.persistObject(e.getSource().getUUID(), e.getChildType()
+						.getName(), e.getChild().getUUID());
+			} catch (WabitPersistenceException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		public void wabitChildRemoved(WabitChildEvent e) {
+			try {
+				target.removeObject(e.getSource().getUUID(), e.getChild()
+						.getUUID());
+			} catch (WabitPersistenceException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		public void propertyChange(PropertyChangeEvent evt) {
+			try {
+				// XXX Is this actually passing the correct UUID and DataType?
+				target.persistProperty(evt.getPropagationId().toString(), evt
+						.getPropertyName(), WabitPersister.DataType.valueOf(evt
+						.getNewValue().getClass().toString()), evt
+						.getOldValue(), evt.getNewValue());
+			} catch (WabitPersistenceException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 }
