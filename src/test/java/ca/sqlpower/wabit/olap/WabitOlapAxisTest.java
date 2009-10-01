@@ -31,7 +31,7 @@ public class WabitOlapAxisTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        wabitAxis = new WabitOlapAxis(Axis.ROWS.axisOrdinal());
+        wabitAxis = new WabitOlapAxis(Axis.ROWS);
     }
 
     @Override

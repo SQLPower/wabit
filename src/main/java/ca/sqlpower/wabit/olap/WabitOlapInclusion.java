@@ -19,13 +19,19 @@
 
 package ca.sqlpower.wabit.olap;
 
+import org.apache.log4j.Logger;
+import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
+import org.olap4j.query.Selection.Operator;
 
 /**
  * This is a dummy class used to differentiate between inclusions and exclusions
  */
 public class WabitOlapInclusion extends WabitOlapSelection {
 
+	private static final Logger logger = Logger
+			.getLogger(WabitOlapInclusion.class);
+	
 	public WabitOlapInclusion(WabitOlapSelection selection) {
 		super(selection);
 	}
@@ -34,8 +40,25 @@ public class WabitOlapInclusion extends WabitOlapSelection {
 		super(selection);
 	}
 
-	public WabitOlapInclusion(String operator, String uniqueMemberName) {
+	public WabitOlapInclusion(Operator operator, String uniqueMemberName) {
 		super(operator, uniqueMemberName);
+	}
+	
+	/**
+	 * Initializes the WabitOlapSelection, and finds the wrapped Selection based
+	 * on the given unique member name.
+	 */
+	void init(OlapQuery query) {
+		logger.debug("Initializing Selection" + uniqueMemberName);
+		Member member = query.findMember(uniqueMemberName);
+		
+		for (Selection s : ((WabitOlapDimension) getParent()).getDimension().getInclusions()) {
+			if (s.getMember().equals(member)) {
+				selection = s;
+			}
+		}
+		selection.setOperator(operator);
+		initialized = true;
 	}
 
 }

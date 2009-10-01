@@ -22,36 +22,66 @@ package ca.sqlpower.wabit.olap;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
+import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
-public class WabitOlapSelection extends AbstractWabitObject {
+/**
+ * Wrapper class to wrap an Olap4j Selection, that is, an Inclusion or
+ * Exclusion.
+ */
+public abstract class WabitOlapSelection extends AbstractWabitObject {
 
-	private Selection selection;
-	
-	private String operator;
-	
-	private String uniqueMemberName;
-	
-	private boolean initialized = false;
+	private static final Logger logger = Logger
+			.getLogger(WabitOlapSelection.class);
 
+	/**
+	 * The {@link Selection} this class wraps. Should not be leaked out of the
+	 * wabit.olap package.
+	 */
+	protected Selection selection;
+
+	protected final Operator operator;
+
+	protected final String uniqueMemberName;
+
+	protected boolean initialized = false;
+
+	/**
+	 * Copy Constructor. Creates a new WabitOlapSelection with the same
+	 * properties as the parameter.
+	 */
 	public WabitOlapSelection(WabitOlapSelection selection) {
 		this(selection.operator, selection.uniqueMemberName);
 	}
 	
+	/**
+	 * Creates a new WabitOlapSelection to wrap the given {@link Selection}.
+	 */
 	public WabitOlapSelection(Selection selection) {
 		this.selection = selection;
-	}
-	
-	public WabitOlapSelection(String operator, String uniqueMemberName) {
-		this.setOperator(operator);
-		this.setUniqueMemberName(uniqueMemberName);
+		this.operator = selection.getOperator();
+		this.uniqueMemberName = selection.getMember().getUniqueName();
+		initialized = true;
+		firePropertyChange("operator", null, operator);
+		firePropertyChange("uniqueMemberName", null, uniqueMemberName);
 	}
 
-	void init(OlapQuery query) {
-		selection = (Selection) query.findMember(uniqueMemberName);
+	/**
+	 * Creates a new WabitOlapSelection with the given properties. Note that
+	 * this creates an uninitialized wrapper, that is, it has no wrapped class
+	 * until it is initialized. Until then, any getters will return cached
+	 * values.
+	 */
+	public WabitOlapSelection(Operator operator, String uniqueMemberName) {
+		this.operator = operator;
+		this.uniqueMemberName = uniqueMemberName;
+		firePropertyChange("operator", null, operator);
+		firePropertyChange("uniqueMemberName", null, uniqueMemberName);
 	}
 	
 	@Override
@@ -67,10 +97,17 @@ public class WabitOlapSelection extends AbstractWabitObject {
 		return 0;
 	}
 
+	/**
+	 * Selections are leaf nodes.
+	 */
+	@SuppressWarnings("unchecked")
 	public List<? extends WabitObject> getChildren() {
-		return null;
+		return Collections.EMPTY_LIST;
 	}
 
+	/**
+	 * Olap wrapper classes only depend on the wrapped Olap4j objects
+	 */
 	@SuppressWarnings("unchecked")
 	public List<WabitObject> getDependencies() {
 		return Collections.EMPTY_LIST;
@@ -80,14 +117,22 @@ public class WabitOlapSelection extends AbstractWabitObject {
 		//no-op
 	}
 
-	public String getOperator() {
+	/**
+	 * Returns the {@link Operator} associated with the wrapped Selection, or
+	 * the cached Operator if this object hasn't been initialized.
+	 */
+	public Operator getOperator() {
 		if (initialized) {
-			return selection.getOperator().toString();
+			return selection.getOperator();
 		} else {
 			return operator;
 		}
 	}
 
+	/**
+	 * Returns the unique member name associated with the wrapped Selection, or
+	 * the cached Operator if this object hasn't been initialized.
+	 */
 	public String getUniqueMemberName() {
 		if (initialized) {
 			return selection.getMember().getUniqueName();
@@ -95,21 +140,12 @@ public class WabitOlapSelection extends AbstractWabitObject {
 			return uniqueMemberName;
 		}
 	}
-	
-	public void setOperator(String operator) {
-		String oldValue = this.operator;
-		this.operator = operator;
-		initialized = false;
-		firePropertyChange("operator", oldValue, operator);
-	}
 
-	public void setUniqueMemberName(String uniqueMemberName) {
-		String oldValue = this.uniqueMemberName;
-		this.uniqueMemberName = uniqueMemberName;
-		initialized = false;
-		firePropertyChange("unique-member-name", oldValue, uniqueMemberName);
-	}
-	
+	/**
+	 * Returns the Selection wrapped by this object. This method is package
+	 * private to avoid leaking the Olap4j object wrapped inside, and to allow
+	 * other OLAP specific classes access.
+	 */
 	Selection getSelection() {
 		return selection;
 	}

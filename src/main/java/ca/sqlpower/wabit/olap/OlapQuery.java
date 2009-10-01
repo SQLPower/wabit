@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,9 +42,11 @@ import net.jcip.annotations.ThreadSafe;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.CellSet;
+import org.olap4j.CellSetAxis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.OlapStatement;
+import org.olap4j.Position;
 import org.olap4j.mdx.ParseTreeWriter;
 import org.olap4j.mdx.SelectNode;
 import org.olap4j.metadata.Catalog;
@@ -262,6 +265,10 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         	setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
         }
         
+        cubeName = currentCube.getName();
+        schemaName = currentCube.getSchema().getName();
+        catalogName = currentCube.getSchema().getCatalog().getName();
+        
         firePropertyChange("currentCube", oldCube, currentCube);
     }
 
@@ -285,6 +292,17 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      */
     public CellSet executeOlapQuery() throws QueryInitializationException, InterruptedException, SQLException {
         CellSet cellSet = innerExecuteOlapQuery();
+        if (logger.isDebugEnabled() && cellSet != null) {
+        	for (CellSetAxis cellSetAxis : cellSet.getAxes()) {
+        		logger.debug("Axis " + cellSetAxis.getAxisOrdinal() + " contains:");
+        		for (Position position : cellSetAxis.getPositions()) {
+        			logger.debug("Position " + position.getOrdinal());
+        			for (Member member : position.getMembers()) {
+        				logger.debug("Member " + member.getUniqueName());
+        			}
+        		}
+        	}
+        }
         fireResultSetEvent(cellSet);
         return cellSet;
     }
@@ -476,6 +494,13 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         this.mdxQuery = mdxQuery;
         mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
         this.currentCube = mdxQuery.getCube();
+        
+        clearAxes();
+        for (QueryAxis axis : mdxQuery.getAxes().values()) {
+        	if (axis.getLocation() != null) {
+        		addAxis(new WabitOlapAxis(axis));
+        	}
+        }
     }
 
     private Query getMdxQueryCopy() throws SQLException, QueryInitializationException {
@@ -544,6 +569,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	 */
     public synchronized void excludeMember(String dimensionName, Member memberToExclude, Selection.Operator operator) throws QueryInitializationException {
         this.getMDXQuery().getDimension(dimensionName).exclude(operator, memberToExclude);
+        updateAttributes();
     }
 
     public synchronized OlapConnection createOlapConnection()
@@ -578,23 +604,23 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     	return slicerMember;
     }
 
-    /**
-     * OlapQuery is a leaf node, so this method returns false.
-     */
+	/**
+	 * OlapQuery has WabitOlapAxis as children, so this method returns true.
+	 */
     public boolean allowsChildren() {
-        return false;
+        return true;
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        return 0;
+        if (childType.equals(WabitOlapAxis.class)) {
+        	return 0;
+        } else {
+        	throw new IllegalArgumentException("An OlapQuery doesn't have children of type " + childType);
+        }
     }
 
-    /**
-     * OlapQuery is a leaf node, so this method returns an unmodifiable empty
-     * list.
-     */
     public List<? extends WabitObject> getChildren() {
-        return Collections.emptyList();
+        return Collections.unmodifiableList(axes);
     }
     
     /**
@@ -632,7 +658,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     private void init() throws QueryInitializationException {
     	logger.debug("Initializing Olap Query");
     	logger.debug("Was loaded " + wasLoadedFromDao + ", init done " + initDone + ", mdxQuery is null " + (mdxQuery == null));
-        if (!this.wasLoadedFromDao || this.initDone) return;
+        if (!this.wasLoadedFromDao || this.initDone || this.mdxQuery!=null) return;
         
         if (getOlapDataSource() == null) {
 			throw new QueryInitializationException("Missing database for cube " + cubeName + " for use in " + getName() + ".");
@@ -656,9 +682,13 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		
 		for (WabitOlapAxis axis : axes) {
 			axis.init(this, localMDXQuery);
+			
+			for (WabitOlapDimension dimension : axis.getDimensions()) {
+				hierarchiesInUse.put(dimension.getDimension(), dimension.getHierarchy());
+			}
 		}
 		
-        setMdxQuery(localMDXQuery);
+        mdxQuery = localMDXQuery;
         this.initDone = true;
     }
 
@@ -673,18 +703,42 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     	}
     }
 
+    /**
+     * Adds the given axis to the query. Only used for loading.
+     */
 	public void addAxis(WabitOlapAxis axis) {
 		wasLoadedFromDao = true;
 		axes.add(axis);
+		fireChildAdded(WabitOlapAxis.class, axis, axes.size() - 1);
 	}
 	
-	public void removeAxis(WabitOlapAxis axis) {
-		wasLoadedFromDao = true;
-		axes.remove(axis);
+	private void clearAxes() {
+		while (axes.size() > 0) {
+			WabitOlapAxis axis = axes.get(0);
+			axes.remove(0);
+			fireChildRemoved(WabitOlapAxis.class, axis, 0);
+		}
 	}
-	
+
+	/**
+	 * Returns the list of Axis wrappers stored by this query.
+	 */
 	public List<WabitOlapAxis> getAxes() {
 		return Collections.unmodifiableList(axes);
+	}
+
+	/**
+	 * Gets the wrapper around the {@link Dimension} with the given name.
+	 */
+	public WabitOlapDimension getDimension(String dimensionName) {
+		for (WabitOlapAxis axis : axes) {
+			for (WabitOlapDimension dimension : axis.getDimensions()) {
+				if (dimension.getName().equals(dimensionName)) {
+					return dimension;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -775,6 +829,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         if (!wasExpanded) {
             qd.include(Operator.CHILDREN, member);
         }
+        updateAttributes();
+        
         return wasExpanded;
     }
  
@@ -831,7 +887,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     public synchronized void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(member.getDimension().getName());
-        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + " in ordinal " + ordinal);
+        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + "(" + qa.getLocation().axisOrdinal() + ")" + " in ordinal " + ordinal);
         if (!qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
         	qa.addDimension(ordinal, qd);
@@ -891,6 +947,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		if (!(member instanceof Measure) && qa.getLocation() != Axis.FILTER) {
 			qd.setHierarchizeMode(HierarchizeMode.PRE);
         }
+		
+		updateAttributes();
     }
 
     public synchronized List<Hierarchy> getRowHierarchies() throws QueryInitializationException {
@@ -950,6 +1008,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
                 it.remove();
             }
         }
+        
+        updateAttributes();
     }
 
 	/**
@@ -976,6 +1036,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 				includeMember(member);
 			}
 		}
+    	
+    	updateAttributes();
     }
     
 	/**
@@ -1041,6 +1103,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     public synchronized void includeMember(Member member) throws QueryInitializationException {
         QueryDimension qd = findQueryDimension(member);
         qd.include(member);
+        
+        updateAttributes();
     }
 
     /**
@@ -1089,8 +1153,12 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	public synchronized void clearExclusions(Hierarchy hierarchy) throws QueryInitializationException {
 		QueryDimension dimension = getMDXQuery().getDimension(hierarchy.getDimension().getName());
 		dimension.clearExclusions();
+		updateAttributes();
 	}
 	
+	/**
+	 * Axes should not be removed from a public method.
+	 */
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
 	    return false;
@@ -1101,7 +1169,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		this.queryName = queryName;
 		wasLoadedFromDao = true;
 		initDone = false;
-		firePropertyChange("query-name", oldQueryName, queryName);
+		firePropertyChange("queryName", oldQueryName, queryName);
 	}
 	
 	public String getQueryName() {
@@ -1117,7 +1185,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		this.catalogName = catalogName;
 		wasLoadedFromDao = true;
 		initDone = false;
-		firePropertyChange("catalog-name", oldCatalogName, catalogName);
+		firePropertyChange("catalogName", oldCatalogName, catalogName);
 	}
 
 	public String getCatalogName() {
@@ -1133,7 +1201,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		this.schemaName = schemaName;
 		wasLoadedFromDao = true;
 		initDone = false;
-		firePropertyChange("schema-name", oldSchemaName, schemaName);
+		firePropertyChange("schemaName", oldSchemaName, schemaName);
 	}
 
 	public String getSchemaName() {
@@ -1148,7 +1216,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		String oldCubeName = this.cubeName;
 		this.cubeName = cubeName;
 		wasLoadedFromDao = true;
-		firePropertyChange("cube-name", oldCubeName, cubeName);
+		firePropertyChange("cubeName", oldCubeName, cubeName);
 	}
 
 	public String getCubeName() {

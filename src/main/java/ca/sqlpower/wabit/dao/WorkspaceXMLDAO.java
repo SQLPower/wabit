@@ -612,9 +612,9 @@ public class WorkspaceXMLDAO {
 	private void saveOlapAxis(WabitOlapAxis axis) {
 		xml.print(out, "<olap4j-axis");
 		printCommonAttributes(axis);
-		printAttribute("ordinal", axis.getOrdinal());
+		printAttribute("ordinal", axis.getOrdinal().name());
 		
-		if (axis.getOrdinal() == Axis.Standard.ROWS.axisOrdinal()) {
+		if (axis.getOrdinal() == Axis.ROWS) {
             printAttribute("non-empty", axis.isNonEmpty());
         }
         if (axis.getSortOrder() != null) {
@@ -656,7 +656,7 @@ public class WorkspaceXMLDAO {
 		printCommonAttributes(selection);
     	printAttribute("dimension-name", ((WabitOlapDimension) selection.getParent()).getName());
         printAttribute("unique-member-name", selection.getUniqueMemberName());
-        printAttribute("operator", selection.getOperator());
+        printAttribute("operator", selection.getOperator().name());
         xml.niprintln(out, "/>");
 	}
 	
@@ -665,7 +665,7 @@ public class WorkspaceXMLDAO {
 		printCommonAttributes(selection);
     	printAttribute("dimension-name", ((WabitOlapDimension) selection.getParent()).getName());
         printAttribute("unique-member-name", selection.getUniqueMemberName());
-        printAttribute("operator", selection.getOperator());
+        printAttribute("operator", selection.getOperator().name());
         xml.niprintln(out, "/>");
 	}
 

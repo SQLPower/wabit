@@ -27,6 +27,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 
 import org.olap4j.metadata.Cube;
+import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -42,6 +43,10 @@ import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.olap.WabitOlapExclusion;
+import ca.sqlpower.wabit.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
@@ -170,6 +175,14 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	}
         } else if (valueType.equals(OlapQuery.class)) {
         	newValue = new OlapQuery(new StubWabitSessionContext());
+        } else if (valueType.equals(WabitOlapAxis.class)) { 
+        	newValue = new WabitOlapAxis(org.olap4j.Axis.ROWS);
+        } else if (valueType.equals(WabitOlapDimension.class)) {
+        	newValue = new WabitOlapDimension("Geography");
+        } else if (valueType.equals(WabitOlapInclusion.class)) {
+        	newValue = new WabitOlapInclusion(Operator.MEMBER, "[Geography].[World]");
+        } else if (valueType.equals(WabitOlapExclusion.class)) {
+        	newValue = new WabitOlapExclusion(Operator.MEMBER, "[Geography].[World].[Africa]");
         } else if (valueType.equals(WabitImage.class)) {
             newValue = new WabitImage();
         } else if (valueType.equals(GroupAndBreak.class)) {

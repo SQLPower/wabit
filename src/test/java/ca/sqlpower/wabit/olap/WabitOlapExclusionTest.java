@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.olap;
 
+import org.olap4j.query.Selection.Operator;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -29,7 +31,7 @@ public class WabitOlapExclusionTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        wabitExclusion = new WabitOlapExclusion("", "unique/member/name");
+        wabitExclusion = new WabitOlapExclusion(Operator.MEMBER, "unique/member/name");
     }
 
     @Override

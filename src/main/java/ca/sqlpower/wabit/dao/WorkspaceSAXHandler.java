@@ -49,6 +49,7 @@ import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
 import org.olap4j.metadata.Member;
+import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -358,7 +359,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		            displayMessage = false;
 		        }
 		        
-		        if (fileVersion.compareTo(new Version("1.2.4")) >= 0) {
+		        if (fileVersion.compareTo(new Version("1.2.5")) >= 0) {
                     nameMandatory = true;
                     uuidMandatory = true;
                 } else {
@@ -690,15 +691,15 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("olap-query")) {
             createdObject = loadOlapQuery(attributes);
         } else if (name.equals("olap-cube")) {
-            olapQuery.setCatalogName(attributes.getValue("catalog-name"));
-            olapQuery.setSchemaName(attributes.getValue("schema-name"));
+            olapQuery.setCatalogName(attributes.getValue("catalog"));
+            olapQuery.setSchemaName(attributes.getValue("schema"));
             olapQuery.setCubeName(attributes.getValue("cube-name"));
             createdObject = null;
         } else if (name.equals("olap4j-query")) {
             olapQuery.setQueryName(attributes.getValue("name"));
             createdObject = null;
         } else if (name.equals("olap4j-axis")) {
-        	olapAxis = new WabitOlapAxis(Integer.parseInt(attributes.getValue("ordinal")));
+        	olapAxis = new WabitOlapAxis(org.olap4j.Axis.Factory.forOrdinal(Integer.parseInt(attributes.getValue("ordinal"))));
             olapQuery.addAxis(olapAxis);
             createdObject = olapAxis;
         } else if (name.equals("olap4j-dimension")) {
@@ -707,13 +708,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             createdObject = olapDimension;
         } else if (name.equals("olap4j-selection")) {
         	WabitOlapInclusion olapInclusion = new WabitOlapInclusion(
-					attributes.getValue("operator"), 
+					Operator.valueOf(attributes.getValue("operator")), 
 					attributes.getValue("unique-member-name"));
             olapDimension.addInclusion(olapInclusion);
             createdObject = olapInclusion;
         } else if (name.equals("olap4j-exclusion")) {
         	WabitOlapExclusion olapExclusion = new WabitOlapExclusion(
-					attributes.getValue("operator"), 
+					Operator.valueOf(attributes.getValue("operator")), 
 					attributes.getValue("unique-member-name"));
             olapDimension.addExclusion(olapExclusion);
             createdObject = olapExclusion;

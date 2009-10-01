@@ -20,24 +20,30 @@
 package ca.sqlpower.wabit.olap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Hierarchy;
-import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
+import org.olap4j.query.QueryDimension.HierarchizeMode;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
-import com.rc.retroweaver.runtime.Collections;
-
+/**
+ * Wrapper class to an Olap4j Dimension. Used to load and save Olap4j Dimensions.
+ */
 public class WabitOlapDimension extends AbstractWabitObject {
 	
-	private Hierarchy hierarchy;
+	private static final Logger logger = Logger
+			.getLogger(WabitOlapDimension.class);
+	
+	private Hierarchy hierarchy; // Can't make final, because it is set in init.
 	
 	private QueryDimension dimension;
 
@@ -45,12 +51,13 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	
 	private List<WabitOlapExclusion> exclusions = new ArrayList<WabitOlapExclusion>();
 	
-	private String name;
-	
 	boolean initialized = false;
 	
+	/**
+	 * Copy Constructor. Creates a deep copy of the given WabitOlapDimension and its children.
+	 */
 	public WabitOlapDimension(WabitOlapDimension dimension) {
-		this(dimension.name);
+		this(dimension.getName());
 		
 		for (WabitOlapInclusion inclusion : dimension.inclusions) {
 			addInclusion(new WabitOlapInclusion(inclusion));
@@ -61,29 +68,46 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		}
 	}
 	
+	/**
+	 * Creates a WabitOlapDimension to wrap the given {@link Dimension}.
+	 */
 	public WabitOlapDimension(QueryDimension dimension) {
 		this.dimension = dimension;
+		setName(dimension.getName());
 		updateChildren();
+		initialized = true;
 	}
 	
+	/**
+	 * Creates a WabitOlapDimension with the given name.  Note that
+	 * this creates an uninitialized wrapper, that is, it has no wrapped class
+	 * until it is initialized. Until then, any getters will return cached
+	 * values.
+	 */
 	public WabitOlapDimension(String name) {
-		this.name = name;
-		
+		setName(name);
 	}
 
+	/**
+	 * Initializes the WabitOlapDimension, and finds the wrapped Dimension based
+	 * on the given name. Also recursively initializes its children.
+	 */
 	void init(OlapQuery query, Query mdxQuery) throws QueryInitializationException {
-		dimension = mdxQuery.getDimension(name);
+		logger.debug("Initializing Dimension " + getName());
 		
-		for (WabitOlapInclusion selection : inclusions) {
-			selection.init(query);
-			dimension.include(selection.getSelection().getOperator(), selection.getSelection().getMember());
+		dimension = mdxQuery.getDimension(getName());
+		dimension.setHierarchizeMode(HierarchizeMode.PRE);
+		
+		for (WabitOlapInclusion inclusion : inclusions) {
+			dimension.include(inclusion.getOperator(), query.findMember(inclusion.getUniqueMemberName()));
+			inclusion.init(query);
 		}
-		for (WabitOlapInclusion exclusion : exclusions) {
+		for (WabitOlapExclusion exclusion : exclusions) {
+			dimension.exclude(exclusion.getOperator(), query.findMember(exclusion.getUniqueMemberName()));
 			exclusion.init(query);
-			dimension.exclude(exclusion.getSelection().getOperator(), (Member) exclusion.getSelection());
 		}
 		if (((WabitOlapAxis) getParent()).getQueryAxis().getLocation() != Axis.FILTER) {
-			hierarchy = ((Member) inclusions.get(0)).getHierarchy();
+			hierarchy = inclusions.get(0).getSelection().getMember().getHierarchy();
 		}
 		initialized = true;
 	}
@@ -104,12 +128,21 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		}
 		return false;
 	}
-	
+
+	/**
+	 * Updates lists of children based on children of the wrapped Dimension.
+	 * Calling this is the only way to make sure this wrapper is synchronized
+	 * with the wrapped Dimension, and should be called any time something
+	 * modifies the query's selections.
+	 */
 	public void updateChildren(){
 		updateInclusions();
 		updateExclusions();
 	}
 	
+	/**
+	 * Updates the list of inclusions based on children of the wrapped Dimension.
+	 */
 	private void updateInclusions() {
 		List<Selection> olapInclusions = new ArrayList<Selection>(dimension.getInclusions());
 		Iterator<WabitOlapInclusion> wabitInclusions = inclusions.iterator();
@@ -129,11 +162,14 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		}
 	}
 	
+	/**
+	 * Updates the list of exclusions based on children of the wrapped Dimension.
+	 */
 	private void updateExclusions() {
 		List<Selection> olapExclusions = new ArrayList<Selection>(dimension.getExclusions());
 		Iterator<WabitOlapExclusion> wabitExclusions = exclusions.iterator();
 		for (int index = 0; wabitExclusions.hasNext(); index++) {
-			WabitOlapInclusion exclusion = wabitExclusions.next();
+			WabitOlapExclusion exclusion = wabitExclusions.next();
 			if (!olapExclusions.contains(exclusion.getSelection())) {
 				wabitExclusions.remove();
 				fireChildRemoved(WabitOlapInclusion.class, exclusion, index);
@@ -144,16 +180,25 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		
 		Iterator<Selection> exclusions = olapExclusions.iterator();
 		while (exclusions.hasNext()) {
-			addInclusion(new WabitOlapInclusion(exclusions.next()));
+			addExclusion(new WabitOlapExclusion(exclusions.next()));
 		}
 	}
 	
+	/**
+	 * Adds an inclusion to this dimension. Note that this will not affect the
+	 * wrapped {@link Dimension}.
+	 */
 	public void addInclusion(WabitOlapInclusion inclusion) {
 		inclusions.add(inclusion);
 		inclusion.setParent(this);
-		fireChildAdded(WabitOlapInclusion.class, inclusion, inclusions.size() - 1);
+		fireChildAdded(WabitOlapInclusion.class, inclusion,
+				inclusions.size() - 1);
 	}
-	
+
+	/**
+	 * Adds an exclusion to this dimension. Note that this will not affect the
+	 * wrapped {@link Dimension}.
+	 */
 	public void addExclusion(WabitOlapExclusion exclusion) {
 		exclusions.add(exclusion);
 		exclusion.setParent(this);
@@ -165,55 +210,64 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	}
 
 	public int childPositionOffset(Class<? extends WabitObject> childType) {
-		return 0;
+		if (childType.equals(WabitOlapInclusion.class)) {
+			return 0;
+		} else if (childType.equals(WabitOlapExclusion.class)){
+			return inclusions.size();
+		} else {
+			throw new IllegalArgumentException("WabitOlapDimension has no children of type " + childType);
+		}
 	}
 
-	public List<? extends WabitObject> getChildren() {
-		List<WabitOlapInclusion> allChildren = new ArrayList<WabitOlapInclusion>();
+	public List<WabitOlapSelection> getChildren() {
+		List<WabitOlapSelection> allChildren = new ArrayList<WabitOlapSelection>();
 		allChildren.addAll(inclusions);
 		allChildren.addAll(exclusions);
 		return allChildren;
 	}
 	
-	@SuppressWarnings("unchecked")
+	/**
+	 * Returns the list of inclusions.
+	 */
 	public List<WabitOlapInclusion> getInclusions() {
 		return Collections.unmodifiableList(inclusions);
 	}
 	
-	@SuppressWarnings("unchecked")
+	/**
+	 * Returns the list of exclusions. 
+	 */
 	public List<WabitOlapExclusion> getExclusions() {
 		return Collections.unmodifiableList(exclusions);
 	}
 
+	/**
+	 * Olap wrapper classes only depend on the wrapped Olap4j objects.
+	 */
+	@SuppressWarnings("unchecked")
 	public List<WabitObject> getDependencies() {
-		return null;
+		return Collections.EMPTY_LIST;
 	}
 
 	public void removeDependency(WabitObject dependency) {
 		//no-op
 	}
 	
-	public void setName(String name) {
-		String oldValue = this.name;
-		this.name = name;
-		initialized = false;
-		firePropertyChange("dimension-name", oldValue, name);
-	}
-	
+	@Override
 	public String getName() {
 		if (initialized) {
 			return dimension.getName();
 		} else {
-			return name;
+			return super.getName();
 		}
 	}
 	
+	/**
+	 * Returns the Dimension wrapped by this object. This method is package
+	 * private to avoid leaking the Olap4j object wrapped inside, and to allow
+	 * other OLAP specific classes access.
+	 */
 	QueryDimension getDimension() {
 		return dimension;
-	}
-
-	void setHierarchy(Hierarchy hierarchy) {
-		this.hierarchy = hierarchy;
 	}
 
 	Hierarchy getHierarchy() {

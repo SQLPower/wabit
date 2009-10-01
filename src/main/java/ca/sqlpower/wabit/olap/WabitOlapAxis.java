@@ -20,79 +20,114 @@
 package ca.sqlpower.wabit.olap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.SortOrder;
 
-import com.rc.retroweaver.runtime.Collections;
-
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
- * Wrapper class for an Olap4j Axis. Keeps important properties
+ * Wrapper class to an Olap4j Dimension. Used to load and save Olap4j Dimensions.
  */
 public class WabitOlapAxis extends AbstractWabitObject {
 
+	private static final Logger logger = Logger
+			.getLogger(WabitOlapAxis.class);
+	
 	private QueryAxis queryAxis;
 	
 	private List<WabitOlapDimension> dimensions = new ArrayList<WabitOlapDimension>();
 	
-	private int ordinal;
+	private final Axis ordinal;
 	
 	private boolean nonEmpty;
 	
 	private String sortOrder;
 	
-	private String sortEvalLiteral;
+	private String sortEvaluationLiteral;
 	
 	private boolean initialized = false;
 
+	/**
+	 * Copy Constructor. Creates a deep copy of the given WabitOlapAxis and its children.
+	 */
 	public WabitOlapAxis(WabitOlapAxis axis) {
 		this(axis.ordinal);
 		setNonEmpty(axis.nonEmpty);
 		setSortOrder(axis.sortOrder);
-		setSortEvaluationLiteral(axis.sortEvalLiteral);
+		setSortEvaluationLiteral(axis.sortEvaluationLiteral);
 		
 		for (WabitOlapDimension dimension : axis.dimensions) {
 			addDimension(new WabitOlapDimension(dimension));
 		}
 	}
 	
+	/**
+	 * Creates a WabitOlapAxis to wrap the given {@link QueryAxis}.
+	 */
 	public WabitOlapAxis(QueryAxis queryAxis) {
+		initialized = true;
 		this.queryAxis = queryAxis;
+		ordinal = getOrdinal();
+		setName(ordinal.name());
 		updateChildren();
 	}
 	
-	public WabitOlapAxis(int ordinal) {
-		this.setOrdinal(ordinal);
+	/**
+	 * Creates a WabitOlapDimension with the given name.  Note that
+	 * this creates an uninitialized wrapper, that is, it has no wrapped class
+	 * until it is initialized. Until then, any getters will return cached
+	 * values.
+	 */
+	public WabitOlapAxis(Axis ordinal) {
+		this.ordinal = ordinal;
+		firePropertyChange("ordinal", null, ordinal);
 	}
 	
+	/**
+	 * Initializes the WabitOlapAxis, and finds the wrapped Axis based
+	 * on the given ordinal. Also recursively initializes its children.
+	 */
 	void init(OlapQuery query, Query mdxQuery) throws QueryInitializationException {
-		Axis axis = Axis.Factory.forOrdinal(getOrdinal());
-		queryAxis = mdxQuery.getAxes().get(axis);
-		setNonEmpty(nonEmpty);
-		
-		if (sortOrder != null) {
-			SortOrder order = SortOrder.valueOf(sortOrder);
-			String sortEvaluationLiteral = sortEvalLiteral;
-			queryAxis.sort(order, sortEvaluationLiteral);
+		if (!initialized) {
+			logger.debug("Initializing Axis " + getName());
+
+			queryAxis = mdxQuery.getAxes().get(ordinal);
+			queryAxis.setNonEmpty(nonEmpty);
+
+			if (sortOrder != null) {
+				SortOrder order = SortOrder.valueOf(sortOrder);
+				queryAxis.sort(order, sortEvaluationLiteral);
+			}
+
+			logger.debug("QueryAxis is " + queryAxis);
+
+			initialized = true;
 		}
 		
 		for (WabitOlapDimension dimension : dimensions) {
 			dimension.init(query, mdxQuery);
 			queryAxis.addDimension(dimension.getDimension());
 		}
-		
-		initialized = true;
 	}
 	
+	/**
+	 * Updates lists of children based on children of the wrapped Dimension.
+	 * Calling this is the only way to make sure this wrapper is synchronized
+	 * with the wrapped Dimension, and should be called any time something
+	 * modifies the query's selections.
+	 */
 	public void updateChildren(){
+		logger.debug("Updating children of Axis " + getName() + ". QueryAxis is " + queryAxis);
+		
 		List<QueryDimension> olapDimensions = new ArrayList<QueryDimension>(queryAxis.getDimensions());
 		Iterator<WabitOlapDimension> wabitDimensions = dimensions.iterator();
 		for (int index = 0; wabitDimensions.hasNext(); index++) {
@@ -110,9 +145,20 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		while (queryDimensions.hasNext()) {
 			addDimension(new WabitOlapDimension(queryDimensions.next()));
 		}
+		
+		if (sortOrder != null) {
+			SortOrder order = SortOrder.valueOf(sortOrder);
+			queryAxis.sort(order, sortEvaluationLiteral);
+		}
 	}
 	
+	/**
+	 * Adds an exclusion to this axis. Note that this will not affect the
+	 * wrapped {@link QueryAxis}.
+	 */
 	public void addDimension(WabitOlapDimension dimension) {
+		logger.debug("Adding dimension " + dimension.getName() + " to Axis " + getName() + " at " + ordinal);
+		
 		dimensions.add(dimension);
 		dimension.setParent(this);
 		fireChildAdded(WabitOlapDimension.class, dimension, dimensions.size() - 1);
@@ -132,7 +178,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		if (childType == WabitOlapDimension.class){
 			return 0;
 		} else {
-			throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
+			throw new IllegalArgumentException("A WabitOlapAxis doesn't have children of type " + childType);
 		}
 	}
 
@@ -140,14 +186,21 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		return dimensions;
 	}
 
+	/**
+	 * Olap wrapper classes only depend on the wrapped Olap4j objects
+	 */
+	@SuppressWarnings("unchecked")
 	public List<WabitObject> getDependencies() {
-		return null;
+		return Collections.EMPTY_LIST;
 	}
 
 	public void removeDependency(WabitObject dependency) {
 		//no-op
 	}
 	
+	/**
+	 * Returns the list of dimensions 
+	 */
 	public List<WabitOlapDimension> getDimensions() {
 		return Collections.unmodifiableList(dimensions);
 	}
@@ -156,7 +209,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		boolean oldValue = this.nonEmpty;
 		this.nonEmpty = nonEmpty;
 		initialized = false;
-		firePropertyChange("non-empy", oldValue, nonEmpty);
+		firePropertyChange("nonEmpty", oldValue, nonEmpty);
 	}
 	
 	public boolean isNonEmpty() {
@@ -171,47 +224,46 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		String oldValue = this.sortOrder;
 		this.sortOrder = sortOrder;
 		initialized = false;
-		firePropertyChange("sort-order", oldValue, sortOrder);
+		firePropertyChange("sortOrder", oldValue, sortOrder);
 	}
 
 	public String getSortOrder() {
-		if (initialized) {
+		if (initialized && queryAxis.getSortOrder() != null) {
 			return queryAxis.getSortOrder().name();
 		} else {
 			return sortOrder;
 		}
 	}
 
-	public void setSortEvaluationLiteral(String sortEvalLiteral) {
-		String oldValue = this.sortEvalLiteral;
-		this.sortEvalLiteral = sortEvalLiteral;
+	public void setSortEvaluationLiteral(String sortEvaluationLiteral) {
+		String oldValue = this.sortEvaluationLiteral;
+		this.sortEvaluationLiteral = sortEvaluationLiteral;
 		initialized = false;
-		firePropertyChange("sort-evaluation-literal", oldValue, sortEvalLiteral);
+		firePropertyChange("sortEvaluationLiteral", oldValue, sortEvaluationLiteral);
 	}
 
 	public String getSortEvaluationLiteral() {
 		if (initialized) {
 			return queryAxis.getSortIdentifierNodeName();
 		} else {
-			return sortEvalLiteral;
+			return sortEvaluationLiteral;
 		}
 	}
 	
-	public void setOrdinal(int ordinal) {
-		int oldValue = ordinal;
-		this.ordinal = ordinal;
-		initialized = false;
-		firePropertyChange("ordinal", oldValue, ordinal);
-	}
-
-	public int getOrdinal() {
+	public Axis getOrdinal() {
+		logger.debug("Query Axis is " + queryAxis);
 		if (initialized) {
-			return queryAxis.getLocation().axisOrdinal();
+			return queryAxis.getLocation();
 		} else {
 			return ordinal;
 		}
 	}
 
+	/**
+	 * Returns the QueryAxis wrapped by this object. This method is package
+	 * private to avoid leaking the Olap4j object wrapped inside, and to allow
+	 * other OLAP specific classes access.
+	 */
 	QueryAxis getQueryAxis() {
 		return queryAxis;
 	}
