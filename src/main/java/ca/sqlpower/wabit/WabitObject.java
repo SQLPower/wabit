@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -37,11 +36,47 @@ public interface WabitObject {
      * @see WabitSession#runInForeground(Runnable)
      */
     void addWabitListener(WabitListener l);
+
+    /**
+     * Removes a listener that was previously attached to this wabit object.
+     * 
+     * @param l
+     *            The listener to remove.
+     */
     void removeWabitListener(WabitListener l);
 
+    /**
+     * Returns the parent of this WabitObject. This will be null when the object
+     * is first created until it is added as a child to another object. If this
+     * object is never added as a child to another object this will remain null
+     * and the object may be treated as the root node of a {@link WabitObject}
+     * tree.
+     * 
+     * @return The parent of this object.
+     */
     WabitObject getParent();
+
+    /**
+     * Sets the parent of this object to the given object. This should only be
+     * done when this object is being added as a child to another object.
+     * 
+     * @param parent
+     *            The new parent of this object.
+     */
     void setParent(WabitObject parent);
+    
+    /**
+     * Returns an unmodifiable list of the children in this WabitObject. If there
+     * are no children in this WabitObject an empty list should be returned.
+     */
     List<? extends WabitObject> getChildren();
+
+    /**
+     * Returns true if this object may contain children. Not all types of
+     * WabitObjects can be a child to any WabitObject.
+     * 
+     * @see WabitObject#childPositionOffset(Class)
+     */
     boolean allowsChildren();
     
     /**
