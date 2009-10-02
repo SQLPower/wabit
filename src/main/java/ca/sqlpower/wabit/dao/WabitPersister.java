@@ -19,7 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
-import com.lowagie.text.pdf.codec.Base64.InputStream;
+import java.io.InputStream;
 
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
