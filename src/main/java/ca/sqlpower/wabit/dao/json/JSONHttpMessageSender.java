@@ -39,9 +39,9 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  * message content in the JSON format. (see <a
  * href="http://www.json.org">www.json.org</a>).
  */
-public class JSONHttpMessagePasser extends HttpMessageSender<JSONObject> {
+public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 
-	public JSONHttpMessagePasser(WabitServerInfo serverInfo,
+	public JSONHttpMessageSender(WabitServerInfo serverInfo,
 			String wabitWorkspaceUUID) {
 		super(serverInfo, wabitWorkspaceUUID);
 	}
