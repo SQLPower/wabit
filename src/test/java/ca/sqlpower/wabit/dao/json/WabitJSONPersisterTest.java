@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import ca.sqlpower.wabit.dao.MessagePasser;
+import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
@@ -34,7 +34,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	private WabitJSONPersister persister;
 	
 	public void testBegin() throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					assertEquals(content.getString("method"), WabitPersistMethod.begin.toString());
@@ -49,7 +49,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	}
 
 	public void testCommit() throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					String method = content.getString("method");
@@ -78,7 +78,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	}
 
 	public void testPersistObject()  throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					assertEquals(content.getString("method"), WabitPersistMethod.persistObject.toString());
@@ -96,7 +96,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	}
 
 	public void testChangeProperty() throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					assertEquals(content.getString("method"), WabitPersistMethod.changeProperty.toString());
@@ -115,7 +115,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	}
 
 	public void testPersistProperty() throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					assertEquals(content.getString("method"), WabitPersistMethod.persistProperty.toString());
@@ -133,7 +133,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	}
 
 	public void testRemoveObject() throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					assertEquals(content.getString("method"), WabitPersistMethod.removeObject.toString());
@@ -150,7 +150,7 @@ public class WabitJSONPersisterTest extends TestCase {
 	}
 
 	public void testRollback() throws Exception {
-		MessagePasser<JSONObject> messagePasser = new MessagePasser<JSONObject>() {
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
 					String method = content.getString("method");
