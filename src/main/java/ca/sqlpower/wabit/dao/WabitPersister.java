@@ -58,7 +58,7 @@ public interface WabitPersister {
 
 	/**
 	 * An enumeration of possible WabitPersister commands. The
-	 * {@link MessagePasser}s and {@link MessageDecoder}s can use this is a
+	 * {@link MessageSender}s and {@link MessageDecoder}s can use this is a
 	 * common reference for the type of persistence methods calls that can be
 	 * sent through messages.
 	 */

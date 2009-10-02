@@ -32,12 +32,12 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
- * An abstract {@link MessagePasser} implementation that specifically
+ * An abstract {@link MessageSender} implementation that specifically
  * transmits messages using the HTTP protocol.
  *
  * @param <T> An Object type that represents the content of the message
  */
-public abstract class HttpMessagePasser<T> implements MessagePasser<T> {
+public abstract class HttpMessageSender<T> implements MessageSender<T> {
 
 	/**
 	 * An {@link HttpClient} object that will be used to send HTTP requests
@@ -70,7 +70,7 @@ public abstract class HttpMessagePasser<T> implements MessagePasser<T> {
 	 *            The UUID that identifies the {@link WabitWorkspace} that the
 	 *            HTTP requests will be referring to
 	 */
-	public HttpMessagePasser(WabitServerInfo serverInfo, String wabitWorkspaceUUID) {
+	public HttpMessageSender(WabitServerInfo serverInfo, String wabitWorkspaceUUID) {
 		HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(params, 2000);
         httpClient = new DefaultHttpClient(params);

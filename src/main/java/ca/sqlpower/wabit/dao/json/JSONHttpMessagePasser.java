@@ -30,18 +30,18 @@ import org.apache.http.entity.StringEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import ca.sqlpower.wabit.dao.HttpMessagePasser;
+import ca.sqlpower.wabit.dao.HttpMessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
- * An {@link HttpMessagePasser} implementation that specifically sends it's
+ * An {@link HttpMessageSender} implementation that specifically sends it's
  * message content in the JSON format. (see <a
  * href="http://www.json.org">www.json.org</a>).
  */
-public class HttpJsonMessagePasser extends HttpMessagePasser<JSONObject> {
+public class JSONHttpMessagePasser extends HttpMessageSender<JSONObject> {
 
-	public HttpJsonMessagePasser(WabitServerInfo serverInfo,
+	public JSONHttpMessagePasser(WabitServerInfo serverInfo,
 			String wabitWorkspaceUUID) {
 		super(serverInfo, wabitWorkspaceUUID);
 	}

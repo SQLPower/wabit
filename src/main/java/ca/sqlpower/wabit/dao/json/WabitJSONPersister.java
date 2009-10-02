@@ -22,14 +22,14 @@ package ca.sqlpower.wabit.dao.json;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import ca.sqlpower.wabit.dao.MessagePasser;
+import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 
 /**
  * A {@link WabitPersister} implementation that serializes
  * {@link WabitPersister} method calls as {@link JSONObject}s and transmits them
- * to a destination using a {@link MessagePasser}. This allows these method
+ * to a destination using a {@link MessageSender}. This allows these method
  * calls to be transmitted to other systems, typically (but not necessarily)
  * over a network connection.
  */
@@ -44,13 +44,13 @@ public class WabitJSONPersister implements WabitPersister {
 	 * A MessagePasser object that is responsible for transmitting the
 	 * JSONObject contents.
 	 */
-	private MessagePasser<JSONObject> messagePasser;
+	private MessageSender<JSONObject> messagePasser;
 
 	/**
 	 * Create a {@link WabitJSONPersister} that uses the given
-	 * {@link MessagePasser} to transmit the JSON content
+	 * {@link MessageSender} to transmit the JSON content
 	 */
-	public WabitJSONPersister(MessagePasser<JSONObject> messagePasser) {
+	public WabitJSONPersister(MessageSender<JSONObject> messagePasser) {
 		this.messagePasser = messagePasser;
 	}
 	

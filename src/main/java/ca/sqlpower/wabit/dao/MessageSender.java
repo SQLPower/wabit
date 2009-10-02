@@ -25,6 +25,6 @@ package ca.sqlpower.wabit.dao;
  * @param <T>
  *            The Object type that will represent the content of the message
  */
-public interface MessagePasser<T> {
+public interface MessageSender<T> {
 	public void send(T content) throws WabitPersistenceException;
 }
