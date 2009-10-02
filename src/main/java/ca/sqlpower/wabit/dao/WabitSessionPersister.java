@@ -44,6 +44,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.olap4j.query.Selection.Operator;
 
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
 import ca.sqlpower.query.Container;
@@ -132,7 +133,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Persisted property buffer, mapping of {@link WabitObject} UUIDs to each
 	 * individual persisted property
 	 */
-	private Multimap<String, WabitObjectProperty> persistedProperties;
+	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap
+			.create();
 
 	/**
 	 * Persisted {@link WabitObject} buffer, contains all the data that was
@@ -309,95 +311,100 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitObject parent = workspace.findByUuid(pwo.getParentUUID(),
 					WabitObject.class);
 
-			if (type.equals(CellSetRenderer.class.toString())) {
-				OlapQuery olapQuery = workspace.findByUuid(getPropertyAndRemove(uuid,
-						"olap-query-uuid").toString(), OlapQuery.class);
+			if (type.equals(CellSetRenderer.class.getSimpleName())) {
+				OlapQuery olapQuery = workspace.findByUuid(
+						getPropertyAndRemove(uuid, "olap-query-uuid")
+								.toString(), OlapQuery.class);
 				wo = new CellSetRenderer((OlapQuery) olapQuery);
 				((ContentBox) parent).setContentRenderer((CellSetRenderer) wo);
 
-			} else if (type.equals(Chart.class.toString())) {
+			} else if (type.equals(Chart.class.getSimpleName())) {
 				wo = new Chart();
 				((WabitWorkspace) parent).addChart((Chart) wo);
 
-			} else if (type.equals(ChartColumn.class.toString())) {
-				String columnName = getPropertyAndRemove(uuid, "name").toString();
+			} else if (type.equals(ChartColumn.class.getSimpleName())) {
+				String columnName = getPropertyAndRemove(uuid, "name")
+						.toString();
 				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = (ca.sqlpower.wabit.report.chart.ChartColumn.DataType) getPropertyAndRemove(
 						uuid, "data-type");
 
 				wo = new ChartColumn(columnName, dataType);
 				((Chart) parent).addChartColumn((ChartColumn) wo);
 
-			} else if (type.equals(ChartRenderer.class.toString())) {
+			} else if (type.equals(ChartRenderer.class.getSimpleName())) {
 				Chart chart = workspace.findByUuid(getPropertyAndRemove(uuid,
 						"chart-uuid").toString(), Chart.class);
 				wo = new ChartRenderer(chart);
 				((ContentBox) parent).setContentRenderer((ChartRenderer) wo);
 
-			} else if (type.equals(ContentBox.class.toString())) {
+			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
 				((Page) parent).addContentBox((ContentBox) wo);
 
-			} else if (type.equals(Guide.class.toString())) {
-				Axis axis = Axis.valueOf(getPropertyAndRemove(uuid, "axis").toString());
-				double offset = Double.valueOf(getPropertyAndRemove(uuid, "offset")
+			} else if (type.equals(Guide.class.getSimpleName())) {
+				Axis axis = Axis.valueOf(getPropertyAndRemove(uuid, "axis")
 						.toString());
+				double offset = Double.valueOf(getPropertyAndRemove(uuid,
+						"offset").toString());
 
 				wo = new Guide(axis, offset);
 				((Page) parent).addGuide((Guide) wo);
 
-			} else if (type.equals(ImageRenderer.class.toString())) {
+			} else if (type.equals(ImageRenderer.class.getSimpleName())) {
 				wo = new ImageRenderer();
 				((ContentBox) parent).setContentRenderer((ImageRenderer) wo);
 
-			} else if (type.equals(Label.class.toString())) {
+			} else if (type.equals(Label.class.getSimpleName())) {
 				wo = new Label();
 				((ContentBox) parent).setContentRenderer((Label) wo);
 
-			} else if (type.equals(OlapQuery.class.toString())) {
+			} else if (type.equals(OlapQuery.class.getSimpleName())) {
 				wo = new OlapQuery(session.getContext());
 				((WabitWorkspace) parent).addOlapQuery((OlapQuery) wo);
 
-			} else if (type.equals(QueryCache.class.toString())) {
+			} else if (type.equals(QueryCache.class.getSimpleName())) {
 				wo = new QueryCache(session.getContext());
 				((WabitWorkspace) parent).addQuery((QueryCache) wo, session);
 
-			} else if (type.equals(Page.class.toString())) {
+			} else if (type.equals(Page.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				int width = Integer.valueOf(getPropertyAndRemove(uuid, "width")
 						.toString());
-				int height = Integer.valueOf(getPropertyAndRemove(uuid, "height")
-						.toString());
+				int height = Integer.valueOf(getPropertyAndRemove(uuid,
+						"height").toString());
 				PageOrientation orientation = PageOrientation
-						.valueOf(getPropertyAndRemove(uuid, "orientation").toString());
+						.valueOf(getPropertyAndRemove(uuid, "orientation")
+								.toString());
 
 				wo = new Page(name, width, height, orientation);
 				((Layout) parent).setPage((Page) wo);
 
-			} else if (type.equals(Report.class.toString())) {
+			} else if (type.equals(Report.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new Report(name);
 				((WabitWorkspace) parent).addReport((Report) wo);
 
-			} else if (type.equals(Template.class.toString())) {
+			} else if (type.equals(Template.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new Template(name);
 				((WabitWorkspace) parent).addTemplate((Template) wo);
 
-			} else if (type.equals(WabitColumnItem.class.toString())) {
+			} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				SQLObjectItem soItem = new SQLObjectItem(name, uuid);
 
 				wo = new WabitColumnItem(soItem);
 				((WabitTableContainer) parent).getDelegate().addItem(soItem);
 
-			} else if (type.equals(WabitConstantsContainer.class.toString())) {
+			} else if (type.equals(WabitConstantsContainer.class
+					.getSimpleName())) {
 				Container container = ((QueryCache) parent)
 						.newConstantsContainer(uuid);
 				wo = new WabitConstantsContainer(container);
 
-			} else if (type.equals(WabitConstantItem.class.toString())) {
+			} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				StringItem stringItem = new StringItem(name);
 
@@ -405,31 +412,32 @@ public class WabitSessionPersister implements WabitPersister {
 				((WabitConstantsContainer) parent).getDelegate().addItem(
 						stringItem);
 
-			} else if (type.equals(WabitDataSource.class.toString())) {
+			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 				SPDataSource spds = session.getContext().getDataSources()
-						.getDataSource(getPropertyAndRemove(uuid, "name").toString());
+						.getDataSource(
+								getPropertyAndRemove(uuid, "name").toString());
 
 				wo = new WabitDataSource(spds);
 				((WabitWorkspace) parent).addDataSource((WabitDataSource) wo);
 
-			} else if (type.equals(WabitImage.class.toString())) {
+			} else if (type.equals(WabitImage.class.getSimpleName())) {
 				wo = new WabitImage();
 				((WabitWorkspace) parent).addImage((WabitImage) wo);
 
-			} else if (type.equals(WabitOlapAxis.class.toString())) {
-				org.olap4j.Axis axis = (org.olap4j.Axis) getPropertyAndRemove(uuid,
-						"ordinal");
+			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
+				org.olap4j.Axis axis = (org.olap4j.Axis) getPropertyAndRemove(
+						uuid, "ordinal");
 
 				wo = new WabitOlapAxis(axis);
 				((OlapQuery) parent).addAxis((WabitOlapAxis) wo);
 
-			} else if (type.equals(WabitOlapDimension.class.toString())) {
+			} else if (type.equals(WabitOlapDimension.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new WabitOlapDimension(name);
 				((WabitOlapAxis) parent).addDimension((WabitOlapDimension) wo);
 
-			} else if (type.equals(WabitOlapExclusion.class.toString())) {
+			} else if (type.equals(WabitOlapExclusion.class.getSimpleName())) {
 				Operator operator = Operator.valueOf(getPropertyAndRemove(uuid,
 						"operator").toString());
 				String uniqueMemberName = getPropertyAndRemove(uuid,
@@ -438,7 +446,7 @@ public class WabitSessionPersister implements WabitPersister {
 				((WabitOlapDimension) parent)
 						.addExclusion((WabitOlapExclusion) wo);
 
-			} else if (type.equals(WabitOlapInclusion.class.toString())) {
+			} else if (type.equals(WabitOlapInclusion.class.getSimpleName())) {
 				Operator operator = Operator.valueOf(getPropertyAndRemove(uuid,
 						"operator").toString());
 				String uniqueMemberName = getPropertyAndRemove(uuid,
@@ -447,10 +455,11 @@ public class WabitSessionPersister implements WabitPersister {
 				((WabitOlapDimension) parent)
 						.addInclusion((WabitOlapInclusion) wo);
 
-			} else if (type.equals(WabitTableContainer.class.toString())) {
+			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				String schema = getPropertyAndRemove(uuid, "schema").toString();
-				String catalog = getPropertyAndRemove(uuid, "catalog").toString();
+				String catalog = getPropertyAndRemove(uuid, "catalog")
+						.toString();
 				List<SQLObjectItem> items = null;
 				SQLDatabase db = ((QueryCache) parent).getDatabase();
 
@@ -461,7 +470,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else {
 				throw new WabitPersistenceException(uuid,
-						"Unknown WabitObject type");
+						"Unknown WabitObject type: " + type);
 			}
 
 			if (wo != null) {
@@ -475,8 +484,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 	/**
 	 * Retrieves a persisted property value given by the UUID of the
-	 * {@link WabitObject} and its property name. This method can also remove
-	 * the persisted property if necessary.
+	 * {@link WabitObject} and its property name. The property is removed from
+	 * the {@link Multimap} if found.
 	 * 
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject}
@@ -627,7 +636,6 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitObject parent = workspace.findByUuid(
 					objectsToRemove.get(uuid), WabitObject.class);
 
-			parent.removeDependency(wo);
 			try {
 				parent.removeChild(wo);
 			} catch (IllegalArgumentException e) {
@@ -2432,10 +2440,15 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Rollback all changes to persistent storage to the beginning of the
 	 * transaction
+	 * 
+	 * @throws WabitPersistenceException
 	 */
-	public void rollback() {
+	public void rollback() throws WabitPersistenceException {
 		// TODO Auto-generated method stub
-
+		if (transactionCount <= 0) {
+			throw new WabitPersistenceException(null,
+					"Cannot rollback while not in a transaction.");
+		}
 	}
 
 	/**
