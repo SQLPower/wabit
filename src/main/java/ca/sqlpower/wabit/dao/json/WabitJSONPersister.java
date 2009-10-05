@@ -44,14 +44,14 @@ public class WabitJSONPersister implements WabitPersister {
 	 * A MessagePasser object that is responsible for transmitting the
 	 * JSONObject contents.
 	 */
-	private MessageSender<JSONObject> messagePasser;
+	private MessageSender<JSONObject> messageSender;
 
 	/**
 	 * Create a {@link WabitJSONPersister} that uses the given
 	 * {@link MessageSender} to transmit the JSON content
 	 */
-	public WabitJSONPersister(MessageSender<JSONObject> messagePasser) {
-		this.messagePasser = messagePasser;
+	public WabitJSONPersister(MessageSender<JSONObject> messageSender) {
+		this.messageSender = messageSender;
 	}
 	
 	public void begin() throws WabitPersistenceException{
@@ -64,7 +64,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(null, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
 		transactionCount++;
 	}
 
@@ -81,7 +81,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(null, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
 		transactionCount--;
 	}
 
@@ -96,7 +96,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
 	}
 
 	public void persistProperty(String uuid, String propertyName, DataType type,
@@ -112,7 +112,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
 	}
 	
 	public void persistProperty(String uuid, String propertyName, DataType type, Object newValue) throws WabitPersistenceException {
@@ -126,7 +126,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
 	};
 	
 	public void removeObject(String parentUUID, String uuid)
@@ -139,7 +139,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
 	}
 	
 	public void rollback() throws WabitPersistenceException {
@@ -155,6 +155,10 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(null, e);
 		}
-		messagePasser.send(jsonObject);
+		messageSender.send(jsonObject);
+	}
+	
+	public MessageSender<JSONObject> getMessageSender() {
+		return messageSender;
 	}
 }
