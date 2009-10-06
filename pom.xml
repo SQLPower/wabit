@@ -80,52 +80,63 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<!--
-							This exclusion is to prevent the JAR plugin from bundling the JDBC
-							.jar files together in the wabit.jar, as JarURLConnection does not
-							support nested JAR files. Each plugin that generates the
-							distributables for each platform arranges for the JDBC jar files to be
-							resources on the classpath. See src/main/jdbc/README_JDBC for details.
-						-->
-						<exclude>*.jar</exclude>
-					</excludes>
-					<finalName>wabit</finalName>
-					<archive>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<mainClass>ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl</mainClass>
-							<classpathPrefix>lib/</classpathPrefix>
-						</manifest>
-						<manifestEntries>
-							<Class-Path>
-							  jdbc/
-							  lib/apache-mime4j-0.5.jar
-							  lib/architect_dbtree_lib.jar
-							  lib/architect_lib.jar
-							  lib/commons-math-1.0.jar
-							  lib/commons-vfs.jar
-							  lib/eigenbase-properties.jar
-							  lib/eigenbase-resgen.jar
-							  lib/eigenbase-xom.jar
-							  lib/javacup.jar
-							  lib/jcommon-1.0.15.jar
-							  lib/jfreechart-1.0.12.jar
-							  lib/jmdns.jar
-							  lib/miglayout-3.7.jar
-							  lib/mondrian.jar
-							  lib/olap4j.jar
-							  lib/osx_adapter.jar
-							  lib/piccolo.jar
-							  lib/piccolox.jar
-							  lib/rsyntaxtextarea.jar
-							  lib/simple-jndi-0.11.4.1.jar
-							  lib/wabithelp.jar
-							</Class-Path>
-						</manifestEntries>
-					</archive>
-				</configuration>
+				<executions>
+					<execution>
+						<id>executable-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+							<excludes>
+								<!--
+									This exclusion is to prevent the JAR plugin from bundling the JDBC
+									.jar files together in the wabit.jar, as JarURLConnection does not
+									support nested JAR files. Each plugin that generates the
+									distributables for each platform arranges for the JDBC jar files
+									to be resources on the classpath. See src/main/jdbc/README_JDBC
+									for details.
+								-->
+								<exclude>*.jar</exclude>
+							</excludes>
+							<finalName>wabit</finalName>
+							<archive>
+								<manifest>
+									<addClasspath>true</addClasspath>
+									<mainClass>ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl</mainClass>
+									<classpathPrefix>lib/</classpathPrefix>
+								</manifest>
+								<manifestEntries>
+									<Class-Path>
+										jdbc/
+										lib/apache-mime4j-0.5.jar
+										lib/architect_dbtree_lib.jar
+										lib/architect_lib.jar
+										lib/commons-math-1.0.jar
+										lib/commons-vfs.jar
+										lib/eigenbase-properties.jar
+										lib/eigenbase-resgen.jar
+										lib/eigenbase-xom.jar
+										lib/javacup.jar
+										lib/jcommon-1.0.15.jar
+										lib/jfreechart-1.0.12.jar
+										lib/jmdns.jar
+										lib/miglayout-3.7.jar
+										lib/mondrian.jar
+										lib/olap4j.jar
+										lib/osx_adapter.jar
+										lib/piccolo.jar
+										lib/piccolox.jar
+										lib/rsyntaxtextarea.jar
+										lib/simple-jndi-0.11.4.1.jar
+										lib/wabithelp.jar
+			                            </Class-Path>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -579,29 +590,21 @@
 			<groupId>edu.umd.cs</groupId>
 			<artifactId>piccolo</artifactId>
 			<version>1.2.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/piccolo.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>edu.umd.cs</groupId>
 			<artifactId>piccolox</artifactId>
 			<version>1.2.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/piccolox.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>ca.sqlpower.architect</groupId>
 			<artifactId>architect-core</artifactId>
-			<version>0.9.12alpha</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/architect_lib.jar</systemPath>
+			<version>0.9.12-alpha</version>
 		</dependency>
 		<dependency>
-			<groupId>ca.sqlpower.architect.swingui.dbtree</groupId>
+			<groupId>ca.sqlpower.architect</groupId>
 			<artifactId>architect-dbtree</artifactId>
-			<version>0.9.12alpha</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/architect_dbtree_lib.jar</systemPath>
+			<version>0.9.12-alpha</version>
 		</dependency>
 		<dependency>
             <groupId>jfree</groupId>
@@ -619,22 +622,16 @@
 			<groupId>org.fife</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/rsyntaxtextarea.jar</systemPath>
 		</dependency>
 		<dependency>
-            <groupId>ca.sqlpower.wabit.osxadapter</groupId>
-            <artifactId>osx-adapter</artifactId>
+            <groupId>ca.sqlpower.wabit</groupId>
+            <artifactId>wabit-osx</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/osx_adapter.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>ca.sqlpower.wabit</groupId>
-            <artifactId>wabithelp</artifactId>
+            <artifactId>wabit-help</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/wabithelp.jar</systemPath>
         </dependency>
 		<dependency>
 			<groupId>com.jgoodies</groupId>
@@ -691,8 +688,6 @@
             <groupId>javax.jmdns</groupId>
             <artifactId>jmdns</artifactId>
             <version>2.1</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/jmdns.jar</systemPath>
         </dependency>
         
         <dependency>
@@ -868,6 +863,14 @@
         <repository>
 			<id>pentaho-third-party</id>
 			<url>http://repo.pentaho.org/artifactory/third-party/</url>
+        </repository>
+        <repository>
+            <id>sqlpg</id>
+            <url>http://pag.sqlpower.ca:8080/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>sqlpg-thirdparty</id>
+            <url>http://pag.sqlpower.ca:8080/nexus/content/repositories/thirdparty/</url>
         </repository>
 	</repositories>
 </project>
