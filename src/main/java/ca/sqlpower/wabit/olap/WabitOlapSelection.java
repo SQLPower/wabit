@@ -140,6 +140,10 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 			return uniqueMemberName;
 		}
 	}
+	
+	public String getName() {
+		return getUniqueMemberName();
+	}
 
 	/**
 	 * Returns the Selection wrapped by this object. This method is package

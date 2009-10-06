@@ -90,6 +90,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	public WabitOlapAxis(Axis ordinal) {
 		this.ordinal = ordinal;
 		firePropertyChange("ordinal", null, ordinal);
+		setName("unnamed Axis");
 	}
 	
 	/**
@@ -126,8 +127,10 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	 * modifies the query's selections.
 	 */
 	public void updateChildren(){
+		if (!initialized) return;
 		logger.debug("Updating children of Axis " + getName() + ". QueryAxis is " + queryAxis);
 		
+		fireTransactionStarted("Updating Children");
 		List<QueryDimension> olapDimensions = new ArrayList<QueryDimension>(queryAxis.getDimensions());
 		Iterator<WabitOlapDimension> wabitDimensions = dimensions.iterator();
 		for (int index = 0; wabitDimensions.hasNext(); index++) {
@@ -143,13 +146,16 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		
 		Iterator<QueryDimension> queryDimensions = olapDimensions.iterator();
 		while (queryDimensions.hasNext()) {
-			addDimension(new WabitOlapDimension(queryDimensions.next()));
+			WabitOlapDimension dimension = new WabitOlapDimension(queryDimensions.next());
+			addDimension(dimension);
+			dimension.updateChildren();
 		}
 		
 		if (sortOrder != null) {
 			SortOrder order = SortOrder.valueOf(sortOrder);
 			queryAxis.sort(order, sortEvaluationLiteral);
 		}
+		fireTransactionEnded();
 	}
 	
 	/**
@@ -166,7 +172,12 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
-		dimensions.remove(child);
+		int index = dimensions.indexOf(child);
+		dimensions.remove(index);
+		queryAxis.removeDimension(((WabitOlapDimension) child).getDimension());
+		fireTransactionStarted("Removing Child");
+		fireChildRemoved(WabitOlapDimension.class, child, index);
+		fireTransactionEnded();
 		return true;
 	}
 

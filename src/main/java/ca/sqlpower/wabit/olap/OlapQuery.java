@@ -19,11 +19,11 @@
 
 package ca.sqlpower.wabit.olap;
 
+import java.beans.PropertyChangeEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -67,11 +67,15 @@ import org.olap4j.query.QueryDimension.HierarchizeMode;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
+import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
@@ -128,13 +132,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     public static OlapQuery copyOlapQuery(OlapQuery oldOlapQuery) throws SQLException, 
             QueryInitializationException {
         synchronized (oldOlapQuery) {
-            OlapQuery newQuery = new OlapQuery(oldOlapQuery.olapMapping);
+            OlapQuery newQuery = new OlapQuery(null, oldOlapQuery.olapMapping, oldOlapQuery.getQueryName(), oldOlapQuery.getCatalogName(), oldOlapQuery.getSchemaName(), oldOlapQuery.getCubeName());
             newQuery.setOlapDataSource(oldOlapQuery.getOlapDataSource());
             newQuery.setName(oldOlapQuery.getName());
-            newQuery.setQueryName(oldOlapQuery.getQueryName());
-            newQuery.setCatalogName(oldOlapQuery.getCatalogName());
-            newQuery.setSchemaName(oldOlapQuery.getSchemaName());
-            newQuery.setCubeName(oldOlapQuery.getCubeName());
             
             oldOlapQuery.updateAttributes();
             for (WabitOlapAxis axis : oldOlapQuery.getAxes()) {
@@ -240,21 +240,65 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     @GuardedBy("this")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
+    private WabitListener childListener = new WabitListener(){
+    	private int transactionCount;
+    	
+		public void transactionEnded(TransactionEvent e) {
+			transactionCount--;
+			if (transactionCount <= 0){
+				transactionCount = 0;
+				try {
+					logger.debug("Auto Executing OLAP Query");
+					executeOlapQuery();
+				} catch (Exception ex) {
+					logger.error("Error auto-executing OLAP Query", ex);
+				}
+			}
+		}
+		
+		public void transactionRollback(TransactionEvent e) {
+			// no-op
+		}
+		public void transactionStarted(TransactionEvent e) {
+			transactionCount++;
+		}
+		
+		public void wabitChildAdded(WabitChildEvent e) {
+			logger.debug("Listening to child " + e.getChild().getName());
+			WabitUtils.listenToHierarchy(e.getChild(), this);
+		}
+
+		public void wabitChildRemoved(WabitChildEvent e) {
+			logger.debug("Removing child " + e.getChild().getName());
+			WabitUtils.unlistenToHierarchy(e.getChild(), this);
+		}
+
+		public void propertyChange(PropertyChangeEvent evt) {
+			// TODO Auto-generated method stub
+			
+		}
+    	
+    };
+    
     /**
      * Creates a new, empty query with no set persistent object ID.
      */
     public OlapQuery(OlapConnectionMapping olapMapping) {
-        this(null, olapMapping);
+        this(null, olapMapping, OLAP4J_QUERY_NAME, null, null, null);
     }
-
+    
     /**
      * Creates a new, empty query that will use the given persistent object ID
      * when it's saved. This constructor is only of particular use to the
      * persistence layer.
      */
-    public OlapQuery(String uuid, OlapConnectionMapping olapMapping) {
+    public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String queryName, String catalogName, String schemaName, String cubeName) {
         super(uuid);
         this.olapMapping = olapMapping;
+		this.queryName = queryName;
+		this.catalogName = catalogName;
+		this.schemaName = schemaName;
+		this.cubeName = cubeName;
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
@@ -495,12 +539,14 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
         this.currentCube = mdxQuery.getCube();
         
+        childListener.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Updating OLAP Attributes"));
         clearAxes();
         for (QueryAxis axis : mdxQuery.getAxes().values()) {
         	if (axis.getLocation() != null) {
         		addAxis(new WabitOlapAxis(axis));
         	}
         }
+    	childListener.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
     }
 
     private Query getMdxQueryCopy() throws SQLException, QueryInitializationException {
@@ -664,6 +710,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 			throw new QueryInitializationException("Missing database for cube " + cubeName + " for use in " + getName() + ".");
 		}
 		try {
+			logger.debug("Creating cube with catalog=" + catalogName + ", schema=" + schemaName + ", cube=" + cubeName);
 			OlapConnection createOlapConnection = createOlapConnection();
 			Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
 			Schema schema = catalog.getSchemas().get(schemaName);
@@ -675,6 +722,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		
 		Query localMDXQuery = null;
 		try {
+			logger.debug("Creating new Query with name " + queryName + " and cube " + getCurrentCube());
 		    localMDXQuery = new Query(queryName, getCurrentCube());
 		} catch (SQLException e) {
 			throw new QueryInitializationException(e);
@@ -698,9 +746,11 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	 * call.
 	 */
     public void updateAttributes() {
+    	childListener.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Updating OLAP Attributes"));
     	for (WabitOlapAxis axis :  axes) {
     		axis.updateChildren();
     	}
+    	childListener.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
     }
 
     /**
@@ -709,6 +759,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	public void addAxis(WabitOlapAxis axis) {
 		wasLoadedFromDao = true;
 		axes.add(axis);
+		axis.setParent(this);
+		WabitUtils.listenToHierarchy(axis, childListener);
 		fireChildAdded(WabitOlapAxis.class, axis, axes.size() - 1);
 	}
 	
@@ -1115,11 +1167,13 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      *            them.
      */
     public synchronized void setNonEmpty(boolean nonEmpty) {
+    	boolean oldVal = nonEmpty;
     	this.nonEmpty = nonEmpty;
     	if (mdxQuery != null) {
     		mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
     		logger.debug("Query has rows non-empty? " + mdxQuery.getAxis(Axis.ROWS).isNonEmpty());
     	}
+    	firePropertyChange("nonEmpty", oldVal, nonEmpty);
     }
 
     /**
@@ -1164,28 +1218,12 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	    return false;
 	}
 	
-	public void setQueryName(String queryName) {
-		String oldQueryName = this.queryName;
-		this.queryName = queryName;
-		wasLoadedFromDao = true;
-		initDone = false;
-		firePropertyChange("queryName", oldQueryName, queryName);
-	}
-	
 	public String getQueryName() {
 		if (isInitDone()) {
 			return mdxQuery.getName();
 		} else {
 			return queryName;
 		}
-	}
-
-	public void setCatalogName(String catalogName) {
-		String oldCatalogName = this.catalogName;
-		this.catalogName = catalogName;
-		wasLoadedFromDao = true;
-		initDone = false;
-		firePropertyChange("catalogName", oldCatalogName, catalogName);
 	}
 
 	public String getCatalogName() {
@@ -1196,27 +1234,12 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		}
 	}
 
-	public void setSchemaName(String schemaName) {
-		String oldSchemaName = this.schemaName;
-		this.schemaName = schemaName;
-		wasLoadedFromDao = true;
-		initDone = false;
-		firePropertyChange("schemaName", oldSchemaName, schemaName);
-	}
-
 	public String getSchemaName() {
 		if (isInitDone()) {
 			return currentCube.getSchema().getName();
 		} else {
 			return schemaName;
 		}
-	}
-
-	public void setCubeName(String cubeName) {
-		String oldCubeName = this.cubeName;
-		this.cubeName = cubeName;
-		wasLoadedFromDao = true;
-		firePropertyChange("cubeName", oldCubeName, cubeName);
 	}
 
 	public String getCubeName() {

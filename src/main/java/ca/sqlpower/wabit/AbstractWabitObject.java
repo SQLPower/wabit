@@ -111,6 +111,7 @@ public abstract class AbstractWabitObject implements WabitObject {
      *         testing purposes.
      */
     protected WabitChildEvent fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
+    	logger.debug("Child Added: " + type + " notifying " + listeners.size() + " listeners");
         synchronized(listeners) {
             if (listeners.isEmpty()) return null;
         }
@@ -147,6 +148,7 @@ public abstract class AbstractWabitObject implements WabitObject {
      *         testing purposes.
      */
     protected WabitChildEvent fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
+    	logger.debug("Child Removed: " + type + " notifying " + listeners.size() + " listeners: " + listeners);
         synchronized(listeners) {
             if (listeners.isEmpty()) return null;
         }
@@ -362,7 +364,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    while (topAncestor.getParent() != null) {
 	        topAncestor = topAncestor.getParent();
 	    }
-	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, child, false, true);
+	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, child, true, true);
 	    for (WabitObject graphNode : graph.getNodes()) {
 	        List<WabitObject> ancestors = new ArrayList<WabitObject>();
 	        WabitObject ancestor = graphNode.getParent();

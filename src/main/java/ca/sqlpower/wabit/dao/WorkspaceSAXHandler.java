@@ -269,6 +269,18 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
 	private WabitOlapDimension olapDimension;
 
+	private String catalogName;
+
+	private String schemaName;
+
+	private String cubeName;
+
+	private Olap4jDataSource olapDataSource;
+
+	private String olapName;
+
+	private String olapID;
+
     /**
      * Creates a new SAX handler which is capable of reading in a series of
      * workspace descriptions from an XML stream. The list of workspaces
@@ -689,14 +701,36 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             byteStream = new ByteArrayOutputStream();
             loadingText = true;
         } else if (name.equals("olap-query")) {
-            createdObject = loadOlapQuery(attributes);
+        	olapName = attributes.getValue("name");
+        	olapID = attributes.getValue("uuid");
+        	String dsName = attributes.getValue("data-source");
+			olapDataSource = session.getWorkspace().getDataSource(dsName, Olap4jDataSource.class);
+            if (olapDataSource == null) {
+                String newDSName = oldToNewDSNames.get(dsName);
+                if (newDSName != null) {
+                    olapDataSource = session.getWorkspace().getDataSource(newDSName, Olap4jDataSource.class);
+                    if (olapDataSource == null) {
+                        logger.debug("Data source " + dsName + " is not in the workspace or was not of the correct type. Attempted to replace with new data source " + newDSName + ". Query " + "data-source" + " was connected to it previously.");
+                        throw new NullPointerException("Data source " + newDSName + " was not found in the workspace or was not an Olap4j Datasource.");
+                    }
+                }
+                logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
+            }
+            createdObject = null;
         } else if (name.equals("olap-cube")) {
-            olapQuery.setCatalogName(attributes.getValue("catalog"));
-            olapQuery.setSchemaName(attributes.getValue("schema"));
-            olapQuery.setCubeName(attributes.getValue("cube-name"));
+            catalogName = attributes.getValue("catalog");
+            schemaName = attributes.getValue("schema");
+            cubeName = attributes.getValue("cube-name");
             createdObject = null;
         } else if (name.equals("olap4j-query")) {
-            olapQuery.setQueryName(attributes.getValue("name"));
+            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), catalogName, schemaName, cubeName);
+            olapQuery.setName(olapName);
+            olapQuery.setOlapDataSource(olapDataSource);
+            if (cellSetRenderer == null) {
+            	session.getWorkspace().addOlapQuery(olapQuery);
+            } else {
+                cellSetRenderer.setModifiedOlapQuery(olapQuery);
+            }
             createdObject = null;
         } else if (name.equals("olap4j-axis")) {
         	olapAxis = new WabitOlapAxis(org.olap4j.Axis.Factory.forOrdinal(Integer.parseInt(attributes.getValue("ordinal"))));
@@ -1194,44 +1228,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		}
 		
 	}
-
-    private OlapQuery loadOlapQuery(Attributes attributes) throws SAXException {
-        String uuid = attributes.getValue("uuid");
-        checkMandatory("uuid", uuid);
-        olapQuery = new OlapQuery(uuid, session.getContext());
-        if (cellSetRenderer == null) {
-        	session.getWorkspace().addOlapQuery(olapQuery);
-        } else {
-            cellSetRenderer.setModifiedOlapQuery(olapQuery);
-        }
-        
-        for (int i = 0; i < attributes.getLength(); i++) {
-            String aname = attributes.getQName(i);
-            String aval = attributes.getValue(i);
-            if (aname.equals("uuid")) {
-                //already loaded
-            } else if (aname.equals("name")) {
-                olapQuery.setName(aval);
-            } else if (aname.equals("data-source")) {
-                Olap4jDataSource ds = session.getWorkspace().getDataSource(aval, Olap4jDataSource.class);
-                if (ds == null) {
-                    String newDSName = oldToNewDSNames.get(aval);
-                    if (newDSName != null) {
-                        ds = session.getWorkspace().getDataSource(newDSName, Olap4jDataSource.class);
-                        if (ds == null) {
-                            logger.debug("Data source " + aval + " is not in the workspace or was not of the correct type. Attempted to replace with new data source " + newDSName + ". Query " + aname + " was connected to it previously.");
-                            throw new NullPointerException("Data source " + newDSName + " was not found in the workspace or was not an Olap4j Datasource.");
-                        }
-                    }
-                    logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
-                }
-                olapQuery.setOlapDataSource(ds);
-            } else {
-                logger.warn("Unexpected attribute of <olap-query>: " + aname + " = " + aval);
-            }
-        }
-        return olapQuery;
-    }
 
     /**
      * This is a helper method for loading {@link ChartColumn}s introduced

@@ -74,7 +74,6 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	public WabitOlapDimension(QueryDimension dimension) {
 		this.dimension = dimension;
 		setName(dimension.getName());
-		updateChildren();
 		initialized = true;
 	}
 	
@@ -114,15 +113,23 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
-		if (child instanceof WabitOlapInclusion) {
+		if (child instanceof WabitOlapSelection) {
 			if (inclusions.contains(child)) {
 				int index = inclusions.indexOf(child);
+				dimension.getInclusions().remove(((WabitOlapInclusion) child).getSelection());
+				fireTransactionStarted("Removing Child");
+				inclusions.remove(child);
+				fireTransactionEnded();
 				fireChildRemoved(WabitOlapInclusion.class, child, index);
 				return true;
 			}
 			if (exclusions.contains(child)) {
-				int index = exclusions.indexOf(child) + inclusions.size();
-				fireChildRemoved(WabitOlapInclusion.class, child, index);
+				int index = exclusions.indexOf(child);
+				dimension.getExclusions().remove(((WabitOlapExclusion) child).getSelection());
+				fireTransactionStarted("Removing Child");
+				exclusions.remove(child);
+				fireTransactionEnded();
+				fireChildRemoved(WabitOlapExclusion.class, child, index);
 				return true;
 			}
 		}
@@ -136,8 +143,11 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	 * modifies the query's selections.
 	 */
 	public void updateChildren(){
+		if (!initialized) return;
+		fireTransactionStarted("Updating Children");
 		updateInclusions();
 		updateExclusions();
+		fireTransactionEnded();
 	}
 	
 	/**

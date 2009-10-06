@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 
@@ -37,6 +39,9 @@ import ca.sqlpower.wabit.WabitChildEvent.EventType;
  */
 public abstract class AbstractWabitListener implements WabitListener {
 
+	private static final Logger logger = Logger
+			.getLogger(AbstractWabitListener.class);
+	
     /**
      * Tracks the objects this listener is attached to that are in the middle of
      * a transaction. If the map stores a number greater than 0 for a given
@@ -62,6 +67,7 @@ public abstract class AbstractWabitListener implements WabitListener {
                     + " of type " + e.getSource().getClass() + " was called while it was " +
                     		"not in a transaction.");
         }
+        logger.debug("Transaction count on " + this +  " for:" + e.getSource() + ": " + inTransactionMap.get((WabitObject) e.getSource()));
         Integer nestedTransactionCount = inTransactionMap.get(e.getSource()) - 1;
         if (nestedTransactionCount < 0) {
             throw new IllegalStateException("The transaction count was not removed properly.");
@@ -120,8 +126,9 @@ public abstract class AbstractWabitListener implements WabitListener {
         if (transactionCount == null) {
             inTransactionMap.put((WabitObject) e.getSource(), 1);
         } else {
-            inTransactionMap.put((WabitObject) e.getSource(), transactionCount++);
+            inTransactionMap.put((WabitObject) e.getSource(), transactionCount + 1);
         }
+        logger.debug("Transaction count on " + this +  " for:" + e.getSource() + ": " + inTransactionMap.get((WabitObject) e.getSource()));
         transactionStartedImpl(e);
     }
     

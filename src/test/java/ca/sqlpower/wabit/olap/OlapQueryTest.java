@@ -86,7 +86,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
         
 
         
-        query = new OlapQuery(connectionMapping);
+        query = new OlapQuery(null, connectionMapping, "GUI Query", "LOCALDB", "World", "World Countries");
         query.setOlapDataSource(ds);
         
         connectionPool = new OlapConnectionPool(ds, 
@@ -115,10 +115,6 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
      * Tests the initialization of a query as though it was loaded from a file.
      */
     public void testInitAsLoaded() throws Exception {
-    	query.setCatalogName("LOCALDB");
-    	query.setSchemaName("World");
-    	query.setCubeName("World Countries");
-    	
     	WabitOlapAxis rowsAxis = new WabitOlapAxis(Axis.ROWS);
     	WabitOlapDimension rowsDimension = new WabitOlapDimension("Geography");
     	rowsAxis.addDimension(rowsDimension);
@@ -158,10 +154,6 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
 	 * and then tries to expand a member.
 	 */
     public void testInitAsLoadedAndExpandMember() throws Exception {
-    	query.setCatalogName("LOCALDB");
-    	query.setSchemaName("World");
-    	query.setCubeName("World Countries");
-    	
     	WabitOlapAxis rowsAxis = new WabitOlapAxis(Axis.ROWS);
     	WabitOlapDimension rowsDimension = new WabitOlapDimension("Geography");
     	rowsAxis.addDimension(rowsDimension);
@@ -213,10 +205,6 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
 	}
     
     public void testInitAsLoadedAndExcludeMember() throws Exception {
-    	query.setCatalogName("LOCALDB");
-    	query.setSchemaName("World");
-    	query.setCubeName("World Countries");
-    	
     	WabitOlapAxis rowsAxis = new WabitOlapAxis(Axis.ROWS);
     	WabitOlapDimension rowsDimension = new WabitOlapDimension("Geography");
     	rowsAxis.addDimension(rowsDimension);

@@ -60,6 +60,10 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.olap.WabitOlapInclusion;
+import ca.sqlpower.wabit.olap.WabitOlapSelection;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Layout;
@@ -136,6 +140,9 @@ public class WorkspaceTreeModel implements TreeModel {
         if (o instanceof ContentBox) return true;
         if (o instanceof WabitImage) return true;
         if (o instanceof WabitQuerySelectedItem) return true;
+        if (o instanceof WabitOlapAxis) return true;
+        if (o instanceof WabitOlapDimension) return true;
+        if (o instanceof WabitOlapSelection) return true;
         return false;
     }
     

@@ -612,7 +612,7 @@ public class WorkspaceXMLDAO {
 	private void saveOlapAxis(WabitOlapAxis axis) {
 		xml.print(out, "<olap4j-axis");
 		printCommonAttributes(axis);
-		printAttribute("ordinal", axis.getOrdinal().name());
+		printAttribute("ordinal", axis.getOrdinal().axisOrdinal());
 		
 		if (axis.getOrdinal() == Axis.ROWS) {
             printAttribute("non-empty", axis.isNonEmpty());

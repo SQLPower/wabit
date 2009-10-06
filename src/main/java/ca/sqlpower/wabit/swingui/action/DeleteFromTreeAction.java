@@ -37,6 +37,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
@@ -56,6 +58,9 @@ import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
  * uses of it if other objects are dependent on it.
  */
 public class DeleteFromTreeAction extends AbstractAction {
+	
+	private static final Logger logger = Logger
+			.getLogger(DeleteFromTreeAction.class);
 
     /**
      * This border buffer is for the tree in the dialog that asks users if
@@ -238,12 +243,18 @@ public class DeleteFromTreeAction extends AbstractAction {
             
             dependent.removeDependency(nodeToRemove);
             successfullyRemoved = successfullyRemoved && removeNode(dependent, graph);
+            if (logger.isDebugEnabled() && !successfullyRemoved) {
+            	logger.debug("Could not remove " + dependent.getName());
+            }
         }
         CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(nodeToRemove);
         WabitUtils.displayCleanupErrors(cleanupObject, upf);
         if (nodeToRemove.getParent() != null) {
             successfullyRemoved = successfullyRemoved && 
                 nodeToRemove.getParent().removeChild(nodeToRemove);
+        }
+        if (logger.isDebugEnabled() && !successfullyRemoved) {
+        	logger.debug("Failed to remove " + nodeToRemove.getName());
         }
         return successfullyRemoved;
     }

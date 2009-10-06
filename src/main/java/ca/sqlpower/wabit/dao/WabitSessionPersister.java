@@ -364,7 +364,11 @@ public class WabitSessionPersister implements WabitPersister {
 				((ContentBox) parent).setContentRenderer((Label) wo);
 
 			} else if (type.equals(OlapQuery.class.getSimpleName())) {
-				wo = new OlapQuery(session.getContext());
+				String queryName = getPropertyAndRemove(uuid, "query-name").toString();
+				String catalogName = getPropertyAndRemove(uuid, "catalog-name").toString();
+				String schemaName = getPropertyAndRemove(uuid, "schema-name").toString();
+				String cubeName = getPropertyAndRemove(uuid, "cube-name").toString();
+				wo = new OlapQuery(uuid, session.getContext(), queryName, catalogName, schemaName, cubeName);
 				((WabitWorkspace) parent).addOlapQuery((OlapQuery) wo);
 
 			} else if (type.equals(QueryCache.class.getSimpleName())) {
@@ -1466,15 +1470,6 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		if (propertyName.equals("data-source")) {
 			olapQuery.setOlapDataSource((Olap4jDataSource) newValue);
-		} else if (propertyName.equals("catalog-name")) {
-			olapQuery.setCatalogName(newValue.toString());
-
-		} else if (propertyName.equals("schema-name")) {
-			olapQuery.setSchemaName(newValue.toString());
-
-		} else if (propertyName.equals("cube-name")) {
-			olapQuery.setCubeName(newValue.toString());
-
 		} else {
 			throw new WabitPersistenceException(olapQuery.getUUID(),
 					"Invalid property: " + propertyName);
