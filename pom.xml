@@ -136,6 +136,13 @@
 							</archive>
 						</configuration>
 					</execution>
+					<execution>
+						<id>test-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
