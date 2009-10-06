@@ -11,10 +11,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>ca.sqlpower</groupId>
+	<groupId>ca.sqlpower.wabit</groupId>
 	<artifactId>wabit</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.9</version>
+	<version>0.9.9-SNAPSHOT</version>
 	<name>wabit</name>
 	<url>http://code.google.com/p/wabit</url>
 
@@ -111,8 +111,8 @@
 									<Class-Path>
 										jdbc/
 										lib/apache-mime4j-0.5.jar
-										lib/architect_dbtree_lib.jar
-										lib/architect_lib.jar
+										lib/architect-dbtree.jar
+										lib/architect-core.jar
 										lib/commons-math-1.0.jar
 										lib/commons-vfs.jar
 										lib/eigenbase-properties.jar
@@ -125,12 +125,12 @@
 										lib/miglayout-3.7.jar
 										lib/mondrian.jar
 										lib/olap4j.jar
-										lib/osx_adapter.jar
+										lib/wabit-osx.jar
 										lib/piccolo.jar
 										lib/piccolox.jar
 										lib/rsyntaxtextarea.jar
 										lib/simple-jndi-0.11.4.1.jar
-										lib/wabithelp.jar
+										lib/wabit-help.jar
 			                            </Class-Path>
 								</manifestEntries>
 							</archive>
