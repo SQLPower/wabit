@@ -133,7 +133,7 @@ public class WabitServerSession extends WabitSessionImpl {
      * @throws JSONException 
      */
     public static List<String> getWorkspaceNames(HttpClient httpClient, WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
-        HttpUriRequest request = new HttpHead(getServerURI(serviceInfo, "workspaces"));
+        HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
         String responseBody = httpClient.execute(request, new BasicResponseHandler());
         JSONArray workspaceArray;
         List<String> workspaces = new ArrayList<String>();
