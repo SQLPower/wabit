@@ -589,7 +589,7 @@ public class Page extends AbstractWabitObject {
     }
     
     @Override
-    protected boolean addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(WabitObject child, int index) {
         int innerIndex = index - childPositionOffset(child.getClass());
         if (child instanceof Guide) {
             addGuide((Guide) child, innerIndex);
@@ -600,6 +600,5 @@ public class Page extends AbstractWabitObject {
                     child.getClass() + " should be a valid type for " + getName() + 
                     " of type " + getClass());
         }
-        return true;
     }
 }

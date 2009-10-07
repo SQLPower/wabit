@@ -162,7 +162,7 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	}
 	
 	@Override
-	protected boolean addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(WabitObject child, int index) {
 	    final WabitItem wabitItem = (WabitItem) child;
 	    children.add(index, (T) child);
 	    child.setParent(this);
@@ -170,7 +170,6 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	    
         Item item = wabitItem.getDelegate();
 	    delegate.addItem(item, index);
-	    return true;
 	}
 
 	public boolean allowsChildren() {

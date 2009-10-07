@@ -992,7 +992,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     }
     
     @Override
-    protected boolean addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(WabitObject child, int index) {
         throw new IllegalStateException("The children of the renderer are maintained internally." +
                 " There should be no need to add them outside of this class.");
     }

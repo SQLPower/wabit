@@ -44,7 +44,7 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
     }
     
     @Override
-    protected boolean addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(WabitObject child, int index) {
         throw new IllegalStateException("Cannot add children to a table that was " +
         		"loaded from a data source.");
     }

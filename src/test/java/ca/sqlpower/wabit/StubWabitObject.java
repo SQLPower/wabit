@@ -93,10 +93,9 @@ public class StubWabitObject implements WabitObject {
         return null;
     }
 
-    public boolean addChild(WabitObject child, int index)
+    public void addChild(WabitObject child, int index)
             throws IllegalArgumentException {
         // TODO Auto-generated method stub
-        return false;
     }
 
 }

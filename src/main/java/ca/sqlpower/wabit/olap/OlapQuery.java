@@ -1339,7 +1339,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * changes.
      */
 	@Override
-	protected boolean addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(WabitObject child, int index) {
 	    throw new IllegalStateException("An axis should not be added from a public " +
                 "method. Axis are handled internally to an OlapQuery.");
 	}

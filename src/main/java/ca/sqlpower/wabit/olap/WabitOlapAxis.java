@@ -210,7 +210,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected boolean addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(WabitObject child, int index) {
 	    WabitOlapDimension dimension = (WabitOlapDimension) child;
 	    if (initialized) {
 	        try {
@@ -227,10 +227,8 @@ public class WabitOlapAxis extends AbstractWabitObject {
                 fireTransactionRollback(e.getMessage());
                 throw e;
             }
-            return true;
 	    } else {
 	        addDimension(dimension, index);
-	        return true;
 	    }
 	}
 

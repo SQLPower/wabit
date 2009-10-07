@@ -391,17 +391,18 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
 	protected abstract boolean removeChildImpl(WabitObject child);
 	
-	public final boolean addChild(WabitObject child, int index) throws IllegalArgumentException {
+	public final void addChild(WabitObject child, int index) throws IllegalArgumentException {
 	    //Throws an IllegalStateException if the child is not a valid child of this class.
 	    childPositionOffset(child.getClass());
 	    
 	    final int childCount = getChildren().size();
         if (childCount >= index) {
-	        return addChildImpl(child, index);
+	        addChildImpl(child, index);
+	    } else {
+	        throw new IllegalArgumentException("The index given to add child " + 
+	                child.getName() + " to " + getName() + " is " + index + 
+	                " and is greater than " + childCount);
 	    }
-	    throw new IllegalArgumentException("The index given to add child " + 
-	            child.getName() + " to " + getName() + " is " + index + 
-	            " and is greater than " + childCount);
 	}
 
     /**
@@ -417,8 +418,8 @@ public abstract class AbstractWabitObject implements WabitObject {
      * @param index
      *            The index to add the child at.
      */
-	protected boolean addChildImpl(WabitObject child, int index) {
-	    return false;
+	protected void addChildImpl(WabitObject child, int index) {
+	    //do nothing, meant to be overridden.
 	}
 	
 	/**

@@ -302,13 +302,12 @@ public class ContentBox extends AbstractWabitObject {
     }
     
     @Override
-    protected boolean addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(WabitObject child, int index) {
         if (index > 0) {
             throw new IllegalArgumentException("There is only one child in a content box, " +
             		"index " + index + " is out of range");
         }
         setContentRenderer((ReportContentRenderer) child);
-        return true;
     }
 
     /**

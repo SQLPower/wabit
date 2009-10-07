@@ -163,7 +163,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     }
     
     @Override
-    protected boolean addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(WabitObject child, int index) {
         throw new IllegalStateException("Cannot currently set the page from a layout. Need" +
                 " to implement multi-paging for this functionality.");
     }

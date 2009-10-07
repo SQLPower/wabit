@@ -123,7 +123,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected boolean addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(WabitObject child, int index) {
 	    if (initialized) {
 	        final OlapQuery query = getParent().getParent();
 	        if (child instanceof WabitOlapInclusion) {
@@ -133,7 +133,6 @@ public class WabitOlapDimension extends AbstractWabitObject {
                     query.addToAxis(0, inclusion.getSelection().getMember(), 
                             inclusion.getOperator(), getParent().getOrdinal());
                     fireTransactionEnded();
-                    return true;
                 } catch (OlapException e) {
                     fireTransactionRollback(e.getMessage());
                     throw new RuntimeException(e);
@@ -150,29 +149,22 @@ public class WabitOlapDimension extends AbstractWabitObject {
                     query.excludeMember(getDimension().getName(), exclusion.getSelection().getMember(), 
                             exclusion.getOperator());
                     fireTransactionEnded();
-                    return true;
                 } catch (QueryInitializationException e) {
                     fireTransactionRollback(e.getMessage());
                     throw new IllegalStateException("The dimension " + getName() + 
                             " was initialized but the parent query " + query.getName() + 
                             " was not");
                 }
-	        } else {
-	            return false;
 	        }
 	    } else {
 	        if (child instanceof WabitOlapInclusion) {
 	            WabitOlapInclusion inclusion = (WabitOlapInclusion) child;
 	            inclusions.add(index, inclusion);
 	            fireChildAdded(inclusion.getClass(), inclusion, index);
-	            return true;
 	        } else if (child instanceof WabitOlapExclusion) {
 	            WabitOlapExclusion exclusion = (WabitOlapExclusion) child;
                 exclusions.add(index, exclusion);
                 fireChildAdded(exclusion.getClass(), exclusion, index);
-                return true;
-	        } else {
-	            return false;
 	        }
 	    }
 	}
