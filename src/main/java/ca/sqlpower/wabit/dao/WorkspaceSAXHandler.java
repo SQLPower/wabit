@@ -724,7 +724,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             cubeName = attributes.getValue("cube-name");
             createdObject = null;
         } else if (name.equals("olap4j-query")) {
-            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), catalogName, schemaName, cubeName);
+            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), attributes.getValue("name"), catalogName, schemaName, cubeName);
             olapQuery.setName(olapName);
             olapQuery.setOlapDataSource(olapDataSource);
             if (cellSetRenderer == null) {

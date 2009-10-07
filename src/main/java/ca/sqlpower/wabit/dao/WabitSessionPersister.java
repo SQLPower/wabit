@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +46,8 @@ import org.apache.log4j.Logger;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.QueryImpl;
+import ca.sqlpower.query.Container;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
@@ -69,6 +72,7 @@ import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -88,6 +92,7 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.VerticalAlignment;
@@ -270,7 +275,8 @@ public class WabitSessionPersister implements WabitPersister {
 		this.session = session;
 		this.target = target;
 
-		session.getWorkspace().addWabitListener(new WabitWorkspaceListener());
+		WabitUtils.listenToHierarchy(session.getWorkspace(),
+				new WabitWorkspaceListener());
 	}
 
 	/**
@@ -313,34 +319,29 @@ public class WabitSessionPersister implements WabitPersister {
 
 			if (type.equals(CellSetRenderer.class.getSimpleName())) {
 				OlapQuery olapQuery = workspace.findByUuid(
-						getPropertyAndRemove(uuid, "olap-query-uuid")
+						getPropertyAndRemove(uuid, "modifiedOlapQuery")
 								.toString(), OlapQuery.class);
-				wo = new CellSetRenderer((OlapQuery) olapQuery);
-				((ContentBox) parent).setContentRenderer((CellSetRenderer) wo);
+				wo = new CellSetRenderer(olapQuery);
 
 			} else if (type.equals(Chart.class.getSimpleName())) {
 				wo = new Chart();
-				((WabitWorkspace) parent).addChart((Chart) wo);
 
 			} else if (type.equals(ChartColumn.class.getSimpleName())) {
 				String columnName = getPropertyAndRemove(uuid, "name")
 						.toString();
 				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = ca.sqlpower.wabit.report.chart.ChartColumn.DataType
-						.valueOf(getPropertyAndRemove(uuid, "data-type")
+						.valueOf(getPropertyAndRemove(uuid, "dataType")
 								.toString());
 
 				wo = new ChartColumn(columnName, dataType);
-				((Chart) parent).addChartColumn((ChartColumn) wo);
 
 			} else if (type.equals(ChartRenderer.class.getSimpleName())) {
 				Chart chart = workspace.findByUuid(getPropertyAndRemove(uuid,
-						"chart-uuid").toString(), Chart.class);
+						"chart").toString(), Chart.class);
 				wo = new ChartRenderer(chart);
-				((ContentBox) parent).setContentRenderer((ChartRenderer) wo);
 
 			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
-				((Page) parent).addContentBox((ContentBox) wo);
 
 			} else if (type.equals(Guide.class.getSimpleName())) {
 				Axis axis = Axis.valueOf(getPropertyAndRemove(uuid, "axis")
@@ -349,27 +350,25 @@ public class WabitSessionPersister implements WabitPersister {
 						"offset").toString());
 
 				wo = new Guide(axis, offset);
-				((Page) parent).addGuide((Guide) wo);
 
 			} else if (type.equals(ImageRenderer.class.getSimpleName())) {
 				wo = new ImageRenderer();
-				((ContentBox) parent).setContentRenderer((ImageRenderer) wo);
 
 			} else if (type.equals(Label.class.getSimpleName())) {
 				wo = new Label();
-				((ContentBox) parent).setContentRenderer((Label) wo);
 
 			} else if (type.equals(OlapQuery.class.getSimpleName())) {
-				String queryName = getPropertyAndRemove(uuid, "query-name").toString();
-				String catalogName = getPropertyAndRemove(uuid, "catalog-name").toString();
-				String schemaName = getPropertyAndRemove(uuid, "schema-name").toString();
-				String cubeName = getPropertyAndRemove(uuid, "cube-name").toString();
-				wo = new OlapQuery(uuid, session.getContext(), queryName, catalogName, schemaName, cubeName);
-				((WabitWorkspace) parent).addOlapQuery((OlapQuery) wo);
-
-			} else if (type.equals(QueryCache.class.getSimpleName())) {
-				wo = new QueryCache(session.getContext());
-				((WabitWorkspace) parent).addQuery((QueryCache) wo, session);
+				String name = getPropertyAndRemove(uuid, "name").toString();
+				String queryName = getPropertyAndRemove(uuid, "queryName")
+						.toString();
+				String catalogName = getPropertyAndRemove(uuid, "catalogName")
+						.toString();
+				String schemaName = getPropertyAndRemove(uuid, "schemaName")
+						.toString();
+				String cubeName = getPropertyAndRemove(uuid, "cubeName")
+						.toString();
+				wo = new OlapQuery(uuid, session.getContext(), name, queryName,
+						catalogName, schemaName, cubeName);
 
 			} else if (type.equals(Page.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
@@ -382,26 +381,25 @@ public class WabitSessionPersister implements WabitPersister {
 								.toString());
 
 				wo = new Page(name, width, height, orientation);
-				((Layout) parent).setPage((Page) wo);
+
+			} else if (type.equals(QueryCache.class.getSimpleName())) {
+				wo = new QueryCache(session.getContext());
 
 			} else if (type.equals(Report.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new Report(name);
-				((WabitWorkspace) parent).addReport((Report) wo);
 
 			} else if (type.equals(Template.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new Template(name);
-				((WabitWorkspace) parent).addTemplate((Template) wo);
 
 			} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				SQLObjectItem soItem = new SQLObjectItem(name, uuid);
 
 				wo = new WabitColumnItem(soItem);
-				((WabitTableContainer) parent).getDelegate().addItem(soItem);
 
 			} else if (type.equals(WabitConstantsContainer.class
 					.getSimpleName())) {
@@ -412,8 +410,6 @@ public class WabitSessionPersister implements WabitPersister {
 				StringItem stringItem = new StringItem(name);
 
 				wo = new WabitConstantItem(stringItem);
-				((WabitConstantsContainer) parent).getDelegate().addItem(
-						stringItem);
 
 			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 				SPDataSource spds = session.getContext().getDataSources()
@@ -421,67 +417,59 @@ public class WabitSessionPersister implements WabitPersister {
 								getPropertyAndRemove(uuid, "name").toString());
 
 				wo = new WabitDataSource(spds);
-				((WabitWorkspace) parent).addDataSource((WabitDataSource) wo);
 
 			} else if (type.equals(WabitImage.class.getSimpleName())) {
 				wo = new WabitImage();
-				((WabitWorkspace) parent).addImage((WabitImage) wo);
 
 			} else if (type.equals(WabitJoin.class.getSimpleName())) {
 				Item leftItem = workspace.findByUuid(
-						getPropertyAndRemove(uuid, "left-item-id").toString(),
-						WabitColumnItem.class).getDelegate();
+						getPropertyAndRemove(uuid, SQLJoin.LEFT_JOIN_CHANGED)
+								.toString(), WabitColumnItem.class)
+						.getDelegate();
 				Item rightItem = workspace.findByUuid(
-						getPropertyAndRemove(uuid, "right-item-id").toString(),
-						WabitColumnItem.class).getDelegate();
+						getPropertyAndRemove(uuid, SQLJoin.RIGHT_JOIN_CHANGED)
+								.toString(), WabitColumnItem.class)
+						.getDelegate();
 				wo = new WabitJoin((QueryCache) parent, new SQLJoin(leftItem,
 						rightItem));
-				// TODO Need to add this WabitJoin object to a parent QueryCache
 
 			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
-				org.olap4j.Axis axis = (org.olap4j.Axis) getPropertyAndRemove(
-						uuid, "ordinal");
+				org.olap4j.Axis axis = org.olap4j.Axis.Factory
+						.forOrdinal(Integer.valueOf(getPropertyAndRemove(uuid,
+								"ordinal").toString()));
 
 				wo = new WabitOlapAxis(axis);
-				((OlapQuery) parent).addAxis((WabitOlapAxis) wo);
 
 			} else if (type.equals(WabitOlapDimension.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new WabitOlapDimension(name);
-				((WabitOlapAxis) parent).addDimension((WabitOlapDimension) wo);
 
 			} else if (type.equals(WabitOlapExclusion.class.getSimpleName())) {
 				Operator operator = Operator.valueOf(getPropertyAndRemove(uuid,
 						"operator").toString());
 				String uniqueMemberName = getPropertyAndRemove(uuid,
-						"unique-member-name").toString();
+						"uniqueMemberName").toString();
 				wo = new WabitOlapExclusion(operator, uniqueMemberName);
-				((WabitOlapDimension) parent)
-						.addExclusion((WabitOlapExclusion) wo);
 
 			} else if (type.equals(WabitOlapInclusion.class.getSimpleName())) {
 				Operator operator = Operator.valueOf(getPropertyAndRemove(uuid,
 						"operator").toString());
 				String uniqueMemberName = getPropertyAndRemove(uuid,
-						"unique-member-name").toString();
+						"uniqueMemberName").toString();
 				wo = new WabitOlapInclusion(operator, uniqueMemberName);
-				((WabitOlapDimension) parent)
-						.addInclusion((WabitOlapInclusion) wo);
 
 			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				String schema = getPropertyAndRemove(uuid, "schema").toString();
 				String catalog = getPropertyAndRemove(uuid, "catalog")
 						.toString();
-				List<SQLObjectItem> items = null;
+				List<SQLObjectItem> items = Collections.emptyList();
 				SQLDatabase db = ((QueryCache) parent).getDatabase();
 
 				TableContainer tableContainer = new TableContainer(uuid, db,
 						name, schema, catalog, items);
 				wo = new WabitTableContainer(tableContainer);
-				((QueryCache) parent).addTable(tableContainer);
-				// TODO
 
 			} else {
 				throw new WabitPersistenceException(uuid,
@@ -490,6 +478,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 			if (wo != null) {
 				wo.setUUID(uuid);
+				parent.addChild(wo, parent.getChildren().size());
 			}
 
 		}
@@ -628,6 +617,9 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof WabitTableContainer) {
 					commitWabitTableContainerProperty((WabitTableContainer) wo,
 							propertyName, newValue);
+				} else if (wo instanceof WabitWorkspace) {
+					commitWabitWorkspaceProperty((WabitWorkspace) wo,
+							propertyName, newValue);
 				} else {
 					throw new WabitPersistenceException(uuid,
 							"Invalid WabitObject");
@@ -676,11 +668,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The class name of the {@link WabitObject} to persist
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject} to persist
+	 * @param index
+	 *            The index of the {@link WabitObject} within its parents' list
+	 *            of children
 	 * 
 	 * @throws WabitPersistenceException
 	 */
-	public void persistObject(String parentUUID, String type, String uuid)
-			throws WabitPersistenceException {
+	public void persistObject(String parentUUID, String type, String uuid,
+			int index) throws WabitPersistenceException {
 
 		if (exists(uuid)) {
 			throw new WabitPersistenceException(uuid,
@@ -915,6 +910,9 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof WabitTableContainer) {
 				propertyValue = getWabitTableContainerProperty(
 						(WabitTableContainer) wo, propertyName);
+			} else if (wo instanceof WabitWorkspace) {
+				propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
+						propertyName);
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid WabitObject");
 			}
@@ -964,7 +962,7 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		if (propertyName.equals("name")) {
 			return wo.getName();
-		} else if (propertyName.equals("uuid")) {
+		} else if (propertyName.equals("UUID")) {
 			return wo.getUUID();
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
@@ -988,11 +986,66 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("name")) {
 			wo.setName(newValue.toString());
-		} else if (propertyName.equals("uuid")) {
+		} else if (propertyName.equals("UUID")) {
 			wo.setUUID(newValue.toString());
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
 					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Retrieves a property value from a {@link WabitWorkspace} object.
+	 * 
+	 * @param workspace
+	 *            The {@link WabitWorkspace} object to retrieve the property
+	 *            from
+	 * @param propertyName
+	 *            The property name
+	 * @return The property value
+	 * @throws WabitPersistenceException
+	 */
+	private Object getWabitWorkspaceProperty(WabitWorkspace workspace,
+			String propertyName) throws WabitPersistenceException {
+		if (propertyName.equals("editorPanelModel")) {
+			return workspace.getEditorPanelModel().getUUID();
+		} else {
+			throw new WabitPersistenceException(workspace.getUUID(),
+					"Invalid property: " + propertyName);
+		}
+	}
+
+	/**
+	 * Commits a persisted {@link WabitWorkspace} object property.
+	 * 
+	 * @param workspace
+	 *            The {@link WabitWorkspace} object to commit the persisted
+	 *            property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 */
+	private void commitWabitWorkspaceProperty(WabitWorkspace workspace,
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
+		String uuid = workspace.getUUID();
+
+		if (propertyName.equals("editorPanelModel")) {
+			String editorUUID = newValue.toString();
+			WabitObject editorPanel = workspace.findByUuid(editorUUID,
+					WabitObject.class);
+
+			if (editorPanel == null) {
+				throw new WabitPersistenceException(uuid,
+						"Invalid editorPanelModel UUID: " + editorUUID);
+			}
+
+			workspace.setEditorPanelModel(editorPanel);
+		} else {
+			throw new WabitPersistenceException(uuid, "Invalid property: "
+					+ propertyName);
 		}
 	}
 
@@ -1046,34 +1099,38 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getQueryCacheProperty(QueryCache query, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("zoom")) {
+		if (propertyName.equals("zoomLevel")) {
 			return query.getZoomLevel();
 
-		} else if (propertyName.equals("streaming-row-limit")) {
+		} else if (propertyName.equals("streaming")) {
+			return query.isStreaming();
+
+		} else if (propertyName.equals("streamingRowLimit")) {
 			return query.getStreamingRowLimit();
 
-		} else if (propertyName.equals("row-limit")) {
+		} else if (propertyName.equals(QueryImpl.ROW_LIMIT)) {
 			return query.getRowLimit();
 
-		} else if (propertyName.equals("grouping-enabled")) {
+		} else if (propertyName.equals(QueryImpl.GROUPING_ENABLED)) {
 			return query.isGroupingEnabled();
 
-		} else if (propertyName.equals("prompt-for-cross-joins")) {
+		} else if (propertyName.equals("promptForCrossJoins")) {
 			return query.getPromptForCrossJoins();
 
-		} else if (propertyName.equals("automatically-executing")) {
+		} else if (propertyName.equals("automaticallyExecuting")) {
 			return query.isAutomaticallyExecuting();
 
-		} else if (propertyName.equals("global-where")) {
+		} else if (propertyName.equals(QueryImpl.GLOBAL_WHERE_CLAUSE)) {
 			return query.getGlobalWhereClause();
 
-		} else if (propertyName.equals("query-text")) {
+		} else if (propertyName.equals(QueryImpl.USER_MODIFIED_QUERY)) {
 			return query.generateQuery();
+			// TODO
 
-		} else if (propertyName.equals("execute-queries-with-cross-joins")) {
+		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
 			return query.getExecuteQueriesWithCrossJoins();
 
-		} else if (propertyName.equals("data-source")) {
+		} else if (propertyName.equals("dataSource")) {
 			return query.getWabitDataSource().getName();
 
 		} else {
@@ -1100,36 +1157,40 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		String uuid = query.getUUID();
 
-		if (propertyName.equals("zoom")) {
+		if (propertyName.equals("zoomLevel")) {
 			query.setZoomLevel(Integer.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("streaming-row-limit")) {
+		} else if (propertyName.equals("streaming")) {
+			query.setStreaming(Boolean.valueOf(newValue.toString()));
+
+		} else if (propertyName.equals("streamingRowLimit")) {
 			query.setStreamingRowLimit(Integer.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("row-limit")) {
+		} else if (propertyName.equals(QueryImpl.ROW_LIMIT)) {
 			query.setRowLimit(Integer.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("grouping-enabled")) {
+		} else if (propertyName.equals(QueryImpl.GROUPING_ENABLED)) {
 			query.setGroupingEnabled(Boolean.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("prompt-for-cross-joins")) {
+		} else if (propertyName.equals("promptForCrossJoins")) {
 			query.setPromptForCrossJoins(Boolean.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("automatically-executing")) {
+		} else if (propertyName.equals("automaticallyExecuting")) {
 			query.setAutomaticallyExecuting(Boolean
 					.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("global-where")) {
+		} else if (propertyName.equals(QueryImpl.GLOBAL_WHERE_CLAUSE)) {
 			query.setGlobalWhereClause(newValue.toString());
 
-		} else if (propertyName.equals("query-text")) {
+		} else if (propertyName.equals(QueryImpl.USER_MODIFIED_QUERY)) {
 			query.defineUserModifiedQuery(newValue.toString());
+			// TODO
 
-		} else if (propertyName.equals("execute-queries-with-cross-joins")) {
+		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
 			query.setExecuteQueriesWithCrossJoins(Boolean.valueOf(newValue
 					.toString()));
 
-		} else if (propertyName.equals("data-source")) {
+		} else if (propertyName.equals("dataSource")) {
 			query.setDataSource(session.getWorkspace().getDataSource(
 					newValue.toString(), JDBCDataSource.class));
 
@@ -1155,11 +1216,9 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		Point2D position = wabitConstantsContainer.getDelegate().getPosition();
 
-		if (propertyName.equals("xpos")) {
-			return position.getX();
-
-		} else if (propertyName.equals("ypos")) {
-			return position.getY();
+		if (propertyName.equals("position")) {
+			return position.toString();
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
@@ -1187,13 +1246,10 @@ public class WabitSessionPersister implements WabitPersister {
 				.getDelegate();
 		Point2D position = container.getPosition();
 
-		if (propertyName.equals("xpos")) {
-			container.setPosition(new Point2D.Double(Double.valueOf(newValue
-					.toString()), position.getY()));
-
-		} else if (propertyName.equals("ypos")) {
-			container.setPosition(new Point2D.Double(position.getX(), Double
-					.valueOf(newValue.toString())));
+		if (propertyName.equals("position")) {
+			// TODO Use commons converter
+			// container.setPosition(new Point2D.Double(Double.valueOf(newValue
+			// .toString()), position.getY()));
 
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
@@ -1218,11 +1274,9 @@ public class WabitSessionPersister implements WabitPersister {
 				.getDelegate();
 		Point2D position = container.getPosition();
 
-		if (propertyName.equals("xpos")) {
-			return position.getX();
-
-		} else if (propertyName.equals("ypos")) {
-			return position.getY();
+		if (propertyName.equals("position")) {
+			return null;
+			// TODO Use commons converter
 
 		} else if (propertyName.equals("alias")) {
 			return container.getAlias();
@@ -1248,19 +1302,15 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitWabitTableContainerProperty(
 			WabitTableContainer wabitTableContainer, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		ca.sqlpower.query.Container container = wabitTableContainer
-				.getDelegate();
+		Container container = wabitTableContainer.getDelegate();
 		Point2D position = container.getPosition();
 
-		if (propertyName.equals("xpos")) {
-			container.setPosition(new Point2D.Double(Double.valueOf(newValue
-					.toString()), position.getY()));
+		if (propertyName.equals("position")) {
+			// TODO Use commons converter
+			// container.setPosition(new Point2D.Double(Double.valueOf(newValue
+			// .toString()), position.getY()));
 
-		} else if (propertyName.equals("ypos")) {
-			container.setPosition(new Point2D.Double(position.getX(), Double
-					.valueOf(newValue.toString())));
-
-		} else if (propertyName.equals("alias")) {
+		} else if (propertyName.equals(Container.CONTAINTER_ALIAS_CHANGED)) {
 			container.setAlias(newValue.toString());
 
 		} else {
@@ -1285,20 +1335,23 @@ public class WabitSessionPersister implements WabitPersister {
 		Item item = wabitItem.getDelegate();
 
 		if (item instanceof SQLObjectItem || item instanceof StringItem) {
-			if (propertyName.equals("alias")) {
+			if (propertyName.equals(Item.ALIAS)) {
 				return item.getAlias();
 
-			} else if (propertyName.equals("where-text")) {
+			} else if (propertyName.equals(Item.WHERE)) {
 				return item.getWhere();
 
-			} else if (propertyName.equals("group-by")) {
+			} else if (propertyName.equals(Item.GROUP_BY)) {
 				return item.getGroupBy().name();
 
-			} else if (propertyName.equals("having")) {
+			} else if (propertyName.equals(Item.HAVING)) {
 				return item.getHaving();
 
-			} else if (propertyName.equals("order-by")) {
+			} else if (propertyName.equals(Item.ORDER_BY)) {
 				return item.getOrderBy().name();
+
+			} else if (propertyName.equals(Item.SELECTED)) {
+				return item.getSelected();
 
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
@@ -1329,20 +1382,23 @@ public class WabitSessionPersister implements WabitPersister {
 		Item item = wabitItem.getDelegate();
 
 		if (item instanceof SQLObjectItem || item instanceof StringItem) {
-			if (propertyName.equals("alias")) {
+			if (propertyName.equals(Item.ALIAS)) {
 				item.setAlias(newValue.toString());
 
-			} else if (propertyName.equals("where-text")) {
+			} else if (propertyName.equals(Item.WHERE)) {
 				item.setWhere(newValue.toString());
 
-			} else if (propertyName.equals("group-by")) {
+			} else if (propertyName.equals(Item.GROUP_BY)) {
 				item.setGroupBy(SQLGroupFunction.valueOf(newValue.toString()));
 
-			} else if (propertyName.equals("having")) {
+			} else if (propertyName.equals(Item.HAVING)) {
 				item.setHaving(newValue.toString());
 
-			} else if (propertyName.equals("order-by")) {
+			} else if (propertyName.equals(Item.ORDER_BY)) {
 				item.setOrderBy(OrderByArgument.valueOf(newValue.toString()));
+
+			} else if (propertyName.equals(Item.SELECTED)) {
+				item.setSelected(Integer.valueOf(newValue.toString()));
 
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
@@ -1368,11 +1424,11 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		SQLJoin join = wabitJoin.getDelegate();
 
-		if (propertyName.equals("left-is-outer")) {
+		if (propertyName.equals(SQLJoin.LEFT_JOIN_CHANGED)) {
 			return join.isLeftColumnOuterJoin();
-		} else if (propertyName.equals("right-is-outer")) {
+		} else if (propertyName.equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
 			return join.isRightColumnOuterJoin();
-		} else if (propertyName.equals("comparator")) {
+		} else if (propertyName.equals(SQLJoin.COMPARATOR_CHANGED)) {
 			return join.getComparator();
 		} else {
 			throw new WabitPersistenceException(wabitJoin.getUUID(),
@@ -1397,11 +1453,11 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		SQLJoin join = wabitJoin.getDelegate();
 
-		if (propertyName.equals("left-is-outer")) {
+		if (propertyName.equals(SQLJoin.LEFT_JOIN_CHANGED)) {
 			join.setLeftColumnOuterJoin(Boolean.valueOf(newValue.toString()));
-		} else if (propertyName.equals("right-is-outer")) {
+		} else if (propertyName.equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
 			join.setRightColumnOuterJoin(Boolean.valueOf(newValue.toString()));
-		} else if (propertyName.equals("comparator")) {
+		} else if (propertyName.equals(SQLJoin.COMPARATOR_CHANGED)) {
 			join.setComparator(newValue.toString());
 		} else {
 			throw new WabitPersistenceException(wabitJoin.getUUID(),
@@ -1421,21 +1477,22 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getOlapQueryProperty(OlapQuery olapQuery, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("data-source")) {
+		if (propertyName.equals("olapDataSource")) {
 			return olapQuery.getOlapDataSource().getName();
-		} else if (propertyName.equals("catalog-name")) {
+		} else if (propertyName.equals("catalogName")) {
 			return olapQuery.getCatalogName();
 
-		} else if (propertyName.equals("schema-name")) {
+		} else if (propertyName.equals("schemaName")) {
 			return olapQuery.getSchemaName();
 
-		} else if (propertyName.equals("cube-name")) {
+		} else if (propertyName.equals("cubeName")) {
 			return olapQuery.getCubeName();
 
 		} else {
 			throw new WabitPersistenceException(olapQuery.getUUID(),
 					"Invalid property: " + propertyName);
 		}
+		// TODO
 	}
 
 	/**
@@ -1453,8 +1510,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitOlapQueryProperty(OlapQuery olapQuery,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("data-source")) {
+		if (propertyName.equals("olapDataSource")) {
 			olapQuery.setOlapDataSource((Olap4jDataSource) newValue);
+		} else if (propertyName.equals("currentCube")) {
+			// TODO
+		} else if (propertyName.equals("nonEmpty")) {
+			olapQuery.setNonEmpty(Boolean.valueOf(newValue.toString()));
 		} else {
 			throw new WabitPersistenceException(olapQuery.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1477,7 +1538,7 @@ public class WabitSessionPersister implements WabitPersister {
 		if (propertyName.equals("operator")) {
 			return selection.getOperator();
 
-		} else if (propertyName.equals("unique-member-name")) {
+		} else if (propertyName.equals("uniqueMemberName")) {
 			return selection.getUniqueMemberName();
 
 		} else {
@@ -1555,15 +1616,15 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitOlapAxisProperty(WabitOlapAxis olapAxis,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("ordinal")) {
-			return olapAxis.getOrdinal();
+			return olapAxis.getOrdinal().axisOrdinal();
 
-		} else if (propertyName.equals("non-empty")) {
+		} else if (propertyName.equals("nonEmpty")) {
 			return olapAxis.isNonEmpty();
 
-		} else if (propertyName.equals("sort-evaluation-literal")) {
+		} else if (propertyName.equals("sortEvaluationLiteral")) {
 			return olapAxis.getSortEvaluationLiteral();
 
-		} else if (propertyName.equals("sort-order")) {
+		} else if (propertyName.equals("sortOrder")) {
 			return olapAxis.getSortOrder();
 
 		} else {
@@ -1588,13 +1649,13 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitWabitOlapAxisProperty(WabitOlapAxis olapAxis,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("non-empty")) {
+		if (propertyName.equals("nonEmpty")) {
 			olapAxis.setNonEmpty(Boolean.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("sort-evaluation-literal")) {
+		} else if (propertyName.equals("sortEvaluationLiteral")) {
 			olapAxis.setSortEvaluationLiteral(newValue.toString());
 
-		} else if (propertyName.equals("sort-order")) {
+		} else if (propertyName.equals("sortOrder")) {
 			olapAxis.setSortOrder(newValue.toString());
 
 		} else {
@@ -1615,25 +1676,25 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getChartProperty(Chart chart, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("x-axis-name")) {
+		if (propertyName.equals("xaxisName")) {
 			return chart.getXaxisName();
 
-		} else if (propertyName.equals("y-axis-name")) {
+		} else if (propertyName.equals("yaxisName")) {
 			return chart.getYaxisName();
 
-		} else if (propertyName.equals("x-axis-label-rotation")) {
+		} else if (propertyName.equals("xAxisLabelRotation")) {
 			return chart.getXaxisLabelRotation();
 
-		} else if (propertyName.equals("gratuitous-animated")) {
+		} else if (propertyName.equals("gratuitousAnimated")) {
 			return chart.isGratuitouslyAnimated();
 
 		} else if (propertyName.equals("type")) {
 			return chart.getType().toString();
 
-		} else if (propertyName.equals("legend-position")) {
+		} else if (propertyName.equals("legendPosition")) {
 			return chart.getLegendPosition().name();
 
-		} else if (propertyName.equals("query-id")) {
+		} else if (propertyName.equals("query")) {
 			return chart.getQuery().getUUID();
 
 		} else {
@@ -1657,27 +1718,27 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 		String uuid = chart.getUUID();
 
-		if (propertyName.equals("x-axis-name")) {
+		if (propertyName.equals("xaxisName")) {
 			chart.setXaxisName(newValue.toString());
 
-		} else if (propertyName.equals("y-axis-name")) {
+		} else if (propertyName.equals("yaxisName")) {
 			chart.setYaxisName(newValue.toString());
 
-		} else if (propertyName.equals("x-axis-label-rotation")) {
+		} else if (propertyName.equals("xAxisLabelRrotation")) {
 			chart.setXAxisLabelRotation(Double.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("gratuitous-animated")) {
+		} else if (propertyName.equals("gratuitousAnimated")) {
 			chart.setGratuitouslyAnimated(Boolean.valueOf(newValue.toString()));
 
 		} else if (propertyName.equals("type")) {
 			chart.setType(ChartType.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("legend-position")) {
+		} else if (propertyName.equals("legendPosition")) {
 			chart
 					.setLegendPosition(LegendPosition.valueOf(newValue
 							.toString()));
 
-		} else if (propertyName.equals("query-id")) {
+		} else if (propertyName.equals("query")) {
 			ResultSetProducer rsProducer = session.getWorkspace().findByUuid(
 					newValue.toString(), ResultSetProducer.class);
 			if (rsProducer == null) {
@@ -1709,10 +1770,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getChartColumnProperty(ChartColumn chartColumn,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("role")) {
+		if (propertyName.equals("roleInChart")) {
 			return chartColumn.getRoleInChart().name();
 
-		} else if (propertyName.equals("x-axis-name")) {
+		} else if (propertyName.equals("XAxisIdentifier")) {
 			return chartColumn.getXAxisIdentifier().getName();
 
 		} else {
@@ -1737,10 +1798,10 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitChartColumnProperty(ChartColumn chartColumn,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("role")) {
+		if (propertyName.equals("roleInChart")) {
 			chartColumn.setRoleInChart(ColumnRole.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("x-axis-name")) {
+		} else if (propertyName.equals("XAxisIdentifier")) {
 			chartColumn.setXAxisIdentifier(new ChartColumn(newValue.toString(),
 					chartColumn.getDataType()));
 
@@ -1838,7 +1899,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getLayoutProperty(Layout layout, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("zoom")) {
+		if (propertyName.equals("zoomLevel")) {
 			return layout.getZoomLevel();
 
 		} else {
@@ -1861,7 +1922,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private void commitLayoutProperty(Layout layout, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		if (propertyName.equals("zoom")) {
+		if (propertyName.equals("zoomLevel")) {
 			layout.setZoomLevel(Integer.valueOf(newValue.toString()));
 
 		} else {
@@ -1891,8 +1952,9 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("orientation")) {
 			return page.getOrientation();
 
-		} else if (propertyName.equals("default-font")) {
+		} else if (propertyName.equals("defaultFont")) {
 			return page.getDefaultFont().toString();
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(page.getUUID(),
@@ -1922,8 +1984,9 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("orientation")) {
 			page.setOrientation(PageOrientation.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("default-font")) {
+		} else if (propertyName.equals("defaultFont")) {
 			page.setDefaultFont(Font.decode(newValue.toString()));
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(page.getUUID(),
@@ -1949,16 +2012,23 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("width")) {
 			return contentBox.getWidth();
 
-		} else if (propertyName.equals("xpos")) {
+		} else if (propertyName.equals("x")) {
 			return contentBox.getX();
 
-		} else if (propertyName.equals("ypos")) {
+		} else if (propertyName.equals("y")) {
 			return contentBox.getY();
+
+		} else if (propertyName.equals("contentRenderer")) {
+			return contentBox.getContentRenderer().getUUID();
+
+		} else if (propertyName.equals("font")) {
+			return contentBox.getFont().toString();
 
 		} else {
 			throw new WabitPersistenceException(contentBox.getUUID(),
 					"Invalid property: " + propertyName);
 		}
+		// TODO
 	}
 
 	/**
@@ -1982,16 +2052,25 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("width")) {
 			contentBox.setWidth(Double.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("xpos")) {
+		} else if (propertyName.equals("x")) {
 			contentBox.setX(Double.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("ypos")) {
+		} else if (propertyName.equals("y")) {
 			contentBox.setY(Double.valueOf(newValue.toString()));
+
+		} else if (propertyName.equals("contentRenderer")) {
+			contentBox.setContentRenderer(session.getWorkspace().findByUuid(
+					newValue.toString(), ReportContentRenderer.class));
+
+		} else if (propertyName.equals("font")) {
+			contentBox.setFont(Font.decode(newValue.toString()));
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(contentBox.getUUID(),
 					"Invalid property: " + propertyName);
 		}
+		// TODO
 	}
 
 	/**
@@ -2043,25 +2122,28 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("olap-query-uuid")) {
-			return csRenderer.getOlapQuery().getUUID();
+		if (propertyName.equals("modifiedOlapQuery")) {
+			return csRenderer.getModifiedOlapQuery().getUUID();
 
-		} else if (propertyName.equals("body-alignment")) {
+		} else if (propertyName.equals("bodyAlignment")) {
 			return csRenderer.getBodyAlignment().toString();
 
-		} else if (propertyName.equals("body-format-pattern")) {
+		} else if (propertyName.equals("bodyFormat")) {
 			return csRenderer.getBodyFormat().toPattern();
 
-		} else if (propertyName.equals("olap-header-font")) {
+		} else if (propertyName.equals("headerFont")) {
 			return csRenderer.getHeaderFont().toString();
+			// TODO
 
-		} else if (propertyName.equals("olap-body-font")) {
+		} else if (propertyName.equals("bodyFont")) {
 			return csRenderer.getBodyFont().toString();
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
 					"Invalid property: " + propertyName);
 		}
+		// TODO
 	}
 
 	/**
@@ -2079,27 +2161,28 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("olap-query-uuid")) {
+		if (propertyName.equals("modifiedOlapQuery")) {
 			csRenderer.setModifiedOlapQuery(session.getWorkspace().findByUuid(
 					newValue.toString(), OlapQuery.class));
 
-		} else if (propertyName.equals("body-alignment")) {
+		} else if (propertyName.equals("bodyAlignment")) {
 			csRenderer.setBodyAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
-		} else if (propertyName.equals("body-format-pattern")) {
+		} else if (propertyName.equals("bodyFormat")) {
 			csRenderer.setBodyFormat(new DecimalFormat(newValue.toString()));
 
-		} else if (propertyName.equals("olap-header-font")) {
+		} else if (propertyName.equals("headerFont")) {
 			csRenderer.setHeaderFont(Font.decode(newValue.toString()));
 
-		} else if (propertyName.equals("olap-body-font")) {
+		} else if (propertyName.equals("bodyFont")) {
 			csRenderer.setBodyFont(Font.decode(newValue.toString()));
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
 					"Invalid property: " + propertyName);
 		}
+		// TODO
 	}
 
 	/**
@@ -2114,16 +2197,19 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getImageRendererProperty(ImageRenderer iRenderer,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("wabit-image-uuid")) {
+		if (propertyName.equals("image")) {
 			return iRenderer.getImage().getUUID();
 
-		} else if (propertyName.equals("preserving-aspect-ratio")) {
+		} else if (propertyName.equals("preservingAspectRatio")) {
 			return iRenderer.isPreservingAspectRatio();
 
-		} else if (propertyName.equals("h-align")) {
+		} else if (propertyName.equals("preserveAspectRatioWhenResizing")) {
+			return iRenderer.isPreserveAspectRatioWhenResizing();
+
+		} else if (propertyName.equals("HAlign")) {
 			return iRenderer.getHAlign().name();
 
-		} else if (propertyName.equals("v-align")) {
+		} else if (propertyName.equals("VAlign")) {
 			return iRenderer.getVAlign().name();
 
 		} else {
@@ -2147,19 +2233,23 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitImageRendererProperty(ImageRenderer iRenderer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("wabit-image-uuid")) {
+		if (propertyName.equals("image")) {
 			iRenderer.setImage(session.getWorkspace().findByUuid(
 					newValue.toString(), WabitImage.class));
 
-		} else if (propertyName.equals("preserving-aspect-ratio")) {
+		} else if (propertyName.equals("preservingAspectRatio")) {
 			iRenderer.setPreservingAspectRatio(Boolean.valueOf(newValue
 					.toString()));
 
-		} else if (propertyName.equals("h-align")) {
+		} else if (propertyName.equals("preserveAspectRatioWhenResizing")) {
+			iRenderer.setPreserveAspectRatioWhenResizing(Boolean
+					.valueOf(newValue.toString()));
+
+		} else if (propertyName.equals("HAlign")) {
 			iRenderer.setHAlign(HorizontalAlignment
 					.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("v-align")) {
+		} else if (propertyName.equals("VAlign")) {
 			iRenderer.setVAlign(VerticalAlignment.valueOf(newValue.toString()));
 
 		} else {
@@ -2180,17 +2270,21 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getLabelProperty(Label label, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("horizontal-align")) {
+		if (propertyName.equals("horizontalAlignment")) {
 			return label.getHorizontalAlignment().name();
 
-		} else if (propertyName.equals("vertical-align")) {
+		} else if (propertyName.equals("verticalAlignment")) {
 			return label.getVerticalAlignment().name();
 
 		} else if (propertyName.equals("text")) {
 			return label.getText();
 
-		} else if (propertyName.equals("bg-colour")) {
+		} else if (propertyName.equals("backgroundColour")) {
 			return label.getBackgroundColour().toString();
+
+		} else if (propertyName.equals("font")) {
+			return label.getFont().toString();
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(label.getUUID(),
@@ -2211,19 +2305,23 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private void commitLabelProperty(Label label, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		if (propertyName.equals("horizontal-align")) {
+		if (propertyName.equals("horizontalAlignment")) {
 			label.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
-		} else if (propertyName.equals("vertical-align")) {
+		} else if (propertyName.equals("verticalAlignment")) {
 			label.setVerticalAlignment(VerticalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("text")) {
 			label.setText(newValue.toString());
 
-		} else if (propertyName.equals("bg-colour")) {
+		} else if (propertyName.equals("backgroundColour")) {
 			label.setBackgroundColour(Color.decode(newValue.toString()));
+
+		} else if (propertyName.equals("font")) {
+			label.setFont(Font.decode(newValue.toString()));
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(label.getUUID(),
@@ -2244,20 +2342,22 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getResultSetRendererProperty(ResultSetRenderer rsRenderer,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("null-string")) {
+		if (propertyName.equals("nullString")) {
 			return rsRenderer.getNullString();
 
-		} else if (propertyName.equals("border")) {
+		} else if (propertyName.equals("borderType")) {
 			return rsRenderer.getBorderType().name();
 
-		} else if (propertyName.equals("bg-colour")) {
+		} else if (propertyName.equals("backgroundColour")) {
 			return rsRenderer.getBackgroundColour().toString();
 
-		} else if (propertyName.equals("header-font")) {
+		} else if (propertyName.equals("headerFont")) {
 			return rsRenderer.getHeaderFont().toString();
+			// TODO
 
-		} else if (propertyName.equals("body-font")) {
+		} else if (propertyName.equals("bodyFont")) {
 			return rsRenderer.getBodyFont().toString();
+			// TODO
 
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
@@ -2280,25 +2380,26 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitResultSetRendererProperty(ResultSetRenderer rsRenderer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("null-string")) {
+		if (propertyName.equals("nullString")) {
 			rsRenderer.setNullString(newValue.toString());
 
 		} else if (propertyName.equals("border")) {
 			rsRenderer.setBorderType(BorderStyles.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("bg-colour")) {
+		} else if (propertyName.equals("backgroundColour")) {
 			rsRenderer.setBackgroundColour(Color.decode(newValue.toString()));
 
-		} else if (propertyName.equals("header-font")) {
+		} else if (propertyName.equals("headerFont")) {
 			rsRenderer.setHeaderFont(Font.decode(newValue.toString()));
 
-		} else if (propertyName.equals("body-font")) {
+		} else if (propertyName.equals("bodyFont")) {
 			rsRenderer.setBodyFont(Font.decode(newValue.toString()));
 
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
 					"Invalid property: " + propertyName);
 		}
+		// TODO
 	}
 
 	/**
@@ -2315,28 +2416,28 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		String uuid = colInfo.getUUID();
 
-		if (propertyName.equals("column-alias")) {
+		if (propertyName.equals(ColumnInfo.COLUMN_ALIAS)) {
 			return colInfo.getColumnAlias();
 
-		} else if (propertyName.equals("width")) {
+		} else if (propertyName.equals(ColumnInfo.WIDTH_CHANGED)) {
 			return colInfo.getWidth();
 
-		} else if (propertyName.equals("horizontal-align")) {
+		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
 			return colInfo.getHorizontalAlignment().name();
 
-		} else if (propertyName.equals("data-type")) {
+		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
 			return colInfo.getDataType().name();
 
-		} else if (propertyName.equals("group-or-break")) {
+		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
 			return colInfo.getWillGroupOrBreak().name();
 
-		} else if (propertyName.equals("will-subtotal")) {
+		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			return colInfo.getWillSubtotal();
 
-		} else if (propertyName.equals("column-info-item-id")) {
+		} else if (propertyName.equals(ColumnInfo.COLUMN_INFO_ITEM_CHANGED)) {
 			return colInfo.getColumnInfoItem().getUUID();
 
-		} else if (propertyName.equals("format-type")) {
+		} else if (propertyName.equals(ColumnInfo.FORMAT_CHANGED)) {
 			Format formatType = colInfo.getFormat();
 
 			if (formatType instanceof SimpleDateFormat) {
@@ -2370,28 +2471,28 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		String uuid = colInfo.getUUID();
-		if (propertyName.equals("column-alias")) {
+		if (propertyName.equals(ColumnInfo.COLUMN_ALIAS)) {
 			colInfo.setColumnAlias(newValue.toString());
 
-		} else if (propertyName.equals("width")) {
+		} else if (propertyName.equals(ColumnInfo.WIDTH_CHANGED)) {
 			colInfo.setWidth(Integer.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("horizontal-align")) {
+		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
 			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
-		} else if (propertyName.equals("data-type")) {
+		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
 			colInfo.setDataType(ca.sqlpower.wabit.report.DataType
 					.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("group-or-break")) {
+		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
 			colInfo.setWillGroupOrBreak(GroupAndBreak.valueOf(newValue
 					.toString()));
 
-		} else if (propertyName.equals("will-subtotal")) {
+		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			colInfo.setWillSubtotal(Boolean.valueOf(newValue.toString()));
 
-		} else if (propertyName.equals("column-info-item-id")) {
+		} else if (propertyName.equals(ColumnInfo.COLUMN_INFO_ITEM_CHANGED)) {
 			boolean found = false;
 			for (Item queryItem : ((ResultSetRenderer) colInfo.getParent())
 					.getQuery().getSelectedColumns()) {
@@ -2408,7 +2509,7 @@ public class WabitSessionPersister implements WabitPersister {
 								+ newValue.toString());
 			}
 
-		} else if (propertyName.equals("format-type")) {
+		} else if (propertyName.equals(ColumnInfo.FORMAT_CHANGED)) {
 			Format formatType = colInfo.getFormat();
 			String newFormatType = newValue.toString();
 			String pattern = "";
@@ -2591,8 +2692,123 @@ public class WabitSessionPersister implements WabitPersister {
 
 		public void wabitChildAdded(WabitChildEvent e) {
 			try {
-				target.persistObject(e.getSource().getUUID(), e.getChildType()
-						.getName(), e.getChild().getUUID());
+				String parentUUID = e.getSource().getUUID();
+				WabitObject child = e.getChild();
+				String className = e.getChildType().getSimpleName();
+				String uuid = e.getChild().getUUID();
+
+				target.persistObject(parentUUID, className, uuid, e.getIndex());
+
+				// Persist any properties required for WabitObject constructor
+				if (child instanceof CellSetRenderer) {
+					target.persistProperty(uuid, "modifiedOlapQuery",
+							DataType.REFERENCE, ((CellSetRenderer) child)
+									.getOlapQuery().getUUID());
+
+				} else if (child instanceof ChartColumn) {
+					ChartColumn chartColumn = (ChartColumn) child;
+
+					target.persistProperty(uuid, "name", DataType.STRING,
+							chartColumn.getName());
+					target.persistProperty(uuid, "dataType", DataType.STRING,
+							chartColumn.getDataType().name());
+
+				} else if (child instanceof ChartRenderer) {
+					target.persistProperty(uuid, "chart", DataType.REFERENCE,
+							((ChartRenderer) child).getChart().getUUID());
+
+				} else if (child instanceof Guide) {
+					Guide guide = (Guide) child;
+
+					target.persistProperty(uuid, "axis", DataType.STRING, guide
+							.getAxis().name());
+					target.persistProperty(uuid, "offset", DataType.DOUBLE,
+							guide.getOffset());
+
+				} else if (child instanceof Layout) {
+					target.persistProperty(uuid, "name", DataType.STRING, child
+							.getName());
+
+				} else if (child instanceof OlapQuery) {
+					OlapQuery olapQuery = (OlapQuery) child;
+
+					target.persistProperty(uuid, "queryName", DataType.STRING,
+							olapQuery.getQueryName());
+					target.persistProperty(uuid, "catalogName",
+							DataType.STRING, olapQuery.getCatalogName());
+					target.persistProperty(uuid, "schemaName", DataType.STRING,
+							olapQuery.getSchemaName());
+					target.persistProperty(uuid, "cubeName", DataType.STRING,
+							olapQuery.getCubeName());
+
+				} else if (child instanceof Page) {
+					Page page = (Page) child;
+
+					target.persistProperty(uuid, "name", DataType.STRING, page
+							.getName());
+					target.persistProperty(uuid, "width", DataType.INTEGER,
+							page.getWidth());
+					target.persistProperty(uuid, "height", DataType.INTEGER,
+							page.getHeight());
+					target.persistProperty(uuid, "orientation",
+							DataType.STRING, page.getOrientation().name());
+
+				} else if (child instanceof WabitColumnItem) {
+					target.persistProperty(uuid, "name", DataType.STRING, child
+							.getName());
+
+				} else if (child instanceof WabitConstantItem) {
+					target.persistProperty(uuid, "name", DataType.STRING, child
+							.getName());
+
+				} else if (child instanceof WabitDataSource) {
+					target.persistProperty(uuid, "name", DataType.STRING, child
+							.getName());
+
+				} else if (child instanceof WabitJoin) {
+					SQLJoin sqlJoin = ((WabitJoin) child).getDelegate();
+
+					target.persistProperty(uuid, SQLJoin.LEFT_JOIN_CHANGED,
+							DataType.REFERENCE, sqlJoin.getLeftColumn()
+									.getUUID());
+					target.persistProperty(uuid, SQLJoin.RIGHT_JOIN_CHANGED,
+							DataType.REFERENCE, sqlJoin.getRightColumn());
+
+				} else if (child instanceof WabitOlapAxis) {
+					target.persistProperty(uuid, "ordinal", DataType.INTEGER,
+							((WabitOlapAxis) child).getOrdinal().axisOrdinal());
+
+				} else if (child instanceof WabitOlapDimension) {
+					target.persistProperty(uuid, "name", DataType.STRING, child
+							.getName());
+
+				} else if (child instanceof WabitOlapSelection) {
+					WabitOlapSelection wabitOlapSelection = (WabitOlapSelection) child;
+
+					target.persistProperty(uuid, "operator", DataType.STRING,
+							wabitOlapSelection.getOperator().name());
+					target.persistProperty(uuid, "uniqueMemberName",
+							DataType.STRING, wabitOlapSelection
+									.getUniqueMemberName());
+
+				} else if (child instanceof WabitTableContainer) {
+					WabitTableContainer wabitTableContainer = (WabitTableContainer) child;
+					TableContainer tableContainer = (TableContainer) wabitTableContainer
+							.getDelegate();
+
+					persistProperty(uuid, "name", DataType.STRING,
+							wabitTableContainer.getName());
+					persistProperty(uuid, "schema", DataType.STRING,
+							tableContainer.getSchema());
+					persistProperty(uuid, "catalog", DataType.STRING,
+							tableContainer.getCatalog());
+
+				}
+
+				System.out.println("wabitChildAdded. type: "
+						+ e.getChildType().getSimpleName() + ". source: "
+						+ e.getSource().getClass().getSimpleName());
+
 			} catch (WabitPersistenceException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -2610,12 +2826,32 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 
 		public void propertyChange(PropertyChangeEvent evt) {
+			WabitObject source = (WabitObject) evt.getSource();
+			String uuid = source.getUUID();
+			String propertyName = evt.getPropertyName();
+			Object oldValue = evt.getOldValue();
+			Object newValue = evt.getNewValue();
+
+			System.out.println("propertyChange. "
+					+ source.getClass().getSimpleName() + ". " + propertyName);
+
 			try {
-				// XXX Is this actually passing the correct UUID and DataType?
-				target.persistProperty(evt.getPropagationId().toString(), evt
-						.getPropertyName(), WabitPersister.DataType.valueOf(evt
-						.getNewValue().getClass().toString()), evt
-						.getOldValue(), evt.getNewValue());
+				if (newValue instanceof WabitObject) {
+					String newValueUUID = ((WabitObject) newValue).getUUID();
+
+					if (oldValue == null) {
+						target.persistProperty(uuid, propertyName,
+								DataType.REFERENCE, oldValue, newValueUUID);
+					} else {
+						target.persistProperty(uuid, propertyName,
+								DataType.REFERENCE, ((WabitObject) oldValue)
+										.getUUID(), newValueUUID);
+					}
+				} else {
+					target.persistProperty(uuid, propertyName,
+							WabitPersister.DataType.getTypeByClass(newValue
+									.getClass()), oldValue, newValue);
+				}
 			} catch (WabitPersistenceException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

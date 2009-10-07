@@ -375,7 +375,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	        if (!graphNode.equals(child) && !ancestors.contains(child)
 	                && !graphNode.equals(topAncestor)) {
 	            throw new ObjectDependentException("The child " + child.getName() + " being" +
-	            		" removed from " + this.getName() + " is depended on by " + graphNode.getName());
+	            		" removed from " + this.getName() + " is depended on by " + graphNode.getName() + " of type " + graphNode.getClass());
 	        }
 	    }
 	    

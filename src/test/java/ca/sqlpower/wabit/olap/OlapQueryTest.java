@@ -91,7 +91,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
         
 
         
-        query = new OlapQuery(null, connectionMapping, "GUI Query", "LOCALDB", "World", "World Countries");
+        query = new OlapQuery(null, connectionMapping, "Life Expectancy And GNP Correlation", "GUI Query", "LOCALDB", "World", "World Countries");
         query.setOlapDataSource(ds);
         
         connectionPool = new OlapConnectionPool(ds, 

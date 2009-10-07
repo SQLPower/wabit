@@ -53,9 +53,9 @@ public class ColumnInfo extends AbstractWabitObject{
 	public static final String HORIZONAL_ALIGNMENT_CHANGED = "horizontalAlignment";
 	public static final String COLUMN_INFO_ITEM_CHANGED = "columnInfoItem";
 	public static final String WIDTH_CHANGED = "width";
-	private static final String WILL_GROUP_OR_BREAK_CHANGED = "willGroupOrBreak";
-	private static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
-	private static final String COLUMN_ALIAS = "columnAlias";
+	public static final String WILL_GROUP_OR_BREAK_CHANGED = "willGroupOrBreak";
+	public static final String WILL_SUBTOTAL_CHANGED = "willSubtotal";
+	public static final String COLUMN_ALIAS = "columnAlias";
 	
 	private int width = DEFAULT_COL_WIDTH;
 

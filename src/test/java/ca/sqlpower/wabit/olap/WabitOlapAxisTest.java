@@ -102,7 +102,7 @@ public class WabitOlapAxisTest extends AbstractWabitObjectTest {
         
         Dimension dimension = connectionPool.getConnection().getSchema().getCubes().get("World Countries").getDimensions().get("Geography");
         
-        OlapQuery query = new OlapQuery(null, connectionMapping, "GUI Query", "LOCALDB", "World", "World Countries");
+        OlapQuery query = new OlapQuery(null, connectionMapping, "Life Expectancy And GNP Correlation", "GUI Query", "LOCALDB", "World", "World Countries");
         query.setOlapDataSource(ds);
         WabitOlapAxis rowAxis = new WabitOlapAxis(Axis.ROWS);
         WabitOlapAxis colAxis = new WabitOlapAxis(Axis.COLUMNS);

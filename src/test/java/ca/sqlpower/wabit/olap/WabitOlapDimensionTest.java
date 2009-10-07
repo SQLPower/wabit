@@ -189,7 +189,7 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
         //arbitrary member to exclude
         Member excludedMember = dimension.getDefaultHierarchy().getLevels().get(1).getMembers().get(0);
         
-        OlapQuery query = new OlapQuery(null, connectionMapping, "GUI Query", "LOCALDB", "World", "World Countries");
+        OlapQuery query = new OlapQuery(null, connectionMapping, "Life Expectancy And GNP Correlation", "GUI Query", "LOCALDB", "World", "World Countries");
         query.setOlapDataSource(ds);
         WabitOlapAxis rowAxis = new WabitOlapAxis(Axis.ROWS);
         WabitOlapAxis colAxis = new WabitOlapAxis(Axis.COLUMNS);

@@ -132,7 +132,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     public static OlapQuery copyOlapQuery(OlapQuery oldOlapQuery) throws SQLException, 
             QueryInitializationException {
         synchronized (oldOlapQuery) {
-            OlapQuery newQuery = new OlapQuery(null, oldOlapQuery.olapMapping, oldOlapQuery.getQueryName(), oldOlapQuery.getCatalogName(), oldOlapQuery.getSchemaName(), oldOlapQuery.getCubeName());
+            OlapQuery newQuery = new OlapQuery(null, oldOlapQuery.olapMapping, oldOlapQuery.getName(), oldOlapQuery.getQueryName(), oldOlapQuery.getCatalogName(), oldOlapQuery.getSchemaName(), oldOlapQuery.getCubeName());
             newQuery.setOlapDataSource(oldOlapQuery.getOlapDataSource());
             newQuery.setName(oldOlapQuery.getName());
             
@@ -284,7 +284,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * Creates a new, empty query with no set persistent object ID.
      */
     public OlapQuery(OlapConnectionMapping olapMapping) {
-        this(null, olapMapping, OLAP4J_QUERY_NAME, null, null, null);
+        this(null, olapMapping, "", OLAP4J_QUERY_NAME, null, null, null);
     }
     
     /**
@@ -292,9 +292,10 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * when it's saved. This constructor is only of particular use to the
      * persistence layer.
      */
-    public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String queryName, String catalogName, String schemaName, String cubeName) {
+    public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String name, String queryName, String catalogName, String schemaName, String cubeName) {
         super(uuid);
         this.olapMapping = olapMapping;
+        this.setName(name);
 		this.queryName = queryName;
 		this.catalogName = catalogName;
 		this.schemaName = schemaName;
