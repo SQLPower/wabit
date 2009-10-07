@@ -54,6 +54,22 @@ public interface WabitPersister {
 		public Class getRepresentation() {
 			return representation;
 		}
+		
+		/**
+		 * Returns a DataType that represents the given class type. The class given
+		 * can be null
+		 */
+		public static DataType getTypeByClass(Class<?> lookupValue) {
+			for (DataType type : values()) {
+				if ((type.getRepresentation() == null && lookupValue == null) || 
+						(type.getRepresentation() != null && 
+								type.getRepresentation().equals(lookupValue))) {
+					return type;
+				}
+			}
+			throw new IllegalArgumentException("The class type " + lookupValue.getName() + 
+					" does not exist as a type in this DataType enum");
+		}
 	}
 
 	/**
@@ -120,8 +136,15 @@ public interface WabitPersister {
 	 * the Persister representing the master copy of the WabitObject.
 	 * 
 	 * @param uuid
+	 *            The UUID of the {@link WabitObject} in which to set the
+	 *            property
 	 * @param propertyName
+	 *            The JavaBeans property name of the property that changed, as
+	 *            it would be discovered by the java.beans.Introspector class
+	 * @param propertyType
+	 *            The type, and Java representation, of this property
 	 * @param newValue
+	 *            The new value to set for the property
 	 * @throws WabitPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the property. It can be used to wrap the
@@ -154,6 +177,8 @@ public interface WabitPersister {
 	 *            (ex. WabitWorkspace)
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject} to actually persist
+	 * @param index
+	 *            The index of the {@link WabitObject} in its parents' list of children
 	 * @throws WabitPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
@@ -166,7 +191,7 @@ public interface WabitPersister {
 	 *             <li>A WabitObject with the given parent UUID does not exist</li>
 	 *             </ul>
 	 */
-	public void persistObject(String parentUUID, String type, String uuid) throws WabitPersistenceException;
+	public void persistObject(String parentUUID, String type, String uuid, int index) throws WabitPersistenceException;
 
 	/**
 	 * Removes a WabitObject from persistent storage
