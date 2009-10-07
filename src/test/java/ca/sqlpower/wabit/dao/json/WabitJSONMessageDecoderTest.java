@@ -55,7 +55,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				fail("Expected to call begin() but instead called persistObject()");
 			}
@@ -101,7 +101,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				fail("Expected to call commit() but instead called persistObject()");
 			}
@@ -147,7 +147,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				// We expect this method to get called.			
 			}
@@ -194,7 +194,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				// We expect this method to get called.			
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				fail("Expected to call persistProperty() but instead called persistObject()");
 			}
@@ -244,7 +244,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				fail("Expected to call persistProperty() without oldValue but instead called persistProperty() with oldValue");
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				fail("Expected to call persistProperty() but instead called persistObject()");
 			}
@@ -293,7 +293,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				fail("Expected to call removeObject() but instead called persistProperty()");
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				fail("Expected to call removeObject() but instead called removeObject()");			
 			}
@@ -340,7 +340,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 				
 			}
 			
-			public void persistObject(String parentUUID, String type, String uuid)
+			public void persistObject(String parentUUID, String type, String uuid, int index)
 					throws WabitPersistenceException {
 				fail("Expected to call rollback() but instead called persistObject()");
 			}

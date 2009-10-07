@@ -25,6 +25,7 @@ import org.json.JSONObject;
 import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * A {@link WabitPersister} implementation that serializes
@@ -85,7 +86,7 @@ public class WabitJSONPersister implements WabitPersister {
 		transactionCount--;
 	}
 
-	public void persistObject(String parentUUID, String type, String uuid)
+	public void persistObject(String parentUUID, String type, String uuid, int index)
 			throws WabitPersistenceException {
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -93,6 +94,7 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("parentUUID", parentUUID);
 			jsonObject.put("type", type);
 			jsonObject.put("uuid", uuid);
+			jsonObject.put("index", index);
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
@@ -160,5 +162,13 @@ public class WabitJSONPersister implements WabitPersister {
 	
 	public MessageSender<JSONObject> getMessageSender() {
 		return messageSender;
+	}
+	
+	// Dummy test method that sends messages to a local test server
+	public static void main(String[] args) throws WabitPersistenceException {
+		String wabitWorkspaceUUID = "12345";
+		WabitServerInfo serverInfo = new WabitServerInfo("localhost", "localhost", 8080, "/wabit-enterprise");
+		WabitJSONPersister persister = new WabitJSONPersister(new JSONHttpMessageSender(serverInfo, wabitWorkspaceUUID));
+		persister.begin();
 	}
 }

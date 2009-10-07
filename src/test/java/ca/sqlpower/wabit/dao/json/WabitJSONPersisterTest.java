@@ -85,6 +85,7 @@ public class WabitJSONPersisterTest extends TestCase {
 					assertEquals(content.getString("parentUUID"), "parent");
 					assertEquals(content.getString("uuid"), "uuid");
 					assertEquals(content.getString("type"), "type");
+					assertEquals(content.getInt("index"), 0);
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
@@ -92,7 +93,7 @@ public class WabitJSONPersisterTest extends TestCase {
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
-		persister.persistObject("parent", "type", "uuid");
+		persister.persistObject("parent", "type", "uuid", 0);
 	}
 
 	public void testChangeProperty() throws Exception {

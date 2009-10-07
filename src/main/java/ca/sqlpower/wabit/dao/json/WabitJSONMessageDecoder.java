@@ -100,7 +100,8 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 			case persistObject:
 				parentUUID = jsonObject.getString("parentUUID");
 				String type = jsonObject.getString("type");
-				persister.persistObject(parentUUID, type, uuid);
+				int index = jsonObject.getInt("index");
+				persister.persistObject(parentUUID, type, uuid, index);
 				break;
 			case changeProperty:
 				parentUUID = jsonObject.getString("parentUUID");
