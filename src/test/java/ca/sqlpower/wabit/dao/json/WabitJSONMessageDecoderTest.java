@@ -166,6 +166,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("uuid", "uuid");
 		json.put("parentUUID", "parent");
 		json.put("type", "type");
+		json.put("index", 0);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
 		decoder.decode(json.toString());
