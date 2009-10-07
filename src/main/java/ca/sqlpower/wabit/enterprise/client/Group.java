@@ -29,11 +29,11 @@ import ca.sqlpower.wabit.WabitObject;
 public class Group extends AbstractWabitObject {
 
     private final List<Grant> grants;
-    private final List<User> members;
+    private final List<GroupMember> members;
 
     public Group() {
         this.grants = new ArrayList<Grant>();
-        this.members = new ArrayList<User>();
+        this.members = new ArrayList<GroupMember>();
     }
 
     @Override
@@ -78,7 +78,7 @@ public class Group extends AbstractWabitObject {
         return grants;
     }
 
-    public List<User> getMembers() {
+    public List<GroupMember> getMembers() {
         return members;
     }
     public void addGrant(Grant grant) {
@@ -94,16 +94,16 @@ public class Group extends AbstractWabitObject {
         }
     }
     
-    public void addMember(User user) {
-        this.members.add(user);
-        fireChildAdded(User.class, user, this.members.indexOf(user));
+    public void addMember(GroupMember member) {
+        this.members.add(member);
+        fireChildAdded(GroupMember.class, member, this.members.indexOf(member));
     }
     
-    public void removeMember(User user) {
-        if (this.members.contains(user)) {
-            int index = this.members.indexOf(user);
-            this.members.remove(user);
-            fireChildRemoved(User.class, user, index);
+    public void removeMember(GroupMember member) {
+        if (this.members.contains(member)) {
+            int index = this.members.indexOf(member);
+            this.members.remove(member);
+            fireChildRemoved(GroupMember.class, member, index);
         }
     }
 }
