@@ -23,7 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -31,6 +31,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
@@ -40,6 +41,8 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
@@ -127,11 +130,18 @@ public class WabitServerSession extends WabitSessionImpl {
      * @return
      * @throws IOException
      * @throws URISyntaxException
+     * @throws JSONException 
      */
-    public static List<String> getWorkspaceNames(HttpClient httpClient, WabitServerInfo serviceInfo) throws IOException, URISyntaxException {
-        String responseBody = executeServerRequest(httpClient, serviceInfo, "workspace", new BasicResponseHandler());
-        logger.debug("Workspace list:\n" + responseBody);
-        List<String> workspaces = Arrays.asList(responseBody.split("\r?\n"));
+    public static List<String> getWorkspaceNames(HttpClient httpClient, WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
+        HttpUriRequest request = new HttpHead(getServerURI(serviceInfo, "workspaces"));
+        String responseBody = httpClient.execute(request, new BasicResponseHandler());
+        JSONArray workspaceArray;
+        List<String> workspaces = new ArrayList<String>();
+		workspaceArray = new JSONArray(responseBody);
+		logger.debug("Workspace list:\n" + responseBody);
+		for (int i = 0; i < workspaceArray.length(); i++) {
+			workspaces.add(workspaceArray.getString(i));
+		}
         return workspaces;
     }
     
