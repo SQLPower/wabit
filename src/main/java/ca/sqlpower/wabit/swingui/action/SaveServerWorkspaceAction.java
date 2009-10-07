@@ -40,6 +40,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONException;
 
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.DataEntryPanel;
@@ -94,7 +95,7 @@ public class SaveServerWorkspaceAction extends AbstractAction {
         private JList existingFileList;
         private HttpClient httpClient;
 
-        SaveOnServerPanel() throws IOException, URISyntaxException {
+        SaveOnServerPanel() throws IOException, URISyntaxException, JSONException {
             HttpParams params = new BasicHttpParams();
             HttpConnectionParams.setConnectionTimeout(params, 2000);
             httpClient = new DefaultHttpClient(params);
