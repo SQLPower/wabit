@@ -29,8 +29,11 @@ import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
+import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
+import ca.sqlpower.testutil.StubDataSourceCollection;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -48,6 +51,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         workspace = new WabitWorkspace();
+        workspace.setName("ws");
         WabitSession session = new StubWabitSession(new StubWabitSessionContext());
         workspace.setSession(session);
     }
@@ -255,6 +259,29 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
             uniqueUUIDs.add(o.getUUID());
         }
         
+    }
+    
+    /**
+     * Test a query can be added to and removed from a workspace with the
+     * addChild method. Also checks that the index is correct.
+     * @throws Exception
+     */
+    public void testAddAndRemoveQuery() throws Exception {
+        final JDBCDataSource spds = new JDBCDataSource(new StubDataSourceCollection<SPDataSource>());
+        spds.setName("ds");
+        WabitDataSource ds = new WabitDataSource(spds);
+        workspace.addDataSource(ds);
+        
+        QueryCache q = new QueryCache(new StubSQLDatabaseMapping());
+        q.setName("query");
+        
+        workspace.addChild(q, 1);
+        
+        assertTrue(workspace.getChildren().contains(q));
+        
+        workspace.removeChild(q);
+        
+        assertFalse(workspace.getChildren().contains(q));
     }
 
 }

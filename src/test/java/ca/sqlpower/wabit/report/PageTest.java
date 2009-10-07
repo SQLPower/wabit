@@ -128,9 +128,12 @@ public class PageTest extends AbstractWabitObjectTest {
      */
     public void testAddAndRemoveGuide() throws Exception {
         Guide guide = new Guide(Axis.HORIZONTAL, 10);
+        ContentBox box = new ContentBox();
+        page.addContentBox(box);
         
-        page.addChild(guide, 0);
+        page.addChild(guide, 1);
         assertTrue(page.getChildren().contains(guide));
+        assertEquals(guide, page.getChildren().get(1));
         
         page.removeChild(guide);
         assertFalse(page.getChildren().contains(guide));

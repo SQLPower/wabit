@@ -696,26 +696,27 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     @Override
     protected boolean addChildImpl(WabitObject child, int index) {
+        int innerIndex = index - childPositionOffset(child.getClass());
         if (child instanceof WabitDataSource) {
-            addDataSource((WabitDataSource) child, index);
+            addDataSource((WabitDataSource) child, innerIndex);
             return true;
         } else if (child instanceof QueryCache) {
-            addQuery((QueryCache) child, session, index);
+            addQuery((QueryCache) child, session, innerIndex);
             return true;
         } else if (child instanceof OlapQuery) {
-            addOlapQuery((OlapQuery) child, index);
+            addOlapQuery((OlapQuery) child, innerIndex);
             return true;
         } else if (child instanceof WabitImage) {
-            addImage((WabitImage) child, index);
+            addImage((WabitImage) child, innerIndex);
             return true;
         } else if (child instanceof Chart) {
-            addChart((Chart) child, index);
+            addChart((Chart) child, innerIndex);
             return true;
         } else if (child instanceof Template) {
-            addTemplate((Template) child, index);
+            addTemplate((Template) child, innerIndex);
             return true;
         } else if (child instanceof Report) {
-            addReport((Report) child, index);
+            addReport((Report) child, innerIndex);
             return true;
         } else {
             throw new AssertionError("Adding child " + child.getName() + " of type " + child.getClass() + 

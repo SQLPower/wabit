@@ -398,7 +398,7 @@ public class Page extends AbstractWabitObject {
         }
         addme.setParent(this);
         setUniqueName(addme, addme.getName());
-        guides.add(addme);
+        guides.add(index, addme);
         fireChildAdded(Guide.class, addme, index);
     }
 
@@ -590,7 +590,7 @@ public class Page extends AbstractWabitObject {
     
     @Override
     protected boolean addChildImpl(WabitObject child, int index) {
-        int innerIndex = childPositionOffset(child.getClass());
+        int innerIndex = index - childPositionOffset(child.getClass());
         if (child instanceof Guide) {
             addGuide((Guide) child, innerIndex);
         } else if (child instanceof ContentBox) {
