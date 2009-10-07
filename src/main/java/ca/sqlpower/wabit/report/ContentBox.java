@@ -233,13 +233,13 @@ public class ContentBox extends AbstractWabitObject {
         
         //Walk up all of the interfaces to see if the given class type implements
         //the interface we are looking for.
-        Set<Class<?>> interfacesOfChildType = new HashSet<Class<?>>();
-        Queue<Class<?>> interfaceQueue = new LinkedList<Class<?>>((Collection<? extends Class<?>>) Arrays.asList(childType.getInterfaces())); 
+        Set<Class> interfacesOfChildType = new HashSet<Class>();
+        Queue<Class> interfaceQueue = new LinkedList<Class>((Collection<Class>) Arrays.asList(childType.getInterfaces())); 
         while (!interfaceQueue.isEmpty()) {
-            Class<?> parentInterface = interfaceQueue.remove();
+            Class parentInterface = interfaceQueue.remove();
             if (!interfacesOfChildType.contains(parentInterface)) {
                 interfacesOfChildType.add(parentInterface);
-                interfaceQueue.addAll((Collection<? extends Class<?>>) Arrays.asList(parentInterface.getInterfaces()));
+                interfaceQueue.addAll((Collection<Class>) Arrays.asList(parentInterface.getInterfaces()));
             }
         }
         
