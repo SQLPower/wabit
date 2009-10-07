@@ -283,12 +283,31 @@ public class Page extends AbstractWabitObject {
             setHeight(oldWidth);
         }
     }
-    
+
+    /**
+     * Adds a content box to this page at the end of the list of content boxes.
+     * 
+     * @param addme
+     *            The content box to add.
+     */
     public void addContentBox(ContentBox addme) {
+        addContentBox(addme, contentBoxes.size());
+    }
+
+    /**
+     * Adds a content box to this page at the given index in the list of content
+     * boxes.
+     * 
+     * @param addme
+     *            The content box to add.
+     * @param index
+     *            The index to add the content box at. This cannot be greater
+     *            than the number of content boxes currently in the page.
+     */
+    public void addContentBox(ContentBox addme, int index) {
         if (addme.getParent() != null) {
             throw new IllegalStateException("That content box already belongs to a different page");
         }
-        int index = contentBoxes.size() + childPositionOffset(ContentBox.class);
         addme.setParent(this);
         setUniqueName(addme, addme.getName());
         contentBoxes.add(addme);
@@ -352,12 +371,31 @@ public class Page extends AbstractWabitObject {
     public List<ContentBox> getContentBoxes() {
         return Collections.unmodifiableList(contentBoxes);
     }
-    
+
+    /**
+     * Adds a guide to the end of the list of guides.
+     * 
+     * @param addme
+     *            The guide to add as a child of this page.
+     */
     public void addGuide(Guide addme) {
+        addGuide(addme, guides.size());
+    }
+
+    /**
+     * Adds a guide to the list of guides at the given index.
+     * 
+     * @param addme
+     *            The guide to add to this page.
+     * @param index
+     *            The index in the list of guides to add this guide to. This
+     *            cannot be greater than the number of guides currently in the
+     *            page.
+     */
+    public void addGuide(Guide addme, int index) {
         if (addme.getParent() != null) {
             throw new IllegalStateException("That guide already belongs to a different page");
         }
-        int index = guides.size();
         addme.setParent(this);
         setUniqueName(addme, addme.getName());
         guides.add(addme);
@@ -548,5 +586,20 @@ public class Page extends AbstractWabitObject {
             throw new IllegalArgumentException("Cannot remove children of type " 
                     + child.getClass() + " from " + getName());
         }
+    }
+    
+    @Override
+    protected boolean addChildImpl(WabitObject child, int index) {
+        int innerIndex = childPositionOffset(child.getClass());
+        if (child instanceof Guide) {
+            addGuide((Guide) child, innerIndex);
+        } else if (child instanceof ContentBox) {
+            addContentBox((ContentBox) child, innerIndex);
+        } else {
+            throw new AssertionError("The child " + child.getName() + " of type " + 
+                    child.getClass() + " should be a valid type for " + getName() + 
+                    " of type " + getClass());
+        }
+        return true;
     }
 }

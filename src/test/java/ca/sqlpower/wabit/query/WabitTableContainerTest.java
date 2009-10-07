@@ -23,12 +23,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitTableContainer;
 
@@ -56,5 +59,5 @@ public class WabitTableContainerTest extends AbstractWabitObjectTest {
     public WabitObject getObjectUnderTest() {
         return container;
     }
-
+    
 }

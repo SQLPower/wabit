@@ -135,7 +135,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             if (method.getName().matches("add.*") &&
                     paramTypes.length == 1 &&
                     WabitObject.class.isAssignableFrom(paramTypes[0])) {
-                
                 int oldAddCount = listener.getAddedCount();
                 int oldRemoveCount = listener.getRemovedCount();
                 Object newChild = valueMaker.makeNewValue(paramTypes[0], null, method.getName());

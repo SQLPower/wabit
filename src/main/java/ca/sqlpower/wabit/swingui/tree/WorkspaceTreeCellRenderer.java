@@ -33,7 +33,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
-import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -44,7 +43,6 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitQueryItem;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -222,22 +220,6 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
             } else if (wo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
-            } else if (wo instanceof WabitQueryItem) {
-                WabitQueryItem item = (WabitQueryItem) wo;
-                OrderByArgument orderBy = item.getItem().getDelegate().getOrderBy();
-                switch (orderBy) {
-                    case ASC:
-                        r.setIcon(ComposedIcon.getInstance(SQL_COLUMN_ICON, SORT_ASC_ARROW));
-                        break;
-                    case DESC:
-                        r.setIcon(ComposedIcon.getInstance(SQL_COLUMN_ICON, SORT_DESC_ARROW));
-                        break;
-                    case NONE:
-                        r.setIcon(SQL_COLUMN_ICON);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown sort order " + orderBy);
-                }
             }
 
             if (wo instanceof WabitBackgroundWorker) {

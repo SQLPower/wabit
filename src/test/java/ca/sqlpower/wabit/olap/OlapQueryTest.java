@@ -34,6 +34,10 @@ import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
+import ca.sqlpower.query.ItemContainer;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
@@ -42,6 +46,7 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitTableContainer;
 
 public class OlapQueryTest extends AbstractWabitObjectTest {
 

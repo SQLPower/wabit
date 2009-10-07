@@ -33,8 +33,6 @@ import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitQueryOrderByItem;
-import ca.sqlpower.wabit.WabitQuerySelectedItem;
 import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -100,8 +98,6 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitConstantItem.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitColumnItem.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitJoin.class)));
-        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitQuerySelectedItem.class)));
-        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitQueryOrderByItem.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitOlapAxis.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitOlapDimension.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitOlapInclusion.class)));

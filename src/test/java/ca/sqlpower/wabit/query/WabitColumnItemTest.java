@@ -39,5 +39,5 @@ public class WabitColumnItemTest extends AbstractWabitObjectTest {
     public WabitObject getObjectUnderTest() {
         return columnItem;
     }
-
+    
 }

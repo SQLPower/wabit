@@ -163,22 +163,75 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	 * wrapped {@link QueryAxis}.
 	 */
 	public void addDimension(WabitOlapDimension dimension) {
+	    addDimension(dimension, dimensions.size());
+	}
+
+    /**
+     * Adds an exclusion to this axis at the given dimension. Note that this
+     * will not affect the wrapped {@link QueryAxis}.
+     */
+	public void addDimension(WabitOlapDimension dimension, int index) {
 		logger.debug("Adding dimension " + dimension.getName() + " to Axis " + getName() + " at " + ordinal);
 		
-		dimensions.add(dimension);
+		dimensions.add(index, dimension);
 		dimension.setParent(this);
-		fireChildAdded(WabitOlapDimension.class, dimension, dimensions.size() - 1);
+		fireChildAdded(WabitOlapDimension.class, dimension, index);
 	}
 	
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
-		int index = dimensions.indexOf(child);
-		dimensions.remove(index);
-		queryAxis.removeDimension(((WabitOlapDimension) child).getDimension());
-		fireTransactionStarted("Removing Child");
-		fireChildRemoved(WabitOlapDimension.class, child, index);
-		fireTransactionEnded();
-		return true;
+	    if (initialized) {
+	        WabitOlapDimension dimension = (WabitOlapDimension) child;
+	        
+	        if (!queryAxis.getDimensions().contains(dimension.getDimension())) return false;
+	        
+	        try {
+	            fireTransactionStarted("Removing " + child.getName() + " from axis " + getName());
+                getParent().removeDimension(dimension.getDimension().getDimension(), 
+                        queryAxis.getLocation());
+                fireTransactionEnded();
+                return true;
+            } catch (QueryInitializationException e) {
+                fireTransactionRollback(e.getMessage());
+                throw new IllegalStateException("The query's axis " + ordinal + " has been initialized " +
+                		"but the query just had an error during initialization.", e);
+            } catch (RuntimeException e) {
+                fireTransactionRollback(e.getMessage());
+                throw e;
+            }
+	    } else {
+	        int index = dimensions.indexOf(child);
+	        boolean success = dimensions.remove(child);
+	        if (success) {
+	            fireChildRemoved(WabitOlapDimension.class, child, index);
+	        }
+	        return success;
+	    }
+	}
+	
+	@Override
+	protected boolean addChildImpl(WabitObject child, int index) {
+	    WabitOlapDimension dimension = (WabitOlapDimension) child;
+	    if (initialized) {
+	        try {
+	            fireTransactionStarted("Adding " + child.getName() + " to axis " + 
+	                    getName() + " at index " + index);
+	            addDimension(dimension, index);
+                getParent().addDimensionToAxis(index, ordinal, dimension.getDimension());
+                fireTransactionEnded();
+            } catch (QueryInitializationException e) {
+                fireTransactionRollback(e.getMessage());
+                throw new IllegalStateException("The axis " + ordinal + " has been initialized " +
+                		"but the query just had an error during initialization.", e);
+            } catch (RuntimeException e) {
+                fireTransactionRollback(e.getMessage());
+                throw e;
+            }
+            return true;
+	    } else {
+	        addDimension(dimension, index);
+	        return true;
+	    }
 	}
 
 	public boolean allowsChildren() {
@@ -277,5 +330,10 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	 */
 	QueryAxis getQueryAxis() {
 		return queryAxis;
+	}
+	
+	@Override
+	public OlapQuery getParent() {
+	    return (OlapQuery) super.getParent();
 	}
 }

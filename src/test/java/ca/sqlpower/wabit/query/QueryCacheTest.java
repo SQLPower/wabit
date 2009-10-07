@@ -25,16 +25,18 @@ import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.QueryChangeAdapter;
+import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitContainer;
 import ca.sqlpower.wabit.WabitItem;
+import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitQueryItem;
 import ca.sqlpower.wabit.WabitTableContainer;
 
 public class QueryCacheTest extends AbstractWabitObjectTest {
@@ -57,8 +59,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		queryCache = new QueryCache(new StubWabitSessionContext() {
-		});
+		queryCache = new QueryCache(new StubWabitSessionContext());
 		queryCache.setName("Main query");
 	}
 	
@@ -70,7 +71,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	public void testAliasListener() throws Exception {
 		Item item = new StringItem("ItemName");
 		queryCache.addItem(item);
-		item.setSelected(true);
+		queryCache.selectItem(item);
 		CountingQueryChangeListener listener = new CountingQueryChangeListener();
 		queryCache.addQueryChangeListener(listener);
 		String newAlias = "Alias test.";
@@ -87,7 +88,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		Item item = new StringItem("ItemName");
 		Container container = new ItemContainer("Container");
 		container.addItem(item);
-		item.setSelected(false);
+		item.setSelected(null);
 		
 		CountingWabitListener listener = new CountingWabitListener();
 		queryCache.addWabitListener(listener);
@@ -112,7 +113,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	    Item item = new StringItem("ItemName");
         Container container = new ItemContainer("Container");
         container.addItem(item);
-        item.setSelected(false);
+        item.setSelected(null);
         
         CountingWabitListener listener = new CountingWabitListener();
         queryCache.addWabitListener(listener);
@@ -133,55 +134,55 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
         assertEquals(1, evt.getIndex());
     }
 	
-	/**
-	 * Tests selecting and unselecting an item fires the correct child events
-	 * and adds the correct child wrapper to the query cache.
-	 */
-	public void testItemSelectionChanged() throws Exception {
-        Item item = new StringItem("ItemName");
-        item.setSelected(false);
-        Container container = new ItemContainer("Container");
-        container.addItem(item);
-        Item item2 = new StringItem("item 2");
-        item2.setSelected(false);
-        container.addItem(item2);
-        Item item3 = new StringItem("item 3");
-        item3.setSelected(false);
-        container.addItem(item3);
-        
-        CountingWabitListener listener = new CountingWabitListener();
-        queryCache.addWabitListener(listener);
-        queryCache.addTable(container);
-        
-        assertEquals(1, listener.getAddedCount());
-        item2.setSelected(true);
-        
-        assertEquals(2, listener.getAddedCount());
-        WabitChildEvent evt = listener.getLastEvent();
-        assertEquals(queryCache, evt.getSource());
-        assertEquals(item2, ((WabitQueryItem) evt.getChild()).getItem().getDelegate());
-        assertEquals(2, evt.getIndex());
-        
-        item3.setSelected(true);
-        assertEquals(3, listener.getAddedCount());
-        evt = listener.getLastEvent();
-        assertEquals(queryCache, evt.getSource());
-        assertEquals(item3, ((WabitQueryItem) evt.getChild()).getItem().getDelegate());
-        assertEquals(3, evt.getIndex());
-        
-        item2.setSelected(false);
-        assertEquals(1, listener.getRemovedCount());
-        evt = listener.getLastEvent();
-        assertEquals(queryCache, evt.getSource());
-        assertEquals(item2, ((WabitQueryItem) evt.getChild()).getItem().getDelegate());
-        assertEquals(2, evt.getIndex());
-        
-        item3.setSelected(false);
-        assertEquals(2, listener.getRemovedCount());
-        evt = listener.getLastEvent();
-        assertEquals(queryCache, evt.getSource());
-        assertEquals(item3, ((WabitQueryItem) evt.getChild()).getItem().getDelegate());
-        assertEquals(2, evt.getIndex());
-    }
 	
+    /**
+     * Tests the addChild and removeChild methods on an OlapQuery can
+     * add and remove a container successfully.
+     */
+    public void testAddAndRemoveContainer() throws Exception {
+        Container tableContainer = new ItemContainer("container");
+        Item item1 = new StringItem("item1");
+        Item item2 = new StringItem("item2");
+        tableContainer.addItem(item1);
+        tableContainer.addItem(item2);
+        WabitTableContainer container = new WabitTableContainer(tableContainer);
+        
+        queryCache.addChild(container, queryCache.childPositionOffset(container.getClass()));
+        
+        assertTrue(queryCache.getFromTableList().contains(container.getDelegate()));
+        
+        queryCache.removeChild(container);
+        
+        assertFalse(queryCache.getFromTableList().contains(container.getDelegate()));
+    }
+    
+    public void testAddAndRemoveJoin() throws Exception {
+        Container tableContainer = new ItemContainer("container");
+        Item item1 = new StringItem("item1");
+        Item item2 = new StringItem("item2");
+        tableContainer.addItem(item1);
+        tableContainer.addItem(item2);
+        queryCache.addTable(tableContainer);
+        Container tableContainer2 = new ItemContainer("container2");
+        Item item3 = new StringItem("item3");
+        Item item4 = new StringItem("item4");
+        tableContainer2.addItem(item3);
+        tableContainer2.addItem(item4);
+        queryCache.addTable(tableContainer2);
+        SQLJoin join = new SQLJoin(item1, item3);
+        
+        WabitJoin wabitJoin = new WabitJoin(queryCache, join);
+        
+        assertFalse(queryCache.getJoins().contains(join));
+        
+        queryCache.addChild(wabitJoin, queryCache.childPositionOffset(wabitJoin.getClass()));
+        
+        assertTrue(queryCache.getJoins().contains(join));
+        
+        queryCache.removeChild(wabitJoin);
+        
+        assertFalse(queryCache.getJoins().contains(join));
+        
+    }
+
 }

@@ -86,13 +86,10 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.OrderByItemEvent;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.QueryImpl;
-import ca.sqlpower.query.QueryItem;
 import ca.sqlpower.query.SQLGroupFunction;
-import ca.sqlpower.query.SelectedItemEvent;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -489,21 +486,6 @@ public class QueryPanel implements WabitPanel {
             inCompoundEdit = true;
         }
 
-		public void selectedItemAdded(SelectedItemEvent evt) {
-			executeQuery();
-		}
-
-		public void selectedItemRemoved(SelectedItemEvent evt) {
-			executeQuery();			
-		}
-
-        public void orderByItemAdded(OrderByItemEvent evt) {
-            executeQuery();
-        }
-
-        public void orderByItemRemoved(OrderByItemEvent evt) {
-            executeQuery();
-        }
     };
     
 	/**
@@ -545,7 +527,7 @@ public class QueryPanel implements WabitPanel {
 					i++;
 				}
 				logger.debug("Received column width change on column " + i + " the new width is " + (Integer) evt.getNewValue());
-				Item resizedItem = queryCache.getSelectedColumns().get(i).getDelegate();
+				Item resizedItem = queryCache.getSelectedColumns().get(i);
 				resizedItem.setColumnWidth((Integer) evt.getNewValue());
 				
 			}
@@ -1098,7 +1080,7 @@ public class QueryPanel implements WabitPanel {
 					havingLabel.setVisible(false);
 				}
 				for (int i = 0; i < renderPanel.getComboBoxes().size(); i++) {
-				    final SQLGroupFunction groupBy = cache.getSelectedColumns().get(i).getDelegate().getGroupBy();
+				    final SQLGroupFunction groupBy = cache.getSelectedColumns().get(i).getGroupBy();
 					if (!groupBy.equals(SQLGroupFunction.GROUP_BY)) {
                         String groupByAggregate = groupBy.getGroupingName();
 						renderPanel.getComboBoxes().get(i).setSelectedItem(groupByAggregate);
@@ -1106,15 +1088,14 @@ public class QueryPanel implements WabitPanel {
 				}
 
 				for (int i = 0; i < renderPanel.getTextFields().size(); i++) {
-					String havingText = cache.getSelectedColumns().get(i).getDelegate().getHaving();
+					String havingText = cache.getSelectedColumns().get(i).getHaving();
 					if (havingText != null) {
 						renderPanel.getTextFields().get(i).setText(havingText);
 					}
 				}
 				
 				LinkedHashMap<Integer, Integer> columnSortMap = new LinkedHashMap<Integer, Integer>();
-				for (QueryItem column : cache.getOrderByList()) {
-				    Item item = column.getDelegate();
+				for (Item item : cache.getOrderByList()) {
 					int columnIndex = cache.indexOfSelectedItem(item);
 					if (columnIndex < 0) {
 					    throw new IllegalStateException("Cannot find " + item.getName() + " in " + cache.getName());
@@ -1133,7 +1114,7 @@ public class QueryPanel implements WabitPanel {
 				renderPanel.setSortingStatus(columnSortMap);
 				
 				for (int i = 0; i < t.getColumnCount(); i++) {
-					Integer width = cache.getSelectedColumns().get(i).getDelegate().getColumnWidth();
+					Integer width = cache.getSelectedColumns().get(i).getColumnWidth();
 					logger.debug("Width in cache for column " + i + " is " + width);
 					if (width != null) {
 						t.getColumnModel().getColumn(i).setPreferredWidth(width);

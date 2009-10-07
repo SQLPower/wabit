@@ -44,12 +44,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.olap4j.query.Selection.Operator;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
-
-import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.QueryItem;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
@@ -72,8 +67,6 @@ import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitQueryOrderByItem;
-import ca.sqlpower.wabit.WabitQuerySelectedItem;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -108,6 +101,9 @@ import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
+
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * This class represents a Data Access Object for {@link WabitSession}s.
@@ -409,9 +405,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitConstantsContainer.class
 					.getSimpleName())) {
-				Container container = ((QueryCache) parent)
-						.newConstantsContainer(uuid);
-				wo = new WabitConstantsContainer(container);
+				wo = ((QueryCache) parent).getWabitConstantsContainer();
 
 			} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
@@ -475,11 +469,6 @@ public class WabitSessionPersister implements WabitPersister {
 				((WabitOlapDimension) parent)
 						.addInclusion((WabitOlapInclusion) wo);
 
-			} else if (type.equals(WabitQueryOrderByItem.class.getSimpleName())) {
-				// TODO
-			} else if (type
-					.equals(WabitQuerySelectedItem.class.getSimpleName())) {
-				// TODO
 			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 				String schema = getPropertyAndRemove(uuid, "schema").toString();
@@ -923,10 +912,6 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof WabitOlapSelection) {
 				propertyValue = getWabitOlapSelectionProperty(
 						(WabitOlapSelection) wo, propertyName);
-			} else if (wo instanceof WabitQueryOrderByItem) {
-				// TODO
-			} else if (wo instanceof WabitQuerySelectedItem) {
-				// TODO
 			} else if (wo instanceof WabitTableContainer) {
 				propertyValue = getWabitTableContainerProperty(
 						(WabitTableContainer) wo, propertyName);
@@ -2408,9 +2393,9 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else if (propertyName.equals("column-info-item-id")) {
 			boolean found = false;
-			for (QueryItem queryItem : ((ResultSetRenderer) colInfo.getParent())
+			for (Item queryItem : ((ResultSetRenderer) colInfo.getParent())
 					.getQuery().getSelectedColumns()) {
-				Item item = queryItem.getDelegate();
+				Item item = queryItem;
 				if (item.getUUID().equals(newValue.toString())) {
 					colInfo.setColumnInfoItem(item);
 					found = true;

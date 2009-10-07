@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryDimension;
@@ -42,7 +43,13 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	
 	private static final Logger logger = Logger
 			.getLogger(WabitOlapDimension.class);
-	
+
+    /**
+     * The hierarchy used by this dimension in the query.
+     * <p> 
+     * XXX This is currently null if the query was not initialized because it 
+     * was created instead of loaded.
+     */
 	private Hierarchy hierarchy; // Can't make final, because it is set in init.
 	
 	private QueryDimension dimension;
@@ -58,6 +65,8 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	 */
 	public WabitOlapDimension(WabitOlapDimension dimension) {
 		this(dimension.getName());
+		this.dimension = dimension.getDimension();
+		this.hierarchy = dimension.getHierarchy();
 		
 		for (WabitOlapInclusion inclusion : dimension.inclusions) {
 			addInclusion(new WabitOlapInclusion(inclusion));
@@ -105,6 +114,8 @@ public class WabitOlapDimension extends AbstractWabitObject {
 			dimension.exclude(exclusion.getOperator(), query.findMember(exclusion.getUniqueMemberName()));
 			exclusion.init(query);
 		}
+		//XXX what if there are no inclusions? possibly occurrs when a query is saved
+		//with an empty axis?
 		if (((WabitOlapAxis) getParent()).getQueryAxis().getLocation() != Axis.FILTER) {
 			hierarchy = inclusions.get(0).getSelection().getMember().getHierarchy();
 		}
@@ -112,30 +123,119 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	}
 	
 	@Override
+	protected boolean addChildImpl(WabitObject child, int index) {
+	    if (initialized) {
+	        final OlapQuery query = getParent().getParent();
+	        if (child instanceof WabitOlapInclusion) {
+	            WabitOlapInclusion inclusion = (WabitOlapInclusion) child;
+	            try {
+	                fireTransactionStarted("Including member " + child.getName() + " on " + getName());
+                    query.addToAxis(0, inclusion.getSelection().getMember(), 
+                            inclusion.getOperator(), getParent().getOrdinal());
+                    fireTransactionEnded();
+                    return true;
+                } catch (OlapException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw new RuntimeException(e);
+                } catch (QueryInitializationException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw new IllegalStateException("The dimension " + getName() + 
+                            " was initialized but the parent query " + query.getName() + 
+                            " was not initialized");
+                }
+	        } else if (child instanceof WabitOlapExclusion) {
+	            WabitOlapExclusion exclusion = (WabitOlapExclusion) child;
+	            try {
+	                fireTransactionStarted("Excluding member " + child.getName() + " on " + getName());
+                    query.excludeMember(getDimension().getName(), exclusion.getSelection().getMember(), 
+                            exclusion.getOperator());
+                    fireTransactionEnded();
+                    return true;
+                } catch (QueryInitializationException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw new IllegalStateException("The dimension " + getName() + 
+                            " was initialized but the parent query " + query.getName() + 
+                            " was not");
+                }
+	        } else {
+	            return false;
+	        }
+	    } else {
+	        if (child instanceof WabitOlapInclusion) {
+	            WabitOlapInclusion inclusion = (WabitOlapInclusion) child;
+	            inclusions.add(index, inclusion);
+	            fireChildAdded(inclusion.getClass(), inclusion, index);
+	            return true;
+	        } else if (child instanceof WabitOlapExclusion) {
+	            WabitOlapExclusion exclusion = (WabitOlapExclusion) child;
+                exclusions.add(index, exclusion);
+                fireChildAdded(exclusion.getClass(), exclusion, index);
+                return true;
+	        } else {
+	            return false;
+	        }
+	    }
+	}
+	
+	@Override
 	protected boolean removeChildImpl(WabitObject child) {
-		if (child instanceof WabitOlapSelection) {
+	    if (initialized) {
+	        if (child instanceof WabitOlapInclusion) {
+	            WabitOlapInclusion inclusion = (WabitOlapInclusion) child;
+	            final OlapQuery query = getParent().getParent();
+	            try {
+	                fireTransactionStarted("Removing " + child.getName() + " from inclusions on " + getName());
+                    boolean success = query.removeIncludedMember(inclusion.getSelection().getMember(), 
+                            inclusion.getOperator());
+                    fireTransactionEnded();
+                    return success;
+                } catch (QueryInitializationException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw new IllegalStateException("The dimension " + getName() + " has been initialized " +
+                    		"but the query " + query.getName() + " was still initializing.", e);
+                } catch (RuntimeException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw e;
+                }
+	        } else if (child instanceof WabitOlapExclusion) {
+	            WabitOlapExclusion exclusion = (WabitOlapExclusion) child;
+                final OlapQuery query = getParent().getParent();
+                try {
+                    fireTransactionStarted("Removing " + child.getName() + " from exclusions on " + getName());
+                    boolean success = query.removeExcludedMember(exclusion.getSelection().getMember(), 
+                            exclusion.getOperator());
+                    fireTransactionEnded();
+                    return success;
+                } catch (QueryInitializationException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw new IllegalStateException("The dimension " + getName() + " has been initialized " +
+                            "but the query " + query.getName() + " was still initializing.", e);
+                } catch (RuntimeException e) {
+                    fireTransactionRollback(e.getMessage());
+                    throw e;
+                }
+	        } else {
+	            throw new AssertionError("The child " + child.getName() + " of type " + 
+	                    child.getClass() + " is not a valid child for " + WabitOlapDimension.class + 
+	                    " and should have been caught sooner.");
+	        }
+	    } else {
 			if (inclusions.contains(child)) {
 				int index = inclusions.indexOf(child);
-				dimension.getInclusions().remove(((WabitOlapInclusion) child).getSelection());
-				fireTransactionStarted("Removing Child");
 				inclusions.remove(child);
-				fireTransactionEnded();
 				fireChildRemoved(WabitOlapInclusion.class, child, index);
 				return true;
-			}
-			if (exclusions.contains(child)) {
+			} else if (exclusions.contains(child)) {
 				int index = exclusions.indexOf(child);
-				dimension.getExclusions().remove(((WabitOlapExclusion) child).getSelection());
-				fireTransactionStarted("Removing Child");
 				exclusions.remove(child);
-				fireTransactionEnded();
 				fireChildRemoved(WabitOlapExclusion.class, child, index);
 				return true;
+			} else {
+			    return false;
 			}
-		}
-		return false;
+	    }
 	}
-
+	
 	/**
 	 * Updates lists of children based on children of the wrapped Dimension.
 	 * Calling this is the only way to make sure this wrapper is synchronized
@@ -280,8 +380,17 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		return dimension;
 	}
 
+	/**
+	 * Warning, if the dimension was made in any way other than loading so that
+	 * init was not called this will always be null as it is only set in init.
+	 */
 	Hierarchy getHierarchy() {
 		return hierarchy;
+	}
+	
+	@Override
+	public WabitOlapAxis getParent() {
+	    return (WabitOlapAxis) super.getParent();
 	}
 
 }

@@ -101,7 +101,7 @@ public class QueryController {
 			query.startCompoundEdit("Handling sort order.");
 			for (int i = 0; i < sortDecorator.getColumnCount(); i++) {
 				int sortStatus = sortDecorator.getSortingStatus(i);
-				Item column = query.getSelectedColumns().get(i).getDelegate();
+				Item column = query.getSelectedColumns().get(i);
 				OrderByArgument orderByArgument = column.getOrderBy();
 				if ((sortStatus == TableModelSortDecorator.NOT_SORTED && orderByArgument == OrderByArgument.NONE)
 						|| (sortStatus == TableModelSortDecorator.ASCENDING && orderByArgument == OrderByArgument.ASC)
@@ -112,17 +112,19 @@ public class QueryController {
 					continue;
 				}
 				
+				OrderByArgument arg;
 				if (sortStatus == TableModelSortDecorator.NOT_SORTED) {
-				    column.setOrderBy(OrderByArgument.NONE);
+				    arg = OrderByArgument.NONE;
 				} else if (sortStatus == TableModelSortDecorator.ASCENDING) {
 					logger.debug("Setting sort order of " + column.getName() + " to ascending.");
-					column.setOrderBy(OrderByArgument.ASC);
+					arg = OrderByArgument.ASC;
 				} else if (sortStatus == TableModelSortDecorator.DESCENDING) {
 					logger.debug("Setting sort order of " + column.getName() + " to descending.");
-					column.setOrderBy(OrderByArgument.DESC);
+					arg = OrderByArgument.DESC;
 				} else {
 					throw new IllegalStateException("The column " + column.getName() + " was sorted in an unknown way");
 				}
+				query.orderColumn(column, arg);
 			}
 			query.endCompoundEdit();
 		}
@@ -135,7 +137,7 @@ public class QueryController {
 	
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_GROUP_BY)) {
-				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource())).getDelegate();
+				Item column = query.getSelectedColumns().get(cellRenderer.getComboBoxes().indexOf((JComboBox)e.getSource()));
 				column.setGroupBy(SQLGroupFunction.getGroupType((String)e.getNewValue()));
 			} else if (e.getPropertyName().equals(ComponentCellRenderer.PROPERTY_HAVING)) {
 				String newValue = (String)e.getNewValue();
@@ -143,7 +145,7 @@ public class QueryController {
 				if (indexOfTextField < 0) {
 					return;
 				}
-				Item item = query.getSelectedColumns().get(indexOfTextField).getDelegate();
+				Item item = query.getSelectedColumns().get(indexOfTextField);
 				item.setHaving(newValue);
 			}
 
@@ -168,7 +170,7 @@ public class QueryController {
 		public void mouseReleased(MouseEvent e) {
 			if (lastTableColumnMove != null) {
 				logger.debug("Moving column in select from " + lastTableColumnMove.getFromIndex() + " to " + lastTableColumnMove.getToIndex());
-				Item movedColumn = query.getSelectedColumns().get(lastTableColumnMove.getFromIndex()).getDelegate();
+				Item movedColumn = query.getSelectedColumns().get(lastTableColumnMove.getFromIndex());
 				query.moveItem(movedColumn, lastTableColumnMove.getToIndex());
 				lastTableColumnMove = null;
 			}

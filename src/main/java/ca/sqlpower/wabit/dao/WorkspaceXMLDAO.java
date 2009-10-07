@@ -51,7 +51,6 @@ import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
-import ca.sqlpower.query.QueryItem;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.util.SQLPowerUtils;
@@ -781,9 +780,9 @@ public class WorkspaceXMLDAO {
 				
 		xml.println(out, "<select>");
 		xml.indent++;
-		for (QueryItem col : data.getSelectedColumns()) {
+		for (Item col : data.getSelectedColumns()) {
 			xml.print(out, "<column");
-			printAttribute("id", itemIdMap.get(col.getDelegate()));
+			printAttribute("id", itemIdMap.get(col));
 			xml.niprintln(out, "/>");
 		}
 		xml.indent--;
@@ -793,9 +792,9 @@ public class WorkspaceXMLDAO {
 		printAttribute("text", data.getGlobalWhereClause());
 		xml.niprintln(out, "/>");
 		
-		for (QueryItem item : data.getOrderByList()) {
+		for (Item item : data.getOrderByList()) {
 			xml.println(out, "<order-by");
-			printAttribute("column-id", itemIdMap.get(item.getDelegate()));
+			printAttribute("column-id", itemIdMap.get(item));
 			xml.niprintln(out, "/>");
 		}
 		

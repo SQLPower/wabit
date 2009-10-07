@@ -23,8 +23,14 @@ import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -222,8 +228,23 @@ public class ContentBox extends AbstractWabitObject {
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        if (childType == ReportContentRenderer.class) {
+        
+        //Walk up all of the interfaces to see if the given class type implements
+        //the interface we are looking for.
+        Set<Class<?>> interfacesOfChildType = new HashSet<Class<?>>();
+        Queue<Class<?>> interfaceQueue = new LinkedList<Class<?>>((Collection<? extends Class<?>>) Arrays.asList(childType.getInterfaces())); 
+        while (!interfaceQueue.isEmpty()) {
+            Class<?> parentInterface = interfaceQueue.remove();
+            if (!interfacesOfChildType.contains(parentInterface)) {
+                interfacesOfChildType.add(parentInterface);
+                interfaceQueue.addAll((Collection<? extends Class<?>>) Arrays.asList(parentInterface.getInterfaces()));
+            }
+        }
+        
+        if (childType == ReportContentRenderer.class || 
+                interfacesOfChildType.contains(ReportContentRenderer.class)) {
             return 0;
         } else {
             throw new UnsupportedOperationException("Content boxes don't have children of type " + childType);
@@ -278,6 +299,16 @@ public class ContentBox extends AbstractWabitObject {
             return true;
         }
         return false;
+    }
+    
+    @Override
+    protected boolean addChildImpl(WabitObject child, int index) {
+        if (index > 0) {
+            throw new IllegalArgumentException("There is only one child in a content box, " +
+            		"index " + index + " is out of range");
+        }
+        setContentRenderer((ReportContentRenderer) child);
+        return true;
     }
 
     /**

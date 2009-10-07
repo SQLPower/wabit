@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.report;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.StubWabitSession;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
 
 public class ContentBoxTest extends AbstractWabitObjectTest {
@@ -35,5 +37,23 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return cb;
+    }
+
+    /**
+     * Tests the content renderer can be set by calling addChild and removed by
+     * calling removeChild.
+     */
+    public void testAddAndRemoveChild() throws Exception {
+        StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
+        Report report = new Report("New Report");
+        session.getWorkspace().addReport(report);
+        report.getPage().addContentBox(cb);
+        
+        ImageRenderer renderer = new ImageRenderer();
+        assertNull(cb.getContentRenderer());
+        cb.addChild(renderer, 0);
+        assertEquals(renderer, cb.getContentRenderer());
+        cb.removeChild(renderer);
+        assertNull(cb.getContentRenderer());
     }
 }

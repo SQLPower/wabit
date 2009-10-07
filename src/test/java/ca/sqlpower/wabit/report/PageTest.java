@@ -28,6 +28,7 @@ import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 public class PageTest extends AbstractWabitObjectTest {
@@ -105,5 +106,33 @@ public class PageTest extends AbstractWabitObjectTest {
         Page newPage = new Page("test", LETTER_HEIGHT, LETTER_WIDTH, PageOrientation.LANDSCAPE);
         assertEquals(LETTER_WIDTH, newPage.getHeight());
         assertEquals(LETTER_HEIGHT, newPage.getWidth());
+    }
+
+    /**
+     * Tests that a content box can be added and removed with the addChild and
+     * removeChild methods.
+     */
+    public void testAddAndRemoveContentBox() throws Exception {
+        ContentBox cb = new ContentBox();
+        
+        page.addChild(cb, 0);
+        assertTrue(page.getChildren().contains(cb));
+        
+        page.removeChild(cb);
+        assertFalse(page.getChildren().contains(cb));
+    }
+    
+    /**
+     * Tests that a guide can be added and removed from a page with the addChild
+     * and removeChild methods.
+     */
+    public void testAddAndRemoveGuide() throws Exception {
+        Guide guide = new Guide(Axis.HORIZONTAL, 10);
+        
+        page.addChild(guide, 0);
+        assertTrue(page.getChildren().contains(guide));
+        
+        page.removeChild(guide);
+        assertFalse(page.getChildren().contains(guide));
     }
 }

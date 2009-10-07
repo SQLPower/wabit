@@ -489,7 +489,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 //        			ci.setWidth(-1); XXX i don't know why this is here but taking it out makes columns size properly
         		}
         	} else {
-        		Item item = query.getSelectedColumns().get(col - 1).getDelegate();
+        		Item item = query.getSelectedColumns().get(col - 1);
         		String columnKey = rsmd.getColumnLabel(col);
         		logger.debug("Matching key " + item.getName());
         		if (colKeyToInfoMap.get(item) != null) {
@@ -989,5 +989,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             		" There should be no need to remove them outside of this class.");
         }
         return false;
+    }
+    
+    @Override
+    protected boolean addChildImpl(WabitObject child, int index) {
+        throw new IllegalStateException("The children of the renderer are maintained internally." +
+                " There should be no need to add them outside of this class.");
     }
 }

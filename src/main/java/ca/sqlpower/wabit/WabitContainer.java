@@ -66,6 +66,12 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
         }
 
         public void containerChildAdded(ContainerChildEvent evt) {
+            if (children.size() > evt.getIndex() && 
+                    children.get(evt.getIndex()).equals(evt.getChild())) {
+                //a child object was added for this event already from addChildImpl
+                //and doesn't need to be added again.
+                return;
+            }
             T child = createWabitItemChild(evt.getChild());
             child.setParent(WabitContainer.this);
             children.add(child);
@@ -152,6 +158,18 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	protected boolean removeChildImpl(WabitObject child) {
 	    Item item = ((WabitItem) child).getDelegate();
 	    delegate.removeItem(item);
+	    return true;
+	}
+	
+	@Override
+	protected boolean addChildImpl(WabitObject child, int index) {
+	    final WabitItem wabitItem = (WabitItem) child;
+	    children.add(index, (T) child);
+	    child.setParent(this);
+	    fireChildAdded(child.getClass(), child, index);
+	    
+        Item item = wabitItem.getDelegate();
+	    delegate.addItem(item, index);
 	    return true;
 	}
 

@@ -21,7 +21,6 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 import java.util.List;
-import java.util.UUID;
 
 public class StubWabitObject implements WabitObject {
 
@@ -92,6 +91,12 @@ public class StubWabitObject implements WabitObject {
     public CleanupExceptions cleanup() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public boolean addChild(WabitObject child, int index)
+            throws IllegalArgumentException {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

@@ -450,7 +450,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	    createdObject = null;
         	}
         } else if (name.equals("query")) {
-        	cache = new QueryCache(session.getContext());
+        	cache = new QueryCache(session.getContext(), false);
         	createdObject = cache;
         	
         	String queryName = attributes.getValue("name");
@@ -501,7 +501,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             createdObject = null;
         	String uuid = attributes.getValue("uuid");
         	checkMandatory("uuid", uuid);
-        	Container constants = cache.newConstantsContainer(uuid);
+        	cache.getConstantsContainer().setUUID(uuid);
+        	Container constants = cache.getConstantsContainer();
         	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
         		String aval = attributes.getValue(i);
@@ -604,7 +605,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		if (uuidToItemMap.get(uuid) == null) {
         			throw new IllegalStateException("Cannot find a column with id " + uuid + " to add to the select statement.");
         		}
-        		uuidToItemMap.get(uuid).setSelected(true);
+        		cache.selectItem(uuidToItemMap.get(uuid));
         	} else {
         		throw new IllegalStateException("A column is being loaded that is not contained by any tables. Parent is " + xmlContext.get(xmlContext.size() - 2));
         	}
@@ -690,7 +691,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	}
         	//Reinserting the items for cases where when the items were first created they defined a sort
         	//order and were placed in the query in an incorrect order to sort the columns in.
-        	cache.moveSortedItemToEnd(item);
+        	cache.moveOrderByItemToEnd(item);
         } else if (name.equals("query-string")) {
             createdObject = null;
         	String queryString = attributes.getValue("string");

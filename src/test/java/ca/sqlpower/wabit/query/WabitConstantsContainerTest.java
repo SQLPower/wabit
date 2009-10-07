@@ -19,8 +19,11 @@
 
 package ca.sqlpower.wabit.query;
 
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -40,4 +43,21 @@ public class WabitConstantsContainerTest extends AbstractWabitObjectTest {
         return container;
     }
 
+    public void testAddAndRemoveChild() throws Exception {
+        Item item = new StringItem("item");
+        WabitConstantItem wabitItem = new WabitConstantItem(item);
+        
+        assertFalse(container.getChildren().contains(wabitItem));
+        
+        container.addChild(wabitItem, 0);
+        
+        assertTrue(container.getChildren().contains(wabitItem));
+        assertTrue(container.getDelegate().getItems().contains(item));
+        
+        container.removeChild(wabitItem);
+        
+        assertFalse(container.getChildren().contains(wabitItem));
+        assertFalse(container.getDelegate().getItems().contains(item));
+    }
+    
 }

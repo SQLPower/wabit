@@ -42,5 +42,17 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
     protected Class<WabitColumnItem> getChildClass() {
         return WabitColumnItem.class;
     }
+    
+    @Override
+    protected boolean addChildImpl(WabitObject child, int index) {
+        throw new IllegalStateException("Cannot add children to a table that was " +
+        		"loaded from a data source.");
+    }
 
+    @Override
+    protected boolean removeChildImpl(WabitObject child) {
+        throw new IllegalStateException("Cannot remove children from a table that " +
+        		"was loaded from a data source.");
+    }
+    
 }

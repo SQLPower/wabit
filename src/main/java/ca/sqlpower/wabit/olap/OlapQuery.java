@@ -509,8 +509,22 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	 * @throws QueryInitializationException 
 	 */
 	public synchronized void removeHierarchy(Hierarchy hierarchy, Axis axis) throws QueryInitializationException {
+	    removeDimension(hierarchy.getDimension(), axis);
+	}
+	
+	/**
+     * Removes the given {@link Dimension} from the given {@link Axis} in the
+     * query
+     * 
+     * @param dimension
+     *            The {@link Dimension} to remove
+     * @param axis
+     *            The {@link Axis} to remove the {@link Dimension} from
+     * @throws QueryInitializationException 
+     */
+	public synchronized void removeDimension(Dimension dimension, Axis axis) throws QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
-        QueryDimension qd = getMDXQuery().getDimension(hierarchy.getDimension().getName());
+        QueryDimension qd = getMDXQuery().getDimension(dimension.getName());
         
         if (qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
@@ -523,6 +537,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         		slicerMember = null;
         	}
         }
+        updateAttributes();
     }
 
     /**
@@ -618,6 +633,37 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         updateAttributes();
     }
 
+    /**
+     * Removes the given member with the given operator from the list of members
+     * that are currently being excluded from the query.
+     * 
+     * @param memberToExclude
+     *            The member that was excluded that we now want to remove from
+     *            the list of exclusions.
+     * @param operator
+     *            The operator that the member is being excluded with.
+     * @return True if the member was successfully removed from the list of
+     *         exclusions, false otherwise.
+     * @throws QueryInitializationException
+     */
+    public synchronized boolean removeExcludedMember(Member memberToExclude, 
+            Selection.Operator operator) throws QueryInitializationException {
+        QueryDimension qd = findQueryDimension(memberToExclude);
+        
+        Selection selectionToRemove = null;
+        for (Selection s : qd.getExclusions()) {
+            if (s.getMember().equals(memberToExclude) && s.getOperator().equals(operator)) {
+                selectionToRemove = s;
+                break;
+            }
+        }
+        if (selectionToRemove == null) return false;
+        qd.getExclusions().remove(selectionToRemove);
+        
+        updateAttributes();
+        return true;
+    }
+
     public synchronized OlapConnection createOlapConnection()
     throws SQLException, ClassNotFoundException, NamingException {
         return olapMapping.createConnection(getOlapDataSource());
@@ -700,8 +746,10 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * which will corrupt the workspace and performance will be bad. All exceptions in this method
      * will be wrapped in a QueryInitializationException, including runtime exceptions, as methods
      * calling init should be aware of any errors with initialization.
+     * <p>
+     * This is package private for testing.
      */
-    private void init() throws QueryInitializationException {
+    void init() throws QueryInitializationException {
     	logger.debug("Initializing Olap Query");
     	logger.debug("Was loaded " + wasLoadedFromDao + ", init done " + initDone + ", mdxQuery is null " + (mdxQuery == null));
         if (!this.wasLoadedFromDao || this.initDone || this.mdxQuery!=null) return;
@@ -754,7 +802,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     }
 
     /**
-     * Adds the given axis to the query. Only used for loading.
+     * Adds the given axis to the query.
      */
 	public void addAxis(WabitOlapAxis axis) {
 		wasLoadedFromDao = true;
@@ -925,7 +973,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	 * @param ordinal
 	 *            If the given member's dimension is not already on the given
 	 *            axis, the dimension will be added to the axis at the given
-	 *            ordinal. Otherwise, this argument is ingored.
+	 *            ordinal. Otherwise, this argument is ignored.
 	 * @param member
 	 *            The member to add. If the member's dimension is not already on
 	 *            the given axis, it will be added to the axis automatically.
@@ -937,22 +985,33 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	 * @throws QueryInitializationException 
 	 */
     public synchronized void addToAxis(int ordinal, Member member, Axis axis) throws OlapException, QueryInitializationException {
+        addToAxis(ordinal, member, Operator.MEMBER, axis);
+    }
+
+    /**
+     * Adds the given member to the given axis with a defined operator.
+     * 
+     * @param ordinal
+     *            If the given member's dimension is not already on the given
+     *            axis, the dimension will be added to the axis at the given
+     *            ordinal. Otherwise, this argument is ignored.
+     * @param member
+     *            The member to add. If the member's dimension is not already on
+     *            the given axis, it will be added to the axis automatically.
+     * @param operator
+     *            The operator to add with the member to the axis.
+     * @param axis
+     *            The axis to add the member to. Must be either Axis.ROWS or
+     *            Axis.COLUMNS.
+     * @throws OlapException
+     *             If a database error occurs
+     * @throws QueryInitializationException
+     */
+    public synchronized void addToAxis(int ordinal, Member member, Operator operator, Axis axis) 
+            throws OlapException, QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
         QueryDimension qd = getMDXQuery().getDimension(member.getDimension().getName());
-        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + "(" + qa.getLocation().axisOrdinal() + ")" + " in ordinal " + ordinal);
-        if (!qa.equals(qd.getAxis())) {
-        	qd.clearInclusions();
-        	qa.addDimension(ordinal, qd);
-        } else {
-        	int index = qa.getDimensions().indexOf(qd);
-        	if (index >= 0) {
-        		qa.getDimensions().remove(index);
-        		if (index < ordinal) {
-        			ordinal--;
-        		}
-        		qa.getDimensions().add(ordinal, qd);
-        	}
-        }
+        addDimensionToAxis(ordinal, axis, qd);
         
         
         if (qa.getLocation() == Axis.FILTER) {
@@ -979,7 +1038,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         }
         
         if (!isIncluded(member)) {
-        	qd.include(Operator.MEMBER, member);
+        	qd.include(operator, member);
         }
         
         //The filter axis does not support multiple members
@@ -1001,6 +1060,31 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         }
 		
 		updateAttributes();
+    }
+
+    /**
+     * Adds a dimension to an axis at the given ordinal. This is package private for
+     * use by other parts of the query.
+     * @param ordinal The position in the axis to add the dimension at.
+     * @param qa The axis to add the dimension to.
+     * @param qd The dimension to add to the axis.
+     */
+    void addDimensionToAxis(int ordinal, Axis axis, QueryDimension qd) throws QueryInitializationException {
+        QueryAxis qa = getMDXQuery().getAxis(axis);
+        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + "(" + qa.getLocation().axisOrdinal() + ")" + " in ordinal " + ordinal);
+        if (!qa.equals(qd.getAxis())) {
+        	qd.clearInclusions();
+        	qa.addDimension(ordinal, qd);
+        } else {
+        	int index = qa.getDimensions().indexOf(qd);
+        	if (index >= 0) {
+        		qa.getDimensions().remove(index);
+        		if (index < ordinal) {
+        			ordinal--;
+        		}
+        		qa.getDimensions().add(ordinal, qd);
+        	}
+        }
     }
 
     public synchronized List<Hierarchy> getRowHierarchies() throws QueryInitializationException {
@@ -1160,6 +1244,36 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     }
 
     /**
+     * Removes the given member from the list of members included in this query.
+     * 
+     * @param member
+     *            The member to remove.
+     * @param operator
+     *            The operator used in the inclusion.
+     * @return True if the member was successfully removed, false otherwise.
+     * @throws QueryInitializationException
+     */
+    public synchronized boolean removeIncludedMember(Member member, Selection.Operator operator) 
+            throws QueryInitializationException {
+        QueryDimension qd = findQueryDimension(member);
+        //XXX There should probably be a better way to remove the member
+        //from the list of included members. This also needs to be fixed
+        //in toggleMember
+        Selection selectionToRemove = null;
+        for (Selection s : qd.getInclusions()) {
+            if (s.getMember().equals(member) && s.getOperator().equals(operator)) {
+                selectionToRemove = s;
+                break;
+            }
+        }
+        if (selectionToRemove == null) return false;
+        qd.getInclusions().remove(selectionToRemove);
+        
+        updateAttributes();
+        return true;
+    }
+
+    /**
      * Sets the ROWS axis of this query to omit empty positions.
      * 
      * @param nonEmpty
@@ -1215,7 +1329,19 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	 */
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
-	    return false;
+	    throw new IllegalStateException("An axis should not be removed from a public " +
+	    		"method. Axis are handled internally to an OlapQuery.");
+	}
+
+    /**
+     * Axes should not be added from a public method. They are only added when
+     * the query is loaded or internally to this class when the MDX query
+     * changes.
+     */
+	@Override
+	protected boolean addChildImpl(WabitObject child, int index) {
+	    throw new IllegalStateException("An axis should not be added from a public " +
+                "method. Axis are handled internally to an OlapQuery.");
 	}
 	
 	public String getQueryName() {

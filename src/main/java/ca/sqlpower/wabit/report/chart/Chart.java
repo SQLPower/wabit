@@ -698,6 +698,12 @@ public class Chart extends AbstractWabitObject {
         return false;
     }
     
+    @Override
+    protected boolean addChildImpl(WabitObject child, int index) {
+        throw new IllegalStateException("The children of the renderer are maintained internally." +
+                " There should be no need to add them outside of this class.");
+    }
+    
     /**
      * Registers the given listener to receive an event every time the dataset
      * returned by {@link #createDataset()} might be different. These events

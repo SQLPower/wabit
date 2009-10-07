@@ -357,8 +357,8 @@ public abstract class AbstractWabitObject implements WabitObject {
 	public final boolean removeChild(WabitObject child)
 	        throws ObjectDependentException {
 	    if (!getChildren().contains(child)) 
-	        throw new IllegalArgumentException("Child object " + child.getName() 
-	                + " is not a child of " + getName());
+	        throw new IllegalArgumentException("Child object " + child.getName() + " of type " + child.getClass()
+	                + " is not a child of " + getName() + " of type " + getClass());
 	    
 	    WabitObject topAncestor = this;
 	    while (topAncestor.getParent() != null) {
@@ -381,7 +381,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    
 	    return removeChildImpl(child);
 	}
-
+	
     /**
      * This is the object specific implementation of removeChild. There are
      * checks in the removeChild method to ensure the child being removed has no
@@ -390,6 +390,36 @@ public abstract class AbstractWabitObject implements WabitObject {
      * @see #removeChild(WabitObject)
      */
 	protected abstract boolean removeChildImpl(WabitObject child);
+	
+	public final boolean addChild(WabitObject child, int index) throws IllegalArgumentException {
+	    //Throws an IllegalStateException if the child is not a valid child of this class.
+	    childPositionOffset(child.getClass());
+	    
+	    final int childCount = getChildren().size();
+        if (childCount >= index) {
+	        return addChildImpl(child, index);
+	    }
+	    throw new IllegalArgumentException("The index given to add child " + 
+	            child.getName() + " to " + getName() + " is " + index + 
+	            " and is greater than " + childCount);
+	}
+
+    /**
+     * This is the object specific implementation of
+     * {@link #addChild(WabitObject)}. There are checks in the
+     * {@link #addChild(WabitObject)} method to ensure that the object given
+     * here is a valid child type of this object.
+     * <p>
+     * This method should be overwritten if children are allowed.
+     * 
+     * @param child
+     *            The child to add to this object.
+     * @param index
+     *            The index to add the child at.
+     */
+	protected boolean addChildImpl(WabitObject child, int index) {
+	    return false;
+	}
 	
 	/**
 	 * Default cleanup method that does nothing. Override and implement this

@@ -162,8 +162,11 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addDataSource(WabitDataSource ds) {
+        addDataSource(ds, dataSources.size());
+    }
+    
+    public void addDataSource(WabitDataSource ds, int index) {
     	logger.debug("adding WabitDataSource");
-        int index = dataSources.size();
         dataSources.add(index, ds);
         ds.setParent(this);
         fireChildAdded(WabitDataSource.class, ds, index);
@@ -197,7 +200,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addQuery(QueryCache query, WabitSession session) {
-        int index = queries.size();
+        addQuery(query, session, queries.size());
+    }
+    
+    public void addQuery(QueryCache query, WabitSession session, int index) {
         queries.add(index, query);
         query.setParent(this);
         query.setDBMapping(session.getContext());
@@ -221,7 +227,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addTemplate(Template template) {
-    	int index = templates.size();
+        addTemplate(template, templates.size());
+    }
+    
+    public void addTemplate(Template template, int index) {
         templates.add(index, template);
         template.setParent(this);
         fireChildAdded(Template.class, template, index);
@@ -243,7 +252,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	}
     
     public void addReport(Report report) {
-        int index = reports.size();
+        addReport(report, reports.size());
+    }
+    
+    public void addReport(Report report, int index) {
         reports.add(index, report);
         report.setParent(this);
         fireChildAdded(Report.class, report, index);
@@ -265,7 +277,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addImage(WabitImage image) {
-        int index = images.size();
+        addImage(image, images.size());
+    }
+    
+    public void addImage(WabitImage image, int index) {
         images.add(index, image);
         image.setParent(this);
         fireChildAdded(WabitImage.class, image, index);
@@ -291,7 +306,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
 
     public void addChart(Chart chart) {
-        int index = charts.size();
+        addChart(chart, charts.size());
+    }
+    
+    public void addChart(Chart chart, int index) {
         charts.add(index, chart);
         chart.setParent(this);
         fireChildAdded(Chart.class, chart, index);
@@ -572,7 +590,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	}
 
     public void addOlapQuery(OlapQuery newQuery) {
-        int index = olapQueries.size();
+        addOlapQuery(newQuery, olapQueries.size());
+    }
+    
+    public void addOlapQuery(OlapQuery newQuery, int index) {
         olapQueries.add(index, newQuery);
         newQuery.setParent(this);
         fireChildAdded(OlapQuery.class, newQuery, index);
@@ -670,6 +691,35 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
             return removeReport((Report) child);
         } else {
             throw new IllegalStateException("Cannot remove child of type " + child.getClass());
+        }
+    }
+    
+    @Override
+    protected boolean addChildImpl(WabitObject child, int index) {
+        if (child instanceof WabitDataSource) {
+            addDataSource((WabitDataSource) child, index);
+            return true;
+        } else if (child instanceof QueryCache) {
+            addQuery((QueryCache) child, session, index);
+            return true;
+        } else if (child instanceof OlapQuery) {
+            addOlapQuery((OlapQuery) child, index);
+            return true;
+        } else if (child instanceof WabitImage) {
+            addImage((WabitImage) child, index);
+            return true;
+        } else if (child instanceof Chart) {
+            addChart((Chart) child, index);
+            return true;
+        } else if (child instanceof Template) {
+            addTemplate((Template) child, index);
+            return true;
+        } else if (child instanceof Report) {
+            addReport((Report) child, index);
+            return true;
+        } else {
+            throw new AssertionError("Adding child " + child.getName() + " of type " + child.getClass() + 
+                    " is not valid for a workspace and should have been checked already");
         }
     }
 

@@ -101,6 +101,24 @@ public interface WabitObject {
      *         was not removed from this object.
      */
     boolean removeChild(WabitObject child) throws ObjectDependentException, IllegalArgumentException;
+
+    /**
+     * Adds the given child object to this object.
+     * 
+     * @param child
+     *            The object to add as a child of this object.
+     * @param index
+     *            The index to add the child to. This cannot be greater than the
+     *            number of children in the object. This is the position of the
+     *            child in the entire list of children not just the position of
+     *            the child in respect to children of its type.
+     * @return True if the child was added successfully, false otherwise.
+     * @throws IllegalArgumentException
+     *             If the given child is not a valid child type of the object or
+     *             if the index given is greater than the number of children in the
+     *             object.
+     */
+    boolean addChild(WabitObject child, int index) throws IllegalArgumentException;
     
     /**
      * Returns the short name for this object.
