@@ -65,7 +65,7 @@ public class Grant extends AbstractWabitObject {
         if (this.subject != null) {
             return this.subject.getName().concat(" - ").concat(this.getPermsString());
         } else if (this.type != null){
-            return "All ".concat(this.subject.getClass().getCanonicalName())
+            return "All ".concat(this.type.getCanonicalName())
                 .concat(" - ").concat(this.getPermsString());
         } else {
             throw new RuntimeException("Badly constructed grant object.");
