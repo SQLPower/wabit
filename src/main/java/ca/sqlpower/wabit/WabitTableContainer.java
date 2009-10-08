@@ -44,15 +44,47 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
     }
     
     @Override
+    /*
+     * This method should only be used internally or in special cases such as
+     * an undo manager or synchronizing with a server. The children of the 
+     * underlying TableContainer cannot be modified so this will only add a new
+     * wrapper for one of the children of the TableContainer.
+     */
     protected void addChildImpl(WabitObject child, int index) {
-        throw new IllegalStateException("Cannot add children to a table that was " +
-        		"loaded from a data source.");
+        final WabitColumnItem wabitItem = (WabitColumnItem) child;
+        if (!getDelegate().getItems().contains(wabitItem.getDelegate())) {
+            throw new IllegalArgumentException("Cannot add " + child.getName() + " to " + getName() + 
+                    " as the container does not have the child " + wabitItem.getDelegate().getName() + 
+                    " to wrap.");
+        }
+        
+        for (WabitObject existingChild : getChildren()) {
+            if (((WabitColumnItem) existingChild).getDelegate().equals(wabitItem.getDelegate())) {
+                throw new IllegalArgumentException("A child for the item " + wabitItem.getDelegate().getName() + 
+                        " already exists in " + getName() + " and cannot be added again");
+            }
+        }
+        
+        children.add(index, wabitItem);
+        child.setParent(this);
+        fireChildAdded(child.getClass(), child, index);
     }
 
     @Override
+    /*
+     * This method should only be used internally or in special cases such as
+     * an undo manager or synchronizing with a server. The children of the
+     * underlying TableContainer cannot be modified so this will only remove
+     * the Wabit wrapper for one of the columns in the container
+     */
     protected boolean removeChildImpl(WabitObject child) {
-        throw new IllegalStateException("Cannot remove children from a table that " +
-        		"was loaded from a data source.");
+        if (getChildren().contains(child)) {
+            int index = children.indexOf(child);
+            children.remove(child);
+            fireChildRemoved(child.getClass(), child, index);
+            return true;
+        }
+        return false;
     }
     
 }

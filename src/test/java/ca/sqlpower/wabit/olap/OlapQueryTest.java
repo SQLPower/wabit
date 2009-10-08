@@ -34,10 +34,6 @@ import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
-import ca.sqlpower.query.Container;
-import ca.sqlpower.query.Item;
-import ca.sqlpower.query.ItemContainer;
-import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
@@ -46,7 +42,6 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitTableContainer;
 
 public class OlapQueryTest extends AbstractWabitObjectTest {
 
@@ -308,5 +303,54 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     	}
     	assertTrue(excludedMembers.contains(asiaMember));
 	}
+
+    /**
+     * Tests that children can be added to and removed from this query. Although
+     * the children of the query are maintained internally and an axis of a
+     * query cannot actually be removed from the query itself the children
+     * wrapping the axis of a query need to be addable and removable for the
+     * undo manager.
+     */
+    public void testAddAndRemoveChild() throws Exception {
+        WabitOlapAxis rowsAxis = new WabitOlapAxis(Axis.ROWS);
+        WabitOlapDimension rowsDimension = new WabitOlapDimension("Geography");
+        rowsAxis.addDimension(rowsDimension);
+        WabitOlapInclusion rowsInclusion = new WabitOlapInclusion(Operator.MEMBER, "[Geography].[World]");
+        WabitOlapExclusion rowsExclusion = new WabitOlapExclusion(Operator.MEMBER, "[Geography].[World].[Africa]");
+        rowsDimension.addExclusion(rowsExclusion);
+        rowsDimension.addInclusion(rowsInclusion);
+        
+        WabitOlapAxis columnsAxis = new WabitOlapAxis(Axis.COLUMNS);
+        WabitOlapDimension columnsDimension = new WabitOlapDimension("Measures");
+        columnsAxis.addDimension(columnsDimension);
+        WabitOlapInclusion colInclusion = new WabitOlapInclusion(Operator.MEMBER, "[Measures].[Life Expectancy]");
+        columnsDimension.addInclusion(colInclusion);
+        
+        query.addAxis(columnsAxis);
+        query.addAxis(rowsAxis);
+        
+        //This should not throw an exception
+        query.executeOlapQuery();
+        
+        assertEquals(2, query.getChildren().size());
+        
+        WabitOlapAxis axis = (WabitOlapAxis) query.getChildren().get(0);
+        
+        query.removeChild(axis);
+        
+        assertEquals(1, query.getChildren().size());
+        assertFalse(query.getChildren().contains(axis));
+        
+        query.addChild(axis, 1);
+        assertEquals(2, query.getChildren().size());
+        assertEquals(axis, query.getChildren().get(1));
+        
+        try {
+            query.addChild(axis, 0);
+            fail();
+        } catch (IllegalArgumentException e) {
+            //trying to add the same axis multiple times should fail.
+        }
+    }
     
 }

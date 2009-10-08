@@ -23,9 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLObjectItem;
-import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
@@ -58,6 +56,40 @@ public class WabitTableContainerTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return container;
+    }
+    
+    /**
+     * Tests that children can be added to and removed from this container.
+     * Although the children of this container are based on the children of
+     * the delegate container and the delegate container's children cannot
+     * change once the table has been setup some classes, like the undo manager
+     * still need to be able to modify the child list of this class. Changing
+     * the child wrappers on this component merely changes the visibility of the
+     * delegate objects but does not actually change the delegate.
+     */
+    public void testAddAndRemoveChild() throws Exception {
+        SQLObjectItem item1 = new SQLObjectItem("item1", "uuid1");
+        SQLObjectItem item2 = new SQLObjectItem("item2", "uuid2");
+        List<SQLObjectItem> items = new ArrayList<SQLObjectItem>();
+        items.add(item1);
+        items.add(item2);
+        TableContainer del = new TableContainer("uuid", db, "table", "schema", "catalog", items);
+        WabitTableContainer testWrapper = new WabitTableContainer(del);
+        
+        assertEquals(2, testWrapper.getChildren().size());
+        
+        WabitColumnItem wrapperItem = (WabitColumnItem) testWrapper.getChildren().get(0);
+        
+        testWrapper.removeChild(wrapperItem);
+        
+        assertEquals(1, testWrapper.getChildren().size());
+        assertFalse(testWrapper.getChildren().contains(wrapperItem));
+        
+        testWrapper.addChild(wrapperItem, 1);
+        
+        assertEquals(2, testWrapper.getChildren().size());
+        assertEquals(wrapperItem, testWrapper.getChildren().get(1));
+        
     }
     
 }

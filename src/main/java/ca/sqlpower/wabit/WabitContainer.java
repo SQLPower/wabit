@@ -50,7 +50,7 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	 * of the delegate contain a parent pointer to the delegate and the {@link WabitItem}s
 	 * point to this container instead.
 	 */
-	private final List<T> children = new ArrayList<T>();
+	protected final List<T> children = new ArrayList<T>();
 
     /**
      * A listener on the delegate container which refires the child events with

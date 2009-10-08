@@ -589,10 +589,25 @@ public class Chart extends AbstractWabitObject {
      *            The new column identifier to add. Must not be null.
      */
     public void addChartColumn(@Nonnull ChartColumn newColumnIdentifier) {
+        addChartColumn(newColumnIdentifier, chartColumns.size());
+    }
+
+    /**
+     * For internal use only (while reading a Workspace file or refreshing the
+     * column list when a new result set comes in). Adds the given column
+     * identifier to the end of the column names list. Fires a childAdded event
+     * once the new column identifier has been added.
+     * 
+     * @param newColumnIdentifier
+     *            The new column identifier to add. Must not be null.
+     * @param index
+     *            The index to add the chart column at. Cannot be greater than
+     *            the current number of identifiers in the chart.
+     */
+    public void addChartColumn(@Nonnull ChartColumn newColumnIdentifier, int index) {
         if (newColumnIdentifier == null) {
             throw new NullPointerException("Null column identifier");
         }
-        int index = chartColumns.size();
         chartColumns.add(newColumnIdentifier);
         newColumnIdentifier.setParent(this);
         fireChildAdded(ChartColumn.class, newColumnIdentifier, index);
@@ -690,18 +705,25 @@ public class Chart extends AbstractWabitObject {
     }
 
     @Override
+    /*
+     * removing a child to a chart should only be done in special cases such as
+     * through an undo manager or synchronizing with a server.
+     */
     protected boolean removeChildImpl(WabitObject child) {
         if (getColumns().contains(child)) {
-            throw new IllegalStateException("The children of the renderer are maintained internally." +
-                " There should be no need to remove them outside of this class.");
+            removeColumnIdentifier((ChartColumn) child);
+            return true;
         }
         return false;
     }
     
     @Override
+    /*
+     * Adding a child to a chart should only be done in special cases such as
+     * through an undo manager or synchronizing with a server.
+     */
     protected void addChildImpl(WabitObject child, int index) {
-        throw new IllegalStateException("The children of the renderer are maintained internally." +
-                " There should be no need to add them outside of this class.");
+        addChartColumn((ChartColumn) child, index);
     }
     
     /**

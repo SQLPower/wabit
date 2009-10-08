@@ -803,7 +803,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     }
 
     /**
-     * Adds the given axis to the query.
+     * Adds the given axis to the query. Adding an axis this way will define the
+     * query to be loaded as a side effect.
      */
 	public void addAxis(WabitOlapAxis axis) {
 		wasLoadedFromDao = true;
@@ -1326,23 +1327,40 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	}
 	
 	/**
-	 * Axes should not be removed from a public method.
+	 * This method should only be used internally or in special cases such as
+     * an undo manager or synchronizing with a server. Removing a child of the query
+     * will only remove the Wabit wrapper around the axis of the query object.
 	 */
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
-	    throw new IllegalStateException("An axis should not be removed from a public " +
-	    		"method. Axis are handled internally to an OlapQuery.");
+	    if (axes.contains(child)) {
+	        int index = axes.indexOf(child);
+	        axes.remove(child);
+	        WabitUtils.unlistenToHierarchy(child, childListener);
+	        fireChildRemoved(child.getClass(), child, index);
+	    }
+	    return false;
 	}
 
     /**
-     * Axes should not be added from a public method. They are only added when
-     * the query is loaded or internally to this class when the MDX query
-     * changes.
+     * This method should only be used internally or in special cases such as
+     * an undo manager or synchronizing with a server. Adding a child to the
+     * query will only add a Wabit wrapper for an axis of the query.
      */
 	@Override
 	protected void addChildImpl(WabitObject child, int index) {
-	    throw new IllegalStateException("An axis should not be added from a public " +
-                "method. Axis are handled internally to an OlapQuery.");
+	    WabitOlapAxis axis = (WabitOlapAxis) child;
+	    for (WabitObject existingChild : axes) {
+	        if (((WabitOlapAxis) existingChild).getOrdinal().equals(axis.getOrdinal())) {
+	            throw new IllegalArgumentException("There already exists a child for the axis " + 
+	                    axis.getOrdinal() + " in the query " + getName());
+	        }
+	    }
+	    
+	    axes.add(index, axis);
+	    WabitUtils.listenToHierarchy(axis, childListener);
+	    axis.setParent(this);
+	    fireChildAdded(child.getClass(), child, index);
 	}
 	
 	public String getQueryName() {

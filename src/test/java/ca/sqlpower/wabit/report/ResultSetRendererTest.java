@@ -281,4 +281,24 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         Graphics2D g = (Graphics2D) image.getGraphics();
         renderer.renderSuccess(g, new ContentBox(), 1, 1, false);
     }
+
+    /**
+     * Tests that children can be added to and removed from a result set
+     * renderer. Although the children of a {@link ResultSetRenderer} are
+     * maintained internally some classes, like the undo manager, need to be
+     * able to modify the children of this renderer.
+     */
+    public void testAddAndRemoveChild() throws Exception {
+        ColumnInfo ci = new ColumnInfo("label");
+        
+        assertEquals(0, renderer.getChildren().size());
+        
+        renderer.addChild(ci, 0);
+        
+        assertEquals(ci, renderer.getChildren().get(0));
+        
+        renderer.removeChild(ci);
+        
+        assertEquals(0, renderer.getChildren().size());
+    }
 }

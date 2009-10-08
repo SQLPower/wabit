@@ -983,17 +983,28 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     }
 
     @Override
+    /*
+     * This method should only be used internally or in special cases such as
+     * an undo manager or synchronizing with a server.
+     */
     protected boolean removeChildImpl(WabitObject child) {
         if (columnInfo.contains(child)) {
-            throw new IllegalStateException("The children of the renderer are maintained internally." +
-            		" There should be no need to remove them outside of this class.");
+            int index = columnInfo.indexOf(child);
+            columnInfo.remove(child);
+            fireChildRemoved(child.getClass(), child, index);
+            return true;
         }
         return false;
     }
     
     @Override
+    /*
+     * This method should only be used internally or in special cases such as
+     * an undo manager or synchronizing with a server.
+     */
     protected void addChildImpl(WabitObject child, int index) {
-        throw new IllegalStateException("The children of the renderer are maintained internally." +
-                " There should be no need to add them outside of this class.");
+        columnInfo.add(index, (ColumnInfo) child);
+        child.setParent(this);
+        fireChildAdded(child.getClass(), child, index);
     }
 }

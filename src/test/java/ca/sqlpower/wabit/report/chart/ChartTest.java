@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.report.chart;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
 
 public class ChartTest extends AbstractWabitObjectTest {
 
@@ -35,6 +36,27 @@ public class ChartTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return chart;
+    }
+
+    /**
+     * Tests that children can be added and removed from a chart. While this is
+     * uncommon to be done as the children are maintained by the chart itself
+     * some parts of Wabit, such as the undo manager, still need to be able to
+     * modify the children of a chart.
+     */
+    public void testAddAndRemoveChild() throws Exception {
+        ChartColumn col = new ChartColumn("col1", DataType.TEXT);
+        
+        assertEquals(0, chart.getChildren().size());
+        
+        chart.addChild(col, 0);
+        
+        assertEquals(col, chart.getChildren().get(0));
+        
+        chart.removeChild(col);
+        
+        assertEquals(0, chart.getChildren().size());
+        
     }
 
 }
