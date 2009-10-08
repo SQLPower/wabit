@@ -83,8 +83,10 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(null, e);
 		}
 		messageSender.send(jsonObject);
-		messageSender.flush();
 		transactionCount--;
+		if (transactionCount == 0) {
+			messageSender.flush();
+		}
 	}
 
 	public void persistObject(String parentUUID, String type, String uuid, int index)
