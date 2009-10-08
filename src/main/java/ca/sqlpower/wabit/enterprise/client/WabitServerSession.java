@@ -31,7 +31,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
@@ -43,6 +42,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
@@ -135,10 +135,11 @@ public class WabitServerSession extends WabitSessionImpl {
     public static List<String> getWorkspaceNames(HttpClient httpClient, WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
         HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
         String responseBody = httpClient.execute(request, new BasicResponseHandler());
-        JSONArray workspaceArray;
+        JSONObject response;
         List<String> workspaces = new ArrayList<String>();
-		workspaceArray = new JSONArray(responseBody);
+		response = new JSONObject(responseBody);
 		logger.debug("Workspace list:\n" + responseBody);
+		JSONArray workspaceArray = response.getJSONArray("workspaceNames");
 		for (int i = 0; i < workspaceArray.length(); i++) {
 			workspaces.add(workspaceArray.getString(i));
 		}
