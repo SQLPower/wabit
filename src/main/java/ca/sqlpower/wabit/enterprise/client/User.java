@@ -23,13 +23,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.security.GrantedAuthority;
+import org.springframework.security.userdetails.UserDetails;
+
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
-public class User extends AbstractWabitObject {
+public class User extends AbstractWabitObject implements UserDetails {
 
     private final List<Grant> grants;
     private String password;
+    private GrantedAuthority[] authorities = null;
 
     public User(String username, String password) {
         assert username != null;
@@ -85,4 +89,36 @@ public class User extends AbstractWabitObject {
             fireChildRemoved(Grant.class, grant, index);
         }
     }
+
+	public GrantedAuthority[] getAuthorities() {
+		if (this.authorities==null) {
+			throw new RuntimeException("Programmatic error. The user manager has to fill in this user's groups before passing back to the security framework.");
+		} else {
+			return this.authorities;
+		}
+	}
+	
+	public void setAuthorities(GrantedAuthority[] authorities) {
+		this.authorities = authorities;
+	}
+
+	public String getUsername() {
+		return super.getName();
+	}
+
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	public boolean isEnabled() {
+		return true;
+	}
 }

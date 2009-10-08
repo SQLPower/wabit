@@ -23,10 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.security.GrantedAuthority;
+
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
-public class Group extends AbstractWabitObject {
+public class Group extends AbstractWabitObject implements GrantedAuthority {
 
     private final List<Grant> grants;
     private final List<GroupMember> members;
@@ -106,4 +108,13 @@ public class Group extends AbstractWabitObject {
             fireChildRemoved(GroupMember.class, member, index);
         }
     }
+
+	public String getAuthority() {
+		return super.getName();
+	}
+
+	public int compareTo(Object o) {
+		assert o instanceof GrantedAuthority;
+		return ((GrantedAuthority)o).getAuthority().compareTo(this.getAuthority());
+	}
 }
