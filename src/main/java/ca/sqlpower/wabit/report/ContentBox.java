@@ -231,22 +231,9 @@ public class ContentBox extends AbstractWabitObject {
     @SuppressWarnings("unchecked")
     public int childPositionOffset(Class<? extends WabitObject> childType) {
         
-        //Walk up all of the interfaces to see if the given class type implements
-        //the interface we are looking for.
-        Set<Class> interfacesOfChildType = new HashSet<Class>();
-        Queue<Class> interfaceQueue = new LinkedList<Class>((Collection<Class>) Arrays.asList(childType.getInterfaces())); 
-        while (!interfaceQueue.isEmpty()) {
-            Class parentInterface = interfaceQueue.remove();
-            if (!interfacesOfChildType.contains(parentInterface)) {
-                interfacesOfChildType.add(parentInterface);
-                interfaceQueue.addAll((Collection<Class>) Arrays.asList(parentInterface.getInterfaces()));
-            }
-        }
-        
-        if (childType == ReportContentRenderer.class || 
-                interfacesOfChildType.contains(ReportContentRenderer.class)) {
-            return 0;
-        } else {
+    	if (ReportContentRenderer.class.isAssignableFrom(childType)) {
+    		return 0;
+    	} else {
             throw new UnsupportedOperationException("Content boxes don't have children of type " + childType);
         }
     }
