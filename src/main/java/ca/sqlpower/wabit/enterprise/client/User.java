@@ -35,6 +35,7 @@ public class User extends AbstractWabitObject {
         assert username != null;
         this.grants = new ArrayList<Grant>();
         this.password = password;
+        super.setName(username);
     }
 
     protected boolean removeChildImpl(WabitObject child) {
