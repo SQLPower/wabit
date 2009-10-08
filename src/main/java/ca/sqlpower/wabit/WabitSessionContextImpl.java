@@ -229,6 +229,10 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 * shouldn't need to call this method from your own code.
 	 */
 	public void deregisterChildSession(WabitSession child) {
+	    if (!childSessions.contains(child)) {
+	        throw new IllegalArgumentException("The session " + child.getWorkspace().getName() + 
+	                " does not exist in this context.");
+	    }
 		childSessions.remove(child);
 		child.removeSessionLifecycleListener(sessionLifecycleListener);
 		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");

@@ -42,7 +42,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
-import ca.sqlpower.swingui.SPSUtils;
+
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 
 /**
@@ -56,6 +58,9 @@ import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
  * that it can be used in the Wabit.
  */
 public class StackedTabComponent extends JComponent {
+    
+    private static final Logger logger = Logger
+            .getLogger(StackedTabComponent.class);
 	
 	/**
 	 * Set of gradient colours for a selected tab
@@ -341,6 +346,10 @@ public class StackedTabComponent extends JComponent {
 	 */
 	public void removeTabAt(int i) {
 		StackedTab removedTab = tabs.get(i);
+		if (logger.isDebugEnabled()) {
+		    logger.debug("removed tab at " + i + ", removed tab " + removedTab.titleLabel, 
+		            new Exception("For stack trace"));
+		}
 		if (removedTab != null) {
 			remove(removedTab.tabComponent);
 			remove(removedTab.subComponent);

@@ -440,7 +440,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			createdObject = null;
         		} else {
         			setCancelled(true);
-        			context.deregisterChildSession(session);
         			createdObject = null;
         		}
         	} else if (!session.getWorkspace().dsAlreadyAdded(ds)) {
