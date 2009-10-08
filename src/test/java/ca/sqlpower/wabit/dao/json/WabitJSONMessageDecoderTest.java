@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.dao.json;
 
 import junit.framework.TestCase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.olap4j.metadata.Datatype;
 
@@ -72,9 +73,11 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		JSONObject json = new JSONObject();
 		json.put("method", WabitPersistMethod.begin);
 		json.put("uuid", JSONObject.NULL);
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 	
 	public void testDecodeCommit() throws Exception {
@@ -118,9 +121,11 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		JSONObject json = new JSONObject();
 		json.put("method", WabitPersistMethod.commit);
 		json.put("uuid", JSONObject.NULL);
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 
 	public void testDecodePersistObject() throws Exception {
@@ -167,9 +172,11 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("parentUUID", "parent");
 		json.put("type", "type");
 		json.put("index", 0);
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 	
 	public void testDecodeChangeProperty() throws Exception {
@@ -217,9 +224,11 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("propertyName", "property");
 		json.put("newValue", "new");
 		json.put("oldValue", "old");
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 	
 	public void testDecodePersistProperty() throws Exception {
@@ -266,9 +275,11 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("type", Datatype.BOOLEAN);
 		json.put("propertyName", "property");
 		json.put("newValue", "new");
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 	
 	public void testDecodeRemoveObject() throws Exception {
@@ -312,9 +323,11 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("method", WabitPersistMethod.removeObject);
 		json.put("uuid", "uuid");
 		json.put("parentUUID", "parent");
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 	
 	public void testDecodeRollback() throws Exception {
@@ -358,8 +371,10 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		JSONObject json = new JSONObject();
 		json.put("method", WabitPersistMethod.rollback);
 		json.put("uuid", JSONObject.NULL);
+		JSONArray messages = new JSONArray();
+		messages.put(json);
 		
 		MessageDecoder<String> decoder = new WabitJSONMessageDecoder(dummyPersister);
-		decoder.decode(json.toString());
+		decoder.decode(messages.toString());
 	}
 }

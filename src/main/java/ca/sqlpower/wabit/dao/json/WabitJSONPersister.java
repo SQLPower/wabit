@@ -83,6 +83,7 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(null, e);
 		}
 		messageSender.send(jsonObject);
+		messageSender.flush();
 		transactionCount--;
 	}
 
@@ -158,6 +159,7 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(null, e);
 		}
 		messageSender.send(jsonObject);
+		messageSender.flush();
 	}
 	
 	public MessageSender<JSONObject> getMessageSender() {

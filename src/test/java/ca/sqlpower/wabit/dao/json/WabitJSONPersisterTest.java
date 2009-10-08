@@ -42,6 +42,10 @@ public class WabitJSONPersisterTest extends TestCase {
 					throw new RuntimeException(e);
 				}
 			}
+
+			public void flush() throws WabitPersistenceException {
+				// no-op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
@@ -59,6 +63,10 @@ public class WabitJSONPersisterTest extends TestCase {
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
+			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
 			}
 		};
 		
@@ -90,6 +98,10 @@ public class WabitJSONPersisterTest extends TestCase {
 					throw new RuntimeException(e);
 				}
 			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
@@ -109,6 +121,10 @@ public class WabitJSONPersisterTest extends TestCase {
 					throw new RuntimeException(e);
 				}
 			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
@@ -127,6 +143,10 @@ public class WabitJSONPersisterTest extends TestCase {
 					throw new RuntimeException(e);
 				}
 			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
@@ -143,6 +163,10 @@ public class WabitJSONPersisterTest extends TestCase {
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
+			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
 			}
 		};
 		
@@ -161,6 +185,10 @@ public class WabitJSONPersisterTest extends TestCase {
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
+			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
 			}
 		};
 		

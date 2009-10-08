@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao.json;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -59,7 +60,12 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 
 	/**
 	 * Takes in a message in the form of String. The message is expected to be
-	 * in JSON format. It expects the following key-value pairs:
+	 * in JSON format.
+	 * 
+	 * The JSON message is expected to be a JSONArray of JSONObjects. Each
+	 * JSONObject contains details for making a WabitPersister method call.
+	 * 
+	 * It expects the following key-value pairs in each JSONObject message:
 	 * <ul>
 	 * <li>method - The String value of a {@link WabitPersistMethod}. This is
 	 * used to determine which {@link WabitPersister} method to call.</li>
@@ -81,55 +87,59 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 */
 	public void decode(String message) throws WabitPersistenceException {
 		String uuid = null;
+		
 		try {
-			JSONObject jsonObject = new JSONObject(message);
-			uuid = jsonObject.getString("uuid");
-			WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
-			
-			String parentUUID;
-			String propertyName;
-			DataType propertyType;
-			Object newValue;
-			switch (method) {
-			case begin:
-				persister.begin();
-				break;
-			case commit:
-				persister.commit();
-				break;
-			case persistObject:
-				parentUUID = jsonObject.getString("parentUUID");
-				String type = jsonObject.getString("type");
-				int index = jsonObject.getInt("index");
-				persister.persistObject(parentUUID, type, uuid, index);
-				break;
-			case changeProperty:
-				parentUUID = jsonObject.getString("parentUUID");
-				propertyName = jsonObject.getString("propertyName");
-				propertyType = DataType.valueOf(jsonObject.getString("type"));
-				newValue = jsonObject.get("newValue");
-				Object oldValue = jsonObject.get("oldValue");
-				persister.persistProperty(parentUUID, propertyName,
-						propertyType, oldValue, newValue);
-				break;
-			case persistProperty:
-				parentUUID = jsonObject.getString("parentUUID");
-				propertyName = jsonObject.getString("propertyName");
-				propertyType = DataType.valueOf(jsonObject.getString("type"));
-				newValue = jsonObject.get("newValue");
-				persister.persistProperty(parentUUID, propertyName,
-						propertyType, newValue);
-				break;
-			case removeObject:
-				parentUUID = jsonObject.getString("parentUUID");
-				persister.removeObject(parentUUID, uuid);
-				break;
-			case rollback:
-				persister.rollback();
-				break;
-			default:
-				throw new WabitPersistenceException(uuid,
-						"Does not support Wabit persistence method " + method);
+			JSONArray messageArray = new JSONArray(message);
+			for (int i=0; i < messageArray.length(); i++) {
+				JSONObject jsonObject = messageArray.getJSONObject(i);
+				uuid = jsonObject.getString("uuid");
+				WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
+				
+				String parentUUID;
+				String propertyName;
+				DataType propertyType;
+				Object newValue;
+				switch (method) {
+				case begin:
+					persister.begin();
+					break;
+				case commit:
+					persister.commit();
+					break;
+				case persistObject:
+					parentUUID = jsonObject.getString("parentUUID");
+					String type = jsonObject.getString("type");
+					int index = jsonObject.getInt("index");
+					persister.persistObject(parentUUID, type, uuid, index);
+					break;
+				case changeProperty:
+					parentUUID = jsonObject.getString("parentUUID");
+					propertyName = jsonObject.getString("propertyName");
+					propertyType = DataType.valueOf(jsonObject.getString("type"));
+					newValue = jsonObject.get("newValue");
+					Object oldValue = jsonObject.get("oldValue");
+					persister.persistProperty(parentUUID, propertyName,
+							propertyType, oldValue, newValue);
+					break;
+				case persistProperty:
+					parentUUID = jsonObject.getString("parentUUID");
+					propertyName = jsonObject.getString("propertyName");
+					propertyType = DataType.valueOf(jsonObject.getString("type"));
+					newValue = jsonObject.get("newValue");
+					persister.persistProperty(parentUUID, propertyName,
+							propertyType, newValue);
+					break;
+				case removeObject:
+					parentUUID = jsonObject.getString("parentUUID");
+					persister.removeObject(parentUUID, uuid);
+					break;
+				case rollback:
+					persister.rollback();
+					break;
+				default:
+					throw new WabitPersistenceException(uuid,
+							"Does not support Wabit persistence method " + method);
+				}
 			}
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);

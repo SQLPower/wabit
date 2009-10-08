@@ -23,11 +23,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import ca.sqlpower.wabit.dao.HttpMessageSender;
@@ -40,32 +42,48 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  * href="http://www.json.org">www.json.org</a>).
  */
 public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
-
+	
+	private JSONArray messageArray;
+	
 	public JSONHttpMessageSender(WabitServerInfo serverInfo,
 			String wabitWorkspaceUUID) {
 		super(serverInfo, wabitWorkspaceUUID);
+		messageArray = new JSONArray();
 	}
 
 	public void send(JSONObject content) throws WabitPersistenceException {
-		String uuid = null;
-		
+		messageArray.put(content);
+	}
+	
+	public void flush() throws WabitPersistenceException {
 		try {
-			uuid = content.getString("uuid");
 			URI serverURI = getServerURI();
-			HttpUriRequest request = null;
 			HttpPost postRequest = new HttpPost(serverURI);
-			postRequest.setEntity(new StringEntity(content.toString()));
+			postRequest.setEntity(new StringEntity(messageArray.toString()));
 			postRequest.setHeader("Content-Type", "application/json");
-			request = postRequest;
-	        getHttpClient().execute(request);
+			HttpUriRequest request = postRequest;
+	        HttpResponse response = getHttpClient().execute(request);
+	        StatusLine statusLine = response.getStatusLine();
+			if (statusLine.getStatusCode() >= 400) {
+	        	throw new WabitPersistenceException(null, 
+	        			"HTTP Post request returned an error: " +
+	        			"Code = " + statusLine.getStatusCode() + ", " +
+	        			"Reason = " + statusLine.getReasonPhrase());
+	        }
 		} catch (URISyntaxException e) {
-			throw new WabitPersistenceException(uuid, e);
+			throw new WabitPersistenceException(null, e);
 		} catch (ClientProtocolException e) {
-			throw new WabitPersistenceException(uuid, e);
+			throw new WabitPersistenceException(null, e);
 		} catch (IOException e) {
-			throw new WabitPersistenceException(uuid, e);
-		} catch (JSONException e) {
-			throw new WabitPersistenceException(uuid, e);
+			throw new WabitPersistenceException(null, e);
+		} finally {
+			clearMessageArray();
+		}
+	}
+	
+	private void clearMessageArray() {
+		for (int i = messageArray.length() - 1; i >= 0; i--) {
+			messageArray.remove(i);
 		}
 	}
 }

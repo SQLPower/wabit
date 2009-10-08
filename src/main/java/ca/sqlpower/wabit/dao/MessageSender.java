@@ -20,11 +20,30 @@
 package ca.sqlpower.wabit.dao;
 
 /**
- * A simple interface for anything that sends a message.
+ * A simple interface for anything that sends a message. The implementation
+ * can support buffering, but it is not mandatory.
  * 
  * @param <T>
  *            The Object type that will represent the content of the message
  */
 public interface MessageSender<T> {
+	/**
+	 * Adds a message for sending. It may not necessarily send the message
+	 * immediately, for example if the implementation supports buffering, in
+	 * which case you may have to call {@link #flush()} to actually send the
+	 * messages.
+	 * 
+	 * @param content
+	 * @throws WabitPersistenceException
+	 */
 	public void send(T content) throws WabitPersistenceException;
+
+	/**
+	 * Should the implementation support buffering, calling this will clear the
+	 * buffered messages and send them. If the implementation chooses not to
+	 * support buffering, this can be a simply no-op.
+	 * 
+	 * @throws WabitPersistenceException
+	 */
+	public void flush() throws WabitPersistenceException;
 }
