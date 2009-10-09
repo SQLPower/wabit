@@ -27,7 +27,7 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class Grant extends AbstractWabitObject {
 
-    private final Class<? extends WabitObject> type;
+    private final String type;
     private final String subject;
     private boolean createPrivilege = false;
     private boolean modifyPrivilege = false;
@@ -47,7 +47,7 @@ public class Grant extends AbstractWabitObject {
      * @param execute
      * @param grant
      */
-    public Grant(String subject, Class<? extends WabitObject> type,
+    public Grant(String subject, String type,
             boolean create, boolean modify, boolean delete, boolean execute,
             boolean grant) 
     {
@@ -65,7 +65,7 @@ public class Grant extends AbstractWabitObject {
         if (this.subject != null) {
             return this.subject.concat(" - ").concat(this.getPermsString());
         } else if (this.type != null){
-            return "All ".concat(this.type.getCanonicalName())
+            return "All ".concat(this.type)
                 .concat(" - ").concat(this.getPermsString());
         } else {
             throw new RuntimeException("Badly constructed grant object.");
@@ -147,7 +147,7 @@ public class Grant extends AbstractWabitObject {
         firePropertyChange("grantPrivilege", oldValue, this.grantPrivilege);
     }
 
-    public Class<? extends WabitObject> getType() {
+    public String getType() {
         return type;
     }
 
