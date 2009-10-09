@@ -28,7 +28,7 @@ import ca.sqlpower.wabit.WabitObject;
 public class Grant extends AbstractWabitObject {
 
     private final Class<? extends WabitObject> type;
-    private final WabitObject subject;
+    private final String subject;
     private boolean createPrivilege = false;
     private boolean modifyPrivilege = false;
     private boolean deletePrivilege = false;
@@ -47,7 +47,7 @@ public class Grant extends AbstractWabitObject {
      * @param execute
      * @param grant
      */
-    public Grant(WabitObject subject, Class<? extends WabitObject> type,
+    public Grant(String subject, Class<? extends WabitObject> type,
             boolean create, boolean modify, boolean delete, boolean execute,
             boolean grant) 
     {
@@ -63,7 +63,7 @@ public class Grant extends AbstractWabitObject {
     @Override
     public String getName() {
         if (this.subject != null) {
-            return this.subject.getName().concat(" - ").concat(this.getPermsString());
+            return this.subject.concat(" - ").concat(this.getPermsString());
         } else if (this.type != null){
             return "All ".concat(this.type.getCanonicalName())
                 .concat(" - ").concat(this.getPermsString());
@@ -151,7 +151,7 @@ public class Grant extends AbstractWabitObject {
         return type;
     }
 
-    public WabitObject getSubject() {
+    public String getSubject() {
         return subject;
     }
     
