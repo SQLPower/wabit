@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.dao;
 
 import java.awt.Font;
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
@@ -83,73 +84,45 @@ public class WabitSessionPersisterTest extends TestCase {
 	private WabitPersister targetPersister = new WabitPersister() {
 
 		public void rollback() throws WabitPersistenceException {
-			// System.out.println("Calling rollback() on target WabitPersister.");
-
+			// TODO
 		}
 
-		public void removeObject(String parentUUID, String uuid)
-				throws WabitPersistenceException {
-			// System.out.println("Calling removeObject(" + parentUUID + ", "
-			// + uuid + ") on target WabitPersister.");
-
+		public void removeObject(String parentUUID, String uuid) {
+			// TODO
 		}
 
 		public void persistProperty(String uuid, String propertyName,
 				DataType propertyType, Object newValue)
 				throws WabitPersistenceException {
-			// System.out.println("Calling persistProperty(" + uuid + ", "
-			// + propertyName + ", " + propertyType.name() + ", "
-			// + newValue.getClass().getSimpleName()
-			// + ") on target WabitPersister.");
-
+			// TODO
 		}
 
 		public void persistProperty(String uuid, String propertyName,
 				DataType propertyType, Object oldValue, Object newValue)
 				throws WabitPersistenceException {
-			// if (oldValue == null) {
-			// System.out.println("Calling persistProperty(" + uuid + ", "
-			// + propertyName + ", " + propertyType.name()
-			// + ", null, " + newValue.getClass().getSimpleName()
-			// + ") on target WabitPersister.");
-			// } else {
-			// System.out.println("Calling persistProperty(" + uuid + ", "
-			// + propertyName + ", " + propertyType.name() + ", "
-			// + oldValue.getClass().getSimpleName() + ", "
-			// + newValue.getClass().getSimpleName()
-			// + ") on target WabitPersister.");
-			//
-			// }
-
+			// TODO
 		}
 
 		public void persistObject(String parentUUID, String type, String uuid,
 				int index) throws WabitPersistenceException {
-			// System.out.println("Calling persistObject(" + parentUUID + ", "
-			// + type + ", " + uuid + ", " + index +
-			// ") on target WabitPersister.");
-
+			// TODO
 		}
 
 		public void commit() throws WabitPersistenceException {
-			// System.out.println("Calling commit() on target WabitPersister.");
-
+			// TODO
 		}
 
 		public void begin() throws WabitPersistenceException {
-			// System.out.println("Calling begin() on target WabitPersister.");
-
+			// TODO
 		}
 	};
 
 	public void setUp() {
 		final PlDotIni defaultPlIni = new PlDotIni();
 		try {
-			defaultPlIni
-					.read(ClassLoader
+			defaultPlIni.read(ClassLoader
 							.getSystemResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
-			defaultPlIni
-					.read(ClassLoader
+			defaultPlIni.read(ClassLoader
 							.getSystemResourceAsStream("ca/sqlpower/demodata/example_database.ini"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -199,6 +172,7 @@ public class WabitSessionPersisterTest extends TestCase {
 		final String constantItemUUID = generateUUID();
 		final String tableUUID = generateUUID();
 		final String tableItemUUID = generateUUID();
+		final String tableItem2UUID = generateUUID();
 		final String joinUUID = generateUUID();
 		final String selectedItemUUID = generateUUID();
 		final String queryOrderByItemUUID = generateUUID();
@@ -277,7 +251,8 @@ public class WabitSessionPersisterTest extends TestCase {
 		//
 		// System.out.println("Testing persistObject on WabitConstantsContainer.");
 		// wsp.persistObject(queryUUID, "WabitConstantsContainer",
-		// constantsUUID, offset++);
+		// constantsUUID,
+		// offset++);
 		//
 		// System.out.println("Testing commit.");
 		// wsp.commit();
@@ -310,46 +285,52 @@ public class WabitSessionPersisterTest extends TestCase {
 		// wci.getParent().getUUID());
 		// assertEquals("WabitConstantItem has an invalid name property.",
 		// "current_date", wci.getName());
-		//
+
 		// Testing WabitTableContainer
-		// System.out.println("Testing begin.");
-		// wsp.begin();
-		//
-		// System.out.println("Testing persistObject on WabitTableContainer.");
-		// wsp.persistObject(queryUUID, "WabitTableContainer", tableUUID,
-		// offset++);
-		// wsp.persistProperty(tableUUID, "name", DataType.STRING,
-		// "test-table-name");
-		// wsp.persistProperty(tableUUID, "schema", DataType.STRING,
-		// "test-schema-name");
-		// wsp.persistProperty(tableUUID, "catalog", DataType.STRING,
-		// "test-catalog-name");
-		//
-		// System.out.println("Testing commit.");
-		// wsp.commit();
-		//
-		// WabitTableContainer wtc = workspace.findByUuid(tableUUID,
-		// WabitTableContainer.class);
-		// assertNotNull("WabitTableContainer could not be persisted.", wtc);
-		// TableContainer tableContainer = ((TableContainer) wtc.getDelegate());
-		// assertEquals("WabitTableContainer has an invalid parent.", queryUUID,
-		// wtc.getParent().getUUID());
-		// assertEquals("WabitTableContainer has an invalid name property.",
-		// "test-table-name", wtc.getName());
-		// assertEquals("WabitTableContainer has an invalid schema property.",
-		// "test-schema-name", tableContainer.getSchema());
-		// assertEquals("WabitTableContainer has an invalid catalog property.",
-		// "test-catalog-name", tableContainer.getCatalog());
-		//
+		System.out.println("Testing begin.");
+		wsp.begin();
+
+		System.out.println("Testing persistObject on WabitTableContainer.");
+		wsp
+				.persistObject(queryUUID, "WabitTableContainer", tableUUID,
+						offset++);
+		wsp.persistProperty(tableUUID, "name", DataType.STRING,
+				"test-table-name");
+		wsp.persistProperty(tableUUID, "schema", DataType.STRING,
+				"test-schema-name");
+		wsp.persistProperty(tableUUID, "catalog", DataType.STRING,
+				"test-catalog-name");
+
+		System.out.println("Testing commit.");
+		wsp.commit();
+
+		WabitTableContainer wtc = workspace.findByUuid(tableUUID,
+				WabitTableContainer.class);
+		assertNotNull("WabitTableContainer could not be persisted.", wtc);
+		TableContainer tableContainer = ((TableContainer) wtc.getDelegate());
+		assertEquals("WabitTableContainer has an invalid parent.", queryUUID,
+				wtc.getParent().getUUID());
+		assertEquals("WabitTableContainer has an invalid name property.",
+				"test-table-name", wtc.getName());
+		assertEquals("WabitTableContainer has an invalid schema property.",
+				"test-schema-name", tableContainer.getSchema());
+		assertEquals("WabitTableContainer has an invalid catalog property.",
+				"test-catalog-name", tableContainer.getCatalog());
+
 		// // Testing WabitColumnItem
 		// System.out.println("Testing begin.");
 		// wsp.begin();
 		//
 		// System.out.println("Testing persistObject on WabitColumnItem.");
-		// wsp.persistObject(tableUUID, "WabitColumnItem", tableItemUUID,
+		// wsp
+		// .persistObject(tableUUID, "WabitColumnItem", tableItemUUID,
 		// offset++);
 		// wsp.persistProperty(tableItemUUID, "name", DataType.STRING,
 		// "test-table-item-name");
+		// wsp.persistObject(tableUUID, "WabitColumnItem", tableItem2UUID,
+		// offset++);
+		// wsp.persistProperty(tableItem2UUID, "name", DataType.STRING,
+		// "test-table-item-2-name");
 		//
 		// System.out.println("Testing commit.");
 		// wsp.commit();
@@ -361,19 +342,28 @@ public class WabitSessionPersisterTest extends TestCase {
 		// .getParent().getUUID());
 		// assertEquals("WabitColumnItem has an invalid name property.",
 		// "test-table-item-name", wci.getName());
-		//		
+		//
+		// WabitColumnItem wci2 = workspace.findByUuid(tableItem2UUID,
+		// WabitColumnItem.class);
+		// assertNotNull("WabitColumnItem could not be persisted.", wci2);
+		// assertEquals("WabitColumnItem has an invalid parent.", tableUUID,
+		// wci2
+		// .getParent().getUUID());
+		// assertEquals("WabitColumnItem has an invalid name property.",
+		// "test-table-item-2-name", wci2.getName());
+
 		// // Testing WabitJoin
 		// System.out.println("Testing begin.");
 		// wsp.begin();
-		//		
+		//
 		// System.out.println("Testing persistObject on WabitJoin.");
 		// wsp.persistObject(queryUUID, "WabitJoin", joinUUID, offset++);
 		// wsp.persistProperty(joinUUID, "LEFT_JOIN_CHANGED",
 		// DataType.REFERENCE,
-		// "some-id");
+		// tableItemUUID);
 		// wsp.persistProperty(joinUUID, "RIGHT_JOIN_CHANGED",
 		// DataType.REFERENCE,
-		// "some-other-id");
+		// tableItem2UUID);
 		//
 		// System.out.println("Testing commit.");
 		// wsp.commit();
@@ -385,9 +375,9 @@ public class WabitSessionPersisterTest extends TestCase {
 		// assertEquals("WabitJoin has an invalid parent.", queryUUID, wabitJoin
 		// .getParent().getUUID());
 		// assertEquals("WabitJoin has an invalid LEFT_JOIN_CHANGED property.",
-		// "some-id", sqlJoin.getLeftColumn().getUUID());
+		// tableItemUUID, sqlJoin.getLeftColumn().getUUID());
 		// assertEquals("WabitJoin has an invalid RIGHT_JOIN_CHANGED property.",
-		// "some-other-id", sqlJoin.getRightColumn().getUUID());
+		// tableItem2UUID, sqlJoin.getRightColumn().getUUID());
 
 		// Testing OlapQuery
 		System.out.println("Testing begin.");
@@ -423,56 +413,54 @@ public class WabitSessionPersisterTest extends TestCase {
 		assertEquals("OlapQuery has an invalid cubeName property.",
 				"test-olap-cube-name", olapQuery.getCubeName());
 
-		// // Testing WabitOlapAxis
-		// System.out.println("Testing begin.");
-		// wsp.begin();
-		//
-		// System.out.println("Testing persistObject on WabitOlapAxis.");
-		// wsp.persistObject(olapQueryUUID, "WabitOlapAxis", olapAxisUUID);
-		// wsp.persistProperty(olapAxisUUID, "ordinal", DataType.INTEGER, 1);
-		//
-		// System.out.println("Testing commit.");
-		// wsp.commit();
-		//
-		// WabitOlapAxis woa = workspace.findByUuid(olapAxisUUID,
-		// WabitOlapAxis.class);
-		// assertNotNull("WabitOlapAxis could not be persisted.", woa);
-		// assertEquals("WabitOlapAxis has an invalid parent.", olapQueryUUID,
-		// woa
-		// .getParent().getUUID());
-		// assertEquals("WabitOlapAxis has an invalid ordinal property.", 1, woa
-		// .getOrdinal().axisOrdinal());
-		//
-		// // Testing WabitOlapDimension
-		// System.out.println("Testing begin.");
-		// wsp.begin();
-		//
-		// System.out.println("Testing persistObject on WabitOlapDimension.");
-		// wsp
-		// .persistObject(olapAxisUUID, "WabitOlapDimension",
-		// olapDimensionUUID);
-		// wsp.persistProperty(olapDimensionUUID, "name", DataType.STRING,
-		// "test-olap-dimension-name");
-		//
-		// System.out.println("Testing commit.");
-		// wsp.commit();
-		//
-		// WabitOlapDimension wod = workspace.findByUuid(olapDimensionUUID,
-		// WabitOlapDimension.class);
-		// assertNotNull("WabitOlapDimension could not be persisted.", wod);
-		// assertEquals("WabitOlapDimension has an invalid parent.",
-		// olapAxisUUID,
-		// wod.getParent().getUUID());
-		// assertEquals("WabitOlapDimension has an invalid name property.",
-		// "test-olap-dimension-name", wod.getName());
-		//
+		// Testing WabitOlapAxis
+		System.out.println("Testing begin.");
+		wsp.begin();
+
+		System.out.println("Testing persistObject on WabitOlapAxis.");
+		wsp.persistObject(olapQueryUUID, "WabitOlapAxis", olapAxisUUID,
+				offset++);
+		wsp.persistProperty(olapAxisUUID, "ordinal", DataType.INTEGER, 1);
+
+		System.out.println("Testing commit.");
+		wsp.commit();
+
+		WabitOlapAxis woa = workspace.findByUuid(olapAxisUUID,
+				WabitOlapAxis.class);
+		assertNotNull("WabitOlapAxis could not be persisted.", woa);
+		assertEquals("WabitOlapAxis has an invalid parent.", olapQueryUUID, woa
+				.getParent().getUUID());
+		assertEquals("WabitOlapAxis has an invalid ordinal property.", 1, woa
+				.getOrdinal().axisOrdinal());
+
+		// Testing WabitOlapDimension
+		System.out.println("Testing begin.");
+		wsp.begin();
+
+		System.out.println("Testing persistObject on WabitOlapDimension.");
+		wsp.persistObject(olapAxisUUID, "WabitOlapDimension",
+				olapDimensionUUID, offset++);
+		wsp.persistProperty(olapDimensionUUID, "name", DataType.STRING,
+				"test-olap-dimension-name");
+
+		System.out.println("Testing commit.");
+		wsp.commit();
+
+		WabitOlapDimension wod = workspace.findByUuid(olapDimensionUUID,
+				WabitOlapDimension.class);
+		assertNotNull("WabitOlapDimension could not be persisted.", wod);
+		assertEquals("WabitOlapDimension has an invalid parent.", olapAxisUUID,
+				wod.getParent().getUUID());
+		assertEquals("WabitOlapDimension has an invalid name property.",
+				"test-olap-dimension-name", wod.getName());
+
 		// // Testing WabitOlapInclusion
 		// System.out.println("Testing begin.");
 		// wsp.begin();
 		//
 		// System.out.println("Testing persistObject on WabitOlapInclusion.");
 		// wsp.persistObject(olapDimensionUUID, "WabitOlapInclusion",
-		// olapInclusionUUID);
+		// olapInclusionUUID, offset++);
 		// wsp.persistProperty(olapInclusionUUID, "operator", DataType.STRING,
 		// Operator.MEMBER.name());
 		// wsp.persistProperty(olapInclusionUUID, "uniqueMemberName",
@@ -500,7 +488,7 @@ public class WabitSessionPersisterTest extends TestCase {
 		//
 		// System.out.println("Testing persistObject on WabitOlapExclusion.");
 		// wsp.persistObject(olapDimensionUUID, "WabitOlapExclusion",
-		// olapExclusionUUID);
+		// olapExclusionUUID, offset++);
 		// wsp.persistProperty(olapExclusionUUID, "operator", DataType.STRING,
 		// Operator.MEMBER.name());
 		// wsp.persistProperty(olapExclusionUUID, "uniqueMemberName",
@@ -537,25 +525,25 @@ public class WabitSessionPersisterTest extends TestCase {
 		assertEquals("Chart has an invalid parent.", workspaceUUID, chart
 				.getParent().getUUID());
 
-		// // Testing ChartColumn
-		// System.out.println("Testing begin.");
-		// wsp.begin();
-		//
-		// System.out.println("Testing persistObject on ChartColumn.");
-		// wsp.persistObject(chartUUID, "ChartColumn", chartColumnUUID);
-		// wsp.persistProperty(chartColumnUUID, "name", DataType.STRING,
-		// "test-chart-column-name");
-		// wsp.persistProperty(chartColumnUUID, "dataType", DataType.STRING,
-		// ca.sqlpower.wabit.report.chart.ChartColumn.DataType.TEXT);
-		//
-		// System.out.println("Testing commit.");
-		// wsp.commit();
-		//
-		// ChartColumn chartColumn = workspace.findByUuid(chartColumnUUID,
-		// ChartColumn.class);
-		// assertNotNull("ChartColumn could not be persisted.", chartColumn);
-		// assertEquals("ChartColumn has an invalid parent.", chartUUID,
-		// chartColumn.getParent().getUUID());
+		// Testing ChartColumn
+		System.out.println("Testing begin.");
+		wsp.begin();
+
+		System.out.println("Testing persistObject on ChartColumn.");
+		wsp.persistObject(chartUUID, "ChartColumn", chartColumnUUID, offset++);
+		wsp.persistProperty(chartColumnUUID, "name", DataType.STRING,
+				"test-chart-column-name");
+		wsp.persistProperty(chartColumnUUID, "dataType", DataType.STRING,
+				ca.sqlpower.wabit.report.chart.ChartColumn.DataType.TEXT);
+
+		System.out.println("Testing commit.");
+		wsp.commit();
+
+		ChartColumn chartColumn = workspace.findByUuid(chartColumnUUID,
+				ChartColumn.class);
+		assertNotNull("ChartColumn could not be persisted.", chartColumn);
+		assertEquals("ChartColumn has an invalid parent.", chartUUID,
+				chartColumn.getParent().getUUID());
 
 		// Testing WabitImage
 		System.out.println("Testing begin.");
@@ -610,18 +598,19 @@ public class WabitSessionPersisterTest extends TestCase {
 				.getParent().getUUID());
 		assertEquals("Report has an invalid name property.",
 				"test-report-name", report.getName());
-		
+
 		// Testing persistProperty
 		System.out.println("Testing begin.");
 		wsp.begin();
-		
+
 		System.out.println("Testing persistProperty on Report.");
 		wsp.persistProperty(reportUUID, "zoomLevel", DataType.INTEGER, 150);
-		
+
 		System.out.println("Testing commit.");
 		wsp.commit();
-		
-		assertEquals("Report has an invalid zoomLevel property.", 150, report.getZoomLevel());
+
+		assertEquals("Report has an invalid zoomLevel property.", 150, report
+				.getZoomLevel());
 
 		// // Testing Page
 		// System.out.println("Testing begin.");
@@ -766,380 +755,5 @@ public class WabitSessionPersisterTest extends TestCase {
 		// .getOffset());
 
 	}
-	// public void testPersistCellSetRenderer() throws IOException,
-	// WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = "w63325b07-5416-4f13-8d89-ae097c73f40e";
-	// final String olapQueryId = "w34aa0826-197c-41a3-8361-bef5c5d0ad30";
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "CellSetRenderer", uuid);
-	// wsp.persistProperty(uuid, "olap-query-uuid", DataType.REFERENCE,
-	// olapQueryId);
-	// wsp.commit();
-	//
-	// CellSetRenderer csRenderer = workspace.findByUuid(uuid,
-	// CellSetRenderer.class);
-	// assertNotNull("CellSetRenderer could not be persisted into storage.",
-	// csRenderer);
-	// assertEquals("CellSetRenderer has an invalid parent.", parentUUID,
-	// csRenderer.getParent().getUUID());
-	// assertEquals("CellSetRenderer has an invalid olap-query-id.",
-	// olapQueryId, csRenderer.getOlapQuery().getUUID());
-	//
-	// // Test persistProperty
-	// final String newOlapQueryId = "w9577bd13-e7fb-4306-882d-03bf095df383";
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "name", DataType.STRING, "test-name");
-	// wsp.persistProperty(uuid, "olap-query-uuid", DataType.REFERENCE,
-	// olapQueryId, newOlapQueryId);
-	// wsp.persistProperty(uuid, "body-alignment", DataType.STRING,
-	// HorizontalAlignment.CENTER.name());
-	// wsp.persistProperty(uuid, "body-format-pattern", DataType.STRING,
-	// DecimalFormat.INTEGER_FIELD);
-	// wsp.persistProperty(uuid, "olap-header-font", DataType.STRING,
-	// new Font("Serif", Font.BOLD, 12).toString());
-	// wsp.persistProperty(uuid, "olap-body-font", DataType.STRING, new Font(
-	// "SansSerif", Font.ITALIC, 10).toString());
-	// wsp.commit();
-	//
-	// assertEquals("CellSetRenderer has an invalid name property.",
-	// "test-name", csRenderer.getName());
-	// assertEquals(
-	// "CellSetRenderer has an invalid olap-query-uuid property.",
-	// newOlapQueryId, csRenderer.getModifiedOlapQuery().getUUID());
-	// assertEquals("CellSetRenderer has an invalid body-alignment property.",
-	// HorizontalAlignment.CENTER.name(), csRenderer
-	// .getBodyAlignment().name());
-	// assertEquals(
-	// "CellSetRenderer has an invalid body-format-pattern property.",
-	// DecimalFormat.INTEGER_FIELD, csRenderer.getBodyFormat()
-	// .toPattern());
-	// assertEquals(
-	// "CellSetRenderer has an invalid olap-header-font property.",
-	// new Font("Serif", Font.BOLD, 12).toString(), csRenderer
-	// .getHeaderFont().toString());
-	// assertEquals("CellSetRenderer has an invalid olap-body-font property.",
-	// new Font("SansSerif", Font.ITALIC, 10).toString(), csRenderer
-	// .getBodyFont().toString());
-	//
-	// }
-	//
-	// public void testPersistChart() throws WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = "w84107a9b-3c5b-46f4-b3b2-86720ae23529";
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "Chart", uuid);
-	// wsp.commit();
-	//
-	// Chart chart = workspace.findByUuid(uuid, Chart.class);
-	// assertNotNull("Chart could not be persisted into storage.", chart);
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "x-axis-name", DataType.STRING,
-	// "test-x-axis-name");
-	// wsp.persistProperty(uuid, "y-axis-name", DataType.STRING,
-	// "test-y-axis-name");
-	// wsp.persistProperty(uuid, "x-axis-label-rotation", DataType.DOUBLE, 45);
-	// wsp.persistProperty(uuid, "gratuitous-animated", DataType.BOOLEAN,
-	// "true");
-	// wsp
-	// .persistProperty(uuid, "type", DataType.STRING, ChartType.BAR
-	// .name());
-	// wsp.persistProperty(uuid, "legend-position", DataType.STRING,
-	// LegendPosition.BOTTOM.name());
-	// wsp.persistProperty(uuid, "query-id", DataType.REFERENCE,
-	// "w9577bd13-e7fb-4306-882d-03bf095df383");
-	// wsp.commit();
-	//
-	// assertEquals("Chart has an invalid x-axis-name property.",
-	// "test-x-axis-name", chart.getXaxisName());
-	// assertEquals("Chart has an invalid y-axis-name property.",
-	// "test-y-axis-name", chart.getYaxisName());
-	// assertEquals("Chart has an invalid x-axis-label-rotation property.",
-	// 45, chart.getXaxisLabelRotation());
-	// assertEquals("Chart has an invalid gratuitous-animated property.",
-	// true, chart.isGratuitouslyAnimated());
-	// assertEquals("Chart has an invalid legend-position property.",
-	// LegendPosition.BOTTOM.name(), chart.getLegendPosition().name());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("Guide could not be removed successfully.", workspace
-	// .findByUuid(uuid, Chart.class));
-	// }
-	//
-	// public void testPersistChartColumn() throws WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = "w717235a9-dfae-4237-90f1-bb268a70f54f";
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "ChartColumn", uuid);
-	// wsp.persistProperty(uuid, "name", DataType.STRING,
-	// "test-chart-column-name");
-	// wsp
-	// .persistProperty(
-	// uuid,
-	// "data-type",
-	// DataType.STRING,
-	// ca.sqlpower.wabit.report.chart.ChartColumn.DataType.TEXT
-	// .name());
-	// wsp.commit();
-	//
-	// ChartColumn chartColumn = workspace.findByUuid(uuid, ChartColumn.class);
-	// assertNotNull("ChartColumn could not be persisted into storage.",
-	// chartColumn);
-	// assertEquals("ChartColumn has an invalid parent.", parentUUID,
-	// chartColumn.getParent().getUUID());
-	// assertEquals("ChartColumn has an invalid name property.",
-	// "test-chart-column-name", chartColumn.getColumnName());
-	// assertEquals(
-	// "ChartColumn has an invalid data-type property.",
-	// ca.sqlpower.wabit.report.chart.ChartColumn.DataType.TEXT.name(),
-	// chartColumn.getDataType().name());
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "role", DataType.STRING, ColumnRole.SERIES
-	// .name());
-	// wsp.persistProperty(uuid, "x-axis-name", DataType.STRING,
-	// "test-x-axis-name");
-	// wsp.commit();
-	//
-	// assertEquals("ChartColumn has an invalid role property.",
-	// ColumnRole.SERIES.name(), chartColumn.getRoleInChart().name());
-	// assertEquals("ChartColumn has an invalid x-axis-name property.",
-	// "test-x-axis-name", chartColumn.getXAxisIdentifier().getName());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("ChartColumn could not be removed successfully.", workspace
-	// .findByUuid(uuid, ChartColumn.class));
-	//
-	// }
-	//
-	// public void testPersistChartRenderer() {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// }
-	//
-	// public void testPersistGuide() throws WabitPersistenceException,
-	// IOException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = "w84107a9b-3c5b-46f4-b3b2-86720ae23529";
-	//
-	// // Test persistObject
-	// String axis = Axis.VERTICAL.name();
-	// double offset = 456;
-	//
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "Guide", uuid);
-	// wsp.persistProperty(uuid, "axis", DataType.STRING, axis);
-	// wsp.persistProperty(uuid, "offset", DataType.DOUBLE, offset + 1);
-	// wsp
-	// .persistProperty(uuid, "offset", DataType.DOUBLE, offset + 1,
-	// offset);
-	// wsp.commit();
-	//
-	// Guide guide = workspace.findByUuid(uuid, Guide.class);
-	// assertNotNull("Guide could not be persisted into storage.", workspace
-	// .findByUuid(uuid, Guide.class));
-	// assertEquals("Guide has an invalid parent.", parentUUID, guide
-	// .getParent().getUUID());
-	// assertEquals("Guide has an invalid axis property.", axis, guide
-	// .getAxis().name());
-	// assertEquals("Guide has an invalid offset property.", offset, guide
-	// .getOffset());
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp
-	// .persistProperty(uuid, "offset", DataType.DOUBLE, offset,
-	// offset + 2);
-	// wsp.persistProperty(uuid, "name", DataType.STRING, "test-name");
-	// wsp.persistProperty(uuid, "offset", DataType.DOUBLE, offset + 2,
-	// offset + 3);
-	// wsp.commit();
-	//
-	// assertEquals("Guide has an invalid name property.", "test-name", guide
-	// .getName());
-	// assertEquals("Guide has an invalid offset property.", offset + 3, guide
-	// .getOffset());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("Guide could not be removed successfully.", workspace
-	// .findByUuid(uuid, Guide.class));
-	// }
-	//
-	// public void testPersistReport() throws WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = workspaceUUID;
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "Report", uuid);
-	// wsp.persistProperty(uuid, "name", DataType.STRING, "test-name");
-	// wsp.commit();
-	//
-	// Report report = workspace.findByUuid(uuid, Report.class);
-	// assertNotNull("Report could not be persisted into storage.", report);
-	// assertEquals("Report has an invalid parent.", parentUUID, report
-	// .getParent().getUUID());
-	// assertEquals("Report has an invalid name property.", "test-name",
-	// report.getName());
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "zoom", DataType.INTEGER, 150);
-	// wsp.commit();
-	//
-	// assertEquals("Report has an invalid zoom property.", 150, report
-	// .getZoomLevel());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("Report could not be removed successfully.", workspace
-	// .findByUuid(uuid, Report.class));
-	// }
-	//
-	// public void testPersistTemplate() throws WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = workspaceUUID;
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "Template", uuid);
-	// wsp.persistProperty(uuid, "name", DataType.STRING, "test-name");
-	// wsp.commit();
-	//
-	// Report report = workspace.findByUuid(uuid, Report.class);
-	// assertNotNull("Template could not be persisted into storage.", report);
-	// assertEquals("Template has an invalid parent.", parentUUID, report
-	// .getParent().getUUID());
-	// assertEquals("Template has an invalid name property.", "test-name",
-	// report.getName());
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "zoom", DataType.INTEGER, 150);
-	// wsp.commit();
-	//
-	// assertEquals("Template has an invalid zoom property.", 150, report
-	// .getZoomLevel());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("Report could not be removed successfully.", workspace
-	// .findByUuid(uuid, Report.class));
-	// }
-	//
-	// public void testPersistOlapQuery() throws WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = "w9f868a71-c10f-4af7-832f-dd3f53c733eb";
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "OlapQuery", uuid);
-	// wsp.commit();
-	//
-	// OlapQuery olapQuery = workspace.findByUuid(uuid, OlapQuery.class);
-	// assertNotNull("OlapQuery could not be persisted into storage.");
-	// assertEquals("OlapQuery has an invalid parent.", parentUUID, olapQuery
-	// .getParent().getUUID());
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "catalog", DataType.STRING,
-	// "test-catalog-name");
-	// wsp.persistProperty(uuid, "schema-name", DataType.STRING,
-	// "test-schema-name");
-	// wsp.persistProperty(uuid, "cube-name", DataType.STRING,
-	// "test-cube-name");
-	// wsp.commit();
-	//
-	// assertEquals("OlapQuery has an invalid catalog property.",
-	// "test-catalog-name", olapQuery.getCatalogName());
-	// assertEquals("OlapQuery has an invalid schema-name property.",
-	// "test-schema-name", olapQuery.getSchemaName());
-	// assertEquals("OlapQuery has an invalid cube-name property.",
-	// "test-cube-name", olapQuery.getCubeName());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("OlapQuery could not be removed successfully.", workspace
-	// .findByUuid(uuid, OlapQuery.class));
-	// }
-	//
-	// public void testPersistContentBox() throws WabitPersistenceException {
-	// WabitWorkspace workspace = wsp.getWabitSession().getWorkspace();
-	// final String uuid = generateUUID();
-	// final String parentUUID = "w5e006b77-082a-4f40-ab87-6d016db96033";
-	//
-	// // Test persistObject
-	// wsp.begin();
-	// wsp.persistObject(parentUUID, "ContentBox", uuid);
-	// wsp.commit();
-	//
-	// ContentBox contentBox = workspace.findByUuid(uuid, ContentBox.class);
-	// assertNotNull("ContentBox could not be persisted into storage.",
-	// contentBox);
-	// assertEquals("ContentBox has an invalid parent.", parentUUID,
-	// contentBox.getParent().getUUID());
-	//
-	// // Test persistProperty
-	// wsp.begin();
-	// wsp.persistProperty(uuid, "height", DataType.DOUBLE, 123);
-	// wsp.persistProperty(uuid, "width", DataType.DOUBLE, 456);
-	// wsp.persistProperty(uuid, "xpos", DataType.DOUBLE, 135);
-	// wsp.persistProperty(uuid, "ypos", DataType.DOUBLE, 246);
-	// wsp.commit();
-	//
-	// assertEquals("ContentBox has an invalid height property.", 123,
-	// contentBox.getHeight());
-	// assertEquals("ContentBox has an invalid width property.", 456,
-	// contentBox.getWidth());
-	// assertEquals("ContentBox has an invalid xpos property.", 135,
-	// contentBox.getX());
-	// assertEquals("ContentBox has an nvalid ypos property.", 246, contentBox
-	// .getY());
-	//
-	// // Test removeObject
-	// wsp.begin();
-	// wsp.removeObject(parentUUID, uuid);
-	// wsp.commit();
-	//
-	// assertNull("ContentBox could not be removed successfully.", workspace
-	// .findByUuid(uuid, ContentBox.class));
-	// }
+
 }

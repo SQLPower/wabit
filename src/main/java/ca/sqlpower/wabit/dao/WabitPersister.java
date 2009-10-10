@@ -19,7 +19,12 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.geom.Point2D;
 import java.io.InputStream;
+
+import org.olap4j.metadata.Cube;
 
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -30,13 +35,27 @@ import ca.sqlpower.wabit.WabitWorkspace;
  */
 public interface WabitPersister {
 
+	/**
+	 * Defines each type of object that can be persisted by the WabitPersister.
+	 * Each object type can be converted to a simple type based on its name.
+	 */
 	public enum DataType {
 		STRING("String", String.class),
 		INTEGER("Integer", Integer.class),
 		DOUBLE("Double", Double.class),
 		BOOLEAN("Boolean", Boolean.class),
-		REFERENCE("Reference", String.class),
+		
+		/**
+		 * This is a Wabit object reference. Other objects like 
+		 * Font or Color have their own entry in this data type.
+		 */
+		REFERENCE("Reference", WabitObject.class),
 		PNG_IMG("PNG_IMG", InputStream.class),
+		FONT("FONT", Font.class),
+		COLOR("COLOR", Color.class),
+		CUBE("CUBE", Cube.class),
+		POINT2D("POINT2D", Point2D.class),
+		ENUM("ENUM", Enum.class),
 		NULL("Null", null);
 		
 		private final String name;
@@ -62,8 +81,8 @@ public interface WabitPersister {
 		public static DataType getTypeByClass(Class<?> lookupValue) {
 			for (DataType type : values()) {
 				if ((type.getRepresentation() == null && lookupValue == null) || 
-						(type.getRepresentation() != null && 
-								type.getRepresentation().equals(lookupValue))) {
+						(lookupValue != null && type.getRepresentation() != null && 
+								type.representation.isAssignableFrom(lookupValue))) {
 					return type;
 				}
 			}

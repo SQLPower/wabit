@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
@@ -67,8 +66,11 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		this.operator = selection.getOperator();
 		this.uniqueMemberName = selection.getMember().getUniqueName();
 		initialized = true;
+		//XXX The object is not constructed so what is listening to it?
 		firePropertyChange("operator", null, operator);
 		firePropertyChange("uniqueMemberName", null, uniqueMemberName);
+		
+		setName(getUniqueMemberName());
 	}
 
 	/**
@@ -80,8 +82,10 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 	public WabitOlapSelection(Operator operator, String uniqueMemberName) {
 		this.operator = operator;
 		this.uniqueMemberName = uniqueMemberName;
+		//XXX The object is not constructed so what is listening to it?
 		firePropertyChange("operator", null, operator);
 		firePropertyChange("uniqueMemberName", null, uniqueMemberName);
+		setName(getUniqueMemberName());
 	}
 	
 	@Override
@@ -141,10 +145,6 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		}
 	}
 	
-	public String getName() {
-		return getUniqueMemberName();
-	}
-
 	/**
 	 * Returns the Selection wrapped by this object. This method is package
 	 * private to avoid leaking the Olap4j object wrapped inside, and to allow

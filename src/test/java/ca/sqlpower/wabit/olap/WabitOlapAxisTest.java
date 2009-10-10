@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.olap;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Set;
 
 import javax.naming.NamingException;
 
@@ -41,6 +42,13 @@ import ca.sqlpower.wabit.WabitObject;
 public class WabitOlapAxisTest extends AbstractWabitObjectTest {
     
     private WabitOlapAxis wabitAxis;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
+    	notPersisting.add("dimensions");
+    	return notPersisting;
+    }
     
     @Override
     protected void setUp() throws Exception {

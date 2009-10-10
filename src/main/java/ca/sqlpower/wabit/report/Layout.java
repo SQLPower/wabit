@@ -45,7 +45,7 @@ import ca.sqlpower.wabit.WabitVersion;
 public abstract class Layout extends AbstractWabitObject implements Pageable, Printable {
     private static final Logger logger = Logger.getLogger(Report.class);
 
-	private static final String PROPERTY_ZOOM = "zoomLevel";
+	public static final String PROPERTY_ZOOM = "zoomLevel";
 	
 	/**
 	 * A Boolean property that when true defines the print method calls to be

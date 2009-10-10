@@ -24,9 +24,14 @@ import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
 import java.io.File;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 
+import javax.naming.NamingException;
+
+import org.olap4j.OlapException;
 import org.olap4j.metadata.Cube;
+import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.query.Container;
@@ -236,6 +241,14 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        } else if (valueType.equals(Member.class)) {
+        	try {
+        		//This train wreck gets the first member in the first dimension of a basic cube.
+				newValue = connectionPool.getConnection().getSchema().getCubes().get("World Countries").
+				getDimensions().get(0).getDefaultHierarchy().getDefaultMember();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

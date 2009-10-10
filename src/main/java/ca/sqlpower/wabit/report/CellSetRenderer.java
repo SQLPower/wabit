@@ -597,6 +597,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         this.selectedMember = selectedMember;
         firePropertyChange("selectedMember", oldSelection, selectedMember);
     }
+    
+    public Member getSelectedMember() {
+    	return selectedMember;
+    }
 
     private void setCellSet(CellSet cellSet) {
         CellSet oldSet = this.cellSet;

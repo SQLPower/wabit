@@ -116,6 +116,7 @@ public class ChartColumn extends AbstractWabitObject {
             throw new NullPointerException("null data type not allowed");
         }
         this.columnName = columnName;
+        setName(columnName);
         this.dataType = dataType;
         setRoleInChart(ColumnRole.NONE);
     }
@@ -166,10 +167,6 @@ public class ChartColumn extends AbstractWabitObject {
         //do nothing.
     }
     
-    public String getName() {
-        return getColumnName();
-    }
-
     public String getColumnName() {
         return columnName;
     }

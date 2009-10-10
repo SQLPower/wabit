@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,12 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.testutil.NewValueMaker;
+import ca.sqlpower.wabit.WabitChildEvent.EventType;
+import ca.sqlpower.wabit.dao.CountingWabitPersister;
+import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
+import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
+import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 
 /**
  * A baseline test that all tests for WabitObject implementations should pass.
@@ -58,6 +65,21 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         Set<String> ignore = new HashSet<String>();
         ignore.add("class");
         return ignore;
+    }
+    
+    /**
+     * Returns a list of JavaBeans property names that should be ignored when
+     * testing that all of the properties of an object are persisted when the
+     * object itself is being persisted.
+     */
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignore = new HashSet<String>();
+    	ignore.add("class");
+    	ignore.add("children");
+    	ignore.add("parent");
+    	ignore.add("dependencies");
+    	ignore.add("UUID");
+    	return ignore;
     }
     
     /**
@@ -114,6 +136,155 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         }
 
     }
+
+	/**
+	 * This will reflectively iterate over all of the properties in the Wabit
+	 * object and set each value that has a setter and getter. When the property
+	 * is set it should cause the property to be persisted through the
+	 * {@link WorkspacePersisterListener}.
+	 */
+    public void testPropertiesArePersisted() throws Exception {
+    	
+    	CountingWabitPersister countingPersister = new CountingWabitPersister();
+    	WorkspacePersisterListener listener = new WorkspacePersisterListener(null, null, null, countingPersister);
+    	
+        WabitObject wo = getObjectUnderTest();
+        wo.addWabitListener(listener);
+
+        SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(null, null, null);
+        List<PropertyDescriptor> settableProperties;
+        settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
+
+        Set<String> propertiesToIgnoreForEvents = getPropertiesToIgnoreForEvents();
+        NewValueMaker valueMaker = new WabitNewValueMaker();
+        for (PropertyDescriptor property : settableProperties) {
+            Object oldVal;
+            
+            if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
+            
+            try {
+                oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());
+
+                // check for a setter
+                if (property.getWriteMethod() == null) continue;
+                
+            } catch (NoSuchMethodException e) {
+                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                continue;
+            }
+            
+            Object newVal = valueMaker.makeNewValue(property.getPropertyType(), oldVal, property.getName());
+            int oldChangeCount = countingPersister.getPersistPropertyCount();
+            
+            try {
+                System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
+                BeanUtils.copyProperty(wo, property.getName(), newVal);
+
+                assertTrue("Did not persist property " + property.getName(), 
+                		oldChangeCount + 1 == countingPersister.getPersistPropertyCount());
+                assertEquals(wo.getUUID(), countingPersister.getLastUUID());
+                assertEquals(property.getName(), countingPersister.getLastPropertyName());
+                DataType oldValType;
+                if (oldVal != null) {
+                	 oldValType = DataType.getTypeByClass(oldVal.getClass());
+                } else {
+                	 oldValType = DataType.getTypeByClass(null);
+                }
+				Object oldConvertedType = converterFactory.convertToBasicType(oldVal, oldValType);
+				assertEquals("Old value of property " + property.getName() + " was wrong, value expected was  " + oldConvertedType + 
+						" but is " + countingPersister.getLastOldValue(), oldConvertedType, 
+                		countingPersister.getLastOldValue());
+                assertEquals(converterFactory.convertToBasicType(newVal, DataType.getTypeByClass(newVal.getClass())), 
+                		countingPersister.getLastNewValue());
+                Class<? extends Object> classType;
+                if (oldVal != null) {
+                	classType = oldVal.getClass();
+                } else {
+                	classType = newVal.getClass();
+                }
+                assertEquals(DataType.getTypeByClass(classType), countingPersister.getLastDataType());
+            } catch (InvocationTargetException e) {
+                System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
+            }
+        }
+		
+	}
+    
+    /**
+     * Reflective test that the wabit object can be persisted as an object and all of
+     * its properties are persisted with it.
+     */
+    public void testPersistsObjectAsChild() throws Exception {
+
+    	//This may need to actually have the wabit object as a child to itself.
+    	WabitObject parent = new StubWabitObject(); 
+    	
+    	CountingWabitPersister persister = new CountingWabitPersister();
+    	WorkspacePersisterListener listener = new WorkspacePersisterListener(null, null, null, persister);
+    	WabitObject wo = getObjectUnderTest();
+    	wo.setParent(parent);
+    	
+    	listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
+    	
+    	assertEquals(1, persister.getPersistObjectCount());
+    	assertEquals(wo.getClass().getSimpleName(), persister.getLastPersistObject().getType());
+    	assertEquals(0, persister.getLastPersistObject().getIndex());
+    	assertEquals(wo.getUUID(), persister.getLastPersistObject().getUUID());
+    	
+    	//confirm we get one persist property for each getter/setter pair
+    	//confirm we get one persist property for each value in one of the constructors in the object.
+    	
+    	List<PropertyDescriptor> settableProperties = new ArrayList<PropertyDescriptor>(
+    			Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass())));
+    	List<WabitObjectProperty> allPropertyChanges = persister.getAllPropertyChanges();
+    	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
+    	
+    	for (int i = settableProperties.size() - 1; i >= 0; i--) {
+    		PropertyDescriptor pd = settableProperties.get(i);
+    		if (ignorableProperties.contains(pd.getName())) {
+    			settableProperties.remove(pd);
+    		}
+    	}
+    	
+    	if (settableProperties.size() != allPropertyChanges.size()) {
+    		for (PropertyDescriptor descriptor : settableProperties) {
+        		WabitObjectProperty foundChange = null;
+        		for (WabitObjectProperty propertyChange : allPropertyChanges) {
+        			if (propertyChange.getPropertyName().equals(descriptor.getName())) {
+        				foundChange = propertyChange;
+        				break;
+        			}
+        		}
+        		assertNotNull("The property " + descriptor.getName() + " was not persisted", foundChange);
+    		}
+    	}
+    	assertEquals(settableProperties.size(), allPropertyChanges.size());
+    	assertEquals(settableProperties.size(), persister.getPersistPropertyUnconditionallyCount());
+    	
+    	SessionPersisterSuperConverter factory = new SessionPersisterSuperConverter(null, null, null);
+    	for (PropertyDescriptor descriptor : settableProperties) {
+    		WabitObjectProperty foundChange = null;
+    		for (WabitObjectProperty propertyChange : allPropertyChanges) {
+    			if (propertyChange.getPropertyName().equals(descriptor.getName())) {
+    				foundChange = propertyChange;
+    				break;
+    			}
+    		}
+    		assertNotNull("The property " + descriptor.getName() + " was not persisted", foundChange);
+    		assertTrue(foundChange.isUnconditional());
+    		assertEquals(wo.getUUID(), foundChange.getUUID());
+    		Object value = PropertyUtils.getSimpleProperty(wo, descriptor.getName());
+    		System.out.println("Property \"" + descriptor.getName() + "\": expected \"" + value + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
+    		DataType dataTypeForValue;
+    		if (value != null) {
+    			dataTypeForValue = DataType.getTypeByClass(value.getClass());
+    		} else {
+    			dataTypeForValue = DataType.getTypeByClass(null);
+    		}
+			Object valueConvertedToBasic = factory.convertToBasicType(value, dataTypeForValue);
+			assertEquals(valueConvertedToBasic, foundChange.getNewValue());
+    	}
+	}
 
     /**
      * Reflectively discovers all the addXXX() methods which take an argument of

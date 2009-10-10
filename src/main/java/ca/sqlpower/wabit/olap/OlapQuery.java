@@ -1283,7 +1283,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      *            them.
      */
     public synchronized void setNonEmpty(boolean nonEmpty) {
-    	boolean oldVal = nonEmpty;
+    	boolean oldVal = this.nonEmpty;
     	this.nonEmpty = nonEmpty;
     	if (mdxQuery != null) {
     		mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);

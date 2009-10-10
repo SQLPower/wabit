@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.naming.NamingException;
 
@@ -72,6 +73,15 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
 		}
     	
     };
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
+    	notPersisting.add("axes");
+    	notPersisting.add("columnHierarchies");
+    	notPersisting.add("initDone");
+    	return notPersisting;
+    }
     
     @Override
     protected void setUp() throws Exception {

@@ -48,6 +48,13 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     private WabitWorkspace workspace;
     
     @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
+    	notPersisting.add("charts");
+    	return notPersisting;
+    }
+    
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         workspace = new WabitWorkspace();
