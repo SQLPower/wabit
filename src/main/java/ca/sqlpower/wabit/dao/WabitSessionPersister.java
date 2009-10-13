@@ -2375,11 +2375,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("modifiedOlapQuery")) {
-			return converter.convertToBasicType(csRenderer.getModifiedOlapQuery(),
-					DataType.REFERENCE);
-
-		} else if (propertyName.equals("bodyAlignment")) {
+		
+		if (propertyName.equals("bodyAlignment")) {
 			return converter.convertToBasicType(csRenderer.getBodyAlignment(),
 					DataType.ENUM);
 
@@ -2414,10 +2411,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("modifiedOlapQuery")) {
-			csRenderer.setModifiedOlapQuery((OlapQuery) converter.convertToComplexType(newValue, OlapQuery.class));
 
-		} else if (propertyName.equals("bodyAlignment")) {
+		if (propertyName.equals("bodyAlignment")) {
 			csRenderer.setBodyAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 

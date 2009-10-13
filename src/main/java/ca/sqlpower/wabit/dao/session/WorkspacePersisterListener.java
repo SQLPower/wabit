@@ -221,10 +221,6 @@ public class WorkspacePersisterListener implements WabitListener {
 			if (child instanceof CellSetRenderer) {
 				CellSetRenderer csRenderer = (CellSetRenderer) child;
 
-				// Constructor argument
-				target.persistProperty(uuid, "modifiedOlapQuery",
-								DataType.REFERENCE, converter.convertToBasicType(csRenderer.getContent(), DataType.REFERENCE));
-
 				// Remaining properties
 				target.persistProperty(uuid, "bodyAlignment", DataType.STRING,
 						csRenderer.getBodyAlignment().name());

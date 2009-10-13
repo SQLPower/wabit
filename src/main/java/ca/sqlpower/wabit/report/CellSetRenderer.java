@@ -170,7 +170,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
 
     public CellSetRenderer(CellSetRenderer cellSetRenderer) {
     	this.olapQuery = cellSetRenderer.getContent();
-    	this.modifiedOlapQuery = cellSetRenderer.getModifiedOlapQuery();
+    	try {
+			this.setModifiedOlapQuery(OlapQuery.copyOlapQuery(cellSetRenderer.getModifiedOlapQuery()));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
     	setName(cellSetRenderer.getName());
     	this.olapQuery.addWabitListener(nameListener);
     	this.headerFont = cellSetRenderer.headerFont;
@@ -194,8 +198,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         try {
         	if (modifiedOlapQuery == null) {
             	try {
-    				modifiedOlapQuery = OlapQuery.copyOlapQuery(olapQuery);
-    				modifiedOlapQuery.addOlapQueryListener(queryListener);
+    				setModifiedOlapQuery(OlapQuery.copyOlapQuery(olapQuery));
     				
     				// This code will eventually fire the change and set the cellset
     				// (must be done synchronously--don't use asyncExecute!)
@@ -205,7 +208,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
     				throw new RuntimeException(e);
     			}
             } else if (modifiedOlapQuery.hasCachedAttributes()) {
-            	modifiedOlapQuery.addOlapQueryListener(queryListener);
             	modifiedOlapQuery.executeOlapQuery();
             }
         	this.initDone=true;
@@ -549,7 +551,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public boolean allowsChildren() {
-        return false;
+        return true;
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
@@ -557,7 +559,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public List<? extends WabitObject> getChildren() {
-        return new ArrayList<WabitObject>();
+    	if (modifiedOlapQuery != null) {
+    		return Collections.singletonList(modifiedOlapQuery);
+    	} else {
+    		return Collections.emptyList();
+    	}
     }
 
     public void setHeaderFont(Font headerFont) {
@@ -626,9 +632,16 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
     
     public void setModifiedOlapQuery(OlapQuery modifiedOlapQuery) {
+    	if (this.modifiedOlapQuery != null) {
+    		this.modifiedOlapQuery.removeOlapQueryListener(queryListener);
+    	}
+    	fireChildRemoved(OlapQuery.class, this.modifiedOlapQuery, 0);
         OlapQuery oldQuery = this.modifiedOlapQuery;
         this.modifiedOlapQuery = modifiedOlapQuery;
+        this.modifiedOlapQuery.setParent(this);
+        this.modifiedOlapQuery.addOlapQueryListener(queryListener);
         firePropertyChange("modifiedOlapQuery", oldQuery, modifiedOlapQuery);
+        fireChildAdded(OlapQuery.class, modifiedOlapQuery, 0);
     }
     
     public String getErrorMessage() {

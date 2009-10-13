@@ -37,6 +37,9 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
     	ignorable.add("cellSet");
     	ignorable.add("errorMessage");
     	
+    	//Child of this thing.
+    	ignorable.add("modifiedOlapQuery");
+    	
     	//These properties are only defined when a user hovers over a member with their mouse.
     	ignorable.add("memberSelectedAtPoint");
     	ignorable.add("selectedMember");
