@@ -140,7 +140,7 @@ public class SessionPersisterSuperConverter {
 			return convertFrom;
 			
 		} else if (convertFrom.getClass().isEnum()) {
-			return new EnumConverter(convertFrom.getClass()).convertToSimpleType(convertFrom);
+			return new EnumConverter(convertFrom.getClass()).convertToSimpleType((Enum) convertFrom);
 			
 		} else {
 			throw new IllegalArgumentException("Cannot convert " + convertFrom + " of type " + 
