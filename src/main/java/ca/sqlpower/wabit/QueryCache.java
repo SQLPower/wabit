@@ -770,6 +770,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean setDataSourceWithoutReset(JDBCDataSource dataSource) {
         return query.setDataSourceWithoutReset(dataSource);
     }
+    
+    public JDBCDataSource getDataSource() {
+    	return query.getDataSource();
+    }
 
     public void setName(String string) {
         query.setName(string);
@@ -829,10 +833,14 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         addTable(new WabitTableContainer(container), index);
     }
 
-    public void defineUserModifiedQuery(String query) {
-        this.query.defineUserModifiedQuery(query);
+    public void setUserModifiedQuery(String query) {
+        this.query.setUserModifiedQuery(query);
     }
 
+    public String getUserModifiedQuery() {
+    	return query.getUserModifiedQuery();
+    }
+    
     public void endCompoundEdit() {
         query.endCompoundEdit();
     }
@@ -845,8 +853,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         return query.getDatabase();
     }
 
-    public SQLDatabaseMapping getDbMapping() {
-        return query.getDbMapping();
+    public SQLDatabaseMapping getDBMapping() {
+        return query.getDBMapping();
     }
 
     public List<Container> getFromTableList() {

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.query;
 
 import java.beans.PropertyChangeEvent;
+import java.util.Set;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -56,6 +57,51 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	}
 	
 	private QueryCache queryCache;
+	
+	@Override
+	public Set<String> getPropertiesToIgnoreForEvents() {
+		Set<String> ignorable = super.getPropertiesToIgnoreForEvents();
+		ignorable.add("DBMapping");
+		return ignorable;
+	}
+	
+	@Override
+	public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+		Set<String> noPersist = super.getPropertiesToNotPersistOnObjectPersist();
+		
+		//SQLDatabase information that is not persisted. The data source is the persisted part
+		//of the connection.
+		noPersist.add("DBMapping");
+		noPersist.add("database");
+		
+		//Values that define a cached result. This is not persisted.
+		noPersist.add("cachedRowSet");
+		noPersist.add("resultSet");
+		noPersist.add("running");
+		noPersist.add("moreResults");
+		noPersist.add("updateCount");
+
+		//The following are children not properties
+		noPersist.add("constantsContainer");
+		noPersist.add("wabitConstantsContainer");
+		noPersist.add("fromTableList");
+		noPersist.add("joins");
+		
+		//Automatically generated values created based on the children and 
+		//other properties of the query.
+		noPersist.add("orderByList");
+		noPersist.add("scriptModified");
+		noPersist.add("selectedColumns");
+		noPersist.add("statement");
+		
+		//Not persisted, this is a patch for queries that were hanging around.
+		noPersist.add("phantomQuery");
+		
+		//The data source is being persisted itself.
+		noPersist.add("wabitDataSource");
+		
+		return noPersist;
+	}
 	
 	protected void setUp() throws Exception {
 		super.setUp();

@@ -25,10 +25,11 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.TransactionEvent;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitConstantItem;
@@ -41,7 +42,6 @@ import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
-import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -56,6 +56,8 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.ReportContentRenderer;
+import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
@@ -380,6 +382,9 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining properties
 				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
 						olapQuery.isNonEmpty());
+				target.persistProperty(uuid, "olapDataSource", DataType.STRING, 
+						converter.convertToBasicType(olapQuery.getOlapDataSource(), 
+								DataType.OLAP4J_DATA_SOURCE));
 				target.persistProperty(uuid, "currentCube", DataType.CUBE,
 						converter.convertToBasicType(
 								olapQuery.getCurrentCube(), DataType.CUBE));
@@ -399,6 +404,35 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "defaultFont", DataType.FONT,
 						converter.convertToBasicType(page.getDefaultFont(), DataType.FONT));
 
+			} else if (child instanceof QueryCache) {
+				QueryCache query = (QueryCache) child;
+				
+				target.persistProperty(uuid, "zoomLevel", DataType.INTEGER,
+						query.getZoomLevel());
+				target.persistProperty(uuid, "streaming", DataType.BOOLEAN,
+						query.isStreaming());
+				target.persistProperty(uuid, "streamingRowLimit",
+						DataType.INTEGER, query.getStreamingRowLimit());
+				target.persistProperty(uuid, QueryImpl.ROW_LIMIT,
+						DataType.INTEGER, query.getRowLimit());
+				target.persistProperty(uuid, QueryImpl.GROUPING_ENABLED,
+						DataType.BOOLEAN, query.isGroupingEnabled());
+				target.persistProperty(uuid, "promptForCrossJoins",
+						DataType.BOOLEAN, query.getPromptForCrossJoins());
+				target.persistProperty(uuid, "automaticallyExecuting",
+						DataType.BOOLEAN, query.isAutomaticallyExecuting());
+				target.persistProperty(uuid, QueryImpl.GLOBAL_WHERE_CLAUSE,
+						DataType.STRING, query.getGlobalWhereClause());
+				target.persistProperty(uuid, QueryImpl.USER_MODIFIED_QUERY,
+						DataType.STRING, query.getUserModifiedQuery());
+				target.persistProperty(uuid, "executeQueriesWithCrossJoins",
+						DataType.BOOLEAN, query
+								.getExecuteQueriesWithCrossJoins());
+				target.persistProperty(uuid, "dataSource",
+						DataType.OLAP4J_DATA_SOURCE,
+						converter.convertToBasicType(query.getWabitDataSource(),
+										DataType.OLAP4J_DATA_SOURCE));
+				
 			} else if (child instanceof WabitColumnItem) {
 
 			} else if (child instanceof WabitConstantItem) {
@@ -406,12 +440,17 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof WabitDataSource) {
 
 			} else if (child instanceof WabitJoin) {
-				SQLJoin sqlJoin = ((WabitJoin) child).getDelegate();
+				WabitJoin sqlJoin = ((WabitJoin) child);
+				
+				target.persistProperty(uuid, "delegate", DataType.STRING, 
+						converter.convertToBasicType(sqlJoin.getDelegate(), DataType.SQL_JOIN));
 
-				target.persistProperty(uuid, SQLJoin.LEFT_JOIN_CHANGED,
-						DataType.REFERENCE, sqlJoin.getLeftColumn().getUUID());
-				target.persistProperty(uuid, SQLJoin.RIGHT_JOIN_CHANGED,
-						DataType.REFERENCE, sqlJoin.getRightColumn());
+				target.persistProperty(uuid, "comparator", DataType.STRING,
+						sqlJoin.getComparator());
+				target.persistProperty(uuid, "leftColumnOuterJoin",
+						DataType.REFERENCE, sqlJoin.isLeftColumnOuterJoin());
+				target.persistProperty(uuid, "rightColumnOuterJoin",
+						DataType.REFERENCE, sqlJoin.isRightColumnOuterJoin());
 
 			} else if (child instanceof WabitOlapAxis) {
 				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
@@ -453,13 +492,34 @@ public class WorkspacePersisterListener implements WabitListener {
 								tableContainer, DataType.TABLE_CONTAINER));
 
 				// Remaining properties
-				target.persistProperty(uuid, "delegate" + WabitSessionPersister.PROPERTY_SEPARATOR
-						+ "alias", DataType.STRING,
+				target.persistProperty(uuid, "alias", DataType.STRING,
 						tableContainer.getAlias());
-				target.persistProperty(uuid, "delegate" + WabitSessionPersister.PROPERTY_SEPARATOR
-						+ "position", DataType.POINT2D,
-						converter.convertToBasicType(tableContainer.getPosition(), DataType.POINT2D));
+				target.persistProperty(uuid, "position", DataType.POINT2D,
+						converter.convertToBasicType(tableContainer.getPosition(),
+								DataType.POINT2D));
 
+			} else if (child instanceof ResultSetRenderer) {
+				ResultSetRenderer renderer = (ResultSetRenderer) child;
+				
+				target.persistProperty(uuid, "content", DataType.REFERENCE, 
+						converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
+				
+				target.persistProperty(uuid, "bodyFont", DataType.FONT, 
+						converter.convertToBasicType(renderer.getBodyFont(), DataType.FONT));
+				target.persistProperty(uuid, "headerFont", DataType.FONT, 
+						converter.convertToBasicType(renderer.getHeaderFont(), DataType.FONT));
+				target.persistProperty(uuid, "borderType", DataType.ENUM, 
+						converter.convertToBasicType(renderer.getBorderType(), DataType.ENUM));
+				target.persistProperty(uuid, "bodyFont", DataType.STRING, 
+						renderer.getNullString());
+				
+			}
+			
+			if (child instanceof ReportContentRenderer) {
+				ReportContentRenderer rcr = (ReportContentRenderer) child;
+				target.persistProperty(uuid, "backgroundColour",
+						DataType.COLOR,
+						converter.convertToBasicType(rcr.getBackgroundColour(), DataType.COLOR));
 			}
 			
 		} catch (WabitPersistenceException e1) {

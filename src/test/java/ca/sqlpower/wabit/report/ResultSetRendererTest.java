@@ -30,6 +30,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
@@ -55,6 +56,16 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
     
     private SQLDatabaseMapping stubMapping;
     
+    private ContentBox parentCB;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignorable = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignorable.add("colBeingDragged");
+    	ignorable.add("columnInfoList");
+    	return ignorable;
+    }
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -70,6 +81,8 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         JDBCDataSource ds = plini.getDataSource("regression_test", JDBCDataSource.class);
         db = new SQLDatabase(ds);
         renderer = new ResultSetRenderer(new QueryCache(stubMapping));
+        parentCB = new ContentBox();
+        parentCB.setContentRenderer(renderer);
         
         BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
         graphics = image.getGraphics();
@@ -120,7 +133,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         workspace.addQuery(cache, session);
         cache.setDBMapping(stubMapping);
         cache.setDataSource(db.getDataSource());
-        cache.defineUserModifiedQuery("select * from subtotal_table");
+        cache.setUserModifiedQuery("select * from subtotal_table");
         assertEquals(db, cache.getDatabase());
 
         Report report = new Report("report");

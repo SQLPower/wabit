@@ -25,7 +25,10 @@ import java.awt.geom.Point2D;
 
 import org.olap4j.metadata.Cube;
 
+import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
@@ -49,6 +52,12 @@ public class SessionPersisterSuperConverter {
 	private static final Point2DConverter point2DConverter = new Point2DConverter();
 	
 	private final TableContainerConverter tableContainerConverter;
+	
+	private final SQLJoinConverter sqlJoinConverter;
+	
+	private final JDBCDataSourceConverter jdbcDataSourceConverter;
+	
+	private final Olap4jDataSourceConverter olap4jDataSourceConverter;
 
 	/**
 	 * This converter will allow changes between any complex object in the
@@ -65,6 +74,9 @@ public class SessionPersisterSuperConverter {
 		wabitObjectConverter = new WabitObjectConverter(session.getWorkspace());
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
 		tableContainerConverter = new TableContainerConverter(session);
+		sqlJoinConverter = new SQLJoinConverter(session.getWorkspace());
+		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getWorkspace());
+		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());
 	}
 
 	/**
@@ -111,6 +123,19 @@ public class SessionPersisterSuperConverter {
 		} else if (convertFrom instanceof TableContainer) {
 			TableContainer table = (TableContainer) convertFrom;
 			return tableContainerConverter.convertToSimpleType(table);
+			
+		} else if (convertFrom instanceof SQLJoin) {
+			SQLJoin join = (SQLJoin) convertFrom;
+			return sqlJoinConverter.convertToSimpleType(join);
+			
+		} else if (convertFrom instanceof JDBCDataSource) {
+			JDBCDataSource jdbcDataSource = (JDBCDataSource) convertFrom;
+			return jdbcDataSourceConverter.convertToSimpleType(jdbcDataSource);
+			
+		} else if (convertFrom instanceof Olap4jDataSource) {
+			Olap4jDataSource olap4jDataSource = (Olap4jDataSource) convertFrom;
+			return olap4jDataSourceConverter.convertToSimpleType(olap4jDataSource);
+			
 		} else if (convertFrom instanceof String) {
 			if (fromType != DataType.STRING) {
 				throw new IllegalArgumentException("Converting a string should " +
@@ -171,6 +196,16 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (TableContainer.class.isAssignableFrom(type)) {
 			return tableContainerConverter.convertToComplexType((String) o);
+			
+		} else if (SQLJoin.class.isAssignableFrom(type)) {
+			return sqlJoinConverter.convertToComplexType((String) o);
+
+		} else if (JDBCDataSource.class.isAssignableFrom(type)) {
+			return jdbcDataSourceConverter.convertToComplexType((String) o);
+			
+		} else if (Olap4jDataSource.class.isAssignableFrom(type)) {
+			return olap4jDataSourceConverter.convertToComplexType((String) o);
+			
 		} else if (String.class.isAssignableFrom(type)) {
 			return (String) o;
 			

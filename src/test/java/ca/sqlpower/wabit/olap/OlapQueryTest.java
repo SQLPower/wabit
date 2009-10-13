@@ -79,7 +79,11 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
     	notPersisting.add("axes");
     	notPersisting.add("columnHierarchies");
+    	notPersisting.add("rowHierarchies");
     	notPersisting.add("initDone");
+    	notPersisting.add("mdxText");
+    	notPersisting.add("running");
+    	notPersisting.add("slicerMember");
     	return notPersisting;
     }
     

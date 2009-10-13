@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -192,5 +193,26 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	public void removeDependency(WabitObject dependency) {
 	    //do nothing, no dependencies
 	}
+	
+	//------------Container getters and setters-------------
+	//TODO We will want to make this a correct delegate when we have time. For now we 
+	//are just adding the getters and setters that fire events.
 
+	public String getAlias() {
+		return delegate.getAlias();
+	}
+	
+	public void setAlias(String alias) {
+		delegate.setAlias(alias);
+	}
+	
+	public Point2D getPosition() {
+		return delegate.getPosition();
+	}
+	
+	public void setPosition(Point2D position) {
+		delegate.setPosition(position);
+	}
+	
+	//-----------End Container getters and setters----------
 }

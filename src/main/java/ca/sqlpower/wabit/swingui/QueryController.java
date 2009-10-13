@@ -227,13 +227,13 @@ public class QueryController {
 	 */
 	private final DocumentListener queryTextListener = new DocumentListener() {
 		public void removeUpdate(DocumentEvent e) {
-			query.defineUserModifiedQuery(queryText.getText());
+			query.setUserModifiedQuery(queryText.getText());
 		}
 		public void insertUpdate(DocumentEvent e) {
-			query.defineUserModifiedQuery(queryText.getText());	
+			query.setUserModifiedQuery(queryText.getText());	
 		}
 		public void changedUpdate(DocumentEvent e) {
-			query.defineUserModifiedQuery(queryText.getText());	
+			query.setUserModifiedQuery(queryText.getText());	
 		}
 	};
 

@@ -21,9 +21,7 @@ package ca.sqlpower.wabit.query;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.TableContainer;
@@ -34,7 +32,6 @@ import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitTableContainer;
-import ca.sqlpower.wabit.dao.WabitSessionPersister;
 
 public class WabitTableContainerTest extends AbstractWabitObjectTest {
     
@@ -56,14 +53,6 @@ public class WabitTableContainerTest extends AbstractWabitObjectTest {
         container = new WabitTableContainer(delegate);
     }
 
-    @Override
-    public Set<String> getAdditionalPropertiesToPersistOnObjectPersist() {
-    	Set<String> properties = new HashSet<String>();
-    	properties.add("delegate" + WabitSessionPersister.PROPERTY_SEPARATOR + "alias");
-    	properties.add("delegate" + WabitSessionPersister.PROPERTY_SEPARATOR + "position");
-    	return properties;
-    }
-    
     @Override
     public WabitObject getObjectUnderTest() {
         return container;

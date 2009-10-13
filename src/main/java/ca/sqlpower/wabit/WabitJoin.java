@@ -143,4 +143,32 @@ public class WabitJoin extends AbstractWabitObject {
         }
     }
 
+    //-----------SQLJoin getters and setters----------------
+    //TODO make this a full delegator when we have spare time.
+    
+    public void setLeftColumnOuterJoin(boolean isOuterJoin) {
+    	delegate.setLeftColumnOuterJoin(isOuterJoin);
+    }
+    
+    public boolean isLeftColumnOuterJoin() {
+    	return delegate.isLeftColumnOuterJoin();
+    }
+    
+    public void setRightColumnOuterJoin(boolean isOuterJoin) {
+    	delegate.setRightColumnOuterJoin(isOuterJoin);
+    }
+    
+    public boolean isRightColumnOuterJoin() {
+    	return delegate.isRightColumnOuterJoin();
+    }
+    
+    public void setComparator(String comparator) {
+    	delegate.setComparator(comparator);
+    }
+    
+    public String getComparator() {
+    	return delegate.getComparator();
+    }
+    
+    //-----------End SQLJoin getters and setters -----------
 }

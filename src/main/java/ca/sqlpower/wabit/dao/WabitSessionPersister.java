@@ -44,7 +44,6 @@ import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Selection.Operator;
 
-import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.SQLGroupFunction;
@@ -67,10 +66,8 @@ import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
-import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -112,15 +109,6 @@ import com.google.common.collect.Multimap;
  */
 public class WabitSessionPersister implements WabitPersister {
 	
-	/**
-	 * This separates property names if a sub property is being set. For example
-	 * if the object has a property called delegate and a property on the delegate
-	 * changes the delegate property's name, delegate, will be separated by the 
-	 * property name that was changed with this separator to have:
-	 * delegate + PROPERTY_SEPARATOR + propertyName.
-	 */
-	public static final String PROPERTY_SEPARATOR = ".";
-
 	private static final Logger logger = Logger
 			.getLogger(WabitSessionPersister.class);
 
@@ -128,12 +116,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 * A {@link WabitSession} to persisted objects and properties onto.
 	 */
 	private WabitSession session;
-
-	/**
-	 * A {@link WabitPersister} to make persist calls on whenever there is a
-	 * child added/removed or property change event
-	 */
-	private WabitPersister target;
 
 	/**
 	 * A count of transactions, mainly to keep track of nested transactions.
@@ -305,14 +287,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param session
 	 *            The {@link WabitSession} this DAO should work under
 	 */
-	public WabitSessionPersister(WabitSession session, WabitPersister target) {
+	public WabitSessionPersister(WabitSession session) {
 		this.session = session;
-		this.target = target;
 		
 		converter = new SessionPersisterSuperConverter(session);
-
-		WabitUtils.listenToHierarchy(session.getWorkspace(),
-				new WorkspacePersisterListener(session, target));
 	}
 
 	/**
@@ -463,11 +441,11 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitJoin.class.getSimpleName())) {
 				Item leftItem = workspace.findByUuid(
-						getPropertyAndRemove(uuid, SQLJoin.LEFT_JOIN_CHANGED)
+						getPropertyAndRemove(uuid, "leftColumnOuterJoin")
 								.toString(), WabitColumnItem.class)
 						.getDelegate();
 				Item rightItem = workspace.findByUuid(
-						getPropertyAndRemove(uuid, SQLJoin.RIGHT_JOIN_CHANGED)
+						getPropertyAndRemove(uuid, "rightColumnOuterJoin")
 								.toString(), WabitColumnItem.class)
 						.getDelegate();
 				wo = new WabitJoin((QueryCache) parent, new SQLJoin(leftItem,
@@ -505,7 +483,10 @@ public class WabitSessionPersister implements WabitPersister {
 						delegateString, TableContainer.class);
 				
 				wo = new WabitTableContainer(tableContainer);
-
+				
+			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
+				String contentID = (String) getPropertyAndRemove(uuid, "content");
+				
 			} else {
 				throw new WabitPersistenceException(uuid,
 						"Unknown WabitObject type: " + type);
@@ -1204,8 +1185,7 @@ public class WabitSessionPersister implements WabitPersister {
 			return query.getGlobalWhereClause();
 
 		} else if (propertyName.equals(QueryImpl.USER_MODIFIED_QUERY)) {
-			return query.generateQuery();
-			// TODO
+			return query.getUserModifiedQuery();
 
 		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
 			return query.getExecuteQueriesWithCrossJoins();
@@ -1263,7 +1243,7 @@ public class WabitSessionPersister implements WabitPersister {
 			query.setGlobalWhereClause(newValue.toString());
 
 		} else if (propertyName.equals(QueryImpl.USER_MODIFIED_QUERY)) {
-			query.defineUserModifiedQuery(newValue.toString());
+			query.setUserModifiedQuery(newValue.toString());
 			// TODO
 
 		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
@@ -1365,15 +1345,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitTableContainerProperty(
 			WabitTableContainer wabitTableContainer, String propertyName)
 			throws WabitPersistenceException {
-		ca.sqlpower.query.Container container = wabitTableContainer
-				.getDelegate();
 
-		if (propertyName.equals("delegate" + PROPERTY_SEPARATOR + "position")) {
-			return converter.convertToBasicType(container.getPosition(), DataType.POINT2D);
+		if (propertyName.equals("position")) {
+			return converter.convertToBasicType(wabitTableContainer.getPosition(), DataType.POINT2D);
 
-		} else if (propertyName.equals("delegate" + PROPERTY_SEPARATOR
-				+ "alias")) {
-			return container.getAlias();
+		} else if (propertyName.equals("alias")) {
+			return wabitTableContainer.getAlias();
 
 		} else {
 			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
@@ -1396,14 +1373,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitWabitTableContainerProperty(
 			WabitTableContainer wabitTableContainer, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		Container container = wabitTableContainer.getDelegate();
 
-		if (propertyName.equals("delegate" + PROPERTY_SEPARATOR + "position")) {
-			container.setPosition((Point2D) converter.convertToComplexType(newValue, Point2D.class));
+		if (propertyName.equals("position")) {
+			wabitTableContainer.setPosition((Point2D) converter.convertToComplexType(newValue, Point2D.class));
 
-		} else if (propertyName.equals("delegate" + PROPERTY_SEPARATOR
-				+ "alias")) {
-			container.setAlias(newValue.toString());
+		} else if (propertyName.equals("alias")) {
+			wabitTableContainer.setAlias(newValue.toString());
 
 		} else {
 			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
@@ -1538,14 +1513,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getWabitJoinProperty(WabitJoin wabitJoin, String propertyName)
 			throws WabitPersistenceException {
-		SQLJoin join = wabitJoin.getDelegate();
 
-		if (propertyName.equals(SQLJoin.LEFT_JOIN_CHANGED)) {
-			return join.isLeftColumnOuterJoin();
-		} else if (propertyName.equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
-			return join.isRightColumnOuterJoin();
-		} else if (propertyName.equals(SQLJoin.COMPARATOR_CHANGED)) {
-			return join.getComparator();
+		if (propertyName.equals("leftColumnOuterJoin")) {
+			return wabitJoin.isLeftColumnOuterJoin();
+		} else if (propertyName.equals("rightColumnOuterJoin")) {
+			return wabitJoin.isRightColumnOuterJoin();
+		} else if (propertyName.equals("comparator")) {
+			return wabitJoin.getComparator();
 		} else {
 			throw new WabitPersistenceException(wabitJoin.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1567,14 +1541,13 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitWabitJoinProperty(WabitJoin wabitJoin,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		SQLJoin join = wabitJoin.getDelegate();
 
-		if (propertyName.equals(SQLJoin.LEFT_JOIN_CHANGED)) {
-			join.setLeftColumnOuterJoin(Boolean.valueOf(newValue.toString()));
-		} else if (propertyName.equals(SQLJoin.RIGHT_JOIN_CHANGED)) {
-			join.setRightColumnOuterJoin(Boolean.valueOf(newValue.toString()));
-		} else if (propertyName.equals(SQLJoin.COMPARATOR_CHANGED)) {
-			join.setComparator(newValue.toString());
+		if (propertyName.equals("leftColumnOuterJoin")) {
+			wabitJoin.setLeftColumnOuterJoin(Boolean.valueOf(newValue.toString()));
+		} else if (propertyName.equals("rightColumnOuterJoin")) {
+			wabitJoin.setRightColumnOuterJoin(Boolean.valueOf(newValue.toString()));
+		} else if (propertyName.equals("comparator")) {
+			wabitJoin.setComparator(newValue.toString());
 		} else {
 			throw new WabitPersistenceException(wabitJoin.getUUID(),
 					"Invalid property: " + propertyName);
@@ -2964,15 +2937,6 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Accessor for the target {@link WabitPersister} object.
-	 * 
-	 * @return The {@link WabitPersister} object this class targets
-	 */
-	public WabitPersister getTargetPersister() {
-		return target;
-	}
-
-	/**
 	 * Mutator for the {@link WabitSession} object.
 	 * 
 	 * @param session
@@ -2980,16 +2944,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void setWabitSession(WabitSession session) {
 		this.session = session;
-	}
-
-	/**
-	 * Mutator for the target {@link WabitPersister} object.
-	 * 
-	 * @param target
-	 *            The {@link WabitPersister} object to make this class target
-	 */
-	public void setTargetPersister(WabitPersister target) {
-		this.target = target;
 	}
 
 }

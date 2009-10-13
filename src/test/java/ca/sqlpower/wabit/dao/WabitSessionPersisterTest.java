@@ -137,8 +137,7 @@ public class WabitSessionPersisterTest extends TestCase {
 			}
 		};
 
-		wsp = new WabitSessionPersister(new StubWabitSession(context),
-				targetPersister);
+		wsp = new WabitSessionPersister(new StubWabitSession(context));
 
 	}
 

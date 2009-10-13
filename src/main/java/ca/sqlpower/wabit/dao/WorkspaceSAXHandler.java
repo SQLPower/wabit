@@ -695,7 +695,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             createdObject = null;
         	String queryString = attributes.getValue("string");
         	checkMandatory("string", queryString);
-        	cache.defineUserModifiedQuery(queryString);
+        	cache.setUserModifiedQuery(queryString);
         } else if (name.equals("text") && parentIs("query")) {
             createdObject = null;
             byteStream = new ByteArrayOutputStream();
@@ -1401,7 +1401,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             loadingText = false;
             
         } else if (name.equals("text") && parentIs("query")) {
-            cache.defineUserModifiedQuery(byteStream.toString());
+            cache.setUserModifiedQuery(byteStream.toString());
             loadingText = false;
         }
     	

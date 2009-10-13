@@ -26,7 +26,11 @@ import java.io.InputStream;
 
 import org.olap4j.metadata.Cube;
 
+import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 
@@ -52,12 +56,15 @@ public interface WabitPersister {
 		 */
 		REFERENCE("Reference", WabitObject.class),
 		PNG_IMG("PNG_IMG", InputStream.class),
-		FONT("FONT", Font.class),
-		COLOR("COLOR", Color.class),
-		CUBE("CUBE", Cube.class),
-		POINT2D("POINT2D", Point2D.class),
-		TABLE_CONTAINER("TABLECONTAINER", TableContainer.class),
-		ENUM("ENUM", Enum.class),
+		FONT("Font", Font.class),
+		COLOR("Color", Color.class),
+		CUBE("Cube", Cube.class),
+		POINT2D("Point2D", Point2D.class),
+		TABLE_CONTAINER("TableContainer", TableContainer.class),
+		SQL_JOIN("SQLJoin", SQLJoin.class),
+		ENUM("Enum", Enum.class),
+		JDBC_DATA_SOURCE("JDBCDataSource", JDBCDataSource.class),
+		OLAP4J_DATA_SOURCE("Olap4jDataSource", Olap4jDataSource.class),
 		NULL("Null", null);
 		
 		private final String name;

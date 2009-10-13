@@ -38,7 +38,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
-import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
@@ -240,7 +239,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(
     			new StubWabitSession(new StubWabitSessionContext()), persister);
     	WabitObject wo = getObjectUnderTest();
-    	wo.setParent(parent);
+    	if (wo.getParent() == null) {
+    		wo.setParent(parent);
+    	}
     	
     	listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
     	
@@ -277,6 +278,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         		assertNotNull("The property " + descriptor + " was not persisted", foundChange);
     		}
     	}
+    	System.out.println("Property names" + settablePropertyNames);
     	assertEquals(settablePropertyNames.size(), allPropertyChanges.size());
     	assertEquals(settablePropertyNames.size(), persister.getPersistPropertyUnconditionallyCount());
     	
@@ -293,11 +295,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		assertNotNull("The property " + descriptor + " was not persisted", foundChange);
     		assertTrue(foundChange.isUnconditional());
     		assertEquals(wo.getUUID(), foundChange.getUUID());
-    		String[] properties = descriptor.split("\\" + WabitSessionPersister.PROPERTY_SEPARATOR);
-    		Object value = wo;
-    		for (String property : properties) {
-    			value = PropertyUtils.getSimpleProperty(value, property);
-    		}
+    		Object value = PropertyUtils.getSimpleProperty(wo, descriptor);
     		System.out.println("Property \"" + descriptor + "\": expected \"" + value + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
     		DataType dataTypeForValue;
     		if (value != null) {
