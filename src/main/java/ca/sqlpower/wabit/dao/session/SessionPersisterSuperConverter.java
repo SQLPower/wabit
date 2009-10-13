@@ -26,6 +26,8 @@ import java.awt.geom.Point2D;
 import org.olap4j.metadata.Cube;
 
 import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -58,6 +60,10 @@ public class SessionPersisterSuperConverter {
 	private final JDBCDataSourceConverter jdbcDataSourceConverter;
 	
 	private final Olap4jDataSourceConverter olap4jDataSourceConverter;
+	
+	private final StringItemConverter stringItemConverter= new StringItemConverter();
+	
+	private final SQLObjectItemConverter sqlObjectItemConverter = new SQLObjectItemConverter();
 
 	/**
 	 * This converter will allow changes between any complex object in the
@@ -136,6 +142,12 @@ public class SessionPersisterSuperConverter {
 			Olap4jDataSource olap4jDataSource = (Olap4jDataSource) convertFrom;
 			return olap4jDataSourceConverter.convertToSimpleType(olap4jDataSource);
 			
+		} else if (convertFrom instanceof SQLObjectItem) {
+			return sqlObjectItemConverter.convertToSimpleType((SQLObjectItem) convertFrom);
+			
+		} else if (convertFrom instanceof StringItem) {
+			return stringItemConverter.convertToSimpleType((StringItem) convertFrom);
+			
 		} else if (convertFrom instanceof String) {
 			if (fromType != DataType.STRING) {
 				throw new IllegalArgumentException("Converting a string should " +
@@ -205,6 +217,12 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (Olap4jDataSource.class.isAssignableFrom(type)) {
 			return olap4jDataSourceConverter.convertToComplexType((String) o);
+			
+		} else if (SQLObjectItem.class.isAssignableFrom(type)) {
+			return sqlObjectItemConverter.convertToComplexType((String) o);
+			
+		} else if (StringItem.class.isAssignableFrom(type)) {
+			return stringItemConverter.convertToComplexType((String) o);
 			
 		} else if (String.class.isAssignableFrom(type)) {
 			return (String) o;

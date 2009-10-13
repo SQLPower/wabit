@@ -28,6 +28,8 @@ import java.text.DecimalFormat;
 import org.olap4j.metadata.Cube;
 
 import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -66,6 +68,8 @@ public interface WabitPersister {
 		JDBC_DATA_SOURCE("JDBCDataSource", JDBCDataSource.class),
 		OLAP4J_DATA_SOURCE("Olap4jDataSource", Olap4jDataSource.class),
 		DECIMAL_FORMAT("DecimalFormat", DecimalFormat.class),
+		SQL_OBJECT_ITEM("SQLObjectItem", SQLObjectItem.class),
+		STRING_ITEM("StringItem", StringItem.class),
 		ENUM("Enum", Enum.class),
 		NULL("Null", null);
 		

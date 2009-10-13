@@ -27,7 +27,7 @@ import org.apache.commons.beanutils.ConversionException;
  * simple type of object and C for the complex type of object.
  */
 public interface BidirectionalConverter<S, C> {
-
+	
 	/**
 	 * This is a String delimiter that separates the properties of an object.
 	 */

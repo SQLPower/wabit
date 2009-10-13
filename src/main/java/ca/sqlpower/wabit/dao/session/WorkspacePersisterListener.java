@@ -33,9 +33,8 @@ import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitColumnItem;
-import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
@@ -486,9 +485,25 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
 						renderer.isPrintingGrandTotals());
 				
-			} else if (child instanceof WabitColumnItem) {
-
-			} else if (child instanceof WabitConstantItem) {
+			} else if (child instanceof WabitItem) {
+				WabitItem item = (WabitItem) child;
+				
+				DataType delegateType = DataType.getTypeByClass(item.getDelegate().getClass());
+				target.persistProperty(uuid, "delegate", delegateType, 
+						converter.convertToBasicType(item.getDelegate(), delegateType));
+				
+				target.persistProperty(uuid, "alias", DataType.STRING, item.getAlias());
+				target.persistProperty(uuid, "selected", DataType.INTEGER, item.getSelected());
+				target.persistProperty(uuid, "where", DataType.STRING, item.getWhere());
+				target.persistProperty(uuid, "groupBy", DataType.ENUM, 
+						converter.convertToBasicType(item.getGroupBy(), DataType.ENUM));
+				target.persistProperty(uuid, "having", DataType.STRING, item.getHaving());
+				target.persistProperty(uuid, "orderBy", DataType.ENUM, 
+						converter.convertToBasicType(item.getOrderBy(), DataType.ENUM));
+				target.persistProperty(uuid, "orderByOrdering", DataType.INTEGER,
+						item.getOrderByOrdering());
+				target.persistProperty(uuid, "columnWidth", DataType.INTEGER, item.getColumnWidth());
+				
 
 			} else if (child instanceof WabitDataSource) {
 				WabitDataSource ds = (WabitDataSource) child;

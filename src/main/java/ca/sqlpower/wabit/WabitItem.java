@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.SQLGroupFunction;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 
 /**
  * This type of {@link Item} wraps any other type of item to let other classes
@@ -92,5 +94,75 @@ public abstract class WabitItem extends AbstractWabitObject {
 	public void removeDependency(WabitObject dependency) {
 		// do nothing
 	}
+	
+	//-----------------Item setters and getters--------------
+	//TODO make this a proper delegate
+
+	public void setGroupBy(SQLGroupFunction groupBy) {
+		delegate.setGroupBy(groupBy);
+    }
+
+    public SQLGroupFunction getGroupBy() {
+        return delegate.getGroupBy();
+    }
+
+    public void setHaving(String having) {
+    	delegate.setHaving(having);
+    }
+
+    public String getHaving() {
+        return delegate.getHaving();
+    }
+
+    public void setOrderBy(OrderByArgument orderBy) {
+    	delegate.setOrderBy(orderBy);
+    }
+
+    public OrderByArgument getOrderBy() {
+        return delegate.getOrderBy();
+    }
+    
+	public Integer getSelected() {
+		return delegate.getSelected();
+	}
+	
+	public void setSelected(Integer selected) {
+		delegate.setSelected(selected);
+	}
+	
+	public void setOrderByOrdering(Integer ordering) {
+		delegate.setOrderByOrdering(ordering);
+	}
+	
+	public Integer getOrderByOrdering() {
+	    return delegate.getOrderByOrdering();
+	}
+	
+	public void setAlias(String alias) {
+		delegate.setAlias(alias);
+	}
+	
+	public String getAlias() {
+		return delegate.getAlias();
+	}
+	
+	public void setWhere(String where) {
+		delegate.setWhere(where);
+	}
+	
+	public String getWhere() {
+		return delegate.getWhere();
+	}
+	
+	public void setColumnWidth(Integer width) {
+		delegate.setColumnWidth(width);
+	}
+	
+	public Integer getColumnWidth() {
+		return delegate.getColumnWidth();
+	}
+	
+	//-----------------End Item setters and getters-----------
+	
 
 }

@@ -408,26 +408,31 @@ public class WabitSessionPersister implements WabitPersister {
 
 				wo = new Report(name);
 
+			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
+				String contentID = (String) getPropertyAndRemove(uuid, "content");
+				
 			} else if (type.equals(Template.class.getSimpleName())) {
 				String name = getPropertyAndRemove(uuid, "name").toString();
 
 				wo = new Template(name);
 
 			} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
-				SQLObjectItem soItem = new SQLObjectItem(name, uuid);
+				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
+				SQLObjectItem item = (SQLObjectItem) converter.convertToComplexType(
+						delegateString, SQLObjectItem.class);
 
-				wo = new WabitColumnItem(soItem);
+				wo = new WabitColumnItem(item);
 
 			} else if (type.equals(WabitConstantsContainer.class
 					.getSimpleName())) {
 				wo = ((QueryCache) parent).getWabitConstantsContainer();
 
 			} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
-				StringItem stringItem = new StringItem(name);
+				String delegateString = getPropertyAndRemove(uuid, "delegate").toString();
+				StringItem item = (StringItem) converter.convertToComplexType(
+						delegateString, StringItem.class);
 
-				wo = new WabitConstantItem(stringItem);
+				wo = new WabitConstantItem(item);
 
 			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 				SPDataSource spds = session.getContext().getDataSources()
@@ -483,9 +488,6 @@ public class WabitSessionPersister implements WabitPersister {
 						delegateString, TableContainer.class);
 				
 				wo = new WabitTableContainer(tableContainer);
-				
-			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
-				String contentID = (String) getPropertyAndRemove(uuid, "content");
 				
 			} else {
 				throw new WabitPersistenceException(uuid,
@@ -1421,17 +1423,26 @@ public class WabitSessionPersister implements WabitPersister {
 				return item.getWhere();
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
-				return item.getGroupBy().name();
+				return converter.convertToBasicType(item.getGroupBy(), DataType.ENUM);
 
 			} else if (propertyName.equals(Item.HAVING)) {
 				return item.getHaving();
 
 			} else if (propertyName.equals(Item.ORDER_BY)) {
-				return item.getOrderBy().name();
+				return converter.convertToBasicType(item.getOrderBy(), DataType.ENUM);
 
 			} else if (propertyName.equals(Item.SELECTED)) {
 				return item.getSelected();
 
+			} else if (propertyName.equals(Item.WHERE)) {
+				return item.getWhere();
+				
+			} else if (propertyName.equals("orderByOrdering")) {
+				return item.getOrderByOrdering();
+				
+			} else if (propertyName.equals("colWidth")) {
+				return item.getColumnWidth();
+				
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
 						+ propertyName);
@@ -1468,17 +1479,28 @@ public class WabitSessionPersister implements WabitPersister {
 				item.setWhere(newValue.toString());
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
-				item.setGroupBy(SQLGroupFunction.valueOf(newValue.toString()));
+				item.setGroupBy((SQLGroupFunction) converter.convertToComplexType(
+						newValue, SQLGroupFunction.class));
 
 			} else if (propertyName.equals(Item.HAVING)) {
 				item.setHaving(newValue.toString());
 
 			} else if (propertyName.equals(Item.ORDER_BY)) {
-				item.setOrderBy(OrderByArgument.valueOf(newValue.toString()));
+				item.setOrderBy((OrderByArgument) converter.convertToComplexType(
+						newValue, OrderByArgument.class));
 
 			} else if (propertyName.equals(Item.SELECTED)) {
 				item.setSelected(Integer.valueOf(newValue.toString()));
 
+			} else if (propertyName.equals(Item.WHERE)) {
+				item.setWhere(newValue.toString());
+				
+			} else if (propertyName.equals("orderByOrdering")) {
+				item.setOrderByOrdering(Integer.valueOf(newValue.toString()));
+				
+			} else if (propertyName.equals("colWidth")) {
+				item.setColumnWidth(Integer.valueOf(newValue.toString()));
+				
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
 						+ propertyName);

@@ -634,8 +634,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public void setModifiedOlapQuery(OlapQuery modifiedOlapQuery) {
     	if (this.modifiedOlapQuery != null) {
     		this.modifiedOlapQuery.removeOlapQueryListener(queryListener);
+    		fireChildRemoved(OlapQuery.class, this.modifiedOlapQuery, 0);
     	}
-    	fireChildRemoved(OlapQuery.class, this.modifiedOlapQuery, 0);
         OlapQuery oldQuery = this.modifiedOlapQuery;
         this.modifiedOlapQuery = modifiedOlapQuery;
         this.modifiedOlapQuery.setParent(this);
