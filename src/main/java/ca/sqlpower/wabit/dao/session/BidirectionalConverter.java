@@ -29,6 +29,11 @@ import org.apache.commons.beanutils.ConversionException;
 public interface BidirectionalConverter<S, C> {
 
 	/**
+	 * This is a String delimiter that separates the properties of an object.
+	 */
+	public static final String DELIMITER = ",";
+	
+	/**
 	 * This method converts an object of type C to an object of type S.
 	 * 
 	 * @param convertFrom

@@ -26,6 +26,7 @@ import java.io.InputStream;
 
 import org.olap4j.metadata.Cube;
 
+import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 
@@ -55,6 +56,7 @@ public interface WabitPersister {
 		COLOR("COLOR", Color.class),
 		CUBE("CUBE", Cube.class),
 		POINT2D("POINT2D", Point2D.class),
+		TABLE_CONTAINER("TABLECONTAINER", TableContainer.class),
 		ENUM("ENUM", Enum.class),
 		NULL("Null", null);
 		

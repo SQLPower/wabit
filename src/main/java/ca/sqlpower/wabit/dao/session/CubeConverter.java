@@ -33,13 +33,6 @@ import ca.sqlpower.wabit.OlapConnectionMapping;
 public class CubeConverter implements BidirectionalConverter<String, Cube> {
 
 	/**
-	 * This delimiter will separate the unique identifiers that define a cube.
-	 * This value should not be a valid character or set of characters in any of
-	 * the unique identifiers that define a cube.
-	 */
-	private static final String DELIMITER = ",";
-
-	/**
 	 * This is the connection map that contains the connection that contains the cube we are converting from a
 	 * string. If we are only converting cubes to strings then this value will
 	 * be unused.

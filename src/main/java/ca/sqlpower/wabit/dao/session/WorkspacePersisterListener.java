@@ -24,15 +24,11 @@ import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 
-import org.apache.commons.beanutils.ConvertUtils;
-
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.TableContainer;
-import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitConstantItem;
@@ -40,10 +36,12 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
+import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -81,10 +79,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	private final SessionPersisterSuperConverter converter;
 
-	public WorkspacePersisterListener(WabitWorkspace workspace,
-			OlapConnectionMapping mapping, DataSourceCollection<SPDataSource> dsCollection,
+	public WorkspacePersisterListener(WabitSession session,
 			WabitPersister persister) {
-		converter = new SessionPersisterSuperConverter(workspace, mapping, dsCollection);
+		converter = new SessionPersisterSuperConverter(session);
 		target = persister;
 	}
 
@@ -207,15 +204,9 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "roleInChart", DataType.ENUM,
 						converter.convertToBasicType(chartColumn.getRoleInChart(), DataType.ENUM));
 
-				ChartColumn xAxisIdentifier = chartColumn.getXAxisIdentifier();
-				if (xAxisIdentifier != null) {
-					target.persistProperty(uuid, "XAxisIdentifier",
-							DataType.REFERENCE, ConvertUtils.convert(
-									xAxisIdentifier, String.class));
-				} else {
-					target.persistProperty(uuid, "XAxisIdentifier",
-							DataType.REFERENCE, null);
-				}
+				target.persistProperty(uuid, "XAxisIdentifier",
+						DataType.REFERENCE, converter.convertToBasicType(
+								chartColumn.getXAxisIdentifier(), DataType.REFERENCE));
 
 
 			} else if (child instanceof Chart) {
@@ -402,7 +393,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "height", DataType.INTEGER, page
 						.getHeight());
 				target.persistProperty(uuid, "orientation", DataType.ENUM,
-						page.getOrientation().name());
+						converter.convertToBasicType(page.getOrientation(), DataType.ENUM));
 
 				// Remaining properties
 				target.persistProperty(uuid, "defaultFont", DataType.FONT,
@@ -457,15 +448,16 @@ public class WorkspacePersisterListener implements WabitListener {
 						.getDelegate();
 
 				// Constructor arguments
-				target.persistProperty(uuid, "schema", DataType.STRING,
-						tableContainer.getSchema());
-				target.persistProperty(uuid, "catalog", DataType.STRING,
-						tableContainer.getCatalog());
+				target.persistProperty(uuid, "delegate",
+						DataType.TABLE_CONTAINER, converter.convertToBasicType(
+								tableContainer, DataType.TABLE_CONTAINER));
 
 				// Remaining properties
-				target.persistProperty(uuid, "alias", DataType.STRING,
+				target.persistProperty(uuid, "delegate" + WabitSessionPersister.PROPERTY_SEPARATOR
+						+ "alias", DataType.STRING,
 						tableContainer.getAlias());
-				target.persistProperty(uuid, "position", DataType.POINT2D,
+				target.persistProperty(uuid, "delegate" + WabitSessionPersister.PROPERTY_SEPARATOR
+						+ "position", DataType.POINT2D,
 						converter.convertToBasicType(tableContainer.getPosition(), DataType.POINT2D));
 
 			}

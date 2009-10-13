@@ -26,13 +26,6 @@ import org.apache.commons.beanutils.ConversionException;
 public class Point2DConverter implements
 		BidirectionalConverter<String, Point2D> {
 
-	/**
-	 * This delimiter will separate the x and y positions of a {@link Point2D}
-	 * object. The separated values should be able to be represented as double
-	 * values.
-	 */
-	private static final String DELIMITER = ",";
-
 	public Point2D convertToComplexType(String convertFrom)
 			throws ConversionException {
 		String[] pointPieces = convertFrom.split(DELIMITER);

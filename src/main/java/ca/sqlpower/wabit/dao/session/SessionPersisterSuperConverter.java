@@ -25,11 +25,9 @@ import java.awt.geom.Point2D;
 
 import org.olap4j.metadata.Cube;
 
-import ca.sqlpower.sql.DataSourceCollection;
-import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 
 /**
@@ -50,10 +48,23 @@ public class SessionPersisterSuperConverter {
 	
 	private static final Point2DConverter point2DConverter = new Point2DConverter();
 	
-	public SessionPersisterSuperConverter(WabitWorkspace workspace, OlapConnectionMapping con, 
-			DataSourceCollection<SPDataSource> dsCollection) {
-		wabitObjectConverter = new WabitObjectConverter(workspace);
-		cubeConverter = new CubeConverter(con, dsCollection);
+	private final TableContainerConverter tableContainerConverter;
+
+	/**
+	 * This converter will allow changes between any complex object in the
+	 * session's workspace and a simple type that can be passed between
+	 * persisters.
+	 * 
+	 * @param session
+	 *            The session used to find necessary parts for converting
+	 *            between simple and complex types. The session may be used to
+	 *            look up connections, cubes, and {@link WabitObject}s in the
+	 *            workspace.
+	 */
+	public SessionPersisterSuperConverter(WabitSession session) {
+		wabitObjectConverter = new WabitObjectConverter(session.getWorkspace());
+		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
+		tableContainerConverter = new TableContainerConverter(session);
 	}
 
 	/**
@@ -97,6 +108,9 @@ public class SessionPersisterSuperConverter {
 			Point2D p = (Point2D) convertFrom;
 			return point2DConverter.convertToSimpleType(p);
 			
+		} else if (convertFrom instanceof TableContainer) {
+			TableContainer table = (TableContainer) convertFrom;
+			return tableContainerConverter.convertToSimpleType(table);
 		} else if (convertFrom instanceof String) {
 			if (fromType != DataType.STRING) {
 				throw new IllegalArgumentException("Converting a string should " +
@@ -155,6 +169,8 @@ public class SessionPersisterSuperConverter {
 		} else if (Point2D.class.isAssignableFrom(type)) {
 			return point2DConverter.convertToComplexType((String) o);
 			
+		} else if (TableContainer.class.isAssignableFrom(type)) {
+			return tableContainerConverter.convertToComplexType((String) o);
 		} else if (String.class.isAssignableFrom(type)) {
 			return (String) o;
 			

@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,7 +56,6 @@ import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitColumnItem;
@@ -113,6 +111,15 @@ import com.google.common.collect.Multimap;
  * This class represents a Data Access Object for {@link WabitSession}s.
  */
 public class WabitSessionPersister implements WabitPersister {
+	
+	/**
+	 * This separates property names if a sub property is being set. For example
+	 * if the object has a property called delegate and a property on the delegate
+	 * changes the delegate property's name, delegate, will be separated by the 
+	 * property name that was changed with this separator to have:
+	 * delegate + PROPERTY_SEPARATOR + propertyName.
+	 */
+	public static final String PROPERTY_SEPARATOR = ".";
 
 	private static final Logger logger = Logger
 			.getLogger(WabitSessionPersister.class);
@@ -302,12 +309,10 @@ public class WabitSessionPersister implements WabitPersister {
 		this.session = session;
 		this.target = target;
 		
-		converter = new SessionPersisterSuperConverter(session.getWorkspace(), 
-				session.getContext(), session.getDataSources());
+		converter = new SessionPersisterSuperConverter(session);
 
 		WabitUtils.listenToHierarchy(session.getWorkspace(),
-				new WorkspacePersisterListener(session.getWorkspace(), session.getContext(), 
-						session.getDataSources(), target));
+				new WorkspacePersisterListener(session, target));
 	}
 
 	/**
@@ -495,15 +500,10 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new WabitOlapInclusion(operator, uniqueMemberName);
 
 			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
-				String schema = getPropertyAndRemove(uuid, "schema").toString();
-				String catalog = getPropertyAndRemove(uuid, "catalog")
-						.toString();
-				List<SQLObjectItem> items = Collections.emptyList();
-				SQLDatabase db = ((QueryCache) parent).getDatabase();
-
-				TableContainer tableContainer = new TableContainer(uuid, db,
-						name, schema, catalog, items);
+				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
+				TableContainer tableContainer = (TableContainer) converter.convertToComplexType(
+						delegateString, TableContainer.class);
+				
 				wo = new WabitTableContainer(tableContainer);
 
 			} else {
@@ -1368,10 +1368,11 @@ public class WabitSessionPersister implements WabitPersister {
 		ca.sqlpower.query.Container container = wabitTableContainer
 				.getDelegate();
 
-		if (propertyName.equals("position")) {
+		if (propertyName.equals("delegate" + PROPERTY_SEPARATOR + "position")) {
 			return converter.convertToBasicType(container.getPosition(), DataType.POINT2D);
 
-		} else if (propertyName.equals("alias")) {
+		} else if (propertyName.equals("delegate" + PROPERTY_SEPARATOR
+				+ "alias")) {
 			return container.getAlias();
 
 		} else {
@@ -1397,10 +1398,11 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 		Container container = wabitTableContainer.getDelegate();
 
-		if (propertyName.equals("position")) {
+		if (propertyName.equals("delegate" + PROPERTY_SEPARATOR + "position")) {
 			container.setPosition((Point2D) converter.convertToComplexType(newValue, Point2D.class));
 
-		} else if (propertyName.equals(Container.CONTAINTER_ALIAS_CHANGED)) {
+		} else if (propertyName.equals("delegate" + PROPERTY_SEPARATOR
+				+ "alias")) {
 			container.setAlias(newValue.toString());
 
 		} else {
@@ -1880,7 +1882,7 @@ public class WabitSessionPersister implements WabitPersister {
 			return chart.getType().toString();
 
 		} else if (propertyName.equals("legendPosition")) {
-			return chart.getLegendPosition().name();
+			return converter.convertToBasicType(chart.getLegendPosition(), DataType.ENUM);
 
 		} else if (propertyName.equals("query")) {
 			return chart.getQuery().getUUID();
@@ -1971,7 +1973,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getChartColumnProperty(ChartColumn chartColumn,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("roleInChart")) {
-			return chartColumn.getRoleInChart().name();
+			return converter.convertToBasicType(chartColumn.getRoleInChart(), DataType.ENUM);
 
 		} else if (propertyName.equals("XAxisIdentifier")) {
 			return chartColumn.getXAxisIdentifier().getName();
@@ -2401,10 +2403,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("modifiedOlapQuery")) {
-			return csRenderer.getModifiedOlapQuery().getUUID();
+			return converter.convertToBasicType(csRenderer.getModifiedOlapQuery(),
+					DataType.REFERENCE);
 
 		} else if (propertyName.equals("bodyAlignment")) {
-			return csRenderer.getBodyAlignment().toString();
+			return converter.convertToBasicType(csRenderer.getBodyAlignment(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("bodyFormat")) {
 			return csRenderer.getBodyFormat().toPattern();

@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.dao.session;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.swingui.StubWabitSwingSession;
 import junit.framework.TestCase;
 
 public class WorkspacePersisterListenerTest extends TestCase {
@@ -34,7 +35,7 @@ public class WorkspacePersisterListenerTest extends TestCase {
 		WabitWorkspace workspace = new WabitWorkspace();
 		CountingWabitPersister counter = new CountingWabitPersister();
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(
-				workspace, null, null, counter);
+				new StubWabitSwingSession(), counter);
 		
 		WabitImage image = new WabitImage();
 		workspace.addImage(image);
