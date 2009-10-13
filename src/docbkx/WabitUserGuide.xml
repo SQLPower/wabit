@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD Simplified DocBook XML V1.0//EN"
-"http://www.oasis-open.org/docbook/xml/simple/1.0/sdocbook.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                  "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY GPLv3 SYSTEM "GPLv3Section.txt">
 ]>
 <book id="wabit-user-guide" lang="en">
@@ -889,47 +889,47 @@
       <para>Click the following toolbar buttons to...</para>
 
       <orderedlist>
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/execute_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - execute the current query (Shortcut: CTRL +
-        R).</listitem>
+        R).</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/export.png" format="PNG"
                          width="0.20in" />
             </imageobject>
           </inlinemediaobject> - export the current query to a new Wabit
-        workspace file, or to a new SQL script file.</listitem>
+        workspace file, or to a new SQL script file.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/delete_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - reset the query.
-        </listitem>
+        </para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/join_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - create a join from a column in a table to
         another column in another table (Shortcut: The accelerator key +
-        J).</listitem>
+        J).</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/zoom_slider.png"
                          format="PNG" width="1.05in" />
             </imageobject>
           </inlinemediaobject> - zoom in and out of the query (Shortcut: To
         zoom in, the accelerator key + the shift key + "+" and to zoom out,
-        the accelerator key + the shift key + "-").</listitem>
+        the accelerator key + the shift key + "-").</para></listitem>
 
         <listitem>
           <para><inlinemediaobject>
@@ -978,29 +978,29 @@
         ways:</para>
 
         <orderedlist>
-          <listitem>The table can be given an alias by clicking on the table
+          <listitem><para>The table can be given an alias by clicking on the table
           name and changing it. To remove the table alias and reset it to the
           column name, clear the editing space completely and press
-          enter.</listitem>
+          enter.</para></listitem>
 
-          <listitem>Columns in the table are added to the query if they have a
+          <listitem><para>Columns in the table are added to the query if they have a
           check mark besides their name. Columns are easily added or removed
           by selecting or deselecting their check box. All the columns in a
           table can be turn on or off at the same time by checking or
           un-checking the "select all/none" check box in the table
-          header.</listitem>
+          header.</para></listitem>
 
-          <listitem>Columns can be aliased by clicking their name and changing
+          <listitem><para>Columns can be aliased by clicking their name and changing
           it. To remove a column alias, set the alias back to the column's
-          original name or remove the alias text while editing it.</listitem>
+          original name or remove the alias text while editing it.</para></listitem>
 
-          <listitem>A where clause can be given to a specific column by
+          <listitem><para>A where clause can be given to a specific column by
           clicking in the <quote>where</quote> field to the right of the
           column. For example, if we want all movies with a rating above 8.0
           adding the text <quote>&gt; 8.0</quote> to the right of
           the<quote>rating</quote> column. Note: When comparing strings, you
           will have to add single quotes around the text. Eg. FullName = 'John
-          Doe'.</listitem>
+          Doe'.</para></listitem>
         </orderedlist>
       </section>
 
@@ -1147,84 +1147,84 @@
       <para>Click the following toolbar buttons to...</para>
 
       <orderedlist>
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/prev_query_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - replace the current query with the query
-        executed last.</listitem>
+        executed last.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/next_query_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - replace the current query with the query
-        executed after it.</listitem>
+        executed after it.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/execute_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - execute the current query (Shortcut: The
         accelerator key + the enter key for whatever text is
-        highlighted).</listitem>
+        highlighted).</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/stop_execution_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
-          </inlinemediaobject> - stop executing the current query.</listitem>
+          </inlinemediaobject> - stop executing the current query.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/reset.png" format="PNG"
                          width="0.20in" />
             </imageobject>
           </inlinemediaobject> - clear all text on the text editor
-        side.</listitem>
+        side.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/undo_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - undo the last change made with the text
-        editor.</listitem>
+        editor.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/redo_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
           </inlinemediaobject> - redo the last change made with the text
-        editor.</listitem>
+        editor.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/export.png" format="PNG"
                          width="0.20in" />
             </imageobject>
           </inlinemediaobject> - export the current query to a new Wabit
-        workspace file, or to a new SQL script file.</listitem>
+        workspace file, or to a new SQL script file.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/report_from_query_button.png"
                            format="PNG" width="0.20in" />
               </imageobject>
             </inlinemediaobject> - generate a report of the current
-          query.</listitem>
+          query.</para></listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
               <imageobject>
                 <imagedata fileref="src/docbkx/images/page_setup_button.png"
                            format="PNG" width="0.20in" />
               </imageobject>
-            </inlinemediaobject> - access the query properties panel.</listitem>
+            </inlinemediaobject> - access the query properties panel.</para></listitem>
       </orderedlist>
 
       <para>The SQL text editor in the query builder will allow any free
@@ -1259,12 +1259,12 @@
       <para>Click the following toolbar buttons to...</para>
 
       <orderedlist>
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/execute_button.png"
                          format="PNG" width="0.20in" />
             </imageobject>
-          </inlinemediaobject> - execute the current query.</listitem>
+          </inlinemediaobject> - execute the current query.</para></listitem>
 
         <listitem>
           <para><inlinemediaobject>
@@ -1275,13 +1275,13 @@
             </inlinemediaobject> - reset the query.</para>
         </listitem>
 
-        <listitem><inlinemediaobject>
+        <listitem><para><inlinemediaobject>
             <imageobject>
               <imagedata fileref="src/docbkx/images/export.png" format="PNG"
                          width="0.20in" />
             </imageobject>
           </inlinemediaobject> - export the current query to a new Wabit
-        workspace file.</listitem>
+        workspace file.</para></listitem>
 
         <listitem>
           <para><inlinemediaobject>
@@ -1416,13 +1416,13 @@
     <para>Click the following toolbar buttons to...</para>
 
     <orderedlist>
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/refresh.png" format="PNG"
                        width="0.20in" />
           </imageobject>
         </inlinemediaobject> - refresh the chart to be synchronized with the
-      query it was built upon.</listitem>
+      query it was built upon.</para></listitem>
 
       <listitem>
         <para><inlinemediaobject>
@@ -1435,12 +1435,12 @@
         series).</para>
       </listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/chart-bar.png" format="PNG"
                        width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - bar graph.</listitem>
+        </inlinemediaobject> - bar graph.</para></listitem>
 
       <listitem>
         <para><inlinemediaobject>
@@ -1552,13 +1552,13 @@
     <para>Click the following toolbar buttons to...</para>
 
     <orderedlist>
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/refresh.png" format="PNG"
-                       valign="bottom" width="0.20in" />
+                       width="0.20in" />
           </imageobject>
         </inlinemediaobject> - refresh the report to synchronize it with the
-      queries it is based upon.</listitem>
+      queries it is based upon.</para></listitem>
 
       <listitem>
         <para><inlinemediaobject>
@@ -1596,12 +1596,12 @@
           </inlinemediaobject> - add a vertical guide to the report.</para>
       </listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/zoom_slider.png"
                        format="PNG" width="1.05in" />
           </imageobject>
-        </inlinemediaobject> - zoom in and out of the report.</listitem>
+        </inlinemediaobject> - zoom in and out of the report.</para></listitem>
 
       <listitem>
         <para><inlinemediaobject>
@@ -1613,41 +1613,41 @@
         screen.</para>
       </listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/page_setup_button.png"
-                       format="PNG" valign="bottom" width="0.20in" />
+                       format="PNG" width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - access the page settings.</listitem>
+        </inlinemediaobject> - access the page settings.</para></listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/export.png" format="PNG"
                        width="0.20in" />
           </imageobject>
         </inlinemediaobject> - export the report the to a new Wabit
-      workspace.</listitem>
+      workspace.</para></listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/printPreview.png"
-                       format="PNG" valign="bottom" width="0.20in" />
+                       format="PNG" width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - preview the report.</listitem>
+        </inlinemediaobject> - preview the report.</para></listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/print_button.png"
-                       format="PNG" valign="bottom" width="0.20in" />
+                       format="PNG" width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - print the report.</listitem>
+        </inlinemediaobject> - print the report.</para></listitem>
 
-      <listitem><inlinemediaobject>
+      <listitem><para><inlinemediaobject>
           <imageobject>
             <imagedata fileref="src/docbkx/images/pdf.png" format="PNG"
                        width="0.20in" />
           </imageobject>
-        </inlinemediaobject> - generate a pdf file of the report.</listitem>
+        </inlinemediaobject> - generate a pdf file of the report.</para></listitem>
     </orderedlist>
 
     <para>The report layout allows users to create and alter the look of a
@@ -2046,11 +2046,12 @@
         "surname". Now the column's name has changed. In the table in the
         query pen the column's original name is shown in brackets to the right
         of the alias for the column.</para>
+        
+        <para>Now that the query is complete, we can move to laying out the
+        report. To generate a report based on the query, click the layout button
+        to the right of the zoom slider at the top of the query pen.</para>
       </section>
-
-      <para>Now that the query is complete, we can move to laying out the
-      report. To generate a report based on the query, click the layout button
-      to the right of the zoom slider at the top of the query pen.</para>
+        
     </section>
 
     <section id="walkthrough.report">
