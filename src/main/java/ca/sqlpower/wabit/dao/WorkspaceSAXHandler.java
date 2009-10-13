@@ -1079,7 +1079,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	//For backwards compatability with 0.9.1
         	String colInfoKey = attributes.getValue("column-info-key");
         	if (colInfoKey != null && colInfoItem == null) {
-        		Query q = rsRenderer.getQuery();
+        		Query q = rsRenderer.getContent();
         		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
         			Item item = entry.getValue();
         			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {

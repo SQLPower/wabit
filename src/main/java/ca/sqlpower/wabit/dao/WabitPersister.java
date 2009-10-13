@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 
 import org.olap4j.metadata.Cube;
 
@@ -62,9 +63,10 @@ public interface WabitPersister {
 		POINT2D("Point2D", Point2D.class),
 		TABLE_CONTAINER("TableContainer", TableContainer.class),
 		SQL_JOIN("SQLJoin", SQLJoin.class),
-		ENUM("Enum", Enum.class),
 		JDBC_DATA_SOURCE("JDBCDataSource", JDBCDataSource.class),
 		OLAP4J_DATA_SOURCE("Olap4jDataSource", Olap4jDataSource.class),
+		DECIMAL_FORMAT("DecimalFormat", DecimalFormat.class),
+		ENUM("Enum", Enum.class),
 		NULL("Null", null);
 		
 		private final String name;

@@ -51,6 +51,18 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
     	notPersisting.add("charts");
+    	notPersisting.add("connections");
+    	notPersisting.add("dataSources");
+    	notPersisting.add("images");
+    	notPersisting.add("olapQueries");
+    	notPersisting.add("queries");
+    	notPersisting.add("reports");
+    	notPersisting.add("session");
+    	notPersisting.add("templates");
+    	
+    	// These are currently not supported.
+    	notPersisting.add("dataSourceTypes");
+    	notPersisting.add("serverBaseURI");
     	return notPersisting;
     }
     

@@ -169,7 +169,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     private boolean initDone = false;
 
     public CellSetRenderer(CellSetRenderer cellSetRenderer) {
-    	this.olapQuery = cellSetRenderer.getOlapQuery();
+    	this.olapQuery = cellSetRenderer.getContent();
     	this.modifiedOlapQuery = cellSetRenderer.getModifiedOlapQuery();
     	setName(cellSetRenderer.getName());
     	this.olapQuery.addWabitListener(nameListener);
@@ -215,7 +215,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         }
     }
     
-    public WabitObject getContent(){
+    public OlapQuery getContent(){
     	return olapQuery;
     }
 
@@ -613,10 +613,6 @@ public class CellSetRenderer extends AbstractWabitObject implements
         return cellSet;
     }
 
-    public OlapQuery getOlapQuery() {
-        return olapQuery;
-    }
-    
     public HorizontalAlignment getBodyAlignment() {
         return bodyAlignment;
     }
@@ -640,8 +636,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	}
     
     public List<WabitObject> getDependencies() {
-        if (getOlapQuery() == null) return Collections.emptyList();
-        return new ArrayList<WabitObject>(Collections.singleton(getOlapQuery()));
+        if (getContent() == null) return Collections.emptyList();
+        return new ArrayList<WabitObject>(Collections.singleton(getContent()));
     }
     
     public void removeDependency(WabitObject dependency) {

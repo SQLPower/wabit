@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -28,6 +30,18 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
     
     private OlapQuery query;
     private CellSetRenderer renderer;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignorable = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignorable.add("cellSet");
+    	ignorable.add("errorMessage");
+    	
+    	//These properties are only defined when a user hovers over a member with their mouse.
+    	ignorable.add("memberSelectedAtPoint");
+    	ignorable.add("selectedMember");
+    	return ignorable;
+    }
     
     @Override
     protected void setUp() throws Exception {

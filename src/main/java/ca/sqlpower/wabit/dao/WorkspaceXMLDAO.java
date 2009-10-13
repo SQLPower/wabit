@@ -355,7 +355,7 @@ public class WorkspaceXMLDAO {
 						ResultSetRenderer rsRenderer = (ResultSetRenderer) box.getContentRenderer();
 						xml.print(out, "<content-result-set");
 						printCommonAttributes(rsRenderer);
-						printAttribute("query-id", rsRenderer.getQuery().getUUID());
+						printAttribute("query-id", rsRenderer.getContent().getUUID());
 						printAttribute("null-string", rsRenderer.getNullString());
 						printAttribute("border", rsRenderer.getBorderType().name());
 						if (rsRenderer.getBackgroundColour() != null) {
@@ -425,7 +425,7 @@ public class WorkspaceXMLDAO {
 					    CellSetRenderer renderer = (CellSetRenderer) box.getContentRenderer();
 					    xml.print(out, "<cell-set-renderer");
 					    printCommonAttributes(renderer);
-					    printAttribute("olap-query-uuid", renderer.getOlapQuery().getUUID());
+					    printAttribute("olap-query-uuid", renderer.getContent().getUUID());
 					    printAttribute("body-alignment", renderer.getBodyAlignment().toString());
 					    if (renderer.getBodyFormat() != null) {
 					        printAttribute("body-format-pattern", renderer.getBodyFormat().toPattern());

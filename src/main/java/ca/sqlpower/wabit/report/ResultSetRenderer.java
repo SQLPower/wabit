@@ -365,7 +365,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	setName(resultSetRenderer.getName());
     }
     
-    public WabitObject getContent(){
+    public QueryCache getContent(){
     	return query;
     }
     
@@ -829,10 +829,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     @Override
     public ContentBox getParent() {
         return (ContentBox) super.getParent();
-    }
-    
-    public QueryCache getQuery() {
-        return query;
     }
     
 	public void setBackgroundColour(Color backgroundColour) {

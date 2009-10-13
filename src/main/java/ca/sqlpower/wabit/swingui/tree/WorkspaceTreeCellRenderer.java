@@ -189,10 +189,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                     r.setIcon(BOX_ICON);
                     r.setText("Empty content box");
                 } else if (cbChild instanceof ResultSetRenderer) {
-                	setupForQueryCache((WorkspaceTreeCellRenderer) r, ((ResultSetRenderer) cbChild).getQuery());
+                	setupForQueryCache((WorkspaceTreeCellRenderer) r, ((ResultSetRenderer) cbChild).getContent());
                 } else if (cbChild instanceof CellSetRenderer) {
                 	r.setIcon(OLAP_QUERY_ICON);
-                	r.setText(((CellSetRenderer) cbChild).getOlapQuery().getName());
+                	r.setText(((CellSetRenderer) cbChild).getContent().getName());
                 } else if (cbChild instanceof ImageRenderer) {
                     setupForWabitImage((WorkspaceTreeCellRenderer) r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {

@@ -28,6 +28,8 @@ import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.swingui.event.SessionLifecycleEvent;
+import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
@@ -39,6 +41,7 @@ import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
@@ -58,6 +61,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
@@ -71,6 +75,34 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
 public class WorkspacePersisterListener implements WabitListener {
 
 	/**
+	 * This will connect a new instance of this listener to the workspace and
+	 * all of its descendants. When the children of a workspace change the
+	 * listener will be added to or removed from the children. When the session
+	 * is being disposed of the listener will be removed from the workspace
+	 * tree.
+	 * 
+	 * @param session
+	 *            The session to listen to for lifecycle changes and its
+	 *            workspace will be listened to by a new persister listener.
+	 * @param targetPersister
+	 *            This persister will have persist methods called on it when
+	 *            events occur in the workspace in the given session.
+	 */
+	public static void attachListener(final WabitSession session, WabitPersister targetPersister) {
+		final WorkspacePersisterListener listener = 
+			new WorkspacePersisterListener(session, targetPersister);
+		WabitUtils.listenToHierarchy(session.getWorkspace(), listener);
+		
+		session.addSessionLifecycleListener(new SessionLifecycleListener<WabitSession>() {
+			
+			public void sessionClosing(SessionLifecycleEvent<WabitSession> e) {
+				WabitUtils.unlistenToHierarchy(session.getWorkspace(), listener);
+			}
+		});
+		
+	}
+
+	/**
 	 * This is the persister to call the appropriate persist methods on when an
 	 * event occurs signaling a change to the model.
 	 */
@@ -81,6 +113,20 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	private final SessionPersisterSuperConverter converter;
 
+	/**
+	 * This listener should be added through the static method for attaching a
+	 * listener to a session.
+	 * <p>
+	 * A new listener should only be created in testing. To properly add a
+	 * listener to a session see
+	 * {@link #attachListener(WabitSession, WabitPersister)}.
+	 * 
+	 * @param session
+	 *            The session whose workspace will be listened to.
+	 * @param persister
+	 *            The persister that will have the events be forwarded to as
+	 *            persist calls.
+	 */
 	public WorkspacePersisterListener(WabitSession session,
 			WabitPersister persister) {
 		converter = new SessionPersisterSuperConverter(session);
@@ -114,6 +160,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 	public void wabitChildAdded(WabitChildEvent e) {
 		persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
+		e.getChild().addWabitListener(this);
 	}
 	
 	/**
@@ -176,22 +223,17 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Constructor argument
 				target.persistProperty(uuid, "modifiedOlapQuery",
-								DataType.REFERENCE, csRenderer.getOlapQuery()
-										.getUUID());
+								DataType.REFERENCE, converter.convertToBasicType(csRenderer.getContent(), DataType.REFERENCE));
 
 				// Remaining properties
 				target.persistProperty(uuid, "bodyAlignment", DataType.STRING,
 						csRenderer.getBodyAlignment().name());
 				target.persistProperty(uuid, "bodyFont", DataType.FONT,
 						converter.convertToBasicType(csRenderer.getBodyFont(), DataType.FONT));
-				target.persistProperty(uuid, "bodyFormat", DataType.STRING,
-						csRenderer.getBodyFormat().toPattern());
+				target.persistProperty(uuid, "bodyFormat", DataType.DECIMAL_FORMAT,
+						converter.convertToBasicType(csRenderer.getBodyFormat(), DataType.DECIMAL_FORMAT));
 				target.persistProperty(uuid, "headerFont", DataType.FONT,
 						converter.convertToBasicType(csRenderer.getHeaderFont(), DataType.FONT));
-				// target.persistProperty(uuid, "selectedMember",
-				// DataType.STRING,
-				// csRenderer.getSelectedMember().getProperties());
-				// TODO
 
 			} else if (child instanceof ChartColumn) {
 				ChartColumn chartColumn = (ChartColumn) child;
@@ -263,7 +305,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				}
 
 				target.persistProperty(uuid, ColumnInfo.DATATYPE_CHANGED,
-						DataType.STRING, columnInfo.getDataType().name());
+						DataType.ENUM, converter.convertToBasicType(
+								columnInfo.getDataType(), DataType.ENUM));
 
 				Format formatType = columnInfo.getFormat();
 
@@ -433,24 +476,43 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(query.getWabitDataSource(),
 										DataType.OLAP4J_DATA_SOURCE));
 				
+			} else if (child instanceof ResultSetRenderer) {
+				ResultSetRenderer renderer = (ResultSetRenderer) child;
+				
+				target.persistProperty(uuid, "bodyFont", DataType.FONT, 
+						converter.convertToBasicType(renderer.getBodyFont(), DataType.FONT));
+				target.persistProperty(uuid, "headerFont", DataType.FONT, 
+						converter.convertToBasicType(renderer.getHeaderFont(), DataType.FONT));
+				target.persistProperty(uuid, "borderType", DataType.ENUM, 
+						converter.convertToBasicType(renderer.getBorderType(), DataType.ENUM));
+				target.persistProperty(uuid, "nullString", DataType.STRING, 
+						renderer.getNullString());
+				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
+						renderer.isPrintingGrandTotals());
+				
 			} else if (child instanceof WabitColumnItem) {
 
 			} else if (child instanceof WabitConstantItem) {
 
 			} else if (child instanceof WabitDataSource) {
+				WabitDataSource ds = (WabitDataSource) child;
+				
+				DataType type = DataType.getTypeByClass(ds.getSPDataSource().getClass());
+				target.persistProperty(uuid, "SPDataSource", type, 
+						converter.convertToBasicType(ds.getSPDataSource(), type));
 
 			} else if (child instanceof WabitJoin) {
 				WabitJoin sqlJoin = ((WabitJoin) child);
 				
-				target.persistProperty(uuid, "delegate", DataType.STRING, 
+				target.persistProperty(uuid, "delegate", DataType.SQL_JOIN, 
 						converter.convertToBasicType(sqlJoin.getDelegate(), DataType.SQL_JOIN));
 
 				target.persistProperty(uuid, "comparator", DataType.STRING,
 						sqlJoin.getComparator());
 				target.persistProperty(uuid, "leftColumnOuterJoin",
-						DataType.REFERENCE, sqlJoin.isLeftColumnOuterJoin());
+						DataType.BOOLEAN, sqlJoin.isLeftColumnOuterJoin());
 				target.persistProperty(uuid, "rightColumnOuterJoin",
-						DataType.REFERENCE, sqlJoin.isRightColumnOuterJoin());
+						DataType.BOOLEAN, sqlJoin.isRightColumnOuterJoin());
 
 			} else if (child instanceof WabitOlapAxis) {
 				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
@@ -498,21 +560,12 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(tableContainer.getPosition(),
 								DataType.POINT2D));
 
-			} else if (child instanceof ResultSetRenderer) {
-				ResultSetRenderer renderer = (ResultSetRenderer) child;
+			} else if (child instanceof WabitWorkspace) {
+				WabitWorkspace workspace = (WabitWorkspace) child;
 				
-				target.persistProperty(uuid, "content", DataType.REFERENCE, 
-						converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
-				
-				target.persistProperty(uuid, "bodyFont", DataType.FONT, 
-						converter.convertToBasicType(renderer.getBodyFont(), DataType.FONT));
-				target.persistProperty(uuid, "headerFont", DataType.FONT, 
-						converter.convertToBasicType(renderer.getHeaderFont(), DataType.FONT));
-				target.persistProperty(uuid, "borderType", DataType.ENUM, 
-						converter.convertToBasicType(renderer.getBorderType(), DataType.ENUM));
-				target.persistProperty(uuid, "bodyFont", DataType.STRING, 
-						renderer.getNullString());
-				
+				target.persistProperty(uuid, "editorPanelModel", DataType.REFERENCE,
+						converter.convertToBasicType(workspace.getEditorPanelModel(),
+								DataType.REFERENCE));
 			}
 			
 			if (child instanceof ReportContentRenderer) {
@@ -520,6 +573,11 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "backgroundColour",
 						DataType.COLOR,
 						converter.convertToBasicType(rcr.getBackgroundColour(), DataType.COLOR));
+			}
+			if (child instanceof WabitObjectReportRenderer) {
+				WabitObjectReportRenderer renderer = (WabitObjectReportRenderer) child;
+				target.persistProperty(uuid, "content", DataType.REFERENCE, 
+						converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
 			}
 			
 		} catch (WabitPersistenceException e1) {
@@ -536,6 +594,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			throw new RuntimeException(
 					"Could not remove WabitObject from its parent.", e1);
 		}
+		e.getChild().removeWabitListener(this);
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {

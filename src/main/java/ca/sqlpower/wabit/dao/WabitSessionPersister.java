@@ -1046,7 +1046,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitWorkspaceProperty(WabitWorkspace workspace,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("editorPanelModel")) {
-			return workspace.getEditorPanelModel().getUUID();
+			return converter.convertToBasicType(workspace.getEditorPanelModel(),
+					DataType.REFERENCE);
 		} else {
 			throw new WabitPersistenceException(workspace.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1071,13 +1072,12 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = workspace.getUUID();
 
 		if (propertyName.equals("editorPanelModel")) {
-			String editorUUID = newValue.toString();
-			WabitObject editorPanel = workspace.findByUuid(editorUUID,
-					WabitObject.class);
+			WabitObject editorPanel = (WabitObject) converter.convertToComplexType(
+					newValue, WabitObject.class);
 
 			if (editorPanel == null) {
 				throw new WabitPersistenceException(uuid,
-						"Invalid editorPanelModel UUID: " + editorUUID);
+						"Invalid editorPanelModel UUID: " + newValue.toString());
 			}
 
 			workspace.setEditorPanelModel(editorPanel);
@@ -2384,7 +2384,7 @@ public class WabitSessionPersister implements WabitPersister {
 					DataType.ENUM);
 
 		} else if (propertyName.equals("bodyFormat")) {
-			return csRenderer.getBodyFormat().toPattern();
+			return converter.convertToBasicType(csRenderer.getBodyFormat(), DataType.DECIMAL_FORMAT);
 
 		} else if (propertyName.equals("headerFont")) {
 			return converter.convertToBasicType(csRenderer.getHeaderFont(), DataType.FONT);
@@ -2415,15 +2415,15 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("modifiedOlapQuery")) {
-			csRenderer.setModifiedOlapQuery(session.getWorkspace().findByUuid(
-					newValue.toString(), OlapQuery.class));
+			csRenderer.setModifiedOlapQuery((OlapQuery) converter.convertToComplexType(newValue, OlapQuery.class));
 
 		} else if (propertyName.equals("bodyAlignment")) {
 			csRenderer.setBodyAlignment(HorizontalAlignment.valueOf(newValue
 					.toString()));
 
 		} else if (propertyName.equals("bodyFormat")) {
-			csRenderer.setBodyFormat(new DecimalFormat(newValue.toString()));
+			csRenderer.setBodyFormat((DecimalFormat) converter.convertToComplexType(
+					newValue, DecimalFormat.class));
 
 		} else if (propertyName.equals("headerFont")) {
 			csRenderer.setHeaderFont((Font) converter.convertToComplexType(newValue, Font.class));
@@ -2435,7 +2435,6 @@ public class WabitSessionPersister implements WabitPersister {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
 					"Invalid property: " + propertyName);
 		}
-		// TODO
 	}
 
 	/**
@@ -2791,7 +2790,7 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals(ColumnInfo.COLUMN_INFO_ITEM_CHANGED)) {
 			boolean found = false;
 			for (Item queryItem : ((ResultSetRenderer) colInfo.getParent())
-					.getQuery().getSelectedColumns()) {
+					.getContent().getSelectedColumns()) {
 				Item item = queryItem;
 				if (item.getUUID().equals(newValue.toString())) {
 					colInfo.setColumnInfoItem(item);

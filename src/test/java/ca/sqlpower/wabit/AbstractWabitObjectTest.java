@@ -84,19 +84,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     }
     
     /**
-     * Returns a list of properties that must be persisted on top of the
-     * properties that can be set on the object. These properties will be
-     * properties of objects contained by the object under test. In the 
-     * future we may want to reflectively go through each object in the
-     * object under test and find all of the setters and getters to check
-     * that they are persisted but at current we only need this for a few
-     * specific places. This returns an empty list.
-     */
-    public Set<String> getAdditionalPropertiesToPersistOnObjectPersist() {
-    	return Collections.emptySet();
-    }
-    
-    /**
      * Uses reflection to find all the settable properties of the object under test,
      * and fails if any of them can be set without an event happening.
      */
@@ -264,7 +251,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	}
     	
     	settablePropertyNames.removeAll(ignorableProperties);
-    	settablePropertyNames.addAll(getAdditionalPropertiesToPersistOnObjectPersist());
     	
     	if (settablePropertyNames.size() != allPropertyChanges.size()) {
     		for (String descriptor : settablePropertyNames) {

@@ -1059,9 +1059,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			if (currentWO instanceof ContentBox) {
 				ReportContentRenderer content = ((ContentBox) currentWO).getContentRenderer();
 				if (content instanceof CellSetRenderer) {
-					name = ((CellSetRenderer) content).getOlapQuery().getName();
+					name = ((CellSetRenderer) content).getContent().getName();
 				} else if (content instanceof ResultSetRenderer) {
-					name = ((ResultSetRenderer) content).getQuery().getName();
+					name = ((ResultSetRenderer) content).getContent().getName();
 				} else if (content instanceof Label) {
 					name = ((Label) content).getText();
 				} else if (content instanceof ChartRenderer) {
