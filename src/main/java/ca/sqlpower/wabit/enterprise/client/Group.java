@@ -30,13 +30,8 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class Group extends AbstractWabitObject implements GrantedAuthority {
 
-    private final List<Grant> grants;
-    private final List<GroupMember> members;
-
-    public Group() {
-        this.grants = new ArrayList<Grant>();
-        this.members = new ArrayList<GroupMember>();
-    }
+    private final List<Grant> grants = new ArrayList<Grant>();
+    private final List<GroupMember> members = new ArrayList<GroupMember>();
 
     @Override
     protected boolean removeChildImpl(WabitObject child) {

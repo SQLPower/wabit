@@ -36,6 +36,7 @@ public class User extends AbstractWabitObject implements UserDetails {
     private GrantedAuthority[] authorities = null;
 
     public User(String username, String password) {
+    	super();
         assert username != null;
         this.grants = new ArrayList<Grant>();
         this.password = password;
