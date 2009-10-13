@@ -39,6 +39,13 @@ public class PageTest extends AbstractWabitObjectTest {
     private final int LETTER_HEIGHT = 72 * 11;
     
     @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
+    	notPersisting.add("contentBoxes");
+    	return notPersisting;
+    }
+    
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         WabitSession session = new StubWabitSession(new StubWabitSessionContext());
