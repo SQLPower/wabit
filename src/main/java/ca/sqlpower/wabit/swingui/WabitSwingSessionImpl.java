@@ -257,7 +257,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 
         @Override
         public void propertyChangeImpl(PropertyChangeEvent evt) {
-            // TODO probably need to extend this to a set of ignorable property names
             if (!ignorablePropertyNames.contains(evt.getPropertyName())) {
                 SQLPowerUtils.logPropertyChange(
                         logger, "Marking workspace dirty because of property change", evt);

@@ -38,6 +38,8 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
@@ -98,6 +100,16 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private final List<Chart> charts = new ArrayList<Chart>();
     
     /**
+     * The list of users in this workspace. Only to be used if this is the system workspace.
+     */
+    private final List<User> users = new ArrayList<User>();
+    
+    /**
+     * The list of groups in this workspace. Only to be used if this is the system workspace.
+     */
+    private final List<Group> groups = new ArrayList<Group>();
+    
+    /**
      * TODO: These listeners are never fired at current as they are only used for
      * DS Type undo events in the library currently. These listeners are unused
      * until the workspace supports changing DS Types or other undoable edits are
@@ -127,15 +139,20 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public List<WabitObject> getChildren() {
-        List<WabitObject> allChildren = new ArrayList<WabitObject>();
-        allChildren.addAll(dataSources);
-        allChildren.addAll(queries);
-        allChildren.addAll(olapQueries);
-        allChildren.addAll(charts);
-        allChildren.addAll(images);
-        allChildren.addAll(templates);
-        allChildren.addAll(reports);
-        return allChildren;
+    	List<WabitObject> allChildren = new ArrayList<WabitObject>();
+    	if (isSystemWorkspace()) {
+    		allChildren.addAll(users);
+    		allChildren.addAll(groups);
+    	} else {
+    		allChildren.addAll(dataSources);
+    		allChildren.addAll(queries);
+    		allChildren.addAll(olapQueries);
+    		allChildren.addAll(charts);
+    		allChildren.addAll(images);
+    		allChildren.addAll(templates);
+    		allChildren.addAll(reports);
+    	}
+    	return allChildren;
     }
     
     /**
@@ -337,28 +354,37 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public int childPositionOffset(Class<? extends WabitObject> childType) {
         int offset = 0;
 
-        // TODO consider whether this should be instaceOf or strict equality
-        if (childType == WabitDataSource.class) return offset;
-        offset += dataSources.size();
+        if (isSystemWorkspace()) {
+        	if (childType == User.class) return offset;
+        	offset += users.size();
+        	
+        	if (childType == Group.class) return offset;
+        	
+        	throw new IllegalArgumentException("System Workspace does not have children of type " + childType);
+        } else {
+        	// TODO consider whether this should be instaceOf or strict equality
+        	if (childType == WabitDataSource.class) return offset;
+        	offset += dataSources.size();
 
-        if (childType == QueryCache.class) return offset;
-        offset += queries.size();
-        
-        if (childType == OlapQuery.class) return offset;
-        offset += olapQueries.size();
-        
-        if (childType == Chart.class) return offset;
-        offset += charts.size();
-        
-        if (childType == WabitImage.class) return offset;
-        offset += images.size();
-        
-        if (childType == Template.class) return offset;
-        offset += templates.size();
+        	if (childType == QueryCache.class) return offset;
+        	offset += queries.size();
 
-        if (childType == Report.class) return offset;
-        
-        throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
+        	if (childType == OlapQuery.class) return offset;
+        	offset += olapQueries.size();
+
+        	if (childType == Chart.class) return offset;
+        	offset += charts.size();
+
+        	if (childType == WabitImage.class) return offset;
+        	offset += images.size();
+
+        	if (childType == Template.class) return offset;
+        	offset += templates.size();
+
+        	if (childType == Report.class) return offset;
+
+        	throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
+        }
     }
     
     public List<QueryCache> getQueries() {
@@ -387,6 +413,43 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     		}
     	}
     	return null;
+    }
+    
+    public void addUser(User u) {
+    	users.add(u);
+    }
+    
+    public void addUser(User u, int index) {
+    	users.add(index, u);
+    }
+    
+    public void removeUser(User u) {
+    	users.remove(u);
+    }
+    
+    public List<User> getUsers() {
+    	return Collections.unmodifiableList(users);
+    }
+    
+    public void addGroup(Group g) {
+    	groups.add(g);
+    }
+    
+    public void addGroup(Group g, int index) {
+    	groups.add(index, g);
+    }
+    
+    public void removeGroup(Group g) {
+    	groups.remove(g);
+    }
+    
+    public List<Group> getGroups() {
+    	return Collections.unmodifiableList(groups);
+    }
+    
+    public boolean isSystemWorkspace() {
+    	logger.debug("Workspace UUID is " + getUUID());
+    	return getUUID().equals("system");
     }
     
 	public WabitObject getParent() {

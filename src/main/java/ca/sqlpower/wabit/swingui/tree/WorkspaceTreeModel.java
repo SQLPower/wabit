@@ -57,11 +57,12 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.olap.WabitOlapSelection;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -108,15 +109,24 @@ public class WorkspaceTreeModel implements TreeModel {
     public WorkspaceTreeModel(WabitWorkspace workspace) {
         this.workspace = workspace;
         this.folderList = new ArrayList<FolderNode>();
+        generateFolderList();
         
-        folderList.add(new FolderNode(workspace, FolderType.CONNECTIONS));
-        folderList.add(new FolderNode(workspace, FolderType.QUERIES));
-        folderList.add(new FolderNode(workspace, FolderType.CHARTS));
-        folderList.add(new FolderNode(workspace, FolderType.IMAGES));
-        folderList.add(new FolderNode(workspace, FolderType.TEMPLATES));
-        folderList.add(new FolderNode(workspace, FolderType.REPORTS));
         listener = new WabitTreeModelEventAdapter();
         WabitUtils.listenToHierarchy(workspace, listener);
+    }
+    
+    public void generateFolderList() {
+    	if (workspace.isSystemWorkspace()) {
+    		folderList.add(new FolderNode(workspace, FolderType.USERS));
+    		folderList.add(new FolderNode(workspace, FolderType.GROUPS));
+    	} else {
+    		folderList.add(new FolderNode(workspace, FolderType.CONNECTIONS));
+    		folderList.add(new FolderNode(workspace, FolderType.QUERIES));
+    		folderList.add(new FolderNode(workspace, FolderType.CHARTS));
+    		folderList.add(new FolderNode(workspace, FolderType.IMAGES));
+    		folderList.add(new FolderNode(workspace, FolderType.TEMPLATES));
+    		folderList.add(new FolderNode(workspace, FolderType.REPORTS));
+    	}
     }
     
     /**
@@ -127,20 +137,26 @@ public class WorkspaceTreeModel implements TreeModel {
      * @return True if o should appear; false if it should not.
      */
     private boolean appearsInTree(WabitObject o) {
-        if (o instanceof WabitWorkspace) return true;
-        if (o instanceof WabitDataSource) return true;
-        if (o instanceof QueryCache) return true;
-        if (o instanceof OlapQuery) return true;
-        if (o instanceof FolderNode) return true;
-        if (o instanceof Template) return true;
-        if (o instanceof Report) return true;
-        if (o instanceof Chart) return true;
-        if (o instanceof ChartColumn) return true;
-        if (o instanceof ContentBox) return true;
-        if (o instanceof WabitImage) return true;
-        if (o instanceof WabitOlapAxis) return true;
-        if (o instanceof WabitOlapDimension) return true;
-        if (o instanceof WabitOlapSelection) return true;
+    	if (o instanceof WabitWorkspace) return true;
+    	if (o instanceof FolderNode) return true;
+    	
+    	if (workspace.isSystemWorkspace()) {
+    		if (o instanceof User) return true;
+    		if (o instanceof Group) return true;
+    	} else {
+	        if (o instanceof WabitDataSource) return true;
+	        if (o instanceof QueryCache) return true;
+	        if (o instanceof OlapQuery) return true;
+	        if (o instanceof Template) return true;
+	        if (o instanceof Report) return true;
+	        if (o instanceof Chart) return true;
+	        if (o instanceof ChartColumn) return true;
+	        if (o instanceof ContentBox) return true;
+	        if (o instanceof WabitImage) return true;
+	        if (o instanceof WabitOlapAxis) return true;
+	        if (o instanceof WabitOlapDimension) return true;
+	        if (o instanceof WabitOlapSelection) return true;
+    	}
         return false;
     }
     
@@ -470,6 +486,24 @@ public class WorkspaceTreeModel implements TreeModel {
 				// special case for root node
 				e = new TreeModelEvent(this, new Object[] { getRoot() }, null,
 						null);
+				if (evt.getPropertyName().equals("UUID") && workspace.isSystemWorkspace()) {
+					// Since the tree is generated before the workspace is fully
+					// loaded, this exists to check if the workspace becomes the
+					// system workspace later.
+					while (folderList.size() > 0) {
+						TreeModelEvent treeEvent = new TreeModelEvent(this, new Object[] { getRoot() },
+								new int[] { 0 }, new Object[] { folderList.get(0) });
+						folderList.remove(0);
+						fireTreeNodesRemoved(treeEvent);
+					}
+					generateFolderList();
+					for (int i = 0; i < folderList.size(); i++) {
+						TreeModelEvent treeEvent = new TreeModelEvent(this, new Object[] { getRoot() }, 
+					    		new int[] { i },
+					    		new Object[] { folderList.get(i) });
+						fireTreeNodesInserted(treeEvent);
+					}
+				}
 			} else {
                 TreePath treePath = createTreePathForObject(node);
                 treePath = treePath.getParentPath();
@@ -544,22 +578,27 @@ public class WorkspaceTreeModel implements TreeModel {
 			// need the same offset.
 			
 			int index = actualIndex;
-			if (wabitObject instanceof WabitDataSource) return index;
-			index -= (workspace.getConnections().size());
 			
-			if (wabitObject instanceof OlapQuery || wabitObject instanceof QueryCache) return index;
-			index -= (workspace.getQueries().size()) + (workspace.getOlapQueries().size());
-			
-            if (wabitObject instanceof Chart) return index;
-            index -= (workspace.getCharts().size());
+			if (workspace.isSystemWorkspace()) {
+				return actualIndex - workspace.childPositionOffset(wabitObject.getClass());
+			} else {
+				if (wabitObject instanceof WabitDataSource) return index;
+				index -= (workspace.getConnections().size());
 
-            if (wabitObject instanceof WabitImage) return index;
-            index -= (workspace.getImages().size());
-            
-            if (wabitObject instanceof Template) return index;
-            index -= (workspace.getTemplates().size());
-			
-			if (wabitObject instanceof Report) return index;
+				if (wabitObject instanceof OlapQuery || wabitObject instanceof QueryCache) return index;
+				index -= (workspace.getQueries().size()) + (workspace.getOlapQueries().size());
+
+				if (wabitObject instanceof Chart) return index;
+				index -= (workspace.getCharts().size());
+
+				if (wabitObject instanceof WabitImage) return index;
+				index -= (workspace.getImages().size());
+
+				if (wabitObject instanceof Template) return index;
+				index -= (workspace.getTemplates().size());
+
+				if (wabitObject instanceof Report) return index;
+			}
 			
 			return actualIndex;
 		}

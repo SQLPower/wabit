@@ -26,6 +26,8 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
@@ -45,7 +47,9 @@ public class FolderNode {
     	CHARTS,
     	IMAGES,
     	REPORTS,
-    	TEMPLATES
+    	TEMPLATES,
+    	USERS,
+    	GROUPS
     }
     
     public static FolderType getProperFolderParent(WabitObject object) {
@@ -61,6 +65,10 @@ public class FolderNode {
 			return FolderType.REPORTS;
     	} else if (object instanceof Template) {
     		return FolderType.TEMPLATES;
+    	} else if (object instanceof User) {
+    		return FolderType.USERS;
+    	} else if (object instanceof Group) {
+    		return FolderType.GROUPS;
     	}
     	throw new UnsupportedOperationException("Trying to find the parent folder of object of type: " + object.getClass());
     }
@@ -118,6 +126,12 @@ public class FolderNode {
 		case TEMPLATES:
 			childList.addAll(parent.getTemplates());
 			break;
+		case USERS:
+			childList.addAll(parent.getUsers());
+			break;
+		case GROUPS:
+			childList.addAll(parent.getGroups());
+			break;
 		}
 		return childList;
 	}
@@ -143,6 +157,12 @@ public class FolderNode {
 			break;
 		case TEMPLATES:
 			name = "Templates";
+			break;
+		case USERS:
+			name = "Users";
+			break;
+		case GROUPS:
+			name = "Groups";
 			break;
 		}
 		return name;

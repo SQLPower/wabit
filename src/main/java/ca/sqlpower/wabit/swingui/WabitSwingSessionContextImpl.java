@@ -166,12 +166,14 @@ import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
+import ca.sqlpower.wabit.swingui.action.NewGroupAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
+import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
@@ -648,12 +650,17 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
     			WabitSwingSession activeSession = getActiveSwingSession();
     			if (activeSession != null) {
-    				popupMenu.add(new NewQueryAction(activeSession));
-    				popupMenu.add(new NewOLAPQueryAction(activeSession));
-                    popupMenu.add(new NewChartAction(activeSession));
-                    popupMenu.add(new NewImageAction(activeSession));
-    				popupMenu.add(new NewReportAction(activeSession));
-    				popupMenu.add(new NewTemplateAction(activeSession));
+    				if (activeSession.getWorkspace().isSystemWorkspace()) {
+    					popupMenu.add(new NewUserAction(activeSession));
+    					popupMenu.add(new NewGroupAction(activeSession));
+    				} else {
+	    				popupMenu.add(new NewQueryAction(activeSession));
+	    				popupMenu.add(new NewOLAPQueryAction(activeSession));
+	                    popupMenu.add(new NewChartAction(activeSession));
+	                    popupMenu.add(new NewImageAction(activeSession));
+	    				popupMenu.add(new NewReportAction(activeSession));
+	    				popupMenu.add(new NewTemplateAction(activeSession));
+    				}
     			}
     			popupMenu.show(source, 0, source.getHeight());
     		}
