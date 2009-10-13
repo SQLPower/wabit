@@ -89,6 +89,13 @@ public class User extends AbstractWabitObject implements UserDetails {
             fireChildRemoved(Grant.class, grant, index);
         }
     }
+    
+    /**
+     * The returned list is mutable. Beware.
+     */
+    public List<Grant> getGrants() {
+		return grants;
+	}
 
 	public GrantedAuthority[] getAuthorities() {
 		if (this.authorities==null) {

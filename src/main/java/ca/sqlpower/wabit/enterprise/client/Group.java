@@ -76,6 +76,10 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         // no-op
     }
 
+    /**
+     * Mutable list!! beware.
+     * @return
+     */
     public List<Grant> getGrants() {
         return grants;
     }
