@@ -58,11 +58,8 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
-import ca.sqlpower.wabit.report.chart.ChartType;
-import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 
 /**
@@ -117,13 +114,60 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void wabitChildAdded(WabitChildEvent e) {
+		persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
+	}
+	
+	/**
+	 * Persists the given object and all of its descendants to the next
+	 * persister. The root object and every descendant will be sent to the
+	 * persister as a persist object and all of its properties will be sent as
+	 * unconditional property persists.
+	 * 
+	 * @param root
+	 *            The root of the tree of objects that will be persisted. This
+	 *            object and all of its children will be persisted.
+	 */
+	public void persistObject(WabitObject root) throws WabitPersistenceException {
+		target.begin();
+
+		int index = 0;
+		if (root.getParent() != null) {
+			index = root.getParent().getChildren().indexOf(root);
+		}
+		persistChild(root.getParent(), root, root.getClass(), index);
+		for (WabitObject child : root.getChildren()) {
+			persistObject(child);
+		}
+		target.commit();
+	}
+
+	/**
+	 * Calls {@link WabitPersister#persistObject(String, String, String, int)}
+	 * for the child object and
+	 * {@link WabitPersister#persistProperty(String, String, DataType, Object)}
+	 * for each property on the object.
+	 * 
+	 * @param parent
+	 *            The parent of the object being persisted as added to this
+	 *            object.
+	 * @param child
+	 *            The child object that was added to its parent.
+	 * @param childClassType
+	 *            The object type of the child added.
+	 * @param indexOfChild
+	 *            The index of the child in the child list of the parent.
+	 */
+	private void persistChild(WabitObject parent, WabitObject child, 
+			Class<? extends WabitObject> childClassType, int indexOfChild) {
 		try {
-			String parentUUID = e.getSource().getUUID();
-			WabitObject child = e.getChild();
-			String className = e.getChildType().getSimpleName();
+			String parentUUID = null;
+			if (parent != null) {
+				parentUUID = parent.getUUID();
+			}
+			String className = childClassType.getSimpleName();
 			String uuid = child.getUUID();
 
-			target.persistObject(parentUUID, className, uuid, e.getIndex());
+			target.persistObject(parentUUID, className, uuid, indexOfChild);
 			target.persistProperty(uuid, "name", DataType.STRING, child
 					.getName());
 
@@ -426,10 +470,6 @@ public class WorkspacePersisterListener implements WabitListener {
 
 			}
 			
-			System.out.println("wabitChildAdded. type: "
-					+ e.getChildType().getSimpleName() + ". source: "
-					+ e.getSource().getClass().getSimpleName());
-
 		} catch (WabitPersistenceException e1) {
 			throw new RuntimeException("Could not add WabitObject as a child.",
 					e1);
