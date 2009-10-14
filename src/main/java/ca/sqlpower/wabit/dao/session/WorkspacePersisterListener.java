@@ -33,6 +33,7 @@ import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitJoin;
@@ -338,28 +339,22 @@ public class WorkspacePersisterListener implements WabitListener {
 				ContentBox contentBox = (ContentBox) child;
 
 				// Remaining arguments
-				target.persistProperty(uuid, "contentRenderer",
-						DataType.REFERENCE, contentBox.getContentRenderer()
-								.getUUID());
+				target.persistProperty(uuid, "contentRenderer",	DataType.REFERENCE,
+						converter.convertToBasicType(contentBox.getContentRenderer(), DataType.REFERENCE));
 				target.persistProperty(uuid, "font", DataType.FONT,
 						converter.convertToBasicType(contentBox.getFont(), DataType.FONT));
-				target.persistProperty(uuid, "height", DataType.DOUBLE,
-						contentBox.getHeight());
-				target.persistProperty(uuid, "width", DataType.DOUBLE,
-						contentBox.getWidth());
-				target.persistProperty(uuid, "x", DataType.DOUBLE, contentBox
-						.getX());
-				target.persistProperty(uuid, "y", DataType.DOUBLE, contentBox
-						.getY());
+				target.persistProperty(uuid, "height", DataType.DOUBLE,	contentBox.getHeight());
+				target.persistProperty(uuid, "width", DataType.DOUBLE, contentBox.getWidth());
+				target.persistProperty(uuid, "x", DataType.DOUBLE, contentBox.getX());
+				target.persistProperty(uuid, "y", DataType.DOUBLE, contentBox.getY());
 
 			} else if (child instanceof Guide) {
 				Guide guide = (Guide) child;
 
 				// Constructor arguments
-				target.persistProperty(uuid, "axis", DataType.STRING, guide
-						.getAxis().name());
-				target.persistProperty(uuid, "offset", DataType.DOUBLE, guide
-						.getOffset());
+				target.persistProperty(uuid, "axis", DataType.STRING,
+						converter.convertToBasicType(guide.getAxis(), DataType.ENUM));
+				target.persistProperty(uuid, "offset", DataType.DOUBLE, guide.getOffset());
 
 				// Remaining properties
 
@@ -380,10 +375,6 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof Label) {
 				Label label = (Label) child;
 
-				// Remaining arguments
-				target.persistProperty(uuid, "backgroundColour",
-						DataType.COLOR,
-						converter.convertToBasicType(label.getBackgroundColour(), DataType.COLOR));
 				target.persistProperty(uuid, "font", DataType.FONT,
 						converter.convertToBasicType(label.getFont(), DataType.FONT));
 				target.persistProperty(uuid, "horizontalAlignment",
@@ -485,6 +476,16 @@ public class WorkspacePersisterListener implements WabitListener {
 						renderer.getNullString());
 				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
 						renderer.isPrintingGrandTotals());
+				
+			} else if (child instanceof WabitConstantsContainer) {
+				WabitConstantsContainer container = (WabitConstantsContainer) child;
+				
+				target.persistProperty(uuid, "delegate", DataType.ITEM_CONTAINER,
+						converter.convertToBasicType(container.getDelegate(), DataType.ITEM_CONTAINER));
+				
+				target.persistProperty(uuid, "alias", DataType.STRING, container.getAlias());
+				target.persistProperty(uuid, "position", DataType.POINT2D, 
+						converter.convertToBasicType(container.getPosition(), DataType.POINT2D));
 				
 			} else if (child instanceof WabitItem) {
 				WabitItem item = (WabitItem) child;

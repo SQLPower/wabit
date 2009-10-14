@@ -60,6 +60,11 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	notPersisting.add("session");
     	notPersisting.add("templates");
     	
+    	// These are system workspace specific children and properties
+    	notPersisting.add("systemWorkspace");
+    	notPersisting.add("groups");
+    	notPersisting.add("users");
+    	
     	// These are currently not supported.
     	notPersisting.add("dataSourceTypes");
     	notPersisting.add("serverBaseURI");

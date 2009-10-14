@@ -332,40 +332,38 @@ public class WabitSessionPersister implements WabitPersister {
 					WabitObject.class);
 
 			if (type.equals(CellSetRenderer.class.getSimpleName())) {
-				OlapQuery olapQuery = workspace.findByUuid(
-						getPropertyAndRemove(uuid, "modifiedOlapQuery")
-								.toString(), OlapQuery.class);
+				OlapQuery olapQuery = (OlapQuery) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "modifiedOlapQuery"), OlapQuery.class);
 				wo = new CellSetRenderer(olapQuery);
 
 			} else if (type.equals(Chart.class.getSimpleName())) {
 				wo = new Chart();
 
 			} else if (type.equals(ChartColumn.class.getSimpleName())) {
-				String columnName = getPropertyAndRemove(uuid, "name")
-						.toString();
-				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = ca.sqlpower.wabit.report.chart.ChartColumn.DataType
-						.valueOf(getPropertyAndRemove(uuid, "dataType")
-								.toString());
+				String columnName = (String) getPropertyAndRemove(uuid, "name");
+				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType =
+					(ca.sqlpower.wabit.report.chart.ChartColumn.DataType)
+					converter.convertToComplexType(getPropertyAndRemove(uuid, "dataType"),
+							ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
 
 				wo = new ChartColumn(columnName, dataType);
 
 			} else if (type.equals(ChartRenderer.class.getSimpleName())) {
-				Chart chart = workspace.findByUuid(getPropertyAndRemove(uuid,
-						"chart").toString(), Chart.class);
+				Chart chart = (Chart) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "chart"), Chart.class);
 				wo = new ChartRenderer(chart);
 
 			} else if (type.equals(ColumnInfo.class.getSimpleName())) {
-				wo = new ColumnInfo(getPropertyAndRemove(uuid,
-						ColumnInfo.COLUMN_ALIAS).toString());
+				wo = new ColumnInfo((String) getPropertyAndRemove(
+						uuid, ColumnInfo.COLUMN_ALIAS));
 
 			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
 
 			} else if (type.equals(Guide.class.getSimpleName())) {
-				Axis axis = Axis.valueOf(getPropertyAndRemove(uuid, "axis")
-						.toString());
-				double offset = Double.valueOf(getPropertyAndRemove(uuid,
-						"offset").toString());
+				Axis axis = (Axis) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "axis"), Axis.class);
+				double offset = (Double) getPropertyAndRemove(uuid, "offset");
 
 				wo = new Guide(axis, offset);
 
@@ -376,27 +374,21 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new Label();
 
 			} else if (type.equals(OlapQuery.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
-				String queryName = getPropertyAndRemove(uuid, "queryName")
-						.toString();
-				String catalogName = getPropertyAndRemove(uuid, "catalogName")
-						.toString();
-				String schemaName = getPropertyAndRemove(uuid, "schemaName")
-						.toString();
-				String cubeName = getPropertyAndRemove(uuid, "cubeName")
-						.toString();
+				String name = (String) getPropertyAndRemove(uuid, "name");
+				String queryName = (String) getPropertyAndRemove(uuid, "queryName");
+				String catalogName = (String) getPropertyAndRemove(uuid, "catalogName");
+				String schemaName = (String) getPropertyAndRemove(uuid, "schemaName");
+				String cubeName = (String) getPropertyAndRemove(uuid, "cubeName");
 				wo = new OlapQuery(uuid, session.getContext(), name, queryName,
 						catalogName, schemaName, cubeName);
 
 			} else if (type.equals(Page.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
-				int width = Integer.valueOf(getPropertyAndRemove(uuid, "width")
-						.toString());
-				int height = Integer.valueOf(getPropertyAndRemove(uuid,
-						"height").toString());
-				PageOrientation orientation = PageOrientation
-						.valueOf(getPropertyAndRemove(uuid, "orientation")
-								.toString());
+				String name = (String) getPropertyAndRemove(uuid, "name");
+				int width = (Integer) getPropertyAndRemove(uuid, "width");
+				int height = (Integer) getPropertyAndRemove(uuid, "height");
+				PageOrientation orientation =
+					(PageOrientation) converter.convertToComplexType(
+							getPropertyAndRemove(uuid, "orientation"), PageOrientation.class); 
 
 				wo = new Page(name, width, height, orientation);
 
@@ -404,15 +396,17 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new QueryCache(session.getContext());
 
 			} else if (type.equals(Report.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
+				String name = (String) getPropertyAndRemove(uuid, "name");
 
 				wo = new Report(name);
 
 			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
 				String contentID = (String) getPropertyAndRemove(uuid, "content");
 				
+				// TODO No ResultSetRenderer object has been created yet.
+				
 			} else if (type.equals(Template.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
+				String name = (String) getPropertyAndRemove(uuid, "name");
 
 				wo = new Template(name);
 
@@ -423,12 +417,11 @@ public class WabitSessionPersister implements WabitPersister {
 
 				wo = new WabitColumnItem(item);
 
-			} else if (type.equals(WabitConstantsContainer.class
-					.getSimpleName())) {
+			} else if (type.equals(WabitConstantsContainer.class.getSimpleName())) {
 				wo = ((QueryCache) parent).getWabitConstantsContainer();
 
 			} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
-				String delegateString = getPropertyAndRemove(uuid, "delegate").toString();
+				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
 				StringItem item = (StringItem) converter.convertToComplexType(
 						delegateString, StringItem.class);
 
@@ -436,8 +429,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 				SPDataSource spds = session.getContext().getDataSources()
-						.getDataSource(
-								getPropertyAndRemove(uuid, "name").toString());
+						.getDataSource((String) getPropertyAndRemove(uuid, "name"));
 
 				wo = new WabitDataSource(spds);
 
@@ -458,34 +450,36 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
 				org.olap4j.Axis axis = org.olap4j.Axis.Factory
-						.forOrdinal(Integer.valueOf(getPropertyAndRemove(uuid,
-								"ordinal").toString()));
+						.forOrdinal((Integer) getPropertyAndRemove(uuid, "ordinal"));
 
 				wo = new WabitOlapAxis(axis);
 
 			} else if (type.equals(WabitOlapDimension.class.getSimpleName())) {
-				String name = getPropertyAndRemove(uuid, "name").toString();
+				String name = (String) getPropertyAndRemove(uuid, "name");
 
 				wo = new WabitOlapDimension(name);
 
 			} else if (type.equals(WabitOlapExclusion.class.getSimpleName())) {
-				Operator operator = Operator.valueOf(getPropertyAndRemove(uuid,
-						"operator").toString());
-				String uniqueMemberName = getPropertyAndRemove(uuid,
-						"uniqueMemberName").toString();
+				Operator operator = (Operator) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "operator"), Operator.class); 
+				String uniqueMemberName = 
+					(String) getPropertyAndRemove(uuid, "uniqueMemberName");
+				
 				wo = new WabitOlapExclusion(operator, uniqueMemberName);
 
 			} else if (type.equals(WabitOlapInclusion.class.getSimpleName())) {
-				Operator operator = Operator.valueOf(getPropertyAndRemove(uuid,
-						"operator").toString());
-				String uniqueMemberName = getPropertyAndRemove(uuid,
-						"uniqueMemberName").toString();
+				Operator operator = (Operator) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "operator"), Operator.class); 
+				String uniqueMemberName = 
+					(String) getPropertyAndRemove(uuid, "uniqueMemberName");
+				
 				wo = new WabitOlapInclusion(operator, uniqueMemberName);
 
 			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
 				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
-				TableContainer tableContainer = (TableContainer) converter.convertToComplexType(
-						delegateString, TableContainer.class);
+				TableContainer tableContainer = 
+					(TableContainer) converter.convertToComplexType(
+							delegateString, TableContainer.class);
 				
 				wo = new WabitTableContainer(tableContainer);
 				
@@ -1014,9 +1008,9 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitCommonProperty(WabitObject wo, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("name")) {
-			wo.setName(newValue.toString());
+			wo.setName((String) newValue);
 		} else if (propertyName.equals("UUID")) {
-			wo.setUUID(newValue.toString());
+			wo.setUUID((String) newValue);
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1193,7 +1187,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return query.getExecuteQueriesWithCrossJoins();
 
 		} else if (propertyName.equals("dataSource")) {
-			return query.getWabitDataSource().getName();
+			return converter.convertToBasicType(query.getWabitDataSource(),
+					DataType.JDBC_DATA_SOURCE);
 
 		} else {
 			throw new WabitPersistenceException(query.getUUID(),
@@ -1220,41 +1215,38 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = query.getUUID();
 
 		if (propertyName.equals("zoomLevel")) {
-			query.setZoomLevel(Integer.valueOf(newValue.toString()));
+			query.setZoomLevel((Integer) newValue);
 
 		} else if (propertyName.equals("streaming")) {
-			query.setStreaming(Boolean.valueOf(newValue.toString()));
+			query.setStreaming((Boolean) newValue);
 
 		} else if (propertyName.equals("streamingRowLimit")) {
-			query.setStreamingRowLimit(Integer.valueOf(newValue.toString()));
+			query.setStreamingRowLimit((Integer) newValue);
 
 		} else if (propertyName.equals(QueryImpl.ROW_LIMIT)) {
-			query.setRowLimit(Integer.valueOf(newValue.toString()));
+			query.setRowLimit((Integer) newValue);
 
 		} else if (propertyName.equals(QueryImpl.GROUPING_ENABLED)) {
-			query.setGroupingEnabled(Boolean.valueOf(newValue.toString()));
+			query.setGroupingEnabled((Boolean) newValue);
 
 		} else if (propertyName.equals("promptForCrossJoins")) {
-			query.setPromptForCrossJoins(Boolean.valueOf(newValue.toString()));
+			query.setPromptForCrossJoins((Boolean) newValue);
 
 		} else if (propertyName.equals("automaticallyExecuting")) {
-			query.setAutomaticallyExecuting(Boolean
-					.valueOf(newValue.toString()));
+			query.setAutomaticallyExecuting((Boolean) newValue);
 
 		} else if (propertyName.equals(QueryImpl.GLOBAL_WHERE_CLAUSE)) {
-			query.setGlobalWhereClause(newValue.toString());
+			query.setGlobalWhereClause((String) newValue);
 
 		} else if (propertyName.equals(QueryImpl.USER_MODIFIED_QUERY)) {
-			query.setUserModifiedQuery(newValue.toString());
-			// TODO
+			query.setUserModifiedQuery((String) newValue);
 
 		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
-			query.setExecuteQueriesWithCrossJoins(Boolean.valueOf(newValue
-					.toString()));
+			query.setExecuteQueriesWithCrossJoins((Boolean) newValue);
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSource(session.getWorkspace().getDataSource(
-					newValue.toString(), JDBCDataSource.class));
+			query.setDataSource((JDBCDataSource) converter.convertToComplexType(
+					newValue, JDBCDataSource.class));
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Invalid property: "
@@ -1287,8 +1279,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitConstantsContainerProperty(
 			WabitConstantsContainer wabitConstantsContainer, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("position")) {
-			return converter.convertToBasicType(wabitConstantsContainer.getDelegate().getPosition(), DataType.POINT2D);
+		if (propertyName.equals("alias")) {
+			return wabitConstantsContainer.getDelegate().getAlias();
+			
+		} else if (propertyName.equals("position")) {
+			return converter.convertToBasicType(
+					wabitConstantsContainer.getDelegate().getPosition(), DataType.POINT2D);
 
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
@@ -1312,9 +1308,13 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitConstantsContainer wabitConstantsContainer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		if (propertyName.equals("position")) {
-			wabitConstantsContainer.getDelegate()
-					.setPosition((Point2D) converter.convertToComplexType(newValue, Point2D.class)); 
+		
+		if (propertyName.equals("alias")) {
+			wabitConstantsContainer.getDelegate().setAlias((String) newValue);
+			
+		} else if (propertyName.equals("position")) {
+			wabitConstantsContainer.getDelegate().setPosition(
+					(Point2D) converter.convertToComplexType(newValue, Point2D.class)); 
 
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
@@ -1349,7 +1349,8 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("position")) {
-			return converter.convertToBasicType(wabitTableContainer.getPosition(), DataType.POINT2D);
+			return converter.convertToBasicType(
+					wabitTableContainer.getPosition(), DataType.POINT2D);
 
 		} else if (propertyName.equals("alias")) {
 			return wabitTableContainer.getAlias();
@@ -1377,10 +1378,11 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 
 		if (propertyName.equals("position")) {
-			wabitTableContainer.setPosition((Point2D) converter.convertToComplexType(newValue, Point2D.class));
+			wabitTableContainer.setPosition((Point2D) converter.convertToComplexType(
+					newValue, Point2D.class));
 
 		} else if (propertyName.equals("alias")) {
-			wabitTableContainer.setAlias(newValue.toString());
+			wabitTableContainer.setAlias((String) newValue);
 
 		} else {
 			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
@@ -1473,33 +1475,33 @@ public class WabitSessionPersister implements WabitPersister {
 
 		if (item instanceof SQLObjectItem || item instanceof StringItem) {
 			if (propertyName.equals(Item.ALIAS)) {
-				item.setAlias(newValue.toString());
+				item.setAlias((String) newValue);
 
 			} else if (propertyName.equals(Item.WHERE)) {
-				item.setWhere(newValue.toString());
+				item.setWhere((String) newValue);
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
 				item.setGroupBy((SQLGroupFunction) converter.convertToComplexType(
 						newValue, SQLGroupFunction.class));
 
 			} else if (propertyName.equals(Item.HAVING)) {
-				item.setHaving(newValue.toString());
+				item.setHaving((String) newValue);
 
 			} else if (propertyName.equals(Item.ORDER_BY)) {
 				item.setOrderBy((OrderByArgument) converter.convertToComplexType(
 						newValue, OrderByArgument.class));
 
 			} else if (propertyName.equals(Item.SELECTED)) {
-				item.setSelected(Integer.valueOf(newValue.toString()));
+				item.setSelected((Integer) newValue);
 
 			} else if (propertyName.equals(Item.WHERE)) {
-				item.setWhere(newValue.toString());
+				item.setWhere((String) newValue);
 				
 			} else if (propertyName.equals("orderByOrdering")) {
-				item.setOrderByOrdering(Integer.valueOf(newValue.toString()));
+				item.setOrderByOrdering((Integer) newValue);
 				
 			} else if (propertyName.equals("colWidth")) {
-				item.setColumnWidth(Integer.valueOf(newValue.toString()));
+				item.setColumnWidth((Integer) newValue);
 				
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
@@ -1565,11 +1567,11 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("leftColumnOuterJoin")) {
-			wabitJoin.setLeftColumnOuterJoin(Boolean.valueOf(newValue.toString()));
+			wabitJoin.setLeftColumnOuterJoin((Boolean) newValue);
 		} else if (propertyName.equals("rightColumnOuterJoin")) {
-			wabitJoin.setRightColumnOuterJoin(Boolean.valueOf(newValue.toString()));
+			wabitJoin.setRightColumnOuterJoin((Boolean) newValue);
 		} else if (propertyName.equals("comparator")) {
-			wabitJoin.setComparator(newValue.toString());
+			wabitJoin.setComparator((String) newValue);
 		} else {
 			throw new WabitPersistenceException(wabitJoin.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1601,7 +1603,9 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getOlapQueryProperty(OlapQuery olapQuery, String propertyName)
 			throws WabitPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
-			return olapQuery.getOlapDataSource().getName();
+			return converter.convertToBasicType(
+					olapQuery.getOlapDataSource(), DataType.OLAP4J_DATA_SOURCE);
+			
 		} else if (propertyName.equals("catalogName")) {
 			return olapQuery.getCatalogName();
 
@@ -1642,8 +1646,8 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
-			olapQuery.setOlapDataSource(session.getWorkspace().getDataSource(
-					newValue.toString(), Olap4jDataSource.class));
+			olapQuery.setOlapDataSource((Olap4jDataSource) converter.convertToComplexType(
+					newValue, Olap4jDataSource.class));
 
 		} else if (propertyName.equals("currentCube")) {
 			try {
@@ -1654,7 +1658,7 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 			
 		} else if (propertyName.equals("nonEmpty")) {
-			olapQuery.setNonEmpty(Boolean.valueOf(newValue.toString()));
+			olapQuery.setNonEmpty((Boolean) newValue);
 		} else {
 			throw new WabitPersistenceException(olapQuery.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1686,7 +1690,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitOlapSelectionProperty(WabitOlapSelection selection,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("operator")) {
-			return selection.getOperator();
+			return converter.convertToBasicType(selection.getOperator(), DataType.ENUM);
 
 		} else if (propertyName.equals("uniqueMemberName")) {
 			return selection.getUniqueMemberName();
@@ -1823,13 +1827,13 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("nonEmpty")) {
-			olapAxis.setNonEmpty(Boolean.valueOf(newValue.toString()));
+			olapAxis.setNonEmpty((Boolean) newValue);
 
 		} else if (propertyName.equals("sortEvaluationLiteral")) {
-			olapAxis.setSortEvaluationLiteral(newValue.toString());
+			olapAxis.setSortEvaluationLiteral((String) newValue);
 
 		} else if (propertyName.equals("sortOrder")) {
-			olapAxis.setSortOrder(newValue.toString());
+			olapAxis.setSortOrder((String) newValue);
 
 		} else {
 			throw new WabitPersistenceException(olapAxis.getUUID(),
@@ -1904,31 +1908,31 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = chart.getUUID();
 
 		if (propertyName.equals("xaxisName")) {
-			chart.setXaxisName(newValue.toString());
+			chart.setXaxisName((String) newValue);
 
 		} else if (propertyName.equals("yaxisName")) {
-			chart.setYaxisName(newValue.toString());
+			chart.setYaxisName((String) newValue);
 
 		} else if (propertyName.equals("xAxisLabelRrotation")) {
-			chart.setXAxisLabelRotation(Double.valueOf(newValue.toString()));
+			chart.setXAxisLabelRotation((Double) newValue);
 
 		} else if (propertyName.equals("gratuitousAnimated")) {
-			chart.setGratuitouslyAnimated(Boolean.valueOf(newValue.toString()));
+			chart.setGratuitouslyAnimated((Boolean) newValue);
 
 		} else if (propertyName.equals("type")) {
-			chart.setType(ChartType.valueOf(newValue.toString()));
+			chart.setType((ChartType) converter.convertToComplexType(
+					newValue, ChartType.class));
 
 		} else if (propertyName.equals("legendPosition")) {
-			chart
-					.setLegendPosition(LegendPosition.valueOf(newValue
-							.toString()));
+			chart.setLegendPosition((LegendPosition) converter.convertToComplexType(
+					newValue, LegendPosition.class));
 
 		} else if (propertyName.equals("query")) {
-			ResultSetProducer rsProducer = session.getWorkspace().findByUuid(
-					newValue.toString(), ResultSetProducer.class);
+			ResultSetProducer rsProducer = (ResultSetProducer) converter.convertToComplexType(
+					newValue, ResultSetProducer.class);
 			if (rsProducer == null) {
 				throw new WabitPersistenceException(uuid, "Invalid query-id: "
-						+ newValue.toString());
+						+ ((String) newValue));
 			}
 
 			try {
@@ -1996,10 +2000,11 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("roleInChart")) {
-			chartColumn.setRoleInChart(ColumnRole.valueOf(newValue.toString()));
+			chartColumn.setRoleInChart((ColumnRole) converter.convertToComplexType(
+					newValue, ColumnRole.class));
 
 		} else if (propertyName.equals("XAxisIdentifier")) {
-			chartColumn.setXAxisIdentifier(new ChartColumn(newValue.toString(),
+			chartColumn.setXAxisIdentifier(new ChartColumn((String) newValue,
 					chartColumn.getDataType()));
 
 		} else {
@@ -2153,7 +2158,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitLayoutProperty(Layout layout, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("zoomLevel")) {
-			layout.setZoomLevel(Integer.valueOf(newValue.toString()));
+			layout.setZoomLevel((Integer) newValue);
 
 		} else {
 			throw new WabitPersistenceException(layout.getUUID(),
@@ -2217,14 +2222,14 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitPageProperty(Page page, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("height")) {
-			page.setHeight(Integer.parseInt(newValue.toString()));
+			page.setHeight((Integer) newValue);
 
 		} else if (propertyName.equals("width")) {
-			page.setWidth(Integer.parseInt(newValue.toString()));
+			page.setWidth((Integer) newValue);
 
 		} else if (propertyName.equals("orientation")) {
-			page.setOrientation((PageOrientation) converter
-					.convertToComplexType(newValue, PageOrientation.class));
+			page.setOrientation((PageOrientation) converter.convertToComplexType(
+					newValue, PageOrientation.class));
 
 		} else if (propertyName.equals("defaultFont")) {
 			page.setDefaultFont((Font) converter.convertToComplexType(newValue, Font.class));
@@ -2272,7 +2277,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return contentBox.getY();
 
 		} else if (propertyName.equals("contentRenderer")) {
-			return contentBox.getContentRenderer().getUUID();
+			return converter.convertToBasicType(
+					contentBox.getContentRenderer(), DataType.REFERENCE);
 
 		} else if (propertyName.equals("font")) {
 			return converter.convertToBasicType(contentBox.getFont(), DataType.FONT);
@@ -2300,20 +2306,21 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("height")) {
-			contentBox.setHeight(Double.valueOf(newValue.toString()));
+			contentBox.setHeight((Double) newValue);
 
 		} else if (propertyName.equals("width")) {
-			contentBox.setWidth(Double.valueOf(newValue.toString()));
+			contentBox.setWidth((Double) newValue);
 
 		} else if (propertyName.equals("x")) {
-			contentBox.setX(Double.valueOf(newValue.toString()));
+			contentBox.setX((Double) newValue);
 
 		} else if (propertyName.equals("y")) {
-			contentBox.setY(Double.valueOf(newValue.toString()));
+			contentBox.setY((Double) newValue);
 
 		} else if (propertyName.equals("contentRenderer")) {
-			contentBox.setContentRenderer(session.getWorkspace().findByUuid(
-					newValue.toString(), ReportContentRenderer.class));
+			contentBox.setContentRenderer(
+					(ReportContentRenderer) converter.convertToComplexType(
+							newValue, ReportContentRenderer.class));
 
 		} else if (propertyName.equals("font")) {
 			contentBox.setFont((Font) converter.convertToComplexType(newValue, Font.class));
@@ -2435,18 +2442,20 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("bodyAlignment")) {
-			csRenderer.setBodyAlignment(HorizontalAlignment.valueOf(newValue
-					.toString()));
+			csRenderer.setBodyAlignment((HorizontalAlignment) converter.convertToComplexType(
+					newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("bodyFormat")) {
 			csRenderer.setBodyFormat((DecimalFormat) converter.convertToComplexType(
 					newValue, DecimalFormat.class));
 
 		} else if (propertyName.equals("headerFont")) {
-			csRenderer.setHeaderFont((Font) converter.convertToComplexType(newValue, Font.class));
+			csRenderer.setHeaderFont((Font) converter.convertToComplexType(
+					newValue, Font.class));
 
 		} else if (propertyName.equals("bodyFont")) {
-			csRenderer.setBodyFont((Font) converter.convertToComplexType(newValue, Font.class));
+			csRenderer.setBodyFont((Font) converter.convertToComplexType(
+					newValue, Font.class));
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
@@ -2479,7 +2488,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getImageRendererProperty(ImageRenderer iRenderer,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("image")) {
-			return iRenderer.getImage().getUUID();
+			return converter.convertToBasicType(iRenderer.getImage(), DataType.REFERENCE);
 
 		} else if (propertyName.equals("preservingAspectRatio")) {
 			return iRenderer.isPreservingAspectRatio();
@@ -2488,10 +2497,10 @@ public class WabitSessionPersister implements WabitPersister {
 			return iRenderer.isPreserveAspectRatioWhenResizing();
 
 		} else if (propertyName.equals("HAlign")) {
-			return iRenderer.getHAlign().name();
+			return converter.convertToBasicType(iRenderer.getHAlign(), DataType.ENUM);
 
 		} else if (propertyName.equals("VAlign")) {
-			return iRenderer.getVAlign().name();
+			return converter.convertToBasicType(iRenderer.getVAlign(), DataType.ENUM);
 
 		} else {
 			throw new WabitPersistenceException(iRenderer.getUUID(),
@@ -2515,23 +2524,22 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("image")) {
-			iRenderer.setImage(session.getWorkspace().findByUuid(
-					newValue.toString(), WabitImage.class));
+			iRenderer.setImage((WabitImage) converter.convertToComplexType(
+					newValue, WabitImage.class));
 
 		} else if (propertyName.equals("preservingAspectRatio")) {
-			iRenderer.setPreservingAspectRatio(Boolean.valueOf(newValue
-					.toString()));
+			iRenderer.setPreservingAspectRatio((Boolean) newValue);
 
 		} else if (propertyName.equals("preserveAspectRatioWhenResizing")) {
-			iRenderer.setPreserveAspectRatioWhenResizing(Boolean
-					.valueOf(newValue.toString()));
+			iRenderer.setPreserveAspectRatioWhenResizing((Boolean) newValue);
 
 		} else if (propertyName.equals("HAlign")) {
-			iRenderer.setHAlign(HorizontalAlignment
-					.valueOf(newValue.toString()));
+			iRenderer.setHAlign((HorizontalAlignment) converter.convertToComplexType(
+					newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("VAlign")) {
-			iRenderer.setVAlign(VerticalAlignment.valueOf(newValue.toString()));
+			iRenderer.setVAlign((VerticalAlignment) converter.convertToComplexType(
+					newValue, VerticalAlignment.class));
 
 		} else {
 			throw new WabitPersistenceException(iRenderer.getUUID(),
@@ -2564,10 +2572,10 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getLabelProperty(Label label, String propertyName)
 			throws WabitPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
-			return label.getHorizontalAlignment().name();
+			return converter.convertToBasicType(label.getHorizontalAlignment(), DataType.ENUM);
 
 		} else if (propertyName.equals("verticalAlignment")) {
-			return label.getVerticalAlignment().name();
+			return converter.convertToBasicType(label.getVerticalAlignment(), DataType.ENUM);
 
 		} else if (propertyName.equals("text")) {
 			return label.getText();
@@ -2598,18 +2606,19 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitLabelProperty(Label label, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
-			label.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
-					.toString()));
+			label.setHorizontalAlignment((HorizontalAlignment) converter.convertToComplexType(
+					newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("verticalAlignment")) {
-			label.setVerticalAlignment(VerticalAlignment.valueOf(newValue
-					.toString()));
+			label.setVerticalAlignment((VerticalAlignment) converter.convertToComplexType(
+					newValue, VerticalAlignment.class));
 
 		} else if (propertyName.equals("text")) {
-			label.setText(newValue.toString());
+			label.setText((String) newValue);
 
 		} else if (propertyName.equals("backgroundColour")) {
-			label.setBackgroundColour((Color) converter.convertToComplexType(newValue, Color.class));
+			label.setBackgroundColour((Color) converter.convertToComplexType(
+					newValue, Color.class));
 
 		} else if (propertyName.equals("font")) {
 			label.setFont((Font) converter.convertToComplexType(newValue, Font.class));
@@ -2648,7 +2657,7 @@ public class WabitSessionPersister implements WabitPersister {
 			return rsRenderer.getNullString();
 
 		} else if (propertyName.equals("borderType")) {
-			return rsRenderer.getBorderType().name();
+			return converter.convertToBasicType(rsRenderer.getBorderType(), DataType.ENUM);
 
 		} else if (propertyName.equals("backgroundColour")) {
 			return converter.convertToBasicType(rsRenderer.getBackgroundColour(), DataType.COLOR);
@@ -2681,19 +2690,23 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("nullString")) {
-			rsRenderer.setNullString(newValue.toString());
+			rsRenderer.setNullString((String) newValue);
 
 		} else if (propertyName.equals("border")) {
-			rsRenderer.setBorderType(BorderStyles.valueOf(newValue.toString()));
+			rsRenderer.setBorderType((BorderStyles) converter.convertToComplexType(
+					newValue, BorderStyles.class));
 
 		} else if (propertyName.equals("backgroundColour")) {
-			rsRenderer.setBackgroundColour((Color) converter.convertToComplexType(newValue, Color.class));
+			rsRenderer.setBackgroundColour((Color) converter.convertToComplexType(
+					newValue, Color.class));
 
 		} else if (propertyName.equals("headerFont")) {
-			rsRenderer.setHeaderFont((Font) converter.convertToComplexType(newValue, Font.class));
+			rsRenderer.setHeaderFont((Font) converter.convertToComplexType(
+					newValue, Font.class));
 
 		} else if (propertyName.equals("bodyFont")) {
-			rsRenderer.setBodyFont((Font) converter.convertToComplexType(newValue, Font.class));
+			rsRenderer.setBodyFont((Font) converter.convertToComplexType(
+					newValue, Font.class));
 
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
@@ -2784,32 +2797,33 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		String uuid = colInfo.getUUID();
 		if (propertyName.equals(ColumnInfo.COLUMN_ALIAS)) {
-			colInfo.setColumnAlias(newValue.toString());
+			colInfo.setColumnAlias((String) newValue);
 
 		} else if (propertyName.equals(ColumnInfo.WIDTH_CHANGED)) {
-			colInfo.setWidth(Integer.valueOf(newValue.toString()));
+			colInfo.setWidth((Integer) newValue);
 
 		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
-			colInfo.setHorizontalAlignment(HorizontalAlignment.valueOf(newValue
-					.toString()));
+			colInfo.setHorizontalAlignment((HorizontalAlignment) converter.convertToComplexType(
+					newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
-			colInfo.setDataType(ca.sqlpower.wabit.report.DataType
-					.valueOf(newValue.toString()));
+			colInfo.setDataType((ca.sqlpower.wabit.report.DataType) 
+					converter.convertToComplexType(
+							newValue, ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
-			colInfo.setWillGroupOrBreak(GroupAndBreak.valueOf(newValue
-					.toString()));
+			colInfo.setWillGroupOrBreak((GroupAndBreak) converter.convertToComplexType(
+					newValue, GroupAndBreak.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
-			colInfo.setWillSubtotal(Boolean.valueOf(newValue.toString()));
+			colInfo.setWillSubtotal((Boolean) newValue);
 
 		} else if (propertyName.equals(ColumnInfo.COLUMN_INFO_ITEM_CHANGED)) {
 			boolean found = false;
 			for (Item queryItem : ((ResultSetRenderer) colInfo.getParent())
 					.getContent().getSelectedColumns()) {
 				Item item = queryItem;
-				if (item.getUUID().equals(newValue.toString())) {
+				if (item.getUUID().equals((String) newValue)) {
 					colInfo.setColumnInfoItem(item);
 					found = true;
 					break;
@@ -2897,7 +2911,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitGuideProperty(Guide guide, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("offset")) {
-			guide.setOffset(Double.valueOf(newValue.toString()));
+			guide.setOffset((Double) newValue);
 
 		} else {
 			throw new WabitPersistenceException(guide.getUUID(),

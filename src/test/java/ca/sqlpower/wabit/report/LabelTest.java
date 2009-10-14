@@ -30,6 +30,14 @@ public class LabelTest extends AbstractWabitObjectTest {
 
     private Label label;
     
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignored.add("variableContext");
+    	return ignored;
+    }
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();

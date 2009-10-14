@@ -37,13 +37,13 @@ public class SessionPersisterUtils {
 	 * @return The pieces the string is split into.
 	 */
 	static String[] splitByDelimiter(String toSplit, int numPieces) {
-		String[] pointPieces = toSplit.split(BidirectionalConverter.DELIMITER);
+		String[] pieces = toSplit.split(BidirectionalConverter.DELIMITER);
 
-		if (pointPieces.length != 2) {
+		if (pieces.length != numPieces) {
 			throw new IllegalArgumentException("Cannot convert string \""
 					+ toSplit + "\" with an invalid number of properties.");
 		}
-		return pointPieces;
+		return pieces;
 	}
 	
 	private SessionPersisterUtils() {

@@ -28,15 +28,10 @@ public class Point2DConverter implements
 
 	public Point2D convertToComplexType(String convertFrom)
 			throws ConversionException {
-		String[] pointPieces = convertFrom.split(DELIMITER);
+		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 2);
 
-		if (pointPieces.length != 2) {
-			throw new IllegalArgumentException("Cannot convert string \""
-					+ convertFrom + "\" with an invalid number of properties.");
-		}
-
-		double x = Double.valueOf(pointPieces[0]);
-		double y = Double.valueOf(pointPieces[1]);
+		double x = Double.valueOf(pieces[0]);
+		double y = Double.valueOf(pieces[1]);
 
 		return (new Point2D.Double(x, y));
 	}

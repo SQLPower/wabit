@@ -48,24 +48,21 @@ public class CubeConverter implements BidirectionalConverter<String, Cube> {
 
 	public Cube convertToComplexType(String convertFrom) throws ConversionException {
 
-		String[] cubePieces = convertFrom.split(DELIMITER);
-		if (cubePieces.length != 4) {
-			throw new IllegalArgumentException("The cube representation \"" + convertFrom + 
-					"\" has an incorrect number of pieces.");
-		}
-		Olap4jDataSource ds = dsCollection.getDataSource(cubePieces[0], Olap4jDataSource.class);
+		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 4);
+		
+		Olap4jDataSource ds = dsCollection.getDataSource(pieces[0], Olap4jDataSource.class);
 		
 		Catalog catalog;
 		try {
-			catalog = mapping.createConnection(ds).getCatalogs().get(cubePieces[1]);
+			catalog = mapping.createConnection(ds).getCatalogs().get(pieces[1]);
 		} catch (Exception ex) {
-			throw new ConversionException("Error connecting to data source " + cubePieces[0] + 
+			throw new ConversionException("Error connecting to data source " + pieces[0] + 
 					" to get cube defined by " + convertFrom, ex);
 		}
 		Schema schema;
 		try {
-			schema = catalog.getSchemas().get(cubePieces[2]);
-			Cube cube = schema.getCubes().get(cubePieces[3]);
+			schema = catalog.getSchemas().get(pieces[2]);
+			Cube cube = schema.getCubes().get(pieces[3]);
 			return cube;
 		} catch (OlapException e) {
 			throw new ConversionException("The cube could not be retrieved from the string " + 

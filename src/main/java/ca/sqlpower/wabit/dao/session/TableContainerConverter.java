@@ -43,12 +43,7 @@ public class TableContainerConverter implements BidirectionalConverter<String, T
 
 	public TableContainer convertToComplexType(String convertFrom)
 			throws ConversionException {
-		String[] pieces = convertFrom.split(DELIMITER);
-
-		if (pieces.length != 5) {
-			throw new IllegalArgumentException("Cannot convert string \""
-					+ convertFrom + "\" with an invalid number of properties.");
-		}
+		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 5);
 		
 		JDBCDataSource ds = session.getDataSources().getDataSource(pieces[1], JDBCDataSource.class);
 		SQLDatabase db = session.getContext().getDatabase(ds);

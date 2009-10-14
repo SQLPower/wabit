@@ -19,12 +19,23 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 
 public class LayoutTest extends AbstractWabitObjectTest {
 
     private Report layout;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignored.add("currentlyPrinting");
+    	ignored.add("numberOfPages");
+    	ignored.add("page");
+    	return ignored;
+    }
     
     @Override
     protected void setUp() throws Exception {

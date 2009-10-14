@@ -42,12 +42,8 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 
 	public SQLJoin convertToComplexType(String convertFrom)
 			throws ConversionException {
-		String[] pieces = convertFrom.split(DELIMITER);
-
-		if (pieces.length != 5) {
-			throw new IllegalArgumentException("Cannot convert string \""
-					+ convertFrom + "\" with an invalid number of properties.");
-		}
+		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 5);
+		
 		String queryID = pieces[0];
 		String leftTableID = pieces[1];
 		String leftItemID = pieces[2];
