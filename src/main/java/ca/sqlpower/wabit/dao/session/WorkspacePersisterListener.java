@@ -367,6 +367,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining arguments
 				target.persistProperty(uuid, "HAlign", DataType.STRING,
 						iRenderer.getHAlign().name());
+				target.persistProperty(uuid, "VAlign", DataType.STRING,
+						iRenderer.getVAlign().name());
 				target.persistProperty(uuid, "image", DataType.REFERENCE,
 						iRenderer.getImage().getUUID());
 				target.persistProperty(uuid, "preserveAspectRatioWhenResizing",

@@ -41,7 +41,17 @@ public class PageTest extends AbstractWabitObjectTest {
     @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
+    	
+    	// This is a child.
     	notPersisting.add("contentBoxes");
+    	
+    	// These are generated from other properties.
+    	notPersisting.add("leftMarginOffset");
+    	notPersisting.add("lowerMarginOffset");
+    	notPersisting.add("rightMarginOffset");
+    	notPersisting.add("upperMarginOffset");
+    	notPersisting.add("pageFormat");
+    	
     	return notPersisting;
     }
     

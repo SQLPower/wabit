@@ -46,8 +46,6 @@ public class ImageRenderer extends AbstractWabitObject implements
 	
 	private WabitImage image;
 
-	private String filename;
-	
 	/**
 	 * If the image is preserving the aspect ratio then this will decide
 	 * its position in the content box horizontally.
@@ -104,7 +102,6 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public ImageRenderer(ImageRenderer imageRenderer) {
 	    this();
 		this.image = imageRenderer.getImage();
-		this.filename = imageRenderer.getFilename();
 	}
 	
 	public WabitObject getContent(){
@@ -194,10 +191,6 @@ public class ImageRenderer extends AbstractWabitObject implements
 		return image;
 	}
 	
-	public String getFilename() {
-		return filename;
-	}
-
 	public void setImage(WabitImage image) {
 	    WabitImage oldImage = this.image;
 		this.image = image;
