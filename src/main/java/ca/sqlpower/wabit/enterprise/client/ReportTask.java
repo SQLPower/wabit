@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -83,7 +84,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setReport(Report report) {
+		Report oldVal = this.report;
 		this.report = report;
+		firePropertyChange("report", oldVal, report);
 	}
 
 	public String getEmail() {
@@ -91,7 +94,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setEmail(String email) {
+		String oldEmail = this.email;
 		this.email = email;
+		firePropertyChange("email", oldEmail, email);
 	}
 
 	public String getTriggerType() {
@@ -99,7 +104,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setTriggerType(String triggerType) {
+		String oldTriggerType = this.triggerType;
 		this.triggerType = triggerType;
+		firePropertyChange("triggerType", oldTriggerType, triggerType);
 	}
 
 	public int getTriggerHourParam() {
@@ -107,7 +114,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setTriggerHourParam(int triggerHourParam) {
+		int oldVal = this.triggerHourParam;
 		this.triggerHourParam = triggerHourParam;
+		firePropertyChange("triggerHourParam", oldVal, triggerHourParam);
 	}
 
 	public int getTriggerMinuteParam() {
@@ -115,7 +124,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setTriggerMinuteParam(int triggerMinuteParam) {
+		int oldVal = this.triggerMinuteParam;
 		this.triggerMinuteParam = triggerMinuteParam;
+		firePropertyChange("triggerMinuteParam", oldVal, triggerMinuteParam);
 	}
 
 	public int getTriggerDayOfWeekParam() {
@@ -123,7 +134,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setTriggerDayOfWeekParam(int triggerDayOfWeekParam) {
+		int oldVal = this.triggerDayOfWeekParam;
 		this.triggerDayOfWeekParam = triggerDayOfWeekParam;
+		firePropertyChange("triggerDayOfWeekParam", oldVal, triggerDayOfWeekParam);
 	}
 
 	public int getTriggerDayOfMonthParam() {
@@ -131,7 +144,9 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setTriggerDayOfMonthParam(int triggerDayOfMonthParam) {
+		int oldVal = this.triggerDayOfMonthParam;
 		this.triggerDayOfMonthParam = triggerDayOfMonthParam;
+		firePropertyChange("triggerDayOfMonthParam", oldVal, triggerDayOfMonthParam);
 	}
 
 	public int getTriggerIntervalParam() {
@@ -139,6 +154,8 @@ public class ReportTask extends AbstractWabitObject {
 	}
 
 	public void setTriggerIntervalParam(int triggerIntervalParam) {
+		int oldVal = this.triggerIntervalParam;
 		this.triggerIntervalParam = triggerIntervalParam;
+		firePropertyChange("triggerIntervalParam", oldVal, triggerIntervalParam);
 	}
 }
