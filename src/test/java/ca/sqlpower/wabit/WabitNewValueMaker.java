@@ -24,15 +24,12 @@ import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
 import java.io.File;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 
-import javax.naming.NamingException;
-
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
+import org.springframework.security.GrantedAuthority;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -45,6 +42,8 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
+import ca.sqlpower.wabit.enterprise.client.Grant;
+import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -249,6 +248,10 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
+        } else if (valueType.equals(Grant.class)) {
+        	newValue = new Grant("subject", "type", true, true, true, true, true);
+        } else if (valueType.equals(GrantedAuthority.class)) {
+        	newValue = new Group();
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

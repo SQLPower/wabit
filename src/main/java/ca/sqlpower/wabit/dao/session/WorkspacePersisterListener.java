@@ -45,6 +45,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.olap.WabitOlapDimension;
@@ -577,6 +578,9 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "editorPanelModel", DataType.REFERENCE,
 						converter.convertToBasicType(workspace.getEditorPanelModel(),
 								DataType.REFERENCE));
+			} else if (child instanceof User) {
+				User user = (User) child;
+				target.persistProperty(uuid, "password", DataType.STRING, user.getPassword());
 			}
 			
 			if (child instanceof ReportContentRenderer) {
