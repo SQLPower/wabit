@@ -25,6 +25,7 @@ import java.awt.geom.Point2D;
 
 import org.olap4j.metadata.Cube;
 
+import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
@@ -64,6 +65,8 @@ public class SessionPersisterSuperConverter {
 	private final StringItemConverter stringItemConverter= new StringItemConverter();
 	
 	private final SQLObjectItemConverter sqlObjectItemConverter = new SQLObjectItemConverter();
+	
+	private final ItemContainerConverter itemContainerConverter = new ItemContainerConverter();
 
 	/**
 	 * This converter will allow changes between any complex object in the
@@ -147,6 +150,9 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (convertFrom instanceof StringItem) {
 			return stringItemConverter.convertToSimpleType((StringItem) convertFrom);
+			
+		} else if (convertFrom instanceof ItemContainer) {
+			return itemContainerConverter.convertToSimpleType((ItemContainer) convertFrom);
 			
 		} else if (convertFrom instanceof String) {
 			if (fromType != DataType.STRING) {

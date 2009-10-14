@@ -670,7 +670,7 @@ public class Chart extends AbstractWabitObject {
      * Returns the desired rotation for the X-axis category/item labels. 0 means
      * horizontal; -90 means read bottom to top; 90 means read top to bottom.
      */
-    public double getXaxisLabelRotation() {
+    public double getXAxisLabelRotation() {
         return xAxisLabelRotation;
     }
 
@@ -691,7 +691,7 @@ public class Chart extends AbstractWabitObject {
         }
         double oldValue = this.xAxisLabelRotation;
         this.xAxisLabelRotation = xAxisLabelRotation;
-        firePropertyChange("xAxisLabelRotation", oldValue, xAxisLabelRotation);
+        firePropertyChange("XAxisLabelRotation", oldValue, xAxisLabelRotation);
     }
 
     public void setGratuitouslyAnimated(boolean gratuitouslyAnimated) {

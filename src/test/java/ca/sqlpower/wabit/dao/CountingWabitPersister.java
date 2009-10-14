@@ -123,4 +123,13 @@ public class CountingWabitPersister implements WabitPersister {
 	public List<WabitObjectProperty> getAllPropertyChanges() {
 		return Collections.unmodifiableList(propertiesPersisted);
 	}
+
+	/**
+	 * Removes all of the property change events that were stored to track what
+	 * objects were persisted. This does not change the count of how many times
+	 * the persist property method was called.
+	 */
+	public void clearAllPropertyChanges() {
+		propertiesPersisted.clear();
+	}
 }

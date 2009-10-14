@@ -127,7 +127,7 @@ public class ChartSwingUtil {
             logger.debug("Made a new category chart: " + categoryChart);
             
             if (categoryChart != null) {
-                double rotationRads = Math.toRadians(c.getXaxisLabelRotation());
+                double rotationRads = Math.toRadians(c.getXAxisLabelRotation());
                 CategoryLabelPositions clp;
                 if (Math.abs(rotationRads) < 0.05) {
                     clp = CategoryLabelPositions.STANDARD;

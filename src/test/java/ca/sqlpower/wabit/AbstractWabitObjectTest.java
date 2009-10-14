@@ -178,7 +178,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             
             if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
             if (propertiesToIgnoreForPersisting.contains(property.getName())) continue;
-            
+
+            countingPersister.clearAllPropertyChanges();
             try {
                 oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());
 
@@ -198,9 +199,15 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 BeanUtils.copyProperty(wo, property.getName(), newVal);
 
                 assertTrue("Did not persist property " + property.getName(), 
-                		oldChangeCount + 1 == countingPersister.getPersistPropertyCount());
-                assertEquals(wo.getUUID(), countingPersister.getLastUUID());
-                assertEquals(property.getName(), countingPersister.getLastPropertyName());
+                		oldChangeCount < countingPersister.getPersistPropertyCount());
+                
+                //The first property change at current is always the property change we are
+                //looking for, this may need to be changed in the future to find the correct
+                //property.
+                WabitObjectProperty propertyChange = countingPersister.getAllPropertyChanges().get(0);
+                
+                assertEquals(wo.getUUID(), propertyChange.getUUID());
+                assertEquals(property.getName(), propertyChange.getPropertyName());
                 DataType oldValType;
                 if (oldVal != null) {
                 	 oldValType = DataType.getTypeByClass(oldVal.getClass());
@@ -210,16 +217,16 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 				Object oldConvertedType = converterFactory.convertToBasicType(oldVal, oldValType);
 				assertEquals("Old value of property " + property.getName() + " was wrong, value expected was  " + oldConvertedType + 
 						" but is " + countingPersister.getLastOldValue(), oldConvertedType, 
-                		countingPersister.getLastOldValue());
+                		propertyChange.getOldValue());
                 assertEquals(converterFactory.convertToBasicType(newVal, DataType.getTypeByClass(newVal.getClass())), 
-                		countingPersister.getLastNewValue());
+                		propertyChange.getNewValue());
                 Class<? extends Object> classType;
                 if (oldVal != null) {
                 	classType = oldVal.getClass();
                 } else {
                 	classType = newVal.getClass();
                 }
-                assertEquals(DataType.getTypeByClass(classType), countingPersister.getLastDataType());
+                assertEquals(DataType.getTypeByClass(classType), propertyChange.getDataType());
             } catch (InvocationTargetException e) {
                 System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }

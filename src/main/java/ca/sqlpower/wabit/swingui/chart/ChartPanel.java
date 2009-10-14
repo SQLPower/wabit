@@ -457,7 +457,7 @@ public class ChartPanel implements WabitPanel {
                 xaxisNameField.setText(chart.getXaxisName());
             }
             
-            xaxisLabelRotationSlider.setValue((int) chart.getXaxisLabelRotation());
+            xaxisLabelRotationSlider.setValue((int) chart.getXAxisLabelRotation());
             
             gratuitousAnimationCheckbox.setSelected(chart.isGratuitouslyAnimated());
             

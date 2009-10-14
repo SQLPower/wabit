@@ -271,12 +271,14 @@ public class WorkspacePersisterListener implements WabitListener {
 				
 				target.persistProperty(uuid, "type", DataType.ENUM,
 						converter.convertToBasicType(chart.getType(), DataType.ENUM));
-				target.persistProperty(uuid, "xAxisLabelRotation",
-						DataType.DOUBLE, chart.getXaxisLabelRotation());
+				target.persistProperty(uuid, "XAxisLabelRotation",
+						DataType.DOUBLE, chart.getXAxisLabelRotation());
 				target.persistProperty(uuid, "xaxisName", DataType.STRING,
 						chart.getXaxisName());
 				target.persistProperty(uuid, "yaxisName", DataType.STRING,
 						chart.getYaxisName());
+				target.persistProperty(uuid, "backgroundColour", DataType.COLOR,
+						converter.convertToBasicType(chart.getBackgroundColour(), DataType.COLOR));
 
 			} else if (child instanceof ChartRenderer) {
 				ChartRenderer cRenderer = (ChartRenderer) child;

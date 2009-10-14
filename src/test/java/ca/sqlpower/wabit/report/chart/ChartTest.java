@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.report.chart;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
@@ -26,6 +28,26 @@ import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
 public class ChartTest extends AbstractWabitObjectTest {
 
     private Chart chart;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	
+    	ignored.add("resultSet");
+    	ignored.add("seriesColours");
+    	ignored.add("unfilteredResultSet");
+    	
+    	// These are children.
+    	ignored.add("columns");
+    	
+    	// This is currently not used.
+    	ignored.add("missingIdentifiers");
+    	
+    	// This is an internal property.
+    	ignored.add("resultSetFilter");
+    	
+    	return ignored;
+    }
     
     @Override
     protected void setUp() throws Exception {

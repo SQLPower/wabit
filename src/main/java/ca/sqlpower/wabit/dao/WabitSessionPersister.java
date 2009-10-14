@@ -1874,8 +1874,8 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("yaxisName")) {
 			return chart.getYaxisName();
 
-		} else if (propertyName.equals("xAxisLabelRotation")) {
-			return chart.getXaxisLabelRotation();
+		} else if (propertyName.equals("XAxisLabelRotation")) {
+			return chart.getXAxisLabelRotation();
 
 		} else if (propertyName.equals("gratuitousAnimated")) {
 			return chart.isGratuitouslyAnimated();
