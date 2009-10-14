@@ -48,6 +48,7 @@ import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.olap.WabitOlapDimension;
@@ -604,6 +605,11 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER));
 				target.persistProperty(uuid, "report", DataType.REFERENCE, 
 						converter.convertToBasicType(task.getReport(), DataType.REFERENCE));
+			} else if (child instanceof WabitImage) {
+				WabitImage image = (WabitImage) child;
+				
+				target.persistProperty(uuid, "image", DataType.PNG_IMG, 
+						converter.convertToBasicType(image.getImage(), DataType.PNG_IMG));
 			}
 			
 			if (child instanceof ReportContentRenderer) {

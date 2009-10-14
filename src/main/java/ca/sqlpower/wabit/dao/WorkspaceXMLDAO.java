@@ -20,12 +20,9 @@
 package ca.sqlpower.wabit.dao;
 
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -40,8 +37,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -516,34 +511,17 @@ public class WorkspaceXMLDAO {
 	    
 	    final Image wabitInnerImage = wabitImage.getImage();
 	    if (wabitInnerImage != null) {
-	        BufferedImage image;
-	        if (wabitInnerImage instanceof BufferedImage) {
-	            image = (BufferedImage) wabitInnerImage;
-	        } else {
-	            image = new BufferedImage(wabitInnerImage.getWidth(null), 
-	                    wabitInnerImage.getHeight(null), BufferedImage.TYPE_INT_ARGB); 
-	            final Graphics2D g = image.createGraphics();
-	            g.drawImage(wabitInnerImage, 0, 0, null);
-	            g.dispose();
-	        }
-	        if (image != null) {
-	            try {
-	                out.flush();
-	                ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-	                ImageIO.write(image, "PNG", byteStream);
-	                byte[] byteArray = new Base64().encode(byteStream.toByteArray());
-	                logger.debug("Encoded length is " + byteArray.length);
-	                logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
-	                for (int i = 0; i < byteArray.length; i++) {
-	                    out.write((char)byteArray[i]);
-	                    if (i % 60 == 59) {
-	                        out.write("\n");
-	                    }
-	                }
-	            } catch (IOException e) {
-	                throw new RuntimeException(e);
-	            }
-	        }
+	    	ByteArrayOutputStream byteStream = PersisterUtils.convertImageToStreamAsPNG(wabitInnerImage);
+	    	out.flush();
+	    	byte[] byteArray = new Base64().encode(byteStream.toByteArray());
+	    	logger.debug("Encoded length is " + byteArray.length);
+	    	logger.debug("Stream has byte array " + Arrays.toString(byteStream.toByteArray()));
+	    	for (int i = 0; i < byteArray.length; i++) {
+	    		out.write((char)byteArray[i]);
+	    		if (i % 60 == 59) {
+	    			out.write("\n");
+	    		}
+	    	}
 	    }
         
         xml.indent--;
