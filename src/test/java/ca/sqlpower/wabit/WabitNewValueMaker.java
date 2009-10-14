@@ -44,6 +44,8 @@ import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.GroupMember;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -252,6 +254,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = new Grant("subject", "type", true, true, true, true, true);
         } else if (valueType.equals(GrantedAuthority.class)) {
         	newValue = new Group();
+        } else if (valueType.equals(GroupMember.class)) {
+        	newValue = new GroupMember(new User("name", "pass"));
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
