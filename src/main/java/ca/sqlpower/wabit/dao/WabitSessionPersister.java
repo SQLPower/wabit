@@ -68,6 +68,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -925,6 +926,8 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof WabitWorkspace) {
 				propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
 						propertyName);
+			} else if (wo instanceof ReportTask) {
+				propertyValue = getReportTaskProperty((ReportTask) wo, propertyName);
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid WabitObject");
 			}
@@ -2626,6 +2629,32 @@ public class WabitSessionPersister implements WabitPersister {
 		} else {
 			throw new WabitPersistenceException(label.getUUID(),
 					"Invalid property: " + propertyName);
+		}
+	}
+	
+	private Object getReportTaskProperty(ReportTask task,
+			String propertyName) throws WabitPersistenceException {
+		
+		if (propertyName.equals("email")) {
+			return converter.convertToBasicType(task.getEmail(), DataType.STRING);
+		} else if (propertyName.equals("report")) {
+			return converter.convertToBasicType(task.getReport(), DataType.REFERENCE);
+		} else if (propertyName.equals("triggerType")) {
+			return converter.convertToBasicType(task.getTriggerType(), DataType.STRING);
+		} else if (propertyName.equals("triggerHourParam")) {
+			return converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER);
+		} else if (propertyName.equals("triggerMinuteParam")) {
+			return converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER);
+		} else if (propertyName.equals("triggerDayOfWeekParam")) {
+			return converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER);
+		} else if (propertyName.equals("triggerDayOfMonthParam")) {
+			return converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER);
+		} else if (propertyName.equals("triggerIntervalParam")) {
+			return converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER);
+			
+		} else {
+			throw new WabitPersistenceException(task.getUUID(), "Unknown property " + 
+					propertyName + " for ReportTask.");
 		}
 	}
 

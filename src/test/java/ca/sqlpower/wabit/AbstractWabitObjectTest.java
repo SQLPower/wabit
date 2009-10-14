@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,6 +65,15 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         Set<String> ignore = new HashSet<String>();
         ignore.add("class");
         return ignore;
+    }
+    
+    /**
+     * These properties, on top of the properties ignored for events, will be
+     * ignored when checking the properties of a specific {@link WabitObject}
+     * are persisted.
+     */
+    public Set<String> getPropertiesToIgnoreForPersisting() {
+    	return new HashSet<String>();
     }
     
     /**
@@ -158,12 +166,18 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
 
+        //Ignore properties that are not in events because we won't have an event
+        //to respond to.
         Set<String> propertiesToIgnoreForEvents = getPropertiesToIgnoreForEvents();
+        
+        Set<String> propertiesToIgnoreForPersisting = getPropertiesToIgnoreForPersisting();
+        
         NewValueMaker valueMaker = new WabitNewValueMaker();
         for (PropertyDescriptor property : settableProperties) {
             Object oldVal;
             
             if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
+            if (propertiesToIgnoreForPersisting.contains(property.getName())) continue;
             
             try {
                 oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());

@@ -19,12 +19,23 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 
 public class ReportTaskTest extends AbstractWabitObjectTest {
 	
 	private ReportTask reportTask;
+
+	@Override
+	public Set<String> getPropertiesToIgnoreForPersisting() {
+		Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
+		//The report task ignores the name and defines it based on the report
+		//scheduled so this property is not necessary for persisting.
+		ignored.add("name");
+		return ignored;
+	}
 	
 	@Override
 	protected void setUp() throws Exception {

@@ -382,6 +382,12 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         	offset += templates.size();
 
         	if (childType == Report.class) return offset;
+        	offset += reports.size();
+        	
+        	if (childType == User.class) return offset;
+        	offset += users.size();
+        	
+        	if (childType == Group.class) return offset;
 
         	throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
         }
@@ -416,15 +422,20 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addUser(User u) {
-    	users.add(u);
+    	addUser(u, users.size());
     }
     
     public void addUser(User u, int index) {
     	users.add(index, u);
+    	fireChildAdded(User.class, u, index);
     }
     
     public void removeUser(User u) {
-    	users.remove(u);
+    	int index = users.indexOf(u);
+    	boolean success = users.remove(u);
+    	if (success) {
+    		fireChildRemoved(User.class, u, index);
+    	}
     }
     
     public List<User> getUsers() {
@@ -432,15 +443,20 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addGroup(Group g) {
-    	groups.add(g);
+    	addGroup(g, groups.size());
     }
     
     public void addGroup(Group g, int index) {
     	groups.add(index, g);
+    	fireChildAdded(Group.class, g, index);
     }
     
     public void removeGroup(Group g) {
-    	groups.remove(g);
+    	int index = groups.indexOf(g);
+    	boolean success = groups.remove(g);
+    	if (success) {
+    		fireChildRemoved(Group.class, g, index);
+    	}
     }
     
     public List<Group> getGroups() {

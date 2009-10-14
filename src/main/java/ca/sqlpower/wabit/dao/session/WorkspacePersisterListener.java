@@ -46,6 +46,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -582,6 +583,23 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof User) {
 				User user = (User) child;
 				target.persistProperty(uuid, "password", DataType.STRING, user.getPassword());
+			} else if (child instanceof ReportTask) {
+				ReportTask task = (ReportTask) child;
+				
+				target.persistProperty(uuid, "email", DataType.STRING, task.getEmail());
+				target.persistProperty(uuid, "triggerType", DataType.STRING, task.getTriggerType());
+				target.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerMinuteParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerDayOfWeekParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerDayOfMonthParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerIntervalParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "report", DataType.REFERENCE, 
+						converter.convertToBasicType(task.getReport(), DataType.REFERENCE));
 			}
 			
 			if (child instanceof ReportContentRenderer) {

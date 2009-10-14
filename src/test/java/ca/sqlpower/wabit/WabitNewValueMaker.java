@@ -250,6 +250,10 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
+        } else if (valueType.equals(User.class)) {
+        	newValue = new User("name", "pass");
+        } else if (valueType.equals(Group.class)) {
+        	newValue = new Group();
         } else if (valueType.equals(Grant.class)) {
         	newValue = new Grant("subject", "type", true, true, true, true, true);
         } else if (valueType.equals(GrantedAuthority.class)) {
