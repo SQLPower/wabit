@@ -19,19 +19,33 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 public class ContentBoxTest extends AbstractWabitObjectTest {
 
     private ContentBox cb;
     
+    private Page parentPage;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignored.add("bounds");
+    	return ignored;
+    }
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         cb = new ContentBox();
+        parentPage = new Page("page", 10, 10, PageOrientation.LANDSCAPE);
+        parentPage.addContentBox(cb);
     }
     
     @Override
@@ -44,6 +58,7 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
      * calling removeChild.
      */
     public void testAddAndRemoveChild() throws Exception {
+    	ContentBox cb = new ContentBox();
         StubWabitSession session = new StubWabitSession(new StubWabitSessionContext());
         Report report = new Report("New Report");
         session.getWorkspace().addReport(report);

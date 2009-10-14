@@ -24,6 +24,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 
 import org.olap4j.metadata.Cube;
 
@@ -71,6 +72,9 @@ public class SessionPersisterSuperConverter {
 	private final ItemContainerConverter itemContainerConverter = new ItemContainerConverter();
 	
 	private final PNGImageConverter pngImageConverter = new PNGImageConverter();
+	
+	private final SimpleDateFormatConverter simpleDateFormatConverter = 
+		new SimpleDateFormatConverter();
 
 	/**
 	 * This converter will allow changes between any complex object in the
@@ -161,6 +165,9 @@ public class SessionPersisterSuperConverter {
 		} else if (convertFrom instanceof Image && DataType.PNG_IMG.equals(fromType)) {
 			return pngImageConverter.convertToSimpleType((Image) convertFrom);
 			
+		} else if (convertFrom instanceof SimpleDateFormat) {
+			return simpleDateFormatConverter.convertToSimpleType((SimpleDateFormat) convertFrom);
+			
 		} else if (convertFrom instanceof String) {
 			if (fromType != DataType.STRING) {
 				throw new IllegalArgumentException("Converting a string should " +
@@ -240,6 +247,9 @@ public class SessionPersisterSuperConverter {
 			//TODO we should pass this the data type to know that we want a PNG 
 			//in case other formats are supported in the future
 			return pngImageConverter.convertToComplexType((InputStream) o);
+			
+		} else if (SimpleDateFormat.class.isAssignableFrom(type)) {
+			return simpleDateFormatConverter.convertToComplexType((String) o);
 			
 		} else if (String.class.isAssignableFrom(type)) {
 			return (String) o;

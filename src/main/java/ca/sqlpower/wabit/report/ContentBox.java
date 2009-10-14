@@ -260,7 +260,7 @@ public class ContentBox extends AbstractWabitObject {
     }
 
     public void setFont(Font font) {
-        Font oldFont = this.font;
+        Font oldFont = getFont();
         this.font = font;
         firePropertyChange("font", oldFont, font);
     }

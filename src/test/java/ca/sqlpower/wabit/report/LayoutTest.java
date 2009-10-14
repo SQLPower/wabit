@@ -34,6 +34,9 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	ignored.add("currentlyPrinting");
     	ignored.add("numberOfPages");
     	ignored.add("page");
+    	ignored.add("pageFormat");
+    	ignored.add("printable");
+    	ignored.add("varContext");
     	return ignored;
     }
     

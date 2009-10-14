@@ -300,44 +300,31 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining properties
 				Item item = columnInfo.getColumnInfoItem();
 				if (item != null) {
+					DataType type = DataType.getTypeByClass(item.getClass());
 					target.persistProperty(uuid,
 							ColumnInfo.COLUMN_INFO_ITEM_CHANGED,
-							DataType.STRING, item.getUUID());
+							type, converter.convertToBasicType(item, type));
 				}
 
 				target.persistProperty(uuid, ColumnInfo.DATATYPE_CHANGED,
 						DataType.ENUM, converter.convertToBasicType(
 								columnInfo.getDataType(), DataType.ENUM));
 
-				Format formatType = columnInfo.getFormat();
-
-				if (formatType != null) {
-					String formatString;
-
-					if (formatType instanceof SimpleDateFormat) {
-						formatString = "date-format";
-					} else if (formatType instanceof DecimalFormat) {
-						formatString = "decimal-format";
-					} else {
-						throw new WabitPersistenceException(uuid,
-								"Invalid format type: "
-										+ formatType.getClass().getSimpleName());
-					}
-					target.persistProperty(uuid, ColumnInfo.FORMAT_CHANGED,
-							DataType.STRING, formatString);
-				}
-
 				target.persistProperty(uuid,
 						ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED,
-						DataType.STRING, columnInfo.getHorizontalAlignment()
-								.name());
+						DataType.ENUM, converter.convertToBasicType(
+								columnInfo.getHorizontalAlignment(), DataType.ENUM));
 				target.persistProperty(uuid, ColumnInfo.WIDTH_CHANGED,
 						DataType.INTEGER, columnInfo.getWidth());
 				target.persistProperty(uuid,
 						ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED,
-						DataType.BOOLEAN, columnInfo.getWillGroupOrBreak());
+						DataType.ENUM, converter.convertToBasicType(
+								columnInfo.getWillGroupOrBreak(), DataType.ENUM));
 				target.persistProperty(uuid, ColumnInfo.WILL_SUBTOTAL_CHANGED,
 						DataType.BOOLEAN, columnInfo.getWillSubtotal());
+				DataType type = DataType.getTypeByClass(child.getClass());
+				target.persistProperty(uuid, "format", type, 
+						converter.convertToBasicType(columnInfo.getFormat(), type));
 
 			} else if (child instanceof ContentBox) {
 				ContentBox contentBox = (ContentBox) child;
