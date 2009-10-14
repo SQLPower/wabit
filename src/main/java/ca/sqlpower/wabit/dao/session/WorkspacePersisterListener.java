@@ -20,9 +20,6 @@
 package ca.sqlpower.wabit.dao.session;
 
 import java.beans.PropertyChangeEvent;
-import java.text.DecimalFormat;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
@@ -132,7 +129,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	public WorkspacePersisterListener(WabitSession session,
 			WabitPersister persister) {
-		converter = new SessionPersisterSuperConverter(session);
+		converter = new SessionPersisterSuperConverter(session, session.getWorkspace());
 		target = persister;
 	}
 

@@ -66,6 +66,7 @@ import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
@@ -109,7 +110,7 @@ import com.google.common.collect.Multimap;
  * This class represents a Data Access Object for {@link WabitSession}s.
  */
 public class WabitSessionPersister implements WabitPersister {
-	
+
 	private static final Logger logger = Logger
 			.getLogger(WabitSessionPersister.class);
 
@@ -159,6 +160,7 @@ public class WabitSessionPersister implements WabitPersister {
 		 * Constructor to persist a {@link WabitObject} property, keeping track
 		 * of all the parameters of the persistProperty(...) method call. These
 		 * fields will be necessary for when commit() is called.
+		 * 
 		 * @param propertyName
 		 *            The name of the property to persist
 		 * @param newValue
@@ -167,8 +169,9 @@ public class WabitSessionPersister implements WabitPersister {
 		 *            Whether or not to validate if oldValue matches the actual
 		 *            property value before persisting
 		 */
-		public WabitObjectProperty(String uuid, String propertyName, DataType dataType, Object oldValue,
-				Object newValue, boolean unconditional) {
+		public WabitObjectProperty(String uuid, String propertyName,
+				DataType dataType, Object oldValue, Object newValue,
+				boolean unconditional) {
 			this.uuid = uuid;
 			this.propertyName = propertyName;
 			this.newValue = newValue;
@@ -203,15 +206,15 @@ public class WabitSessionPersister implements WabitPersister {
 		public boolean isUnconditional() {
 			return unconditional;
 		}
-		
+
 		public DataType getDataType() {
 			return dataType;
 		}
-		
+
 		public Object getOldValue() {
 			return oldValue;
 		}
-		
+
 		public String getUUID() {
 			return uuid;
 		}
@@ -237,7 +240,8 @@ public class WabitSessionPersister implements WabitPersister {
 		 * @param uuid
 		 *            The UUID of the {@link WabitObject} to persist
 		 */
-		public PersistedWabitObject(String parentUUID, String type, String uuid, int index) {
+		public PersistedWabitObject(String parentUUID, String type,
+				String uuid, int index) {
 			this.parentUUID = parentUUID;
 			this.type = type;
 			this.uuid = uuid;
@@ -270,28 +274,48 @@ public class WabitSessionPersister implements WabitPersister {
 		public String getUUID() {
 			return uuid;
 		}
-		
+
 		public int getIndex() {
 			return index;
 		}
 
 	}
-	
+
 	/**
 	 * This converter will do all of the converting for this persister.
 	 */
 	private final SessionPersisterSuperConverter converter;
 
 	/**
-	 * Constructor to set the {@link WabitSession} this DAO should work under
-	 * 
-	 * @param session
-	 *            The {@link WabitSession} this DAO should work under
+	 * This root object is used to find other objects by UUID by walking the
+	 * descendant tree when an object is required.
+	 */
+	private final WabitObject root;
+
+	/**
+	 * Creates a session persister that can update any object at or a descendant
+	 * of the given session's workspace object. If the persist call to this
+	 * persister is involving an object that is not the workspace or descendant
+	 * of the workspace in the given session an exception will be thrown
+	 * depending on the call. See the specific method being called for more
+	 * information about the exceptions that will be thrown.
 	 */
 	public WabitSessionPersister(WabitSession session) {
+		this(session, session.getWorkspace());
+	}
+
+	/**
+	 * Creates a session persister that can update an object at or a descendant
+	 * of the given root now. If the persist call involves an object that is
+	 * outside of the scope of the root node and its descendant tree an
+	 * exception will be thrown depending on the method called as the object
+	 * will not be found.
+	 */
+	public WabitSessionPersister(WabitSession session, WabitObject root) {
 		this.session = session;
-		
-		converter = new SessionPersisterSuperConverter(session);
+		this.root = root;
+
+		converter = new SessionPersisterSuperConverter(session, root);
 	}
 
 	/**
@@ -327,14 +351,14 @@ public class WabitSessionPersister implements WabitPersister {
 		for (PersistedWabitObject pwo : persistedObjects) {
 			String uuid = pwo.getUUID();
 			String type = pwo.getType();
-			WabitWorkspace workspace = session.getWorkspace();
 			WabitObject wo = null;
-			WabitObject parent = workspace.findByUuid(pwo.getParentUUID(),
+			WabitObject parent = WabitUtils.findByUuid(root, pwo.getParentUUID(),
 					WabitObject.class);
 
 			if (type.equals(CellSetRenderer.class.getSimpleName())) {
-				OlapQuery olapQuery = (OlapQuery) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "modifiedOlapQuery"), OlapQuery.class);
+				OlapQuery olapQuery = (OlapQuery) converter
+						.convertToComplexType(getPropertyAndRemove(uuid,
+								"modifiedOlapQuery"), OlapQuery.class);
 				wo = new CellSetRenderer(olapQuery);
 
 			} else if (type.equals(Chart.class.getSimpleName())) {
@@ -342,10 +366,10 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(ChartColumn.class.getSimpleName())) {
 				String columnName = (String) getPropertyAndRemove(uuid, "name");
-				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType =
-					(ca.sqlpower.wabit.report.chart.ChartColumn.DataType)
-					converter.convertToComplexType(getPropertyAndRemove(uuid, "dataType"),
-							ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
+				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = (ca.sqlpower.wabit.report.chart.ChartColumn.DataType) converter
+						.convertToComplexType(
+								getPropertyAndRemove(uuid, "dataType"),
+								ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
 
 				wo = new ChartColumn(columnName, dataType);
 
@@ -355,8 +379,8 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new ChartRenderer(chart);
 
 			} else if (type.equals(ColumnInfo.class.getSimpleName())) {
-				wo = new ColumnInfo((String) getPropertyAndRemove(
-						uuid, ColumnInfo.COLUMN_ALIAS));
+				wo = new ColumnInfo((String) getPropertyAndRemove(uuid,
+						ColumnInfo.COLUMN_ALIAS));
 
 			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
@@ -376,10 +400,14 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(OlapQuery.class.getSimpleName())) {
 				String name = (String) getPropertyAndRemove(uuid, "name");
-				String queryName = (String) getPropertyAndRemove(uuid, "queryName");
-				String catalogName = (String) getPropertyAndRemove(uuid, "catalogName");
-				String schemaName = (String) getPropertyAndRemove(uuid, "schemaName");
-				String cubeName = (String) getPropertyAndRemove(uuid, "cubeName");
+				String queryName = (String) getPropertyAndRemove(uuid,
+						"queryName");
+				String catalogName = (String) getPropertyAndRemove(uuid,
+						"catalogName");
+				String schemaName = (String) getPropertyAndRemove(uuid,
+						"schemaName");
+				String cubeName = (String) getPropertyAndRemove(uuid,
+						"cubeName");
 				wo = new OlapQuery(uuid, session.getContext(), name, queryName,
 						catalogName, schemaName, cubeName);
 
@@ -387,9 +415,9 @@ public class WabitSessionPersister implements WabitPersister {
 				String name = (String) getPropertyAndRemove(uuid, "name");
 				int width = (Integer) getPropertyAndRemove(uuid, "width");
 				int height = (Integer) getPropertyAndRemove(uuid, "height");
-				PageOrientation orientation =
-					(PageOrientation) converter.convertToComplexType(
-							getPropertyAndRemove(uuid, "orientation"), PageOrientation.class); 
+				PageOrientation orientation = (PageOrientation) converter
+						.convertToComplexType(getPropertyAndRemove(uuid,
+								"orientation"), PageOrientation.class);
 
 				wo = new Page(name, width, height, orientation);
 
@@ -402,27 +430,32 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new Report(name);
 
 			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
-				String contentID = (String) getPropertyAndRemove(uuid, "content");
-				
+				String contentID = (String) getPropertyAndRemove(uuid,
+						"content");
+
 				// TODO No ResultSetRenderer object has been created yet.
-				
+
 			} else if (type.equals(Template.class.getSimpleName())) {
 				String name = (String) getPropertyAndRemove(uuid, "name");
 
 				wo = new Template(name);
 
 			} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
-				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
-				SQLObjectItem item = (SQLObjectItem) converter.convertToComplexType(
-						delegateString, SQLObjectItem.class);
+				String delegateString = (String) getPropertyAndRemove(uuid,
+						"delegate");
+				SQLObjectItem item = (SQLObjectItem) converter
+						.convertToComplexType(delegateString,
+								SQLObjectItem.class);
 
 				wo = new WabitColumnItem(item);
 
-			} else if (type.equals(WabitConstantsContainer.class.getSimpleName())) {
+			} else if (type.equals(WabitConstantsContainer.class
+					.getSimpleName())) {
 				wo = ((QueryCache) parent).getWabitConstantsContainer();
 
 			} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
-				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
+				String delegateString = (String) getPropertyAndRemove(uuid,
+						"delegate");
 				StringItem item = (StringItem) converter.convertToComplexType(
 						delegateString, StringItem.class);
 
@@ -430,7 +463,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 				SPDataSource spds = session.getContext().getDataSources()
-						.getDataSource((String) getPropertyAndRemove(uuid, "name"));
+						.getDataSource(
+								(String) getPropertyAndRemove(uuid, "name"));
 
 				wo = new WabitDataSource(spds);
 
@@ -438,11 +472,11 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new WabitImage();
 
 			} else if (type.equals(WabitJoin.class.getSimpleName())) {
-				Item leftItem = workspace.findByUuid(
+				Item leftItem = WabitUtils.findByUuid(root, 
 						getPropertyAndRemove(uuid, "leftColumnOuterJoin")
 								.toString(), WabitColumnItem.class)
 						.getDelegate();
-				Item rightItem = workspace.findByUuid(
+				Item rightItem = WabitUtils.findByUuid(root, 
 						getPropertyAndRemove(uuid, "rightColumnOuterJoin")
 								.toString(), WabitColumnItem.class)
 						.getDelegate();
@@ -451,7 +485,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
 				org.olap4j.Axis axis = org.olap4j.Axis.Factory
-						.forOrdinal((Integer) getPropertyAndRemove(uuid, "ordinal"));
+						.forOrdinal((Integer) getPropertyAndRemove(uuid,
+								"ordinal"));
 
 				wo = new WabitOlapAxis(axis);
 
@@ -462,28 +497,29 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitOlapExclusion.class.getSimpleName())) {
 				Operator operator = (Operator) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "operator"), Operator.class); 
-				String uniqueMemberName = 
-					(String) getPropertyAndRemove(uuid, "uniqueMemberName");
-				
+						getPropertyAndRemove(uuid, "operator"), Operator.class);
+				String uniqueMemberName = (String) getPropertyAndRemove(uuid,
+						"uniqueMemberName");
+
 				wo = new WabitOlapExclusion(operator, uniqueMemberName);
 
 			} else if (type.equals(WabitOlapInclusion.class.getSimpleName())) {
 				Operator operator = (Operator) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "operator"), Operator.class); 
-				String uniqueMemberName = 
-					(String) getPropertyAndRemove(uuid, "uniqueMemberName");
-				
+						getPropertyAndRemove(uuid, "operator"), Operator.class);
+				String uniqueMemberName = (String) getPropertyAndRemove(uuid,
+						"uniqueMemberName");
+
 				wo = new WabitOlapInclusion(operator, uniqueMemberName);
 
 			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
-				String delegateString = (String) getPropertyAndRemove(uuid, "delegate");
-				TableContainer tableContainer = 
-					(TableContainer) converter.convertToComplexType(
-							delegateString, TableContainer.class);
-				
+				String delegateString = (String) getPropertyAndRemove(uuid,
+						"delegate");
+				TableContainer tableContainer = (TableContainer) converter
+						.convertToComplexType(delegateString,
+								TableContainer.class);
+
 				wo = new WabitTableContainer(tableContainer);
-				
+
 			} else {
 				throw new WabitPersistenceException(uuid,
 						"Unknown WabitObject type: " + type);
@@ -538,7 +574,7 @@ public class WabitSessionPersister implements WabitPersister {
 					return true;
 				}
 			}
-			if (session.getWorkspace().findByUuid(uuid, WabitObject.class) != null) {
+			if (WabitUtils.findByUuid(root, uuid, WabitObject.class) != null) {
 				return true;
 			}
 		}
@@ -551,13 +587,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	private void commitProperties() throws WabitPersistenceException {
-		WabitWorkspace workspace = session.getWorkspace();
 		WabitObject wo;
 		String propertyName;
 		Object newValue;
 
 		for (String uuid : persistedProperties.keySet()) {
-			wo = workspace.findByUuid(uuid, WabitObject.class);
+			wo = WabitUtils.findByUuid(root, uuid, WabitObject.class);
 
 			for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 				propertyName = wop.getPropertyName();
@@ -652,11 +687,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	private void commitRemovals() throws WabitPersistenceException {
-		WabitWorkspace workspace = session.getWorkspace();
 
 		for (String uuid : objectsToRemove.keySet()) {
-			WabitObject wo = workspace.findByUuid(uuid, WabitObject.class);
-			WabitObject parent = workspace.findByUuid(
+			WabitObject wo = WabitUtils.findByUuid(root, uuid, WabitObject.class);
+			WabitObject parent = WabitUtils.findByUuid(root, 
 					objectsToRemove.get(uuid), WabitObject.class);
 
 			try {
@@ -803,7 +837,7 @@ public class WabitSessionPersister implements WabitPersister {
 								+ lastPropertyValueFound + "\"");
 			}
 		} else if (!unconditional) {
-			WabitObject wo = session.getWorkspace().findByUuid(uuid,
+			WabitObject wo = WabitUtils.findByUuid(root, uuid,
 					WabitObject.class);
 			Object propertyValue = null;
 
@@ -927,12 +961,14 @@ public class WabitSessionPersister implements WabitPersister {
 				propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
 						propertyName);
 			} else if (wo instanceof ReportTask) {
-				propertyValue = getReportTaskProperty((ReportTask) wo, propertyName);
+				propertyValue = getReportTaskProperty((ReportTask) wo,
+						propertyName);
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid WabitObject");
 			}
 
-			if (!oldValue.equals(propertyValue)) {
+			if ((oldValue == null && propertyValue != null) ||
+					(oldValue != null && !oldValue.equals(propertyValue))) {
 				throw new WabitPersistenceException(
 						uuid,
 						"The expected property value \""
@@ -942,8 +978,8 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 
-		persistedProperties.put(uuid, new WabitObjectProperty(uuid, propertyName,
-				propertyType, oldValue, newValue, unconditional));
+		persistedProperties.put(uuid, new WabitObjectProperty(uuid,
+				propertyName, propertyType, oldValue, newValue, unconditional));
 
 		if (transactionCount == 0) {
 			commitProperties();
@@ -959,7 +995,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @return Determinant of whether the given property name is common
 	 */
 	private boolean isCommonProperty(String propertyName) {
-		return (propertyName.equals("name") || propertyName.equals("uuid"));
+		return (propertyName.equals("name") || propertyName.equals("UUID") 
+				|| propertyName.equals("parent"));
 	}
 
 	/**
@@ -968,8 +1005,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 * persister. The only two common properties are "name" and "uuid".
 	 * 
 	 * @param wo
-	 *            The {@link WabitObject} to retrieve the named property
-	 *            from.
+	 *            The {@link WabitObject} to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -990,6 +1026,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return wo.getName();
 		} else if (propertyName.equals("UUID")) {
 			return wo.getUUID();
+		} else if (propertyName.equals("parent")) {
+			return converter.convertToBasicType(wo.getParent(), DataType.REFERENCE);
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1014,6 +1052,10 @@ public class WabitSessionPersister implements WabitPersister {
 			wo.setName((String) newValue);
 		} else if (propertyName.equals("UUID")) {
 			wo.setUUID((String) newValue);
+		} else if (propertyName.equals("parent")) {
+			wo.setParent((WabitObject) converter.convertToComplexType(
+					newValue, WabitObject.class));
+			
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1021,13 +1063,13 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link WabitWorkspace} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link WabitWorkspace} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param workspace
-	 *            The {@link WabitWorkspace} object to retrieve the named property
-	 *            from.
+	 *            The {@link WabitWorkspace} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1045,8 +1087,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitWorkspaceProperty(WabitWorkspace workspace,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("editorPanelModel")) {
-			return converter.convertToBasicType(workspace.getEditorPanelModel(),
-					DataType.REFERENCE);
+			return converter.convertToBasicType(
+					workspace.getEditorPanelModel(), DataType.REFERENCE);
 		} else {
 			throw new WabitPersistenceException(workspace.getUUID(),
 					"Invalid property: " + propertyName);
@@ -1071,8 +1113,8 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = workspace.getUUID();
 
 		if (propertyName.equals("editorPanelModel")) {
-			WabitObject editorPanel = (WabitObject) converter.convertToComplexType(
-					newValue, WabitObject.class);
+			WabitObject editorPanel = (WabitObject) converter
+					.convertToComplexType(newValue, WabitObject.class);
 
 			if (editorPanel == null) {
 				throw new WabitPersistenceException(uuid,
@@ -1093,8 +1135,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * class.
 	 * 
 	 * @param wds
-	 *            The {@link WabitDataSource} object to retrieve the named property
-	 *            from.
+	 *            The {@link WabitDataSource} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1136,9 +1178,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link QueryCache} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link QueryCache} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param query
 	 *            The {@link QueryCache} object to retrieve the named property
@@ -1248,8 +1290,8 @@ public class WabitSessionPersister implements WabitPersister {
 			query.setExecuteQueriesWithCrossJoins((Boolean) newValue);
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSource((JDBCDataSource) converter.convertToComplexType(
-					newValue, JDBCDataSource.class));
+			query.setDataSource((JDBCDataSource) converter
+					.convertToComplexType(newValue, JDBCDataSource.class));
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Invalid property: "
@@ -1263,8 +1305,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * passed to a persister.
 	 * 
 	 * @param wabitConstantsContainer
-	 *            The {@link WabitConstantsContainer} to retrieve the named property
-	 *            from.
+	 *            The {@link WabitConstantsContainer} to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1284,10 +1326,10 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		if (propertyName.equals("alias")) {
 			return wabitConstantsContainer.getDelegate().getAlias();
-			
+
 		} else if (propertyName.equals("position")) {
-			return converter.convertToBasicType(
-					wabitConstantsContainer.getDelegate().getPosition(), DataType.POINT2D);
+			return converter.convertToBasicType(wabitConstantsContainer
+					.getDelegate().getPosition(), DataType.POINT2D);
 
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
@@ -1311,13 +1353,14 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitConstantsContainer wabitConstantsContainer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		
+
 		if (propertyName.equals("alias")) {
 			wabitConstantsContainer.getDelegate().setAlias((String) newValue);
-			
+
 		} else if (propertyName.equals("position")) {
 			wabitConstantsContainer.getDelegate().setPosition(
-					(Point2D) converter.convertToComplexType(newValue, Point2D.class)); 
+					(Point2D) converter.convertToComplexType(newValue,
+							Point2D.class));
 
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
@@ -1352,8 +1395,8 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("position")) {
-			return converter.convertToBasicType(
-					wabitTableContainer.getPosition(), DataType.POINT2D);
+			return converter.convertToBasicType(wabitTableContainer
+					.getPosition(), DataType.POINT2D);
 
 		} else if (propertyName.equals("alias")) {
 			return wabitTableContainer.getAlias();
@@ -1381,8 +1424,8 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 
 		if (propertyName.equals("position")) {
-			wabitTableContainer.setPosition((Point2D) converter.convertToComplexType(
-					newValue, Point2D.class));
+			wabitTableContainer.setPosition((Point2D) converter
+					.convertToComplexType(newValue, Point2D.class));
 
 		} else if (propertyName.equals("alias")) {
 			wabitTableContainer.setAlias((String) newValue);
@@ -1394,13 +1437,12 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link WabitItem} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link WabitItem} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param wabitItem
-	 *            The {@link WabitItem} to retrieve the named property
-	 *            from.
+	 *            The {@link WabitItem} to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1428,26 +1470,28 @@ public class WabitSessionPersister implements WabitPersister {
 				return item.getWhere();
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
-				return converter.convertToBasicType(item.getGroupBy(), DataType.ENUM);
+				return converter.convertToBasicType(item.getGroupBy(),
+						DataType.ENUM);
 
 			} else if (propertyName.equals(Item.HAVING)) {
 				return item.getHaving();
 
 			} else if (propertyName.equals(Item.ORDER_BY)) {
-				return converter.convertToBasicType(item.getOrderBy(), DataType.ENUM);
+				return converter.convertToBasicType(item.getOrderBy(),
+						DataType.ENUM);
 
 			} else if (propertyName.equals(Item.SELECTED)) {
 				return item.getSelected();
 
 			} else if (propertyName.equals(Item.WHERE)) {
 				return item.getWhere();
-				
+
 			} else if (propertyName.equals("orderByOrdering")) {
 				return item.getOrderByOrdering();
-				
+
 			} else if (propertyName.equals("colWidth")) {
 				return item.getColumnWidth();
-				
+
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
 						+ propertyName);
@@ -1484,28 +1528,30 @@ public class WabitSessionPersister implements WabitPersister {
 				item.setWhere((String) newValue);
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
-				item.setGroupBy((SQLGroupFunction) converter.convertToComplexType(
-						newValue, SQLGroupFunction.class));
+				item
+						.setGroupBy((SQLGroupFunction) converter
+								.convertToComplexType(newValue,
+										SQLGroupFunction.class));
 
 			} else if (propertyName.equals(Item.HAVING)) {
 				item.setHaving((String) newValue);
 
 			} else if (propertyName.equals(Item.ORDER_BY)) {
-				item.setOrderBy((OrderByArgument) converter.convertToComplexType(
-						newValue, OrderByArgument.class));
+				item.setOrderBy((OrderByArgument) converter
+						.convertToComplexType(newValue, OrderByArgument.class));
 
 			} else if (propertyName.equals(Item.SELECTED)) {
 				item.setSelected((Integer) newValue);
 
 			} else if (propertyName.equals(Item.WHERE)) {
 				item.setWhere((String) newValue);
-				
+
 			} else if (propertyName.equals("orderByOrdering")) {
 				item.setOrderByOrdering((Integer) newValue);
-				
+
 			} else if (propertyName.equals("colWidth")) {
 				item.setColumnWidth((Integer) newValue);
-				
+
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid property: "
 						+ propertyName);
@@ -1517,9 +1563,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link WabitJoin} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link WabitJoin} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param wabitJoin
 	 *            The {@link WabitJoin} object to retrieve the named property
@@ -1582,9 +1628,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from an {@link OlapQuery} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from an {@link OlapQuery} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param olapQuery
 	 *            The {@link OlapQuery} object to retrieve the named property
@@ -1606,9 +1652,9 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getOlapQueryProperty(OlapQuery olapQuery, String propertyName)
 			throws WabitPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
-			return converter.convertToBasicType(
-					olapQuery.getOlapDataSource(), DataType.OLAP4J_DATA_SOURCE);
-			
+			return converter.convertToBasicType(olapQuery.getOlapDataSource(),
+					DataType.OLAP4J_DATA_SOURCE);
+
 		} else if (propertyName.equals("catalogName")) {
 			return olapQuery.getCatalogName();
 
@@ -1649,17 +1695,17 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
-			olapQuery.setOlapDataSource((Olap4jDataSource) converter.convertToComplexType(
-					newValue, Olap4jDataSource.class));
+			olapQuery.setOlapDataSource((Olap4jDataSource) converter
+					.convertToComplexType(newValue, Olap4jDataSource.class));
 
 		} else if (propertyName.equals("currentCube")) {
 			try {
-				olapQuery.setCurrentCube((Cube)
-						converter.convertToComplexType(newValue, Cube.class));
+				olapQuery.setCurrentCube((Cube) converter.convertToComplexType(
+						newValue, Cube.class));
 			} catch (SQLException e) {
 				throw new WabitPersistenceException(olapQuery.getUUID(), e);
 			}
-			
+
 		} else if (propertyName.equals("nonEmpty")) {
 			olapQuery.setNonEmpty((Boolean) newValue);
 		} else {
@@ -1669,13 +1715,13 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link WabitOlapSelection} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link WabitOlapSelection} object based
+	 * on the property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param selection
-	 *            The {@link WabitOlapSelection} object to retrieve the named property
-	 *            from.
+	 *            The {@link WabitOlapSelection} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1693,7 +1739,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitOlapSelectionProperty(WabitOlapSelection selection,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("operator")) {
-			return converter.convertToBasicType(selection.getOperator(), DataType.ENUM);
+			return converter.convertToBasicType(selection.getOperator(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("uniqueMemberName")) {
 			return selection.getUniqueMemberName();
@@ -1725,9 +1772,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieve a property value from a WabitOlapDimension object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister. Currently, there are no uncommon properties to retrieve.
+	 * Retrieve a property value from a WabitOlapDimension object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister. Currently, there are no uncommon properties to retrieve.
 	 * 
 	 * @param dimension
 	 *            The {@link WabitOlapDimension} to retrieve the named property
@@ -1772,13 +1819,13 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link WabitOlapAxis} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link WabitOlapAxis} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param olapAxis
-	 *            The {@link WabitOlapAxis} object to retrieve the named property
-	 *            from.
+	 *            The {@link WabitOlapAxis} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1845,13 +1892,12 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link Chart} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link Chart} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param chart
-	 *            The {@link Chart} object to retrieve the named property
-	 *            from.
+	 *            The {@link Chart} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -1884,7 +1930,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return chart.getType().toString();
 
 		} else if (propertyName.equals("legendPosition")) {
-			return converter.convertToBasicType(chart.getLegendPosition(), DataType.ENUM);
+			return converter.convertToBasicType(chart.getLegendPosition(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("query")) {
 			return chart.getQuery().getUUID();
@@ -1923,16 +1970,16 @@ public class WabitSessionPersister implements WabitPersister {
 			chart.setGratuitouslyAnimated((Boolean) newValue);
 
 		} else if (propertyName.equals("type")) {
-			chart.setType((ChartType) converter.convertToComplexType(
-					newValue, ChartType.class));
+			chart.setType((ChartType) converter.convertToComplexType(newValue,
+					ChartType.class));
 
 		} else if (propertyName.equals("legendPosition")) {
-			chart.setLegendPosition((LegendPosition) converter.convertToComplexType(
-					newValue, LegendPosition.class));
+			chart.setLegendPosition((LegendPosition) converter
+					.convertToComplexType(newValue, LegendPosition.class));
 
 		} else if (propertyName.equals("query")) {
-			ResultSetProducer rsProducer = (ResultSetProducer) converter.convertToComplexType(
-					newValue, ResultSetProducer.class);
+			ResultSetProducer rsProducer = (ResultSetProducer) converter
+					.convertToComplexType(newValue, ResultSetProducer.class);
 			if (rsProducer == null) {
 				throw new WabitPersistenceException(uuid, "Invalid query-id: "
 						+ ((String) newValue));
@@ -1951,9 +1998,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link ChartColumn} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link ChartColumn} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param chartColumn
 	 *            The {@link ChartColumn} object to retrieve the named property
@@ -1975,10 +2022,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getChartColumnProperty(ChartColumn chartColumn,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("roleInChart")) {
-			return converter.convertToBasicType(chartColumn.getRoleInChart(), DataType.ENUM);
+			return converter.convertToBasicType(chartColumn.getRoleInChart(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("XAxisIdentifier")) {
-			return chartColumn.getXAxisIdentifier().getName();
+			return converter.convertToBasicType(chartColumn.getXAxisIdentifier(), 
+					DataType.REFERENCE);
 
 		} else {
 			throw new WabitPersistenceException(chartColumn.getUUID(),
@@ -2003,12 +2052,12 @@ public class WabitSessionPersister implements WabitPersister {
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("roleInChart")) {
-			chartColumn.setRoleInChart((ColumnRole) converter.convertToComplexType(
-					newValue, ColumnRole.class));
+			chartColumn.setRoleInChart((ColumnRole) converter
+					.convertToComplexType(newValue, ColumnRole.class));
 
 		} else if (propertyName.equals("XAxisIdentifier")) {
-			chartColumn.setXAxisIdentifier(new ChartColumn((String) newValue,
-					chartColumn.getDataType()));
+			chartColumn.setXAxisIdentifier((ChartColumn) converter.convertToComplexType(
+					newValue, ChartColumn.class));
 
 		} else {
 			throw new WabitPersistenceException(chartColumn.getUUID(),
@@ -2021,7 +2070,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * the property name and converts it to something that can be passed to a
 	 * persister.
 	 * 
-	 * @param wabitImage The {@link WabitImage} object to retrieve the named property
+	 * @param wabitImage
+	 *            The {@link WabitImage} object to retrieve the named property
 	 *            from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
@@ -2114,13 +2164,12 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link Layout} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link Layout} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param layout
-	 *            The {@link Layout} object to retrieve the named property
-	 *            from.
+	 *            The {@link Layout} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2170,13 +2219,12 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link Page} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link Page} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param page
-	 *            The {@link Page} object to retrieve the named property
-	 *            from.
+	 *            The {@link Page} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2200,10 +2248,12 @@ public class WabitSessionPersister implements WabitPersister {
 			return page.getWidth();
 
 		} else if (propertyName.equals("orientation")) {
-			return converter.convertToBasicType(page.getOrientation(), DataType.ENUM);
+			return converter.convertToBasicType(page.getOrientation(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("defaultFont")) {
-			return converter.convertToBasicType(page.getDefaultFont(), DataType.FONT);
+			return converter.convertToBasicType(page.getDefaultFont(),
+					DataType.FONT);
 
 		} else {
 			throw new WabitPersistenceException(page.getUUID(),
@@ -2231,11 +2281,12 @@ public class WabitSessionPersister implements WabitPersister {
 			page.setWidth((Integer) newValue);
 
 		} else if (propertyName.equals("orientation")) {
-			page.setOrientation((PageOrientation) converter.convertToComplexType(
-					newValue, PageOrientation.class));
+			page.setOrientation((PageOrientation) converter
+					.convertToComplexType(newValue, PageOrientation.class));
 
 		} else if (propertyName.equals("defaultFont")) {
-			page.setDefaultFont((Font) converter.convertToComplexType(newValue, Font.class));
+			page.setDefaultFont((Font) converter.convertToComplexType(newValue,
+					Font.class));
 
 		} else {
 			throw new WabitPersistenceException(page.getUUID(),
@@ -2244,9 +2295,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link ContentBox} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link ContentBox} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param contentBox
 	 *            The {@link ContentBox} object to retrieve the named property
@@ -2284,7 +2335,8 @@ public class WabitSessionPersister implements WabitPersister {
 					contentBox.getContentRenderer(), DataType.REFERENCE);
 
 		} else if (propertyName.equals("font")) {
-			return converter.convertToBasicType(contentBox.getFont(), DataType.FONT);
+			return converter.convertToBasicType(contentBox.getFont(),
+					DataType.FONT);
 
 		} else {
 			throw new WabitPersistenceException(contentBox.getUUID(),
@@ -2321,12 +2373,14 @@ public class WabitSessionPersister implements WabitPersister {
 			contentBox.setY((Double) newValue);
 
 		} else if (propertyName.equals("contentRenderer")) {
-			contentBox.setContentRenderer(
-					(ReportContentRenderer) converter.convertToComplexType(
-							newValue, ReportContentRenderer.class));
+			contentBox
+					.setContentRenderer((ReportContentRenderer) converter
+							.convertToComplexType(newValue,
+									ReportContentRenderer.class));
 
 		} else if (propertyName.equals("font")) {
-			contentBox.setFont((Font) converter.convertToComplexType(newValue, Font.class));
+			contentBox.setFont((Font) converter.convertToComplexType(newValue,
+					Font.class));
 
 		} else {
 			throw new WabitPersistenceException(contentBox.getUUID(),
@@ -2336,14 +2390,14 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link ChartRenderer} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
-	 * Currently, uncommon properties cannot be retrieved from this object.
+	 * Retrieves a property value from a {@link ChartRenderer} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister. Currently, uncommon properties cannot be retrieved from this
+	 * object.
 	 * 
 	 * @param cRenderer
-	 *            The {@link ChartRenderer} object to retrieve the named property
-	 *            from.
+	 *            The {@link ChartRenderer} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2384,13 +2438,13 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link CellSetRenderer} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link CellSetRenderer} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param csRenderer
-	 *            The {@link CellSetRenderer} object to retrieve the named property
-	 *            from.
+	 *            The {@link CellSetRenderer} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2407,19 +2461,22 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName) throws WabitPersistenceException {
-		
+
 		if (propertyName.equals("bodyAlignment")) {
 			return converter.convertToBasicType(csRenderer.getBodyAlignment(),
 					DataType.ENUM);
 
 		} else if (propertyName.equals("bodyFormat")) {
-			return converter.convertToBasicType(csRenderer.getBodyFormat(), DataType.DECIMAL_FORMAT);
+			return converter.convertToBasicType(csRenderer.getBodyFormat(),
+					DataType.DECIMAL_FORMAT);
 
 		} else if (propertyName.equals("headerFont")) {
-			return converter.convertToBasicType(csRenderer.getHeaderFont(), DataType.FONT);
+			return converter.convertToBasicType(csRenderer.getHeaderFont(),
+					DataType.FONT);
 
 		} else if (propertyName.equals("bodyFont")) {
-			return converter.convertToBasicType(csRenderer.getBodyFont(), DataType.FONT);
+			return converter.convertToBasicType(csRenderer.getBodyFont(),
+					DataType.FONT);
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
@@ -2445,12 +2502,12 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("bodyAlignment")) {
-			csRenderer.setBodyAlignment((HorizontalAlignment) converter.convertToComplexType(
-					newValue, HorizontalAlignment.class));
+			csRenderer.setBodyAlignment((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("bodyFormat")) {
-			csRenderer.setBodyFormat((DecimalFormat) converter.convertToComplexType(
-					newValue, DecimalFormat.class));
+			csRenderer.setBodyFormat((DecimalFormat) converter
+					.convertToComplexType(newValue, DecimalFormat.class));
 
 		} else if (propertyName.equals("headerFont")) {
 			csRenderer.setHeaderFont((Font) converter.convertToComplexType(
@@ -2467,13 +2524,13 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from an {@link ImageRenderer} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from an {@link ImageRenderer} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param iRenderer
-	 *            The {@link ImageRenderer} object to retrieve the named property
-	 *            from.
+	 *            The {@link ImageRenderer} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2491,7 +2548,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getImageRendererProperty(ImageRenderer iRenderer,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("image")) {
-			return converter.convertToBasicType(iRenderer.getImage(), DataType.REFERENCE);
+			return converter.convertToBasicType(iRenderer.getImage(),
+					DataType.REFERENCE);
 
 		} else if (propertyName.equals("preservingAspectRatio")) {
 			return iRenderer.isPreservingAspectRatio();
@@ -2500,10 +2558,12 @@ public class WabitSessionPersister implements WabitPersister {
 			return iRenderer.isPreserveAspectRatioWhenResizing();
 
 		} else if (propertyName.equals("HAlign")) {
-			return converter.convertToBasicType(iRenderer.getHAlign(), DataType.ENUM);
+			return converter.convertToBasicType(iRenderer.getHAlign(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("VAlign")) {
-			return converter.convertToBasicType(iRenderer.getVAlign(), DataType.ENUM);
+			return converter.convertToBasicType(iRenderer.getVAlign(),
+					DataType.ENUM);
 
 		} else {
 			throw new WabitPersistenceException(iRenderer.getUUID(),
@@ -2537,12 +2597,12 @@ public class WabitSessionPersister implements WabitPersister {
 			iRenderer.setPreserveAspectRatioWhenResizing((Boolean) newValue);
 
 		} else if (propertyName.equals("HAlign")) {
-			iRenderer.setHAlign((HorizontalAlignment) converter.convertToComplexType(
-					newValue, HorizontalAlignment.class));
+			iRenderer.setHAlign((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("VAlign")) {
-			iRenderer.setVAlign((VerticalAlignment) converter.convertToComplexType(
-					newValue, VerticalAlignment.class));
+			iRenderer.setVAlign((VerticalAlignment) converter
+					.convertToComplexType(newValue, VerticalAlignment.class));
 
 		} else {
 			throw new WabitPersistenceException(iRenderer.getUUID(),
@@ -2551,13 +2611,12 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link Label} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link Label} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param label
-	 *            The {@link Label} object to retrieve the named property
-	 *            from.
+	 *            The {@link Label} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2575,16 +2634,19 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getLabelProperty(Label label, String propertyName)
 			throws WabitPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
-			return converter.convertToBasicType(label.getHorizontalAlignment(), DataType.ENUM);
+			return converter.convertToBasicType(label.getHorizontalAlignment(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("verticalAlignment")) {
-			return converter.convertToBasicType(label.getVerticalAlignment(), DataType.ENUM);
+			return converter.convertToBasicType(label.getVerticalAlignment(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("text")) {
 			return label.getText();
 
 		} else if (propertyName.equals("backgroundColour")) {
-			return converter.convertToBasicType(label.getBackgroundColour(), DataType.COLOR);
+			return converter.convertToBasicType(label.getBackgroundColour(),
+					DataType.COLOR);
 
 		} else if (propertyName.equals("font")) {
 			return converter.convertToBasicType(label.getFont(), DataType.FONT);
@@ -2609,12 +2671,12 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitLabelProperty(Label label, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
-			label.setHorizontalAlignment((HorizontalAlignment) converter.convertToComplexType(
-					newValue, HorizontalAlignment.class));
+			label.setHorizontalAlignment((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("verticalAlignment")) {
-			label.setVerticalAlignment((VerticalAlignment) converter.convertToComplexType(
-					newValue, VerticalAlignment.class));
+			label.setVerticalAlignment((VerticalAlignment) converter
+					.convertToComplexType(newValue, VerticalAlignment.class));
 
 		} else if (propertyName.equals("text")) {
 			label.setText((String) newValue);
@@ -2624,48 +2686,57 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Color.class));
 
 		} else if (propertyName.equals("font")) {
-			label.setFont((Font) converter.convertToComplexType(newValue, Font.class));
+			label.setFont((Font) converter.convertToComplexType(newValue,
+					Font.class));
 
 		} else {
 			throw new WabitPersistenceException(label.getUUID(),
 					"Invalid property: " + propertyName);
 		}
 	}
-	
-	private Object getReportTaskProperty(ReportTask task,
-			String propertyName) throws WabitPersistenceException {
-		
+
+	private Object getReportTaskProperty(ReportTask task, String propertyName)
+			throws WabitPersistenceException {
+
 		if (propertyName.equals("email")) {
-			return converter.convertToBasicType(task.getEmail(), DataType.STRING);
+			return converter.convertToBasicType(task.getEmail(),
+					DataType.STRING);
 		} else if (propertyName.equals("report")) {
-			return converter.convertToBasicType(task.getReport(), DataType.REFERENCE);
+			return converter.convertToBasicType(task.getReport(),
+					DataType.REFERENCE);
 		} else if (propertyName.equals("triggerType")) {
-			return converter.convertToBasicType(task.getTriggerType(), DataType.STRING);
+			return converter.convertToBasicType(task.getTriggerType(),
+					DataType.STRING);
 		} else if (propertyName.equals("triggerHourParam")) {
-			return converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER);
+			return converter.convertToBasicType(task.getTriggerHourParam(),
+					DataType.INTEGER);
 		} else if (propertyName.equals("triggerMinuteParam")) {
-			return converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER);
+			return converter.convertToBasicType(task.getTriggerMinuteParam(),
+					DataType.INTEGER);
 		} else if (propertyName.equals("triggerDayOfWeekParam")) {
-			return converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER);
+			return converter.convertToBasicType(
+					task.getTriggerDayOfWeekParam(), DataType.INTEGER);
 		} else if (propertyName.equals("triggerDayOfMonthParam")) {
-			return converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER);
+			return converter.convertToBasicType(task
+					.getTriggerDayOfMonthParam(), DataType.INTEGER);
 		} else if (propertyName.equals("triggerIntervalParam")) {
-			return converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER);
-			
+			return converter.convertToBasicType(task.getTriggerIntervalParam(),
+					DataType.INTEGER);
+
 		} else {
-			throw new WabitPersistenceException(task.getUUID(), "Unknown property " + 
-					propertyName + " for ReportTask.");
+			throw new WabitPersistenceException(task.getUUID(),
+					"Unknown property " + propertyName + " for ReportTask.");
 		}
 	}
 
 	/**
-	 * Retrieves a property value from a {@link ResultSetRenderer} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link ResultSetRenderer} object based
+	 * on the property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param rsRenderer
-	 *            The {@link ResultSetRenderer} object to retrieve the named property
-	 *            from.
+	 *            The {@link ResultSetRenderer} object to retrieve the named
+	 *            property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2686,16 +2757,20 @@ public class WabitSessionPersister implements WabitPersister {
 			return rsRenderer.getNullString();
 
 		} else if (propertyName.equals("borderType")) {
-			return converter.convertToBasicType(rsRenderer.getBorderType(), DataType.ENUM);
+			return converter.convertToBasicType(rsRenderer.getBorderType(),
+					DataType.ENUM);
 
 		} else if (propertyName.equals("backgroundColour")) {
-			return converter.convertToBasicType(rsRenderer.getBackgroundColour(), DataType.COLOR);
+			return converter.convertToBasicType(rsRenderer
+					.getBackgroundColour(), DataType.COLOR);
 
 		} else if (propertyName.equals("headerFont")) {
-			return converter.convertToBasicType(rsRenderer.getHeaderFont(), DataType.FONT);
+			return converter.convertToBasicType(rsRenderer.getHeaderFont(),
+					DataType.FONT);
 
 		} else if (propertyName.equals("bodyFont")) {
-			return converter.convertToBasicType(rsRenderer.getBodyFont(), DataType.FONT);
+			return converter.convertToBasicType(rsRenderer.getBodyFont(),
+					DataType.FONT);
 
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
@@ -2722,12 +2797,12 @@ public class WabitSessionPersister implements WabitPersister {
 			rsRenderer.setNullString((String) newValue);
 
 		} else if (propertyName.equals("border")) {
-			rsRenderer.setBorderType((BorderStyles) converter.convertToComplexType(
-					newValue, BorderStyles.class));
+			rsRenderer.setBorderType((BorderStyles) converter
+					.convertToComplexType(newValue, BorderStyles.class));
 
 		} else if (propertyName.equals("backgroundColour")) {
-			rsRenderer.setBackgroundColour((Color) converter.convertToComplexType(
-					newValue, Color.class));
+			rsRenderer.setBackgroundColour((Color) converter
+					.convertToComplexType(newValue, Color.class));
 
 		} else if (propertyName.equals("headerFont")) {
 			rsRenderer.setHeaderFont((Font) converter.convertToComplexType(
@@ -2745,9 +2820,9 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link ColumnInfo} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link ColumnInfo} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param colInfo
 	 *            The {@link ColumnInfo} object to retrieve the named property
@@ -2832,17 +2907,19 @@ public class WabitSessionPersister implements WabitPersister {
 			colInfo.setWidth((Integer) newValue);
 
 		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
-			colInfo.setHorizontalAlignment((HorizontalAlignment) converter.convertToComplexType(
-					newValue, HorizontalAlignment.class));
+			colInfo.setHorizontalAlignment((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
-			colInfo.setDataType((ca.sqlpower.wabit.report.DataType) 
-					converter.convertToComplexType(
-							newValue, ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class));
+			colInfo
+					.setDataType((ca.sqlpower.wabit.report.DataType) converter
+							.convertToComplexType(
+									newValue,
+									ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
-			colInfo.setWillGroupOrBreak((GroupAndBreak) converter.convertToComplexType(
-					newValue, GroupAndBreak.class));
+			colInfo.setWillGroupOrBreak((GroupAndBreak) converter
+					.convertToComplexType(newValue, GroupAndBreak.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			colInfo.setWillSubtotal((Boolean) newValue);
@@ -2894,13 +2971,12 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link Guide} object
-	 * based on the property name and converts it to something that can be
-	 * passed to a persister.
+	 * Retrieves a property value from a {@link Guide} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
 	 * 
 	 * @param guide
-	 *            The {@link Guide} object to retrieve the named property
-	 *            from.
+	 *            The {@link Guide} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on

@@ -743,33 +743,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      *         workspace.
      */
     public <T extends WabitObject> T findByUuid(String uuid, Class<T> expectedType) {
-        return expectedType.cast(findRecursively(this, uuid));
-    }
-
-    /**
-     * Performs a preorder traversal of the given WabitObject and its
-     * descendants, returning the first WabitObject having the given UUID.
-     * Returns null if no such WabitObject exists under startWith.
-     * 
-     * @param startWith
-     *            The WabitObject to start the search with.
-     * @param uuid
-     *            The UUID to search for
-     * @return the first WabitObject having the given UUID in a preorder
-     *         traversal of startWith and its descendants. Returns null if no
-     *         such WabitObject exists.
-     */
-    private static WabitObject findRecursively(WabitObject startWith, String uuid) {
-        if (uuid.equals(startWith.getUUID())) {
-            return startWith;
-        }
-        for (WabitObject child : startWith.getChildren()) {
-            WabitObject found = findRecursively(child, uuid);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
+        return WabitUtils.findByUuid(this, uuid, expectedType);
     }
 
     @Override

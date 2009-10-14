@@ -198,4 +198,54 @@ public class WabitUtils {
                 o.getClass());
     }
 
+	/**
+	 * Locates the WabitObject inside the root wabit object which has the given
+	 * UUID, returning null if the item is not found. Throws ClassCastException
+	 * if in item is found, but it is not of the expected type.
+	 * 
+	 * @param <T>
+	 *            The expected type of the item
+	 * @param uuid
+	 *            The UUID of the item
+	 * @param expectedType
+	 *            The type of the item with the given UUID. If you are uncertain
+	 *            what type of object it is, or you do not want a
+	 *            ClassCastException in case the item is of the wrong type, use
+	 *            <tt>WabitObject.class</tt> for this parameter.
+	 * @return The item, or null if no item with the given UUID exists in the
+	 *         descendent tree rooted at the given root object.
+	 */
+    public static <T extends WabitObject> T findByUuid(WabitObject root, String uuid, Class<T> expectedType) {
+        return expectedType.cast(findRecursively(root, uuid));
+    }
+    
+    /**
+     * Performs a preorder traversal of the given WabitObject and its
+     * descendants, returning the first WabitObject having the given UUID.
+     * Returns null if no such WabitObject exists under startWith.
+     * 
+     * @param startWith
+     *            The WabitObject to start the search with.
+     * @param uuid
+     *            The UUID to search for
+     * @return the first WabitObject having the given UUID in a preorder
+     *         traversal of startWith and its descendants. Returns null if no
+     *         such WabitObject exists.
+     */
+    private static WabitObject findRecursively(WabitObject startWith, String uuid) {
+    	if (startWith == null) {
+    		throw new IllegalArgumentException("Cannot search a null object for children with the uuid " + uuid);
+    	}
+        if (uuid.equals(startWith.getUUID())) {
+            return startWith;
+        }
+        for (WabitObject child : startWith.getChildren()) {
+            WabitObject found = findRecursively(child, uuid);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
+    }
+
 }

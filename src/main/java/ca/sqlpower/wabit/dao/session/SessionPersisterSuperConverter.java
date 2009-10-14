@@ -87,11 +87,11 @@ public class SessionPersisterSuperConverter {
 	 *            look up connections, cubes, and {@link WabitObject}s in the
 	 *            workspace.
 	 */
-	public SessionPersisterSuperConverter(WabitSession session) {
-		wabitObjectConverter = new WabitObjectConverter(session.getWorkspace());
+	public SessionPersisterSuperConverter(WabitSession session, WabitObject root) {
+		wabitObjectConverter = new WabitObjectConverter(root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
 		tableContainerConverter = new TableContainerConverter(session);
-		sqlJoinConverter = new SQLJoinConverter(session.getWorkspace());
+		sqlJoinConverter = new SQLJoinConverter(root);
 		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getWorkspace());
 		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());
 	}

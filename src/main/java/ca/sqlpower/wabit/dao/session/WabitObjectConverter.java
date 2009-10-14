@@ -22,7 +22,7 @@ package ca.sqlpower.wabit.dao.session;
 import org.apache.commons.beanutils.ConversionException;
 
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.WabitUtils;
 
 
 /**
@@ -36,15 +36,15 @@ public class WabitObjectConverter implements BidirectionalConverter<String, Wabi
 	 * This is the root object of the tree of {@link WabitObject}s that
 	 * will be searched for the given object by unique id.
 	 */
-	private final WabitWorkspace root;
+	private final WabitObject root;
 
-	public WabitObjectConverter(WabitWorkspace root) {
+	public WabitObjectConverter(WabitObject root) {
 		this.root = root;
 	}
 
 	public WabitObject convertToComplexType(String convertFrom)
 			throws ConversionException {
-		return root.findByUuid(convertFrom, WabitObject.class); 
+		return WabitUtils.findByUuid(root, convertFrom, WabitObject.class); 
 	}
 
 	public String convertToSimpleType(WabitObject convertFrom, Object ... additionalValues) {
