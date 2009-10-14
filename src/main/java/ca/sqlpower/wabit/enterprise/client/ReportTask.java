@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
-import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +27,79 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Report;
 
+/**
+ * <p>ReportTask objects are used to parameter a server side report production
+ * and distribution via email. The mandatory parameters are :
+ * 
+ * <ul>
+ * <li>report</li>
+ * <li>email</li>
+ * <li>triggerType</li>
+ * </ul>
+ * 
+ * <p>The triggerType has to be one of the following values.
+ * 
+ * <dl>
+ * <dt>minute</dt>
+ * <dd>Launches a job every minute.</dd>
+ * <dt>hour</dt>
+ * <dd>Launches a job every hour.</dd>
+ * <dt>day</dt>
+ * <dd>Launches a job every day.</dd>
+ * <dt>week</dt>
+ * <dd>Launches a job every week</dd>
+ * <dt>month</dt>
+ * <dd>Launches a job every month</dd>
+ * </dl>
+ * 
+ * <p>For a minute triggerType, you need to define those parameters
+ * 
+ * <dl>
+ * <dt>triggerIntervalParam</dt>
+ * <dd>Defines how many minutes between each execution. Default 1.</dd>
+ * </dl>
+ * 
+ * <p>For a hour triggerType, you need to define those parameters
+ * 
+ * <dl>
+ * <dt>triggerIntervalParam</dt>
+ * <dd>Defines how many hours between each execution. Default 1.</dd>
+ * </dl>
+ * 
+ * <p>For a day triggerType, you need to define those parameters
+ * 
+ * <dl>
+ * <dt>triggerHourParam</dt>
+ * <dd>Defines at which hour of the day to launch the execution. Default 0 (midnight).</dd>
+ * <dt>triggerMinuteParam</dt>
+ * <dd>Defines at which minute of the hour to launch the execution. Default 0.</dd>
+ * </dl>
+ * 
+ * <p>For a week triggerType, you need to define those parameters
+ * 
+ * <dl>
+ * <dt>triggerDayOfWeekParam</dt>
+ * <dd>Defines at which day of the week to launch the execution. Default 1.</dd>
+ * <dt>triggerHourParam</dt>
+ * <dd>Defines at which hour of the day to launch the execution. Default 0 (midnight).</dd>
+ * <dt>triggerMinuteParam</dt>
+ * <dd>Defines at which minute of the hour to launch the execution. Default 0.</dd>
+ * </dl>
+ * 
+ * <p>For a month triggerType, you need to define those parameters
+ * 
+ * <dl>
+ * <dt>triggerDayOfMonthParam</dt>
+ * <dd>Defines at which day of the month to launch the execution. Default 1</dd>
+ * <dt>triggerHourParam</dt>
+ * <dd>Defines at which hour of the day to launch the execution. Default 0 (midnight).</dd>
+ * <dt>triggerMinuteParam</dt>
+ * <dd>Defines at which minute of the hour to launch the execution. Default 0.</dd>
+ * </dl>
+ * 
+ * @author luc
+ *
+ */
 public class ReportTask extends AbstractWabitObject {
 
 	private Report report = null;
