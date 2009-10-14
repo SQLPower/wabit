@@ -39,6 +39,7 @@ import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -109,6 +110,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     private final List<Group> groups = new ArrayList<Group>();
     
+    private final List<ReportTask> reportTasks = new ArrayList<ReportTask>();
+    
     /**
      * TODO: These listeners are never fired at current as they are only used for
      * DS Type undo events in the library currently. These listeners are unused
@@ -151,6 +154,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     		allChildren.addAll(images);
     		allChildren.addAll(templates);
     		allChildren.addAll(reports);
+    		allChildren.addAll(reportTasks);
     	}
     	return allChildren;
     }
@@ -461,6 +465,22 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     public List<Group> getGroups() {
     	return Collections.unmodifiableList(groups);
+    }
+    
+    public void addReportTask(ReportTask g) {
+    	reportTasks.add(g);
+    }
+    
+    public void addReportTask(ReportTask g, int index) {
+    	reportTasks.add(index, g);
+    }
+    
+    public void removeReportTask(ReportTask g) {
+    	reportTasks.remove(g);
+    }
+    
+    public List<ReportTask> getReportTask() {
+    	return Collections.unmodifiableList(reportTasks);
     }
     
     public boolean isSystemWorkspace() {

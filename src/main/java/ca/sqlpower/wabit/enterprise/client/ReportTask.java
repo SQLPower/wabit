@@ -33,11 +33,11 @@ public class ReportTask extends AbstractWabitObject {
 	private Report report = null;
 	private String email = null;
 	private String triggerType = null; 
-	private int triggerHourParam = -1;
-	private int triggerMinuteParam = -1;
-	private int triggerDayOfWeekParam = -1;
-	private int triggerDayOfMonthParam = -1;
-	private int triggerIntervalParam = -1;
+	private int triggerHourParam = 0;
+	private int triggerMinuteParam = 0;
+	private int triggerDayOfWeekParam = 1;
+	private int triggerDayOfMonthParam = 1;
+	private int triggerIntervalParam = 1;
 	
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
