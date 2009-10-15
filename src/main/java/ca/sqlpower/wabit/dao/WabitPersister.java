@@ -37,6 +37,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
  * An interface for objects that persist {@link WabitObject}s. The medium into
@@ -73,6 +74,7 @@ public interface WabitPersister {
 		SQL_OBJECT_ITEM("SQLObjectItem", SQLObjectItem.class),
 		STRING_ITEM("StringItem", StringItem.class),
 		ITEM_CONTAINER("ItemContainer", ItemContainer.class),
+		OLAP4J_AXIS("Olap4jAxis", Axis.class),
 		ENUM("Enum", Enum.class),
 		NULL("Null", null);
 		

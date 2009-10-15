@@ -23,8 +23,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
@@ -33,8 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
@@ -503,9 +499,11 @@ public class WabitSessionPersister implements WabitPersister {
 						rightItem));
 
 			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
-				org.olap4j.Axis axis = org.olap4j.Axis.Factory
-						.forOrdinal((Integer) getPropertyAndRemove(uuid,
-								"ordinal"));
+				Object ordinal = getPropertyAndRemove(uuid,
+						"ordinal");
+				
+				org.olap4j.Axis axis = (org.olap4j.Axis) converter.convertToComplexType(
+						ordinal, org.olap4j.Axis.class); 
 
 				wo = new WabitOlapAxis(axis);
 
@@ -669,15 +667,6 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof WabitDataSource) {
 					commitWabitDataSourceProperty((WabitDataSource) wo,
 							propertyName, newValue);
-				} else if (wo instanceof WabitOlapAxis) {
-					commitWabitOlapAxisProperty((WabitOlapAxis) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitOlapDimension) {
-					commitWabitOlapDimensionProperty((WabitOlapDimension) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitOlapSelection) {
-					commitWabitOlapSelectionProperty((WabitOlapSelection) wo,
-							propertyName, newValue);
 				} else if (wo instanceof WabitImage) {
 					commitWabitImageProperty((WabitImage) wo, propertyName,
 							newValue);
@@ -687,6 +676,15 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof WabitJoin) {
 					commitWabitJoinProperty((WabitJoin) wo, propertyName,
 							newValue);
+				} else if (wo instanceof WabitOlapAxis) {
+					commitWabitOlapAxisProperty((WabitOlapAxis) wo,
+							propertyName, newValue);
+				} else if (wo instanceof WabitOlapDimension) {
+					commitWabitOlapDimensionProperty((WabitOlapDimension) wo,
+							propertyName, newValue);
+				} else if (wo instanceof WabitOlapSelection) {
+					commitWabitOlapSelectionProperty((WabitOlapSelection) wo,
+							propertyName, newValue);
 				} else if (wo instanceof WabitTableContainer) {
 					commitWabitTableContainerProperty((WabitTableContainer) wo,
 							propertyName, newValue);
@@ -1892,10 +1890,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getWabitOlapAxisProperty(WabitOlapAxis olapAxis,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("ordinal")) {
-			return olapAxis.getOrdinal().axisOrdinal();
 
-		} else if (propertyName.equals("nonEmpty")) {
+		if (propertyName.equals("nonEmpty")) {
 			return olapAxis.isNonEmpty();
 
 		} else if (propertyName.equals("sortEvaluationLiteral")) {
@@ -2148,8 +2144,8 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = wabitImage.getUUID();
 
 		if (propertyName.equals("image")) {
-			final Image wabitInnerImage = wabitImage.getImage();
-			return PersisterUtils.convertImageToStreamAsPNG(wabitInnerImage).toByteArray();
+			return PersisterUtils.convertImageToStreamAsPNG(
+					wabitImage.getImage()).toByteArray();
 
 		} else {
 			throw new WabitPersistenceException(uuid,
@@ -2170,23 +2166,17 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The persisted property value to be committed
 	 * @throws WabitPersistenceException
 	 *             Thrown if the property name is not known in this method
-	 *             or if the new value could not be commited.
+	 *             or if the new value could not be committed.
 	 */
 	private void commitWabitImageProperty(WabitImage wabitImage,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		String uuid = wabitImage.getUUID();
 
 		if (propertyName.equals("image")) {
-			try {
-				wabitImage.setImage(ImageIO.read((InputStream) newValue));
-			} catch (IOException e) {
-				throw new WabitPersistenceException(uuid,
-						"Cannot commit WabitImage as the input stream could not be read.", e);
-			}
+			wabitImage.setImage((Image) converter.convertToComplexType(newValue, Image.class));
 
 		} else {
-			throw new WabitPersistenceException(uuid,
+			throw new WabitPersistenceException(wabitImage.getUUID(),
 					getWabitPersistenceExceptionMessage(wabitImage, propertyName));
 		}
 	}

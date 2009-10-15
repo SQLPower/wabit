@@ -563,8 +563,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
 
 				// Constructor argument
-				target.persistProperty(uuid, "ordinal", DataType.STRING,
-						wabitOlapAxis.getOrdinal().name());
+				target.persistProperty(uuid, "ordinal", DataType.OLAP4J_AXIS,
+						converter.convertToBasicType(wabitOlapAxis.getOrdinal(), DataType.OLAP4J_AXIS));
 
 				// Remaining properties
 				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,

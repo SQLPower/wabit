@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
+import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
 
 import ca.sqlpower.query.ItemContainer;
@@ -78,6 +79,8 @@ public class SessionPersisterSuperConverter {
 	
 	private final SimpleDateFormatConverter simpleDateFormatConverter = 
 		new SimpleDateFormatConverter();
+	
+	private final Olap4JAxisConverter olap4jAxisConverter = new Olap4JAxisConverter();
 
 	/**
 	 * This converter will allow changes between any complex object in the
@@ -173,6 +176,8 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (convertFrom instanceof SimpleDateFormat) {
 			return simpleDateFormatConverter.convertToSimpleType((SimpleDateFormat) convertFrom);
+		} else if (convertFrom instanceof Axis) {
+			return olap4jAxisConverter.convertToSimpleType((Axis) convertFrom);
 			
 		} else if (convertFrom instanceof String) {
 			if (fromType != DataType.STRING) {
@@ -260,6 +265,9 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (SimpleDateFormat.class.isAssignableFrom(type)) {
 			return simpleDateFormatConverter.convertToComplexType((String) o);
+			
+		} else if (Axis.class.isAssignableFrom(type)) {
+			return olap4jAxisConverter.convertToComplexType((String) o);
 			
 		} else if (String.class.isAssignableFrom(type)) {
 			return (String) o;
