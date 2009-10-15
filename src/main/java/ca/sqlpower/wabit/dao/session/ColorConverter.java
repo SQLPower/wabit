@@ -27,11 +27,11 @@ import java.awt.Color;
 public class ColorConverter implements BidirectionalConverter<String, Color> {
 
 	public Color convertToComplexType(String convertFrom) {
-		return Color.decode(convertFrom.toString());
+		return Color.decode(convertFrom);
 	}
 
 	public String convertToSimpleType(Color convertFrom, Object ... additionalInfo) {
-		return convertFrom.toString();
+		return Integer.toString(convertFrom.getRGB());
 	}
 
 }

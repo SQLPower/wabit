@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit;
 
 import java.beans.PropertyDescriptor;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -34,6 +35,13 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
@@ -42,6 +50,8 @@ import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
+import ca.sqlpower.wabit.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.swingui.StubWabitSwingSession;
 
 /**
@@ -58,7 +68,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * created by the subclass's setUp method.
      */
     public abstract WabitObject getObjectUnderTest();
-
+    
     /**
      * Returns a list of JavaBeans property names that should be ignored when
      * testing for proper events.
@@ -206,7 +216,15 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 //The first property change at current is always the property change we are
                 //looking for, this may need to be changed in the future to find the correct
                 //property.
-                WabitObjectProperty propertyChange = countingPersister.getAllPropertyChanges().get(0);
+                WabitObjectProperty propertyChange = null;
+                
+                for (WabitObjectProperty nextPropertyChange : countingPersister.getAllPropertyChanges()) {
+                	if (nextPropertyChange.getPropertyName().equals(property.getName())) {
+                		propertyChange = nextPropertyChange;
+                		break;
+                	}
+                }
+                assertNotNull("A property change event cannot be found for the property " + property.getName(), propertyChange);
                 
                 assertEquals(wo.getUUID(), propertyChange.getUUID());
                 assertEquals(property.getName(), propertyChange.getPropertyName());
@@ -220,7 +238,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 				assertEquals("Old value of property " + property.getName() + " was wrong, value expected was  " + oldConvertedType + 
 						" but is " + countingPersister.getLastOldValue(), oldConvertedType, 
                 		propertyChange.getOldValue());
-                assertEquals(converterFactory.convertToBasicType(newVal, DataType.getTypeByClass(newVal.getClass())), 
+				
+	            //XXX will replace this later
+	            List<Object> additionalVals = new ArrayList<Object>();
+	            if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
+	            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
+	            }
+                assertEquals(converterFactory.convertToBasicType(newVal, DataType.getTypeByClass(newVal.getClass()), additionalVals.toArray()), 
                 		propertyChange.getNewValue());
                 Class<? extends Object> classType;
                 if (oldVal != null) {
@@ -235,20 +259,54 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         }
 		
 	}
+    
+    /**
+     * Returns the specific class type that is the parent of this WabitObject.
+     * This returns {@link WabitObject} which works for most cases but some specific
+     * instances have a tighter parent type.
+     */
+    public Class<? extends WabitObject> getParentClass() {
+    	return WabitObject.class;
+    }
 
 	/**
 	 * This test uses the object under test to ensure that the
 	 * {@link WabitSessionPersister} updates each property appropriately on
-	 * persistance.
+	 * persistence.
 	 */
     public void testPersisterUpdatesProperties() throws Exception {
+    	
+    	final PlDotIni plIni = new PlDotIni();
+    	plIni.read(new File("src/test/java/pl.regression.ini"));
+        final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
+        		Olap4jDataSource.class);
+        if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
+        final OlapConnectionPool connectionPool = new OlapConnectionPool(olapDS, 
+        		new SQLDatabaseMapping() {
+        	private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return sqlDB;
+        	}
+        });
     	
     	AllObjectContainer superParent = new AllObjectContainer();
     	
     	WabitObject wo = getObjectUnderTest();
     	superParent.addChild(wo, 0);
     	
-    	WabitSessionPersister persister = new WabitSessionPersister(new StubWabitSwingSession(), superParent);
+    	WabitSessionContext context = new StubWabitSessionContext() {
+    		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
+    			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
+    				return connectionPool.getConnection();
+    		};
+    	};
+    	WabitSession session = new StubWabitSession(context) {
+    		@Override
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
+    	};
+    	WabitSessionPersister persister = new WabitSessionPersister(session, superParent);
 		
     	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
@@ -276,7 +334,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 continue;
             }
             
-            Object newVal = valueMaker.makeNewValue(property.getPropertyType(), oldVal, property.getName());
+            //special case for parent types. If a specific wabit object has a tighter parent then
+            //WabitObject the getParentClass should return the parent type.
+            Class<?> propertyType = property.getPropertyType();
+            if (property.getName().equals("parent")) {
+            	propertyType = getParentClass();
+            }
+            Object newVal = valueMaker.makeNewValue(propertyType, oldVal, property.getName());
             
             if (newVal instanceof WabitObject) {
             	superParent.addChild((WabitObject) newVal, 0);
@@ -284,12 +348,21 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             
             System.out.println("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
             
-            DataType type = DataType.getTypeByClass(newVal.getClass());
-			persister.persistProperty(wo.getUUID(), property.getName(), type, 
-					converterFactory.convertToBasicType(oldVal, type), 
-					converterFactory.convertToBasicType(newVal, type));
+            //XXX will replace this later
+            List<Object> additionalVals = new ArrayList<Object>();
+            if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
+            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
+            }
             
-			assertEquals(newVal, PropertyUtils.getSimpleProperty(wo, property.getName()));
+            DataType type = DataType.getTypeByClass(newVal.getClass());
+			Object basicNewValue = converterFactory.convertToBasicType(newVal, type, additionalVals.toArray());
+			persister.persistProperty(wo.getUUID(), property.getName(), type, 
+					converterFactory.convertToBasicType(oldVal, type, additionalVals.toArray()), 
+					basicNewValue);
+            
+			//Not all new values are equivalent to their old values so we are
+			//comparing them by their basic type as that is at least comparable, i hope.
+			assertEquals(basicNewValue, converterFactory.convertToBasicType(PropertyUtils.getSimpleProperty(wo, property.getName()), type, additionalVals.toArray()));
     	}
 	}
     

@@ -127,7 +127,7 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (convertFrom instanceof Cube) {
 			Cube c = (Cube) convertFrom;
-			return cubeConverter.convertToSimpleType(c);
+			return cubeConverter.convertToSimpleType(c, additionalInfo);
 			
 		} else if (convertFrom instanceof Font) {
 			Font f = (Font) convertFrom;

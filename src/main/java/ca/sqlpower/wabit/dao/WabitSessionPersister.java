@@ -2766,6 +2766,9 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("bodyFont")) {
 			return converter.convertToBasicType(rsRenderer.getBodyFont(),
 					DataType.FONT);
+			
+		} else if (propertyName.equals("printingGrandTotals")) {
+			return converter.convertToBasicType(rsRenderer.isPrintingGrandTotals(), DataType.BOOLEAN);
 
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
@@ -2792,7 +2795,7 @@ public class WabitSessionPersister implements WabitPersister {
 		if (propertyName.equals("nullString")) {
 			rsRenderer.setNullString((String) newValue);
 
-		} else if (propertyName.equals("border")) {
+		} else if (propertyName.equals("borderType")) {
 			rsRenderer.setBorderType((BorderStyles) converter
 					.convertToComplexType(newValue, BorderStyles.class));
 
@@ -2807,7 +2810,11 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("bodyFont")) {
 			rsRenderer.setBodyFont((Font) converter.convertToComplexType(
 					newValue, Font.class));
-
+			
+		} else if (propertyName.equals("printingGrandTotals")) {
+			rsRenderer.setPrintingGrandTotals((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class)); 
+			
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
 					getWabitPersistenceExceptionMessage(rsRenderer, propertyName));

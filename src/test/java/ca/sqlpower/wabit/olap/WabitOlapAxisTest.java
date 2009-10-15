@@ -51,6 +51,11 @@ public class WabitOlapAxisTest extends AbstractWabitObjectTest {
     }
     
     @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return OlapQuery.class;
+    }
+    
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         wabitAxis = new WabitOlapAxis(Axis.ROWS);

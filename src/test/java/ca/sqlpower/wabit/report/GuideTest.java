@@ -28,6 +28,11 @@ public class GuideTest extends AbstractWabitObjectTest {
     Guide guide;
     
     @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return Page.class;
+    }
+    
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         guide = new Guide(Axis.HORIZONTAL, 123);
