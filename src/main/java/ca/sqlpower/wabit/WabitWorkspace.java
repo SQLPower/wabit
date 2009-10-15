@@ -438,12 +438,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	fireChildAdded(User.class, u, index);
     }
     
-    public void removeUser(User u) {
+    public boolean removeUser(User u) {
     	int index = users.indexOf(u);
     	boolean success = users.remove(u);
     	if (success) {
     		fireChildRemoved(User.class, u, index);
     	}
+    	return success;
     }
     
     public List<User> getUsers() {
@@ -459,12 +460,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	fireChildAdded(Group.class, g, index);
     }
     
-    public void removeGroup(Group g) {
+    public boolean removeGroup(Group g) {
     	int index = groups.indexOf(g);
     	boolean success = groups.remove(g);
     	if (success) {
     		fireChildRemoved(Group.class, g, index);
     	}
+    	return success;
     }
     
     public List<Group> getGroups() {
@@ -781,6 +783,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
             return removeReport((Report) child);
         } else if (child instanceof ReportTask) {
             return removeReportTask((ReportTask) child);
+        } else if (child instanceof User) {
+            return removeUser((User) child);
+        } else if (child instanceof Group) {
+            return removeGroup((Group) child);
         } else {
             throw new IllegalStateException("Cannot remove child of type " + child.getClass());
         }
@@ -803,6 +809,12 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
             addTemplate((Template) child, innerIndex);
         } else if (child instanceof Report) {
             addReport((Report) child, innerIndex);
+        } else if (child instanceof ReportTask) {
+            addReportTask((ReportTask) child, innerIndex);
+        } else if (child instanceof User) {
+            addUser((User) child, innerIndex);
+        } else if (child instanceof Group) {
+            addGroup((Group) child, innerIndex);
         } else {
             throw new AssertionError("Adding child " + child.getName() + " of type " + child.getClass() + 
                     " is not valid for a workspace and should have been checked already");

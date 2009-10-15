@@ -116,4 +116,9 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
 		assert o instanceof GrantedAuthority;
 		return ((GrantedAuthority)o).getAuthority().compareTo(this.getAuthority());
 	}
+	
+	@Override
+	public String toString() {
+		return super.getName();
+	}
 }

@@ -60,4 +60,9 @@ public class GroupMember extends AbstractWabitObject {
         }
     }
 
+	public User getUser() {
+		return user;
+	}
+
+    
 }

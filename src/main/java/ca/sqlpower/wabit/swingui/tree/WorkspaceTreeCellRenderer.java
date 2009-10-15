@@ -43,7 +43,9 @@ import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -173,6 +175,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(WabitIcons.REPORT_ICON_16);
             } else if (wo instanceof Template) {
             	r.setIcon(WabitIcons.TEMPLATE_ICON_16);
+            } else if (wo instanceof Group) {
+            	r.setIcon(WabitIcons.GROUP_ICON_16);
+            } else if (wo instanceof User) {
+            	r.setIcon(WabitIcons.USER_ICON_16);
             } else if (wo instanceof ContentBox || wo instanceof ReportContentRenderer) {
                 final ReportContentRenderer cbChild;
                 if (wo instanceof ContentBox) {
