@@ -47,7 +47,7 @@ public class GroupMember extends AbstractWabitObject {
     }
 
     public List<? extends WabitObject> getChildren() {
-        return null;
+        return Collections.emptyList();
     }
 
     public List<WabitObject> getDependencies() {
