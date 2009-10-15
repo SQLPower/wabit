@@ -609,11 +609,15 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     private void setCellSet(CellSet cellSet) {
-        CellSet oldSet = this.cellSet;
         this.cellSet = cellSet;
-        firePropertyChange("cellSet", oldSet, cellSet);
+        getParent().repaint();
     }
 
+    @Override
+    public ContentBox getParent() {
+    	return (ContentBox) super.getParent();
+    }
+    
     public CellSet getCellSet() {
     	init();
         return cellSet;

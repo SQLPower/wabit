@@ -310,9 +310,15 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         	setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
         }
         
-        cubeName = currentCube.getName();
-        schemaName = currentCube.getSchema().getName();
-        catalogName = currentCube.getSchema().getCatalog().getName();
+        if (currentCube != null) {
+        	cubeName = currentCube.getName();
+        	schemaName = currentCube.getSchema().getName();
+        	catalogName = currentCube.getSchema().getCatalog().getName();
+        } else {
+        	cubeName = null;
+        	schemaName = null;
+        	catalogName = null;
+        }
         
         firePropertyChange("currentCube", oldCube, currentCube);
     }

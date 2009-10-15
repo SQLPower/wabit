@@ -38,6 +38,11 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
     };
     
     @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return ContentBox.class;
+    }
+    
+    @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignorable = super.getPropertiesToNotPersistOnObjectPersist();
     	ignorable.add("cellSet");
