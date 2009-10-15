@@ -47,6 +47,11 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
     private WabitOlapDimension wabitDimension;
     
     @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return WabitOlapAxis.class;
+    }
+    
+    @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
     	ignored.add("exclusions");

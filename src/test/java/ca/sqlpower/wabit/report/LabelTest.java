@@ -30,6 +30,10 @@ public class LabelTest extends AbstractWabitObjectTest {
 
     private Label label;
     
+    @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return ContentBox.class;
+    }
     
     @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {

@@ -24,6 +24,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
 import org.olap4j.metadata.Cube;
@@ -72,6 +73,8 @@ public class SessionPersisterSuperConverter {
 	private final ItemContainerConverter itemContainerConverter = new ItemContainerConverter();
 	
 	private final PNGImageConverter pngImageConverter = new PNGImageConverter();
+	
+	private final DecimalFormatConverter decimalFormatConverter = new DecimalFormatConverter();
 	
 	private final SimpleDateFormatConverter simpleDateFormatConverter = 
 		new SimpleDateFormatConverter();
@@ -165,6 +168,9 @@ public class SessionPersisterSuperConverter {
 		} else if (convertFrom instanceof Image && DataType.PNG_IMG.equals(fromType)) {
 			return pngImageConverter.convertToSimpleType((Image) convertFrom);
 			
+		} else if (convertFrom instanceof DecimalFormat) {
+			return decimalFormatConverter.convertToSimpleType((DecimalFormat) convertFrom);
+			
 		} else if (convertFrom instanceof SimpleDateFormat) {
 			return simpleDateFormatConverter.convertToSimpleType((SimpleDateFormat) convertFrom);
 			
@@ -243,10 +249,14 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (StringItem.class.isAssignableFrom(type)) {
 			return stringItemConverter.convertToComplexType((String) o);
+			
 		} else if (Image.class.isAssignableFrom(type)) { 
 			//TODO we should pass this the data type to know that we want a PNG 
 			//in case other formats are supported in the future
 			return pngImageConverter.convertToComplexType((InputStream) o);
+			
+		} else if (DecimalFormat.class.isAssignableFrom(type)) {
+			return decimalFormatConverter.convertToComplexType((String) o);
 			
 		} else if (SimpleDateFormat.class.isAssignableFrom(type)) {
 			return simpleDateFormatConverter.convertToComplexType((String) o);

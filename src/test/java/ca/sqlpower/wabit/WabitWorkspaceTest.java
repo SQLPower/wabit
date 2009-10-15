@@ -59,7 +59,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	notPersisting.add("reports");
     	notPersisting.add("session");
     	notPersisting.add("templates");
-    	notPersisting.add("reportTask");
+    	notPersisting.add("reportTasks");
     	
     	// These are system workspace specific children and properties
     	notPersisting.add("systemWorkspace");

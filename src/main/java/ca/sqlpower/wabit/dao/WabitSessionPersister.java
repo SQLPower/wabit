@@ -21,11 +21,8 @@ package ca.sqlpower.wabit.dao;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -39,7 +36,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Selection.Operator;
@@ -71,6 +67,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -437,6 +434,9 @@ public class WabitSessionPersister implements WabitPersister {
 
 				wo = new Report(name);
 
+			} else if (type.equals(ReportTask.class.getSimpleName())) {
+				wo = new ReportTask();
+				
 			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
 				String contentID = (String) getPropertyAndRemove(uuid,
 						"content");
@@ -447,6 +447,14 @@ public class WabitSessionPersister implements WabitPersister {
 				String name = (String) getPropertyAndRemove(uuid, "name");
 
 				wo = new Template(name);
+				
+			} else if (type.equals(User.class.getSimpleName())) {
+				String username = (String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "username"), String.class);
+				String password = (String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "password"), String.class);
+				
+				wo = new User(username, password);
 
 			} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
 				String delegateString = (String) getPropertyAndRemove(uuid,
@@ -647,9 +655,13 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof QueryCache) {
 					commitQueryCacheProperty((QueryCache) wo, propertyName,
 							newValue);
+				} else if (wo instanceof ReportTask) {
+					commitReportTaskProperty((ReportTask) wo, propertyName, newValue);
 				} else if (wo instanceof ResultSetRenderer) {
 					commitResultSetRendererProperty((ResultSetRenderer) wo,
 							propertyName, newValue);
+				} else if (wo instanceof User) {
+					commitUserProperty((User) wo, propertyName, newValue);
 				} else if (wo instanceof WabitConstantsContainer) {
 					commitWabitConstantsContainerProperty(
 							(WabitConstantsContainer) wo, propertyName,
@@ -911,9 +923,14 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof QueryCache) {
 				propertyValue = getQueryCacheProperty((QueryCache) wo,
 						propertyName);
+			} else if (wo instanceof ReportTask) {
+				propertyValue = getReportTaskProperty((ReportTask) wo,
+						propertyName);
 			} else if (wo instanceof ResultSetRenderer) {
 				propertyValue = getResultSetRendererProperty(
 						(ResultSetRenderer) wo, propertyName);
+			} else if (wo instanceof User) {
+				propertyValue = getUserProperty((User) wo, propertyName);
 			} else if (wo instanceof WabitConstantsContainer) {
 				propertyValue = getWabitConstantsContainerProperty(
 						(WabitConstantsContainer) wo, propertyName);
@@ -924,10 +941,6 @@ public class WabitSessionPersister implements WabitPersister {
 				propertyValue = getWabitImageProperty((WabitImage) wo,
 						propertyName);
 
-				// Convert oldValue into a byte array so that it can be compared
-				// with propertyValue
-				final Image wabitInnerImage = ((WabitImage) wo).getImage();
-				
 				// We are converting the expected old value InputStream in this way because
 				// we want to ensure that the conversion process is the same as the one
 				// used to convert the current image into a byte array.
@@ -955,9 +968,6 @@ public class WabitSessionPersister implements WabitPersister {
 						(WabitTableContainer) wo, propertyName);
 			} else if (wo instanceof WabitWorkspace) {
 				propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
-						propertyName);
-			} else if (wo instanceof ReportTask) {
-				propertyValue = getReportTaskProperty((ReportTask) wo,
 						propertyName);
 			} else {
 				throw new WabitPersistenceException(uuid, "Invalid WabitObject type " + wo.getClass());
@@ -1522,7 +1532,7 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (propertyName.equals("orderByOrdering")) {
 				return item.getOrderByOrdering();
 
-			} else if (propertyName.equals("colWidth")) {
+			} else if (propertyName.equals("columnWidth")) {
 				return item.getColumnWidth();
 
 			} else {
@@ -1583,7 +1593,7 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (propertyName.equals("orderByOrdering")) {
 				item.setOrderByOrdering((Integer) newValue);
 
-			} else if (propertyName.equals("colWidth")) {
+			} else if (propertyName.equals("columnWidth")) {
 				item.setColumnWidth((Integer) newValue);
 
 			} else {
@@ -1964,18 +1974,18 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("XAxisLabelRotation")) {
 			return chart.getXAxisLabelRotation();
 
-		} else if (propertyName.equals("gratuitousAnimated")) {
+		} else if (propertyName.equals("gratuitouslyAnimated")) {
 			return chart.isGratuitouslyAnimated();
 
 		} else if (propertyName.equals("type")) {
-			return chart.getType().toString();
+			return converter.convertToBasicType(chart.getType(), DataType.ENUM);
 
 		} else if (propertyName.equals("legendPosition")) {
 			return converter.convertToBasicType(chart.getLegendPosition(),
 					DataType.ENUM);
 
 		} else if (propertyName.equals("query")) {
-			return chart.getQuery().getUUID();
+			return converter.convertToBasicType(chart.getQuery(), DataType.REFERENCE);
 
 		} else {
 			throw new WabitPersistenceException(chart.getUUID(),
@@ -2005,10 +2015,10 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("yaxisName")) {
 			chart.setYaxisName((String) newValue);
 
-		} else if (propertyName.equals("xAxisLabelRrotation")) {
+		} else if (propertyName.equals("XAxisLabelRotation")) {
 			chart.setXAxisLabelRotation((Double) newValue);
 
-		} else if (propertyName.equals("gratuitousAnimated")) {
+		} else if (propertyName.equals("gratuitouslyAnimated")) {
 			chart.setGratuitouslyAnimated((Boolean) newValue);
 
 		} else if (propertyName.equals("type")) {
@@ -2714,6 +2724,27 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 	}
 
+	/**
+	 * Retrieves a property value from a {@link ReportTask} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
+	 * 
+	 * @param task
+	 *            The {@link ReportTask} object to retrieve the named property from.
+	 * @param propertyName
+	 *            The property name that needs to be retrieved and converted.
+	 *            This is the name of the property in the class itself based on
+	 *            the property fired by the setter for the event which is
+	 *            enforced by tests using JavaBeans methods even though the
+	 *            values are hard coded in here and won't change if the class
+	 *            changes.
+	 * @return The value stored in the variable of the object we are given at
+	 *         the property name after it has been converted to a type that can
+	 *         be stored. The conversion is based on the
+	 *         {@link SessionPersisterSuperConverter}.
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
 	private Object getReportTaskProperty(ReportTask task, String propertyName)
 			throws WabitPersistenceException {
 
@@ -2741,6 +2772,46 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("triggerIntervalParam")) {
 			return converter.convertToBasicType(task.getTriggerIntervalParam(),
 					DataType.INTEGER);
+
+		} else {
+			throw new WabitPersistenceException(task.getUUID(),
+					"Unknown property " + propertyName + " for ReportTask with name " 
+					+ task.getName());
+		}
+	}
+	
+	/**
+	 * Commits a persisted {@link ReportTask} object property
+	 * 
+	 * @param task
+	 *            The {@link ReportTask} object to commit the persisted
+	 *            property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private void commitReportTaskProperty(ReportTask task, String propertyName,
+			Object newValue) throws WabitPersistenceException {
+		
+		if (propertyName.equals("email")) {
+			task.setEmail((String) converter.convertToComplexType(newValue, String.class));
+		} else if (propertyName.equals("report")) {
+			task.setReport((Report) converter.convertToComplexType(newValue, Report.class));
+		} else if (propertyName.equals("triggerType")) {
+			task.setTriggerType((String) converter.convertToComplexType(newValue, String.class));
+		} else if (propertyName.equals("triggerHourParam")) {
+			task.setTriggerHourParam((Integer) converter.convertToComplexType(newValue, Integer.class));
+		} else if (propertyName.equals("triggerMinuteParam")) {
+			task.setTriggerMinuteParam((Integer) converter.convertToComplexType(newValue, Integer.class));
+		} else if (propertyName.equals("triggerDayOfWeekParam")) {
+			task.setTriggerDayOfWeekParam((Integer) converter.convertToComplexType(newValue, Integer.class));
+		} else if (propertyName.equals("triggerDayOfMonthParam")) {
+			task.setTriggerDayOfMonthParam((Integer) converter.convertToComplexType(newValue, Integer.class));
+		} else if (propertyName.equals("triggerIntervalParam")) {
+			task.setTriggerIntervalParam((Integer) converter.convertToComplexType(newValue, Integer.class));
 
 		} else {
 			throw new WabitPersistenceException(task.getUUID(),
@@ -3051,6 +3122,60 @@ public class WabitSessionPersister implements WabitPersister {
 		} else {
 			throw new WabitPersistenceException(guide.getUUID(),
 					getWabitPersistenceExceptionMessage(guide, propertyName));
+		}
+	}
+	
+	/**
+	 * Retrieves a property value from a {@link User} object based on the
+	 * property name and converts it to something that can be passed to a
+	 * persister.
+	 * 
+	 * @param user
+	 *            The {@link User} object to retrieve the named property from.
+	 * @param propertyName
+	 *            The property name that needs to be retrieved and converted.
+	 *            This is the name of the property in the class itself based on
+	 *            the property fired by the setter for the event which is
+	 *            enforced by tests using JavaBeans methods even though the
+	 *            values are hard coded in here and won't change if the class
+	 *            changes.
+	 * @return The value stored in the variable of the object we are given at
+	 *         the property name after it has been converted to a type that can
+	 *         be stored. The conversion is based on the
+	 *         {@link SessionPersisterSuperConverter}.
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private Object getUserProperty(User user, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("password")) {
+			return converter.convertToBasicType(user.getPassword(), DataType.STRING);
+		} else {
+			throw new WabitPersistenceException(user.getUUID(),
+					getWabitPersistenceExceptionMessage(user, propertyName));
+		}
+	}
+	
+	/**
+	 * Commits a persisted {@link User} object property
+	 * 
+	 * @param user
+	 *            The {@link User} object to commit the persisted property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private void commitUserProperty(User user, String propertyName,
+			Object newValue) throws WabitPersistenceException {
+		
+		if (propertyName.equals("password")) {
+			user.setPassword((String) converter.convertToComplexType(newValue, String.class));
+		} else {
+			throw new WabitPersistenceException(user.getUUID(),
+					getWabitPersistenceExceptionMessage(user, propertyName));
 		}
 	}
 

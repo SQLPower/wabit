@@ -29,6 +29,11 @@ public class ChartRendererTest extends AbstractWabitObjectTest {
     private Chart chart;
     
     @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return ContentBox.class;
+    }
+    
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         chart = new Chart();
