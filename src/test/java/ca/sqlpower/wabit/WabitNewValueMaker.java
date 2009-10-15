@@ -19,9 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
-
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -60,6 +57,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
@@ -123,8 +121,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         } else if (valueType.equals(ContentBox.class)) {
         	newValue = new ContentBox();
         } else if (valueType.equals(ReportContentRenderer.class)) {
-        	newValue = createMock(ReportContentRenderer.class);
-        	replay(newValue);
+        	newValue = new Label(); 
         } else if (valueType.equals(Guide.class)) {
             if (oldVal != null) {
                 newValue = new Guide(Axis.HORIZONTAL, (int) (((Guide) oldVal).getOffset() + 1));
@@ -156,8 +153,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 newValue = DataType.DATE;
             }
         } else if (valueType.equals(Item.class)) {
-        	newValue = createMock(Item.class);
-        	replay(newValue);
+        	newValue = new StringItem("item");
         } else if (valueType.equals(Color.class)) {
         	if (oldVal != null) {
         		newValue = new Color(0x224466);
@@ -266,7 +262,11 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         } else if (valueType.equals(ReportTask.class)) {
         	newValue = new ReportTask();
         } else if (valueType.equals(Image.class)) {
-        	newValue = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+        	if (oldVal != null) {
+        		newValue = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+        	} else {
+        		newValue = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
+        	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

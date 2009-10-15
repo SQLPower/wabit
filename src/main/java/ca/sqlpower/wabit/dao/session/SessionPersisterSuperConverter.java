@@ -196,7 +196,10 @@ public class SessionPersisterSuperConverter {
 	
 	@SuppressWarnings("unchecked")
 	public Object convertToComplexType(Object o, Class<? extends Object> type) {
-		if (WabitObject.class.isAssignableFrom(type)) {
+		if (o == null) {
+			return null;
+			
+		} else if (WabitObject.class.isAssignableFrom(type)) {
 			return wabitObjectConverter.convertToComplexType((String) o);
 			
 		} else if (Color.class.isAssignableFrom(type)) {

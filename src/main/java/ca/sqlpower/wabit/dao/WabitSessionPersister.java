@@ -26,7 +26,6 @@ import java.awt.geom.Point2D;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -62,6 +61,8 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -385,6 +386,15 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
+				
+			} else if (type.equals(Group.class.getSimpleName())) {
+				wo = new Group();
+				
+			} else if (type.equals(GroupMember.class.getSimpleName())) {
+				User user = (User) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "user"), User.class);
+				
+				wo = new GroupMember(user);
 
 			} else if (type.equals(Guide.class.getSimpleName())) {
 				Axis axis = (Axis) converter.convertToComplexType(
@@ -636,6 +646,10 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof ContentBox) {
 					commitContentBoxProperty((ContentBox) wo, propertyName,
 							newValue);
+				} else if (wo instanceof Group) {
+					commitGroupProperty((Group) wo, propertyName, newValue);
+				} else if (wo instanceof GroupMember) {
+					commitGroupMemberProperty((GroupMember) wo, propertyName, newValue);
 				} else if (wo instanceof Guide) {
 					commitGuideProperty((Guide) wo, propertyName, newValue);
 				} else if (wo instanceof ImageRenderer) {
@@ -904,6 +918,10 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof ContentBox) {
 				propertyValue = getContentBoxProperty((ContentBox) wo,
 						propertyName);
+			} else if (wo instanceof Group) {
+				propertyValue = getGroupProperty((Group) wo, propertyName);
+			} else if (wo instanceof GroupMember) {
+				propertyValue = getGroupMemberProperty((GroupMember) wo, propertyName);
 			} else if (wo instanceof Guide) {
 				propertyValue = getGuideProperty((Guide) wo, propertyName);
 			} else if (wo instanceof ImageRenderer) {
@@ -942,9 +960,11 @@ public class WabitSessionPersister implements WabitPersister {
 				// We are converting the expected old value InputStream in this way because
 				// we want to ensure that the conversion process is the same as the one
 				// used to convert the current image into a byte array.
-				oldValue = PersisterUtils.convertImageToStreamAsPNG(
-						(Image) converter.convertToComplexType(
-								oldValue, Image.class)).toByteArray();
+				if (oldValue != null) {
+					oldValue = PersisterUtils.convertImageToStreamAsPNG(
+							(Image) converter.convertToComplexType(
+									oldValue, Image.class)).toByteArray();
+				}
 
 			} else if (wo instanceof WabitItem) {
 				propertyValue = getWabitItemProperty((WabitItem) wo,
@@ -2136,6 +2156,9 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = wabitImage.getUUID();
 
 		if (propertyName.equals("image")) {
+			if (wabitImage.getImage() == null) {
+				return null;
+			}
 			return PersisterUtils.convertImageToStreamAsPNG(
 					wabitImage.getImage()).toByteArray();
 
@@ -2917,31 +2940,19 @@ public class WabitSessionPersister implements WabitPersister {
 			return colInfo.getWidth();
 
 		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
-			return colInfo.getHorizontalAlignment().name();
+			return converter.convertToBasicType(colInfo.getHorizontalAlignment());
 
 		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
-			return colInfo.getDataType().name();
+			return converter.convertToBasicType(colInfo.getDataType());
 
 		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
-			return colInfo.getWillGroupOrBreak().name();
+			return converter.convertToBasicType(colInfo.getWillGroupOrBreak());
 
 		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			return colInfo.getWillSubtotal();
 
-		} else if (propertyName.equals(ColumnInfo.COLUMN_INFO_ITEM_CHANGED)) {
-			return colInfo.getColumnInfoItem().getUUID();
-
 		} else if (propertyName.equals(ColumnInfo.FORMAT_CHANGED)) {
-			Format formatType = colInfo.getFormat();
-
-			if (formatType instanceof SimpleDateFormat) {
-				return "date-format";
-			} else if (formatType instanceof DecimalFormat) {
-				return "decimal-format";
-			} else {
-				throw new WabitPersistenceException(uuid,
-						"Invalid format-type: " + formatType.toString());
-			}
+			return converter.convertToBasicType(colInfo.getFormat());
 
 		} else {
 			throw new WabitPersistenceException(uuid,
@@ -2981,7 +2992,7 @@ public class WabitSessionPersister implements WabitPersister {
 			colInfo.setDataType((ca.sqlpower.wabit.report.DataType)
 					converter.convertToComplexType(
 									newValue,
-									ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class));
+									ca.sqlpower.wabit.report.DataType.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
 			colInfo.setWillGroupOrBreak((GroupAndBreak) converter
@@ -2990,46 +3001,9 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			colInfo.setWillSubtotal((Boolean) newValue);
 
-		} else if (propertyName.equals(ColumnInfo.COLUMN_INFO_ITEM_CHANGED)) {
-			boolean found = false;
-			for (Item queryItem : ((ResultSetRenderer) colInfo.getParent())
-					.getContent().getSelectedColumns()) {
-				Item item = queryItem;
-				if (item.getUUID().equals((String) newValue)) {
-					colInfo.setColumnInfoItem(item);
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				throw new WabitPersistenceException(uuid,
-						"Could not find QueryItem with uuid "
-								+ newValue.toString() + " for property " + propertyName
-								+ " for parent " + colInfo.getName());
-			}
-
 		} else if (propertyName.equals(ColumnInfo.FORMAT_CHANGED)) {
-			Format formatType = colInfo.getFormat();
-			String newFormatType = newValue.toString();
-			String pattern = "";
-
-			if (formatType instanceof SimpleDateFormat) {
-				pattern = ((SimpleDateFormat) formatType).toPattern();
-			} else if (formatType instanceof DecimalFormat) {
-				pattern = ((DecimalFormat) formatType).toPattern();
-			} else {
-				throw new WabitPersistenceException(uuid,
-						"Invalid format-type: " + formatType.toString());
-			}
-
-			if (newFormatType.equals("date-format")) {
-				colInfo.setFormat(new SimpleDateFormat(pattern));
-			} else if (newFormatType.equals("decimal-format")) {
-				colInfo.setFormat(new DecimalFormat(pattern));
-			} else {
-				throw new WabitPersistenceException(uuid,
-						"Invalid format-type: " + formatType.toString());
-			}
+			colInfo.setFormat((Format) converter.convertToComplexType(
+					newValue, Format.class));
 
 		} else {
 			throw new WabitPersistenceException(uuid,
@@ -3144,6 +3118,104 @@ public class WabitSessionPersister implements WabitPersister {
 			throw new WabitPersistenceException(user.getUUID(),
 					getWabitPersistenceExceptionMessage(user, propertyName));
 		}
+	}
+	
+	/**
+	 * Retrieves a property value from a {@link Group} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister. Currently, uncommon properties cannot be retrieved from this
+	 * class.
+	 * 
+	 * @param group
+	 *            The {@link Group} object to retrieve the named
+	 *            property from.
+	 * @param propertyName
+	 *            The property name that needs to be retrieved and converted.
+	 *            This is the name of the property in the class itself based on
+	 *            the property fired by the setter for the event which is
+	 *            enforced by tests using JavaBeans methods even though the
+	 *            values are hard coded in here and won't change if the class
+	 *            changes.
+	 * @return The value stored in the variable of the object we are given at
+	 *         the property name after it has been converted to a type that can
+	 *         be stored. The conversion is based on the
+	 *         {@link SessionPersisterSuperConverter}.
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private Object getGroupProperty(Group group, String propertyName)
+			throws WabitPersistenceException {
+		throw new WabitPersistenceException(group.getUUID(),
+				getWabitPersistenceExceptionMessage(group, propertyName));
+	}
+	
+	/**
+	 * Commits a persisted {@link Group} property. Currently, uncommon
+	 * properties cannot be persisted for this class.
+	 * 
+	 * @param group
+	 *            The {@link Group} object to commit the persisted
+	 *            property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private void commitGroupProperty(Group group, String propertyName,
+			Object newValue) throws WabitPersistenceException {
+		throw new WabitPersistenceException(group.getUUID(),
+				getWabitPersistenceExceptionMessage(group, propertyName));
+	}
+	
+	/**
+	 * Retrieves a property value from a {@link GroupMember} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister. Currently, uncommon properties cannot be retrieved from this
+	 * class.
+	 * 
+	 * @param groupMember
+	 *            The {@link GroupMember} object to retrieve the named
+	 *            property from.
+	 * @param propertyName
+	 *            The property name that needs to be retrieved and converted.
+	 *            This is the name of the property in the class itself based on
+	 *            the property fired by the setter for the event which is
+	 *            enforced by tests using JavaBeans methods even though the
+	 *            values are hard coded in here and won't change if the class
+	 *            changes.
+	 * @return The value stored in the variable of the object we are given at
+	 *         the property name after it has been converted to a type that can
+	 *         be stored. The conversion is based on the
+	 *         {@link SessionPersisterSuperConverter}.
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private Object getGroupMemberProperty(GroupMember groupMember, String propertyName)
+			throws WabitPersistenceException {
+		throw new WabitPersistenceException(groupMember.getUUID(),
+				getWabitPersistenceExceptionMessage(groupMember, propertyName));
+	}
+	
+	/**
+	 * Commits a persisted {@link GroupMember} property. Currently, uncommon
+	 * properties cannot be persisted for this class.
+	 * 
+	 * @param groupMember
+	 *            The {@link GroupMember} object to commit the persisted
+	 *            property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private void commitGroupMemberProperty(GroupMember groupMember, String propertyName,
+			Object newValue) throws WabitPersistenceException {
+		throw new WabitPersistenceException(groupMember.getUUID(),
+				getWabitPersistenceExceptionMessage(groupMember, propertyName));
 	}
 
 	/**

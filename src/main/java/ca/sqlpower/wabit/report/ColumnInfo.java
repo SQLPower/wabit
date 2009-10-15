@@ -42,7 +42,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	/**
 	 * The item this column information is describing.
 	 */
-    private Item columnInfoItem;
+    private final Item columnInfoItem;
 
 	/**
 	 * Column width in Graphics2D units (screen pixels or 1/72 of an inch when printed).
@@ -85,19 +85,19 @@ public class ColumnInfo extends AbstractWabitObject{
 	private String columnAlias;
 	
 	public ColumnInfo(Item item, String label) {
-		setColumnInfoItem(item);
+		columnInfoItem = item;
 		setName(label);
 		
 	}
 	
 	public ColumnInfo(String label) {
-		setColumnAlias(label);
-		setName(label);
+		this(label, label);
 	}
 	
 	public ColumnInfo(String alias, String label) {
 		setColumnAlias(alias);
 		setName(label);
+		columnInfoItem = null;
 	}
 	
 	public ColumnInfo(ColumnInfo columnInfo) {
@@ -118,10 +118,7 @@ public class ColumnInfo extends AbstractWabitObject{
 	public Item getColumnInfoItem() {
 		return columnInfoItem;
 	}
-	public void setColumnInfoItem(Item item) {
-		firePropertyChange(COLUMN_INFO_ITEM_CHANGED, this.columnInfoItem, item);
-		this.columnInfoItem = item;
-	}
+	
 	public int getWidth() {
 		return width;
 	}

@@ -21,6 +21,8 @@ package ca.sqlpower.wabit;
 
 import java.awt.Image;
 import java.beans.PropertyDescriptor;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,6 +48,7 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
+import ca.sqlpower.wabit.dao.PersisterUtils;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
@@ -249,13 +252,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 
                 assertEquals(wo.getUUID(), propertyChange.getUUID());
                 assertEquals(property.getName(), propertyChange.getPropertyName());
-                DataType oldValType;
-                if (oldVal != null) {
-                	 oldValType = DataType.getTypeByClass(oldVal.getClass());
-                } else {
-                	 oldValType = DataType.getTypeByClass(null);
-                }
-				Object oldConvertedType = converterFactory.convertToBasicType(oldVal, oldValType);
+				Object oldConvertedType = converterFactory.convertToBasicType(oldVal);
 				assertEquals("Old value of property " + property.getName() + " was wrong, value expected was  " + oldConvertedType + 
 						" but is " + countingPersister.getLastOldValue(), oldConvertedType, 
                 		propertyChange.getOldValue());
@@ -265,7 +262,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	            if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
 	            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
 	            }
-                assertEquals(converterFactory.convertToBasicType(newVal, DataType.getTypeByClass(newVal.getClass()), additionalVals.toArray()), 
+                assertEquals(converterFactory.convertToBasicType(newVal, additionalVals.toArray()), 
                 		propertyChange.getNewValue());
                 Class<? extends Object> classType;
                 if (oldVal != null) {
@@ -380,10 +377,20 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
 					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
 					basicNewValue);
-            
-			//Not all new values are equivalent to their old values so we are
-			//comparing them by their basic type as that is at least comparable, i hope.
-			assertEquals(basicNewValue, converterFactory.convertToBasicType(PropertyUtils.getSimpleProperty(wo, property.getName()), additionalVals.toArray()));
+			
+			Object newValAfterSet = PropertyUtils.getSimpleProperty(wo, property.getName());
+			Object basicExpectedValue = converterFactory.convertToBasicType(newValAfterSet, additionalVals.toArray());
+			
+			//Input streams from images are being compared by hash code not values
+			if (Image.class.isAssignableFrom(property.getPropertyType())) {
+				assertTrue(Arrays.equals(PersisterUtils.convertImageToStreamAsPNG((Image) newVal).toByteArray(),
+						PersisterUtils.convertImageToStreamAsPNG((Image) newValAfterSet).toByteArray()));
+			} else {
+
+				//Not all new values are equivalent to their old values so we are
+				//comparing them by their basic type as that is at least comparable, in most cases, i hope.
+				assertEquals(basicNewValue, basicExpectedValue);
+			}
     	}
 	}
     

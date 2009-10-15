@@ -44,6 +44,7 @@ import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -376,6 +377,12 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "x", DataType.DOUBLE, contentBox.getX());
 				target.persistProperty(uuid, "y", DataType.DOUBLE, contentBox.getY());
 
+			} else if (child instanceof GroupMember) {
+				GroupMember groupMember = (GroupMember) child;
+				
+				target.persistProperty(uuid, "user", DataType.REFERENCE, 
+						converter.convertToBasicType(groupMember.getUser()));
+				
 			} else if (child instanceof Guide) {
 				Guide guide = (Guide) child;
 
@@ -491,6 +498,24 @@ public class WorkspacePersisterListener implements WabitListener {
 						DataType.STRING,
 						converter.convertToBasicType(query.getWabitDataSource()));
 				
+			} else if (child instanceof ReportTask) {
+				ReportTask task = (ReportTask) child;
+				
+				target.persistProperty(uuid, "email", DataType.STRING, task.getEmail());
+				target.persistProperty(uuid, "triggerType", DataType.STRING, task.getTriggerType());
+				target.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerMinuteParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerDayOfWeekParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerDayOfMonthParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "triggerIntervalParam", DataType.INTEGER, 
+						converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER));
+				target.persistProperty(uuid, "report", DataType.REFERENCE, 
+						converter.convertToBasicType(task.getReport(), DataType.REFERENCE));
+				
 			} else if (child instanceof ResultSetRenderer) {
 				ResultSetRenderer renderer = (ResultSetRenderer) child;
 				
@@ -505,6 +530,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
 						renderer.isPrintingGrandTotals());
 				
+			} else if (child instanceof User) {
+				User user = (User) child;
+				target.persistProperty(uuid, "password", DataType.STRING, user.getPassword());
+				
 			} else if (child instanceof WabitConstantsContainer) {
 				WabitConstantsContainer container = (WabitConstantsContainer) child;
 				
@@ -514,6 +543,12 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "alias", DataType.STRING, container.getAlias());
 				target.persistProperty(uuid, "position", DataType.STRING, 
 						converter.convertToBasicType(container.getPosition()));
+				
+			} else if (child instanceof WabitImage) {
+				WabitImage image = (WabitImage) child;
+				
+				target.persistProperty(uuid, "image", DataType.PNG_IMG, 
+						converter.convertToBasicType(image.getImage(), DataType.PNG_IMG));
 				
 			} else if (child instanceof WabitItem) {
 				WabitItem item = (WabitItem) child;
@@ -604,31 +639,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "editorPanelModel", DataType.REFERENCE,
 						converter.convertToBasicType(workspace.getEditorPanelModel(),
 								DataType.REFERENCE));
-			} else if (child instanceof User) {
-				User user = (User) child;
-				target.persistProperty(uuid, "password", DataType.STRING, user.getPassword());
-			} else if (child instanceof ReportTask) {
-				ReportTask task = (ReportTask) child;
 				
-				target.persistProperty(uuid, "email", DataType.STRING, task.getEmail());
-				target.persistProperty(uuid, "triggerType", DataType.STRING, task.getTriggerType());
-				target.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerMinuteParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerDayOfWeekParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerDayOfMonthParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerIntervalParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "report", DataType.REFERENCE, 
-						converter.convertToBasicType(task.getReport(), DataType.REFERENCE));
-			} else if (child instanceof WabitImage) {
-				WabitImage image = (WabitImage) child;
-				
-				target.persistProperty(uuid, "image", DataType.PNG_IMG, 
-						converter.convertToBasicType(image.getImage(), DataType.PNG_IMG));
 			}
 			
 			if (child instanceof ReportContentRenderer) {
