@@ -31,8 +31,16 @@ public class GroupMember extends AbstractWabitObject {
     
     public GroupMember(User user) {
         this.user = user;
+        if (user == null) {
+        	throw new NullPointerException("User is null");
+        }
     }
 
+    @Override
+    public String getName() {
+    	return user.getName();
+    }
+    
     @Override
     protected boolean removeChildImpl(WabitObject child) {
         return false;

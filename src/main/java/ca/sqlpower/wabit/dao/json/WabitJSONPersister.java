@@ -171,7 +171,7 @@ public class WabitJSONPersister implements WabitPersister {
 	// Dummy test method that sends messages to a local test server
 	public static void main(String[] args) throws WabitPersistenceException {
 		String wabitWorkspaceUUID = "12345";
-		WabitServerInfo serverInfo = new WabitServerInfo("localhost", "localhost", 8080, "/wabit-enterprise");
+		WabitServerInfo serverInfo = new WabitServerInfo("localhost", "localhost", 8080, "/wabit-enterprise", "", "");
 		WabitJSONPersister persister = new WabitJSONPersister(new JSONHttpMessageSender(serverInfo, wabitWorkspaceUUID));
 		persister.begin();
 	}

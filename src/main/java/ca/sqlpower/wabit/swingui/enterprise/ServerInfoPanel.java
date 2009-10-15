@@ -24,6 +24,7 @@ import java.awt.Component;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import ca.sqlpower.swingui.DataEntryPanel;
@@ -48,6 +49,8 @@ public class ServerInfoPanel implements DataEntryPanel {
     private JTextField host;
     private JTextField port;
     private JTextField path;
+    private JTextField username;
+    private JPasswordField password;
 
     
     public ServerInfoPanel(Component dialogOwner, WabitServerInfo defaultSettings) {
@@ -56,7 +59,7 @@ public class ServerInfoPanel implements DataEntryPanel {
     }
 
     public ServerInfoPanel(JComponent dialogOwner) {
-        this(dialogOwner, new WabitServerInfo("", "", 8080, "/sqlpower-enterprise/"));
+        this(dialogOwner, new WabitServerInfo("", "", 8080, "/wabit-enterprise/", "", ""));
     }
 
     private JPanel buildUI(WabitServerInfo si) {
@@ -66,6 +69,8 @@ public class ServerInfoPanel implements DataEntryPanel {
         builder.append("Host", host = new JTextField(si.getServerAddress()));
         builder.append("Port", port = new JTextField(String.valueOf(si.getPort())));
         builder.append("Path", path = new JTextField(si.getPath()));
+        builder.append("Username", username = new JTextField(si.getUsername()));
+        builder.append("Password", password = new JPasswordField(si.getPassword()));
         
         return builder.getPanel();
     }
@@ -77,7 +82,8 @@ public class ServerInfoPanel implements DataEntryPanel {
     public WabitServerInfo getServerInfo() {
         int port = Integer.parseInt(this.port.getText());
         WabitServerInfo si = new WabitServerInfo(
-                name.getText(), host.getText(), port, path.getText());
+                name.getText(), host.getText(), port, path.getText(), 
+                username.getText(), new String(password.getPassword()));
         return si;
     }
     public JComponent getPanel() {

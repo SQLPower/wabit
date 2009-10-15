@@ -319,6 +319,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Begins a transaction
 	 */
 	public void begin() {
+		logger.debug("wsp.begin();");
 		transactionCount++;
 	}
 
@@ -326,6 +327,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Commits the persisted {@link WabitObject}s, its properties and removals
 	 */
 	public void commit() throws WabitPersistenceException {
+		logger.debug("wsp.commit();");
 		try {
 			isUpdating = true;
 			if (transactionCount <= 0) {
@@ -333,10 +335,11 @@ public class WabitSessionPersister implements WabitPersister {
 						"Commit attempted while not in a transaction");
 			}
 	
-			commitObjects();
-			commitProperties();
-			commitRemovals();
-	
+			if (transactionCount == 1) {
+				commitObjects();
+				commitProperties();
+				commitRemovals();
+			}	
 			transactionCount--;
 		} finally {
 			isUpdating = false;
@@ -456,7 +459,7 @@ public class WabitSessionPersister implements WabitPersister {
 				
 			} else if (type.equals(User.class.getSimpleName())) {
 				String username = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "username"), String.class);
+						getPropertyAndRemove(uuid, "name"), String.class);
 				String password = (String) converter.convertToComplexType(
 						getPropertyAndRemove(uuid, "password"), String.class);
 				
@@ -762,6 +765,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
+		logger.debug(
+				String.format(
+						"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);",
+						parentUUID, type, uuid, index));
 		try {
 			isUpdating = true;
 			if (exists(uuid)) {
@@ -805,6 +812,10 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
+		logger.debug(
+				String.format(
+						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
+						uuid, propertyName, propertyType.name(), oldValue, newValue));
 		try {
 			isUpdating = true;
 			persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
@@ -833,6 +844,10 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
+		logger.debug(
+				String.format(
+						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
+						uuid, propertyName, propertyType.name(), newValue));
 		try {
 			isUpdating = true;
 			persistPropertyHelper(uuid, propertyName, propertyType, null, newValue,
@@ -3229,6 +3244,9 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
+		logger.debug(
+				String.format(
+						"wsp.removeObject(\"%s\", \"%s\");", parentUUID, uuid));
 		try {
 			isUpdating = true;
 			if (!exists(uuid)) {
@@ -3254,6 +3272,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	public void rollback() throws WabitPersistenceException {
+		logger.debug("wsp.rollback();");
 		try {
 			isUpdating = true;
 			if (transactionCount <= 0) {

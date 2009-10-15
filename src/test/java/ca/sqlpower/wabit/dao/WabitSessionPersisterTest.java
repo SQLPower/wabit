@@ -1674,4 +1674,11 @@ public class WabitSessionPersisterTest extends TestCase {
 				.getOffset());
 	}
 
+	public void testForwardReferenceFollowedByNestedTransaction() throws Exception {
+		wsp.begin();
+		wsp.begin();
+		wsp.persistObject("w6bbe2735-dfb4-496a-b1b5-32006e6ea3bd", "WabitDataSource", "w96184b5a-b847-4d44-9bc1-961a83d63dd0", 0);
+		wsp.begin();
+		wsp.commit();
+	}
 }

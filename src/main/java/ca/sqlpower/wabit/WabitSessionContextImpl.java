@@ -316,6 +316,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         thisServer.put("serverAddress", serverInfo.getServerAddress());
         thisServer.putInt("port", serverInfo.getPort());
         thisServer.put("path", serverInfo.getPath());
+        thisServer.put("username", serverInfo.getUsername());
+        thisServer.put("password", serverInfo.getPassword());
         for (int i = serverListeners.size() - 1; i >= 0; i--) {
         	serverListeners.get(i).serverAdded(new ServerListEvent(serverInfo));
         }
@@ -354,8 +356,9 @@ public class WabitSessionContextImpl implements WabitSessionContext {
                     serverNode.get("name", null),
                     serverNode.get("serverAddress", null),
                     serverNode.getInt("port", 0),
-                    serverNode.get("path", null)
-                    ));
+                    serverNode.get("path", null),
+                    serverNode.get("username", ""),
+                    serverNode.get("password", "")));
         }
         return serverList;
     }

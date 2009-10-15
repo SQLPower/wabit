@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
@@ -67,20 +69,29 @@ public class WabitServerSession extends WabitSessionImpl {
     
     private final HttpClient httpClient;
     private final WabitServerInfo serviceInfo;
-    
+
     public WabitServerSession(WabitServerInfo serviceInfo, WabitSessionContext context) {
         super(context);
-        getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
-        HttpParams params = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(params, 2000);
-        httpClient = new DefaultHttpClient(params);
-
         this.serviceInfo = serviceInfo;
         if (serviceInfo == null) {
-            logger.error("Null pointer Exception");
-            throw new NullPointerException("serviceInfo is for the WabitServer is null");
+        	logger.error("Null pointer Exception");
+        	throw new NullPointerException("serviceInfo is for the WabitServer is null");
         }
+
+        httpClient = createHttpClient(serviceInfo);
+        
+        getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
     }
+
+	public static HttpClient createHttpClient(WabitServerInfo serviceInfo) {
+		HttpParams params = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(params, 2000);
+        DefaultHttpClient httpClient = new DefaultHttpClient(params);
+        httpClient.getCredentialsProvider().setCredentials(
+            new AuthScope(serviceInfo.getServerAddress(), AuthScope.ANY_PORT), 
+            new UsernamePasswordCredentials(serviceInfo.getUsername(), serviceInfo.getPassword()));
+        return httpClient;
+	}
 
     @Override
     public boolean close() {
@@ -132,18 +143,23 @@ public class WabitServerSession extends WabitSessionImpl {
      * @throws URISyntaxException
      * @throws JSONException 
      */
-    public static List<String> getWorkspaceNames(HttpClient httpClient, WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
-        HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
-        String responseBody = httpClient.execute(request, new BasicResponseHandler());
-        JSONArray response;
-        List<String> workspaces = new ArrayList<String>();
-		response = new JSONArray(responseBody);
-		logger.debug("Workspace list:\n" + responseBody);
-		for (int i = 0; i < response.length(); i++) {
-			JSONObject workspace = (JSONObject) response.get(i);
-			workspaces.add(workspace.getString("name"));
-		}
-        return workspaces;
+    public static List<String> getWorkspaceNames(WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
+    	HttpClient httpClient = createHttpClient(serviceInfo);
+    	try {
+    		HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
+    		String responseBody = httpClient.execute(request, new BasicResponseHandler());
+    		JSONArray response;
+    		List<String> workspaces = new ArrayList<String>();
+    		response = new JSONArray(responseBody);
+    		logger.debug("Workspace list:\n" + responseBody);
+    		for (int i = 0; i < response.length(); i++) {
+    			JSONObject workspace = (JSONObject) response.get(i);
+    			workspaces.add(workspace.getString("name"));
+    		}
+    		return workspaces;
+    	} finally {
+    		httpClient.getConnectionManager().shutdown();
+    	}
     }
     
     private static <T> T executeServerRequest(HttpClient httpClient, WabitServerInfo serviceInfo, 
@@ -173,8 +189,7 @@ public class WabitServerSession extends WabitSessionImpl {
      * @throws URISyntaxException
      *             If the workspace name can't be properly encoded in a URI
      */
-    public static void saveWorkspace(HttpClient httpClient, WabitServerInfo serviceInfo, WabitSessionContext context, WabitWorkspace workspace) throws IOException, URISyntaxException {
-        
+    public static void saveWorkspace(WabitServerInfo serviceInfo, WabitSessionContext context, WabitWorkspace workspace) throws IOException, URISyntaxException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, context);
         dao.saveActiveWorkspace();
@@ -183,6 +198,7 @@ public class WabitServerSession extends WabitSessionImpl {
         HttpPost request = new HttpPost(getServerURI(serviceInfo, "workspace/" + workspace.getName()));
         logger.debug("Posting workspace to " + request);
         request.setEntity(new ByteArrayEntity(out.toByteArray()));
+        HttpClient httpClient = createHttpClient(serviceInfo);
         httpClient.execute(request);
         logger.debug("Post complete!");
     }

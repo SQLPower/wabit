@@ -69,10 +69,7 @@ public class OpenOnServerMenu extends JMenu {
         logger.debug("Refreshing workspace list...");
         removeAll();
         try {
-            HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 2000);
-            HttpClient httpClient = new DefaultHttpClient(params);
-            for (String workspaceName : WabitServerSession.getWorkspaceNames(httpClient, serviceInfo)) {
+            for (String workspaceName : WabitServerSession.getWorkspaceNames(serviceInfo)) {
                 add(new OpenServerWorkspaceAction(dialogOwner, serviceInfo, workspaceName, context));
             }
         } catch (Exception ex) {

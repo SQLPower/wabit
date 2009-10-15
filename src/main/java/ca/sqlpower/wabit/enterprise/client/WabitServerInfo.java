@@ -35,6 +35,8 @@ public class WabitServerInfo {
     private final String serverAddress;
     private final int port;
     private final String path;
+	private final String username;
+	private final String password;
 
     /**
      * 
@@ -43,11 +45,13 @@ public class WabitServerInfo {
      * @param port The port number the server listens on
      * @param path The path to the enterprise server. Must begin with a '/'.
      */
-    public WabitServerInfo(String name, String serverAddress, int port, String path) {
+    public WabitServerInfo(String name, String serverAddress, int port, String path, String username, String password) {
         this.name = name;
         this.serverAddress = serverAddress;
         this.port = port;
         this.path = path;
+		this.username = username;
+		this.password = password;
         
         if (path == null || path.length() < 1 || path.charAt(0) != '/') {
             throw new IllegalArgumentException("path must begin with a /");
@@ -59,6 +63,8 @@ public class WabitServerInfo {
         serverAddress = si.getHostAddress();
         port = si.getPort();
         path = si.getPropertyString("path");
+        username = null;
+        password = null;
     }
 
     public String getName() {
@@ -129,5 +135,12 @@ public class WabitServerInfo {
         
         return true;
     }
+
+	public String getUsername() {
+		return username;
+	}
     
+	public String getPassword() {
+		return password;
+	}
 }

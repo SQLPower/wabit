@@ -93,16 +93,11 @@ public class SaveServerWorkspaceAction extends AbstractAction {
         private final JPanel panel;
         private JTextField fileNameField;
         private JList existingFileList;
-        private HttpClient httpClient;
 
         SaveOnServerPanel() throws IOException, URISyntaxException, JSONException {
-            HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 2000);
-            httpClient = new DefaultHttpClient(params);
-            
             DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
             fileNameField = new JTextField(workspace.getName());
-            existingFileList = new JList(WabitServerSession.getWorkspaceNames(httpClient, si).toArray(new String[0]));
+            existingFileList = new JList(WabitServerSession.getWorkspaceNames(si).toArray(new String[0]));
             existingFileList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
                 public void valueChanged(ListSelectionEvent e) {
                     fileNameField.setText((String) existingFileList.getSelectedValue());
@@ -122,7 +117,7 @@ public class SaveServerWorkspaceAction extends AbstractAction {
         public boolean applyChanges() {
             // TODO prompt about overwrite
             try {
-                WabitServerSession.saveWorkspace(httpClient, si, context, workspace);
+                WabitServerSession.saveWorkspace(si, context, workspace);
                 return true;
             } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(dialogOwner, "Save to server failed", ex);
