@@ -55,6 +55,7 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
 
@@ -211,20 +212,20 @@ public class ReportTaskPanel implements WabitPanel {
 		
 		
 		
-		this.okButton = new JButton("Save");
+		this.okButton = new JButton("Update Schedule", WabitIcons.RUN_ICON_32);
 		this.okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				applyChanges();
 			}
 		});
-		this.cancelButton = new JButton("Cancel");
+		this.cancelButton = new JButton("Cancel", WabitIcons.CANCEL_ICON_32);
 		this.cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				reinitGuiModel();
 			}
 		});
-		this.panel.add(this.okButton, "ax right");
-		this.panel.add(this.cancelButton, "span, wrap");
+		this.toolbarBuilder.add(this.okButton);
+		this.toolbarBuilder.add(this.cancelButton);
 		
 		this.scheduleTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
