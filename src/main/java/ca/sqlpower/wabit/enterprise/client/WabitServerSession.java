@@ -135,13 +135,13 @@ public class WabitServerSession extends WabitSessionImpl {
     public static List<String> getWorkspaceNames(HttpClient httpClient, WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
         HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
         String responseBody = httpClient.execute(request, new BasicResponseHandler());
-        JSONObject response;
+        JSONArray response;
         List<String> workspaces = new ArrayList<String>();
-		response = new JSONObject(responseBody);
+		response = new JSONArray(responseBody);
 		logger.debug("Workspace list:\n" + responseBody);
-		JSONArray workspaceArray = response.getJSONArray("workspaceNames");
-		for (int i = 0; i < workspaceArray.length(); i++) {
-			workspaces.add(workspaceArray.getString(i));
+		for (int i = 0; i < response.length(); i++) {
+			JSONObject workspace = (JSONObject) response.get(i);
+			workspaces.add(workspace.getString("name"));
 		}
         return workspaces;
     }
