@@ -29,6 +29,14 @@ public class LayoutTest extends AbstractWabitObjectTest {
     private Report layout;
     
     @Override
+    public Set<String> getPropertiesToIgnoreForEvents() {
+    	Set<String> ignored = super.getPropertiesToIgnoreForEvents();
+    	//This is actually a child.
+    	ignored.add("page");
+    	return ignored;
+    }
+    
+    @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
     	ignored.add("currentlyPrinting");

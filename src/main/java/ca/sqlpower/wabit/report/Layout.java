@@ -133,10 +133,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     }
     
     public void setPage(Page page) {
-        Page oldPage = this.page;
     	fireChildRemoved(Page.class, this.page, 0);
     	this.page = page;
-    	firePropertyChange("page", oldPage, page);
     	fireChildAdded(Page.class, page, 0);
     	page.setParent(this);
     }
