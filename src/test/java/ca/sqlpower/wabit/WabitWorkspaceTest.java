@@ -59,6 +59,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	notPersisting.add("reports");
     	notPersisting.add("session");
     	notPersisting.add("templates");
+    	notPersisting.add("reportTask");
     	
     	// These are system workspace specific children and properties
     	notPersisting.add("systemWorkspace");
@@ -86,6 +87,9 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         ignore.add("dataSourceTypes");
         ignore.add("serverBaseURI");
         ignore.add("session");
+        
+        //workspace parents cannot be set as they are always null.
+        ignore.add("parent");
     	return ignore;
     }
     

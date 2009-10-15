@@ -45,6 +45,7 @@ import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.GroupMember;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
@@ -260,6 +261,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = new Group();
         } else if (valueType.equals(GroupMember.class)) {
         	newValue = new GroupMember(new User("name", "pass"));
+        } else if (valueType.equals(ReportTask.class)) {
+        	newValue = new ReportTask();
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

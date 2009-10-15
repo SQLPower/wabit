@@ -388,6 +388,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         	if (childType == Report.class) return offset;
         	offset += reports.size();
         	
+        	if (childType == ReportTask.class) return offset;
+        	offset += reportTasks.size();
+        	
         	if (childType == User.class) return offset;
         	offset += users.size();
         	
@@ -468,15 +471,18 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addReportTask(ReportTask g) {
-    	reportTasks.add(g);
+    	addReportTask(g, reportTasks.size());
     }
     
     public void addReportTask(ReportTask g, int index) {
     	reportTasks.add(index, g);
+    	fireChildAdded(ReportTask.class, g, index);
     }
     
     public void removeReportTask(ReportTask g) {
+    	int index = reportTasks.indexOf(g);
     	reportTasks.remove(g);
+    	fireChildRemoved(ReportTask.class, g, index);
     }
     
     public List<ReportTask> getReportTask() {
