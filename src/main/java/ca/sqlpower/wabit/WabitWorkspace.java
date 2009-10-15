@@ -388,13 +388,14 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         	if (childType == Report.class) return offset;
         	offset += reports.size();
         	
-        	if (childType == ReportTask.class) return offset;
-        	offset += reportTasks.size();
-        	
         	if (childType == User.class) return offset;
         	offset += users.size();
         	
         	if (childType == Group.class) return offset;
+        	offset += groups.size();
+        	
+        	if(childType == ReportTask.class) return offset;
+        	offset += reportTasks.size();
 
         	throw new IllegalArgumentException("Objects of this type don't have children of type " + childType);
         }
@@ -470,22 +471,32 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	return Collections.unmodifiableList(groups);
     }
     
-    public void addReportTask(ReportTask g) {
-    	addReportTask(g, reportTasks.size());
+    public void addReportTask(ReportTask task) {
+    	this.addReportTask(task, reportTasks.size());
     }
     
-    public void addReportTask(ReportTask g, int index) {
-    	reportTasks.add(index, g);
-    	fireChildAdded(ReportTask.class, g, index);
+    public void addReportTask(ReportTask task, int index) {
+    	reportTasks.add(index, task);
+    	task.setParent(this);
+        fireChildAdded(ReportTask.class, task, index);
+        setEditorPanelModel(task);
     }
     
-    public void removeReportTask(ReportTask g) {
-    	int index = reportTasks.indexOf(g);
-    	reportTasks.remove(g);
-    	fireChildRemoved(ReportTask.class, g, index);
+    public boolean removeReportTask(ReportTask task) {
+    	int index = reportTasks.indexOf(task);
+    	if (index != -1) {
+    		reportTasks.remove(task);
+    		fireChildRemoved(ReportTask.class, task, index);
+    		if (editorPanelModel == task) {
+    		    setEditorPanelModel(this);
+    		}
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
     
-    public List<ReportTask> getReportTask() {
+    public List<ReportTask> getReportTasks() {
     	return Collections.unmodifiableList(reportTasks);
     }
     
@@ -768,6 +779,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
             return removeTemplate((Template) child);
         } else if (child instanceof Report) {
             return removeReport((Report) child);
+        } else if (child instanceof ReportTask) {
+            return removeReportTask((ReportTask) child);
         } else {
             throw new IllegalStateException("Cannot remove child of type " + child.getClass());
         }

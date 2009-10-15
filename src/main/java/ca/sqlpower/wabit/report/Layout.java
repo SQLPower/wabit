@@ -284,4 +284,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         page.removeDependency(dependency);
     }
 
+    @Override
+    public String toString() {
+    	return getName();
+    }
 }

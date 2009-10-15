@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, SQL Power Group Inc.
+ * Copyright (c) 2008, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -22,28 +22,29 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
+import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
-
-public class NewUserAction extends AbstractAction {
-
-	private static final Icon NEW_USER_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/user-16.png"));
-	
+/**
+ * An action that adds a new empty report to a particular workspace every time it
+ * is invoked.
+ */
+public class ScheduleReportAction extends AbstractAction {
 	private final WabitSwingSession session;
-	
-	public NewUserAction(WabitSwingSession session) {
-		super("New User", NEW_USER_ICON);
+	private Report report = null;
+    
+    public ScheduleReportAction(Report report, WabitSwingSession session) {
+        super("Schedule this report...", WabitIcons.REPORTTASK_ICON_16);
+		this.report  = report;
 		this.session = session;
-	}
-	
-	public void actionPerformed(ActionEvent e) {
-		User user = new User("New User", "password");
-		session.getWorkspace().addUser(user);
-	}
+    }
 
+    public void actionPerformed(ActionEvent e) {
+    	ReportTask task = new ReportTask(report);
+    	task.setNoob(true);
+    	session.getWorkspace().addReportTask(task);
+    }
 }

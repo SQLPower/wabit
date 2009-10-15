@@ -58,6 +58,7 @@ import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -126,6 +127,7 @@ public class WorkspaceTreeModel implements TreeModel {
     		folderList.add(new FolderNode(workspace, FolderType.IMAGES));
     		folderList.add(new FolderNode(workspace, FolderType.TEMPLATES));
     		folderList.add(new FolderNode(workspace, FolderType.REPORTS));
+    		folderList.add(new FolderNode(workspace, FolderType.REPORTTASK));
     	}
     }
     
@@ -149,6 +151,7 @@ public class WorkspaceTreeModel implements TreeModel {
 	        if (o instanceof OlapQuery) return true;
 	        if (o instanceof Template) return true;
 	        if (o instanceof Report) return true;
+	        if (o instanceof ReportTask) return true;
 	        if (o instanceof Chart) return true;
 	        if (o instanceof ChartColumn) return true;
 	        if (o instanceof ContentBox) return true;
@@ -172,11 +175,13 @@ public class WorkspaceTreeModel implements TreeModel {
     	} else if (parentObject instanceof Layout) {
     		return  getLayoutsChildren((Layout) parentObject).get(index);
     	} else if (parentObject instanceof ContentBox) {
-    		return new ArrayList<Object>();
+    		return Collections.emptyList();
     	} else if (parentObject instanceof WabitDataSource) {
     		List<Object> children = getWabitDatasourceChildren((WabitDataSource) parentObject);
     		return children.get(index);
     	} else if (parentObject instanceof QueryCache) {
+    	    return Collections.emptyList();
+    	} else if (parentObject instanceof ReportTask) {
     	    return Collections.emptyList();
     	} else if (parentObject instanceof SQLObject) {
     		try {
@@ -210,6 +215,8 @@ public class WorkspaceTreeModel implements TreeModel {
     		WabitDataSource wds = (WabitDataSource) parent;
 			List<Object> children = getWabitDatasourceChildren(wds);
     		return children.size();
+    	} else if (parent instanceof ReportTask) {
+    		return 0;
     	} else if (parent instanceof QueryCache) {
     	    return 0;
     	} else if (parent instanceof SQLObject) {
@@ -598,6 +605,10 @@ public class WorkspaceTreeModel implements TreeModel {
 				index -= (workspace.getTemplates().size());
 
 				if (wabitObject instanceof Report) return index;
+				index -= (workspace.getReports().size());
+				
+				if (wabitObject instanceof ReportTask) return index;
+				index -= (workspace.getReportTasks().size());
 			}
 			
 			return actualIndex;
@@ -678,6 +689,11 @@ public class WorkspaceTreeModel implements TreeModel {
                     page.addContentBox(new ContentBox());
                     page.addGuide(new Guide(Axis.HORIZONTAL, 123));
                     page.addContentBox(new ContentBox());
+                    
+                    // dd a report task
+                    ReportTask task = new ReportTask();
+                    task.setReport(layout);
+                    p.addReportTask(task);
                     
                     // Show workspace tree in a frame
                     WorkspaceTreeModel tm = new WorkspaceTreeModel(p);

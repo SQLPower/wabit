@@ -250,7 +250,15 @@ public abstract class AbstractWabitObject implements WabitObject {
         runInForeground(runner);
         return evt;
     }
-
+    
+    public void beginTransaction(final String message) {
+    	this.fireTransactionStarted(message);
+    }
+    
+    public void commitTransaction() {
+    	this.fireTransactionEnded();
+    }
+    
     /**
      * Fires a transaction started event with a message indicating the
      * reason/type of the transaction.
@@ -474,5 +482,15 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    } catch (SessionNotFoundException e) {
 	        runner.run();
 	    }
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof WabitObject) {
+			if (this.getUUID().equals(((WabitObject)obj).getUUID())) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

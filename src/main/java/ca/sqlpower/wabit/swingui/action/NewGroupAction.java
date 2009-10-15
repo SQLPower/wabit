@@ -32,7 +32,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 public class NewGroupAction extends AbstractAction {
 
-private static final Icon NEW_GROUP_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/image-16.png"));
+private static final Icon NEW_GROUP_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/group-16.png"));
 	
 	private final WabitSwingSession session;
 	

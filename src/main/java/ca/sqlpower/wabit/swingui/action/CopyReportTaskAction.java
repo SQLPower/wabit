@@ -19,31 +19,26 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
-import java.awt.event.ActionEvent;
+import java.awt.Window;
 
-import javax.swing.AbstractAction;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 
-import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
-
-
-public class NewUserAction extends AbstractAction {
-
-	private static final Icon NEW_USER_ICON = new ImageIcon(WabitSwingSessionImpl.class.getClassLoader().getResource("icons/user-16.png"));
+public class CopyReportTaskAction extends CopyAction {
+	private ReportTask task;
+	private WabitSession session;
 	
-	private final WabitSwingSession session;
-	
-	public NewUserAction(WabitSwingSession session) {
-		super("New User", NEW_USER_ICON);
+	public CopyReportTaskAction(ReportTask task, WabitSession session, Window dialogOwner) {
+		super(task, dialogOwner);
+		this.task = task;
 		this.session = session;
 	}
 	
-	public void actionPerformed(ActionEvent e) {
-		User user = new User("New User", "password");
-		session.getWorkspace().addUser(user);
+	public void copy(String name) {
+		ReportTask taskCopy = new ReportTask(task);
+		taskCopy.setParent(task.getParent());
+		taskCopy.setName(name);
+		taskCopy.setNoob(true);
+		session.getWorkspace().addReportTask(taskCopy);
 	}
-
 }

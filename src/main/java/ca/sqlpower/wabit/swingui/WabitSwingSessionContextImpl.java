@@ -149,6 +149,7 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -171,6 +172,7 @@ import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
+import ca.sqlpower.wabit.swingui.action.NewReportTaskAction;
 import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewUserAction;
@@ -181,6 +183,7 @@ import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.action.ShowWabitApplicationPreferencesAction;
 import ca.sqlpower.wabit.swingui.chart.ChartPanel;
+import ca.sqlpower.wabit.swingui.enterprise.ReportTaskPanel;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
@@ -660,6 +663,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	                    popupMenu.add(new NewImageAction(activeSession));
 	    				popupMenu.add(new NewReportAction(activeSession));
 	    				popupMenu.add(new NewTemplateAction(activeSession));
+	    				popupMenu.add(new NewReportTaskAction(activeSession));
     				}
     			}
     			popupMenu.show(source, 0, source.getHeight());
@@ -1620,6 +1624,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             currentEditorPanel = new WabitImagePanel((WabitImage) entryPanelModel, this);
         } else if (entryPanelModel instanceof Layout) {
             currentEditorPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
+        } else if (entryPanelModel instanceof ReportTask) {
+            currentEditorPanel = new ReportTaskPanel((ReportTask) entryPanelModel);
         } else if (entryPanelModel instanceof WabitWorkspace) {
             currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
         } else {

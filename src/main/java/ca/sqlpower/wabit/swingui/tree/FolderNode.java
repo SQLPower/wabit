@@ -27,6 +27,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -47,6 +48,7 @@ public class FolderNode {
     	CHARTS,
     	IMAGES,
     	REPORTS,
+    	REPORTTASK,
     	TEMPLATES,
     	USERS,
     	GROUPS
@@ -63,6 +65,8 @@ public class FolderNode {
             return FolderType.IMAGES;
     	} else if (object instanceof Report) {
 			return FolderType.REPORTS;
+    	} else if (object instanceof ReportTask) {
+			return FolderType.REPORTTASK;
     	} else if (object instanceof Template) {
     		return FolderType.TEMPLATES;
     	} else if (object instanceof User) {
@@ -132,6 +136,9 @@ public class FolderNode {
 		case GROUPS:
 			childList.addAll(parent.getGroups());
 			break;
+		case REPORTTASK:
+			childList.addAll(parent.getReportTasks());
+			break;
 		}
 		return childList;
 	}
@@ -154,6 +161,9 @@ public class FolderNode {
             break;
 		case REPORTS:
 			name = "Reports & Dashboards";
+			break;
+		case REPORTTASK:
+			name = "Scheduled Reports";
 			break;
 		case TEMPLATES:
 			name = "Templates";

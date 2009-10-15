@@ -107,9 +107,31 @@ public class ReportTask extends AbstractWabitObject {
 	private String triggerType = null; 
 	private int triggerHourParam = 0;
 	private int triggerMinuteParam = 0;
-	private int triggerDayOfWeekParam = 1;
+	private int triggerDayOfWeekParam = 0;
 	private int triggerDayOfMonthParam = 1;
 	private int triggerIntervalParam = 1;
+	private transient boolean noob = false;
+	
+	public ReportTask() {
+		super();
+	}
+	
+	public ReportTask(Report report) {
+		super();
+		this.report = report;
+	}
+	
+	public ReportTask(ReportTask task) {
+		super();
+		this.report = task.getReport();
+		this.email = task.getEmail();
+		this.triggerType = task.getTriggerType();
+		this.triggerDayOfMonthParam = task.getTriggerDayOfMonthParam();
+		this.triggerDayOfWeekParam = task.getTriggerDayOfWeekParam();
+		this.triggerHourParam = task.getTriggerHourParam();
+		this.triggerIntervalParam = task.getTriggerIntervalParam();
+		this.triggerMinuteParam = task.getTriggerMinuteParam();
+	}
 	
 	@Override
 	protected boolean removeChildImpl(WabitObject child) {
@@ -145,9 +167,9 @@ public class ReportTask extends AbstractWabitObject {
 	@Override
 	public String getName() {
 		if (this.report==null) {
-			return "Report Task";
+			return "Scheduled Report";
 		} else {
-			return "Report Task (" + report.getName() + ")";
+			return "Schedule for report " + report.getName();
 		}
 	}
 
@@ -229,5 +251,18 @@ public class ReportTask extends AbstractWabitObject {
 		int oldVal = this.triggerIntervalParam;
 		this.triggerIntervalParam = triggerIntervalParam;
 		firePropertyChange("triggerIntervalParam", oldVal, triggerIntervalParam);
+	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
+
+	public boolean isNoob() {
+		return noob;
+	}
+
+	public void setNoob(boolean noob) {
+		this.noob = noob;
 	}
 }
