@@ -710,8 +710,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		}
 
 		try {
-			DataType typeForClass = WabitPersister.DataType
-					.getTypeByClass(newValue.getClass());
+			DataType typeForClass = SessionPersisterUtils.getDataType(newValue.getClass());
 			Object oldBasicType;
 			Object newBasicType; 
 			if (ds == null) {

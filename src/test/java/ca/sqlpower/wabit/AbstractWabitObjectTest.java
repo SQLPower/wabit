@@ -21,8 +21,6 @@ package ca.sqlpower.wabit;
 
 import java.awt.Image;
 import java.beans.PropertyDescriptor;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -53,6 +51,7 @@ import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
+import ca.sqlpower.wabit.dao.session.SessionPersisterUtils;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -104,27 +103,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("dependencies");
     	ignore.add("UUID");
     	return ignore;
-    }
-    
-    /**
-     * Gets the correct data type based on the given class for the wabit persister.
-     */
-    private DataType getDataType(Class<? extends Object> classForDataType) {
-    	if (Integer.class.isAssignableFrom(classForDataType)) {
-    		return DataType.INTEGER;
-    	} else if (Boolean.class.isAssignableFrom(classForDataType)) {
-    		return DataType.BOOLEAN;
-    	} else if (Double.class.isAssignableFrom(classForDataType)) {
-    		return DataType.DOUBLE;
-    	} else if (String.class.isAssignableFrom(classForDataType)) {
-    		return DataType.STRING;
-    	} else if (Image.class.isAssignableFrom(classForDataType)) {
-    		return DataType.PNG_IMG;
-    	} else if (WabitObject.class.isAssignableFrom(classForDataType)) {
-    		return DataType.REFERENCE;
-    	} else {
-    		return DataType.STRING;
-    	}
     }
     
     /**
@@ -372,7 +350,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
             }
             
-            DataType type = getDataType(property.getPropertyType());
+            DataType type = SessionPersisterUtils.getDataType(property.getPropertyType());
 			Object basicNewValue = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
 					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 

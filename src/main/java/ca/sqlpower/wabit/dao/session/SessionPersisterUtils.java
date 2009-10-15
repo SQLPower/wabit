@@ -19,6 +19,11 @@
 
 package ca.sqlpower.wabit.dao.session;
 
+import java.awt.Image;
+
+import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+
 /**
  * Utilities that are specific to the session persisters.
  */
@@ -45,6 +50,27 @@ public class SessionPersisterUtils {
 		}
 		return pieces;
 	}
+	
+    /**
+     * Gets the correct data type based on the given class for the wabit persister.
+     */
+    public static DataType getDataType(Class<? extends Object> classForDataType) {
+    	if (Integer.class.isAssignableFrom(classForDataType)) {
+    		return DataType.INTEGER;
+    	} else if (Boolean.class.isAssignableFrom(classForDataType)) {
+    		return DataType.BOOLEAN;
+    	} else if (Double.class.isAssignableFrom(classForDataType)) {
+    		return DataType.DOUBLE;
+    	} else if (String.class.isAssignableFrom(classForDataType)) {
+    		return DataType.STRING;
+    	} else if (Image.class.isAssignableFrom(classForDataType)) {
+    		return DataType.PNG_IMG;
+    	} else if (WabitObject.class.isAssignableFrom(classForDataType)) {
+    		return DataType.REFERENCE;
+    	} else {
+    		return DataType.STRING;
+    	}
+    }
 	
 	private SessionPersisterUtils() {
 		//cannot make an instance of this class.
