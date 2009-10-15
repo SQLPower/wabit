@@ -470,10 +470,13 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new WabitConstantItem(item);
 
 			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
+				String dsName = (String) getPropertyAndRemove(uuid, "name");
 				SPDataSource spds = session.getContext().getDataSources()
-						.getDataSource(
-								(String) getPropertyAndRemove(uuid, "name"));
-
+						.getDataSource(dsName);
+				if (spds == null) {
+					throw new WabitPersistenceException(uuid, 
+							"The Wabit does not know about Datasource '" + dsName + "'");
+				}
 				wo = new WabitDataSource(spds);
 
 			} else if (type.equals(WabitImage.class.getSimpleName())) {
