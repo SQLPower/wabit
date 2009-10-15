@@ -42,6 +42,7 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
+import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
@@ -88,9 +89,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            This persister will have persist methods called on it when
 	 *            events occur in the workspace in the given session.
 	 */
-	public static void attachListener(final WabitSession session, WabitPersister targetPersister) {
+	public static WorkspacePersisterListener attachListener(final WabitSession session, WabitPersister targetPersister, WabitSessionPersister eventSource) {
 		final WorkspacePersisterListener listener = 
-			new WorkspacePersisterListener(session, targetPersister);
+			new WorkspacePersisterListener(session, targetPersister, eventSource);
 		WabitUtils.listenToHierarchy(session.getWorkspace(), listener);
 		
 		session.addSessionLifecycleListener(new SessionLifecycleListener<WabitSession>() {
@@ -99,7 +100,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				WabitUtils.unlistenToHierarchy(session.getWorkspace(), listener);
 			}
 		});
-		
+		return listener;
 	}
 
 	/**
@@ -113,6 +114,8 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	private final SessionPersisterSuperConverter converter;
 
+	private final WabitSessionPersister eventSource;
+
 	/**
 	 * This listener should be added through the static method for attaching a
 	 * listener to a session.
@@ -123,17 +126,53 @@ public class WorkspacePersisterListener implements WabitListener {
 	 * 
 	 * @param session
 	 *            The session whose workspace will be listened to.
-	 * @param persister
+	 * @param targetPersister
 	 *            The persister that will have the events be forwarded to as
 	 *            persist calls.
 	 */
 	public WorkspacePersisterListener(WabitSession session,
-			WabitPersister persister) {
-		converter = new SessionPersisterSuperConverter(session, session.getWorkspace());
-		target = persister;
+			WabitPersister targetPersister) {
+		this(session, targetPersister, null);
+	}
+
+	/**
+	 * This listener should be added through the static method for attaching a
+	 * listener to a session.
+	 * <p>
+	 * A new listener should only be created in testing. To properly add a
+	 * listener to a session see
+	 * {@link #attachListener(WabitSession, WabitPersister)}.
+	 * 
+	 * @param session
+	 *            The session whose workspace will be listened to.
+	 * @param targetPersister
+	 *            The persister that will have the events be forwarded to as
+	 *            persist calls.
+	 * @param eventSource
+	 *            A {@link WabitPersister} that this listener will consult in
+	 *            order to perform 'echo-cancellation' of events.
+	 */
+	public WorkspacePersisterListener(WabitSession session,
+			WabitPersister targetPersister, WabitSessionPersister eventSource) {
+		this.converter = new SessionPersisterSuperConverter(session, session.getWorkspace());
+		this.target = targetPersister;
+		this.eventSource = eventSource;
+	}
+
+	/**
+	 * Returns true if the WabitSessionPersister that this listener complements
+	 * is currently in the middle of an update. In that case, none of the
+	 * WabitListener methods should make calls into the target persister.
+	 * 
+	 * @return True if forwarding an event to the target persister would
+	 *         constitute an echo.
+	 */
+	private boolean wouldEcho() {
+		return eventSource != null && eventSource.isUpdatingWabitWorkspace();
 	}
 
 	public void transactionEnded(TransactionEvent e) {
+		if (wouldEcho()) return;
 		try {
 			target.commit();
 		} catch (WabitPersistenceException e1) {
@@ -142,6 +181,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void transactionRollback(TransactionEvent e) {
+		if (wouldEcho()) return;
 		try {
 			target.rollback();
 		} catch (WabitPersistenceException e1) {
@@ -151,6 +191,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void transactionStarted(TransactionEvent e) {
+		if (wouldEcho()) return;
 		try {
 			target.begin();
 		} catch (WabitPersistenceException e1) {
@@ -159,8 +200,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void wabitChildAdded(WabitChildEvent e) {
-		persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
 		e.getChild().addWabitListener(this);
+		if (wouldEcho()) return;
+		persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
 	}
 	
 	/**
@@ -173,7 +215,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            The root of the tree of objects that will be persisted. This
 	 *            object and all of its children will be persisted.
 	 */
-	public void persistObject(WabitObject root) throws WabitPersistenceException {
+	 void persistObject(WabitObject root) throws WabitPersistenceException {
 		target.begin();
 
 		int index = 0;
@@ -615,6 +657,8 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void wabitChildRemoved(WabitChildEvent e) {
+		e.getChild().removeWabitListener(this);
+		if (wouldEcho()) return;
 		try {
 			target.removeObject(e.getSource().getUUID(), e.getChild()
 							.getUUID());
@@ -622,10 +666,10 @@ public class WorkspacePersisterListener implements WabitListener {
 			throw new RuntimeException(
 					"Could not remove WabitObject from its parent.", e1);
 		}
-		e.getChild().removeWabitListener(this);
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
+		if (wouldEcho()) return;
 		WabitObject source = (WabitObject) evt.getSource();
 		String uuid = source.getUUID();
 		String propertyName = evt.getPropertyName();

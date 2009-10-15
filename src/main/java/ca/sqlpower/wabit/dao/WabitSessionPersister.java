@@ -69,6 +69,7 @@ import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
+import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -292,6 +293,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private final WabitObject root;
 
+	private boolean isUpdating;
+
 	/**
 	 * Creates a session persister that can update any object at or a descendant
 	 * of the given session's workspace object. If the persist call to this
@@ -329,16 +332,21 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Commits the persisted {@link WabitObject}s, its properties and removals
 	 */
 	public void commit() throws WabitPersistenceException {
-		if (transactionCount <= 0) {
-			throw new WabitPersistenceException(null,
-					"Commit attempted while not in a transaction");
+		try {
+			isUpdating = true;
+			if (transactionCount <= 0) {
+				throw new WabitPersistenceException(null,
+						"Commit attempted while not in a transaction");
+			}
+	
+			commitObjects();
+			commitProperties();
+			commitRemovals();
+	
+			transactionCount--;
+		} finally {
+			isUpdating = false;
 		}
-
-		commitObjects();
-		commitProperties();
-		commitRemovals();
-
-		transactionCount--;
 	}
 
 	/**
@@ -727,20 +735,24 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
-
-		if (exists(uuid)) {
-			throw new WabitPersistenceException(uuid,
-					"A WabitObject with UUID " + uuid + " and type " + type 
-					+ " under parent with UUID " + parentUUID + " already exists.");
-		}
-
-		PersistedWabitObject pwo = new PersistedWabitObject(parentUUID, type,
-				uuid, index);
-
-		persistedObjects.add(pwo);
-
-		if (transactionCount == 0) {
-			commitObjects();
+		try {
+			isUpdating = true;
+			if (exists(uuid)) {
+				throw new WabitPersistenceException(uuid,
+						"A WabitObject with UUID " + uuid + " and type " + type 
+						+ " under parent with UUID " + parentUUID + " already exists.");
+			}
+	
+			PersistedWabitObject pwo = new PersistedWabitObject(parentUUID, type,
+					uuid, index);
+	
+			persistedObjects.add(pwo);
+	
+			if (transactionCount == 0) {
+				commitObjects();
+			}
+		} finally {
+			isUpdating = false;
 		}
 
 	}
@@ -766,8 +778,13 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
-		persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
-				newValue, false);
+		try {
+			isUpdating = true;
+			persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
+					newValue, false);
+		} finally {
+			isUpdating = false;
+		}
 	}
 
 	/**
@@ -789,8 +806,13 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
-		persistPropertyHelper(uuid, propertyName, propertyType, null, newValue,
-				true);
+		try {
+			isUpdating = true;
+			persistPropertyHelper(uuid, propertyName, propertyType, null, newValue,
+					true);
+		} finally {
+			isUpdating = false;
+		}
 	}
 
 	/**
@@ -3040,17 +3062,21 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
-
-		if (!exists(uuid)) {
-			throw new WabitPersistenceException(uuid,
-					"Cannot remove the WabitObject with UUID " + uuid 
-					+ " from parent UUID " + parentUUID + " as it does not exist.");
-		}
-
-		objectsToRemove.put(uuid, parentUUID);
-
-		if (transactionCount == 0) {
-			commitRemovals();
+		try {
+			isUpdating = true;
+			if (!exists(uuid)) {
+				throw new WabitPersistenceException(uuid,
+						"Cannot remove the WabitObject with UUID " + uuid 
+						+ " from parent UUID " + parentUUID + " as it does not exist.");
+			}
+	
+			objectsToRemove.put(uuid, parentUUID);
+	
+			if (transactionCount == 0) {
+				commitRemovals();
+			}
+		} finally {
+			isUpdating = false;
 		}
 	}
 
@@ -3061,10 +3087,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	public void rollback() throws WabitPersistenceException {
-		// TODO Auto-generated method stub
-		if (transactionCount <= 0) {
-			throw new WabitPersistenceException(null,
-					"Cannot rollback while not in a transaction.");
+		try {
+			isUpdating = true;
+			if (transactionCount <= 0) {
+				throw new WabitPersistenceException(null,
+						"Cannot rollback while not in a transaction.");
+			}
+		} finally {
+			isUpdating = false;
 		}
 	}
 
@@ -3085,6 +3115,15 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void setWabitSession(WabitSession session) {
 		this.session = session;
+	}
+
+	/**
+	 * This is part of the 'echo-cancellation' system to notify any
+	 * {@link WorkspacePersisterListener} listening to the same session to
+	 * ignore modifications to that session.
+	 */
+	public boolean isUpdatingWabitWorkspace() {
+		return isUpdating;
 	}
 
 }
