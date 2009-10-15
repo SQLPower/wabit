@@ -212,20 +212,21 @@ public class ReportTaskPanel implements WabitPanel {
 		
 		
 		
-		this.okButton = new JButton("Update Schedule", WabitIcons.RUN_ICON_32);
+		this.okButton = new JButton();
 		this.okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				applyChanges();
 			}
 		});
-		this.cancelButton = new JButton("Cancel", WabitIcons.CANCEL_ICON_32);
+		this.cancelButton = new JButton();
 		this.cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				reinitGuiModel();
+				discardChanges();
+				((WabitWorkspace)task.getParent()).setEditorPanelModel((WabitWorkspace)task.getParent());
 			}
 		});
-		this.toolbarBuilder.add(this.okButton);
-		this.toolbarBuilder.add(this.cancelButton);
+		this.toolbarBuilder.add(this.okButton, "Update Scheduler", WabitIcons.REFRESH_ICON_32);
+		this.toolbarBuilder.add(this.cancelButton, "Cancel", WabitIcons.CANCEL_ICON_32);
 		
 		this.scheduleTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -341,6 +342,7 @@ public class ReportTaskPanel implements WabitPanel {
 		task.commitTransaction();
 		task.setNoob(false);
 		this.dirty = false;
+		JOptionPane.showMessageDialog(this.panel, "Your report schedule is now updated.", "Scheduled Report", JOptionPane.PLAIN_MESSAGE);
 		return true;
 	}
 

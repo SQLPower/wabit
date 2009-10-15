@@ -45,6 +45,7 @@ public class ScheduleReportAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
     	ReportTask task = new ReportTask(report);
     	task.setNoob(true);
+    	task.setName("Unsaved scheduled report");
     	session.getWorkspace().addReportTask(task);
     }
 }

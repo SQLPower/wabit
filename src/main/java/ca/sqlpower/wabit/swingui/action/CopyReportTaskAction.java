@@ -37,7 +37,7 @@ public class CopyReportTaskAction extends CopyAction {
 	public void copy(String name) {
 		ReportTask taskCopy = new ReportTask(task);
 		taskCopy.setParent(task.getParent());
-		taskCopy.setName(name);
+		taskCopy.setName("Unsaved copied scheduled report");
 		taskCopy.setNoob(true);
 		session.getWorkspace().addReportTask(taskCopy);
 	}

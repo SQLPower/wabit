@@ -40,6 +40,8 @@ public class WabitIcons {
 	public static final Icon ZOOM_IN_ICON_16 = makeIcon("zoomPlus-16");
 	public static final Icon SAVE_ICON_16 = makeIcon("save-16");
 	public static final Icon CANCEL_ICON_32 = makeIcon("32x32/cancel");
+	public static final Icon REFRESH_ICON_32 = makeIcon("32x32/refresh");
+	 
 	
     private static final ImageIcon makeIcon(String resourceName) {
         URL iconUrl = WabitIcons.class.getClassLoader().getResource(

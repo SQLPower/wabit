@@ -164,15 +164,6 @@ public class ReportTask extends AbstractWabitObject {
 		this.report = null;
 	}
 
-	@Override
-	public String getName() {
-		if (this.report==null) {
-			return "Scheduled Report";
-		} else {
-			return "Schedule for report " + report.getName();
-		}
-	}
-
 	public Report getReport() {
 		return report;
 	}
