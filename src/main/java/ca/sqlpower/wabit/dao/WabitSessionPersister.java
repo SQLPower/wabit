@@ -61,6 +61,7 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
+import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
@@ -390,6 +391,24 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
 				
+			} else if (type.equals(Grant.class.getSimpleName())) {
+				String subject = (String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "subject"), String.class);
+				String grantType = (String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "type"), String.class);
+				boolean create = (Boolean) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "createPrivilege"), Boolean.class);
+				boolean modify = (Boolean) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "modifyPrivilege"), Boolean.class);
+				boolean delete = (Boolean) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "deletePrivilege"), Boolean.class);
+				boolean execute = (Boolean) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "executePrivilege"), Boolean.class);
+				boolean grant = (Boolean) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "grantPrivilege"), Boolean.class);
+				
+				wo = new Grant(subject, type, create, modify, delete, execute, grant);
+				
 			} else if (type.equals(Group.class.getSimpleName())) {
 				wo = new Group();
 				
@@ -449,7 +468,7 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
 				String contentID = (String) getPropertyAndRemove(uuid,
 						"content");
-
+				
 				// TODO No ResultSetRenderer object has been created yet.
 
 			} else if (type.equals(Template.class.getSimpleName())) {
@@ -649,6 +668,8 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof ContentBox) {
 					commitContentBoxProperty((ContentBox) wo, propertyName,
 							newValue);
+				} else if (wo instanceof Grant) {
+					commitGrantProperty((Grant) wo, propertyName, newValue);
 				} else if (wo instanceof Group) {
 					commitGroupProperty((Group) wo, propertyName, newValue);
 				} else if (wo instanceof GroupMember) {
@@ -933,6 +954,8 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof ContentBox) {
 				propertyValue = getContentBoxProperty((ContentBox) wo,
 						propertyName);
+			} else if (wo instanceof Grant) {
+				propertyValue = getGrantProperty((Grant) wo, propertyName);
 			} else if (wo instanceof Group) {
 				propertyValue = getGroupProperty((Group) wo, propertyName);
 			} else if (wo instanceof GroupMember) {
@@ -3231,6 +3254,93 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 		throw new WabitPersistenceException(groupMember.getUUID(),
 				getWabitPersistenceExceptionMessage(groupMember, propertyName));
+	}
+	
+	/**
+	 * Retrieves a property value from a {@link Grant} object based on
+	 * the property name and converts it to something that can be passed to a
+	 * persister.
+	 * 
+	 * @param grant
+	 *            The {@link v} object to retrieve the named
+	 *            property from.
+	 * @param propertyName
+	 *            The property name that needs to be retrieved and converted.
+	 *            This is the name of the property in the class itself based on
+	 *            the property fired by the setter for the event which is
+	 *            enforced by tests using JavaBeans methods even though the
+	 *            values are hard coded in here and won't change if the class
+	 *            changes.
+	 * @return The value stored in the variable of the object we are given at
+	 *         the property name after it has been converted to a type that can
+	 *         be stored. The conversion is based on the
+	 *         {@link SessionPersisterSuperConverter}.
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private Object getGrantProperty(Grant grant, String propertyName)
+			throws WabitPersistenceException {
+		if (propertyName.equals("createPrivilege")) {
+			return converter.convertToBasicType(grant.isCreatePrivilege());
+			
+		} else if (propertyName.equals("deletePrivilege")) {
+			return converter.convertToBasicType(grant.isDeletePrivilege());
+			
+		} else if (propertyName.equals("executePrivilege")) {
+			return converter.convertToBasicType(grant.isExecutePrivilege());
+			
+		} else if (propertyName.equals("grantPrivilege")) {
+			return converter.convertToBasicType(grant.isGrantPrivilege());
+			
+		} else if (propertyName.equals("modifyPrivilege")) {
+			return converter.convertToBasicType(grant.isModifyPrivilege());
+			
+		} else {
+			throw new WabitPersistenceException(grant.getUUID(),
+				getWabitPersistenceExceptionMessage(grant, propertyName));
+		}
+	}
+	
+	/**
+	 * Commits a persisted {@link Grant} property.
+	 * 
+	 * @param grant
+	 *            The {@link Grant} object to commit the persisted
+	 *            property upon
+	 * @param propertyName
+	 *            The property name
+	 * @param newValue
+	 *            The persisted property value to be committed
+	 * @throws WabitPersistenceException
+	 *             Thrown if the property name is not known in this method.
+	 */
+	private void commitGrantProperty(Grant grant, String propertyName,
+			Object newValue) throws WabitPersistenceException {
+		if (propertyName.equals("createPrivilege")) {
+			grant.setCreatePrivilege((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+		} else if (propertyName.equals("deletePrivilege")) {
+			grant.setDeletePrivilege((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+			
+		} else if (propertyName.equals("executePrivilege")) {
+			grant.setExecutePrivilege((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+		} else if (propertyName.equals("grantPrivilege")) {
+			grant.setGrantPrivilege((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+		} else if (propertyName.equals("modifyPrivilege")) {
+			grant.setModifyPrivilege((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+		} else {
+			throw new WabitPersistenceException(grant.getUUID(),
+				getWabitPersistenceExceptionMessage(grant, propertyName));
+		}
 	}
 
 	/**

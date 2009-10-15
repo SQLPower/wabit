@@ -19,12 +19,21 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 
 public class GrantTest extends AbstractWabitObjectTest {
 	
 	private Grant grant;
+	
+	@Override
+	public Set<String> getPropertiesToIgnoreForEvents() {
+		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
+		ignored.add("name");
+		return ignored;
+	}
 	
 	@Override
 	protected void setUp() throws Exception {

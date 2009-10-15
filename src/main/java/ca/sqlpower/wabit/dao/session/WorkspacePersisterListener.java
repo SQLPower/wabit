@@ -44,6 +44,7 @@ import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
@@ -377,9 +378,29 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "x", DataType.DOUBLE, contentBox.getX());
 				target.persistProperty(uuid, "y", DataType.DOUBLE, contentBox.getY());
 
+			} else if (child instanceof Grant) {
+				Grant grant = (Grant) child;
+				
+				// Constructor arguments
+				target.persistProperty(uuid, "subject", DataType.STRING, 
+						converter.convertToBasicType(grant.getSubject()));
+				target.persistProperty(uuid, "type", DataType.STRING, 
+						converter.convertToBasicType(grant.getType()));
+				target.persistProperty(uuid, "createPrivilege", DataType.BOOLEAN, 
+						converter.convertToBasicType(grant.isCreatePrivilege()));
+				target.persistProperty(uuid, "deletePrivilege", DataType.BOOLEAN, 
+						converter.convertToBasicType(grant.isDeletePrivilege()));
+				target.persistProperty(uuid, "executePrivilege", DataType.BOOLEAN, 
+						converter.convertToBasicType(grant.isExecutePrivilege()));
+				target.persistProperty(uuid, "grantPrivilege", DataType.BOOLEAN, 
+						converter.convertToBasicType(grant.isGrantPrivilege()));
+				target.persistProperty(uuid, "modifyPrivilege", DataType.BOOLEAN, 
+						converter.convertToBasicType(grant.isModifyPrivilege()));
+				
 			} else if (child instanceof GroupMember) {
 				GroupMember groupMember = (GroupMember) child;
 				
+				// Constructor argument
 				target.persistProperty(uuid, "user", DataType.REFERENCE, 
 						converter.convertToBasicType(groupMember.getUser()));
 				
@@ -501,6 +522,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof ReportTask) {
 				ReportTask task = (ReportTask) child;
 				
+				// Remaining arguments
 				target.persistProperty(uuid, "email", DataType.STRING, task.getEmail());
 				target.persistProperty(uuid, "triggerType", DataType.STRING, task.getTriggerType());
 				target.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
@@ -532,6 +554,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				
 			} else if (child instanceof User) {
 				User user = (User) child;
+				
 				target.persistProperty(uuid, "password", DataType.STRING, user.getPassword());
 				
 			} else if (child instanceof WabitConstantsContainer) {
