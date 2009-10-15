@@ -266,12 +266,12 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining properties
 				target.persistProperty(uuid, "bodyAlignment", DataType.STRING,
 						csRenderer.getBodyAlignment().name());
-				target.persistProperty(uuid, "bodyFont", DataType.FONT,
-						converter.convertToBasicType(csRenderer.getBodyFont(), DataType.FONT));
-				target.persistProperty(uuid, "bodyFormat", DataType.DECIMAL_FORMAT,
-						converter.convertToBasicType(csRenderer.getBodyFormat(), DataType.DECIMAL_FORMAT));
-				target.persistProperty(uuid, "headerFont", DataType.FONT,
-						converter.convertToBasicType(csRenderer.getHeaderFont(), DataType.FONT));
+				target.persistProperty(uuid, "bodyFont", DataType.STRING,
+						converter.convertToBasicType(csRenderer.getBodyFont()));
+				target.persistProperty(uuid, "bodyFormat", DataType.STRING,
+						converter.convertToBasicType(csRenderer.getBodyFormat()));
+				target.persistProperty(uuid, "headerFont", DataType.STRING,
+						converter.convertToBasicType(csRenderer.getHeaderFont()));
 
 			} else if (child instanceof ChartColumn) {
 				ChartColumn chartColumn = (ChartColumn) child;
@@ -279,12 +279,12 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Constructor arguments
 				target.persistProperty(uuid, "columnName", DataType.STRING,
 						chartColumn.getColumnName());
-				target.persistProperty(uuid, "dataType", DataType.ENUM,
-						converter.convertToBasicType(chartColumn.getDataType(), DataType.ENUM));
+				target.persistProperty(uuid, "dataType", DataType.STRING,
+						converter.convertToBasicType(chartColumn.getDataType()));
 
 				// Remaining properties
-				target.persistProperty(uuid, "roleInChart", DataType.ENUM,
-						converter.convertToBasicType(chartColumn.getRoleInChart(), DataType.ENUM));
+				target.persistProperty(uuid, "roleInChart", DataType.STRING,
+						converter.convertToBasicType(chartColumn.getRoleInChart()));
 
 				target.persistProperty(uuid, "XAxisIdentifier",
 						DataType.REFERENCE, converter.convertToBasicType(
@@ -297,8 +297,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining properties
 				target.persistProperty(uuid, "gratuitouslyAnimated",
 						DataType.BOOLEAN, chart.isGratuitouslyAnimated());
-				target.persistProperty(uuid, "legendPosition", DataType.ENUM,
-						converter.convertToBasicType(chart.getLegendPosition(), DataType.ENUM));
+				target.persistProperty(uuid, "legendPosition", DataType.STRING,
+						converter.convertToBasicType(chart.getLegendPosition()));
 				
 				ResultSetProducer rsProducer = chart.getQuery();
 				if (rsProducer != null) {
@@ -309,16 +309,16 @@ public class WorkspacePersisterListener implements WabitListener {
 							null);
 				}
 				
-				target.persistProperty(uuid, "type", DataType.ENUM,
-						converter.convertToBasicType(chart.getType(), DataType.ENUM));
+				target.persistProperty(uuid, "type", DataType.STRING,
+						converter.convertToBasicType(chart.getType()));
 				target.persistProperty(uuid, "XAxisLabelRotation",
 						DataType.DOUBLE, chart.getXAxisLabelRotation());
 				target.persistProperty(uuid, "xaxisName", DataType.STRING,
 						chart.getXaxisName());
 				target.persistProperty(uuid, "yaxisName", DataType.STRING,
 						chart.getYaxisName());
-				target.persistProperty(uuid, "backgroundColour", DataType.COLOR,
-						converter.convertToBasicType(chart.getBackgroundColour(), DataType.COLOR));
+				target.persistProperty(uuid, "backgroundColour", DataType.STRING,
+						converter.convertToBasicType(chart.getBackgroundColour()));
 
 			} else if (child instanceof ChartRenderer) {
 				ChartRenderer cRenderer = (ChartRenderer) child;
@@ -339,31 +339,29 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining properties
 				Item item = columnInfo.getColumnInfoItem();
 				if (item != null) {
-					DataType type = DataType.getTypeByClass(item.getClass());
 					target.persistProperty(uuid,
 							ColumnInfo.COLUMN_INFO_ITEM_CHANGED,
-							type, converter.convertToBasicType(item, type));
+							DataType.STRING, converter.convertToBasicType(item));
 				}
 
 				target.persistProperty(uuid, ColumnInfo.DATATYPE_CHANGED,
-						DataType.ENUM, converter.convertToBasicType(
-								columnInfo.getDataType(), DataType.ENUM));
+						DataType.STRING, converter.convertToBasicType(
+								columnInfo.getDataType()));
 
 				target.persistProperty(uuid,
 						ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED,
-						DataType.ENUM, converter.convertToBasicType(
-								columnInfo.getHorizontalAlignment(), DataType.ENUM));
+						DataType.STRING, converter.convertToBasicType(
+								columnInfo.getHorizontalAlignment()));
 				target.persistProperty(uuid, ColumnInfo.WIDTH_CHANGED,
 						DataType.INTEGER, columnInfo.getWidth());
 				target.persistProperty(uuid,
 						ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED,
-						DataType.ENUM, converter.convertToBasicType(
-								columnInfo.getWillGroupOrBreak(), DataType.ENUM));
+						DataType.STRING, converter.convertToBasicType(
+								columnInfo.getWillGroupOrBreak()));
 				target.persistProperty(uuid, ColumnInfo.WILL_SUBTOTAL_CHANGED,
 						DataType.BOOLEAN, columnInfo.getWillSubtotal());
-				DataType type = DataType.getTypeByClass(child.getClass());
-				target.persistProperty(uuid, "format", type, 
-						converter.convertToBasicType(columnInfo.getFormat(), type));
+				target.persistProperty(uuid, "format", DataType.STRING, 
+						converter.convertToBasicType(columnInfo.getFormat()));
 
 			} else if (child instanceof ContentBox) {
 				ContentBox contentBox = (ContentBox) child;
@@ -371,8 +369,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Remaining arguments
 				target.persistProperty(uuid, "contentRenderer",	DataType.REFERENCE,
 						converter.convertToBasicType(contentBox.getContentRenderer(), DataType.REFERENCE));
-				target.persistProperty(uuid, "font", DataType.FONT,
-						converter.convertToBasicType(contentBox.getFont(), DataType.FONT));
+				target.persistProperty(uuid, "font", DataType.STRING,
+						converter.convertToBasicType(contentBox.getFont()));
 				target.persistProperty(uuid, "height", DataType.DOUBLE,	contentBox.getHeight());
 				target.persistProperty(uuid, "width", DataType.DOUBLE, contentBox.getWidth());
 				target.persistProperty(uuid, "x", DataType.DOUBLE, contentBox.getX());
@@ -383,7 +381,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Constructor arguments
 				target.persistProperty(uuid, "axis", DataType.STRING,
-						converter.convertToBasicType(guide.getAxis(), DataType.ENUM));
+						converter.convertToBasicType(guide.getAxis()));
 				target.persistProperty(uuid, "offset", DataType.DOUBLE, guide.getOffset());
 
 				// Remaining properties
@@ -407,8 +405,8 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof Label) {
 				Label label = (Label) child;
 
-				target.persistProperty(uuid, "font", DataType.FONT,
-						converter.convertToBasicType(label.getFont(), DataType.FONT));
+				target.persistProperty(uuid, "font", DataType.STRING,
+						converter.convertToBasicType(label.getFont()));
 				target.persistProperty(uuid, "horizontalAlignment",
 						DataType.STRING, label.getHorizontalAlignment().name());
 				target.persistProperty(uuid, "text", DataType.STRING, label
@@ -445,11 +443,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
 						olapQuery.isNonEmpty());
 				target.persistProperty(uuid, "olapDataSource", DataType.STRING, 
-						converter.convertToBasicType(olapQuery.getOlapDataSource(), 
-								DataType.OLAP4J_DATA_SOURCE));
-				target.persistProperty(uuid, "currentCube", DataType.CUBE,
+						converter.convertToBasicType(olapQuery.getOlapDataSource()));
+				target.persistProperty(uuid, "currentCube", DataType.STRING,
 						converter.convertToBasicType(
-								olapQuery.getCurrentCube(), DataType.CUBE));
+								olapQuery.getCurrentCube()));
 
 			} else if (child instanceof Page) {
 				Page page = (Page) child;
@@ -459,12 +456,12 @@ public class WorkspacePersisterListener implements WabitListener {
 						.getWidth());
 				target.persistProperty(uuid, "height", DataType.INTEGER, page
 						.getHeight());
-				target.persistProperty(uuid, "orientation", DataType.ENUM,
-						converter.convertToBasicType(page.getOrientation(), DataType.ENUM));
+				target.persistProperty(uuid, "orientation", DataType.STRING,
+						converter.convertToBasicType(page.getOrientation()));
 
 				// Remaining properties
-				target.persistProperty(uuid, "defaultFont", DataType.FONT,
-						converter.convertToBasicType(page.getDefaultFont(), DataType.FONT));
+				target.persistProperty(uuid, "defaultFont", DataType.STRING,
+						converter.convertToBasicType(page.getDefaultFont()));
 
 			} else if (child instanceof QueryCache) {
 				QueryCache query = (QueryCache) child;
@@ -491,19 +488,18 @@ public class WorkspacePersisterListener implements WabitListener {
 						DataType.BOOLEAN, query
 								.getExecuteQueriesWithCrossJoins());
 				target.persistProperty(uuid, "dataSource",
-						DataType.OLAP4J_DATA_SOURCE,
-						converter.convertToBasicType(query.getWabitDataSource(),
-										DataType.OLAP4J_DATA_SOURCE));
+						DataType.STRING,
+						converter.convertToBasicType(query.getWabitDataSource()));
 				
 			} else if (child instanceof ResultSetRenderer) {
 				ResultSetRenderer renderer = (ResultSetRenderer) child;
 				
-				target.persistProperty(uuid, "bodyFont", DataType.FONT, 
-						converter.convertToBasicType(renderer.getBodyFont(), DataType.FONT));
-				target.persistProperty(uuid, "headerFont", DataType.FONT, 
-						converter.convertToBasicType(renderer.getHeaderFont(), DataType.FONT));
-				target.persistProperty(uuid, "borderType", DataType.ENUM, 
-						converter.convertToBasicType(renderer.getBorderType(), DataType.ENUM));
+				target.persistProperty(uuid, "bodyFont", DataType.STRING, 
+						converter.convertToBasicType(renderer.getBodyFont()));
+				target.persistProperty(uuid, "headerFont", DataType.STRING, 
+						converter.convertToBasicType(renderer.getHeaderFont()));
+				target.persistProperty(uuid, "borderType", DataType.STRING, 
+						converter.convertToBasicType(renderer.getBorderType()));
 				target.persistProperty(uuid, "nullString", DataType.STRING, 
 						renderer.getNullString());
 				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
@@ -512,28 +508,27 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof WabitConstantsContainer) {
 				WabitConstantsContainer container = (WabitConstantsContainer) child;
 				
-				target.persistProperty(uuid, "delegate", DataType.ITEM_CONTAINER,
-						converter.convertToBasicType(container.getDelegate(), DataType.ITEM_CONTAINER));
+				target.persistProperty(uuid, "delegate", DataType.STRING,
+						converter.convertToBasicType(container.getDelegate()));
 				
 				target.persistProperty(uuid, "alias", DataType.STRING, container.getAlias());
-				target.persistProperty(uuid, "position", DataType.POINT2D, 
-						converter.convertToBasicType(container.getPosition(), DataType.POINT2D));
+				target.persistProperty(uuid, "position", DataType.STRING, 
+						converter.convertToBasicType(container.getPosition()));
 				
 			} else if (child instanceof WabitItem) {
 				WabitItem item = (WabitItem) child;
 				
-				DataType delegateType = DataType.getTypeByClass(item.getDelegate().getClass());
-				target.persistProperty(uuid, "delegate", delegateType, 
-						converter.convertToBasicType(item.getDelegate(), delegateType));
+				target.persistProperty(uuid, "delegate", DataType.STRING, 
+						converter.convertToBasicType(item.getDelegate()));
 				
 				target.persistProperty(uuid, "alias", DataType.STRING, item.getAlias());
 				target.persistProperty(uuid, "selected", DataType.INTEGER, item.getSelected());
 				target.persistProperty(uuid, "where", DataType.STRING, item.getWhere());
-				target.persistProperty(uuid, "groupBy", DataType.ENUM, 
-						converter.convertToBasicType(item.getGroupBy(), DataType.ENUM));
+				target.persistProperty(uuid, "groupBy", DataType.STRING, 
+						converter.convertToBasicType(item.getGroupBy()));
 				target.persistProperty(uuid, "having", DataType.STRING, item.getHaving());
-				target.persistProperty(uuid, "orderBy", DataType.ENUM, 
-						converter.convertToBasicType(item.getOrderBy(), DataType.ENUM));
+				target.persistProperty(uuid, "orderBy", DataType.STRING, 
+						converter.convertToBasicType(item.getOrderBy()));
 				target.persistProperty(uuid, "orderByOrdering", DataType.INTEGER,
 						item.getOrderByOrdering());
 				target.persistProperty(uuid, "columnWidth", DataType.INTEGER, item.getColumnWidth());
@@ -542,15 +537,14 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof WabitDataSource) {
 				WabitDataSource ds = (WabitDataSource) child;
 				
-				DataType type = DataType.getTypeByClass(ds.getSPDataSource().getClass());
-				target.persistProperty(uuid, "SPDataSource", type, 
-						converter.convertToBasicType(ds.getSPDataSource(), type));
+				target.persistProperty(uuid, "SPDataSource", DataType.STRING, 
+						converter.convertToBasicType(ds.getSPDataSource()));
 
 			} else if (child instanceof WabitJoin) {
 				WabitJoin sqlJoin = ((WabitJoin) child);
 				
-				target.persistProperty(uuid, "delegate", DataType.SQL_JOIN, 
-						converter.convertToBasicType(sqlJoin.getDelegate(), DataType.SQL_JOIN));
+				target.persistProperty(uuid, "delegate", DataType.STRING, 
+						converter.convertToBasicType(sqlJoin.getDelegate()));
 
 				target.persistProperty(uuid, "comparator", DataType.STRING,
 						sqlJoin.getComparator());
@@ -563,8 +557,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
 
 				// Constructor argument
-				target.persistProperty(uuid, "ordinal", DataType.OLAP4J_AXIS,
-						converter.convertToBasicType(wabitOlapAxis.getOrdinal(), DataType.OLAP4J_AXIS));
+				target.persistProperty(uuid, "ordinal", DataType.STRING,
+						converter.convertToBasicType(wabitOlapAxis.getOrdinal()));
 
 				// Remaining properties
 				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
@@ -595,15 +589,14 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Constructor arguments
 				target.persistProperty(uuid, "delegate",
-						DataType.TABLE_CONTAINER, converter.convertToBasicType(
-								tableContainer, DataType.TABLE_CONTAINER));
+						DataType.STRING, converter.convertToBasicType(
+								tableContainer));
 
 				// Remaining properties
 				target.persistProperty(uuid, "alias", DataType.STRING,
 						tableContainer.getAlias());
-				target.persistProperty(uuid, "position", DataType.POINT2D,
-						converter.convertToBasicType(tableContainer.getPosition(),
-								DataType.POINT2D));
+				target.persistProperty(uuid, "position", DataType.STRING,
+						converter.convertToBasicType(tableContainer.getPosition()));
 
 			} else if (child instanceof WabitWorkspace) {
 				WabitWorkspace workspace = (WabitWorkspace) child;
@@ -641,8 +634,8 @@ public class WorkspacePersisterListener implements WabitListener {
 			if (child instanceof ReportContentRenderer) {
 				ReportContentRenderer rcr = (ReportContentRenderer) child;
 				target.persistProperty(uuid, "backgroundColour",
-						DataType.COLOR,
-						converter.convertToBasicType(rcr.getBackgroundColour(), DataType.COLOR));
+						DataType.STRING,
+						converter.convertToBasicType(rcr.getBackgroundColour()));
 			}
 			if (child instanceof WabitObjectReportRenderer) {
 				WabitObjectReportRenderer renderer = (WabitObjectReportRenderer) child;

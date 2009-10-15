@@ -19,25 +19,10 @@
 
 package ca.sqlpower.wabit.dao;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.geom.Point2D;
 import java.io.InputStream;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 
-import org.olap4j.metadata.Cube;
-
-import ca.sqlpower.query.ItemContainer;
-import ca.sqlpower.query.SQLJoin;
-import ca.sqlpower.query.SQLObjectItem;
-import ca.sqlpower.query.StringItem;
-import ca.sqlpower.query.TableContainer;
-import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.report.Guide.Axis;
 
 /**
  * An interface for objects that persist {@link WabitObject}s. The medium into
@@ -59,23 +44,8 @@ public interface WabitPersister {
 		 * This is a Wabit object reference. Other objects like 
 		 * Font or Color have their own entry in this data type.
 		 */
-		REFERENCE("Reference", WabitObject.class),
+		REFERENCE("Reference", String.class),
 		PNG_IMG("PNG_IMG", InputStream.class),
-		FONT("Font", Font.class),
-		COLOR("Color", Color.class),
-		CUBE("Cube", Cube.class),
-		POINT2D("Point2D", Point2D.class),
-		TABLE_CONTAINER("TableContainer", TableContainer.class),
-		SQL_JOIN("SQLJoin", SQLJoin.class),
-		JDBC_DATA_SOURCE("JDBCDataSource", JDBCDataSource.class),
-		OLAP4J_DATA_SOURCE("Olap4jDataSource", Olap4jDataSource.class),
-		DECIMAL_FORMAT("DecimalFormat", DecimalFormat.class),
-		SIMPLE_DATE_FORMAT("SimpleDateFormat", SimpleDateFormat.class),
-		SQL_OBJECT_ITEM("SQLObjectItem", SQLObjectItem.class),
-		STRING_ITEM("StringItem", StringItem.class),
-		ITEM_CONTAINER("ItemContainer", ItemContainer.class),
-		OLAP4J_AXIS("Olap4jAxis", Axis.class),
-		ENUM("Enum", Enum.class),
 		NULL("Null", null);
 		
 		private final String name;

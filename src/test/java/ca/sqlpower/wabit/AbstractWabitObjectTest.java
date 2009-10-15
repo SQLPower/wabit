@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit;
 
+import java.awt.Image;
 import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -52,7 +53,6 @@ import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.swingui.StubWabitSwingSession;
 
 /**
  * A baseline test that all tests for WabitObject implementations should pass.
@@ -101,6 +101,27 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("dependencies");
     	ignore.add("UUID");
     	return ignore;
+    }
+    
+    /**
+     * Gets the correct data type based on the given class for the wabit persister.
+     */
+    private DataType getDataType(Class<? extends Object> classForDataType) {
+    	if (Integer.class.isAssignableFrom(classForDataType)) {
+    		return DataType.INTEGER;
+    	} else if (Boolean.class.isAssignableFrom(classForDataType)) {
+    		return DataType.BOOLEAN;
+    	} else if (Double.class.isAssignableFrom(classForDataType)) {
+    		return DataType.DOUBLE;
+    	} else if (String.class.isAssignableFrom(classForDataType)) {
+    		return DataType.STRING;
+    	} else if (Image.class.isAssignableFrom(classForDataType)) {
+    		return DataType.PNG_IMG;
+    	} else if (WabitObject.class.isAssignableFrom(classForDataType)) {
+    		return DataType.REFERENCE;
+    	} else {
+    		return DataType.STRING;
+    	}
     }
     
     /**
@@ -354,15 +375,15 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
             }
             
-            DataType type = DataType.getTypeByClass(newVal.getClass());
-			Object basicNewValue = converterFactory.convertToBasicType(newVal, type, additionalVals.toArray());
+            DataType type = getDataType(property.getPropertyType());
+			Object basicNewValue = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
-					converterFactory.convertToBasicType(oldVal, type, additionalVals.toArray()), 
+					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
 					basicNewValue);
             
 			//Not all new values are equivalent to their old values so we are
 			//comparing them by their basic type as that is at least comparable, i hope.
-			assertEquals(basicNewValue, converterFactory.convertToBasicType(PropertyUtils.getSimpleProperty(wo, property.getName()), type, additionalVals.toArray()));
+			assertEquals(basicNewValue, converterFactory.convertToBasicType(PropertyUtils.getSimpleProperty(wo, property.getName()), additionalVals.toArray()));
     	}
 	}
     
@@ -436,13 +457,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		assertEquals(wo.getUUID(), foundChange.getUUID());
     		Object value = PropertyUtils.getSimpleProperty(wo, descriptor);
     		System.out.println("Property \"" + descriptor + "\": expected \"" + value + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
-    		DataType dataTypeForValue;
-    		if (value != null) {
-    			dataTypeForValue = DataType.getTypeByClass(value.getClass());
-    		} else {
-    			dataTypeForValue = DataType.getTypeByClass(null);
-    		}
-			Object valueConvertedToBasic = factory.convertToBasicType(value, dataTypeForValue);
+			Object valueConvertedToBasic = factory.convertToBasicType(value);
 			assertEquals(valueConvertedToBasic, foundChange.getNewValue());
     	}
 	}

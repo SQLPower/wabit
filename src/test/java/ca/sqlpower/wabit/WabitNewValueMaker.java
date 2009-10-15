@@ -23,6 +23,8 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.DecimalFormat;
 
@@ -263,6 +265,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = new GroupMember(new User("name", "pass"));
         } else if (valueType.equals(ReportTask.class)) {
         	newValue = new ReportTask();
+        } else if (valueType.equals(Image.class)) {
+        	newValue = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

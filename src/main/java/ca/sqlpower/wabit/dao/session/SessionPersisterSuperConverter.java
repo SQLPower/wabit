@@ -24,8 +24,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.io.InputStream;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
+import java.text.Format;
 
 import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
@@ -39,7 +38,6 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 
 /**
  * Converts any known object in Wabit into a simple type of object that can be
@@ -75,10 +73,7 @@ public class SessionPersisterSuperConverter {
 	
 	private final PNGImageConverter pngImageConverter = new PNGImageConverter();
 	
-	private final DecimalFormatConverter decimalFormatConverter = new DecimalFormatConverter();
-	
-	private final SimpleDateFormatConverter simpleDateFormatConverter = 
-		new SimpleDateFormatConverter();
+	private final FormatConverter formatConverter = new FormatConverter();
 	
 	private final Olap4JAxisConverter olap4jAxisConverter = new Olap4JAxisConverter();
 
@@ -120,7 +115,7 @@ public class SessionPersisterSuperConverter {
 	 *            then this value can go away.
 	 */
 	@SuppressWarnings("unchecked")
-	public Object convertToBasicType(Object convertFrom, DataType fromType, Object ... additionalInfo) {
+	public Object convertToBasicType(Object convertFrom, Object ... additionalInfo) {
 		if (convertFrom == null) {
 			return null;
 		} else if (convertFrom instanceof WabitObject) {
@@ -168,43 +163,25 @@ public class SessionPersisterSuperConverter {
 		} else if (convertFrom instanceof ItemContainer) {
 			return itemContainerConverter.convertToSimpleType((ItemContainer) convertFrom);
 			
-		} else if (convertFrom instanceof Image && DataType.PNG_IMG.equals(fromType)) {
+		} else if (convertFrom instanceof Image) {
 			return pngImageConverter.convertToSimpleType((Image) convertFrom);
 			
-		} else if (convertFrom instanceof DecimalFormat) {
-			return decimalFormatConverter.convertToSimpleType((DecimalFormat) convertFrom);
+		} else if (convertFrom instanceof Format) {
+			return formatConverter.convertToSimpleType((Format) convertFrom);
 			
-		} else if (convertFrom instanceof SimpleDateFormat) {
-			return simpleDateFormatConverter.convertToSimpleType((SimpleDateFormat) convertFrom);
 		} else if (convertFrom instanceof Axis) {
 			return olap4jAxisConverter.convertToSimpleType((Axis) convertFrom);
 			
 		} else if (convertFrom instanceof String) {
-			if (fromType != DataType.STRING) {
-				throw new IllegalArgumentException("Converting a string should " +
-						"define the type as " + DataType.STRING);
-			}
 			return convertFrom;
 			
 		} else if (convertFrom instanceof Integer) {
-			if (fromType != DataType.INTEGER) {
-				throw new IllegalArgumentException("Converting an integer should " +
-						"define the type as " + DataType.INTEGER);
-			}
 			return convertFrom;
 			
 		} else if (convertFrom instanceof Double) {
-			if (fromType != DataType.DOUBLE) {
-				throw new IllegalArgumentException("Converting a double should " +
-						"define the type as " + DataType.DOUBLE);
-			}
 			return convertFrom;
 			
 		} else if (convertFrom instanceof Boolean) {
-			if (fromType != DataType.BOOLEAN) {
-				throw new IllegalArgumentException("Converting a boolean should " +
-						"define the type as " + DataType.BOOLEAN);
-			}
 			return convertFrom;
 			
 		} else if (convertFrom.getClass().isEnum()) {
@@ -212,7 +189,7 @@ public class SessionPersisterSuperConverter {
 			
 		} else {
 			throw new IllegalArgumentException("Cannot convert " + convertFrom + " of type " + 
-					convertFrom.getClass() + " to the type " + fromType);
+					convertFrom.getClass());
 		}
 		
 	}
@@ -260,11 +237,8 @@ public class SessionPersisterSuperConverter {
 			//in case other formats are supported in the future
 			return pngImageConverter.convertToComplexType((InputStream) o);
 			
-		} else if (DecimalFormat.class.isAssignableFrom(type)) {
-			return decimalFormatConverter.convertToComplexType((String) o);
-			
-		} else if (SimpleDateFormat.class.isAssignableFrom(type)) {
-			return simpleDateFormatConverter.convertToComplexType((String) o);
+		} else if (Format.class.isAssignableFrom(type)) {
+			return formatConverter.convertToComplexType((String) o);
 			
 		} else if (Axis.class.isAssignableFrom(type)) {
 			return olap4jAxisConverter.convertToComplexType((String) o);
