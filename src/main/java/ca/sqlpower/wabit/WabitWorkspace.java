@@ -435,6 +435,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     public void addUser(User u, int index) {
     	users.add(index, u);
+    	u.setParent(this);
     	fireChildAdded(User.class, u, index);
     }
     
@@ -457,6 +458,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     public void addGroup(Group g, int index) {
     	groups.add(index, g);
+    	g.setParent(this);
     	fireChildAdded(Group.class, g, index);
     }
     
