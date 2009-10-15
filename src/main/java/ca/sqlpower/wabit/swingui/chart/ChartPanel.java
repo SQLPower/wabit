@@ -297,7 +297,11 @@ public class ChartPanel implements WabitPanel {
      */
     private final ChartDataListener chartDataListener = new ChartDataListener() {
         public void chartDataChanged(ChartDataChangedEvent evt) {
-            updateChartPreview();
+            try {
+				updateGUIFromChart();
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
             if (resultTable.getModel() instanceof ResultSetTableModel) {
                 ResultSetTableModel rstm = (ResultSetTableModel) resultTable.getModel();
                 rstm.dataChanged();

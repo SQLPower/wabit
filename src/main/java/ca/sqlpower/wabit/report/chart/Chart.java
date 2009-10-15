@@ -332,9 +332,6 @@ public class Chart extends AbstractWabitObject {
             addChartColumn(col);
         }
         
-        // notifying AFTER the column list has been synchronized with the new query
-        firePropertyChange("unfilteredResultSet", oldUnfilteredResults, unfilteredResults);
-        
         if (unfilteredResults != null) {
             unfilteredResults.addRowSetListener(rowSetListener);
         }
@@ -551,9 +548,7 @@ public class Chart extends AbstractWabitObject {
     }
 
     private void setResultSetFilter(RowFilter resultSetFilter) {
-        RowFilter oldValue = this.resultSetFilter;
         this.resultSetFilter = resultSetFilter;
-        firePropertyChange("resultSetFilter", oldValue, resultSetFilter);
     }
     
     public RowFilter getResultSetFilter() {
