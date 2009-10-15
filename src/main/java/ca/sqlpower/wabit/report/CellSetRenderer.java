@@ -142,7 +142,9 @@ public class CellSetRenderer extends AbstractWabitObject implements
     };
     
     /**
-     * This member is the member the user is over with their mouse
+     * This member is the member the user is over with their mouse. This property
+     * is only here until the render report content is moved to the swing component
+     * to this class.
      */
     private Member selectedMember;
 
@@ -599,9 +601,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     public void setSelectedMember(Member selectedMember) {
-        Member oldSelection = this.selectedMember; 
         this.selectedMember = selectedMember;
-        firePropertyChange("selectedMember", oldSelection, selectedMember);
+        getParent().repaint();
     }
     
     public Member getSelectedMember() {

@@ -34,6 +34,8 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToIgnoreForEvents() {
     	Set<String> ignored = super.getPropertiesToIgnoreForEvents();
     	ignored.add("modifiedOlapQuery");
+    	ignored.add("cellSet");
+    	ignored.add("selectedMember");
     	return ignored;
     };
     
