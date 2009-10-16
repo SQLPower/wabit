@@ -288,7 +288,19 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private final WabitObject root;
 
-	private boolean isUpdating;
+	/**
+	 * This is the key to the echo cancellation scheme. When its value is 0,
+	 * there is not currently a modification to the target session in progress.
+	 * When > 0, there is currently an update in progress.
+	 * 
+	 * @see #isUpdatingWabitWorkspace()
+	 */
+	private int updateDepth;
+
+	/**
+	 * Name of this persister (for debugging purposes).
+	 */
+	private final String name;
 
 	/**
 	 * Creates a session persister that can update any object at or a descendant
@@ -298,8 +310,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * depending on the call. See the specific method being called for more
 	 * information about the exceptions that will be thrown.
 	 */
-	public WabitSessionPersister(WabitSession session) {
-		this(session, session.getWorkspace());
+	public WabitSessionPersister(String name, WabitSession session) {
+		this(name, session, session.getWorkspace());
 	}
 
 	/**
@@ -309,13 +321,19 @@ public class WabitSessionPersister implements WabitPersister {
 	 * exception will be thrown depending on the method called as the object
 	 * will not be found.
 	 */
-	public WabitSessionPersister(WabitSession session, WabitObject root) {
+	public WabitSessionPersister(String name, WabitSession session, WabitObject root) {
+		this.name = name;
 		this.session = session;
 		this.root = root;
 
 		converter = new SessionPersisterSuperConverter(session, root);
 	}
 
+	@Override
+	public String toString() {
+		return "WabitSessionPersister \"" + name + "\"";
+	}
+	
 	/**
 	 * Begins a transaction
 	 */
@@ -330,7 +348,7 @@ public class WabitSessionPersister implements WabitPersister {
 	public void commit() throws WabitPersistenceException {
 		logger.debug("wsp.commit();");
 		try {
-			isUpdating = true;
+			updateDepth++;
 			if (transactionCount <= 0) {
 				throw new WabitPersistenceException(null,
 						"Commit attempted while not in a transaction");
@@ -343,7 +361,7 @@ public class WabitSessionPersister implements WabitPersister {
 			}	
 			transactionCount--;
 		} finally {
-			isUpdating = false;
+			updateDepth--;
 		}
 	}
 
@@ -803,7 +821,7 @@ public class WabitSessionPersister implements WabitPersister {
 						"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);",
 						parentUUID, type, uuid, index));
 		try {
-			isUpdating = true;
+			updateDepth++;
 			if (exists(uuid)) {
 				throw new WabitPersistenceException(uuid,
 						"A WabitObject with UUID " + uuid + " and type " + type 
@@ -819,7 +837,7 @@ public class WabitSessionPersister implements WabitPersister {
 				commitObjects();
 			}
 		} finally {
-			isUpdating = false;
+			updateDepth--;
 		}
 
 	}
@@ -850,11 +868,11 @@ public class WabitSessionPersister implements WabitPersister {
 						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
 						uuid, propertyName, propertyType.name(), oldValue, newValue));
 		try {
-			isUpdating = true;
+			updateDepth++;
 			persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
 					newValue, false);
 		} finally {
-			isUpdating = false;
+			updateDepth--;
 		}
 	}
 
@@ -882,11 +900,11 @@ public class WabitSessionPersister implements WabitPersister {
 						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
 						uuid, propertyName, propertyType.name(), newValue));
 		try {
-			isUpdating = true;
+			updateDepth++;
 			persistPropertyHelper(uuid, propertyName, propertyType, null, newValue,
 					true);
 		} finally {
-			isUpdating = false;
+			updateDepth--;
 		}
 	}
 
@@ -3370,7 +3388,7 @@ public class WabitSessionPersister implements WabitPersister {
 				String.format(
 						"wsp.removeObject(\"%s\", \"%s\");", parentUUID, uuid));
 		try {
-			isUpdating = true;
+			updateDepth++;
 			if (!exists(uuid)) {
 				throw new WabitPersistenceException(uuid,
 						"Cannot remove the WabitObject with UUID " + uuid 
@@ -3383,7 +3401,7 @@ public class WabitSessionPersister implements WabitPersister {
 				commitRemovals();
 			}
 		} finally {
-			isUpdating = false;
+			updateDepth--;
 		}
 	}
 
@@ -3396,13 +3414,13 @@ public class WabitSessionPersister implements WabitPersister {
 	public void rollback() throws WabitPersistenceException {
 		logger.debug("wsp.rollback();");
 		try {
-			isUpdating = true;
+			updateDepth++;
 			if (transactionCount <= 0) {
 				throw new WabitPersistenceException(null,
 						"Cannot rollback while not in a transaction.");
 			}
 		} finally {
-			isUpdating = false;
+			updateDepth--;
 		}
 	}
 
@@ -3431,7 +3449,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * ignore modifications to that session.
 	 */
 	public boolean isUpdatingWabitWorkspace() {
-		return isUpdating;
+		logger.debug("updateDepth = " + updateDepth);
+		return updateDepth != 0;
 	}
 
 }

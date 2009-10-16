@@ -325,7 +325,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	WabitObject wo = getObjectUnderTest();
     	superParent.addChild(wo, 0);
     	
-    	WabitSessionPersister persister = new WabitSessionPersister(session, superParent);
+    	WabitSessionPersister persister = new WabitSessionPersister("secondary test persister", session, superParent);
 		
     	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
@@ -442,7 +442,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	WabitObject wo = getObjectUnderTest();
     	
-    	WabitSessionPersister persister = new WabitSessionPersister(session, superParent);
+    	WabitSessionPersister persister = new WabitSessionPersister("test persister", session, superParent);
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(session, persister);
 		
     	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(

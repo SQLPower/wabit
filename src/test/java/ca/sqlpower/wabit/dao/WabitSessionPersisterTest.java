@@ -70,7 +70,7 @@ public class WabitSessionPersisterTest extends TestCase {
 			}
 		};
 
-		wsp = new WabitSessionPersister(new StubWabitSession(context));
+		wsp = new WabitSessionPersister("testing persister", new StubWabitSession(context));
 
 	}
 

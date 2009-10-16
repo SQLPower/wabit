@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.dao.session;
 
 import java.beans.PropertyChangeEvent;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
@@ -77,6 +79,9 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
  */
 public class WorkspacePersisterListener implements WabitListener {
 
+	private static final Logger logger = Logger
+			.getLogger(WorkspacePersisterListener.class);
+	
 	/**
 	 * This will connect a new instance of this listener to the workspace and
 	 * all of its descendants. When the children of a workspace change the
