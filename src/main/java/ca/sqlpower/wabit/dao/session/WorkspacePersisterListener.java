@@ -53,7 +53,6 @@ import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.olap.WabitOlapDimension;
 import ca.sqlpower.wabit.olap.WabitOlapSelection;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -273,7 +272,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Remaining properties
 				target.persistProperty(uuid, "bodyAlignment", DataType.STRING,
-						csRenderer.getBodyAlignment().name());
+						converter.convertToBasicType(csRenderer.getBodyAlignment()));
 				target.persistProperty(uuid, "bodyFont", DataType.STRING,
 						converter.convertToBasicType(csRenderer.getBodyFont()));
 				target.persistProperty(uuid, "bodyFormat", DataType.STRING,
@@ -286,7 +285,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Constructor arguments
 				target.persistProperty(uuid, "columnName", DataType.STRING,
-						chartColumn.getColumnName());
+						converter.convertToBasicType(chartColumn.getColumnName()));
 				target.persistProperty(uuid, "dataType", DataType.STRING,
 						converter.convertToBasicType(chartColumn.getDataType()));
 
@@ -304,27 +303,23 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Remaining properties
 				target.persistProperty(uuid, "gratuitouslyAnimated",
-						DataType.BOOLEAN, chart.isGratuitouslyAnimated());
+						DataType.BOOLEAN, converter.convertToBasicType(
+								chart.isGratuitouslyAnimated()));
 				target.persistProperty(uuid, "legendPosition", DataType.STRING,
 						converter.convertToBasicType(chart.getLegendPosition()));
 				
 				ResultSetProducer rsProducer = chart.getQuery();
-				if (rsProducer != null) {
-					target.persistProperty(uuid, "query", DataType.REFERENCE,
-							rsProducer.getUUID());
-				} else {
-					target.persistProperty(uuid, "query", DataType.REFERENCE,
-							null);
-				}
-				
+				target.persistProperty(uuid, "query", DataType.REFERENCE, 
+						converter.convertToBasicType(rsProducer));
 				target.persistProperty(uuid, "type", DataType.STRING,
 						converter.convertToBasicType(chart.getType()));
 				target.persistProperty(uuid, "XAxisLabelRotation",
-						DataType.DOUBLE, chart.getXAxisLabelRotation());
+						DataType.DOUBLE, converter.convertToBasicType(
+								chart.getXAxisLabelRotation()));
 				target.persistProperty(uuid, "xaxisName", DataType.STRING,
-						chart.getXaxisName());
+						converter.convertToBasicType(chart.getXaxisName()));
 				target.persistProperty(uuid, "yaxisName", DataType.STRING,
-						chart.getYaxisName());
+						converter.convertToBasicType(chart.getYaxisName()));
 				target.persistProperty(uuid, "backgroundColour", DataType.STRING,
 						converter.convertToBasicType(chart.getBackgroundColour()));
 
@@ -333,7 +328,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Constructor argument
 				target.persistProperty(uuid, "chart", DataType.REFERENCE,
-						cRenderer.getChart().getUUID());
+						converter.convertToBasicType(cRenderer.getChart()));
 
 				// Remaining properties
 
@@ -342,7 +337,8 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Constructor argument
 				target.persistProperty(uuid, ColumnInfo.COLUMN_ALIAS,
-						DataType.STRING, columnInfo.getColumnAlias());
+						DataType.STRING, converter.convertToBasicType(
+								columnInfo.getColumnAlias()));
 
 				// Remaining properties
 				Item item = columnInfo.getColumnInfoItem();
@@ -367,7 +363,8 @@ public class WorkspacePersisterListener implements WabitListener {
 						DataType.STRING, converter.convertToBasicType(
 								columnInfo.getWillGroupOrBreak()));
 				target.persistProperty(uuid, ColumnInfo.WILL_SUBTOTAL_CHANGED,
-						DataType.BOOLEAN, columnInfo.getWillSubtotal());
+						DataType.BOOLEAN, converter.convertToBasicType(
+								columnInfo.getWillSubtotal()));
 				target.persistProperty(uuid, "format", DataType.STRING, 
 						converter.convertToBasicType(columnInfo.getFormat()));
 
@@ -379,10 +376,14 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(contentBox.getContentRenderer(), DataType.REFERENCE));
 				target.persistProperty(uuid, "font", DataType.STRING,
 						converter.convertToBasicType(contentBox.getFont()));
-				target.persistProperty(uuid, "height", DataType.DOUBLE,	contentBox.getHeight());
-				target.persistProperty(uuid, "width", DataType.DOUBLE, contentBox.getWidth());
-				target.persistProperty(uuid, "x", DataType.DOUBLE, contentBox.getX());
-				target.persistProperty(uuid, "y", DataType.DOUBLE, contentBox.getY());
+				target.persistProperty(uuid, "height", DataType.DOUBLE,	
+						converter.convertToBasicType(contentBox.getHeight()));
+				target.persistProperty(uuid, "width", DataType.DOUBLE, 
+						converter.convertToBasicType(contentBox.getWidth()));
+				target.persistProperty(uuid, "x", DataType.DOUBLE, 
+						converter.convertToBasicType(contentBox.getX()));
+				target.persistProperty(uuid, "y", DataType.DOUBLE, 
+						converter.convertToBasicType(contentBox.getY()));
 
 			} else if (child instanceof Grant) {
 				Grant grant = (Grant) child;
@@ -416,7 +417,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Constructor arguments
 				target.persistProperty(uuid, "axis", DataType.STRING,
 						converter.convertToBasicType(guide.getAxis()));
-				target.persistProperty(uuid, "offset", DataType.DOUBLE, guide.getOffset());
+				target.persistProperty(uuid, "offset", DataType.DOUBLE, 
+						converter.convertToBasicType(guide.getOffset()));
 
 				// Remaining properties
 
@@ -425,16 +427,17 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Remaining arguments
 				target.persistProperty(uuid, "HAlign", DataType.STRING,
-						iRenderer.getHAlign().name());
+						converter.convertToBasicType(iRenderer.getHAlign()));
 				target.persistProperty(uuid, "VAlign", DataType.STRING,
-						iRenderer.getVAlign().name());
+						converter.convertToBasicType(iRenderer.getVAlign()));
 				target.persistProperty(uuid, "image", DataType.REFERENCE,
-						iRenderer.getImage().getUUID());
+						converter.convertToBasicType(iRenderer.getImage()));
 				target.persistProperty(uuid, "preserveAspectRatioWhenResizing",
-						DataType.BOOLEAN, iRenderer
-								.isPreserveAspectRatioWhenResizing());
+						DataType.BOOLEAN, converter.convertToBasicType(
+								iRenderer.isPreserveAspectRatioWhenResizing()));
 				target.persistProperty(uuid, "preservingAspectRatio",
-						DataType.BOOLEAN, iRenderer.isPreservingAspectRatio());
+						DataType.BOOLEAN, converter.convertToBasicType(
+								iRenderer.isPreservingAspectRatio()));
 
 			} else if (child instanceof Label) {
 				Label label = (Label) child;
@@ -442,11 +445,13 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "font", DataType.STRING,
 						converter.convertToBasicType(label.getFont()));
 				target.persistProperty(uuid, "horizontalAlignment",
-						DataType.STRING, label.getHorizontalAlignment().name());
-				target.persistProperty(uuid, "text", DataType.STRING, label
-						.getText());
+						DataType.STRING, converter.convertToBasicType(
+								label.getHorizontalAlignment()));
+				target.persistProperty(uuid, "text", DataType.STRING,
+						converter.convertToBasicType(label.getText()));
 				target.persistProperty(uuid, "verticalAlignment",
-						DataType.STRING, label.getVerticalAlignment().name());
+						DataType.STRING, converter.convertToBasicType(
+								label.getVerticalAlignment()));
 
 			} else if (child instanceof Layout) {
 				Layout layout = (Layout) child;
@@ -458,24 +463,24 @@ public class WorkspacePersisterListener implements WabitListener {
 				// layout.getPage().getUUID());
 				// target.persistProperty(uuid, "varContext", ...)
 				target.persistProperty(uuid, Layout.PROPERTY_ZOOM,
-						DataType.INTEGER, layout.getZoomLevel());
+						DataType.INTEGER, converter.convertToBasicType(layout.getZoomLevel()));
 
 			} else if (child instanceof OlapQuery) {
 				OlapQuery olapQuery = (OlapQuery) child;
 
 				// Constructor arguments
 				target.persistProperty(uuid, "queryName", DataType.STRING,
-						olapQuery.getQueryName());
+						converter.convertToBasicType(olapQuery.getQueryName()));
 				target.persistProperty(uuid, "catalogName", DataType.STRING,
-						olapQuery.getCatalogName());
+						converter.convertToBasicType(olapQuery.getCatalogName()));
 				target.persistProperty(uuid, "schemaName", DataType.STRING,
-						olapQuery.getSchemaName());
+						converter.convertToBasicType(olapQuery.getSchemaName()));
 				target.persistProperty(uuid, "cubeName", DataType.STRING,
-						olapQuery.getCubeName());
+						converter.convertToBasicType(olapQuery.getCubeName()));
 
 				// Remaining properties
 				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
-						olapQuery.isNonEmpty());
+						converter.convertToBasicType(olapQuery.isNonEmpty()));
 				target.persistProperty(uuid, "olapDataSource", DataType.STRING, 
 						converter.convertToBasicType(olapQuery.getOlapDataSource()));
 				target.persistProperty(uuid, "currentCube", DataType.STRING,
@@ -486,10 +491,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				Page page = (Page) child;
 
 				// Constructor arguments
-				target.persistProperty(uuid, "width", DataType.INTEGER, page
-						.getWidth());
-				target.persistProperty(uuid, "height", DataType.INTEGER, page
-						.getHeight());
+				target.persistProperty(uuid, "width", DataType.INTEGER, 
+						converter.convertToBasicType(page.getWidth()));
+				target.persistProperty(uuid, "height", DataType.INTEGER, 
+						converter.convertToBasicType(page.getHeight()));
 				target.persistProperty(uuid, "orientation", DataType.STRING,
 						converter.convertToBasicType(page.getOrientation()));
 
@@ -502,26 +507,33 @@ public class WorkspacePersisterListener implements WabitListener {
 				
 				// Remaining properties
 				target.persistProperty(uuid, "zoomLevel", DataType.INTEGER,
-						query.getZoomLevel());
+						converter.convertToBasicType(query.getZoomLevel()));
 				target.persistProperty(uuid, "streaming", DataType.BOOLEAN,
-						query.isStreaming());
+						converter.convertToBasicType(query.isStreaming()));
 				target.persistProperty(uuid, "streamingRowLimit",
-						DataType.INTEGER, query.getStreamingRowLimit());
+						DataType.INTEGER, converter.convertToBasicType(
+								query.getStreamingRowLimit()));
 				target.persistProperty(uuid, QueryImpl.ROW_LIMIT,
-						DataType.INTEGER, query.getRowLimit());
+						DataType.INTEGER, 
+						converter.convertToBasicType(query.getRowLimit()));
 				target.persistProperty(uuid, QueryImpl.GROUPING_ENABLED,
-						DataType.BOOLEAN, query.isGroupingEnabled());
+						DataType.BOOLEAN, 
+						converter.convertToBasicType(query.isGroupingEnabled()));
 				target.persistProperty(uuid, "promptForCrossJoins",
-						DataType.BOOLEAN, query.getPromptForCrossJoins());
+						DataType.BOOLEAN, 
+						converter.convertToBasicType(query.getPromptForCrossJoins()));
 				target.persistProperty(uuid, "automaticallyExecuting",
-						DataType.BOOLEAN, query.isAutomaticallyExecuting());
+						DataType.BOOLEAN, 
+						converter.convertToBasicType(query.isAutomaticallyExecuting()));
 				target.persistProperty(uuid, QueryImpl.GLOBAL_WHERE_CLAUSE,
-						DataType.STRING, query.getGlobalWhereClause());
+						DataType.STRING, 
+						converter.convertToBasicType(query.getGlobalWhereClause()));
 				target.persistProperty(uuid, QueryImpl.USER_MODIFIED_QUERY,
-						DataType.STRING, query.getUserModifiedQuery());
+						DataType.STRING, 
+						converter.convertToBasicType(query.getUserModifiedQuery()));
 				target.persistProperty(uuid, "executeQueriesWithCrossJoins",
-						DataType.BOOLEAN, query
-								.getExecuteQueriesWithCrossJoins());
+						DataType.BOOLEAN, 
+						converter.convertToBasicType(query.getExecuteQueriesWithCrossJoins()));
 				target.persistProperty(uuid, "dataSource",
 						DataType.STRING,
 						converter.convertToBasicType(query.getWabitDataSource()));
@@ -530,8 +542,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				ReportTask task = (ReportTask) child;
 				
 				// Remaining arguments
-				target.persistProperty(uuid, "email", DataType.STRING, task.getEmail());
-				target.persistProperty(uuid, "triggerType", DataType.STRING, task.getTriggerType());
+				target.persistProperty(uuid, "email", DataType.STRING, 
+						converter.convertToBasicType(task.getEmail()));
+				target.persistProperty(uuid, "triggerType", DataType.STRING, 
+						converter.convertToBasicType(task.getTriggerType()));
 				target.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
 						converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER));
 				target.persistProperty(uuid, "triggerMinuteParam", DataType.INTEGER, 
@@ -556,9 +570,9 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "borderType", DataType.STRING, 
 						converter.convertToBasicType(renderer.getBorderType()));
 				target.persistProperty(uuid, "nullString", DataType.STRING, 
-						renderer.getNullString());
+						converter.convertToBasicType(renderer.getNullString()));
 				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
-						renderer.isPrintingGrandTotals());
+						converter.convertToBasicType(renderer.isPrintingGrandTotals()));
 				
 			} else if (child instanceof User) {
 				User user = (User) child;
@@ -575,7 +589,8 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(container.getDelegate()));
 				
 				// Remaining properties
-				target.persistProperty(uuid, "alias", DataType.STRING, container.getAlias());
+				target.persistProperty(uuid, "alias", DataType.STRING, 
+						converter.convertToBasicType(container.getAlias()));
 				target.persistProperty(uuid, "position", DataType.STRING, 
 						converter.convertToBasicType(container.getPosition()));
 				
@@ -594,17 +609,22 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(item.getDelegate()));
 				
 				// Remaining properties
-				target.persistProperty(uuid, "alias", DataType.STRING, item.getAlias());
-				target.persistProperty(uuid, "selected", DataType.INTEGER, item.getSelected());
-				target.persistProperty(uuid, "where", DataType.STRING, item.getWhere());
+				target.persistProperty(uuid, "alias", DataType.STRING, 
+						converter.convertToBasicType(item.getAlias()));
+				target.persistProperty(uuid, "selected", DataType.INTEGER, 
+						converter.convertToBasicType(item.getSelected()));
+				target.persistProperty(uuid, "where", DataType.STRING, 
+						converter.convertToBasicType(item.getWhere()));
 				target.persistProperty(uuid, "groupBy", DataType.STRING, 
 						converter.convertToBasicType(item.getGroupBy()));
-				target.persistProperty(uuid, "having", DataType.STRING, item.getHaving());
+				target.persistProperty(uuid, "having", DataType.STRING, 
+						converter.convertToBasicType(item.getHaving()));
 				target.persistProperty(uuid, "orderBy", DataType.STRING, 
 						converter.convertToBasicType(item.getOrderBy()));
 				target.persistProperty(uuid, "orderByOrdering", DataType.INTEGER,
-						item.getOrderByOrdering());
-				target.persistProperty(uuid, "columnWidth", DataType.INTEGER, item.getColumnWidth());
+						converter.convertToBasicType(item.getOrderByOrdering()));
+				target.persistProperty(uuid, "columnWidth", DataType.INTEGER, 
+						converter.convertToBasicType(item.getColumnWidth()));
 				
 
 			} else if (child instanceof WabitDataSource) {
@@ -627,11 +647,11 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Remaining properties
 				target.persistProperty(uuid, "comparator", DataType.STRING,
-						sqlJoin.getComparator());
-				target.persistProperty(uuid, "leftColumnOuterJoin",
-						DataType.BOOLEAN, sqlJoin.isLeftColumnOuterJoin());
-				target.persistProperty(uuid, "rightColumnOuterJoin",
-						DataType.BOOLEAN, sqlJoin.isRightColumnOuterJoin());
+						converter.convertToBasicType(sqlJoin.getComparator()));
+				target.persistProperty(uuid, "leftColumnOuterJoin", DataType.BOOLEAN, 
+						converter.convertToBasicType(sqlJoin.isLeftColumnOuterJoin()));
+				target.persistProperty(uuid, "rightColumnOuterJoin", DataType.BOOLEAN, 
+						sqlJoin.isRightColumnOuterJoin());
 
 			} else if (child instanceof WabitOlapAxis) {
 				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
@@ -642,22 +662,21 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Remaining properties
 				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
-						wabitOlapAxis.isNonEmpty());
+						converter.convertToBasicType(wabitOlapAxis.isNonEmpty()));
 				target.persistProperty(uuid, "sortEvaluationLiteral",
-						DataType.STRING, wabitOlapAxis
-								.getSortEvaluationLiteral());
+						DataType.STRING, 
+						converter.convertToBasicType(wabitOlapAxis.getSortEvaluationLiteral()));
 				target.persistProperty(uuid, "sortOrder", DataType.STRING,
-						wabitOlapAxis.getSortOrder());
+						converter.convertToBasicType(wabitOlapAxis.getSortOrder()));
 
 			} else if (child instanceof WabitOlapSelection) {
 				WabitOlapSelection wabitOlapSelection = (WabitOlapSelection) child;
 
 				// Constructor argument
 				target.persistProperty(uuid, "operator", DataType.STRING,
-						wabitOlapSelection.getOperator().name());
-				target.persistProperty(uuid, "uniqueMemberName",
-						DataType.STRING, wabitOlapSelection
-								.getUniqueMemberName());
+						converter.convertToBasicType(wabitOlapSelection.getOperator()));
+				target.persistProperty(uuid, "uniqueMemberName", DataType.STRING, 
+						converter.convertToBasicType(wabitOlapSelection.getUniqueMemberName()));
 
 			} else if (child instanceof WabitTableContainer) {
 				WabitTableContainer wabitTableContainer = (WabitTableContainer) child;
@@ -671,7 +690,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 				// Remaining properties
 				target.persistProperty(uuid, "alias", DataType.STRING,
-						tableContainer.getAlias());
+						converter.convertToBasicType(tableContainer.getAlias()));
 				target.persistProperty(uuid, "position", DataType.STRING,
 						converter.convertToBasicType(tableContainer.getPosition()));
 
