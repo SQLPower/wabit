@@ -19,12 +19,21 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 
 public class GroupMemberTest extends AbstractWabitObjectTest {
 
 	private GroupMember groupMember;
+	
+	@Override
+	public Set<String> getPropertiesToIgnoreForPersisting() {
+		Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
+		ignored.add("name");
+		return ignored;
+	}
 	
 	@Override
 	protected void setUp() throws Exception {

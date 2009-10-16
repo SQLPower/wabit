@@ -240,15 +240,25 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	            if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
 	            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
 	            }
-                assertEquals(converterFactory.convertToBasicType(newVal, additionalVals.toArray()), 
+				//Input streams from images are being compared by hash code not values
+				if (Image.class.isAssignableFrom(property.getPropertyType())) {
+					System.out.println(propertyChange.getNewValue().getClass());
+					assertTrue(Arrays.equals(PersisterUtils.convertImageToStreamAsPNG(
+								(Image) newVal).toByteArray(),
+							PersisterUtils.convertImageToStreamAsPNG(
+								(Image) converterFactory.convertToComplexType(
+										propertyChange.getNewValue(), Image.class)).toByteArray()));
+				} else {
+					assertEquals(converterFactory.convertToBasicType(newVal, additionalVals.toArray()), 
                 		propertyChange.getNewValue());
+				}
                 Class<? extends Object> classType;
                 if (oldVal != null) {
                 	classType = oldVal.getClass();
                 } else {
                 	classType = newVal.getClass();
                 }
-                assertEquals(DataType.getTypeByClass(classType), propertyChange.getDataType());
+                assertEquals(SessionPersisterUtils.getDataType(classType), propertyChange.getDataType());
             } catch (InvocationTargetException e) {
                 System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
@@ -318,6 +328,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             Object oldVal;
             
             if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
+            
+            if (getPropertiesToIgnoreForPersisting().contains(property.getName())) continue;
 
             try {
                 oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());

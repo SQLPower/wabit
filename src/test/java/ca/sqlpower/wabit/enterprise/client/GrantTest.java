@@ -29,8 +29,8 @@ public class GrantTest extends AbstractWabitObjectTest {
 	private Grant grant;
 	
 	@Override
-	public Set<String> getPropertiesToIgnoreForEvents() {
-		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
+	public Set<String> getPropertiesToIgnoreForPersisting() {
+		Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
 		ignored.add("name");
 		return ignored;
 	}
