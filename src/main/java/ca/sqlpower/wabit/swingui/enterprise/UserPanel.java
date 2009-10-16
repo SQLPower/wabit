@@ -79,6 +79,8 @@ public class UserPanel implements WabitPanel {
 	private final JPanel panel = new JPanel(new MigLayout());
 	private final JTextField loginTextField;
 	private final JPasswordField passwordTextField;
+	private final JTextField fullNameTextField;
+	private final JTextField emailTextField;
 	
 	private final JList currentGroupsList;
 	private final JScrollPane currentGroupsScrollPane;
@@ -94,6 +96,8 @@ public class UserPanel implements WabitPanel {
 	
 	private final JLabel loginLabel;
 	private final JLabel passwordLabel;
+	private final JLabel fullNameLabel;
+	private final JLabel emailLabel;
 	private final JLabel groupsLabel;
 	private final JLabel currentGroupsLabel;
 	private final JLabel availableGroupsLabel;
@@ -129,6 +133,40 @@ public class UserPanel implements WabitPanel {
 		this.passwordTextField.addKeyListener(new KeyListener() {
 			public void keyTyped(KeyEvent e) {
 				user.setPassword(new String(passwordTextField.getPassword()));
+			}
+			public void keyReleased(KeyEvent e) {
+				// no-op
+			}
+			public void keyPressed(KeyEvent e) {
+				// no-op
+			}
+		});
+		
+		
+		
+		this.fullNameTextField = new JTextField();
+		this.fullNameTextField.setText(user.getFullName());
+		this.fullNameLabel = new JLabel("Full name");
+		this.fullNameTextField.addKeyListener(new KeyListener() {
+			public void keyTyped(KeyEvent e) {
+				user.setFullName(new String(fullNameTextField.getText()));
+			}
+			public void keyReleased(KeyEvent e) {
+				// no-op
+			}
+			public void keyPressed(KeyEvent e) {
+				// no-op
+			}
+		});
+		
+		
+		
+		this.emailTextField = new JTextField();
+		this.emailTextField.setText(user.getEmail());
+		this.emailLabel = new JLabel("Email");
+		this.emailTextField.addKeyListener(new KeyListener() {
+			public void keyTyped(KeyEvent e) {
+				user.setEmail(new String(emailTextField.getText()));
 			}
 			public void keyReleased(KeyEvent e) {
 				// no-op
@@ -227,10 +265,14 @@ public class UserPanel implements WabitPanel {
 		
 		// Panel building time
 		JPanel namePassPanel = new JPanel(new MigLayout());
-		namePassPanel.add(this.loginLabel, "align right");
+		namePassPanel.add(this.loginLabel, "align right, gaptop 20");
 		namePassPanel.add(this.loginTextField, "span, wrap, wmin 600");
 		namePassPanel.add(this.passwordLabel, "align right");
 		namePassPanel.add(this.passwordTextField, "span, wrap, wmin 600");
+		namePassPanel.add(this.fullNameLabel, "align right, gaptop 20");
+		namePassPanel.add(this.fullNameTextField, "span, wrap, wmin 600");
+		namePassPanel.add(this.emailLabel, "align right");
+		namePassPanel.add(this.emailTextField, "span, wrap, wmin 600");
 		this.panel.add(namePassPanel, "north");
 		
 		this.panel.add(this.groupsLabel, "span, wrap, gaptop 20, align center");
