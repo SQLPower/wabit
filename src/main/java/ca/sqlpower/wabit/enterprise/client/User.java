@@ -34,6 +34,8 @@ public class User extends AbstractWabitObject implements UserDetails {
     private final List<Grant> grants;
     private String password;
     private GrantedAuthority[] authorities = null;
+    private String fullName = null;
+    private String email = null;
 
     public User(String username, String password) {
     	super();
@@ -90,6 +92,26 @@ public class User extends AbstractWabitObject implements UserDetails {
             fireChildRemoved(Grant.class, grant, index);
         }
     }
+    
+    public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		String oldName = this.fullName;
+		this.fullName = fullName;
+		firePropertyChange("fullName", oldName, this.fullName);
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		String oldEmail = this.email;
+		this.email = email;
+		firePropertyChange("email", oldEmail, this.email);
+	}
     
     /**
      * The returned list is mutable. Beware.

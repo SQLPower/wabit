@@ -581,6 +581,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				// Constructor arguments
 				target.persistProperty(uuid, "password", DataType.STRING, 
 						converter.convertToBasicType(user.getPassword()));
+				target.persistProperty(uuid, "email", DataType.STRING, 
+						converter.convertToBasicType(user.getEmail()));
+				target.persistProperty(uuid, "fullName", DataType.STRING, 
+						converter.convertToBasicType(user.getFullName()));
 				
 			} else if (child instanceof WabitConstantsContainer) {
 				WabitConstantsContainer container = (WabitConstantsContainer) child;

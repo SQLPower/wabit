@@ -3250,6 +3250,10 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		if (propertyName.equals("password")) {
 			return converter.convertToBasicType(user.getPassword());
+		} else if (propertyName.equals("fullName")) {
+			return converter.convertToBasicType(user.getFullName());
+		} else if (propertyName.equals("email")) {
+			return converter.convertToBasicType(user.getEmail());
 		} else {
 			throw new WabitPersistenceException(user.getUUID(),
 					getWabitPersistenceExceptionMessage(user, propertyName));
@@ -3273,6 +3277,10 @@ public class WabitSessionPersister implements WabitPersister {
 		
 		if (propertyName.equals("password")) {
 			user.setPassword((String) converter.convertToComplexType(newValue, String.class));
+		} else if (propertyName.equals("email")) {
+			user.setEmail((String) converter.convertToComplexType(newValue, String.class));
+		} else if (propertyName.equals("fullName")) {
+			user.setFullName((String) converter.convertToComplexType(newValue, String.class));
 		} else {
 			throw new WabitPersistenceException(user.getUUID(),
 					getWabitPersistenceExceptionMessage(user, propertyName));
