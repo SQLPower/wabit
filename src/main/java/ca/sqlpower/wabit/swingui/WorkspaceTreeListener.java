@@ -74,7 +74,7 @@ import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.ScheduleReportAction;
 import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
-import ca.sqlpower.wabit.swingui.action.SystemLevelSecurityAction;
+import ca.sqlpower.wabit.swingui.action.SecurityAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
@@ -223,6 +223,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			    if (lastPathComponent instanceof WabitObject) {
 			        menu.add(new JMenuItem(new ShowEditorAction(session.getWorkspace(),
 			                (WabitObject) lastPathComponent)));
+			        securityMenu(menu,null,(WabitObject) lastPathComponent);
 			        menu.addSeparator();
 			    }
 			    
@@ -322,6 +323,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 
 			menu.add(createDataSourcesMenu());
 			menu.addSeparator();
+			securityMenu(menu, null, this.session.getWorkspace());
+			securityMenu(menu, WabitWorkspace.class.getSimpleName(), null);
+			menu.addSeparator();
 			
 			menu.add(newQuery);
 			menu.add(newOlapQuery);
@@ -341,13 +345,13 @@ public class WorkspaceTreeListener extends MouseAdapter {
     private void securityMenu(JPopupMenu menu, String simpleName, WabitObject object) {
     	
     	
-    	if (!(this.session instanceof WabitServerSession)) {
-    		return;
-    	}
-    	
-    	WabitWorkspace systemWorkspace = ((WabitServerSession)this.session).getSystemWorkspace();
-    		
-		if (simpleName != null) {
+//    	if (!(this.session instanceof WabitServerSession)) {
+//    		return;
+//    	}
+//    	
+//    	WabitWorkspace systemWorkspace = ((WabitServerSession)this.session).getSystemWorkspace();
+    	WabitWorkspace systemWorkspace = null; 
+		if (simpleName != null && object == null) {
 			String label = null;
 			if (simpleName.equals("WabitDataSource")) {
 				label = "datasources";
@@ -369,10 +373,46 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				label = "users";
 			} else if (simpleName.equals("Group")) {
 				label = "groups";
+			} else if (simpleName.equals("WabitWorkspace")) {
+				label = "all workspaces";
 			} else {
 				throw new IllegalStateException(simpleName);
 			}
-			menu.add(new JMenuItem(new SystemLevelSecurityAction(this.session.getWorkspace(), systemWorkspace, null,simpleName,label)));
+			menu.add(
+				new JMenuItem(
+					new SecurityAction(
+						this.session.getWorkspace(), 
+						systemWorkspace, 
+						null,
+						simpleName,
+						label)));
+		} else if (simpleName == null && object != null) {
+			if (object instanceof WabitDataSource ||
+					object instanceof QueryCache ||
+					object instanceof OlapQuery ||
+					object instanceof WabitImage ||
+					object instanceof Chart ||
+					object instanceof Report ||
+					object instanceof Template ||
+					object instanceof ReportTask) {
+				menu.add(new JMenuItem(
+					new SecurityAction(
+						this.session.getWorkspace(), 
+						systemWorkspace, 
+						object.getUUID(),
+						null,
+						object.getName())));
+			} else if (object instanceof WabitWorkspace) {
+				menu.add(new JMenuItem(
+						new SecurityAction(
+							this.session.getWorkspace(), 
+							systemWorkspace, 
+							object.getUUID(),
+							null,
+							object.getName().concat(" workspace"))));
+			}
+		} else {
+			throw new IllegalStateException();
 		}
 	}
 

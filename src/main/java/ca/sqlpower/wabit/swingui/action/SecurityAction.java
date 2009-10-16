@@ -30,7 +30,7 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.enterprise.GrantPanel;
 
 
-public class SystemLevelSecurityAction extends AbstractAction {
+public class SecurityAction extends AbstractAction {
 
 	private final String objectUuid;
 	private final String objectType;
@@ -38,8 +38,8 @@ public class SystemLevelSecurityAction extends AbstractAction {
 	private final WabitWorkspace workspace;
 	private final WabitWorkspace systemWorkspace;
 	
-	public SystemLevelSecurityAction(WabitWorkspace workspace, WabitWorkspace systemWorkspace, String objectUuid, String objectType, String label) {
-		super("Manage ".concat(label).concat(" permissions"), WabitIcons.SECURITY_ICON_16);
+	public SecurityAction(WabitWorkspace workspace, WabitWorkspace systemWorkspace, String objectUuid, String objectType, String label) {
+		super("Manage ".concat(label).concat(" sharing and security"), WabitIcons.SECURITY_ICON_16);
 		this.workspace = workspace;
 		this.systemWorkspace = systemWorkspace;
 		this.objectUuid = objectUuid;
@@ -52,7 +52,7 @@ public class SystemLevelSecurityAction extends AbstractAction {
 		DataEntryPanelBuilder.createDataEntryPanelDialog(
 				panel,
 				((WabitSwingSessionContext)workspace.getSession().getContext()).getFrame(), 
-				"Server permissions for "+label, 
+				"Sharing and security - "+label, 
 				"Apply changes").setVisible(true);
 	}
 }
