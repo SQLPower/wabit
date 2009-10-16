@@ -27,6 +27,13 @@ import ca.sqlpower.wabit.WabitObject;
 public class ReportTaskTest extends AbstractWabitObjectTest {
 	
 	private ReportTask reportTask;
+	
+	@Override
+	public Set<String> getPropertiesToIgnoreForEvents() {
+		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
+		ignored.add("noob");
+		return ignored;
+	}
 
 	@Override
 	public Set<String> getPropertiesToIgnoreForPersisting() {

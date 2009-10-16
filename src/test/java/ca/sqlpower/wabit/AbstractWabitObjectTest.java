@@ -417,6 +417,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     			Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass())));
     	List<WabitObjectProperty> allPropertyChanges = persister.getAllPropertyChanges();
     	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
+    	ignorableProperties.addAll(getPropertiesToIgnoreForEvents());
     	
     	List<String> settablePropertyNames = new ArrayList<String>();
     	for (PropertyDescriptor pd : settableProperties) {
