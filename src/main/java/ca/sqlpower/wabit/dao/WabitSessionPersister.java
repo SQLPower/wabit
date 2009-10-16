@@ -466,10 +466,19 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new ReportTask();
 				
 			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
-				String contentID = (String) getPropertyAndRemove(uuid,
-						"content");
+				String contentID = (String) getPropertyAndRemove(uuid, "content");
 				
-				// TODO No ResultSetRenderer object has been created yet.
+				QueryCache query = (QueryCache) converter.convertToComplexType(
+						contentID, QueryCache.class);
+				
+				if (query == null) {
+					throw new WabitPersistenceException(uuid, 
+							"Cannot commit ResultSetRenderer with UUID " + uuid 
+							+ " as its QueryCache reference with UUID " + contentID 
+							+ " does not exist in the workspace.");
+				}
+				
+				wo = new ResultSetRenderer(query);
 
 			} else if (type.equals(Template.class.getSimpleName())) {
 				String name = (String) getPropertyAndRemove(uuid, "name");

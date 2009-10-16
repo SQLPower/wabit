@@ -322,6 +322,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         //Ignore properties that are not in events because we won't have an event
         //to respond to.
         Set<String> propertiesToIgnoreForEvents = getPropertiesToIgnoreForEvents();
+        
+        Set<String> propertiesToIgnoreForPersisting = getPropertiesToIgnoreForPersisting();
     	
         NewValueMaker valueMaker = new WabitNewValueMaker();
     	for (PropertyDescriptor property : settableProperties) {
@@ -329,7 +331,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             
             if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
             
-            if (getPropertiesToIgnoreForPersisting().contains(property.getName())) continue;
+            if (propertiesToIgnoreForPersisting.contains(property.getName())) continue;
 
             try {
                 oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());
