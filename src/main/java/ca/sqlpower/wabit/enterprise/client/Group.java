@@ -99,9 +99,13 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         }
     }
     
-    public void addMember(GroupMember member) {
+    public void addMember(GroupMember member, int index) {
         this.members.add(member);
-        fireChildAdded(GroupMember.class, member, this.members.indexOf(member));
+        fireChildAdded(GroupMember.class, member, index);
+    }
+
+    public void addMember(GroupMember member) {
+        addMember(member, members.size());
     }
     
     public void removeMember(GroupMember member) {
@@ -124,5 +128,14 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
 	@Override
 	public String toString() {
 		return super.getName();
+	}
+	
+	@Override
+	protected void addChildImpl(WabitObject child, int index) {
+		if (child instanceof GroupMember) {
+			addMember((GroupMember) child);
+		} else {
+			throw new IllegalArgumentException("Group is expecting child type Member, but instead got " + child);
+		}
 	}
 }

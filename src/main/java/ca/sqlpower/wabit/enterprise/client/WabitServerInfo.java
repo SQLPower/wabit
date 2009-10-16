@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.enterprise.client;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.annotation.concurrent.Immutable;
 import javax.jmdns.ServiceInfo;
 
 /**
@@ -29,6 +30,7 @@ import javax.jmdns.ServiceInfo;
  * Can be created either by directly specifying values, or by providing a
  * ServiceInfo object to read the values from.
  */
+@Immutable
 public class WabitServerInfo {
 
     private final String name;

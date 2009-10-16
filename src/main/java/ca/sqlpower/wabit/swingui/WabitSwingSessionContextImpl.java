@@ -180,7 +180,6 @@ import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
-import ca.sqlpower.wabit.swingui.action.SaveServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.action.ShowWabitApplicationPreferencesAction;
@@ -1449,7 +1448,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }));
         fileMenu.add(createServerListMenu(frame, "Open Server Workspace", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
-                return new OpenOnServerMenu(dialogOwner, serviceInfo, WabitSwingSessionContextImpl.this);
+                return new JMenuItem(new LogInToServerAction(dialogOwner, serviceInfo, WabitSwingSessionContextImpl.this));
             }
         }));
         
@@ -1481,18 +1480,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 SaveWorkspaceAction.saveAllSessions(WabitSwingSessionContextImpl.this);
             }
         });
-        fileMenu.add(createServerListMenu(frame, "Save Workspace on Server", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
-                try {
-                    return new JMenuItem(new SaveServerWorkspaceAction(serviceInfo, dialogOwner, getActiveSession().getWorkspace(), WabitSwingSessionContextImpl.this));
-                } catch (Exception e) {
-                    JMenuItem menuItem = new JMenuItem(e.toString());
-                    menuItem.setEnabled(false);
-                    // TODO it would be nice to have ASUtils.createExceptionMenuItem(Throwable)
-                    return menuItem;
-                }
-            }
-        }));
         fileMenu.addSeparator();
         
         JMenuItem closeMenuItem = new JMenuItem(new CloseWorkspaceAction(this));

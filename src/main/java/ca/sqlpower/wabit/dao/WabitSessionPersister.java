@@ -705,7 +705,10 @@ public class WabitSessionPersister implements WabitPersister {
 
 		for (String uuid : persistedProperties.keySet()) {
 			wo = WabitUtils.findByUuid(root, uuid, WabitObject.class);
-
+			if (wo == null) {
+				throw new IllegalStateException("Couldn't locate object " + uuid + " in session");
+			}
+			
 			for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 				propertyName = wop.getPropertyName();
 				newValue = wop.getNewValue();

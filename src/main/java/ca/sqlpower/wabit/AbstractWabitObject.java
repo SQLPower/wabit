@@ -420,7 +420,7 @@ public abstract class AbstractWabitObject implements WabitObject {
      *            The index to add the child at.
      */
 	protected void addChildImpl(WabitObject child, int index) {
-	    //do nothing, meant to be overridden.
+		throw new UnsupportedOperationException("This WabitObject cannot have children");
 	}
 	
 	/**

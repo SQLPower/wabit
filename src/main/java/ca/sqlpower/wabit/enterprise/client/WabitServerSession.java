@@ -26,6 +26,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -33,9 +35,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
@@ -52,11 +52,12 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
+import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionImpl;
-import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
+import ca.sqlpower.wabit.dao.WabitPersistenceException;
+import ca.sqlpower.wabit.dao.WabitSessionPersister;
+import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
 
 /**
  * A special kind of session that binds itself to a remote Wabit Enterprise
@@ -68,19 +69,29 @@ public class WabitServerSession extends WabitSessionImpl {
     private static final Logger logger = Logger.getLogger(WabitServerSession.class);
     
     private final HttpClient httpClient;
-    private final WabitServerInfo serviceInfo;
 
-    public WabitServerSession(WabitServerInfo serviceInfo, WabitSessionContext context) {
+	private final Updater updater;
+
+    /**
+     * This workspace's location information.
+     */
+	private final WorkspaceLocation workspaceLocation;
+
+    public WabitServerSession(
+    		@Nonnull WorkspaceLocation workspaceLocation,
+    		@Nonnull WabitSessionContext context) {
         super(context);
-        this.serviceInfo = serviceInfo;
-        if (serviceInfo == null) {
-        	logger.error("Null pointer Exception");
-        	throw new NullPointerException("serviceInfo is for the WabitServer is null");
+		this.workspaceLocation = workspaceLocation;
+        if (workspaceLocation == null) {
+        	throw new NullPointerException("workspaceLocation must not be null");
         }
 
-        httpClient = createHttpClient(serviceInfo);
+        httpClient = createHttpClient(workspaceLocation.getServiceInfo());
         
+        getWorkspace().setUUID(workspaceLocation.getUuid());
         getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
+        
+        updater = new Updater(workspaceLocation.getUuid());
     }
 
 	public static HttpClient createHttpClient(WabitServerInfo serviceInfo) {
@@ -119,7 +130,7 @@ public class WabitServerSession extends WabitSessionImpl {
                 }
                 PlDotIni plIni;
                 try {
-                    plIni = new PlDotIni(getServerURI(serviceInfo, "/"));
+                    plIni = new PlDotIni(getServerURI(workspaceLocation.getServiceInfo(), "/"));
                     plIni.read(response.getEntity().getContent());
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
@@ -128,7 +139,7 @@ public class WabitServerSession extends WabitSessionImpl {
             }
         };
         try {
-            return executeServerRequest(httpClient, serviceInfo, "data-sources/", plIniHandler);
+            return executeServerRequest(httpClient, workspaceLocation.getServiceInfo(), "data-sources/", plIniHandler);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -143,18 +154,21 @@ public class WabitServerSession extends WabitSessionImpl {
      * @throws URISyntaxException
      * @throws JSONException 
      */
-    public static List<String> getWorkspaceNames(WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
+    public static List<WorkspaceLocation> getWorkspaceNames(WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
     	HttpClient httpClient = createHttpClient(serviceInfo);
     	try {
     		HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
     		String responseBody = httpClient.execute(request, new BasicResponseHandler());
     		JSONArray response;
-    		List<String> workspaces = new ArrayList<String>();
+    		List<WorkspaceLocation> workspaces = new ArrayList<WorkspaceLocation>();
     		response = new JSONArray(responseBody);
     		logger.debug("Workspace list:\n" + responseBody);
     		for (int i = 0; i < response.length(); i++) {
     			JSONObject workspace = (JSONObject) response.get(i);
-    			workspaces.add(workspace.getString("name"));
+    			workspaces.add(new WorkspaceLocation(
+    					workspace.getString("name"),
+    					workspace.getString("UUID"),
+    					serviceInfo));
     		}
     		return workspaces;
     	} finally {
@@ -162,6 +176,28 @@ public class WabitServerSession extends WabitSessionImpl {
     	}
     }
     
+	
+	/**
+	 * Finds and opens all visible Wabit workspaces on the given Wabit Enterprise Server.
+	 * Calling this method essentially constitutes "logging in" to the given server.
+	 * 
+	 * @param context the context to add the newly-retrieved sessions to
+	 * @param serverInfo The server to contact.
+	 * @return the list of sessions that were opened.
+	 * @throws JSONException 
+	 * @throws URISyntaxException 
+	 * @throws IOException 
+	 */
+	public static List<WabitSession> openServerSessions(WabitSessionContext context, WabitServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
+		List<WabitSession> openedSessions = new ArrayList<WabitSession>();
+		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
+			final WabitServerSession session = new WabitServerSession(workspaceLoc, context);
+			session.startUpdaterThread();
+			openedSessions.add(session);
+		}
+        return openedSessions;
+    }
+
     private static <T> T executeServerRequest(HttpClient httpClient, WabitServerInfo serviceInfo, 
             String contextRelativePath, ResponseHandler<T> responseHandler)
     throws IOException, URISyntaxException {
@@ -175,86 +211,94 @@ public class WabitServerSession extends WabitSessionImpl {
         return new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
                 contextPath + contextRelativePath, null, null);
     }
-    
-    /**
-     * Saves the given workspace on this session context's server. The name to
-     * save as is determined by the workspace's name.
-     * 
-     * @param workspace
-     *            The workspace to save. Its name determines the name of the
-     *            resource saved to the server. If there is already a workspace on
-     *            the server with the same name, it will be replaced.
-     * @throws IOException
-     *             If the upload fails
-     * @throws URISyntaxException
-     *             If the workspace name can't be properly encoded in a URI
-     */
-    public static void saveWorkspace(WabitServerInfo serviceInfo, WabitSessionContext context, WabitWorkspace workspace) throws IOException, URISyntaxException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        WorkspaceXMLDAO dao = new WorkspaceXMLDAO(out, context);
-        dao.saveActiveWorkspace();
-        out.close(); // has no effect, but feels sensible :)
-        
-        HttpPost request = new HttpPost(getServerURI(serviceInfo, "workspace/" + workspace.getName()));
-        logger.debug("Posting workspace to " + request);
-        request.setEntity(new ByteArrayEntity(out.toByteArray()));
-        HttpClient httpClient = createHttpClient(serviceInfo);
-        httpClient.execute(request);
-        logger.debug("Post complete!");
-    }
 
-    /**
-     * Opens a workspace based on the server information and a workspace name.
-     * The workspace will be created from the given context.
-     * 
-     * @param serviceInfo
-     *            The information that defines the wabit server.
-     * @param workspaceName
-     *            The name of the workspace being loaded.
-     * @param context
-     *            The context that will create the session and register it.
-     */
-    public static void openWorkspace(WabitServerInfo serviceInfo, final String workspaceName, 
-            final WabitSessionContext context) throws URISyntaxException, ClientProtocolException, IOException {
-        HttpParams params = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(params, 2000);
-        HttpClient httpclient = new DefaultHttpClient(params);
-        try {
-            String contextPath = serviceInfo.getPath();
-            URI uri = new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
-                    contextPath + "workspace/" + workspaceName, null, null);
-            HttpGet httpget = new HttpGet(uri);
-            logger.debug("executing request " + httpget.getURI());
+	public void startUpdaterThread() {
+		updater.start();
+	}
 
-            ResponseHandler<Void> responseHandler = new ResponseHandler<Void>() {
+	/**
+	 * Polls this session's server for updates until interrupted. There should
+	 * be exactly one instance of this class per WabitServerSession.
+	 */
+	private class Updater extends Thread {
+		
+		/**
+		 * How long we will pause after an update error before attempting to
+		 * contact the server again.
+		 */
+		private long retryDelay = 1000;
+		
+		private final WabitSessionPersister sessionPersister;
+		
+		private final WabitJSONMessageDecoder jsonDecoder;
 
-                public Void handleResponse(HttpResponse response)
-                        throws ClientProtocolException, IOException {
-
-                    if (response.getStatusLine().getStatusCode() != 200) {
-                        context.createUserPrompter("Server reported error:\n" + response.getStatusLine() +
-                                "\nWhile requesting workspace \""+workspaceName+"\"", UserPromptType.MESSAGE, 
-                                UserPromptOptions.OK, UserPromptResponse.OK, true);
-                        return null;
-                    }
-                    try {
-                        //TODO set the workspace size correctly
-                        OpenWorkspaceXMLDAO workspaceLoader =
-                            new OpenWorkspaceXMLDAO(
-                                    context,
-                                    response.getEntity().getContent(),
-                                    OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
-                        workspaceLoader.openWorkspaces();
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                    return null;
+		/**
+		 * Creates, but does not start, the updater thread.
+		 * 
+		 * @param workspaceUUID
+		 *            the ID of the workspace this updater is responsible for. This is
+		 *            used in creating the thread's name.
+		 */
+		Updater(String workspaceUUID) {
+			super("updater-" + workspaceUUID);
+			sessionPersister = new WabitSessionPersister(getName(), WabitServerSession.this);
+			jsonDecoder = new WabitJSONMessageDecoder(sessionPersister);
+		}
+		
+		ResponseHandler<Void> jsonUpdateHandler = 
+            new ResponseHandler<Void>() {
+            public Void handleResponse(HttpResponse response)
+                    throws ClientProtocolException, IOException {
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new IOException(
+                            "Server error while reading data sources: " + response.getStatusLine());
                 }
                 
-            };
-            httpclient.execute(httpget, responseHandler);
-        } finally {
-            httpclient.getConnectionManager().shutdown();
-        }
-    }
+                ByteArrayOutputStream responseContent = new ByteArrayOutputStream(2000);
+                response.getEntity().writeTo(responseContent);
+                final String jsonArray = responseContent.toString();
+                runInForeground(new Runnable() {
+					public void run() {
+						try {
+							jsonDecoder.decode(jsonArray);
+						} catch (WabitPersistenceException e) {
+							logger.error("Update from server failed!", e);
+							createUserPrompter(
+									"Wabit failed to apply an update that was just received from the Enterprise Server.\n"
+									+ "The error was:"
+									+ "\n" + e.getMessage(),
+									UserPromptType.MESSAGE, UserPromptOptions.OK,
+									UserPromptResponse.OK, UserPromptResponse.OK, "OK");
+							// TODO discard session and reload
+						}
+					}
+				});
+                return null;
+            }
+        };
+        
+		@Override
+		public void run() {
+			logger.info("Updater thread starting");
+			
+			// the path to contact on the server for update events
+			final String contextRelativePath = "workspaces/" + getWorkspace().getUUID();
+			
+			try {
+				for (;;) {
+					try {
+						executeServerRequest(
+								httpClient, workspaceLocation.getServiceInfo(),
+								contextRelativePath, jsonUpdateHandler);
+					} catch (Exception ex) {
+						logger.error("Failed to contact server. Will retry in " + retryDelay + " ms.", ex);
+						Thread.sleep(retryDelay);
+					}
+				}
+			} catch (InterruptedException ex) {
+				logger.info("Updater thread exiting normally due to interruption.");
+			}
+		}
+	}
+    
 }

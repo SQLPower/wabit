@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -56,6 +57,7 @@ import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
 import ca.sqlpower.wabit.olap.OlapConnectionPool;
 
 import com.rc.retroweaver.runtime.Collections;
@@ -253,11 +255,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		final WabitSessionImpl session = new WabitSessionImpl(this);
         return session;
 	}
-	
-	public WabitSession createServerSession(WabitServerInfo serverInfo) {
-        final WabitSession session = new WabitServerSession(serverInfo, this);
-        return session;
-    }
 
 	protected void setPlDotIniPath(String plDotIniPath) {
 		this.plDotIniPath = plDotIniPath;
@@ -473,5 +470,16 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     public void removePropertyChangeListener(PropertyChangeListener l) {
         pcs.removePropertyChangeListener(l);
     }
+
+	public WabitSession createServerSession(WabitServerInfo serverInfo) {
+		String newWorkspaceId = UUID.randomUUID().toString();
+		WorkspaceLocation workspaceLocation =
+			new WorkspaceLocation("Unnamed Workspace", newWorkspaceId, serverInfo);
+		WabitServerSession newSession = new WabitServerSession(workspaceLocation, this);
+		//TODO
+		logger.error("have to actually create the session on the server here (following call will cause update thread failure)");
+		newSession.startUpdaterThread();
+		return newSession;
+	}
 
 }

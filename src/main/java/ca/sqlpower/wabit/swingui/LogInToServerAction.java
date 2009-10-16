@@ -17,43 +17,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.swingui.action;
+package ca.sqlpower.wabit.swingui;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import org.apache.log4j.Logger;
+
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 
-public class OpenServerWorkspaceAction extends AbstractAction {
-
+/**
+ * An action that, when invoked, opens all visible sessions on a specific target server.
+ */
+public class LogInToServerAction extends AbstractAction {
+    
+    private static final Logger logger = Logger.getLogger(LogInToServerAction.class);
+    
     private final WabitServerInfo serviceInfo;
-    private final String workspaceName;
+    private final Component dialogOwner;
     private final WabitSessionContext context;
-
-    public OpenServerWorkspaceAction(
-            Component dialogOwner,
-            WabitServerInfo si,
-            String workspaceName,
-            WabitSessionContext context) {
-        super(workspaceName);
+    
+    public LogInToServerAction(Component dialogOwner, WabitServerInfo si, WabitSessionContext context) {
+        super(WabitUtils.serviceInfoSummary(si));
+        this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
         this.context = context;
-        if (si == null) {
-            throw new NullPointerException("Null service info");
-        }
-        this.workspaceName = workspaceName;
     }
 
-    public void actionPerformed(ActionEvent e) {
-        try {
-            WabitServerSession.openWorkspace(serviceInfo, workspaceName, context);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-    
+	public void actionPerformed(ActionEvent e) {
+		try {
+			WabitServerSession.openServerSessions(context, serviceInfo);
+		} catch (Exception ex) {
+			SPSUtils.showExceptionDialogNoReport(dialogOwner,
+					"Log in to server "
+							+ WabitUtils.serviceInfoSummary(serviceInfo)
+							+ "failed.", ex);
+		}
+	}
+
 }
