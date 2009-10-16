@@ -407,10 +407,13 @@ public class WabitSessionPersister implements WabitPersister {
 				boolean grant = (Boolean) converter.convertToComplexType(
 						getPropertyAndRemove(uuid, "grantPrivilege"), Boolean.class);
 				
-				wo = new Grant(subject, type, create, modify, delete, execute, grant);
+				wo = new Grant(subject, grantType, create, modify, delete, execute, grant);
 				
 			} else if (type.equals(Group.class.getSimpleName())) {
-				wo = new Group("Unsaved Group");
+				String name = (String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "name"), String.class);
+				
+				wo = new Group(name);
 				
 			} else if (type.equals(GroupMember.class.getSimpleName())) {
 				User user = (User) converter.convertToComplexType(
