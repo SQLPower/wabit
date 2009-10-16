@@ -227,8 +227,8 @@ public class WorkspacePersisterListener implements WabitListener {
 		int index = 0;
 		if (root.getParent() != null) {
 			index = root.getParent().getChildren().indexOf(root);
+			persistChild(root.getParent(), root, root.getClass(), index);
 		}
-		persistChild(root.getParent(), root, root.getClass(), index);
 		for (WabitObject child : root.getChildren()) {
 			persistObject(child);
 		}
