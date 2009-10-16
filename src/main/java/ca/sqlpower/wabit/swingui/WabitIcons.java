@@ -44,6 +44,8 @@ public class WabitIcons {
 	public static final Icon USER_ICON_16 = makeIcon("user-16");
 	public static final Icon SECURITY_ICON_16 = makeIcon("badge");
 	public static final Icon GROUP_ICON_16 = makeIcon("group-16");
+	public static final Icon DELETE_ICON_32 = makeIcon("32x32/cancel");
+	
 	 
 	
     private static final ImageIcon makeIcon(String resourceName) {

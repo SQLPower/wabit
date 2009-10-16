@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -65,8 +66,10 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
+import ca.sqlpower.wabit.swingui.action.DeleteFromTreeAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
 public class UserPanel implements WabitPanel {
@@ -154,7 +157,7 @@ public class UserPanel implements WabitPanel {
 		
 		
 	
-		this.currentGroupsLabel = new JLabel("Current Groups");
+		this.currentGroupsLabel = new JLabel("Current Memberships");
 		this.currentGroupsListModel = new GroupsListModel(user, workspace, true);
 		this.currentGroupsList = new JList(this.currentGroupsListModel);
 		this.currentGroupsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -211,23 +214,39 @@ public class UserPanel implements WabitPanel {
 		});
 		
 		
+		Action deleteAction = new DeleteFromTreeAction(
+				this.workspace, 
+				this.user,
+				this.panel,
+				this.workspace.getSession().getContext());
+		this.toolbarBuilder.add(
+				deleteAction,
+				"Delete this user",
+				WabitIcons.DELETE_ICON_32);
+		
 		
 		// Panel building time
-		this.panel.add(this.loginLabel);
-		this.panel.add(this.loginTextField, "span, wrap");
-		this.panel.add(this.passwordLabel);
-		this.panel.add(this.passwordTextField, "span, wrap");
+		JPanel namePassPanel = new JPanel(new MigLayout());
+		namePassPanel.add(this.loginLabel, "align right");
+		namePassPanel.add(this.loginTextField, "span, wrap, wmin 600");
+		namePassPanel.add(this.passwordLabel, "align right");
+		namePassPanel.add(this.passwordTextField, "span, wrap, wmin 600");
+		this.panel.add(namePassPanel, "north");
 		
+		this.panel.add(this.groupsLabel, "span, wrap, gaptop 20, align center");
 		
-		this.panel.add(this.groupsLabel, "span, wrap, gaptop 20");
-		this.panel.add(this.availableGroupsLabel);
-		this.panel.add(this.currentGroupsLabel, "wrap");
-		
-		this.panel.add(this.availableGroupsScrollPane);
-		this.panel.add(this.addButton);
-		this.panel.add(this.removeButton);
-		this.panel.add(this.currentGroupsScrollPane);
-		
+		JPanel buttonsPanel = new JPanel(new MigLayout());
+		buttonsPanel.add(this.addButton, "wrap");
+		buttonsPanel.add(this.removeButton);
+		JPanel availablePanel = new JPanel(new MigLayout());
+		availablePanel.add(this.availableGroupsLabel, "wrap, align center");
+		availablePanel.add(this.availableGroupsScrollPane, "wmin 300");
+		JPanel currentPanel = new JPanel(new MigLayout());
+		currentPanel.add(this.currentGroupsLabel, "wrap, align center");
+		currentPanel.add(this.currentGroupsScrollPane, "wmin 300");
+		this.panel.add(availablePanel);
+		this.panel.add(buttonsPanel, "shrink, span 1 2");
+		this.panel.add(currentPanel);
 	}
 	
 	

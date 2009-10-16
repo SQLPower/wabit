@@ -30,6 +30,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -60,8 +61,10 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
+import ca.sqlpower.wabit.swingui.action.DeleteFromTreeAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
 public class GroupPanel implements WabitPanel {
@@ -131,7 +134,7 @@ public class GroupPanel implements WabitPanel {
 		
 		
 	
-		this.currentUsersLabel = new JLabel("Current Groups");
+		this.currentUsersLabel = new JLabel("Current Members");
 		this.currentUsersListModel = new UsersListModel(group, workspace, true);
 		this.currentUsersList = new JList(this.currentUsersListModel);
 		this.currentUsersList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -145,7 +148,7 @@ public class GroupPanel implements WabitPanel {
 				        dummyTree, value, isSelected, false, true, 0, cellHasFocus);
 			}
 		});
-		this.usersLabel = new JLabel("Edit user memberships");
+		this.usersLabel = new JLabel("Edit group members");
 		this.currentUsersScrollPane = new JScrollPane(this.currentUsersList);
 	
 		
@@ -188,20 +191,37 @@ public class GroupPanel implements WabitPanel {
 		});
 		
 		
+		Action deleteAction = new DeleteFromTreeAction(
+				this.workspace, 
+				this.group,
+				this.panel,
+				this.workspace.getSession().getContext());
+		this.toolbarBuilder.add(
+				deleteAction,
+				"Delete this group",
+				WabitIcons.DELETE_ICON_32);
 		
-		// Panel building time
-		this.panel.add(this.nameLabel);
-		this.panel.add(this.nameTextField, "span, wrap");
 		
+		// Panel building time		
+		JPanel namePanel = new JPanel(new MigLayout());
+		namePanel.add(this.nameLabel, "align right");
+		namePanel.add(this.nameTextField, "span, wrap, wmin 600");
+		this.panel.add(namePanel, "north");
 		
-		this.panel.add(this.usersLabel, "span, wrap, gaptop 20");
-		this.panel.add(this.availableUsersLabel);
-		this.panel.add(this.currentUsersLabel, "wrap");
+		this.panel.add(this.usersLabel, "span, wrap, gaptop 20, align center");
 		
-		this.panel.add(this.availableUsersScrollPane);
-		this.panel.add(this.addButton);
-		this.panel.add(this.removeButton);
-		this.panel.add(this.currentUsersScrollPane);
+		JPanel buttonsPanel = new JPanel(new MigLayout());
+		buttonsPanel.add(this.addButton, "wrap");
+		buttonsPanel.add(this.removeButton);
+		JPanel availablePanel = new JPanel(new MigLayout());
+		availablePanel.add(this.availableUsersLabel, "wrap, align center");
+		availablePanel.add(this.availableUsersScrollPane, "wmin 300");
+		JPanel currentPanel = new JPanel(new MigLayout());
+		currentPanel.add(this.currentUsersLabel, "wrap, align center");
+		currentPanel.add(this.currentUsersScrollPane, "wmin 300");
+		this.panel.add(availablePanel);
+		this.panel.add(buttonsPanel, "shrink, span 1 2");
+		this.panel.add(currentPanel);
 		
 	}
 	
