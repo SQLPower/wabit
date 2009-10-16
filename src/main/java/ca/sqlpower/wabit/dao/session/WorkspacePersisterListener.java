@@ -341,8 +341,6 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, ColumnInfo.COLUMN_ALIAS,
 						DataType.STRING, converter.convertToBasicType(
 								columnInfo.getColumnAlias()));
-
-				// Remaining properties
 				Item item = columnInfo.getColumnInfoItem();
 				if (item != null) {
 					target.persistProperty(uuid,
@@ -350,6 +348,7 @@ public class WorkspacePersisterListener implements WabitListener {
 							DataType.STRING, converter.convertToBasicType(item));
 				}
 
+				// Remaining properties
 				target.persistProperty(uuid, ColumnInfo.DATATYPE_CHANGED,
 						DataType.STRING, converter.convertToBasicType(
 								columnInfo.getDataType()));

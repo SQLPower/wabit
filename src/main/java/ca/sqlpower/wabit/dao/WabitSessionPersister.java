@@ -404,8 +404,14 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new ChartRenderer(chart);
 
 			} else if (type.equals(ColumnInfo.class.getSimpleName())) {
-				wo = new ColumnInfo((String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS), String.class));
+				
+				if (containsProperty(uuid, "columnInfoItem")) {
+					wo = new ColumnInfo((String) converter.convertToComplexType(
+							getPropertyAndRemove(uuid, "columnInfoItem"), Item.class));
+				} else {
+					wo = new ColumnInfo((String) converter.convertToComplexType(
+							getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS), String.class));
+				}
 
 			} else if (type.equals(ContentBox.class.getSimpleName())) {
 				wo = new ContentBox();
@@ -641,6 +647,27 @@ public class WabitSessionPersister implements WabitPersister {
 		throw new WabitPersistenceException(uuid, "Cannot find the property " + 
 				propertyName + " for object " + uuid);
 
+	}
+
+	/**
+	 * This method searches through the {@link Multimap} of persisted properties
+	 * under a specific {@link WabitObject} UUID to see if it contains a
+	 * property name.
+	 * 
+	 * @param uuid
+	 *            The {@link WabitObject} UUID to search for.
+	 * @param propertyName
+	 *            The property name to search for.
+	 * @return The determinant of whether the {@link Multimap} of persisted
+	 *         properties contains the property name under the specified UUID.
+	 */
+	private boolean containsProperty(String uuid, String propertyName) {
+		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+			if (wop.getPropertyName().equals(propertyName)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
