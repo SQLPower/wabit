@@ -127,7 +127,9 @@ public class WorkspaceTreeModel implements TreeModel {
     		folderList.add(new FolderNode(workspace, FolderType.IMAGES));
     		folderList.add(new FolderNode(workspace, FolderType.TEMPLATES));
     		folderList.add(new FolderNode(workspace, FolderType.REPORTS));
-    		folderList.add(new FolderNode(workspace, FolderType.REPORTTASK));
+    		if (this.workspace.isServerWorkspace()) {
+    			folderList.add(new FolderNode(workspace, FolderType.REPORTTASK));
+    		}
     	}
     }
     
@@ -151,7 +153,6 @@ public class WorkspaceTreeModel implements TreeModel {
 	        if (o instanceof OlapQuery) return true;
 	        if (o instanceof Template) return true;
 	        if (o instanceof Report) return true;
-	        if (o instanceof ReportTask) return true;
 	        if (o instanceof Chart) return true;
 	        if (o instanceof ChartColumn) return true;
 	        if (o instanceof ContentBox) return true;
@@ -159,6 +160,10 @@ public class WorkspaceTreeModel implements TreeModel {
 	        if (o instanceof WabitOlapAxis) return true;
 	        if (o instanceof WabitOlapDimension) return true;
 	        if (o instanceof WabitOlapSelection) return true;
+	        if (o instanceof ReportTask &&
+	        		this.workspace.isServerWorkspace()) {
+	        	return true;
+	        }
     	}
         return false;
     }

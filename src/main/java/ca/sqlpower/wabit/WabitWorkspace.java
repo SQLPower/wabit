@@ -41,6 +41,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
@@ -884,5 +885,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         for (WabitObject child : importObject.getChildren()) {
             generateNewUUIDsForMerge(child);
         }
+    }
+    
+    public boolean isServerWorkspace() {
+    	return this.session instanceof WabitServerSession;
     }
 }

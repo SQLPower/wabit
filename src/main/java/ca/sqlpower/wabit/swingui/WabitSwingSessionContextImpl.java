@@ -666,7 +666,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	                    popupMenu.add(new NewImageAction(activeSession));
 	    				popupMenu.add(new NewReportAction(activeSession));
 	    				popupMenu.add(new NewTemplateAction(activeSession));
-	    				popupMenu.add(new NewReportTaskAction(activeSession));
+	    				if (activeSession.getWorkspace().isServerWorkspace()) {
+	    					popupMenu.add(new NewReportTaskAction(activeSession));
+	    				}
     				}
     			}
     			popupMenu.show(source, 0, source.getHeight());

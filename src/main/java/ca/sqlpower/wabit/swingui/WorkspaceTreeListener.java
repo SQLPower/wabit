@@ -333,7 +333,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			menu.add(newImage);
 			menu.add(newTemplate);
 			menu.add(newReport);
-			menu.add(newReportTask);
+			if (this.session.getWorkspace().isServerWorkspace()) {
+				menu.add(newReportTask);
+			}
 		}
 		if (!(lastPathComponent instanceof ContentBox) && 
 				!(lastPathComponent instanceof SQLObject) &&
