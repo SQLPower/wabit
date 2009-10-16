@@ -92,6 +92,14 @@ public class WabitJoin extends AbstractWabitObject {
     }
     
     /**
+     * XXX The query may be equivalent to the parent. If this is the case the query
+     * variable should be merged with the parent.
+     */
+    public QueryCache getQuery() {
+		return query;
+	}
+    
+    /**
      * Helper method for the constructor that finds the correct {@link WabitItem}
      * wrapper in the {@link QueryCache} that wraps the given delegate item.
      */
@@ -168,14 +176,6 @@ public class WabitJoin extends AbstractWabitObject {
     
     public String getComparator() {
     	return delegate.getComparator();
-    }
-    
-    public Item getLeftColumn() {
-    	return delegate.getLeftColumn();
-    }
-    
-    public Item getRightColumn() {
-    	return delegate.getRightColumn();
     }
     
     //-----------End SQLJoin getters and setters -----------

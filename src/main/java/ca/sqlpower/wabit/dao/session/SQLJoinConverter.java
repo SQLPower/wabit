@@ -79,6 +79,7 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 		}
 		
 		SQLJoin join = new SQLJoin(leftItem, rightItem);
+		query.addJoin(join);
 		return join;
 	}
 
@@ -86,7 +87,7 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 			Object... additionalInfo) {
 		StringBuffer buffer = new StringBuffer();
 		
-		buffer.append(convertFrom.getParent());
+		buffer.append(convertFrom.getParent().getUUID());
 		buffer.append(DELIMITER);
 		buffer.append(convertFrom.getLeftColumn().getParent().getUUID());
 		buffer.append(DELIMITER);

@@ -239,6 +239,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public QueryCache(QueryCache q, boolean connectListeners) {
         this.query = new QueryImpl(q.query, connectListeners);
         query.addQueryChangeListener(queryChangeListener);
+        query.setUUID(getUUID());
         
         final ResultSetAndUpdateCountCollection newCollection;
         if (q.rsCollection != null) {
@@ -284,6 +285,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants) {
         query = new QueryImpl(dbMapping, prepopulateConstants);
         query.addQueryChangeListener(queryChangeListener);
+        query.setUUID(getUUID());
         createWabitObjectWrappers();
     }
 
@@ -1187,6 +1189,20 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     public WabitConstantsContainer getWabitConstantsContainer() {
         return constantContainer;
+    }
+    
+    @Override
+    public void setUUID(String uuid) {
+    	super.setUUID(uuid);
+    	query.setUUID(uuid);
+    }
+    
+    @Override
+    public void generateNewUUID() {
+    	super.generateNewUUID();
+    	if (query != null) {
+    		query.setUUID(getUUID());
+    	}
     }
     
 }

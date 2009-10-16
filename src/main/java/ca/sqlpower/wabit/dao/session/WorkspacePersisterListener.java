@@ -638,12 +638,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				WabitJoin sqlJoin = ((WabitJoin) child);
 				
 				// Constructor arguments
+				target.persistProperty(uuid, "query", DataType.REFERENCE, 
+						converter.convertToBasicType(sqlJoin.getQuery()));
 				target.persistProperty(uuid, "delegate", DataType.STRING, 
 						converter.convertToBasicType(sqlJoin.getDelegate()));
-				target.persistProperty(uuid, "leftColumn", DataType.REFERENCE, 
-						converter.convertToBasicType(sqlJoin.getLeftColumn()));
-				target.persistProperty(uuid, "rightColumn", DataType.REFERENCE, 
-						converter.convertToBasicType(sqlJoin.getRightColumn()));
 
 				// Remaining properties
 				target.persistProperty(uuid, "comparator", DataType.STRING,
@@ -651,7 +649,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "leftColumnOuterJoin", DataType.BOOLEAN, 
 						converter.convertToBasicType(sqlJoin.isLeftColumnOuterJoin()));
 				target.persistProperty(uuid, "rightColumnOuterJoin", DataType.BOOLEAN, 
-						sqlJoin.isRightColumnOuterJoin());
+						converter.convertToBasicType(sqlJoin.isRightColumnOuterJoin()));
 
 			} else if (child instanceof WabitOlapAxis) {
 				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;

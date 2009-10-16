@@ -553,20 +553,13 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new WabitImage();
 
 			} else if (type.equals(WabitJoin.class.getSimpleName())) {
-				WabitColumnItem wabitLeftItem = 
-					(WabitColumnItem) converter.convertToComplexType(
-							getPropertyAndRemove(uuid, "leftColumn"), 
-							WabitColumnItem.class);
-				Item leftItem = wabitLeftItem.getDelegate();
 				
-				WabitColumnItem wabitRightItem = 
-					(WabitColumnItem) converter.convertToComplexType(
-							getPropertyAndRemove(uuid, "rightColumn"), 
-							WabitColumnItem.class);
-				Item rightItem = wabitRightItem.getDelegate();
+				QueryCache query = (QueryCache) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "query"), QueryCache.class);
+				SQLJoin delegate = (SQLJoin) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "delegate"), SQLJoin.class);
 				
-				wo = new WabitJoin((QueryCache) parent, new SQLJoin(leftItem,
-						rightItem));
+				wo = new WabitJoin(query, delegate);
 
 			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
 				Object ordinal = getPropertyAndRemove(uuid, "ordinal");
@@ -3122,8 +3115,8 @@ public class WabitSessionPersister implements WabitPersister {
 							ca.sqlpower.wabit.report.DataType.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
-			colInfo.setWillGroupOrBreak((GroupAndBreak) converter
-					.convertToComplexType(newValue, GroupAndBreak.class));
+			colInfo.setWillGroupOrBreak((GroupAndBreak) converter.convertToComplexType(
+					newValue, GroupAndBreak.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			colInfo.setWillSubtotal((Boolean) converter.convertToComplexType(
