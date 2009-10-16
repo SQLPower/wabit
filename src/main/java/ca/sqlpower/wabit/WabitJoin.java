@@ -170,5 +170,13 @@ public class WabitJoin extends AbstractWabitObject {
     	return delegate.getComparator();
     }
     
+    public Item getLeftColumn() {
+    	return delegate.getLeftColumn();
+    }
+    
+    public Item getRightColumn() {
+    	return delegate.getRightColumn();
+    }
+    
     //-----------End SQLJoin getters and setters -----------
 }

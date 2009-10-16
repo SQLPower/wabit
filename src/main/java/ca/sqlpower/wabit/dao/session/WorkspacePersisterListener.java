@@ -500,6 +500,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof QueryCache) {
 				QueryCache query = (QueryCache) child;
 				
+				// Remaining properties
 				target.persistProperty(uuid, "zoomLevel", DataType.INTEGER,
 						query.getZoomLevel());
 				target.persistProperty(uuid, "streaming", DataType.BOOLEAN,
@@ -547,6 +548,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof ResultSetRenderer) {
 				ResultSetRenderer renderer = (ResultSetRenderer) child;
 				
+				// Remaining properties
 				target.persistProperty(uuid, "bodyFont", DataType.STRING, 
 						converter.convertToBasicType(renderer.getBodyFont()));
 				target.persistProperty(uuid, "headerFont", DataType.STRING, 
@@ -561,14 +563,18 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof User) {
 				User user = (User) child;
 				
-				target.persistProperty(uuid, "password", DataType.STRING, user.getPassword());
+				// Constructor arguments
+				target.persistProperty(uuid, "password", DataType.STRING, 
+						converter.convertToBasicType(user.getPassword()));
 				
 			} else if (child instanceof WabitConstantsContainer) {
 				WabitConstantsContainer container = (WabitConstantsContainer) child;
 				
+				// Constructor argument
 				target.persistProperty(uuid, "delegate", DataType.STRING,
 						converter.convertToBasicType(container.getDelegate()));
 				
+				// Remaining properties
 				target.persistProperty(uuid, "alias", DataType.STRING, container.getAlias());
 				target.persistProperty(uuid, "position", DataType.STRING, 
 						converter.convertToBasicType(container.getPosition()));
@@ -576,15 +582,18 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof WabitImage) {
 				WabitImage image = (WabitImage) child;
 				
+				// Remaining properties
 				target.persistProperty(uuid, "image", DataType.PNG_IMG, 
 						converter.convertToBasicType(image.getImage(), DataType.PNG_IMG));
 				
 			} else if (child instanceof WabitItem) {
 				WabitItem item = (WabitItem) child;
 				
+				// Constructor argument
 				target.persistProperty(uuid, "delegate", DataType.STRING, 
 						converter.convertToBasicType(item.getDelegate()));
 				
+				// Remaining properties
 				target.persistProperty(uuid, "alias", DataType.STRING, item.getAlias());
 				target.persistProperty(uuid, "selected", DataType.INTEGER, item.getSelected());
 				target.persistProperty(uuid, "where", DataType.STRING, item.getWhere());
@@ -601,15 +610,22 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof WabitDataSource) {
 				WabitDataSource ds = (WabitDataSource) child;
 				
+				// Constructor argument
 				target.persistProperty(uuid, "SPDataSource", DataType.STRING, 
 						converter.convertToBasicType(ds.getSPDataSource()));
 
 			} else if (child instanceof WabitJoin) {
 				WabitJoin sqlJoin = ((WabitJoin) child);
 				
+				// Constructor arguments
 				target.persistProperty(uuid, "delegate", DataType.STRING, 
 						converter.convertToBasicType(sqlJoin.getDelegate()));
+				target.persistProperty(uuid, "leftColumn", DataType.REFERENCE, 
+						converter.convertToBasicType(sqlJoin.getLeftColumn()));
+				target.persistProperty(uuid, "rightColumn", DataType.REFERENCE, 
+						converter.convertToBasicType(sqlJoin.getRightColumn()));
 
+				// Remaining properties
 				target.persistProperty(uuid, "comparator", DataType.STRING,
 						sqlJoin.getComparator());
 				target.persistProperty(uuid, "leftColumnOuterJoin",
@@ -632,9 +648,6 @@ public class WorkspacePersisterListener implements WabitListener {
 								.getSortEvaluationLiteral());
 				target.persistProperty(uuid, "sortOrder", DataType.STRING,
 						wabitOlapAxis.getSortOrder());
-
-			} else if (child instanceof WabitOlapDimension) {
-				// Constructor argument
 
 			} else if (child instanceof WabitOlapSelection) {
 				WabitOlapSelection wabitOlapSelection = (WabitOlapSelection) child;
@@ -665,6 +678,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			} else if (child instanceof WabitWorkspace) {
 				WabitWorkspace workspace = (WabitWorkspace) child;
 				
+				// Remaining properties
 				target.persistProperty(uuid, "editorPanelModel", DataType.REFERENCE,
 						converter.convertToBasicType(workspace.getEditorPanelModel(),
 								DataType.REFERENCE));
