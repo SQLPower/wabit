@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao.json;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +40,9 @@ import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
  */
 public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 
+	private static final Logger logger = Logger
+			.getLogger(WabitJSONMessageDecoder.class);
+	
 	/**
 	 * A {@link WabitPersister} that the decoder will make method calls on
 	 */
@@ -87,14 +91,13 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 */
 	public void decode(String message) throws WabitPersistenceException {
 		String uuid = null;
-		
+		JSONObject jsonObject = null;
 		try {
 			JSONArray messageArray = new JSONArray(message);
 			for (int i=0; i < messageArray.length(); i++) {
-				JSONObject jsonObject = messageArray.getJSONObject(i);
+				jsonObject = messageArray.getJSONObject(i);
 				uuid = jsonObject.getString("uuid");
 				WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
-				
 				String parentUUID;
 				String propertyName;
 				DataType propertyType;
@@ -122,7 +125,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 							propertyType, oldValue, newValue);
 					break;
 				case persistProperty:
-					parentUUID = jsonObject.getString("parentUUID");
+					parentUUID = jsonObject.getString("uuid");
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
 					newValue = jsonObject.get("newValue");
@@ -142,6 +145,9 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 				}
 			}
 		} catch (JSONException e) {
+			if (jsonObject != null) {
+				logger.error("Error decoding JSONObject " + jsonObject);
+			}
 			throw new WabitPersistenceException(uuid, e);
 		}
 	}
