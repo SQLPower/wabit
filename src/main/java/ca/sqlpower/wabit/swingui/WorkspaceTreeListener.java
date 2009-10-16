@@ -42,9 +42,11 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -72,6 +74,7 @@ import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.ScheduleReportAction;
 import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
+import ca.sqlpower.wabit.swingui.action.SystemLevelSecurityAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
@@ -173,6 +176,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		
 		JMenuItem newGroup = new JMenuItem(new NewGroupAction(session));
 		
+		
 		if (lastPathComponent != null) {
 			JTree tree = (JTree) e.getSource();
 			if (lastPathComponent instanceof FolderNode) {
@@ -186,23 +190,34 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					});
 
 					menu.add(createDataSourcesMenu());
+					securityMenu(menu,WabitDataSource.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.QUERIES)) {
 					menu.add(newQuery);
 					menu.add(newOlapQuery);
+					securityMenu(menu,QueryCache.class.getSimpleName(),null);
+					securityMenu(menu,OlapQuery.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.IMAGES)) {
 					menu.add(newImage);
+					securityMenu(menu,WabitImage.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.CHARTS)) {
-					menu.add(newChart);					
+					menu.add(newChart);
+					securityMenu(menu,Chart.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTS)) {
 					menu.add(newReport);
+					securityMenu(menu,Report.class.getSimpleName(),null);
+					securityMenu(menu,Template.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.TEMPLATES)) {
 					menu.add(newTemplate);
+					securityMenu(menu,Template.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTTASK)) {
 					menu.add(newReportTask);
+					securityMenu(menu,ReportTask.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.USERS)) {
 					menu.add(newUser);
+					securityMenu(menu,User.class.getSimpleName(),null);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.GROUPS)) {
 					menu.add(newGroup);
+					securityMenu(menu,Group.class.getSimpleName(),null);
 				}
 			} else {
 			    if (lastPathComponent instanceof WabitObject) {
@@ -323,7 +338,45 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		}
 	}
 	
-    /**
+    private void securityMenu(JPopupMenu menu, String simpleName, WabitObject object) {
+    	
+    	
+    	if (!(this.session instanceof WabitServerSession)) {
+    		return;
+    	}
+    	
+    	WabitWorkspace systemWorkspace = ((WabitServerSession)this.session).getSystemWorkspace();
+    		
+		if (simpleName != null) {
+			String label = null;
+			if (simpleName.equals("WabitDataSource")) {
+				label = "datasources";
+			} else if (simpleName.equals("QueryCache")) {
+				label = "relational queries";
+			} else if (simpleName.equals("OlapQuery")) {
+				label = "OLAP queries";
+			} else if (simpleName.equals("WabitImage")) {
+				label = "images";
+			} else if (simpleName.equals("Chart")) {
+				label = "charts";
+			} else if (simpleName.equals("Report")) {
+				label = "reports";
+			} else if (simpleName.equals("Template")) {
+				label = "templates";
+			} else if (simpleName.equals("ReportTask")) {
+				label = "scheduled reports";
+			} else if (simpleName.equals("User")) {
+				label = "users";
+			} else if (simpleName.equals("Group")) {
+				label = "groups";
+			} else {
+				throw new IllegalStateException(simpleName);
+			}
+			menu.add(new JMenuItem(new SystemLevelSecurityAction(this.session.getWorkspace(), systemWorkspace, null,simpleName,label)));
+		}
+	}
+
+	/**
      * Creates a JMenu with an item for each data source defined in the context's
      * data source collection. When one of these items is selected, it invokes an
      * action that adds that data source to the workspace. 

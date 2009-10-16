@@ -25,6 +25,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 
@@ -55,6 +57,7 @@ import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionImpl;
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
@@ -69,19 +72,30 @@ public class WabitServerSession extends WabitSessionImpl {
     private static final Logger logger = Logger.getLogger(WabitServerSession.class);
     
     private final HttpClient httpClient;
-
-	private final Updater updater;
+    
+    private final Updater updater;
+    
+    private final static Map<WabitServerInfo, WabitSession> systemWorkspaces = new ConcurrentHashMap<WabitServerInfo, WabitSession>();
 
     /**
      * This workspace's location information.
      */
 	private final WorkspaceLocation workspaceLocation;
 
+	/**
+	 * They system workspace on the server this session is attached to.
+	 * This system workspace is shared among all the Wabit workspaces that
+	 * come from the same server.
+	 */
+	private final WabitWorkspace systemWorkspace;
+
     public WabitServerSession(
     		@Nonnull WorkspaceLocation workspaceLocation,
+    		@Nonnull WabitWorkspace systemWorkspace,
     		@Nonnull WabitSessionContext context) {
         super(context);
 		this.workspaceLocation = workspaceLocation;
+		this.systemWorkspace = systemWorkspace;
         if (workspaceLocation == null) {
         	throw new NullPointerException("workspaceLocation must not be null");
         }
@@ -191,12 +205,34 @@ public class WabitServerSession extends WabitSessionImpl {
 	public static List<WabitSession> openServerSessions(WabitSessionContext context, WabitServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
 		List<WabitSession> openedSessions = new ArrayList<WabitSession>();
 		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
-			final WabitServerSession session = new WabitServerSession(workspaceLoc, context);
+			final WabitServerSession session = new WabitServerSession(workspaceLoc, null, context);
 			session.startUpdaterThread();
 			openedSessions.add(session);
 		}
         return openedSessions;
     }
+	
+	/**
+	 * Returns the system workspace from the given Wabit server. The system
+	 * workspace for each server is cached; you will never get multiple system
+	 * workspaces for the same server info.
+	 * 
+	 * @param serverInfo the server from which to retrieve the workspace
+	 * @param context The context the system workspace will belong to
+	 * @return the system Workspace for the given server
+	 */
+	public static WabitWorkspace getSystemWorkspace(WabitServerInfo serverInfo, WabitSessionContext context) {
+		
+		WabitSession session;
+		if (systemWorkspaces.containsKey(serverInfo)) {
+			session = systemWorkspaces.get(serverInfo);
+		} else {
+			WorkspaceLocation systemWorkspaceLoc = new WorkspaceLocation("System Workspace", "system", serverInfo);
+			session = new WabitServerSession(systemWorkspaceLoc, null, context);
+			systemWorkspaces.put(serverInfo, session);
+		}
+		return session.getWorkspace();
+	}
 
     private static <T> T executeServerRequest(HttpClient httpClient, WabitServerInfo serviceInfo, 
             String contextRelativePath, ResponseHandler<T> responseHandler)
@@ -299,6 +335,10 @@ public class WabitServerSession extends WabitSessionImpl {
 				logger.info("Updater thread exiting normally due to interruption.");
 			}
 		}
+	}
+
+	public WabitWorkspace getSystemWorkspace() {
+		return systemWorkspace;
 	}
     
 }

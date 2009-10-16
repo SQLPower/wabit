@@ -259,6 +259,10 @@ public abstract class AbstractWabitObject implements WabitObject {
     	this.fireTransactionEnded();
     }
     
+    public void rollbackTransaction() {
+    	this.rollbackTransaction();
+    }
+    
     /**
      * Fires a transaction started event with a message indicating the
      * reason/type of the transaction.

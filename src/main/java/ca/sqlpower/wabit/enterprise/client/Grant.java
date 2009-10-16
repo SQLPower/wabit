@@ -29,6 +29,7 @@ public class Grant extends AbstractWabitObject {
 
     private final String type;
     private final String subject;
+    private boolean dirty = false;
     private boolean createPrivilege = false;
     private boolean modifyPrivilege = false;
     private boolean deletePrivilege = false;
@@ -174,4 +175,12 @@ public class Grant extends AbstractWabitObject {
         }
         return sb.toString();
     }
+
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
 }

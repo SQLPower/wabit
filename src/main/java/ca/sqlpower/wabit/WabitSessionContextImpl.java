@@ -475,7 +475,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		String newWorkspaceId = UUID.randomUUID().toString();
 		WorkspaceLocation workspaceLocation =
 			new WorkspaceLocation("Unnamed Workspace", newWorkspaceId, serverInfo);
-		WabitServerSession newSession = new WabitServerSession(workspaceLocation, this);
+		WabitWorkspace systemWorkspace = WabitServerSession.getSystemWorkspace(serverInfo, this);
+		WabitServerSession newSession = new WabitServerSession(workspaceLocation, systemWorkspace, this);
 		//TODO
 		logger.error("have to actually create the session on the server here (following call will cause update thread failure)");
 		newSession.startUpdaterThread();
