@@ -73,8 +73,8 @@ import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.ScheduleReportAction;
-import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
 import ca.sqlpower.wabit.swingui.action.SecurityAction;
+import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.FolderNode.FolderType;
@@ -345,12 +345,12 @@ public class WorkspaceTreeListener extends MouseAdapter {
     private void securityMenu(JPopupMenu menu, String simpleName, WabitObject object) {
     	
     	
-//    	if (!(this.session instanceof WabitServerSession)) {
-//    		return;
-//    	}
-//    	
-//    	WabitWorkspace systemWorkspace = ((WabitServerSession)this.session).getSystemWorkspace();
-    	WabitWorkspace systemWorkspace = null; 
+    	if (!(this.session instanceof WabitServerSession)) {
+    		return;
+    	}
+    	
+    	WabitWorkspace systemWorkspace = ((WabitServerSession)this.session).getSystemWorkspace();
+
 		if (simpleName != null && object == null) {
 			String label = null;
 			if (simpleName.equals("WabitDataSource")) {
