@@ -478,6 +478,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         Method[] allMethods = wo.getClass().getMethods();
         for (Method method : allMethods) {
             Class<?>[] paramTypes = method.getParameterTypes();
+            
+            //XXX Take this out once we have the wabit workspace an interface with a
+            //normal and session implementation.
+            if (wo instanceof WabitWorkspace && 
+            		(method.getName().equals("addGroup") || method.getName().equals("addUser"))) 
+            	continue;
+            
             if (method.getName().matches("add.*") &&
                     paramTypes.length == 1 &&
                     WabitObject.class.isAssignableFrom(paramTypes[0])) {
