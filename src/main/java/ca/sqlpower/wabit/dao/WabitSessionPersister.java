@@ -2102,6 +2102,9 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else if (propertyName.equals("query")) {
 			return converter.convertToBasicType(chart.getQuery());
+			
+		} else if (propertyName.equals("backgroundColour")) {
+			return converter.convertToBasicType(chart.getBackgroundColour());
 
 		} else {
 			throw new WabitPersistenceException(chart.getUUID(),
@@ -2165,6 +2168,10 @@ public class WabitSessionPersister implements WabitPersister {
 						+ chart.getName() + "\" and UUID \"" + chart.getUUID() 
 						+ "\" for value \"" + newValue.toString() + "\"", e);
 			}
+			
+		} else if (propertyName.equals("backgroundColour")) {
+			chart.setBackgroundColour((Color) converter.convertToComplexType(
+					newValue, Color.class));
 
 		} else {
 			throw new WabitPersistenceException(uuid,

@@ -228,6 +228,12 @@ public class Chart extends AbstractWabitObject {
     public Color getBackgroundColour() {
         return backgroundColour;
     }
+    
+    public void setBackgroundColour(Color backgroundColour) {
+    	Color oldColour = this.backgroundColour;
+    	this.backgroundColour = backgroundColour;
+    	firePropertyChange("backgroundColour", oldColour, backgroundColour);
+    }
 
     /**
      * Returns the current result set of the query that supplies data to this
