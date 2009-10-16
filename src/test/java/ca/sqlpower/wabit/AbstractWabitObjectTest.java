@@ -475,16 +475,22 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
                 BeanUtils.copyProperty(wo, property.getName(), newVal);
                 
+                if (newVal instanceof WabitObject) {
+                	superParent.addChild((WabitObject) newVal, 0);
+                }
+                
             } catch (InvocationTargetException e) {
                 System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
         }
         
+        int oldChildCount = superParent.getChildren().size();
+        
         //persist the object
         listener.wabitChildAdded(new WabitChildEvent(superParent, wo.getClass(), wo, 0, EventType.ADDED));
         
         //the object must now be added to the super parent
-        assertEquals(1, superParent.getChildren().size());
+        assertEquals(oldChildCount + 1, superParent.getChildren().size());
         WabitObject persistedObject = superParent.getChildren().get(0);
         
         //check all the properties are what we expect on the new object
@@ -504,6 +510,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     				classType = propertyDescriptor.getPropertyType();
     			}
     		}
+    		
+    		System.out.println("Persisted object is of type " + persistedObject.getClass());
     		Object oldVal = PropertyUtils.getSimpleProperty(wo, persistedPropertyName);
     		Object newVal = PropertyUtils.getSimpleProperty(persistedObject, persistedPropertyName);
     		
@@ -515,6 +523,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             
             Object basicOldVal = converterFactory.convertToBasicType(oldVal, additionalVals.toArray());
             Object basicNewVal = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
+            
+            System.out.println("Property " + persistedPropertyName + ". oldVal is \"" + basicOldVal + "\" but newVal is \"" + basicNewVal + "\"");
     		
             assertPersistedValuesAreEqual(oldVal, newVal, basicOldVal, basicNewVal, classType);
     	}

@@ -389,7 +389,7 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new Chart();
 
 			} else if (type.equals(ChartColumn.class.getSimpleName())) {
-				String columnName = (String) getPropertyAndRemove(uuid, "name");
+				String columnName = (String) getPropertyAndRemove(uuid, "columnName");
 				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = (ca.sqlpower.wabit.report.chart.ChartColumn.DataType) converter
 						.convertToComplexType(
 								getPropertyAndRemove(uuid, "dataType"),
@@ -606,7 +606,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 			if (wo != null) {
 				wo.setUUID(uuid);
-				parent.addChild(wo, parent.getChildren().size());
+				parent.addChild(wo, pwo.getIndex());
 			}
 
 		}
@@ -624,8 +624,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param propertyName
 	 *            The persisted property name
 	 * @return The persisted property value
+	 * @throws WabitPersistenceException
+	 *             Thrown if the object does not have the specified property
+	 *             name.
 	 */
-	private Object getPropertyAndRemove(String uuid, String propertyName) {
+	private Object getPropertyAndRemove(String uuid, String propertyName) throws WabitPersistenceException {
 		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 			if (wop.getPropertyName().equals(propertyName)) {
 				Object value = wop.getNewValue();
@@ -635,8 +638,10 @@ public class WabitSessionPersister implements WabitPersister {
 				return value;
 			}
 		}
+		
+		throw new WabitPersistenceException(uuid, "Cannot find the property " + 
+				propertyName + " for object " + uuid);
 
-		return null;
 	}
 
 	/**

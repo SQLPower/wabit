@@ -78,7 +78,7 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
  * calls will be made on the target persister.
  */
 public class WorkspacePersisterListener implements WabitListener {
-
+	
 	private static final Logger logger = Logger
 			.getLogger(WorkspacePersisterListener.class);
 	
@@ -262,6 +262,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			String className = childClassType.getSimpleName();
 			String uuid = child.getUUID();
 
+			target.begin();
 			target.persistObject(parentUUID, className, uuid, indexOfChild);
 			target.persistProperty(uuid, "name", DataType.STRING, child
 					.getName());
@@ -681,8 +682,15 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "content", DataType.REFERENCE, 
 						converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
 			}
+			target.commit();
 			
 		} catch (WabitPersistenceException e1) {
+			try {
+				target.rollback();
+			} catch (WabitPersistenceException e) {
+				//Not rethrowing this exception to not squish the actual exception.
+				logger.error(e);
+			}
 			throw new RuntimeException("Could not add WabitObject as a child.",
 					e1);
 		}
