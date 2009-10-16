@@ -28,7 +28,6 @@ import java.text.DecimalFormat;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
-import org.springframework.security.GrantedAuthority;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -43,7 +42,6 @@ import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
 import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -250,15 +248,11 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
 				throw new RuntimeException(e);
 			}
         } else if (valueType.equals(User.class)) {
-        	newValue = new User("name", "pass");
+        	newValue = new User("New User", "");
         } else if (valueType.equals(Group.class)) {
-        	newValue = new Group();
+        	newValue = new Group("New Group");
         } else if (valueType.equals(Grant.class)) {
-        	newValue = new Grant("subject", "type", true, true, true, true, true);
-        } else if (valueType.equals(GrantedAuthority.class)) {
-        	newValue = new Group();
-        } else if (valueType.equals(GroupMember.class)) {
-        	newValue = new GroupMember(new User("name", "pass"));
+        	newValue = new Grant(null, WabitWorkspace.class.getCanonicalName(), false, false, false, false, false);
         } else if (valueType.equals(ReportTask.class)) {
         	newValue = new ReportTask();
         } else if (valueType.equals(Image.class)) {

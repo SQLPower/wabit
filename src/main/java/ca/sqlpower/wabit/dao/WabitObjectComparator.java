@@ -36,6 +36,8 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.WabitOlapAxis;
@@ -107,6 +109,8 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitImage.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Template.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Report.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(User.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Group.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Page.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ContentBox.class)));
         equalObjectsSet = new HashSet<Class<? extends WabitObject>>();

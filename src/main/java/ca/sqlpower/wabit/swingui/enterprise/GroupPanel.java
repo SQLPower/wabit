@@ -27,9 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -39,7 +38,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
@@ -48,9 +46,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.olap4j.impl.ArrayMap;
-
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
@@ -69,47 +64,45 @@ import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
-public class UserPanel implements WabitPanel {
+public class GroupPanel implements WabitPanel {
 
-	private final User user;
+	private final Group group;
 	
 	private final JPanel panel = new JPanel(new MigLayout());
-	private final JTextField loginTextField;
-	private final JPasswordField passwordTextField;
+	private final JTextField nameTextField;
 	
-	private final JList currentGroupsList;
-	private final JScrollPane currentGroupsScrollPane;
-	private final GroupsListModel currentGroupsListModel;
+	private final JList currentUsersList;
+	private final JScrollPane currentUsersScrollPane;
+	private final UsersListModel currentUsersListModel;
 	
-	private final JList availableGroupsList;
-	private final JScrollPane availableGroupsScrollPane;
-	private final GroupsListModel availableGroupsListModel;
+	private final JList availableUsersList;
+	private final JScrollPane availableUsersScrollPane;
+	private final UsersListModel availableUsersListModel;
 	
 	private final JButton addButton;
 	private final JButton removeButton;
 	
 	
-	private final JLabel loginLabel;
-	private final JLabel passwordLabel;
-	private final JLabel groupsLabel;
-	private final JLabel currentGroupsLabel;
-	private final JLabel availableGroupsLabel;
+	private final JLabel nameLabel;
+	private final JLabel usersLabel;
+	private final JLabel currentUsersLabel;
+	private final JLabel availableUsersLabel;
 	
 	private final WabitToolBarBuilder toolbarBuilder = new WabitToolBarBuilder();
 
 	private final WabitWorkspace workspace;
 	
 	
-	public UserPanel(User baseUser) {
-		this.user = baseUser;
-		this.workspace = (WabitWorkspace)this.user.getParent();
+	public GroupPanel(Group baseGroup) {
+		this.group = baseGroup;
+		this.workspace = (WabitWorkspace)this.group.getParent();
 		
-		this.loginTextField = new JTextField();
-		this.loginTextField.setText(user.getName());
-		this.loginLabel = new JLabel("User name");
-		this.loginTextField.addKeyListener(new KeyListener() {
+		this.nameTextField = new JTextField();
+		this.nameTextField.setText(group.getName());
+		this.nameLabel = new JLabel("Group name");
+		this.nameTextField.addKeyListener(new KeyListener() {
 			public void keyTyped(KeyEvent e) {
-				user.setName(loginTextField.getText());
+				group.setName(nameTextField.getText());
 			}
 			public void keyReleased(KeyEvent e) {
 				// no-op
@@ -120,27 +113,11 @@ public class UserPanel implements WabitPanel {
 		});
 		
 		
-		this.passwordTextField = new JPasswordField();
-		this.passwordTextField.setText(user.getPassword());
-		this.passwordLabel = new JLabel("Password");
-		this.passwordTextField.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {
-				user.setPassword(new String(passwordTextField.getPassword()));
-			}
-			public void keyReleased(KeyEvent e) {
-				// no-op
-			}
-			public void keyPressed(KeyEvent e) {
-				// no-op
-			}
-		});
-		
-		
-		this.availableGroupsLabel = new JLabel("Available Groups");
-		this.availableGroupsListModel = new GroupsListModel(user, workspace, false);
-		this.availableGroupsList = new JList(this.availableGroupsListModel);
-		this.availableGroupsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		this.availableGroupsList.setCellRenderer(new DefaultListCellRenderer() {
+		this.availableUsersLabel = new JLabel("Available Users");
+		this.availableUsersListModel = new UsersListModel(group, workspace, false);
+		this.availableUsersList = new JList(this.availableUsersListModel);
+		this.availableUsersList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		this.availableUsersList.setCellRenderer(new DefaultListCellRenderer() {
             final JTree dummyTree = new JTree();
             final WorkspaceTreeCellRenderer delegate = new WorkspaceTreeCellRenderer();
         	@Override
@@ -150,15 +127,15 @@ public class UserPanel implements WabitPanel {
 				        dummyTree, value, isSelected, false, true, 0, cellHasFocus);
 			}
 		});
-		this.availableGroupsScrollPane = new JScrollPane(this.availableGroupsList);
+		this.availableUsersScrollPane = new JScrollPane(this.availableUsersList);
 		
 		
 	
-		this.currentGroupsLabel = new JLabel("Current Groups");
-		this.currentGroupsListModel = new GroupsListModel(user, workspace, true);
-		this.currentGroupsList = new JList(this.currentGroupsListModel);
-		this.currentGroupsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		this.currentGroupsList.setCellRenderer(new DefaultListCellRenderer() {
+		this.currentUsersLabel = new JLabel("Current Groups");
+		this.currentUsersListModel = new UsersListModel(group, workspace, true);
+		this.currentUsersList = new JList(this.currentUsersListModel);
+		this.currentUsersList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		this.currentUsersList.setCellRenderer(new DefaultListCellRenderer() {
             final JTree dummyTree = new JTree();
             final WorkspaceTreeCellRenderer delegate = new WorkspaceTreeCellRenderer();
         	@Override
@@ -168,8 +145,8 @@ public class UserPanel implements WabitPanel {
 				        dummyTree, value, isSelected, false, true, 0, cellHasFocus);
 			}
 		});
-		this.groupsLabel = new JLabel("Edit user memberships");
-		this.currentGroupsScrollPane = new JScrollPane(this.currentGroupsList);
+		this.usersLabel = new JLabel("Edit user memberships");
+		this.currentUsersScrollPane = new JScrollPane(this.currentUsersList);
 	
 		
 		
@@ -177,12 +154,12 @@ public class UserPanel implements WabitPanel {
 		this.addButton = new JButton(">>");
 		this.addButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Object[] selection = availableGroupsList.getSelectedValues();
+				Object[] selection = availableUsersList.getSelectedValues();
 				if (selection.length==0) {
 					return;
 				}
 				for (Object object : selection) {
-					((Group)object).addMember(new GroupMember(user));
+					group.addMember(new GroupMember((User)object));
 				}
 			}
 		});
@@ -192,20 +169,20 @@ public class UserPanel implements WabitPanel {
 		this.removeButton = new JButton("<<");
 		this.removeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Object[] selection = currentGroupsList.getSelectedValues();
+				Object[] selection = currentUsersList.getSelectedValues();
 				if (selection.length==0) {
 					return;
 				}
-				Map<Group,GroupMember> toRemove = new ArrayMap<Group, GroupMember>();
+				List<GroupMember> toRemove = new ArrayList<GroupMember>();
 				for (Object object : selection) {
-					for (GroupMember membership : ((Group)object).getMembers()) {
-						if (membership.getUser().getUUID().equals(user.getUUID())) {
-							toRemove.put((Group)object, membership);
+					for (GroupMember membership : group.getMembers()) {
+						if (membership.getUser().getUUID().equals(((User)object).getUUID())) {
+							toRemove.add(membership);
 						}
 					}
 				}
-				for (Entry<Group, GroupMember> entry : toRemove.entrySet()) {
-					entry.getKey().removeMember(entry.getValue());
+				for (GroupMember membership : toRemove) {
+					group.removeMember(membership);
 				}
 			}
 		});
@@ -213,20 +190,18 @@ public class UserPanel implements WabitPanel {
 		
 		
 		// Panel building time
-		this.panel.add(this.loginLabel);
-		this.panel.add(this.loginTextField, "span, wrap");
-		this.panel.add(this.passwordLabel);
-		this.panel.add(this.passwordTextField, "span, wrap");
+		this.panel.add(this.nameLabel);
+		this.panel.add(this.nameTextField, "span, wrap");
 		
 		
-		this.panel.add(this.groupsLabel, "span, wrap, gaptop 20");
-		this.panel.add(this.availableGroupsLabel);
-		this.panel.add(this.currentGroupsLabel, "wrap");
+		this.panel.add(this.usersLabel, "span, wrap, gaptop 20");
+		this.panel.add(this.availableUsersLabel);
+		this.panel.add(this.currentUsersLabel, "wrap");
 		
-		this.panel.add(this.availableGroupsScrollPane);
+		this.panel.add(this.availableUsersScrollPane);
 		this.panel.add(this.addButton);
 		this.panel.add(this.removeButton);
-		this.panel.add(this.currentGroupsScrollPane);
+		this.panel.add(this.currentUsersScrollPane);
 		
 	}
 	
@@ -237,7 +212,7 @@ public class UserPanel implements WabitPanel {
 	}
 
 	public String getTitle() {
-		return "User editor - "+user.getName();
+		return "Group editor - "+group.getName();
 	}
 
 	public JToolBar getToolbar() {
@@ -297,7 +272,7 @@ public class UserPanel implements WabitPanel {
                     group.setParent(p);
                     group.addMember(new GroupMember(user));
                     
-                    Group group2 = new Group("Other Group");
+                    Group group2 = new Group("Other");
                     group2.setParent(p);
                     
                     p.addUser(user);
@@ -306,9 +281,9 @@ public class UserPanel implements WabitPanel {
                 	
                 	
                 	
-                	UserPanel panel = new UserPanel(user);
+                	GroupPanel panel = new GroupPanel(group);
                 	
-                	UserPanel panel2 = new UserPanel(user);
+                	GroupPanel panel2 = new GroupPanel(group);
                 	
                 	
                     JFrame f = new JFrame("TEST PANEL");

@@ -183,6 +183,10 @@ public class WorkspaceTreeModel implements TreeModel {
     	    return Collections.emptyList();
     	} else if (parentObject instanceof ReportTask) {
     	    return Collections.emptyList();
+    	} else if (parentObject instanceof User) {
+    		return Collections.emptyList();
+    	} else if (parentObject instanceof Group) {
+    		return Collections.emptyList();
     	} else if (parentObject instanceof SQLObject) {
     		try {
 				return ((SQLObject) parentObject).getChild(index);
@@ -216,6 +220,10 @@ public class WorkspaceTreeModel implements TreeModel {
 			List<Object> children = getWabitDatasourceChildren(wds);
     		return children.size();
     	} else if (parent instanceof ReportTask) {
+    		return 0;
+    	} else if (parent instanceof User) {
+    		return 0;
+    	} else if (parent instanceof Group) {
     		return 0;
     	} else if (parent instanceof QueryCache) {
     	    return 0;

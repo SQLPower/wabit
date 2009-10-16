@@ -42,7 +42,7 @@ public class NewUserAction extends AbstractAction {
 	}
 	
 	public void actionPerformed(ActionEvent e) {
-		User user = new User("New User", "password");
+		User user = new User("New User", "");
 		session.getWorkspace().addUser(user);
 	}
 

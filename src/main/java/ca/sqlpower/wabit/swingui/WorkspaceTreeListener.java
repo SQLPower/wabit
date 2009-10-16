@@ -42,7 +42,9 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
+import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -59,12 +61,14 @@ import ca.sqlpower.wabit.swingui.action.CopyTemplateAction;
 import ca.sqlpower.wabit.swingui.action.DeleteFromTreeAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
+import ca.sqlpower.wabit.swingui.action.NewGroupAction;
 import ca.sqlpower.wabit.swingui.action.NewImageAction;
 import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
 import ca.sqlpower.wabit.swingui.action.NewReportTaskAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
+import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.action.ScheduleReportAction;
 import ca.sqlpower.wabit.swingui.action.ShowEditorAction;
@@ -165,6 +169,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		
 		JMenuItem newReportTask = new JMenuItem(new NewReportTaskAction(session));
 		
+		JMenuItem newUser = new JMenuItem(new NewUserAction(session));
+		
+		JMenuItem newGroup = new JMenuItem(new NewGroupAction(session));
+		
 		if (lastPathComponent != null) {
 			JTree tree = (JTree) e.getSource();
 			if (lastPathComponent instanceof FolderNode) {
@@ -191,6 +199,10 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newTemplate);
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTTASK)) {
 					menu.add(newReportTask);
+				} else if (lastFolderNode.getFolderType().equals(FolderType.USERS)) {
+					menu.add(newUser);
+				} else if (lastFolderNode.getFolderType().equals(FolderType.GROUPS)) {
+					menu.add(newGroup);
 				}
 			} else {
 			    if (lastPathComponent instanceof WabitObject) {
@@ -250,9 +262,15 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.addSeparator();
 					menu.add(new CopyImageAction((WabitImage) lastPathComponent, session, session.getContext().getFrame()));
 				} else if (lastPathComponent instanceof ReportTask) {
-					menu.add(newImage);
+					menu.add(newReportTask);
 					menu.addSeparator();
 					menu.add(new CopyReportTaskAction((ReportTask) lastPathComponent, session, session.getContext().getFrame()));
+				} else if (lastPathComponent instanceof User) {
+					menu.add(newUser);
+					menu.addSeparator();
+				} else if (lastPathComponent instanceof Group) {
+					menu.add(newGroup);
+					menu.addSeparator();
 				} else if (lastPathComponent instanceof Chart) {
 					menu.add(newChart);
 					menu.addSeparator();

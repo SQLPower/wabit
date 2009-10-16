@@ -388,12 +388,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         	if (childType == Report.class) return offset;
         	offset += reports.size();
         	
-        	if (childType == User.class) return offset;
-        	offset += users.size();
-        	
-        	if (childType == Group.class) return offset;
-        	offset += groups.size();
-        	
         	if(childType == ReportTask.class) return offset;
         	offset += reportTasks.size();
 
@@ -437,6 +431,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	users.add(index, u);
     	u.setParent(this);
     	fireChildAdded(User.class, u, index);
+    	setEditorPanelModel(u);
     }
     
     public boolean removeUser(User u) {
@@ -460,6 +455,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	groups.add(index, g);
     	g.setParent(this);
     	fireChildAdded(Group.class, g, index);
+    	setEditorPanelModel(g);
     }
     
     public boolean removeGroup(Group g) {
@@ -858,6 +854,15 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
             } else if (importObject instanceof Report) {
                 removeReport((Report) importObject);
                 workspace.addReport((Report) importObject);
+            } else if (importObject instanceof ReportTask) {
+                removeReportTask((ReportTask) importObject);
+                workspace.addReportTask((ReportTask) importObject);
+            } else if (importObject instanceof User) {
+                removeUser((User) importObject);
+                workspace.addUser((User) importObject);
+            } else if (importObject instanceof Group) {
+                removeGroup((Group) importObject);
+                workspace.addGroup((Group) importObject);
             } else if (importObject instanceof Template) {
                 removeTemplate((Template) importObject);
                 workspace.addTemplate((Template) importObject);

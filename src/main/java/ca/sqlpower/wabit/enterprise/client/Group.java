@@ -33,6 +33,10 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     private final List<Grant> grants = new ArrayList<Grant>();
     private final List<GroupMember> members = new ArrayList<GroupMember>();
 
+    public Group(String name) {
+    	setName(name);
+    }
+    
     @Override
     protected boolean removeChildImpl(WabitObject child) {
         if (child instanceof Grant) {

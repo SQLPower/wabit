@@ -410,7 +410,7 @@ public class WabitSessionPersister implements WabitPersister {
 				wo = new Grant(subject, type, create, modify, delete, execute, grant);
 				
 			} else if (type.equals(Group.class.getSimpleName())) {
-				wo = new Group();
+				wo = new Group("Unsaved Group");
 				
 			} else if (type.equals(GroupMember.class.getSimpleName())) {
 				User user = (User) converter.convertToComplexType(

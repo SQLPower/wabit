@@ -42,7 +42,7 @@ private static final Icon NEW_GROUP_ICON = new ImageIcon(WabitSwingSessionImpl.c
 	}
 	
 	public void actionPerformed(ActionEvent e) {
-		Group user = new Group();
+		Group user = new Group("Unsaved Group");
 		session.getWorkspace().addGroup(user);
 	}
 }
