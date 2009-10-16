@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.swingui.enterprise;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,9 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -187,9 +191,9 @@ public class GrantPanel implements DataEntryPanel {
 		this.checkboxPanel.add(this.grantCheckBox, "wrap");
 		
 		
-		panel.add(topLabel, "wrap, span, growx");
-		panel.add(scrollPane);
-		panel.add(this.checkboxPanel, "wrap");
+		panel.add(topLabel, "north, gapbottom 20, gaptop 10");
+		panel.add(scrollPane, "west, wmin 500, hmin 400");
+		panel.add(this.checkboxPanel, "east");
 		
 		updateGrantsList();
 	}
@@ -352,27 +356,27 @@ public class GrantPanel implements DataEntryPanel {
                 	
                 	
                 	
-//                	GrantPanel panel = new GrantPanel(p, , User.class.getSimpleName(), null, "Label");
-//                	
-//                    JFrame f = new JFrame("TEST PANEL");
-//                    JPanel outerPanel = new JPanel(new BorderLayout());
-//                    outerPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
-//                    outerPanel.add(panel.getPanel(), BorderLayout.CENTER);
-//                    f.setContentPane(outerPanel);
-//                    f.pack();
-//                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//                    f.setVisible(true);
-//                    
-//                    
-//                    GrantPanel panel2 = new GrantPanel(p, p.systemWorkspace, User.class.getSimpleName(), null, "label");
-//                    JFrame f2 = new JFrame("TEST PANEL");
-//                    JPanel outerPanel2 = new JPanel(new BorderLayout());
-//                    outerPanel2.setBorder(BorderFactory.createLineBorder(Color.BLUE));
-//                    outerPanel2.add(panel2.getPanel(), BorderLayout.CENTER);
-//                    f2.setContentPane(outerPanel2);
-//                    f2.pack();
-//                    f2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//                    f2.setVisible(true);
+                	GrantPanel panel = new GrantPanel(p, p, User.class.getSimpleName(), null, "Label");
+                	
+                    JFrame f = new JFrame("TEST PANEL");
+                    JPanel outerPanel = new JPanel(new BorderLayout());
+                    outerPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+                    outerPanel.add(panel.getPanel(), BorderLayout.CENTER);
+                    f.setContentPane(outerPanel);
+                    f.pack();
+                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    f.setVisible(true);
+                    
+                    
+                    GrantPanel panel2 = new GrantPanel(p, p, User.class.getSimpleName(), null, "label");
+                    JFrame f2 = new JFrame("TEST PANEL");
+                    JPanel outerPanel2 = new JPanel(new BorderLayout());
+                    outerPanel2.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+                    outerPanel2.add(panel2.getPanel(), BorderLayout.CENTER);
+                    f2.setContentPane(outerPanel2);
+                    f2.pack();
+                    f2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    f2.setVisible(true);
 //                    
                     
                 } catch (Exception ex) {
