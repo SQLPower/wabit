@@ -47,6 +47,7 @@ import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.dao.PersisterUtils;
+import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
@@ -70,6 +71,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * created by the subclass's setUp method.
      */
     public abstract WabitObject getObjectUnderTest();
+    
+    /**
+     * A session that is hooked up to a pl.ini that is used for regression testing.
+     */
+    private WabitSession session;
     
     /**
      * Returns a list of JavaBeans property names that should be ignored when
@@ -103,6 +109,38 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("dependencies");
     	ignore.add("UUID");
     	return ignore;
+    }
+    
+    @Override
+    protected void setUp() throws Exception {
+    	super.setUp();
+    	final PlDotIni plIni = new PlDotIni();
+    	plIni.read(new File("src/test/java/pl.regression.ini"));
+        final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
+        		Olap4jDataSource.class);
+        if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
+        final OlapConnectionPool connectionPool = new OlapConnectionPool(olapDS, 
+        		new SQLDatabaseMapping() {
+        	private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return sqlDB;
+        	}
+        });
+    	
+    	
+    	WabitSessionContext context = new StubWabitSessionContext() {
+    		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
+    			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
+    				return connectionPool.getConnection();
+    		};
+    	};
+    	session = new StubWabitSession(context) {
+    		
+    		@Override
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
+    	};
     }
     
     /**
@@ -282,36 +320,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 */
     public void testPersisterUpdatesProperties() throws Exception {
     	
-    	final PlDotIni plIni = new PlDotIni();
-    	plIni.read(new File("src/test/java/pl.regression.ini"));
-        final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
-        		Olap4jDataSource.class);
-        if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
-        final OlapConnectionPool connectionPool = new OlapConnectionPool(olapDS, 
-        		new SQLDatabaseMapping() {
-        	private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
-        	public SQLDatabase getDatabase(JDBCDataSource ds) {
-        		return sqlDB;
-        	}
-        });
-    	
     	AllObjectContainer superParent = new AllObjectContainer();
     	
     	WabitObject wo = getObjectUnderTest();
     	superParent.addChild(wo, 0);
     	
-    	WabitSessionContext context = new StubWabitSessionContext() {
-    		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
-    			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
-    				return connectionPool.getConnection();
-    		};
-    	};
-    	WabitSession session = new StubWabitSession(context) {
-    		@Override
-    		public DataSourceCollection<SPDataSource> getDataSources() {
-    			return plIni;
-    		}
-    	};
     	WabitSessionPersister persister = new WabitSessionPersister(session, superParent);
 		
     	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
@@ -373,17 +386,139 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 			Object newValAfterSet = PropertyUtils.getSimpleProperty(wo, property.getName());
 			Object basicExpectedValue = converterFactory.convertToBasicType(newValAfterSet, additionalVals.toArray());
 			
-			//Input streams from images are being compared by hash code not values
-			if (Image.class.isAssignableFrom(property.getPropertyType())) {
-				assertTrue(Arrays.equals(PersisterUtils.convertImageToStreamAsPNG((Image) newVal).toByteArray(),
-						PersisterUtils.convertImageToStreamAsPNG((Image) newValAfterSet).toByteArray()));
-			} else {
-
-				//Not all new values are equivalent to their old values so we are
-				//comparing them by their basic type as that is at least comparable, in most cases, i hope.
-				assertEquals(basicNewValue, basicExpectedValue);
-			}
+			assertPersistedValuesAreEqual(newVal, newValAfterSet, basicNewValue, 
+					basicExpectedValue, property.getPropertyType());
     	}
+	}
+
+	/**
+	 * Tests that the new value that was persisted is the same as an old value
+	 * that was to be persisted. This helper method for the persister tests will
+	 * compare the values by their converted type or some other means as not all
+	 * values that are persisted have implemented their equals method.
+	 * <p>
+	 * This will do the asserts to compare if the objects are equal.
+	 * 
+	 * @param valueBeforePersist
+	 *            the value that we are expecting the persisted value to contain
+	 * @param valueAfterPersist
+	 *            the value that was persisted to the object. This will be
+	 *            tested against the valueBeforePersist to ensure that they are
+	 *            the same.
+	 * @param basicValueBeforePersist
+	 *            The valueBeforePersist converted to a basic type by a
+	 *            converter.
+	 * @param basicValueAfterPersist
+	 *            The valueAfterPersist converted to a basic type by a
+	 *            converter.
+	 * @param valueType
+	 *            The type of object the before and after values should contain.
+	 */
+    private void assertPersistedValuesAreEqual(Object valueBeforePersist, Object valueAfterPersist, 
+    		Object basicValueBeforePersist, Object basicValueAfterPersist, 
+    		Class<? extends Object> valueType) {
+    	
+		//Input streams from images are being compared by hash code not values
+		if (Image.class.isAssignableFrom(valueType)) {
+			assertTrue(Arrays.equals(PersisterUtils.convertImageToStreamAsPNG((Image) valueBeforePersist).toByteArray(),
+					PersisterUtils.convertImageToStreamAsPNG((Image) valueAfterPersist).toByteArray()));
+		} else {
+
+			//Not all new values are equivalent to their old values so we are
+			//comparing them by their basic type as that is at least comparable, in most cases, i hope.
+			assertEquals(basicValueBeforePersist, basicValueAfterPersist);
+		}
+    }
+
+	/**
+	 * Tests that calling
+	 * {@link WabitPersister#persistObject(String, String, String, int)} for a
+	 * session persister will create a new object and set all of the properties
+	 * on the object.
+	 */
+    public void testPersisterAddsNewObject() throws Exception {
+    	
+    	AllObjectContainer superParent = new AllObjectContainer();
+    	
+    	WabitObject wo = getObjectUnderTest();
+    	
+    	WabitSessionPersister persister = new WabitSessionPersister(session, superParent);
+    	WorkspacePersisterListener listener = new WorkspacePersisterListener(session, persister);
+		
+    	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
+        		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
+        
+    	List<PropertyDescriptor> settableProperties;
+        settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
+        
+        //Set all possible values to new values for testing.
+        Set<String> propertiesToIgnoreForEvents = getPropertiesToIgnoreForEvents();
+        NewValueMaker valueMaker = new WabitNewValueMaker();
+        for (PropertyDescriptor property : settableProperties) {
+            Object oldVal;
+            if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
+            
+            try {
+                oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());
+
+                // check for a setter
+                if (property.getWriteMethod() == null) continue;
+                
+            } catch (NoSuchMethodException e) {
+                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                continue;
+            }
+            
+            Object newVal = valueMaker.makeNewValue(property.getPropertyType(), oldVal, property.getName());
+            
+            try {
+                System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
+                BeanUtils.copyProperty(wo, property.getName(), newVal);
+                
+            } catch (InvocationTargetException e) {
+                System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
+            }
+        }
+        
+        //persist the object
+        listener.wabitChildAdded(new WabitChildEvent(superParent, wo.getClass(), wo, 0, EventType.ADDED));
+        
+        //the object must now be added to the super parent
+        assertEquals(1, superParent.getChildren().size());
+        WabitObject persistedObject = superParent.getChildren().get(0);
+        
+        //check all the properties are what we expect on the new object
+    	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
+    	
+    	List<String> settablePropertyNames = new ArrayList<String>();
+    	for (PropertyDescriptor pd : settableProperties) {
+    		settablePropertyNames.add(pd.getName());
+    	}
+    	
+    	settablePropertyNames.removeAll(ignorableProperties);
+    	
+    	for (String persistedPropertyName : settablePropertyNames) {
+    		Class<?> classType = null;
+    		for (PropertyDescriptor propertyDescriptor : settableProperties) {
+    			if (propertyDescriptor.getName().equals(persistedPropertyName)) {
+    				classType = propertyDescriptor.getPropertyType();
+    			}
+    		}
+    		Object oldVal = PropertyUtils.getSimpleProperty(wo, persistedPropertyName);
+    		Object newVal = PropertyUtils.getSimpleProperty(persistedObject, persistedPropertyName);
+    		
+            //XXX will replace this later
+            List<Object> additionalVals = new ArrayList<Object>();
+            if (wo instanceof OlapQuery && persistedPropertyName.equals("currentCube")) {
+            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
+            }
+            
+            Object basicOldVal = converterFactory.convertToBasicType(oldVal, additionalVals.toArray());
+            Object basicNewVal = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
+    		
+            assertPersistedValuesAreEqual(oldVal, newVal, basicOldVal, basicNewVal, classType);
+    	}
+    	
 	}
     
     /**
