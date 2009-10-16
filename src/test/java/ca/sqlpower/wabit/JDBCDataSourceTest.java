@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit;
 
+import java.io.File;
+
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
@@ -30,8 +32,9 @@ public class JDBCDataSourceTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        final JDBCDataSource spds = new JDBCDataSource(new PlDotIni());
-        spds.setName("test");
+        PlDotIni plIni = new PlDotIni();
+        plIni.read(new File("src/test/java/pl.regression.ini"));
+        JDBCDataSource spds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         ds = new WabitDataSource(spds);
     }
     

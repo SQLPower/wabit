@@ -538,8 +538,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 				String dsName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-				SPDataSource spds = session.getContext().getDataSources()
+						getPropertyAndRemove(uuid, "SPDataSource"), String.class);
+				SPDataSource spds = session.getDataSources()
 						.getDataSource(dsName);
 				
 				if (spds == null) {
