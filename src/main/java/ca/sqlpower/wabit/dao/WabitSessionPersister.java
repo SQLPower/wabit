@@ -1429,7 +1429,7 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Boolean.class));
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSource((JDBCDataSource) converter.convertToComplexType(
+			query.setDataSourceWithoutReset((JDBCDataSource) converter.convertToComplexType(
 					newValue, JDBCDataSource.class));
 
 		} else {
