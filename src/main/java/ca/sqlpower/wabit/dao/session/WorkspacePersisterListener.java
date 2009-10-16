@@ -222,7 +222,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            The root of the tree of objects that will be persisted. This
 	 *            object and all of its children will be persisted.
 	 */
-	 void persistObject(WabitObject root) throws WabitPersistenceException {
+	 public void persistObject(WabitObject root) throws WabitPersistenceException {
 		target.begin();
 
 		int index = 0;
