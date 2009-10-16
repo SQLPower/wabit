@@ -382,7 +382,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 			if (type.equals(CellSetRenderer.class.getSimpleName())) {
 				OlapQuery olapQuery = (OlapQuery) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "modifiedOlapQuery"), OlapQuery.class);
+						getPropertyAndRemove(uuid, "content"), OlapQuery.class);
 				wo = new CellSetRenderer(olapQuery);
 
 			} else if (type.equals(Chart.class.getSimpleName())) {
@@ -2659,7 +2659,7 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("bodyFont")) {
 			csRenderer.setBodyFont((Font) converter.convertToComplexType(
 					newValue, Font.class));
-
+			
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
 					getWabitPersistenceExceptionMessage(csRenderer, propertyName));

@@ -47,6 +47,15 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
     private WabitWorkspace workspace;
     
+    /**
+     * We are not persisting the WabitWorkspace object because it is created by
+     * the session.
+     */
+    @Override
+    public void testPersisterAddsNewObject() throws Exception {
+    	//no-op
+    }
+    
     @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
