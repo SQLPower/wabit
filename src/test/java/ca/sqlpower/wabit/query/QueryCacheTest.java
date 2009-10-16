@@ -193,7 +193,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
         tableContainer.addItem(item2);
         WabitTableContainer container = new WabitTableContainer(tableContainer);
         
-        queryCache.addChild(container, queryCache.childPositionOffset(container.getClass()));
+        queryCache.addChild(container, 0);
         
         assertTrue(queryCache.getFromTableList().contains(container.getDelegate()));
         

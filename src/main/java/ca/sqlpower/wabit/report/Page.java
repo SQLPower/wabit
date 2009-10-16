@@ -371,6 +371,14 @@ public class Page extends AbstractWabitObject {
     public List<ContentBox> getContentBoxes() {
         return Collections.unmodifiableList(contentBoxes);
     }
+    
+    /**
+     * Returns an unmodifiable view of the page's guides. Currently only used
+     * in testing.
+     */
+    List<Guide> getGuides() {
+    	return Collections.unmodifiableList(guides);
+    }
 
     /**
      * Adds a guide to the end of the list of guides.
@@ -590,11 +598,10 @@ public class Page extends AbstractWabitObject {
     
     @Override
     protected void addChildImpl(WabitObject child, int index) {
-        int innerIndex = index - childPositionOffset(child.getClass());
         if (child instanceof Guide) {
-            addGuide((Guide) child, innerIndex);
+            addGuide((Guide) child, index);
         } else if (child instanceof ContentBox) {
-            addContentBox((ContentBox) child, innerIndex);
+            addContentBox((ContentBox) child, index);
         } else {
             throw new AssertionError("The child " + child.getName() + " of type " + 
                     child.getClass() + " should be a valid type for " + getName() + 

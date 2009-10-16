@@ -792,27 +792,26 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     @Override
     protected void addChildImpl(WabitObject child, int index) {
-        int innerIndex = index - childPositionOffset(child.getClass());
         if (child instanceof WabitDataSource) {
-            addDataSource((WabitDataSource) child, innerIndex);
+            addDataSource((WabitDataSource) child, index);
         } else if (child instanceof QueryCache) {
-            addQuery((QueryCache) child, session, innerIndex);
+            addQuery((QueryCache) child, session, index);
         } else if (child instanceof OlapQuery) {
-            addOlapQuery((OlapQuery) child, innerIndex);
+            addOlapQuery((OlapQuery) child, index);
         } else if (child instanceof WabitImage) {
-            addImage((WabitImage) child, innerIndex);
+            addImage((WabitImage) child, index);
         } else if (child instanceof Chart) {
-            addChart((Chart) child, innerIndex);
+            addChart((Chart) child, index);
         } else if (child instanceof Template) {
-            addTemplate((Template) child, innerIndex);
+            addTemplate((Template) child, index);
         } else if (child instanceof Report) {
-            addReport((Report) child, innerIndex);
+            addReport((Report) child, index);
         } else if (child instanceof ReportTask) {
-            addReportTask((ReportTask) child, innerIndex);
+            addReportTask((ReportTask) child, index);
         } else if (child instanceof User) {
-            addUser((User) child, innerIndex);
+            addUser((User) child, index);
         } else if (child instanceof Group) {
-            addGroup((Group) child, innerIndex);
+            addGroup((Group) child, index);
         } else {
             throw new AssertionError("Adding child " + child.getName() + " of type " + child.getClass() + 
                     " is not valid for a workspace and should have been checked already");

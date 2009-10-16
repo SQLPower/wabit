@@ -150,7 +150,7 @@ public class PageTest extends AbstractWabitObjectTest {
         
         page.addChild(guide, 1);
         assertTrue(page.getChildren().contains(guide));
-        assertEquals(guide, page.getChildren().get(1));
+        assertEquals(guide, page.getGuides().get(1));
         
         page.removeChild(guide);
         assertFalse(page.getChildren().contains(guide));

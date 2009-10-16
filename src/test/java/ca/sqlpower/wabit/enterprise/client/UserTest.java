@@ -52,6 +52,7 @@ public class UserTest extends AbstractWabitObjectTest {
 	
 	@Override
 	protected void setUp() throws Exception {
+		super.setUp();
 		user = new User("name", "password");
 		user.setAuthorities(new GrantedAuthority[0]);
 	}

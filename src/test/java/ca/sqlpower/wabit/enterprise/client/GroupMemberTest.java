@@ -37,6 +37,7 @@ public class GroupMemberTest extends AbstractWabitObjectTest {
 	
 	@Override
 	protected void setUp() throws Exception {
+		super.setUp();
 		User user = new User("name", "pass");
 		groupMember = new GroupMember(user);
 	}

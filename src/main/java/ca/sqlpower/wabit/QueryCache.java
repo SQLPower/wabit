@@ -649,12 +649,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
     @Override
     protected void addChildImpl(WabitObject child, int index) {
-        int innerIndex = index - childPositionOffset(child.getClass());
         if (child instanceof WabitConstantsContainer) {
             throw new IllegalArgumentException("Cannot change the constants table of a query.");
         } else if (child instanceof WabitTableContainer) {
             final WabitTableContainer container = (WabitTableContainer) child;
-            addTable(container, innerIndex);
+            addTable(container, index);
         } else if (child instanceof WabitJoin) {
             //Joins are added to a map not a list so their order is not defined.
             final WabitJoin join = (WabitJoin) child;

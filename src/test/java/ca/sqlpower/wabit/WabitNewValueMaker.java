@@ -33,6 +33,7 @@ import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
@@ -264,6 +265,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	}
         } else if (valueType.equals(GroupMember.class)) {
         	newValue = new GroupMember(new User("username", "password"));
+        } else if (valueType.equals(OrderByArgument.class)) {
+        	if (oldVal.equals(OrderByArgument.ASC)) {
+        		newValue = OrderByArgument.DESC;
+        	} else {
+        		newValue = OrderByArgument.ASC;
+        	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }

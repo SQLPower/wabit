@@ -37,6 +37,7 @@ public class GrantTest extends AbstractWabitObjectTest {
 	
 	@Override
 	protected void setUp() throws Exception {
+		super.setUp();
 		grant = new Grant("Something", null, true, true, true, true, true);
 	}
 

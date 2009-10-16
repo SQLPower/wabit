@@ -403,14 +403,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    //Throws an IllegalStateException if the child is not a valid child of this class.
 	    childPositionOffset(child.getClass());
 	    
-	    final int childCount = getChildren().size();
-        if (childCount >= index) {
-	        addChildImpl(child, index);
-	    } else {
-	        throw new IllegalArgumentException("The index given to add child " + 
-	                child.getName() + " to " + getName() + " is " + index + 
-	                " and is greater than " + childCount);
-	    }
+	    addChildImpl(child, index);
 	}
 
     /**

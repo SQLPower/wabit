@@ -303,7 +303,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         QueryCache q = new QueryCache(new StubSQLDatabaseMapping());
         q.setName("query");
         
-        workspace.addChild(q, 1);
+        workspace.addChild(q, 0);
         
         assertTrue(workspace.getChildren().contains(q));
         
