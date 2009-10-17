@@ -78,10 +78,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
     
     private PlDotIni plIni;
     private OlapConnectionPool connectionPool;
+    private WabitWorkspace workspace;
     
     
-    
-    public WabitNewValueMaker() {
+    public WabitNewValueMaker(WabitWorkspace workspace) {
+    	this.workspace = workspace;
+    	
         plIni = new PlDotIni();
         try {
             plIni.read(new File("src/test/java/pl.regression.ini"));
@@ -105,29 +107,55 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         Object newValue;
         
         if (valueType.equals(WabitObject.class)) {
-            newValue = new StubWabitObject();
+        	WabitImage image = new WabitImage();
+        	workspace.addImage(image);
+            newValue = image;
+            
         } else if (valueType.equals(WabitDataSource.class)) {
             final JDBCDataSource ds = new JDBCDataSource(new PlDotIni());
             ds.setName("test");
-            newValue = new WabitDataSource(ds);
+            WabitDataSource wabitDataSource = new WabitDataSource(ds);
+            workspace.addDataSource(wabitDataSource);
+            newValue = wabitDataSource;
+            
         } else if (valueType.equals(QueryCache.class)) {
-            newValue = new QueryCache(new SQLDatabaseMapping() {
+            QueryCache query = new QueryCache(new SQLDatabaseMapping() {
                 public SQLDatabase getDatabase(JDBCDataSource ds) {
                     return null;
                 }
             });
+            
+            workspace.addQuery(query, workspace.getSession());
+            newValue = query;
+            
         } else if (valueType.equals(Report.class)) {
-            newValue = new Report("testing layout");
+        	Report report = new Report("testing layout");
+            workspace.addReport(report);
+            newValue = report;
+            
         } else if (valueType.equals(ContentBox.class)) {
-        	newValue = new ContentBox();
+        	ContentBox cb = new ContentBox();
+        	Report report = (Report) makeNewValue(Report.class, null, "Made for ContentBox");
+        	report.getPage().addContentBox(cb);
+        	newValue = cb;
+        	
         } else if (valueType.equals(ReportContentRenderer.class)) {
-        	newValue = new Label(); 
+        	Label label = new Label();
+        	ContentBox cb = (ContentBox) makeNewValue(ContentBox.class, null, "Made for Label");
+        	cb.setContentRenderer(label);
+        	newValue = label;
+        	
         } else if (valueType.equals(Guide.class)) {
+        	Guide guide;
             if (oldVal != null) {
-                newValue = new Guide(Axis.HORIZONTAL, (int) (((Guide) oldVal).getOffset() + 1));
+                guide = new Guide(Axis.HORIZONTAL, (int) (((Guide) oldVal).getOffset() + 1));
             } else {
-                newValue = new Guide(Axis.HORIZONTAL, 123);
+                guide = new Guide(Axis.HORIZONTAL, 123);
             }
+            Report report = (Report) makeNewValue(Report.class, null, "Made for Guide");
+            report.getPage().addGuide(guide);
+            newValue = guide;
+            
         } else if (valueType.equals(HorizontalAlignment.class)) {
             if (oldVal == HorizontalAlignment.CENTER) {
                 newValue = HorizontalAlignment.LEFT;
@@ -179,17 +207,43 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         		newValue = new StringItem("Newer String Item");
         	}
         } else if (valueType.equals(OlapQuery.class)) {
-        	newValue = new OlapQuery(new StubWabitSessionContext());
+        	OlapQuery olapQuery = new OlapQuery(new StubWabitSessionContext());
+        	workspace.addOlapQuery(olapQuery);
+        	newValue = olapQuery;
+        	
         } else if (valueType.equals(WabitOlapAxis.class)) { 
-        	newValue = new WabitOlapAxis(org.olap4j.Axis.ROWS);
+        	WabitOlapAxis axis = new WabitOlapAxis(org.olap4j.Axis.ROWS);
+        	OlapQuery olapQuery = (OlapQuery) makeNewValue(OlapQuery.class, null, 
+        			"Made for WabitOlapAxis");
+        	olapQuery.addAxis(axis);
+        	newValue = axis;
+        	
         } else if (valueType.equals(WabitOlapDimension.class)) {
-        	newValue = new WabitOlapDimension("Geography");
+        	WabitOlapDimension dimension = new WabitOlapDimension("Geography");
+        	WabitOlapAxis axis = (WabitOlapAxis) makeNewValue(WabitOlapAxis.class, null, 
+        			"Made for WabitOlapDimension");
+        	axis.addDimension(dimension);
+        	newValue = dimension;
+        	
         } else if (valueType.equals(WabitOlapInclusion.class)) {
-        	newValue = new WabitOlapInclusion(Operator.MEMBER, "[Geography].[World]");
+        	WabitOlapInclusion inclusion = new WabitOlapInclusion(Operator.MEMBER, "[Geography].[World]");
+        	WabitOlapDimension dimension = (WabitOlapDimension) makeNewValue(
+        			WabitOlapDimension.class, null, "Made for WabitOlapInclusion");
+        	dimension.addInclusion(inclusion);
+        	newValue = inclusion;
+        	
         } else if (valueType.equals(WabitOlapExclusion.class)) {
-        	newValue = new WabitOlapExclusion(Operator.MEMBER, "[Geography].[World].[Africa]");
+        	WabitOlapExclusion exclusion = new WabitOlapExclusion(Operator.MEMBER, "[Geography].[World].[Africa]");
+        	WabitOlapDimension dimension = (WabitOlapDimension) makeNewValue(
+        			WabitOlapDimension.class, null, "Made for WabitOlapExclusion");
+        	dimension.addExclusion(exclusion);
+        	newValue = exclusion;
+        	
         } else if (valueType.equals(WabitImage.class)) {
-            newValue = new WabitImage();
+            WabitImage image = new WabitImage();
+            workspace.addImage(image);
+            newValue = image;
+            
         } else if (valueType.equals(GroupAndBreak.class)) {
             if (oldVal.equals(GroupAndBreak.GROUP)) {
                 newValue = GroupAndBreak.BREAK;
@@ -198,15 +252,27 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             }
         } else if (valueType.equals(WabitSession.class)) {
             newValue = new StubWabitSession(new StubWabitSessionContext());
+            
         } else if (valueType.equals(Chart.class)) {
-            newValue = new Chart();
+            Chart chart = new Chart();
+            workspace.addChart(chart);
+            newValue = chart;
+            
         } else if (valueType.equals(Template.class)) {
-            newValue = new Template("Some name");
+            Template template = new Template("Some name");
+            workspace.addTemplate(template);
+            newValue = template;
+            
         } else if (valueType.equals(Page.class)) {
-            newValue = new Page("New page", 10, 20, PageOrientation.LANDSCAPE);
+        	newValue = ((Report) makeNewValue(Report.class, null, "Made for Page")).getPage();
+            
         } else if (valueType.equals(ChartColumn.class)) {
-            newValue = new ChartColumn("New column", 
+            ChartColumn chartColumn = new ChartColumn("New column", 
                     ca.sqlpower.wabit.report.chart.ChartColumn.DataType.NUMERIC);
+            Chart chart = (Chart) makeNewValue(Chart.class, null, "Made for ChartColumn");
+            chart.addChartColumn(chartColumn);
+            newValue = chartColumn;
+            
         } else if (valueType.equals(LegendPosition.class)) {
             if (oldVal != null && oldVal.equals(LegendPosition.LEFT)) {
                 newValue = LegendPosition.RIGHT;
@@ -222,7 +288,9 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         } else if (valueType.equals(ResultSetProducer.class)) {
             QueryCache query = new QueryCache(new StubSQLDatabaseMapping());
             query.setName("New query");
+            workspace.addQuery(query, workspace.getSession());
             newValue = query;
+            
         } else if (valueType.equals(ColumnRole.class)) {
             if (oldVal != null && oldVal.equals(ColumnRole.CATEGORY)) {
                 newValue = ColumnRole.NONE;
@@ -250,13 +318,27 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
 				throw new RuntimeException(e);
 			}
         } else if (valueType.equals(User.class)) {
-        	newValue = new User("New User", "");
+        	User user = new User("New User", "");
+        	workspace.addUser(user);
+        	newValue = user;
+        	
         } else if (valueType.equals(Group.class)) {
-        	newValue = new Group("New Group");
+        	Group group = new Group("New Group");
+        	workspace.addGroup(group);
+        	newValue = group;
+        	
         } else if (valueType.equals(Grant.class)) {
-        	newValue = new Grant(null, WabitWorkspace.class.getCanonicalName(), false, false, false, false, false);
+        	Grant grant = new Grant(null, WabitWorkspace.class.getCanonicalName(), 
+        			false, false, false, false, false);
+        	Group group = (Group) makeNewValue(Group.class, null, "Made for Grant");
+        	group.addGrant(grant);
+        	newValue = grant;
+        	
         } else if (valueType.equals(ReportTask.class)) {
-        	newValue = new ReportTask();
+        	ReportTask reportTask = new ReportTask();
+        	workspace.addReportTask(reportTask);
+        	newValue = reportTask;
+        	
         } else if (valueType.equals(Image.class)) {
         	if (oldVal != null) {
         		newValue = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
@@ -264,7 +346,11 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         		newValue = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
         	}
         } else if (valueType.equals(GroupMember.class)) {
-        	newValue = new GroupMember(new User("username", "password"));
+        	GroupMember groupMember = new GroupMember(new User("username", "password"));
+        	Group group = (Group) makeNewValue(Group.class, null, "Made for GroupMember");
+        	group.addMember(groupMember);
+        	newValue = groupMember;
+        	
         } else if (valueType.equals(OrderByArgument.class)) {
         	if (oldVal.equals(OrderByArgument.ASC)) {
         		newValue = OrderByArgument.DESC;

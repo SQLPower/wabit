@@ -79,6 +79,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      */
     private WabitSession session;
     
+    private NewValueMaker valueMaker;
+    
     public WabitWorkspace getWorkspace() {
     	return session.getWorkspace();
     }
@@ -155,6 +157,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     			return workspace;
     		}
     	};
+    	
+    	valueMaker = new WabitNewValueMaker(getWorkspace());
     }
 
 	/**
@@ -180,7 +184,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
         
         Set<String> propertiesToIgnoreForEvents = getPropertiesToIgnoreForEvents();
-        NewValueMaker valueMaker = new WabitNewValueMaker();
         for (PropertyDescriptor property : settableProperties) {
             Object oldVal;
             if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
@@ -247,7 +250,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         
         Set<String> propertiesToIgnoreForPersisting = getPropertiesToIgnoreForPersisting();
         
-        NewValueMaker valueMaker = new WabitNewValueMaker();
         for (PropertyDescriptor property : settableProperties) {
             Object oldVal;
             
@@ -343,12 +345,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 */
     public void testPersisterUpdatesProperties() throws Exception {
     	
-    	AllObjectContainer superParent = new AllObjectContainer();
-    	
     	WabitObject wo = getObjectUnderTest();
-    	superParent.addChild(wo, 0);
     	
-    	WabitSessionPersister persister = new WabitSessionPersister("secondary test persister", session, superParent);
+    	WabitSessionPersister persister = new WabitSessionPersister("secondary test persister", session, getWorkspace());
 		
     	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
@@ -361,7 +360,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         
         Set<String> propertiesToIgnoreForPersisting = getPropertiesToIgnoreForPersisting();
     	
-        NewValueMaker valueMaker = new WabitNewValueMaker();
     	for (PropertyDescriptor property : settableProperties) {
             Object oldVal;
             
@@ -387,10 +385,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             	propertyType = getParentClass();
             }
             Object newVal = valueMaker.makeNewValue(propertyType, oldVal, property.getName());
-            
-            if (newVal instanceof WabitObject) {
-            	superParent.addChild((WabitObject) newVal, 0);
-            }
             
             System.out.println("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
             
@@ -449,7 +443,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 
 			//Not all new values are equivalent to their old values so we are
 			//comparing them by their basic type as that is at least comparable, in most cases, i hope.
-			assertEquals(basicValueBeforePersist, basicValueAfterPersist);
+			assertEquals("Persist failed for type " + valueType, basicValueBeforePersist, basicValueAfterPersist);
 		}
     }
 
@@ -461,11 +455,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 */
     public void testPersisterAddsNewObject() throws Exception {
     	
-    	AllObjectContainer superParent = new AllObjectContainer();
-    	
     	WabitObject wo = getObjectUnderTest();
     	
-    	WabitSessionPersister persister = new WabitSessionPersister("test persister", session, superParent);
+    	WabitSessionPersister persister = new WabitSessionPersister("test persister", session, session.getWorkspace());
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(session, persister);
 		
     	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
@@ -476,10 +468,10 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         
         //Set all possible values to new values for testing.
         Set<String> propertiesToIgnoreForEvents = getPropertiesToIgnoreForEvents();
-        NewValueMaker valueMaker = new WabitNewValueMaker();
         for (PropertyDescriptor property : settableProperties) {
             Object oldVal;
             if (propertiesToIgnoreForEvents.contains(property.getName())) continue;
+            if (property.getName().equals("parent")) continue; //Changing the parent causes headaches.
             
             try {
                 oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());
@@ -498,23 +490,21 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
                 BeanUtils.copyProperty(wo, property.getName(), newVal);
                 
-                if (newVal instanceof WabitObject) {
-                	superParent.addChild((WabitObject) newVal, 0);
-                }
-                
             } catch (InvocationTargetException e) {
                 System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
         }
         
-        int oldChildCount = superParent.getChildren().size();
+        WabitObject parent = wo.getParent();
+        int oldChildCount = parent.getChildren().size();
+        parent.removeChild(wo);
         
         //persist the object
-        listener.wabitChildAdded(new WabitChildEvent(superParent, wo.getClass(), wo, 0, EventType.ADDED));
+        listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
         
         //the object must now be added to the super parent
-        assertEquals(oldChildCount + 1, superParent.getChildren().size());
-        WabitObject persistedObject = superParent.getChildren().get(0);
+        assertEquals(oldChildCount, parent.getChildren().size());
+        WabitObject persistedObject = parent.getChildren().get(parent.childPositionOffset(wo.getClass()));
         
         //check all the properties are what we expect on the new object
     	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
@@ -648,8 +638,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 
         CountingWabitListener listener = new CountingWabitListener();
         wo.addWabitListener(listener);
-        
-        NewValueMaker valueMaker = new WabitNewValueMaker();
         
         Method[] allMethods = wo.getClass().getMethods();
         for (Method method : allMethods) {

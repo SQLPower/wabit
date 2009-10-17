@@ -85,7 +85,9 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         plini.read(new File("src/test/java/pl.regression.ini"));
         JDBCDataSource ds = plini.getDataSource("regression_test", JDBCDataSource.class);
         db = new SQLDatabase(ds);
-        renderer = new ResultSetRenderer(new QueryCache(stubMapping));
+        QueryCache query = new QueryCache(stubMapping);
+        getWorkspace().addChild(query, 0);
+		renderer = new ResultSetRenderer(query);
         parentCB = new ContentBox();
         parentCB.setContentRenderer(renderer);
         

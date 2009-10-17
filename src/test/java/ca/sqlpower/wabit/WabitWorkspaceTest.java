@@ -66,6 +66,16 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     }
     
     @Override
+    public Set<String> getPropertiesToIgnoreForPersisting() {
+    	Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
+    	
+    	//This property defines the editor and changing this would force all users of each
+    	//workspace to view the same editor all the time.
+    	ignored.add("editorPanelModel");
+    	return ignored;
+    }
+    
+    @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
     	notPersisting.add("charts");
@@ -87,6 +97,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	// These are currently not supported.
     	notPersisting.add("dataSourceTypes");
     	notPersisting.add("serverBaseURI");
+    	
     	return notPersisting;
     }
     
