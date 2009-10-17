@@ -30,9 +30,8 @@ import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
 
 import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
-import ca.sqlpower.query.SQLObjectItem;
-import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -62,9 +61,7 @@ public class SessionPersisterSuperConverter {
 	
 	private final Olap4jDataSourceConverter olap4jDataSourceConverter;
 	
-	private final StringItemConverter stringItemConverter= new StringItemConverter();
-	
-	private final SQLObjectItemConverter sqlObjectItemConverter = new SQLObjectItemConverter();
+	private final ItemConverter sqlObjectItemConverter = new ItemConverter();
 	
 	private final ContainerConverter containerConverter;
 	
@@ -147,11 +144,8 @@ public class SessionPersisterSuperConverter {
 			Olap4jDataSource olap4jDataSource = (Olap4jDataSource) convertFrom;
 			return olap4jDataSourceConverter.convertToSimpleType(olap4jDataSource);
 			
-		} else if (convertFrom instanceof SQLObjectItem) {
-			return sqlObjectItemConverter.convertToSimpleType((SQLObjectItem) convertFrom);
-			
-		} else if (convertFrom instanceof StringItem) {
-			return stringItemConverter.convertToSimpleType((StringItem) convertFrom);
+		} else if (convertFrom instanceof Item) {
+			return sqlObjectItemConverter.convertToSimpleType((Item) convertFrom);
 			
 		} else if (convertFrom instanceof Container) {
 			return containerConverter.convertToSimpleType((Container) convertFrom);
@@ -222,11 +216,8 @@ public class SessionPersisterSuperConverter {
 		} else if (Olap4jDataSource.class.isAssignableFrom(type)) {
 			return olap4jDataSourceConverter.convertToComplexType((String) o);
 			
-		} else if (SQLObjectItem.class.isAssignableFrom(type)) {
+		} else if (Item.class.isAssignableFrom(type)) {
 			return sqlObjectItemConverter.convertToComplexType((String) o);
-			
-		} else if (StringItem.class.isAssignableFrom(type)) {
-			return stringItemConverter.convertToComplexType((String) o);
 			
 		} else if (Image.class.isAssignableFrom(type)) { 
 			//TODO we should pass this the data type to know that we want a PNG 

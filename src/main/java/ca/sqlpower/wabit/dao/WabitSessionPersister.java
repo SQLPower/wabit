@@ -26,8 +26,6 @@ import java.awt.geom.Point2D;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -643,8 +641,8 @@ public class WabitSessionPersister implements WabitPersister {
 				(TableContainer) converter.convertToComplexType(
 						getPropertyAndRemove(uuid, "delegate"), TableContainer.class);
 
-			wo = new WabitTableContainer(tableContainer);
-
+			wo = new WabitTableContainer(tableContainer, false);
+			
 		} else {
 			throw new WabitPersistenceException(uuid,
 					"Unknown WabitObject type: " + type);

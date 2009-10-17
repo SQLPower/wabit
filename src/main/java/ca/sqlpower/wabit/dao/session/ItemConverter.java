@@ -21,21 +21,37 @@ package ca.sqlpower.wabit.dao.session;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLObjectItem;
+import ca.sqlpower.query.StringItem;
 
-public class SQLObjectItemConverter implements BidirectionalConverter<String, SQLObjectItem> {
+public class ItemConverter implements BidirectionalConverter<String, Item> {
 
-	public SQLObjectItem convertToComplexType(String convertFrom)
+	public Item convertToComplexType(String convertFrom)
 			throws ConversionException {
-		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 2);
+		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 3);
 		
-		return new SQLObjectItem(pieces[0], pieces[1]);
+		if (pieces[0].equals(SQLObjectItem.class.getSimpleName())) {
+			return new SQLObjectItem(pieces[1], pieces[2]);
+		} else if (pieces[0].equals(StringItem.class.getSimpleName())) {
+			return new StringItem(pieces[1], pieces[2]);
+		} else {
+			throw new IllegalArgumentException("Unknown class of item for " + pieces[0] + " to convert " + convertFrom);
+		}
 	}
 
-	public String convertToSimpleType(SQLObjectItem convertFrom,
+	public String convertToSimpleType(Item convertFrom,
 			Object... additionalInfo) {
 		StringBuffer buffer = new StringBuffer();
 		
+		if (convertFrom instanceof SQLObjectItem) {
+			buffer.append(SQLObjectItem.class.getSimpleName()); 
+		} else if (convertFrom instanceof StringItem) {
+			buffer.append(StringItem.class.getSimpleName());
+		} else {
+			throw new IllegalArgumentException("Unknown item type of " + convertFrom.getClass());
+		}
+		buffer.append(DELIMITER);
 		buffer.append(convertFrom.getName());
 		buffer.append(DELIMITER);
 		buffer.append(convertFrom.getUUID());

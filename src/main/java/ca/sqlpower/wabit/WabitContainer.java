@@ -120,15 +120,31 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
         }
     };
     
-	public WabitContainer(Container delegate) {
+    public WabitContainer(Container delegate) {
+    	this(delegate, true);
+    }
+
+	/**
+	 * Creates a WabitObject that wraps any {@link Container} object.
+	 * 
+	 * @param delegate
+	 *            The {@link Container} to wrap.
+	 * @param createItemWrappers
+	 *            If true the children of the container will be wrapped to
+	 *            start. If false there will be no {@link WabitObject} children
+	 *            to this container.
+	 */
+	public WabitContainer(Container delegate, boolean createItemWrappers) {
 		super();
 		this.delegate = delegate;
 		delegate.addChildListener(containerChildListener);
 		delegate.addPropertyChangeListener(changeListener);
-		for (Item i : delegate.getItems()) {
-		    T child = createWabitItemChild(i);
-		    child.setParent(this);
-			children.add(child);
+		if (createItemWrappers) {
+			for (Item i : delegate.getItems()) {
+				T child = createWabitItemChild(i);
+				child.setParent(this);
+				children.add(child);
+			}
 		}
 		setName(delegate.getName());
 	}

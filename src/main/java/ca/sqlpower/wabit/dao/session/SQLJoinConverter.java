@@ -69,6 +69,9 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 				break;
 			}
 		}
+		if (leftItem == null) {
+			throw new NullPointerException("Cannot find left item with uuid " + leftItemID + " for join");
+		}
 		
 		Item rightItem = null;
 		for (Item item : rightContainer.getItems()) {
@@ -76,6 +79,9 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 				rightItem = item;
 				break;
 			}
+		}
+		if (rightItem == null) {
+			throw new NullPointerException("Cannot find right item with uuid " + rightItemID + " for join");
 		}
 		
 		SQLJoin join = new SQLJoin(leftItem, rightItem);

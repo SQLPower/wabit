@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.beanutils.ConversionException;
 
 import ca.sqlpower.query.Container;
+import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.TableContainer;
@@ -34,15 +35,23 @@ import ca.sqlpower.wabit.WabitSession;
 
 public class ContainerConverter implements BidirectionalConverter<String, Container> {
 	
+	/**
+	 * New delimiter that must be different from {@link BidirectionalConverter#DELIMITER}.
+	 */
+	private static final String ITEM_DELIMITER = ">" + DELIMITER + "<";
+	
 	private final WabitSession session;
+	
+	private final ItemConverter itemConverter;
 
 	public ContainerConverter(WabitSession session) {
 		this.session = session;
+		itemConverter = new ItemConverter();
 	}
 
 	public Container convertToComplexType(String convertFrom)
 			throws ConversionException {
-
+		
 		int firstSeparator = convertFrom.indexOf(DELIMITER);
 		
 		if (firstSeparator == -1) {
@@ -60,7 +69,9 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 
 			return container;
 		} else if (className.equals(TableContainer.class.getSimpleName())) {
-			String[] pieces = SessionPersisterUtils.splitByDelimiter(pattern, 5);
+			String[] tableAndItems = pattern.split(ITEM_DELIMITER);
+			
+			String[] pieces = SessionPersisterUtils.splitByDelimiter(tableAndItems[0], 5);
 			
 			JDBCDataSource ds = session.getDataSources().getDataSource(pieces[1], JDBCDataSource.class);
 			SQLDatabase db = session.getContext().getDatabase(ds);
@@ -68,6 +79,10 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 				throw new NullPointerException("The data source for name " + pieces[1] + " cannot be found.");
 			}
 			List<SQLObjectItem> l = new ArrayList<SQLObjectItem>();
+			for (int i = 1; i < tableAndItems.length; i++) {
+				l.add((SQLObjectItem) itemConverter.convertToComplexType(tableAndItems[i]));
+			}
+			
 			TableContainer container = new TableContainer(pieces[0], db, pieces[2], pieces[3], pieces[4], l);
 			return container;
 		} else {
@@ -99,6 +114,11 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 			result.append(container.getSchema());
 			result.append(DELIMITER);
 			result.append(container.getCatalog());
+			
+			for (Item i : container.getItems()) {
+				result.append(ITEM_DELIMITER);
+				result.append(itemConverter.convertToSimpleType(i));
+			}
 		} else {
 			throw new IllegalArgumentException("Unknown container type to convert: " + 
 					convertFrom.getClass());

@@ -33,6 +33,10 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
         super(delegate);
     }
 
+    public WabitTableContainer(Container delegate, boolean createItemWrappers) {
+        super(delegate, createItemWrappers);
+    }
+
     @Override
     protected WabitColumnItem createWabitItemChild(Item item) {
         return new WabitColumnItem(item);
