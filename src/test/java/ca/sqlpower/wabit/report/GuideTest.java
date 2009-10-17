@@ -36,6 +36,11 @@ public class GuideTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         guide = new Guide(Axis.HORIZONTAL, 123);
+        
+        Report report = new Report("report");
+        report.getPage().addGuide(guide);
+        
+        getWorkspace().addReport(report);
     }
     
     @Override

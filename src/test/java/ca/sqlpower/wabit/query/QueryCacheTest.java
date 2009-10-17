@@ -33,7 +33,6 @@ import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitContainer;
 import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitJoin;
@@ -107,6 +106,8 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		super.setUp();
 		queryCache = new QueryCache(new StubWabitSessionContext());
 		queryCache.setName("Main query");
+		
+		getWorkspace().addQuery(queryCache, getWorkspace().getSession());
 	}
 	
 	@Override

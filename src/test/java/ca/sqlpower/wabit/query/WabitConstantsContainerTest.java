@@ -22,7 +22,9 @@ package ca.sqlpower.wabit.query;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitObject;
@@ -34,8 +36,11 @@ public class WabitConstantsContainerTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        ItemContainer delegate = new ItemContainer("delegate container");
-        container = new WabitConstantsContainer(delegate);
+        
+        QueryCache query = new QueryCache(new StubSQLDatabaseMapping());
+        container = query.getWabitConstantsContainer();
+        
+        getWorkspace().addChild(query, 0);
     }
 
     @Override

@@ -44,8 +44,12 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         cb = new ContentBox();
-        parentPage = new Page("page", 10, 10, PageOrientation.LANDSCAPE);
+        Report report = new Report("report");
+        parentPage = report.getPage();
         parentPage.addContentBox(cb);
+        
+        getWorkspace().addReport(report);
+        
     }
     
     @Override

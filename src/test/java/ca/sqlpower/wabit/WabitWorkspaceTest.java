@@ -93,10 +93,8 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        workspace = new WabitWorkspace();
+        workspace = getWorkspace();
         workspace.setName("ws");
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
-        workspace.setSession(session);
     }
     
     @Override

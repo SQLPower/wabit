@@ -91,6 +91,10 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         
         BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
         graphics = image.getGraphics();
+        
+        Report report = new Report("report");
+        report.getPage().addContentBox(parentCB);
+        getWorkspace().addReport(report);
     }
     
     @Override

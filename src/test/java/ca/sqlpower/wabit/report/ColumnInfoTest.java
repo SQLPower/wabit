@@ -20,8 +20,11 @@
 package ca.sqlpower.wabit.report;
 
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class ColumnInfoTest extends AbstractWabitObjectTest {
 
@@ -31,6 +34,17 @@ public class ColumnInfoTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         ci = new ColumnInfo(new StringItem("Item"), "column name");
+        
+        QueryCache query = new QueryCache(new StubSQLDatabaseMapping());
+        ResultSetRenderer renderer = new ResultSetRenderer(query);
+        renderer.addChild(ci, 0);
+        ContentBox contentBox = new ContentBox();
+        contentBox.setContentRenderer(renderer);
+        Report report = new Report("report");
+        report.getPage().addContentBox(contentBox);
+        
+        getWorkspace().addReport(report);
+        
     }
     
     @Override

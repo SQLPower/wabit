@@ -50,6 +50,8 @@ public class WabitJoinTest extends AbstractWabitObjectTest {
         SQLJoin delegate = new SQLJoin(item1, item2);
         wabitJoin = new WabitJoin(cache, delegate);
         cache.addChild(wabitJoin, 0);
+        
+        getWorkspace().addChild(cache, 0);
     }
 
     @Override

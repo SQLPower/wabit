@@ -31,6 +31,12 @@ public class ChartColumnTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         chartColumn = new ChartColumn("col", DataType.TEXT);
+        
+        Chart chart = new Chart();
+        chart.setName("chart");
+        chart.addChild(chartColumn, 0);
+        
+        getWorkspace().addChart(chart);
     }
     
     @Override

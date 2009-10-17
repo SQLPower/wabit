@@ -23,6 +23,8 @@ import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.ContentBox;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
 
 public class ChartTest extends AbstractWabitObjectTest {
@@ -53,6 +55,8 @@ public class ChartTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         chart = new Chart();
+        
+        getWorkspace().addChart(chart);
     }
     
     @Override

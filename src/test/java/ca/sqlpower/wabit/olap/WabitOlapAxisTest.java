@@ -38,6 +38,7 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class WabitOlapAxisTest extends AbstractWabitObjectTest {
     
@@ -59,6 +60,9 @@ public class WabitOlapAxisTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         wabitAxis = new WabitOlapAxis(Axis.ROWS);
+        OlapQuery query = new OlapQuery(new StubOlapConnectionMapping());
+        query.addChild(wabitAxis, 0);
+        getWorkspace().addOlapQuery(query);
     }
 
     @Override

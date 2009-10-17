@@ -24,6 +24,7 @@ import java.util.Set;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.Page.PageOrientation;
 import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class CellSetRendererTest extends AbstractWabitObjectTest {
@@ -66,6 +67,15 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
         query.setName("New query");
         renderer = new CellSetRenderer(query);
         renderer.setName("New renderer");
+        
+        ContentBox contentBox = new ContentBox();
+        contentBox.setName("contentbox");
+        contentBox.setContentRenderer(renderer);
+        Report report = new Report("report");
+        report.getPage().addContentBox(contentBox);
+        
+        getWorkspace().addReport(report);
+        
     }
 
     @Override

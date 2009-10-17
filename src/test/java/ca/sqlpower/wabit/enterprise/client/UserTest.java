@@ -25,6 +25,7 @@ import org.springframework.security.GrantedAuthority;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 public class UserTest extends AbstractWabitObjectTest {
 
@@ -55,6 +56,9 @@ public class UserTest extends AbstractWabitObjectTest {
 		super.setUp();
 		user = new User("name", "password");
 		user.setAuthorities(new GrantedAuthority[0]);
+
+		getWorkspace().setUUID(WabitWorkspace.SYSTEM_WORKSPACE_UUID);
+		getWorkspace().addUser(user);
 	}
 	
 	@Override

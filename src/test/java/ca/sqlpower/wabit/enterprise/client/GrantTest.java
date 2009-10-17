@@ -23,6 +23,7 @@ import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 public class GrantTest extends AbstractWabitObjectTest {
 	
@@ -46,6 +47,12 @@ public class GrantTest extends AbstractWabitObjectTest {
 	protected void setUp() throws Exception {
 		super.setUp();
 		grant = new Grant("Something", null, true, true, true, true, true);
+		
+		Group group = new Group("group");
+		group.addGrant(grant);
+		
+		getWorkspace().setUUID(WabitWorkspace.SYSTEM_WORKSPACE_UUID);
+		getWorkspace().addChild(group, 0);
 	}
 
 	@Override

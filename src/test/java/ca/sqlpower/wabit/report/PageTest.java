@@ -66,6 +66,8 @@ public class PageTest extends AbstractWabitObjectTest {
         page = new Page("test page", LETTER_WIDTH, LETTER_HEIGHT, PageOrientation.PORTRAIT);
         report.page = this.page;
         page.setParent(report);
+        
+        getWorkspace().addReport(report);
     }
     
     @Override

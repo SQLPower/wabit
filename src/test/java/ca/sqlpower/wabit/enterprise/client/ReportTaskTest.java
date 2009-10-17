@@ -48,6 +48,8 @@ public class ReportTaskTest extends AbstractWabitObjectTest {
 	protected void setUp() throws Exception {
 		super.setUp();
 		reportTask = new ReportTask();
+		
+		getWorkspace().addReportTask(reportTask);
 	}
 
 	@Override

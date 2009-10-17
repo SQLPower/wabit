@@ -40,6 +40,14 @@ public class ChartRendererTest extends AbstractWabitObjectTest {
         chart.setName("Main chart");
         renderer = new ChartRenderer(chart);
         renderer.setName("Main chart renderer");
+        
+        ContentBox contentBox = new ContentBox();
+        contentBox.setName("contentbox");
+        contentBox.setContentRenderer(renderer);
+        Report report = new Report("report");
+        report.getPage().addContentBox(contentBox);
+        
+        getWorkspace().addReport(report);
     }
     
     @Override

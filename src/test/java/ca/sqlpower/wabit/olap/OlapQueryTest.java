@@ -110,6 +110,8 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
                 return sqlDB;
             }
         });
+        
+        getWorkspace().addOlapQuery(query);
     }
     
     @Override

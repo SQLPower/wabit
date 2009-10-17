@@ -38,6 +38,7 @@ public class WabitDataSourceTest extends AbstractWabitObjectTest {
         ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         
         wabitDS = new WabitDataSource(ds);
+        getWorkspace().addDataSource(wabitDS);
     }
 
     @Override

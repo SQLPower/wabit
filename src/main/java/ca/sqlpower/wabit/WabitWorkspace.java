@@ -55,6 +55,11 @@ import ca.sqlpower.wabit.report.chart.Chart;
  */
 public class WabitWorkspace extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
 	
+	/**
+	 * A workspace with this uuid is a system workspace.
+	 */
+	public static final String SYSTEM_WORKSPACE_UUID = "system";
+	
 	
 	private static final Logger logger = Logger.getLogger(WabitWorkspace.class);
 	
@@ -503,7 +508,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     public boolean isSystemWorkspace() {
     	logger.debug("Workspace UUID is " + getUUID());
-    	return getUUID().equals("system");
+    	return getUUID().equals(SYSTEM_WORKSPACE_UUID);
     }
     
 	public WabitObject getParent() {

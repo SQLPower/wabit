@@ -47,7 +47,12 @@ public class LabelTest extends AbstractWabitObjectTest {
         super.setUp();
         label = new Label();
         label.setVariableContext(new TestingVariableContext());
-        new ContentBox().addChild(label, 0);
+        ContentBox cb = new ContentBox();
+        cb.addChild(label, 0);
+        
+        Report report = new Report("report");
+        report.getPage().addChild(cb, 0);
+        getWorkspace().addReport(report);
     }
     
     @Override

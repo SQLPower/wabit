@@ -28,7 +28,9 @@ import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitTableContainer;
@@ -51,6 +53,10 @@ public class WabitTableContainerTest extends AbstractWabitObjectTest {
         final List<SQLObjectItem> items = new ArrayList<SQLObjectItem>();
         TableContainer delegate = new TableContainer("new-id", db, "tableName", "schemaName", "catalogName", items);
         container = new WabitTableContainer(delegate);
+        
+        QueryCache query = new QueryCache(new StubSQLDatabaseMapping());
+        query.addChild(container, 0);
+        getWorkspace().addChild(query, 0);
     }
 
     @Override

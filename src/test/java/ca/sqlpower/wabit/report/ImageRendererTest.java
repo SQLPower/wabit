@@ -36,6 +36,14 @@ public class ImageRendererTest extends AbstractWabitObjectTest {
         renderer = new ImageRenderer();
         renderer.setName("Main renderer");
         renderer.setImage(image);
+        
+        ContentBox contentBox = new ContentBox();
+        contentBox.setName("contentbox");
+        contentBox.setContentRenderer(renderer);
+        Report report = new Report("report");
+        report.getPage().addContentBox(contentBox);
+        
+        getWorkspace().addReport(report);
     }
 
     @Override

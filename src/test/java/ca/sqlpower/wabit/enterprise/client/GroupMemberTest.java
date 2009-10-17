@@ -40,6 +40,13 @@ public class GroupMemberTest extends AbstractWabitObjectTest {
 		super.setUp();
 		User user = new User("name", "pass");
 		groupMember = new GroupMember(user);
+		
+		Group group = new Group("group");
+		group.addMember(groupMember);
+		
+		getWorkspace().setUUID("system");
+		getWorkspace().addChild(group, 0);
+		
 	}
 	
 	@Override

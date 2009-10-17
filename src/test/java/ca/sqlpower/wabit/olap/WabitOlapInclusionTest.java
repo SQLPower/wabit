@@ -19,10 +19,12 @@
 
 package ca.sqlpower.wabit.olap;
 
+import org.olap4j.Axis;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class WabitOlapInclusionTest extends AbstractWabitObjectTest {
     
@@ -32,6 +34,15 @@ public class WabitOlapInclusionTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         wabitInclusion = new WabitOlapInclusion(Operator.MEMBER, "unique/member/name");
+        
+
+        WabitOlapDimension wabitDimension = new WabitOlapDimension("dimension");
+        wabitDimension.addChild(wabitInclusion, 0);
+        OlapQuery query = new OlapQuery(new StubOlapConnectionMapping());
+        WabitOlapAxis axis = new WabitOlapAxis(Axis.ROWS);
+        axis.addDimension(wabitDimension);
+        query.addChild(axis, 0);
+        getWorkspace().addOlapQuery(query);
     }
 
     @Override

@@ -41,6 +41,9 @@ public class GroupTest extends AbstractWabitObjectTest {
 	protected void setUp() throws Exception {
 		super.setUp();
 		group = new Group("group");
+		
+		getWorkspace().setUUID("system");
+		getWorkspace().addChild(group, 0);
 	}
 
 	@Override

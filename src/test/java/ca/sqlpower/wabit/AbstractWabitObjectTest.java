@@ -69,7 +69,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     
     /**
      * Returns the object being tested. This will typically have been
-     * created by the subclass's setUp method.
+     * created by the subclass's setUp method. The object returned
+     * by this method must be in the workspace returned by {@link #getWorkspace()}.
      */
     public abstract WabitObject getObjectUnderTest();
     
@@ -77,6 +78,10 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * A session that is hooked up to a pl.ini that is used for regression testing.
      */
     private WabitSession session;
+    
+    public WabitWorkspace getWorkspace() {
+    	return session.getWorkspace();
+    }
     
     /**
      * Returns a list of JavaBeans property names that should be ignored when
@@ -137,12 +142,29 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	};
     	session = new StubWabitSession(context) {
     		
+    		private final WabitWorkspace workspace = new WabitWorkspace();
+    		
     		@Override
     		public DataSourceCollection<SPDataSource> getDataSources() {
     			return plIni;
     		}
+    		
+    		@Override
+    		public WabitWorkspace getWorkspace() {
+    			workspace.setSession(this);
+    			return workspace;
+    		}
     	};
     }
+
+	/**
+	 * For the persister tests to work the object under test must be in the
+	 * workspace in this session.
+	 */
+    public void testObjectUnderTestInWorkspace() throws Exception {
+		assertNotNull(getWorkspace().findByUuid(
+				getObjectUnderTest().getUUID(), getObjectUnderTest().getClass()));
+	}
     
     /**
      * Uses reflection to find all the settable properties of the object under test,

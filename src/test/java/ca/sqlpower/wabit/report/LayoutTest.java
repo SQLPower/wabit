@@ -52,6 +52,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         layout = new Report("test layout");
+        getWorkspace().addChild(layout, 0);
     }
     
     @Override

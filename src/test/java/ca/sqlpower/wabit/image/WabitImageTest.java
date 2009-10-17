@@ -40,6 +40,7 @@ public class WabitImageTest extends AbstractWabitObjectTest {
         super.setUp();
         wabitImage = new WabitImage();
         wabitImage.setName("Main image");
+        getWorkspace().addImage(wabitImage);
     }
 
     @Override
