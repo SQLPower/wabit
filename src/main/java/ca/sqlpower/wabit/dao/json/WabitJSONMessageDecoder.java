@@ -95,6 +95,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		try {
 			JSONArray messageArray = new JSONArray(message);
 			for (int i=0; i < messageArray.length(); i++) {
+				logger.debug("Decoding Message: " + jsonObject);
 				jsonObject = messageArray.getJSONObject(i);
 				uuid = jsonObject.getString("uuid");
 				WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
@@ -119,8 +120,8 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 					parentUUID = jsonObject.getString("parentUUID");
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
-					newValue = jsonObject.get("newValue");
-					Object oldValue = jsonObject.get("oldValue");
+					newValue = getNullable(jsonObject, "newValue");
+					Object oldValue = getNullable(jsonObject, "oldValue");
 					persister.persistProperty(parentUUID, propertyName,
 							propertyType, oldValue, newValue);
 					break;
@@ -128,7 +129,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 					parentUUID = jsonObject.getString("uuid");
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
-					newValue = jsonObject.get("newValue");
+					newValue = getNullable(jsonObject, "newValue");
 					persister.persistProperty(parentUUID, propertyName,
 							propertyType, newValue);
 					break;
@@ -152,4 +153,12 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		}
 	}
 
+	private static Object getNullable(JSONObject jo, String propName) throws JSONException {
+		final Object value = jo.get(propName);
+		if (value == JSONObject.NULL) {
+			return null;
+		} else {
+			return value;
+		}
+	}
 }

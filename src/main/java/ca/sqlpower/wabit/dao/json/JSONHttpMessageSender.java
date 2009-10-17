@@ -29,6 +29,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -42,6 +43,9 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  * href="http://www.json.org">www.json.org</a>).
  */
 public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
+	
+	private static final Logger logger = Logger
+			.getLogger(JSONHttpMessageSender.class);
 	
 	private JSONArray messageArray;
 	

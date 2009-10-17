@@ -82,6 +82,7 @@ public class User extends AbstractWabitObject implements UserDetails {
 
     public void addGrant(Grant grant) {
         this.grants.add(grant);
+        grant.setParent(this);
         fireChildAdded(Grant.class, grant, this.grants.indexOf(grant));
     }
     

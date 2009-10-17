@@ -19,9 +19,11 @@
 
 package ca.sqlpower.wabit.dao.json;
 
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
@@ -36,6 +38,9 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  */
 public class WabitJSONPersister implements WabitPersister {
 
+	private static final Logger logger = Logger
+			.getLogger(WabitJSONPersister.class);
+	
 	/**
 	 * A count of transactions, mainly to keep track of nested transactions.
 	 */
@@ -65,6 +70,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(null, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 		transactionCount++;
 	}
@@ -82,6 +88,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(null, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 		transactionCount--;
 		if (transactionCount == 0) {
@@ -91,6 +98,9 @@ public class WabitJSONPersister implements WabitPersister {
 
 	public void persistObject(String parentUUID, String type, String uuid, int index)
 			throws WabitPersistenceException {
+		if (! WabitWorkspace.class.getSimpleName().equals(type) && parentUUID == null) {
+			throw new NullPointerException("Child is not a WabitWorkspace, but has a null parent ID. Child's ID is " + uuid);
+		}
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("method", WabitPersistMethod.persistObject.toString());
@@ -101,6 +111,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 	}
 
@@ -117,6 +128,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 	}
 	
@@ -127,10 +139,11 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
-			jsonObject.put("newValue", newValue);
+			jsonObject.put("newValue", newValue == null ? JSONObject.NULL : newValue);
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 	};
 	
@@ -144,6 +157,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 	}
 	
@@ -160,6 +174,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(null, e);
 		}
+		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
 		messageSender.flush();
 	}

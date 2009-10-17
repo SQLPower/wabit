@@ -206,6 +206,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		List<WabitSession> openedSessions = new ArrayList<WabitSession>();
 		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
 			final WabitServerSession session = new WabitServerSession(workspaceLoc, null, context);
+			context.registerChildSession(session);
 			session.startUpdaterThread();
 			openedSessions.add(session);
 		}
@@ -229,6 +230,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		} else {
 			WorkspaceLocation systemWorkspaceLoc = new WorkspaceLocation("System Workspace", "system", serverInfo);
 			session = new WabitServerSession(systemWorkspaceLoc, null, context);
+			context.registerChildSession(session);
 			systemWorkspaces.put(serverInfo, session);
 		}
 		return session.getWorkspace();

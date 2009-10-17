@@ -53,11 +53,19 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        if (this.members.size() > 0) {
-            return this.members.size() - 1;
+    	int offset = 0;
+        if (GroupMember.class.isAssignableFrom(childType)) {
+        	return offset;
         } else {
-            return 0;
+        	offset += members.size();
         }
+        if (Grant.class.isAssignableFrom(childType)) {
+        	return offset;
+        } else {
+        	offset += grants.size();
+        }
+        
+        throw new IllegalArgumentException("Group does not allow children of type " + childType);
     }
 
     public List<WabitObject> getChildren() {
@@ -88,6 +96,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     }
     public void addGrant(Grant grant) {
         this.grants.add(grant);
+        grant.setParent(this);
         fireChildAdded(Grant.class, grant, this.grants.indexOf(grant));
     }
     
@@ -95,12 +104,14 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         if (this.grants.contains(grant)) {
             int index = this.grants.indexOf(grant);
             this.grants.remove(grant);
+            grant.setParent(null);
             fireChildRemoved(Grant.class, grant, index);
         }
     }
     
     public void addMember(GroupMember member, int index) {
         this.members.add(member);
+        member.setParent(this);
         fireChildAdded(GroupMember.class, member, index);
     }
 
@@ -112,6 +123,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         if (this.members.contains(member)) {
             int index = this.members.indexOf(member);
             this.members.remove(member);
+            member.setParent(null);
             fireChildRemoved(GroupMember.class, member, index);
         }
     }
@@ -134,8 +146,10 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
 	protected void addChildImpl(WabitObject child, int index) {
 		if (child instanceof GroupMember) {
 			addMember((GroupMember) child);
+		} else if (child instanceof Grant) {
+			addGrant((Grant) child);
 		} else {
-			throw new IllegalArgumentException("Group is expecting child type Member, but instead got " + child);
+			throw new IllegalArgumentException("Group does not accept this child: " + child);
 		}
 	}
 }

@@ -23,14 +23,8 @@ import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -234,7 +228,7 @@ public class ContentBox extends AbstractWabitObject {
     	if (ReportContentRenderer.class.isAssignableFrom(childType)) {
     		return 0;
     	} else {
-            throw new UnsupportedOperationException("Content boxes don't have children of type " + childType);
+            throw new IllegalArgumentException("Content boxes don't have children of type " + childType);
         }
     }
 

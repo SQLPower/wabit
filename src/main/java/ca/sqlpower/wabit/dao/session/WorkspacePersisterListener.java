@@ -217,22 +217,23 @@ public class WorkspacePersisterListener implements WabitListener {
 	 * persister as a persist object and all of its properties will be sent as
 	 * unconditional property persists.
 	 * 
-	 * @param root
+	 * @param wo
 	 *            The root of the tree of objects that will be persisted. This
 	 *            object and all of its children will be persisted.
 	 */
-	 public void persistObject(WabitObject root) throws WabitPersistenceException {
+	 public void persistObject(WabitObject wo) throws WabitPersistenceException {
 		target.begin();
 
 		int index = 0;
-		if (root.getParent() != null) {
-			index = root.getParent().getChildren().indexOf(root);
+		WabitObject parent = wo.getParent();
+		if (parent != null) {
+			index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
 		}
 		//XXX Hack to see if this will work to unblock others
-		if (!root.getClass().equals(WabitConstantsContainer.class)) {
-			persistChild(root.getParent(), root, root.getClass(), index);
+		if (!wo.getClass().equals(WabitConstantsContainer.class)) {
+			persistChild(wo.getParent(), wo, wo.getClass(), index);
 		}
-		for (WabitObject child : root.getChildren()) {
+		for (WabitObject child : wo.getChildren()) {
 			persistObject(child);
 		}
 		target.commit();
@@ -257,10 +258,15 @@ public class WorkspacePersisterListener implements WabitListener {
 	private void persistChild(WabitObject parent, WabitObject child, 
 			Class<? extends WabitObject> childClassType, int indexOfChild) {
 		try {
-			String parentUUID = null;
-			if (parent != null) {
+			final String parentUUID;
+			if (child instanceof WabitWorkspace) {
+				parentUUID = null;
+			} else if (parent == null) {
+				throw new NullPointerException("Child is not a WabitWorkspace, but has a null parent ID: " + child);
+			} else {
 				parentUUID = parent.getUUID();
 			}
+			
 			String className = childClassType.getSimpleName();
 			String uuid = child.getUUID();
 

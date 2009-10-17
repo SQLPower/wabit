@@ -305,10 +305,6 @@ public class Page extends AbstractWabitObject {
      *            than the number of content boxes currently in the page.
      */
     public void addContentBox(ContentBox addme, int index) {
-        if (addme.getParent() != null) {
-            throw new IllegalStateException("That content box already belongs to a different page");
-        }
-        addme.setParent(this);
         setUniqueName(addme, addme.getName());
         contentBoxes.add(addme);
         fireChildAdded(ContentBox.class, addme, index);
@@ -401,10 +397,6 @@ public class Page extends AbstractWabitObject {
      *            page.
      */
     public void addGuide(Guide addme, int index) {
-        if (addme.getParent() != null) {
-            throw new IllegalStateException("That guide already belongs to a different page");
-        }
-        addme.setParent(this);
         setUniqueName(addme, addme.getName());
         guides.add(index, addme);
         fireChildAdded(Guide.class, addme, index);

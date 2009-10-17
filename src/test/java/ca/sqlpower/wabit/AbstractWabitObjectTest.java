@@ -645,6 +645,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 assertSame(newChild, listener.getLastEvent().getChild());
                 assertSame(paramTypes[0], listener.getLastEvent().getChildType());
                 
+                //TODO uncomment this when all objects are parented properly
+                //assertSame(wo, ((WabitObject) newChild).getParent());
+                
             } else {
                 logger.debug("Skipped " + method.getName());
             }

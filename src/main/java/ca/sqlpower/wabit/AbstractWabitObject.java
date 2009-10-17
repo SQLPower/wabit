@@ -406,7 +406,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	public final void addChild(WabitObject child, int index) throws IllegalArgumentException {
 	    //Throws an IllegalStateException if the child is not a valid child of this class.
 	    childPositionOffset(child.getClass());
-	    
+	    child.setParent(this); // TODO: check that the given child doesn't already have a parent
 	    addChildImpl(child, index);
 	}
 
