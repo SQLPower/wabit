@@ -27,11 +27,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 
+import javax.swing.ButtonGroup;
+import javax.swing.ComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+import javax.swing.event.ListDataListener;
 
 import org.apache.log4j.Logger;
 
@@ -148,6 +155,31 @@ public class NewWorkspaceScreen {
 		final JLabel additionalDSLabel = new JLabel("(Additional data sources can be added later.)");
 		additionalDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		builder.append(additionalDSLabel);
+		builder.nextLine();
+		
+		final JPanel sessionTypesPanel = new JPanel();
+		final JRadioButton localSessionButton = new JRadioButton("Local Session");
+		final JRadioButton serverSessionButton = new JRadioButton("Server Session");
+		
+		List<WabitServerInfo> serverList = session.getContext().getEnterpriseServers(true);
+		final JComboBox serverComboBox;
+		if (serverList.size() == 0) {
+			String[] noServerArray = {"No Server Defined"};
+			serverComboBox = new JComboBox(noServerArray);
+			serverSessionButton.setEnabled(false);
+			serverComboBox.setEnabled(false);
+		} else {
+			serverComboBox = new JComboBox(serverList.toArray());
+		}
+		
+		final ButtonGroup sessionButtonGroup = new ButtonGroup();
+		sessionButtonGroup.add(localSessionButton);
+		sessionButtonGroup.add(serverSessionButton);
+		localSessionButton.setSelected(true);
+		sessionTypesPanel.add(localSessionButton);
+		sessionTypesPanel.add(serverSessionButton);
+		sessionTypesPanel.add(serverComboBox);
+		builder.append(sessionTypesPanel);
 		builder.nextLine();
 		builder.append(WorkspacePanel.createDBConnectionManager(session, dialog).getPanel());
 		
