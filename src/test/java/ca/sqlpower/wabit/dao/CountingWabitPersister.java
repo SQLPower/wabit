@@ -35,7 +35,7 @@ public class CountingWabitPersister implements WabitPersister {
 	
 	private final List<WabitObjectProperty> propertiesPersisted = new ArrayList<WabitObjectProperty>();
 	
-	private PersistedWabitObject lastPersistObject;  
+	private final List<PersistedWabitObject> persistedObjects = new ArrayList<PersistedWabitObject>();  
 
 	public void begin() throws WabitPersistenceException {
 		// TODO Auto-generated method stub
@@ -50,7 +50,7 @@ public class CountingWabitPersister implements WabitPersister {
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
 		persistObjectCount++;
-		lastPersistObject = new PersistedWabitObject(parentUUID, type, uuid, index);
+		persistedObjects.add(new PersistedWabitObject(parentUUID, type, uuid, index));
 	}
 
 
@@ -117,7 +117,11 @@ public class CountingWabitPersister implements WabitPersister {
 	}
 	
 	public PersistedWabitObject getLastPersistObject() {
-		return lastPersistObject;
+		return persistedObjects.get(persistedObjects.size() - 1);
+	}
+	
+	public List<PersistedWabitObject> getAllPersistedObjects() {
+		return Collections.unmodifiableList(persistedObjects);
 	}
 	
 	public List<WabitObjectProperty> getAllPropertyChanges() {

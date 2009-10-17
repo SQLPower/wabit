@@ -50,6 +50,7 @@ import ca.sqlpower.wabit.dao.PersisterUtils;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.dao.WabitSessionPersister.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.SessionPersisterUtils;
@@ -550,10 +551,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
     	
-    	assertEquals(1, persister.getPersistObjectCount());
-    	assertEquals(wo.getClass().getSimpleName(), persister.getLastPersistObject().getType());
-    	assertEquals(0, persister.getLastPersistObject().getIndex());
-    	assertEquals(wo.getUUID(), persister.getLastPersistObject().getUUID());
+    	assertTrue(persister.getPersistObjectCount() > 0);
+    	PersistedWabitObject persistedWabitObject = persister.getAllPersistedObjects().get(0);
+    	assertEquals(wo.getClass().getSimpleName(), persistedWabitObject.getType());
+    	assertEquals(0, persistedWabitObject.getIndex());
+    	assertEquals(wo.getUUID(), persistedWabitObject.getUUID());
     	
     	//confirm we get one persist property for each getter/setter pair
     	//confirm we get one persist property for each value in one of the constructors in the object.
@@ -564,6 +566,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
     	ignorableProperties.addAll(getPropertiesToIgnoreForEvents());
     	
+    	List<WabitObjectProperty> changesOnObject = new ArrayList<WabitObjectProperty>();
+    	for (int i = allPropertyChanges.size() - 1; i >= 0; i--) {
+    		if (allPropertyChanges.get(i).getUUID().equals(wo.getUUID())) {
+    			changesOnObject.add(allPropertyChanges.get(i));
+    		}
+    	}
+    	
     	List<String> settablePropertyNames = new ArrayList<String>();
     	for (PropertyDescriptor pd : settableProperties) {
     		settablePropertyNames.add(pd.getName());
@@ -571,10 +580,10 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	settablePropertyNames.removeAll(ignorableProperties);
     	
-    	if (settablePropertyNames.size() != allPropertyChanges.size()) {
+    	if (settablePropertyNames.size() != changesOnObject.size()) {
     		for (String descriptor : settablePropertyNames) {
         		WabitObjectProperty foundChange = null;
-        		for (WabitObjectProperty propertyChange : allPropertyChanges) {
+        		for (WabitObjectProperty propertyChange : changesOnObject) {
         			if (propertyChange.getPropertyName().equals(descriptor)) {
         				foundChange = propertyChange;
         				break;
@@ -584,14 +593,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		}
     	}
     	System.out.println("Property names" + settablePropertyNames);
-    	assertEquals(settablePropertyNames.size(), allPropertyChanges.size());
-    	assertEquals(settablePropertyNames.size(), persister.getPersistPropertyUnconditionallyCount());
+    	assertEquals(settablePropertyNames.size(), changesOnObject.size());
     	
     	SessionPersisterSuperConverter factory = new SessionPersisterSuperConverter(
     			new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
     	for (String descriptor : settablePropertyNames) {
     		WabitObjectProperty foundChange = null;
-    		for (WabitObjectProperty propertyChange : allPropertyChanges) {
+    		for (WabitObjectProperty propertyChange : changesOnObject) {
     			if (propertyChange.getPropertyName().equals(descriptor)) {
     				foundChange = propertyChange;
     				break;
