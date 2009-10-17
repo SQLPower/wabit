@@ -77,6 +77,11 @@ public class ServerInfoManager {
         
     };
     
+    private Action editAction = new AbstractAction("Properties...") {
+    	public void actionPerformed(ActionEvent e) {
+    		editSelectedServer();
+    	}
+    };
 
     public ServerInfoManager(WabitSessionContext context, Component dialogOwner) {
         this.context = context;
@@ -88,12 +93,11 @@ public class ServerInfoManager {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                    WabitServerInfo selectedItem = (WabitServerInfo) serverInfos.getSelectedValue();
-                    if (selectedItem != null) {
-                        showAddOrEditDialog(selectedItem);
-                    }
+                    editSelectedServer();
                 }
             }
+
+
         });
         JScrollPane scrollPane = new JScrollPane(serverInfos);
         scrollPane.setPreferredSize(new Dimension(400, 300));
@@ -101,7 +105,7 @@ public class ServerInfoManager {
         refreshInfoList();
         
         builder.append(scrollPane);
-        builder.append(ButtonBarFactory.buildAddRemoveLeftBar(new JButton(addAction), new JButton(removeAction)));
+        builder.append(ButtonBarFactory.buildAddRemovePropertiesLeftBar(new JButton(addAction), new JButton(removeAction), new JButton(editAction)));
         builder.setDefaultDialogBorder();
         panel = builder.getPanel();
     }
@@ -163,4 +167,11 @@ public class ServerInfoManager {
 
         dialog.setVisible(true);
     }
+    
+	private void editSelectedServer() {
+		WabitServerInfo selectedItem = (WabitServerInfo) serverInfos.getSelectedValue();
+		if (selectedItem != null) {
+		    showAddOrEditDialog(selectedItem);
+		}
+	}
 }
