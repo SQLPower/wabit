@@ -36,6 +36,9 @@ public class WorkspacePersisterListenerTest extends TestCase {
 		CountingWabitPersister counter = new CountingWabitPersister();
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(
 				new StubWabitSwingSession(), counter);
+
+		WabitImage firstImage = new WabitImage();
+		workspace.addImage(firstImage);
 		
 		WabitImage image = new WabitImage();
 		workspace.addImage(image);
