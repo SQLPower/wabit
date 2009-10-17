@@ -2785,6 +2785,9 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else if (propertyName.equals("bodyFont")) {
 			return converter.convertToBasicType(csRenderer.getBodyFont());
+			
+		} else if (propertyName.equals("backgroundColour")) {
+			return converter.convertToBasicType(csRenderer.getBackgroundColour());
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
@@ -2825,6 +2828,9 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("bodyFont")) {
 			csRenderer.setBodyFont((Font) converter.convertToComplexType(
 					newValue, Font.class));
+			
+		} else if (propertyName.equals("backgroundColour")) {
+			//This is not implemented yet, placeholder for the future.
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),

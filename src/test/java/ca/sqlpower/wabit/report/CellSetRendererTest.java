@@ -65,6 +65,7 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
         super.setUp();
         query = new OlapQuery(new StubOlapConnectionMapping());
         query.setName("New query");
+        getWorkspace().addOlapQuery(query);
         renderer = new CellSetRenderer(query);
         renderer.setName("New renderer");
         
