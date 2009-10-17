@@ -230,7 +230,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
 		}
 		//XXX Hack to see if this will work to unblock others
-		if (!wo.getClass().equals(WabitConstantsContainer.class)) {
+		if (!wo.getClass().equals(WabitConstantsContainer.class) && !wo.getClass().equals(Page.class)) {
 			persistChild(wo.getParent(), wo, wo.getClass(), index);
 		}
 		for (WabitObject child : wo.getChildren()) {
@@ -467,11 +467,10 @@ public class WorkspacePersisterListener implements WabitListener {
 				Layout layout = (Layout) child;
 
 				// Constructor argument
+				persistChild(layout, layout.getPage(), 
+						Page.class, 0);
 
 				// Remaining parameters
-				// target.persistProperty(uuid, "page", DataType.REFERENCE,
-				// layout.getPage().getUUID());
-				// target.persistProperty(uuid, "varContext", ...)
 				target.persistProperty(uuid, Layout.PROPERTY_ZOOM,
 						DataType.INTEGER, converter.convertToBasicType(layout.getZoomLevel()));
 

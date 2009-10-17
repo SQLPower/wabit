@@ -60,6 +60,20 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 	
 	public Layout(String uuid) {
 		super(uuid);
+		PageFormat pageFormat = new PageFormat();
+        pageFormat.setOrientation(PageFormat.LANDSCAPE);
+        page = new Page("Default Page", pageFormat);
+        page.setParent(this);
+	}
+	
+	public Layout(Page page) {
+		this(null, page);
+	}
+	
+	public Layout(String uuid, Page page) {
+		super(uuid);
+		this.page = page;
+		page.setParent(this);
 	}
 	
 	

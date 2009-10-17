@@ -226,14 +226,14 @@ public class WabitSessionPersister implements WabitPersister {
 		private final String type;
 		private final String uuid;
 		private final int index;
-		
+
 		/**
-		 * XXX If set to true this object has been loaded and does not need to be loaded
-		 * again. It would be better if this was removed from the persisted object
-		 * list but we will have to clean this up later.
+		 * XXX If set to true this object has been loaded and does not need to
+		 * be loaded again. It would be better if this was removed from the
+		 * persisted object list but we will have to clean this up later.
 		 */
 		private boolean loaded = false;
-		
+
 		/**
 		 * Constructor to persist a {@link WabitObject}.
 		 * 
@@ -282,11 +282,11 @@ public class WabitSessionPersister implements WabitPersister {
 		public int getIndex() {
 			return index;
 		}
-		
+
 		@Override
 		public String toString() {
-			return "PersistedWabitObject: uuid " + uuid + ", parent uuid " + parentUUID + 
-				", type " + type + ", index " + index + "\n";
+			return "PersistedWabitObject: uuid " + uuid + ", parent uuid "
+					+ parentUUID + ", type " + type + ", index " + index + "\n";
 		}
 
 		public void setLoaded(boolean loaded) {
@@ -343,7 +343,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * exception will be thrown depending on the method called as the object
 	 * will not be found.
 	 */
-	public WabitSessionPersister(String name, WabitSession session, WabitObject root) {
+	public WabitSessionPersister(String name, WabitSession session,
+			WabitObject root) {
 		this.name = name;
 		this.session = session;
 		this.root = root;
@@ -355,7 +356,7 @@ public class WabitSessionPersister implements WabitPersister {
 	public String toString() {
 		return "WabitSessionPersister \"" + name + "\"";
 	}
-	
+
 	/**
 	 * Begins a transaction
 	 */
@@ -375,12 +376,12 @@ public class WabitSessionPersister implements WabitPersister {
 				throw new WabitPersistenceException(null,
 						"Commit attempted while not in a transaction");
 			}
-	
+
 			if (transactionCount == 1) {
 				commitObjects();
 				commitProperties();
 				commitRemovals();
-			}	
+			}
 			transactionCount--;
 		} finally {
 			updateDepth--;
@@ -395,9 +396,10 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitObjects() throws WabitPersistenceException {
 
 		for (PersistedWabitObject pwo : persistedObjects) {
-			if (pwo.isLoaded()) continue;
-			WabitObject parent = WabitUtils.findByUuid(root, pwo.getParentUUID(),
-					WabitObject.class);
+			if (pwo.isLoaded())
+				continue;
+			WabitObject parent = WabitUtils.findByUuid(root, pwo
+					.getParentUUID(), WabitObject.class);
 			WabitObject wo = loadWabitObject(pwo);
 			if (wo != null) {
 				parent.addChild(wo, pwo.getIndex());
@@ -407,8 +409,9 @@ public class WabitSessionPersister implements WabitPersister {
 
 		persistedObjects.clear();
 	}
-	
-	private WabitObject loadWabitObject(PersistedWabitObject pwo) throws WabitPersistenceException {
+
+	private WabitObject loadWabitObject(PersistedWabitObject pwo)
+			throws WabitPersistenceException {
 		String uuid = pwo.getUUID();
 		String type = pwo.getType();
 		WabitObject wo = null;
@@ -422,11 +425,11 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new Chart();
 
 		} else if (type.equals(ChartColumn.class.getSimpleName())) {
-			String columnName = (String) getPropertyAndRemove(uuid, "columnName");
-			ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = 
-				(ca.sqlpower.wabit.report.chart.ChartColumn.DataType) 
-					converter.convertToComplexType(
-							getPropertyAndRemove(uuid, "dataType"), 
+			String columnName = (String) getPropertyAndRemove(uuid,
+					"columnName");
+			ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = (ca.sqlpower.wabit.report.chart.ChartColumn.DataType) converter
+					.convertToComplexType(
+							getPropertyAndRemove(uuid, "dataType"),
 							ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
 
 			wo = new ChartColumn(columnName, dataType);
@@ -437,46 +440,54 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new ChartRenderer(chart);
 
 		} else if (type.equals(ColumnInfo.class.getSimpleName())) {
-			
+
 			if (containsProperty(uuid, "columnInfoItem")) {
 				wo = new ColumnInfo((String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "columnInfoItem"), Item.class));
+						getPropertyAndRemove(uuid, "columnInfoItem"),
+						Item.class));
 			} else {
 				wo = new ColumnInfo((String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS), String.class));
+						getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS),
+						String.class));
 			}
 
 		} else if (type.equals(ContentBox.class.getSimpleName())) {
 			wo = new ContentBox();
-			
+
 		} else if (type.equals(Grant.class.getSimpleName())) {
 			String subject = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "subject"), String.class);
 			String grantType = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "type"), String.class);
 			boolean create = (Boolean) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "createPrivilege"), Boolean.class);
+					getPropertyAndRemove(uuid, "createPrivilege"),
+					Boolean.class);
 			boolean modify = (Boolean) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "modifyPrivilege"), Boolean.class);
+					getPropertyAndRemove(uuid, "modifyPrivilege"),
+					Boolean.class);
 			boolean delete = (Boolean) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "deletePrivilege"), Boolean.class);
+					getPropertyAndRemove(uuid, "deletePrivilege"),
+					Boolean.class);
 			boolean execute = (Boolean) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "executePrivilege"), Boolean.class);
-			boolean grant = (Boolean) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "grantPrivilege"), Boolean.class);
-			
-			wo = new Grant(subject, grantType, create, modify, delete, execute, grant);
-			
+					getPropertyAndRemove(uuid, "executePrivilege"),
+					Boolean.class);
+			boolean grant = (Boolean) converter
+					.convertToComplexType(getPropertyAndRemove(uuid,
+							"grantPrivilege"), Boolean.class);
+
+			wo = new Grant(subject, grantType, create, modify, delete, execute,
+					grant);
+
 		} else if (type.equals(Group.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "name"), String.class);
-			
+
 			wo = new Group(name);
-			
+
 		} else if (type.equals(GroupMember.class.getSimpleName())) {
 			User user = (User) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "user"), User.class);
-			
+
 			wo = new GroupMember(user);
 
 		} else if (type.equals(Guide.class.getSimpleName())) {
@@ -504,75 +515,85 @@ public class WabitSessionPersister implements WabitPersister {
 					getPropertyAndRemove(uuid, "schemaName"), String.class);
 			String cubeName = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "cubeName"), String.class);
-			
+
 			wo = new OlapQuery(uuid, session.getContext(), name, queryName,
 					catalogName, schemaName, cubeName);
 
 		} else if (type.equals(Page.class.getSimpleName())) {
-			String name = (String) converter.convertToComplexType(getPropertyAndRemove(uuid, "name"), String.class);
-			int width = (Integer) converter.convertToComplexType(getPropertyAndRemove(uuid, "width"), Integer.class);
-			int height = (Integer) converter.convertToComplexType(getPropertyAndRemove(uuid, "height"), Integer.class);
-			PageOrientation orientation = (PageOrientation) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "orientation"), PageOrientation.class);
+			String name = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+			int width = (Integer) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "width"), Integer.class);
+			int height = (Integer) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "height"), Integer.class);
+			PageOrientation orientation = (PageOrientation) converter
+					.convertToComplexType(getPropertyAndRemove(uuid,
+							"orientation"), PageOrientation.class);
 
 			wo = new Page(name, width, height, orientation);
 
 		} else if (type.equals(QueryCache.class.getSimpleName())) {
-			WabitConstantsContainer constantsContainer = (WabitConstantsContainer) 
-				createObjectByCalls(uuid, WabitConstantsContainer.class.getSimpleName());
-			
+			WabitConstantsContainer constantsContainer = (WabitConstantsContainer) createObjectByCalls(
+					uuid, WabitConstantsContainer.class.getSimpleName());
+
 			wo = new QueryCache(session.getContext(), false, constantsContainer);
 
 		} else if (type.equals(Report.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "name"), String.class);
+			Page page = (Page) createObjectByCalls(uuid, Page.class
+					.getSimpleName());
 
-			wo = new Report(name);
+			wo = new Report(name, uuid, page);
 
 		} else if (type.equals(ReportTask.class.getSimpleName())) {
 			wo = new ReportTask();
-			
+
 		} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
 			String contentID = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "content"), String.class);
-			
+
 			QueryCache query = (QueryCache) converter.convertToComplexType(
 					contentID, QueryCache.class);
-			
+
 			if (query == null) {
-				throw new WabitPersistenceException(uuid, 
-						"Cannot commit ResultSetRenderer with UUID " + uuid 
-						+ " as its QueryCache reference with UUID " + contentID 
-						+ " does not exist in the workspace.");
+				throw new WabitPersistenceException(uuid,
+						"Cannot commit ResultSetRenderer with UUID " + uuid
+								+ " as its QueryCache reference with UUID "
+								+ contentID
+								+ " does not exist in the workspace.");
 			}
-			
+
 			wo = new ResultSetRenderer(query);
 
 		} else if (type.equals(Template.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "name"), String.class);
+			Page page = (Page) createObjectByCalls(uuid, Page.class
+					.getSimpleName());
 
-			wo = new Template(name);
-			
+			wo = new Template(name, uuid, page);
+
 		} else if (type.equals(User.class.getSimpleName())) {
 			String username = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "name"), String.class);
 			String password = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "password"), String.class);
-			
+
 			wo = new User(username, password);
 
 		} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
-			SQLObjectItem item = (SQLObjectItem) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "delegate"), SQLObjectItem.class);
+			SQLObjectItem item = (SQLObjectItem) converter
+					.convertToComplexType(
+							getPropertyAndRemove(uuid, "delegate"),
+							SQLObjectItem.class);
 
 			wo = new WabitColumnItem(item);
 
-		} else if (type.equals(WabitConstantsContainer.class
-				.getSimpleName())) {
+		} else if (type.equals(WabitConstantsContainer.class.getSimpleName())) {
 			Container delegate = (Container) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "delegate"), Container.class); 
-			
+					getPropertyAndRemove(uuid, "delegate"), Container.class);
+
 			wo = new WabitConstantsContainer(delegate);
 
 		} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
@@ -584,33 +605,33 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 			String dsName = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "SPDataSource"), String.class);
-			SPDataSource spds = session.getDataSources()
-					.getDataSource(dsName);
-			
+			SPDataSource spds = session.getDataSources().getDataSource(dsName);
+
 			if (spds == null) {
-				throw new WabitPersistenceException(uuid, 
-						"The Wabit does not know about Datasource '" + dsName + "'");
+				throw new WabitPersistenceException(uuid,
+						"The Wabit does not know about Datasource '" + dsName
+								+ "'");
 			}
-			
+
 			wo = new WabitDataSource(spds);
 
 		} else if (type.equals(WabitImage.class.getSimpleName())) {
 			wo = new WabitImage();
 
 		} else if (type.equals(WabitJoin.class.getSimpleName())) {
-			
+
 			QueryCache query = (QueryCache) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "query"), QueryCache.class);
 			SQLJoin delegate = (SQLJoin) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "delegate"), SQLJoin.class);
-			
+
 			wo = new WabitJoin(query, delegate);
 
 		} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
 			Object ordinal = getPropertyAndRemove(uuid, "ordinal");
-			
-			org.olap4j.Axis axis = (org.olap4j.Axis) converter.convertToComplexType(
-					ordinal, org.olap4j.Axis.class); 
+
+			org.olap4j.Axis axis = (org.olap4j.Axis) converter
+					.convertToComplexType(ordinal, org.olap4j.Axis.class);
 
 			wo = new WabitOlapAxis(axis);
 
@@ -624,7 +645,8 @@ public class WabitSessionPersister implements WabitPersister {
 			Operator operator = (Operator) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "operator"), Operator.class);
 			String uniqueMemberName = (String) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "uniqueMemberName"), String.class);
+					getPropertyAndRemove(uuid, "uniqueMemberName"),
+					String.class);
 
 			wo = new WabitOlapExclusion(operator, uniqueMemberName);
 
@@ -632,17 +654,19 @@ public class WabitSessionPersister implements WabitPersister {
 			Operator operator = (Operator) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "operator"), Operator.class);
 			String uniqueMemberName = (String) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "uniqueMemberName"), String.class);
+					getPropertyAndRemove(uuid, "uniqueMemberName"),
+					String.class);
 
 			wo = new WabitOlapInclusion(operator, uniqueMemberName);
 
 		} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
-			TableContainer tableContainer = 
-				(TableContainer) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "delegate"), TableContainer.class);
+			TableContainer tableContainer = (TableContainer) converter
+					.convertToComplexType(
+							getPropertyAndRemove(uuid, "delegate"),
+							TableContainer.class);
 
 			wo = new WabitTableContainer(tableContainer, false);
-			
+
 		} else {
 			throw new WabitPersistenceException(uuid,
 					"Unknown WabitObject type: " + type);
@@ -651,7 +675,7 @@ public class WabitSessionPersister implements WabitPersister {
 		if (wo != null) {
 			wo.setUUID(uuid);
 		}
-		
+
 		pwo.setLoaded(true);
 		return wo;
 	}
@@ -670,7 +694,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 *             Thrown if the object does not have the specified property
 	 *             name.
 	 */
-	private Object getPropertyAndRemove(String uuid, String propertyName) throws WabitPersistenceException {
+	private Object getPropertyAndRemove(String uuid, String propertyName)
+			throws WabitPersistenceException {
 		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 			if (wop.getPropertyName().equals(propertyName)) {
 				Object value = wop.getNewValue();
@@ -680,9 +705,9 @@ public class WabitSessionPersister implements WabitPersister {
 				return value;
 			}
 		}
-		
-		throw new WabitPersistenceException(uuid, "Cannot find the property " + 
-				propertyName + " for object " + uuid);
+
+		throw new WabitPersistenceException(uuid, "Cannot find the property "
+				+ propertyName + " for object " + uuid);
 
 	}
 
@@ -727,20 +752,24 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 		return false;
 	}
-	
+
 	/**
-	 * This will create a wabit object based on persist calls that we have already pooled.
+	 * This will create a wabit object based on persist calls that we have
+	 * already pooled.
 	 */
-	private WabitObject createObjectByCalls(String parentUUID, String classType) throws WabitPersistenceException {
+	private WabitObject createObjectByCalls(String parentUUID, String classType)
+			throws WabitPersistenceException {
 		for (PersistedWabitObject pwo : persistedObjects) {
-			if (pwo.isLoaded()) continue;
-			if (pwo.getType().equals(classType) && pwo.getParentUUID().equals(parentUUID)) {
+			if (pwo.isLoaded())
+				continue;
+			if (pwo.getType().equals(classType)
+					&& pwo.getParentUUID().equals(parentUUID)) {
 				return loadWabitObject(pwo);
 			}
 		}
-		throw new IllegalArgumentException("Cannot find the object " + classType + 
-				" that is the child of " 
-				+ parentUUID + " that we are loading.");
+		throw new IllegalArgumentException("Cannot find the object "
+				+ classType + " that is the child of " + parentUUID
+				+ " that we are loading.");
 	}
 
 	/**
@@ -758,9 +787,10 @@ public class WabitSessionPersister implements WabitPersister {
 		for (String uuid : persistedProperties.keySet()) {
 			wo = WabitUtils.findByUuid(root, uuid, WabitObject.class);
 			if (wo == null) {
-				throw new IllegalStateException("Couldn't locate object " + uuid + " in session");
+				throw new IllegalStateException("Couldn't locate object "
+						+ uuid + " in session");
 			}
-			
+
 			for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 				propertyName = wop.getPropertyName();
 				newValue = wop.getNewValue();
@@ -789,7 +819,8 @@ public class WabitSessionPersister implements WabitPersister {
 				} else if (wo instanceof Group) {
 					commitGroupProperty((Group) wo, propertyName, newValue);
 				} else if (wo instanceof GroupMember) {
-					commitGroupMemberProperty((GroupMember) wo, propertyName, newValue);
+					commitGroupMemberProperty((GroupMember) wo, propertyName,
+							newValue);
 				} else if (wo instanceof Guide) {
 					commitGuideProperty((Guide) wo, propertyName, newValue);
 				} else if (wo instanceof ImageRenderer) {
@@ -808,7 +839,8 @@ public class WabitSessionPersister implements WabitPersister {
 					commitQueryCacheProperty((QueryCache) wo, propertyName,
 							newValue);
 				} else if (wo instanceof ReportTask) {
-					commitReportTaskProperty((ReportTask) wo, propertyName, newValue);
+					commitReportTaskProperty((ReportTask) wo, propertyName,
+							newValue);
 				} else if (wo instanceof ResultSetRenderer) {
 					commitResultSetRendererProperty((ResultSetRenderer) wo,
 							propertyName, newValue);
@@ -867,9 +899,10 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitRemovals() throws WabitPersistenceException {
 
 		for (String uuid : objectsToRemove.keySet()) {
-			WabitObject wo = WabitUtils.findByUuid(root, uuid, WabitObject.class);
-			WabitObject parent = WabitUtils.findByUuid(root, 
-					objectsToRemove.get(uuid), WabitObject.class);
+			WabitObject wo = WabitUtils.findByUuid(root, uuid,
+					WabitObject.class);
+			WabitObject parent = WabitUtils.findByUuid(root, objectsToRemove
+					.get(uuid), WabitObject.class);
 
 			try {
 				parent.removeChild(wo);
@@ -902,23 +935,23 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
-		logger.debug(
-				String.format(
-						"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);",
-						parentUUID, type, uuid, index));
+		logger.debug(String.format(
+				"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
+				type, uuid, index));
 		try {
 			updateDepth++;
 			if (exists(uuid)) {
 				throw new WabitPersistenceException(uuid,
-						"A WabitObject with UUID " + uuid + " and type " + type 
-						+ " under parent with UUID " + parentUUID + " already exists.");
+						"A WabitObject with UUID " + uuid + " and type " + type
+								+ " under parent with UUID " + parentUUID
+								+ " already exists.");
 			}
-	
-			PersistedWabitObject pwo = new PersistedWabitObject(parentUUID, type,
-					uuid, index);
-	
+
+			PersistedWabitObject pwo = new PersistedWabitObject(parentUUID,
+					type, uuid, index);
+
 			persistedObjects.add(pwo);
-	
+
 			if (transactionCount == 0) {
 				commitObjects();
 			}
@@ -949,10 +982,9 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
-		logger.debug(
-				String.format(
-						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
-						uuid, propertyName, propertyType.name(), oldValue, newValue));
+		logger.debug(String.format(
+				"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
+				uuid, propertyName, propertyType.name(), oldValue, newValue));
 		try {
 			updateDepth++;
 			persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
@@ -981,14 +1013,16 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
-		logger.debug(
-				String.format(
-						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
-						uuid, propertyName, propertyType.name(), newValue));
+		logger
+				.debug(String
+						.format(
+								"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
+								uuid, propertyName, propertyType.name(),
+								newValue));
 		try {
 			updateDepth++;
-			persistPropertyHelper(uuid, propertyName, propertyType, null, newValue,
-					true);
+			persistPropertyHelper(uuid, propertyName, propertyType, null,
+					newValue, true);
 		} finally {
 			updateDepth--;
 		}
@@ -1028,9 +1062,10 @@ public class WabitSessionPersister implements WabitPersister {
 			if (propertyName.equals(wop.getPropertyName())) {
 				lastPropertyValueFound = wop.getNewValue();
 				if (wop.isUnconditional() && unconditional) {
-					throw new WabitPersistenceException(
-							uuid,
-							"Cannot make more than one unconditional persist property call for property \"" + propertyName + "\" in the same transaction.");
+					throw new WabitPersistenceException(uuid,
+							"Cannot make more than one unconditional persist property call for property \""
+									+ propertyName
+									+ "\" in the same transaction.");
 				}
 
 			}
@@ -1038,13 +1073,11 @@ public class WabitSessionPersister implements WabitPersister {
 
 		if (lastPropertyValueFound != null) {
 			if (!unconditional && !oldValue.equals(lastPropertyValueFound)) {
-				throw new WabitPersistenceException(
-						uuid,
-						"For property \"" + propertyName 
-								+ "\", the expected property value \""
-								+ oldValue
-								+ "\" does not match with the actual property value \""
-								+ lastPropertyValueFound + "\"");
+				throw new WabitPersistenceException(uuid, "For property \""
+						+ propertyName + "\", the expected property value \""
+						+ oldValue
+						+ "\" does not match with the actual property value \""
+						+ lastPropertyValueFound + "\"");
 			}
 		} else if (!unconditional) {
 			WabitObject wo = WabitUtils.findByUuid(root, uuid,
@@ -1075,7 +1108,8 @@ public class WabitSessionPersister implements WabitPersister {
 			} else if (wo instanceof Group) {
 				propertyValue = getGroupProperty((Group) wo, propertyName);
 			} else if (wo instanceof GroupMember) {
-				propertyValue = getGroupMemberProperty((GroupMember) wo, propertyName);
+				propertyValue = getGroupMemberProperty((GroupMember) wo,
+						propertyName);
 			} else if (wo instanceof Guide) {
 				propertyValue = getGuideProperty((Guide) wo, propertyName);
 			} else if (wo instanceof ImageRenderer) {
@@ -1111,13 +1145,15 @@ public class WabitSessionPersister implements WabitPersister {
 				propertyValue = getWabitImageProperty((WabitImage) wo,
 						propertyName);
 
-				// We are converting the expected old value InputStream in this way because
-				// we want to ensure that the conversion process is the same as the one
+				// We are converting the expected old value InputStream in this
+				// way because
+				// we want to ensure that the conversion process is the same as
+				// the one
 				// used to convert the current image into a byte array.
 				if (oldValue != null) {
 					oldValue = PersisterUtils.convertImageToStreamAsPNG(
-							(Image) converter.convertToComplexType(
-									oldValue, Image.class)).toByteArray();
+							(Image) converter.convertToComplexType(oldValue,
+									Image.class)).toByteArray();
 				}
 
 			} else if (wo instanceof WabitItem) {
@@ -1142,19 +1178,18 @@ public class WabitSessionPersister implements WabitPersister {
 				propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
 						propertyName);
 			} else {
-				throw new WabitPersistenceException(uuid, "Invalid WabitObject type " + wo.getClass());
+				throw new WabitPersistenceException(uuid,
+						"Invalid WabitObject type " + wo.getClass());
 			}
 
-			if ((oldValue == null && propertyValue != null) ||
-					(oldValue != null && !oldValue.equals(propertyValue))) {
-				throw new WabitPersistenceException(
-						uuid,
-						"For property \"" + propertyName + "\" on WabitObject of type "
-								+ wo.getClass() + " and UUID + " + wo.getUUID() 
-								+ ", the expected property value \""
-								+ oldValue
-								+ "\" does not match with the actual property value \""
-								+ propertyValue + "\"");
+			if ((oldValue == null && propertyValue != null)
+					|| (oldValue != null && !oldValue.equals(propertyValue))) {
+				throw new WabitPersistenceException(uuid, "For property \""
+						+ propertyName + "\" on WabitObject of type "
+						+ wo.getClass() + " and UUID + " + wo.getUUID()
+						+ ", the expected property value \"" + oldValue
+						+ "\" does not match with the actual property value \""
+						+ propertyValue + "\"");
 			}
 		}
 
@@ -1173,23 +1208,27 @@ public class WabitSessionPersister implements WabitPersister {
 	 * exception with a message equivalent to this one.
 	 * 
 	 * @param wo
-	 *            The {@link WabitObject} that does not contain the given property.
+	 *            The {@link WabitObject} that does not contain the given
+	 *            property.
 	 * @param propertyName
 	 *            The property we want to find on the {@link WabitObject} that
 	 *            cannot be found.
 	 * @return An error message for exceptions that describes the above.
 	 */
-	public String getWabitPersistenceExceptionMessage(WabitObject wo, String propertyName) {
-		return "Cannot persist property \"" + propertyName + "\" on " + wo.getClass() 
-			+ " with name \"" + wo.getName() + "\" and UUID \"" + wo.getUUID() + "\"";
+	public String getWabitPersistenceExceptionMessage(WabitObject wo,
+			String propertyName) {
+		return "Cannot persist property \"" + propertyName + "\" on "
+				+ wo.getClass() + " with name \"" + wo.getName()
+				+ "\" and UUID \"" + wo.getUUID() + "\"";
 	}
-	
+
 	public String getNotDefinedPropertyExceptionMessage(WabitObject wo,
 			String propertyName, Object newValue) {
-		return "Could not commit the property \"" + propertyName 
-			+ "\" on " + wo.getClass() + " with name \"" + wo.getName() 
-			+ "\" and UUID \"" + wo.getUUID() + " with new value \"" + newValue.toString()
-			+ "\" which is of data type \"" + newValue.getClass() + "\""; 
+		return "Could not commit the property \"" + propertyName + "\" on "
+				+ wo.getClass() + " with name \"" + wo.getName()
+				+ "\" and UUID \"" + wo.getUUID() + " with new value \""
+				+ newValue.toString() + "\" which is of data type \""
+				+ newValue.getClass() + "\"";
 	}
 
 	/**
@@ -1201,8 +1240,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @return Determinant of whether the given property name is common
 	 */
 	private boolean isCommonProperty(String propertyName) {
-		return (propertyName.equals("name") || propertyName.equals("UUID") 
-				|| propertyName.equals("parent"));
+		return (propertyName.equals("name") || propertyName.equals("UUID") || propertyName
+				.equals("parent"));
 	}
 
 	/**
@@ -1256,15 +1295,15 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitCommonProperty(WabitObject wo, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("name")) {
-			wo.setName((String) converter.convertToComplexType(
-					newValue, String.class));
+			wo.setName((String) converter.convertToComplexType(newValue,
+					String.class));
 		} else if (propertyName.equals("UUID")) {
-			wo.setUUID((String) converter.convertToComplexType(
-					newValue, String.class));
+			wo.setUUID((String) converter.convertToComplexType(newValue,
+					String.class));
 		} else if (propertyName.equals("parent")) {
-			wo.setParent((WabitObject) converter.convertToComplexType(
-					newValue, WabitObject.class));
-			
+			wo.setParent((WabitObject) converter.convertToComplexType(newValue,
+					WabitObject.class));
+
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
 					getWabitPersistenceExceptionMessage(wo, propertyName));
@@ -1296,9 +1335,11 @@ public class WabitSessionPersister implements WabitPersister {
 	private Object getWabitWorkspaceProperty(WabitWorkspace workspace,
 			String propertyName) throws WabitPersistenceException {
 		if (propertyName.equals("editorPanelModel")) {
-			return converter.convertToBasicType(workspace.getEditorPanelModel());
+			return converter
+					.convertToBasicType(workspace.getEditorPanelModel());
 		} else {
-			throw new WabitPersistenceException(workspace.getUUID(),
+			throw new WabitPersistenceException(
+					workspace.getUUID(),
 					getWabitPersistenceExceptionMessage(workspace, propertyName));
 		}
 	}
@@ -1314,8 +1355,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param newValue
 	 *            The persisted property value to be committed
 	 * @throws WabitPersistenceException
-	 *             Thrown if the property name is not known in this method
-	 *             or the new value could not be committed.
+	 *             Thrown if the property name is not known in this method or
+	 *             the new value could not be committed.
 	 */
 	private void commitWabitWorkspaceProperty(WabitWorkspace workspace,
 			String propertyName, Object newValue)
@@ -1323,17 +1364,19 @@ public class WabitSessionPersister implements WabitPersister {
 		String uuid = workspace.getUUID();
 
 		if (propertyName.equals("editorPanelModel")) {
-			WabitObject editorPanel = (WabitObject) converter.convertToComplexType(
-					newValue, WabitObject.class);
+			WabitObject editorPanel = (WabitObject) converter
+					.convertToComplexType(newValue, WabitObject.class);
 
 			if (editorPanel == null) {
 				throw new WabitPersistenceException(uuid,
-						getNotDefinedPropertyExceptionMessage(workspace, propertyName, newValue));
+						getNotDefinedPropertyExceptionMessage(workspace,
+								propertyName, newValue));
 			}
 
 			workspace.setEditorPanelModel(editorPanel);
 		} else {
-			throw new WabitPersistenceException(uuid, 
+			throw new WabitPersistenceException(
+					uuid,
 					getWabitPersistenceExceptionMessage(workspace, propertyName));
 		}
 	}
@@ -1431,7 +1474,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(query.getPromptForCrossJoins());
 
 		} else if (propertyName.equals("automaticallyExecuting")) {
-			return converter.convertToBasicType(query.isAutomaticallyExecuting());
+			return converter.convertToBasicType(query
+					.isAutomaticallyExecuting());
 
 		} else if (propertyName.equals(QueryImpl.GLOBAL_WHERE_CLAUSE)) {
 			return converter.convertToBasicType(query.getGlobalWhereClause());
@@ -1440,7 +1484,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(query.getUserModifiedQuery());
 
 		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
-			return converter.convertToBasicType(query.getExecuteQueriesWithCrossJoins());
+			return converter.convertToBasicType(query
+					.getExecuteQueriesWithCrossJoins());
 
 		} else if (propertyName.equals("dataSource")) {
 			return converter.convertToBasicType(query.getWabitDataSource());
@@ -1479,8 +1524,8 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Boolean.class));
 
 		} else if (propertyName.equals("streamingRowLimit")) {
-			query.setStreamingRowLimit((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			query.setStreamingRowLimit((Integer) converter
+					.convertToComplexType(newValue, Integer.class));
 
 		} else if (propertyName.equals(QueryImpl.ROW_LIMIT)) {
 			query.setRowLimit((Integer) converter.convertToComplexType(
@@ -1491,12 +1536,12 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Boolean.class));
 
 		} else if (propertyName.equals("promptForCrossJoins")) {
-			query.setPromptForCrossJoins((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
+			query.setPromptForCrossJoins((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("automaticallyExecuting")) {
-			query.setAutomaticallyExecuting((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
+			query.setAutomaticallyExecuting((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals(QueryImpl.GLOBAL_WHERE_CLAUSE)) {
 			query.setGlobalWhereClause((String) converter.convertToComplexType(
@@ -1507,12 +1552,12 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, String.class));
 
 		} else if (propertyName.equals("executeQueriesWithCrossJoins")) {
-			query.setExecuteQueriesWithCrossJoins((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
+			query.setExecuteQueriesWithCrossJoins((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSourceWithoutReset((JDBCDataSource) converter.convertToComplexType(
-					newValue, JDBCDataSource.class));
+			query.setDataSourceWithoutReset((JDBCDataSource) converter
+					.convertToComplexType(newValue, JDBCDataSource.class));
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Invalid property: "
@@ -1546,7 +1591,7 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitConstantsContainer wabitConstantsContainer, String propertyName)
 			throws WabitPersistenceException {
 		Container delegate = wabitConstantsContainer.getDelegate();
-		
+
 		if (propertyName.equals("alias")) {
 			return converter.convertToBasicType(delegate.getAlias());
 
@@ -1556,7 +1601,7 @@ public class WabitSessionPersister implements WabitPersister {
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
 					.getUUID(), getWabitPersistenceExceptionMessage(
-							wabitConstantsContainer, propertyName));
+					wabitConstantsContainer, propertyName));
 		}
 	}
 
@@ -1577,12 +1622,12 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitConstantsContainer wabitConstantsContainer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-		
+
 		Container delegate = wabitConstantsContainer.getDelegate();
 
 		if (propertyName.equals("alias")) {
-			delegate.setAlias((String) converter.convertToComplexType(
-					newValue, String.class));
+			delegate.setAlias((String) converter.convertToComplexType(newValue,
+					String.class));
 
 		} else if (propertyName.equals("position")) {
 			delegate.setPosition((Point2D) converter.convertToComplexType(
@@ -1591,7 +1636,7 @@ public class WabitSessionPersister implements WabitPersister {
 		} else {
 			throw new WabitPersistenceException(wabitConstantsContainer
 					.getUUID(), getWabitPersistenceExceptionMessage(
-							wabitConstantsContainer, propertyName));
+					wabitConstantsContainer, propertyName));
 		}
 	}
 
@@ -1622,14 +1667,16 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("position")) {
-			return converter.convertToBasicType(wabitTableContainer.getPosition());
+			return converter.convertToBasicType(wabitTableContainer
+					.getPosition());
 
 		} else if (propertyName.equals("alias")) {
 			return converter.convertToBasicType(wabitTableContainer.getAlias());
 
 		} else {
 			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitTableContainer, propertyName));
+					getWabitPersistenceExceptionMessage(wabitTableContainer,
+							propertyName));
 		}
 	}
 
@@ -1651,16 +1698,17 @@ public class WabitSessionPersister implements WabitPersister {
 			Object newValue) throws WabitPersistenceException {
 
 		if (propertyName.equals("position")) {
-			wabitTableContainer.setPosition((Point2D) converter.convertToComplexType(
-					newValue, Point2D.class));
+			wabitTableContainer.setPosition((Point2D) converter
+					.convertToComplexType(newValue, Point2D.class));
 
 		} else if (propertyName.equals("alias")) {
-			wabitTableContainer.setAlias((String) converter.convertToComplexType(
-					newValue, String.class));
+			wabitTableContainer.setAlias((String) converter
+					.convertToComplexType(newValue, String.class));
 
 		} else {
 			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitTableContainer, propertyName));
+					getWabitPersistenceExceptionMessage(wabitTableContainer,
+							propertyName));
 		}
 	}
 
@@ -1720,11 +1768,12 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else {
 				throw new WabitPersistenceException(uuid,
-						getWabitPersistenceExceptionMessage(wabitItem, propertyName));
+						getWabitPersistenceExceptionMessage(wabitItem,
+								propertyName));
 			}
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown WabitItem with name "
-					+ wabitItem.getName());
+			throw new WabitPersistenceException(uuid,
+					"Unknown WabitItem with name " + wabitItem.getName());
 		}
 	}
 
@@ -1739,8 +1788,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param newValue
 	 *            The persisted property value to be committed
 	 * @throws WabitPersistenceException
-	 *             Thrown if the property name is not known in this method or if an
-	 *             invalid delegate is contained within this wrapper.
+	 *             Thrown if the property name is not known in this method or if
+	 *             an invalid delegate is contained within this wrapper.
 	 */
 	private void commitWabitItemProperty(WabitItem wabitItem,
 			String propertyName, Object newValue)
@@ -1750,36 +1799,38 @@ public class WabitSessionPersister implements WabitPersister {
 
 		if (item instanceof SQLObjectItem || item instanceof StringItem) {
 			if (propertyName.equals(Item.ALIAS)) {
-				item.setAlias((String) converter.convertToComplexType(
-						newValue, String.class));
+				item.setAlias((String) converter.convertToComplexType(newValue,
+						String.class));
 
 			} else if (propertyName.equals(Item.WHERE)) {
-				item.setWhere((String) converter.convertToComplexType(
-						newValue, String.class));
+				item.setWhere((String) converter.convertToComplexType(newValue,
+						String.class));
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
-				item.setGroupBy((SQLGroupFunction) converter.convertToComplexType(
-						newValue, SQLGroupFunction.class));
+				item
+						.setGroupBy((SQLGroupFunction) converter
+								.convertToComplexType(newValue,
+										SQLGroupFunction.class));
 
 			} else if (propertyName.equals(Item.HAVING)) {
 				item.setHaving((String) converter.convertToComplexType(
 						newValue, String.class));
 
 			} else if (propertyName.equals(Item.ORDER_BY)) {
-				item.setOrderBy((OrderByArgument) converter.convertToComplexType(
-						newValue, OrderByArgument.class));
+				item.setOrderBy((OrderByArgument) converter
+						.convertToComplexType(newValue, OrderByArgument.class));
 
 			} else if (propertyName.equals(Item.SELECTED)) {
 				item.setSelected((Integer) converter.convertToComplexType(
 						newValue, Integer.class));
 
 			} else if (propertyName.equals(Item.WHERE)) {
-				item.setWhere((String) converter.convertToComplexType(
-						newValue, String.class));
+				item.setWhere((String) converter.convertToComplexType(newValue,
+						String.class));
 
 			} else if (propertyName.equals("orderByOrdering")) {
-				item.setOrderByOrdering((Integer) converter.convertToComplexType(
-						newValue, Integer.class));
+				item.setOrderByOrdering((Integer) converter
+						.convertToComplexType(newValue, Integer.class));
 
 			} else if (propertyName.equals("columnWidth")) {
 				item.setColumnWidth((Integer) converter.convertToComplexType(
@@ -1787,11 +1838,12 @@ public class WabitSessionPersister implements WabitPersister {
 
 			} else {
 				throw new WabitPersistenceException(uuid,
-						getWabitPersistenceExceptionMessage(wabitItem, propertyName));
+						getWabitPersistenceExceptionMessage(wabitItem,
+								propertyName));
 			}
 		} else {
-			throw new WabitPersistenceException(uuid, "Unknown WabitItem with name "
-					+ wabitItem.getName());
+			throw new WabitPersistenceException(uuid,
+					"Unknown WabitItem with name " + wabitItem.getName());
 		}
 	}
 
@@ -1821,15 +1873,18 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("leftColumnOuterJoin")) {
-			return converter.convertToBasicType(wabitJoin.isLeftColumnOuterJoin());
-			
+			return converter.convertToBasicType(wabitJoin
+					.isLeftColumnOuterJoin());
+
 		} else if (propertyName.equals("rightColumnOuterJoin")) {
-			return converter.convertToBasicType(wabitJoin.isRightColumnOuterJoin());
-			
+			return converter.convertToBasicType(wabitJoin
+					.isRightColumnOuterJoin());
+
 		} else if (propertyName.equals("comparator")) {
 			return converter.convertToBasicType(wabitJoin.getComparator());
 		} else {
-			throw new WabitPersistenceException(wabitJoin.getUUID(),
+			throw new WabitPersistenceException(
+					wabitJoin.getUUID(),
 					getWabitPersistenceExceptionMessage(wabitJoin, propertyName));
 		}
 	}
@@ -1852,19 +1907,21 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("leftColumnOuterJoin")) {
-			wabitJoin.setLeftColumnOuterJoin((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-			
+			wabitJoin.setLeftColumnOuterJoin((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
+
 		} else if (propertyName.equals("rightColumnOuterJoin")) {
-			wabitJoin.setRightColumnOuterJoin((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-			
+			wabitJoin.setRightColumnOuterJoin((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
+
 		} else if (propertyName.equals("comparator")) {
 			wabitJoin.setComparator((String) converter.convertToComplexType(
-					newValue, String.class));;
-			
+					newValue, String.class));
+			;
+
 		} else {
-			throw new WabitPersistenceException(wabitJoin.getUUID(),
+			throw new WabitPersistenceException(
+					wabitJoin.getUUID(),
 					getWabitPersistenceExceptionMessage(wabitJoin, propertyName));
 		}
 	}
@@ -1906,14 +1963,15 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(olapQuery.getCubeName());
 
 		} else if (propertyName.equals("currentCube")) {
-			return converter.convertToBasicType(olapQuery.getCurrentCube(), 
+			return converter.convertToBasicType(olapQuery.getCurrentCube(),
 					olapQuery.getOlapDataSource());
 
 		} else if (propertyName.equals("nonEmpty")) {
 			return converter.convertToBasicType(olapQuery.isNonEmpty());
 
 		} else {
-			throw new WabitPersistenceException(olapQuery.getUUID(),
+			throw new WabitPersistenceException(
+					olapQuery.getUUID(),
 					getWabitPersistenceExceptionMessage(olapQuery, propertyName));
 		}
 	}
@@ -1929,33 +1987,35 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param newValue
 	 *            The persisted property value to be committed
 	 * @throws WabitPersistenceException
-	 *             Thrown if the property name is not known in this method
-	 *             or if the new value could not be committed.
+	 *             Thrown if the property name is not known in this method or if
+	 *             the new value could not be committed.
 	 */
 	private void commitOlapQueryProperty(OlapQuery olapQuery,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
-			olapQuery.setOlapDataSource((Olap4jDataSource) converter.convertToComplexType(
-					newValue, Olap4jDataSource.class));
+			olapQuery.setOlapDataSource((Olap4jDataSource) converter
+					.convertToComplexType(newValue, Olap4jDataSource.class));
 
 		} else if (propertyName.equals("currentCube")) {
 			try {
 				olapQuery.setCurrentCube((Cube) converter.convertToComplexType(
 						newValue, Cube.class));
 			} catch (SQLException e) {
-				throw new WabitPersistenceException(olapQuery.getUUID(), 
-						"Cannot commit currentCube property for OlapQuery with name \"" 
-						+ olapQuery.getName() + "\" and UUID \"" + olapQuery.getUUID() 
-						+ "\" to value " + newValue.toString(), e);
+				throw new WabitPersistenceException(olapQuery.getUUID(),
+						"Cannot commit currentCube property for OlapQuery with name \""
+								+ olapQuery.getName() + "\" and UUID \""
+								+ olapQuery.getUUID() + "\" to value "
+								+ newValue.toString(), e);
 			}
 
 		} else if (propertyName.equals("nonEmpty")) {
 			olapQuery.setNonEmpty((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
-			
+
 		} else {
-			throw new WabitPersistenceException(olapQuery.getUUID(),
+			throw new WabitPersistenceException(
+					olapQuery.getUUID(),
 					getWabitPersistenceExceptionMessage(olapQuery, propertyName));
 		}
 	}
@@ -1988,10 +2048,12 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(selection.getOperator());
 
 		} else if (propertyName.equals("uniqueMemberName")) {
-			return converter.convertToBasicType(selection.getUniqueMemberName());
+			return converter
+					.convertToBasicType(selection.getUniqueMemberName());
 
 		} else {
-			throw new WabitPersistenceException(selection.getUUID(),
+			throw new WabitPersistenceException(
+					selection.getUUID(),
 					getWabitPersistenceExceptionMessage(selection, propertyName));
 		}
 	}
@@ -2095,7 +2157,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(olapAxis.isNonEmpty());
 
 		} else if (propertyName.equals("sortEvaluationLiteral")) {
-			return converter.convertToBasicType(olapAxis.getSortEvaluationLiteral());
+			return converter.convertToBasicType(olapAxis
+					.getSortEvaluationLiteral());
 
 		} else if (propertyName.equals("sortOrder")) {
 			return converter.convertToBasicType(olapAxis.getSortOrder());
@@ -2128,8 +2191,8 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Boolean.class));
 
 		} else if (propertyName.equals("sortEvaluationLiteral")) {
-			olapAxis.setSortEvaluationLiteral((String) converter.convertToComplexType(
-					newValue, String.class));
+			olapAxis.setSortEvaluationLiteral((String) converter
+					.convertToComplexType(newValue, String.class));
 
 		} else if (propertyName.equals("sortOrder")) {
 			olapAxis.setSortOrder((String) converter.convertToComplexType(
@@ -2184,7 +2247,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else if (propertyName.equals("query")) {
 			return converter.convertToBasicType(chart.getQuery());
-			
+
 		} else if (propertyName.equals("backgroundColour")) {
 			return converter.convertToBasicType(chart.getBackgroundColour());
 
@@ -2219,12 +2282,12 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, String.class));
 
 		} else if (propertyName.equals("XAxisLabelRotation")) {
-			chart.setXAxisLabelRotation((Double) converter.convertToComplexType(
-					newValue, Double.class));
+			chart.setXAxisLabelRotation((Double) converter
+					.convertToComplexType(newValue, Double.class));
 
 		} else if (propertyName.equals("gratuitouslyAnimated")) {
-			chart.setGratuitouslyAnimated((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
+			chart.setGratuitouslyAnimated((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("type")) {
 			chart.setType((ChartType) converter.convertToComplexType(newValue,
@@ -2239,18 +2302,20 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, ResultSetProducer.class);
 			if (rsProducer == null) {
 				throw new WabitPersistenceException(uuid,
-						getNotDefinedPropertyExceptionMessage(chart, propertyName, newValue));
+						getNotDefinedPropertyExceptionMessage(chart,
+								propertyName, newValue));
 			}
 
 			try {
 				chart.setQuery(rsProducer);
 			} catch (SQLException e) {
-				throw new WabitPersistenceException(uuid, 
-						"Cannot commit property query on Chart with name \"" 
-						+ chart.getName() + "\" and UUID \"" + chart.getUUID() 
-						+ "\" for value \"" + newValue.toString() + "\"", e);
+				throw new WabitPersistenceException(uuid,
+						"Cannot commit property query on Chart with name \""
+								+ chart.getName() + "\" and UUID \""
+								+ chart.getUUID() + "\" for value \""
+								+ newValue.toString() + "\"", e);
 			}
-			
+
 		} else if (propertyName.equals("backgroundColour")) {
 			chart.setBackgroundColour((Color) converter.convertToComplexType(
 					newValue, Color.class));
@@ -2289,11 +2354,13 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(chartColumn.getRoleInChart());
 
 		} else if (propertyName.equals("XAxisIdentifier")) {
-			return converter.convertToBasicType(chartColumn.getXAxisIdentifier());
+			return converter.convertToBasicType(chartColumn
+					.getXAxisIdentifier());
 
 		} else {
 			throw new WabitPersistenceException(chartColumn.getUUID(),
-					getWabitPersistenceExceptionMessage(chartColumn, propertyName));
+					getWabitPersistenceExceptionMessage(chartColumn,
+							propertyName));
 		}
 
 	}
@@ -2319,12 +2386,13 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, ColumnRole.class));
 
 		} else if (propertyName.equals("XAxisIdentifier")) {
-			chartColumn.setXAxisIdentifier((ChartColumn) converter.convertToComplexType(
-					newValue, ChartColumn.class));
+			chartColumn.setXAxisIdentifier((ChartColumn) converter
+					.convertToComplexType(newValue, ChartColumn.class));
 
 		} else {
 			throw new WabitPersistenceException(chartColumn.getUUID(),
-					getWabitPersistenceExceptionMessage(chartColumn, propertyName));
+					getWabitPersistenceExceptionMessage(chartColumn,
+							propertyName));
 		}
 	}
 
@@ -2363,7 +2431,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else {
 			throw new WabitPersistenceException(uuid,
-					getWabitPersistenceExceptionMessage(wabitImage, propertyName));
+					getWabitPersistenceExceptionMessage(wabitImage,
+							propertyName));
 		}
 
 	}
@@ -2379,19 +2448,21 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param newValue
 	 *            The persisted property value to be committed
 	 * @throws WabitPersistenceException
-	 *             Thrown if the property name is not known in this method
-	 *             or if the new value could not be committed.
+	 *             Thrown if the property name is not known in this method or if
+	 *             the new value could not be committed.
 	 */
 	private void commitWabitImageProperty(WabitImage wabitImage,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
 
 		if (propertyName.equals("image")) {
-			wabitImage.setImage((Image) converter.convertToComplexType(newValue, Image.class));
+			wabitImage.setImage((Image) converter.convertToComplexType(
+					newValue, Image.class));
 
 		} else {
 			throw new WabitPersistenceException(wabitImage.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitImage, propertyName));
+					getWabitPersistenceExceptionMessage(wabitImage,
+							propertyName));
 		}
 	}
 
@@ -2508,19 +2579,20 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitPageProperty(Page page, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("height")) {
-			page.setHeight((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			page.setHeight((Integer) converter.convertToComplexType(newValue,
+					Integer.class));
 
 		} else if (propertyName.equals("width")) {
-			page.setWidth((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			page.setWidth((Integer) converter.convertToComplexType(newValue,
+					Integer.class));
 
 		} else if (propertyName.equals("orientation")) {
-			page.setOrientation((PageOrientation) converter.convertToComplexType(
-					newValue, PageOrientation.class));
+			page.setOrientation((PageOrientation) converter
+					.convertToComplexType(newValue, PageOrientation.class));
 
 		} else if (propertyName.equals("defaultFont")) {
-			page.setDefaultFont((Font) converter.convertToComplexType(newValue,	Font.class));
+			page.setDefaultFont((Font) converter.convertToComplexType(newValue,
+					Font.class));
 
 		} else {
 			throw new WabitPersistenceException(page.getUUID(),
@@ -2565,14 +2637,16 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(contentBox.getY());
 
 		} else if (propertyName.equals("contentRenderer")) {
-			return converter.convertToBasicType(contentBox.getContentRenderer());
+			return converter
+					.convertToBasicType(contentBox.getContentRenderer());
 
 		} else if (propertyName.equals("font")) {
 			return converter.convertToBasicType(contentBox.getFont());
 
 		} else {
 			throw new WabitPersistenceException(contentBox.getUUID(),
-					getWabitPersistenceExceptionMessage(contentBox, propertyName));
+					getWabitPersistenceExceptionMessage(contentBox,
+							propertyName));
 		}
 	}
 
@@ -2601,17 +2675,18 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Double.class));
 
 		} else if (propertyName.equals("x")) {
-			contentBox.setX((Double) converter.convertToComplexType(
-					newValue, Double.class));
+			contentBox.setX((Double) converter.convertToComplexType(newValue,
+					Double.class));
 
 		} else if (propertyName.equals("y")) {
-			contentBox.setY((Double) converter.convertToComplexType(
-					newValue, Double.class));
+			contentBox.setY((Double) converter.convertToComplexType(newValue,
+					Double.class));
 
 		} else if (propertyName.equals("contentRenderer")) {
-			contentBox.setContentRenderer((ReportContentRenderer)
-					converter.convertToComplexType(newValue,
-							ReportContentRenderer.class));
+			contentBox
+					.setContentRenderer((ReportContentRenderer) converter
+							.convertToComplexType(newValue,
+									ReportContentRenderer.class));
 
 		} else if (propertyName.equals("font")) {
 			contentBox.setFont((Font) converter.convertToComplexType(newValue,
@@ -2619,7 +2694,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else {
 			throw new WabitPersistenceException(contentBox.getUUID(),
-					getWabitPersistenceExceptionMessage(contentBox, propertyName));
+					getWabitPersistenceExceptionMessage(contentBox,
+							propertyName));
 		}
 	}
 
@@ -2712,7 +2788,8 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(csRenderer, propertyName));
+					getWabitPersistenceExceptionMessage(csRenderer,
+							propertyName));
 		}
 	}
 
@@ -2748,10 +2825,11 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("bodyFont")) {
 			csRenderer.setBodyFont((Font) converter.convertToComplexType(
 					newValue, Font.class));
-			
+
 		} else {
 			throw new WabitPersistenceException(csRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(csRenderer, propertyName));
+					getWabitPersistenceExceptionMessage(csRenderer,
+							propertyName));
 		}
 	}
 
@@ -2783,10 +2861,12 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(iRenderer.getImage());
 
 		} else if (propertyName.equals("preservingAspectRatio")) {
-			return converter.convertToBasicType(iRenderer.isPreservingAspectRatio());
+			return converter.convertToBasicType(iRenderer
+					.isPreservingAspectRatio());
 
 		} else if (propertyName.equals("preserveAspectRatioWhenResizing")) {
-			return converter.convertToBasicType(iRenderer.isPreserveAspectRatioWhenResizing());
+			return converter.convertToBasicType(iRenderer
+					.isPreserveAspectRatioWhenResizing());
 
 		} else if (propertyName.equals("HAlign")) {
 			return converter.convertToBasicType(iRenderer.getHAlign());
@@ -2795,7 +2875,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(iRenderer.getVAlign());
 
 		} else {
-			throw new WabitPersistenceException(iRenderer.getUUID(),
+			throw new WabitPersistenceException(
+					iRenderer.getUUID(),
 					getWabitPersistenceExceptionMessage(iRenderer, propertyName));
 		}
 	}
@@ -2820,23 +2901,24 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, WabitImage.class));
 
 		} else if (propertyName.equals("preservingAspectRatio")) {
-			iRenderer.setPreservingAspectRatio((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
+			iRenderer.setPreservingAspectRatio((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("preserveAspectRatioWhenResizing")) {
-			iRenderer.setPreserveAspectRatioWhenResizing(
-					(Boolean) converter.convertToComplexType(newValue, Boolean.class));
+			iRenderer.setPreserveAspectRatioWhenResizing((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("HAlign")) {
-			iRenderer.setHAlign((HorizontalAlignment) converter.convertToComplexType(
-					newValue, HorizontalAlignment.class));
+			iRenderer.setHAlign((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("VAlign")) {
-			iRenderer.setVAlign((VerticalAlignment) converter.convertToComplexType(
-					newValue, VerticalAlignment.class));
+			iRenderer.setVAlign((VerticalAlignment) converter
+					.convertToComplexType(newValue, VerticalAlignment.class));
 
 		} else {
-			throw new WabitPersistenceException(iRenderer.getUUID(),
+			throw new WabitPersistenceException(
+					iRenderer.getUUID(),
 					getWabitPersistenceExceptionMessage(iRenderer, propertyName));
 		}
 	}
@@ -2899,16 +2981,16 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitLabelProperty(Label label, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
-			label.setHorizontalAlignment((HorizontalAlignment) converter.convertToComplexType(
-					newValue, HorizontalAlignment.class));
+			label.setHorizontalAlignment((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals("verticalAlignment")) {
-			label.setVerticalAlignment((VerticalAlignment) converter.convertToComplexType(
-					newValue, VerticalAlignment.class));
+			label.setVerticalAlignment((VerticalAlignment) converter
+					.convertToComplexType(newValue, VerticalAlignment.class));
 
 		} else if (propertyName.equals("text")) {
-			label.setText((String) converter.convertToComplexType(
-					newValue, String.class));
+			label.setText((String) converter.convertToComplexType(newValue,
+					String.class));
 
 		} else if (propertyName.equals("backgroundColour")) {
 			label.setBackgroundColour((Color) converter.convertToComplexType(
@@ -2930,7 +3012,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * persister.
 	 * 
 	 * @param task
-	 *            The {@link ReportTask} object to retrieve the named property from.
+	 *            The {@link ReportTask} object to retrieve the named property
+	 *            from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -2959,25 +3042,27 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("triggerMinuteParam")) {
 			return converter.convertToBasicType(task.getTriggerMinuteParam());
 		} else if (propertyName.equals("triggerDayOfWeekParam")) {
-			return converter.convertToBasicType(task.getTriggerDayOfWeekParam());
+			return converter
+					.convertToBasicType(task.getTriggerDayOfWeekParam());
 		} else if (propertyName.equals("triggerDayOfMonthParam")) {
-			return converter.convertToBasicType(task.getTriggerDayOfMonthParam());
+			return converter.convertToBasicType(task
+					.getTriggerDayOfMonthParam());
 		} else if (propertyName.equals("triggerIntervalParam")) {
 			return converter.convertToBasicType(task.getTriggerIntervalParam());
 
 		} else {
 			throw new WabitPersistenceException(task.getUUID(),
-					"Unknown property " + propertyName + " for ReportTask with name " 
-					+ task.getName());
+					"Unknown property " + propertyName
+							+ " for ReportTask with name " + task.getName());
 		}
 	}
-	
+
 	/**
 	 * Commits a persisted {@link ReportTask} object property
 	 * 
 	 * @param task
-	 *            The {@link ReportTask} object to commit the persisted
-	 *            property upon
+	 *            The {@link ReportTask} object to commit the persisted property
+	 *            upon
 	 * @param propertyName
 	 *            The property name
 	 * @param newValue
@@ -2987,13 +3072,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private void commitReportTaskProperty(ReportTask task, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		
+
 		if (propertyName.equals("email")) {
-			task.setEmail((String) converter.convertToComplexType(
-					newValue, String.class));
+			task.setEmail((String) converter.convertToComplexType(newValue,
+					String.class));
 		} else if (propertyName.equals("report")) {
-			task.setReport((Report) converter.convertToComplexType(
-					newValue, Report.class));
+			task.setReport((Report) converter.convertToComplexType(newValue,
+					Report.class));
 		} else if (propertyName.equals("triggerType")) {
 			task.setTriggerType((String) converter.convertToComplexType(
 					newValue, String.class));
@@ -3001,22 +3086,22 @@ public class WabitSessionPersister implements WabitPersister {
 			task.setTriggerHourParam((Integer) converter.convertToComplexType(
 					newValue, Integer.class));
 		} else if (propertyName.equals("triggerMinuteParam")) {
-			task.setTriggerMinuteParam((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			task.setTriggerMinuteParam((Integer) converter
+					.convertToComplexType(newValue, Integer.class));
 		} else if (propertyName.equals("triggerDayOfWeekParam")) {
-			task.setTriggerDayOfWeekParam((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			task.setTriggerDayOfWeekParam((Integer) converter
+					.convertToComplexType(newValue, Integer.class));
 		} else if (propertyName.equals("triggerDayOfMonthParam")) {
-			task.setTriggerDayOfMonthParam((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			task.setTriggerDayOfMonthParam((Integer) converter
+					.convertToComplexType(newValue, Integer.class));
 		} else if (propertyName.equals("triggerIntervalParam")) {
-			task.setTriggerIntervalParam((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			task.setTriggerIntervalParam((Integer) converter
+					.convertToComplexType(newValue, Integer.class));
 
 		} else {
 			throw new WabitPersistenceException(task.getUUID(),
-					"Unknown property " + propertyName + " for ReportTask with name " 
-					+ task.getName());
+					"Unknown property " + propertyName
+							+ " for ReportTask with name " + task.getName());
 		}
 	}
 
@@ -3051,20 +3136,23 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(rsRenderer.getBorderType());
 
 		} else if (propertyName.equals("backgroundColour")) {
-			return converter.convertToBasicType(rsRenderer.getBackgroundColour());
+			return converter.convertToBasicType(rsRenderer
+					.getBackgroundColour());
 
 		} else if (propertyName.equals("headerFont")) {
 			return converter.convertToBasicType(rsRenderer.getHeaderFont());
 
 		} else if (propertyName.equals("bodyFont")) {
 			return converter.convertToBasicType(rsRenderer.getBodyFont());
-			
+
 		} else if (propertyName.equals("printingGrandTotals")) {
-			return converter.convertToBasicType(rsRenderer.isPrintingGrandTotals());
+			return converter.convertToBasicType(rsRenderer
+					.isPrintingGrandTotals());
 
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(rsRenderer, propertyName));
+					getWabitPersistenceExceptionMessage(rsRenderer,
+							propertyName));
 		}
 	}
 
@@ -3089,12 +3177,12 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, String.class));
 
 		} else if (propertyName.equals("borderType")) {
-			rsRenderer.setBorderType((BorderStyles) converter.convertToComplexType(
-					newValue, BorderStyles.class));
+			rsRenderer.setBorderType((BorderStyles) converter
+					.convertToComplexType(newValue, BorderStyles.class));
 
 		} else if (propertyName.equals("backgroundColour")) {
-			rsRenderer.setBackgroundColour((Color) converter.convertToComplexType(
-					newValue, Color.class));
+			rsRenderer.setBackgroundColour((Color) converter
+					.convertToComplexType(newValue, Color.class));
 
 		} else if (propertyName.equals("headerFont")) {
 			rsRenderer.setHeaderFont((Font) converter.convertToComplexType(
@@ -3103,14 +3191,15 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("bodyFont")) {
 			rsRenderer.setBodyFont((Font) converter.convertToComplexType(
 					newValue, Font.class));
-			
+
 		} else if (propertyName.equals("printingGrandTotals")) {
-			rsRenderer.setPrintingGrandTotals((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class)); 
-			
+			rsRenderer.setPrintingGrandTotals((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
+
 		} else {
 			throw new WabitPersistenceException(rsRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(rsRenderer, propertyName));
+					getWabitPersistenceExceptionMessage(rsRenderer,
+							propertyName));
 		}
 	}
 
@@ -3147,7 +3236,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(colInfo.getWidth());
 
 		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
-			return converter.convertToBasicType(colInfo.getHorizontalAlignment());
+			return converter.convertToBasicType(colInfo
+					.getHorizontalAlignment());
 
 		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
 			return converter.convertToBasicType(colInfo.getDataType());
@@ -3190,30 +3280,29 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, String.class));
 
 		} else if (propertyName.equals(ColumnInfo.WIDTH_CHANGED)) {
-			colInfo.setWidth((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
+			colInfo.setWidth((Integer) converter.convertToComplexType(newValue,
+					Integer.class));
 
 		} else if (propertyName.equals(ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED)) {
-			colInfo.setHorizontalAlignment(
-					(HorizontalAlignment) converter.convertToComplexType(
-							newValue, HorizontalAlignment.class));
+			colInfo.setHorizontalAlignment((HorizontalAlignment) converter
+					.convertToComplexType(newValue, HorizontalAlignment.class));
 
 		} else if (propertyName.equals(ColumnInfo.DATATYPE_CHANGED)) {
-			colInfo.setDataType((ca.sqlpower.wabit.report.DataType)
-					converter.convertToComplexType(newValue, 
+			colInfo.setDataType((ca.sqlpower.wabit.report.DataType) converter
+					.convertToComplexType(newValue,
 							ca.sqlpower.wabit.report.DataType.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED)) {
-			colInfo.setWillGroupOrBreak((GroupAndBreak) converter.convertToComplexType(
-					newValue, GroupAndBreak.class));
+			colInfo.setWillGroupOrBreak((GroupAndBreak) converter
+					.convertToComplexType(newValue, GroupAndBreak.class));
 
 		} else if (propertyName.equals(ColumnInfo.WILL_SUBTOTAL_CHANGED)) {
 			colInfo.setWillSubtotal((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
 
 		} else if (propertyName.equals(ColumnInfo.FORMAT_CHANGED)) {
-			colInfo.setFormat((Format) converter.convertToComplexType(
-					newValue, Format.class));
+			colInfo.setFormat((Format) converter.convertToComplexType(newValue,
+					Format.class));
 
 		} else {
 			throw new WabitPersistenceException(uuid,
@@ -3268,15 +3357,15 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitGuideProperty(Guide guide, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		if (propertyName.equals("offset")) {
-			guide.setOffset((Double) converter.convertToComplexType(
-					newValue, Double.class));
+			guide.setOffset((Double) converter.convertToComplexType(newValue,
+					Double.class));
 
 		} else {
 			throw new WabitPersistenceException(guide.getUUID(),
 					getWabitPersistenceExceptionMessage(guide, propertyName));
 		}
 	}
-	
+
 	/**
 	 * Retrieves a property value from a {@link User} object based on the
 	 * property name and converts it to something that can be passed to a
@@ -3311,7 +3400,7 @@ public class WabitSessionPersister implements WabitPersister {
 					getWabitPersistenceExceptionMessage(user, propertyName));
 		}
 	}
-	
+
 	/**
 	 * Commits a persisted {@link User} object property
 	 * 
@@ -3326,28 +3415,30 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private void commitUserProperty(User user, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		
+
 		if (propertyName.equals("password")) {
-			user.setPassword((String) converter.convertToComplexType(newValue, String.class));
+			user.setPassword((String) converter.convertToComplexType(newValue,
+					String.class));
 		} else if (propertyName.equals("email")) {
-			user.setEmail((String) converter.convertToComplexType(newValue, String.class));
+			user.setEmail((String) converter.convertToComplexType(newValue,
+					String.class));
 		} else if (propertyName.equals("fullName")) {
-			user.setFullName((String) converter.convertToComplexType(newValue, String.class));
+			user.setFullName((String) converter.convertToComplexType(newValue,
+					String.class));
 		} else {
 			throw new WabitPersistenceException(user.getUUID(),
 					getWabitPersistenceExceptionMessage(user, propertyName));
 		}
 	}
-	
+
 	/**
-	 * Retrieves a property value from a {@link Group} object based on
-	 * the property name and converts it to something that can be passed to a
+	 * Retrieves a property value from a {@link Group} object based on the
+	 * property name and converts it to something that can be passed to a
 	 * persister. Currently, uncommon properties cannot be retrieved from this
 	 * class.
 	 * 
 	 * @param group
-	 *            The {@link Group} object to retrieve the named
-	 *            property from.
+	 *            The {@link Group} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -3367,14 +3458,13 @@ public class WabitSessionPersister implements WabitPersister {
 		throw new WabitPersistenceException(group.getUUID(),
 				getWabitPersistenceExceptionMessage(group, propertyName));
 	}
-	
+
 	/**
 	 * Commits a persisted {@link Group} property. Currently, uncommon
 	 * properties cannot be persisted for this class.
 	 * 
 	 * @param group
-	 *            The {@link Group} object to commit the persisted
-	 *            property upon
+	 *            The {@link Group} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
 	 * @param newValue
@@ -3387,16 +3477,16 @@ public class WabitSessionPersister implements WabitPersister {
 		throw new WabitPersistenceException(group.getUUID(),
 				getWabitPersistenceExceptionMessage(group, propertyName));
 	}
-	
+
 	/**
-	 * Retrieves a property value from a {@link GroupMember} object based on
-	 * the property name and converts it to something that can be passed to a
+	 * Retrieves a property value from a {@link GroupMember} object based on the
+	 * property name and converts it to something that can be passed to a
 	 * persister. Currently, uncommon properties cannot be retrieved from this
 	 * class.
 	 * 
 	 * @param groupMember
-	 *            The {@link GroupMember} object to retrieve the named
-	 *            property from.
+	 *            The {@link GroupMember} object to retrieve the named property
+	 *            from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -3411,12 +3501,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
-	private Object getGroupMemberProperty(GroupMember groupMember, String propertyName)
-			throws WabitPersistenceException {
+	private Object getGroupMemberProperty(GroupMember groupMember,
+			String propertyName) throws WabitPersistenceException {
 		throw new WabitPersistenceException(groupMember.getUUID(),
 				getWabitPersistenceExceptionMessage(groupMember, propertyName));
 	}
-	
+
 	/**
 	 * Commits a persisted {@link GroupMember} property. Currently, uncommon
 	 * properties cannot be persisted for this class.
@@ -3431,20 +3521,20 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
-	private void commitGroupMemberProperty(GroupMember groupMember, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+	private void commitGroupMemberProperty(GroupMember groupMember,
+			String propertyName, Object newValue)
+			throws WabitPersistenceException {
 		throw new WabitPersistenceException(groupMember.getUUID(),
 				getWabitPersistenceExceptionMessage(groupMember, propertyName));
 	}
-	
+
 	/**
-	 * Retrieves a property value from a {@link Grant} object based on
-	 * the property name and converts it to something that can be passed to a
+	 * Retrieves a property value from a {@link Grant} object based on the
+	 * property name and converts it to something that can be passed to a
 	 * persister.
 	 * 
 	 * @param grant
-	 *            The {@link v} object to retrieve the named
-	 *            property from.
+	 *            The {@link v} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -3463,31 +3553,30 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		if (propertyName.equals("createPrivilege")) {
 			return converter.convertToBasicType(grant.isCreatePrivilege());
-			
+
 		} else if (propertyName.equals("deletePrivilege")) {
 			return converter.convertToBasicType(grant.isDeletePrivilege());
-			
+
 		} else if (propertyName.equals("executePrivilege")) {
 			return converter.convertToBasicType(grant.isExecutePrivilege());
-			
+
 		} else if (propertyName.equals("grantPrivilege")) {
 			return converter.convertToBasicType(grant.isGrantPrivilege());
-			
+
 		} else if (propertyName.equals("modifyPrivilege")) {
 			return converter.convertToBasicType(grant.isModifyPrivilege());
-			
+
 		} else {
 			throw new WabitPersistenceException(grant.getUUID(),
-				getWabitPersistenceExceptionMessage(grant, propertyName));
+					getWabitPersistenceExceptionMessage(grant, propertyName));
 		}
 	}
-	
+
 	/**
 	 * Commits a persisted {@link Grant} property.
 	 * 
 	 * @param grant
-	 *            The {@link Grant} object to commit the persisted
-	 *            property upon
+	 *            The {@link Grant} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
 	 * @param newValue
@@ -3500,27 +3589,26 @@ public class WabitSessionPersister implements WabitPersister {
 		if (propertyName.equals("createPrivilege")) {
 			grant.setCreatePrivilege((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
-			
+
 		} else if (propertyName.equals("deletePrivilege")) {
 			grant.setDeletePrivilege((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
-			
-			
+
 		} else if (propertyName.equals("executePrivilege")) {
 			grant.setExecutePrivilege((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
-			
+
 		} else if (propertyName.equals("grantPrivilege")) {
 			grant.setGrantPrivilege((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
-			
+
 		} else if (propertyName.equals("modifyPrivilege")) {
 			grant.setModifyPrivilege((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
-			
+
 		} else {
 			throw new WabitPersistenceException(grant.getUUID(),
-				getWabitPersistenceExceptionMessage(grant, propertyName));
+					getWabitPersistenceExceptionMessage(grant, propertyName));
 		}
 	}
 
@@ -3535,19 +3623,19 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
-		logger.debug(
-				String.format(
-						"wsp.removeObject(\"%s\", \"%s\");", parentUUID, uuid));
+		logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
+				parentUUID, uuid));
 		try {
 			updateDepth++;
 			if (!exists(uuid)) {
 				throw new WabitPersistenceException(uuid,
-						"Cannot remove the WabitObject with UUID " + uuid 
-						+ " from parent UUID " + parentUUID + " as it does not exist.");
+						"Cannot remove the WabitObject with UUID " + uuid
+								+ " from parent UUID " + parentUUID
+								+ " as it does not exist.");
 			}
-	
+
 			objectsToRemove.put(uuid, parentUUID);
-	
+
 			if (transactionCount == 0) {
 				commitRemovals();
 			}

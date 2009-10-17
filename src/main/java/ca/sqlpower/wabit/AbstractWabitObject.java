@@ -424,7 +424,9 @@ public abstract class AbstractWabitObject implements WabitObject {
      *            The index to add the child at.
      */
 	protected void addChildImpl(WabitObject child, int index) {
-		throw new UnsupportedOperationException("This WabitObject cannot have children");
+		throw new UnsupportedOperationException("This WabitObject cannot have children. " +
+				"This class is " + getClass() + " and trying to add " + child.getName() + 
+				" of type " + child.getClass());
 	}
 	
 	/**

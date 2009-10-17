@@ -19,8 +19,6 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.awt.print.PageFormat;
-
 import ca.sqlpower.wabit.WabitSession;
 
 /**
@@ -34,11 +32,13 @@ public class Report extends Layout {
     public Report(String name, String uuid) {
         super(uuid);
         setName(name);
-        PageFormat pageFormat = new PageFormat();
-        pageFormat.setOrientation(PageFormat.LANDSCAPE);
-        page = new Page("Default Page", pageFormat);
-        page.setParent(this);
         updateBuiltinVariables();
+    }
+    
+    public Report(String name, String uuid, Page page) {
+    	super(uuid, page);
+    	setName(name);
+    	updateBuiltinVariables();
     }
     
     /**
@@ -50,10 +50,8 @@ public class Report extends Layout {
      * 		The session to add the layout to
      */
     public Report(Layout layout, WabitSession session) {
-    	super();
+    	super(new Page(layout.getPage()));
     	setName(layout.getName());
-    	page = new Page(layout.getPage());
-    	page.setParent(this);
     	for (String variableName : layout.getVarContext().getVariableNames()) {
     		setVariable(variableName, layout.getVarContext().getVariableValue(variableName, null));
     	}
