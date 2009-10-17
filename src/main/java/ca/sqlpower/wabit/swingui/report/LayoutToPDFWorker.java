@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -29,14 +30,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import javax.swing.JOptionPane;
-
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Report;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -49,12 +47,17 @@ import com.lowagie.text.pdf.PdfWriter;
  */
 public class LayoutToPDFWorker extends SPSwingWorker {
 	
+	public interface PDFWatermarker {
+		public void watermarkPDF(Graphics g, Rectangle size);
+	}
+	
     private boolean cancelled;
     private int numPages;
     private int pageNum;
 	private final File file;
 	private final Layout layout;
 	private final Component dialogOwner;
+	private final PDFWatermarker watermarker;
 	
 	/**
 	 * Tracks if this PDF worker actually was able to start writing to PDF. The
@@ -63,11 +66,20 @@ public class LayoutToPDFWorker extends SPSwingWorker {
 	 */
     private boolean startedWriting;
 
-	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner) {
+    public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner) {
+    	this(registry, file, layout, dialogOwner, new PDFWatermarker(){
+    		public void watermarkPDF(Graphics g, Rectangle size) {
+    	        // no-op
+    		}
+    	});
+    }
+    
+	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner, PDFWatermarker watermarker) {
 		super(registry);
 		this.file = file;
 		this.layout = layout;
 		this.dialogOwner = dialogOwner;
+		this.watermarker = watermarker;
 	}
 
 	@Override
@@ -77,7 +89,7 @@ public class LayoutToPDFWorker extends SPSwingWorker {
 			writePDF(file, layout);
 		} else {
 		    startedWriting = false;
-			JOptionPane.showMessageDialog(dialogOwner, "Could not export to PDF. The layout is currently being exported. Please try again later.", "In Use", JOptionPane.INFORMATION_MESSAGE);
+		    throw new IllegalStateException("Could not export to PDF. The layout is currently being exported. Please try again later.");
 		}
 	}
 	
@@ -114,6 +126,8 @@ public class LayoutToPDFWorker extends SPSwingWorker {
     	        pdfGraphics = pdfContent.createGraphics(pageSize.getWidth(), pageSize.getHeight());
     	        int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
 
+    	        watermarker.watermarkPDF(pdfGraphics, pageSize);
+    	        
     	        pdfGraphics.dispose();
     	        pdfGraphics = null;
 
