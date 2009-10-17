@@ -23,10 +23,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
@@ -42,19 +38,19 @@ public abstract class HttpMessageSender<T> implements MessageSender<T> {
 	/**
 	 * An {@link HttpClient} object that will be used to send HTTP requests
 	 */
-	private HttpClient httpClient;
+	private final HttpClient httpClient;
 	
 	/**
 	 * A {@link WabitServerInfo} instance containing information on a given
 	 * server necessary to send HTTP requests to it
 	 */
-	private WabitServerInfo serverInfo;
+	private final WabitServerInfo serverInfo;
 
 	/**
 	 * The UUID of the {@link WabitWorkspace} that this MessagePasser will be
 	 * sending HTTP requests about
 	 */
-	private String workspaceUUID;
+	private final String workspaceUUID;
 
 	/**
 	 * Creates an HttpMessagePasser configured to send HTTP requests according
@@ -70,10 +66,8 @@ public abstract class HttpMessageSender<T> implements MessageSender<T> {
 	 *            The UUID that identifies the {@link WabitWorkspace} that the
 	 *            HTTP requests will be referring to
 	 */
-	public HttpMessageSender(WabitServerInfo serverInfo, String wabitWorkspaceUUID) {
-		HttpParams params = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(params, 2000);
-        httpClient = new DefaultHttpClient(params);
+	public HttpMessageSender(HttpClient httpClient, WabitServerInfo serverInfo, String wabitWorkspaceUUID) {
+        this.httpClient = httpClient;
 		this.serverInfo = serverInfo;
 		workspaceUUID = wabitWorkspaceUUID;
 	}

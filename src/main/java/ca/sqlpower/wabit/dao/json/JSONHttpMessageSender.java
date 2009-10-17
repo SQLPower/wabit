@@ -26,9 +26,12 @@ import java.net.URISyntaxException;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -49,9 +52,9 @@ public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 	
 	private JSONArray messageArray;
 	
-	public JSONHttpMessageSender(WabitServerInfo serverInfo,
+	public JSONHttpMessageSender(HttpClient httpClient, WabitServerInfo serverInfo,
 			String wabitWorkspaceUUID) {
-		super(serverInfo, wabitWorkspaceUUID);
+		super(httpClient, serverInfo, wabitWorkspaceUUID);
 		messageArray = new JSONArray();
 	}
 
@@ -66,14 +69,19 @@ public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 			postRequest.setEntity(new StringEntity(messageArray.toString()));
 			postRequest.setHeader("Content-Type", "application/json");
 			HttpUriRequest request = postRequest;
-	        HttpResponse response = getHttpClient().execute(request);
-	        StatusLine statusLine = response.getStatusLine();
-			if (statusLine.getStatusCode() >= 400) {
-	        	throw new WabitPersistenceException(null, 
-	        			"HTTP Post request returned an error: " +
-	        			"Code = " + statusLine.getStatusCode() + ", " +
-	        			"Reason = " + statusLine.getReasonPhrase());
-	        }
+	        getHttpClient().execute(request, new ResponseHandler<Void>() {
+				public Void handleResponse(HttpResponse response)
+						throws ClientProtocolException, IOException {
+					StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() >= 400) {
+						throw new ClientProtocolException( 
+								"HTTP Post request returned an error: " +
+								"Code = " + statusLine.getStatusCode() + ", " +
+								"Reason = " + statusLine.getReasonPhrase());
+					}
+					return null;
+				}
+	        });
 		} catch (URISyntaxException e) {
 			throw new WabitPersistenceException(null, e);
 		} catch (ClientProtocolException e) {

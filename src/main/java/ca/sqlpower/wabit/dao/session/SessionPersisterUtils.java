@@ -81,6 +81,8 @@ public class SessionPersisterUtils {
     		return DataType.PNG_IMG;
     	} else if (WabitObject.class.isAssignableFrom(classForDataType)) {
     		return DataType.REFERENCE;
+    	} else if (Void.class.isAssignableFrom(classForDataType)) {
+    		return DataType.NULL;
     	} else {
     		return DataType.STRING;
     	}

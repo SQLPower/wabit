@@ -58,9 +58,13 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
+import ca.sqlpower.wabit.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
+import ca.sqlpower.wabit.dao.json.WabitJSONPersister;
+import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 
 /**
  * A special kind of session that binds itself to a remote Wabit Enterprise
@@ -71,7 +75,7 @@ public class WabitServerSession extends WabitSessionImpl {
     
     private static final Logger logger = Logger.getLogger(WabitServerSession.class);
     
-    private final HttpClient httpClient;
+    
     
     private final Updater updater;
     
@@ -89,6 +93,18 @@ public class WabitServerSession extends WabitSessionImpl {
 	 */
 	private final WabitWorkspace systemWorkspace;
 
+	private final HttpClient outboundHttpClient;
+	
+	/**
+	 * Handles output Wabit persistence calls for this WabitServerSession
+	 */
+	private final WabitJSONPersister jsonPersister;
+
+	/**
+	 * Applies Wabit persistence calls coming from a Wabit server to this WabitServerSession
+	 */
+	private final WabitSessionPersister sessionPersister;
+	
     public WabitServerSession(
     		@Nonnull WorkspaceLocation workspaceLocation,
     		@Nonnull WabitWorkspace systemWorkspace,
@@ -100,12 +116,20 @@ public class WabitServerSession extends WabitSessionImpl {
         	throw new NullPointerException("workspaceLocation must not be null");
         }
 
-        httpClient = createHttpClient(workspaceLocation.getServiceInfo());
+        outboundHttpClient = createHttpClient(workspaceLocation.getServiceInfo());
         
         getWorkspace().setUUID(workspaceLocation.getUuid());
         getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
         
-        updater = new Updater(workspaceLocation.getUuid());
+        
+        sessionPersister = new WabitSessionPersister(
+        		"inbound-" + workspaceLocation.getUuid(),
+        		WabitServerSession.this);
+        updater = new Updater(workspaceLocation.getUuid(), new WabitJSONMessageDecoder(sessionPersister));
+        
+        MessageSender<JSONObject> httpSender = new JSONHttpMessageSender(outboundHttpClient, workspaceLocation.getServiceInfo(),
+        		workspaceLocation.getUuid());
+		jsonPersister = new WabitJSONPersister(httpSender);
     }
 
 	public static HttpClient createHttpClient(WabitServerInfo serviceInfo) {
@@ -120,7 +144,8 @@ public class WabitServerSession extends WabitSessionImpl {
 
     @Override
     public boolean close() {
-        httpClient.getConnectionManager().shutdown();
+        outboundHttpClient.getConnectionManager().shutdown();
+        updater.interrupt();
         return super.close();
     }
 
@@ -153,7 +178,7 @@ public class WabitServerSession extends WabitSessionImpl {
             }
         };
         try {
-            return executeServerRequest(httpClient, workspaceLocation.getServiceInfo(), "data-sources/", plIniHandler);
+            return executeServerRequest(outboundHttpClient, workspaceLocation.getServiceInfo(), "data-sources/", plIniHandler);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -252,6 +277,7 @@ public class WabitServerSession extends WabitSessionImpl {
 
 	public void startUpdaterThread() {
 		updater.start();
+		WorkspacePersisterListener.attachListener(this, jsonPersister, sessionPersister);
 	}
 
 	/**
@@ -266,10 +292,13 @@ public class WabitServerSession extends WabitSessionImpl {
 		 */
 		private long retryDelay = 1000;
 		
-		private final WabitSessionPersister sessionPersister;
-		
 		private final WabitJSONMessageDecoder jsonDecoder;
 
+		/**
+		 * Used by the Updater to handle inbound HTTP updates
+		 */
+		private final HttpClient inboundHttpClient;
+		
 		/**
 		 * Creates, but does not start, the updater thread.
 		 * 
@@ -277,43 +306,11 @@ public class WabitServerSession extends WabitSessionImpl {
 		 *            the ID of the workspace this updater is responsible for. This is
 		 *            used in creating the thread's name.
 		 */
-		Updater(String workspaceUUID) {
+		Updater(String workspaceUUID, WabitJSONMessageDecoder jsonDecoder) {
 			super("updater-" + workspaceUUID);
-			sessionPersister = new WabitSessionPersister(getName(), WabitServerSession.this);
-			jsonDecoder = new WabitJSONMessageDecoder(sessionPersister);
+			this.jsonDecoder = jsonDecoder;
+			inboundHttpClient = createHttpClient(workspaceLocation.getServiceInfo());
 		}
-		
-		ResponseHandler<Void> jsonUpdateHandler = 
-            new ResponseHandler<Void>() {
-            public Void handleResponse(HttpResponse response)
-                    throws ClientProtocolException, IOException {
-                if (response.getStatusLine().getStatusCode() != 200) {
-                    throw new IOException(
-                            "Server error while reading data sources: " + response.getStatusLine());
-                }
-                
-                ByteArrayOutputStream responseContent = new ByteArrayOutputStream(2000);
-                response.getEntity().writeTo(responseContent);
-                final String jsonArray = responseContent.toString();
-                runInForeground(new Runnable() {
-					public void run() {
-						try {
-							jsonDecoder.decode(jsonArray);
-						} catch (WabitPersistenceException e) {
-							logger.error("Update from server failed!", e);
-							createUserPrompter(
-									"Wabit failed to apply an update that was just received from the Enterprise Server.\n"
-									+ "The error was:"
-									+ "\n" + e.getMessage(),
-									UserPromptType.MESSAGE, UserPromptOptions.OK,
-									UserPromptResponse.OK, UserPromptResponse.OK, "OK");
-							// TODO discard session and reload
-						}
-					}
-				});
-                return null;
-            }
-        };
         
 		@Override
 		public void run() {
@@ -325,9 +322,25 @@ public class WabitServerSession extends WabitSessionImpl {
 			try {
 				for (;;) {
 					try {
-						executeServerRequest(
-								httpClient, workspaceLocation.getServiceInfo(),
-								contextRelativePath, jsonUpdateHandler);
+						final String jsonArray = executeServerRequest(
+								inboundHttpClient, workspaceLocation.getServiceInfo(),
+								contextRelativePath, new BasicResponseHandler());
+		                runInForeground(new Runnable() {
+							public void run() {
+								try {
+									jsonDecoder.decode(jsonArray);
+								} catch (WabitPersistenceException e) {
+									logger.error("Update from server failed!", e);
+									createUserPrompter(
+											"Wabit failed to apply an update that was just received from the Enterprise Server.\n"
+											+ "The error was:"
+											+ "\n" + e.getMessage(),
+											UserPromptType.MESSAGE, UserPromptOptions.OK,
+											UserPromptResponse.OK, UserPromptResponse.OK, "OK");
+									// TODO discard session and reload
+								}
+							}
+						});
 					} catch (Exception ex) {
 						logger.error("Failed to contact server. Will retry in " + retryDelay + " ms.", ex);
 						Thread.sleep(retryDelay);
@@ -336,6 +349,8 @@ public class WabitServerSession extends WabitSessionImpl {
 			} catch (InterruptedException ex) {
 				logger.info("Updater thread exiting normally due to interruption.");
 			}
+			
+			inboundHttpClient.getConnectionManager().shutdown();
 		}
 	}
 

@@ -27,7 +27,6 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * A {@link WabitPersister} implementation that serializes
@@ -181,13 +180,5 @@ public class WabitJSONPersister implements WabitPersister {
 	
 	public MessageSender<JSONObject> getMessageSender() {
 		return messageSender;
-	}
-	
-	// Dummy test method that sends messages to a local test server
-	public static void main(String[] args) throws WabitPersistenceException {
-		String wabitWorkspaceUUID = "12345";
-		WabitServerInfo serverInfo = new WabitServerInfo("localhost", "localhost", 8080, "/wabit-enterprise", "", "");
-		WabitJSONPersister persister = new WabitJSONPersister(new JSONHttpMessageSender(serverInfo, wabitWorkspaceUUID));
-		persister.begin();
 	}
 }
