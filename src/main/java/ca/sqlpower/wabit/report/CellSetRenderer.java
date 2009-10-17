@@ -568,6 +568,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     	}
     }
 
+    @Override
+    protected void addChildImpl(WabitObject child, int index) {
+    	if (index != 0) throw new IllegalArgumentException("CellSetRenderers can only " +
+    			"have 1 child and should have an index of 0 not " + index);
+    	setModifiedOlapQuery((OlapQuery) child);
+    }
+    
     public void setHeaderFont(Font headerFont) {
         Font oldFont = this.headerFont;
         this.headerFont = headerFont;
