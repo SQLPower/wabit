@@ -26,6 +26,8 @@ import java.awt.geom.Point2D;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -226,7 +228,14 @@ public class WabitSessionPersister implements WabitPersister {
 		private final String type;
 		private final String uuid;
 		private final int index;
-
+		
+		/**
+		 * XXX If set to true this object has been loaded and does not need to be loaded
+		 * again. It would be better if this was removed from the persisted object
+		 * list but we will have to clean this up later.
+		 */
+		private boolean loaded = false;
+		
 		/**
 		 * Constructor to persist a {@link WabitObject}.
 		 * 
@@ -274,6 +283,20 @@ public class WabitSessionPersister implements WabitPersister {
 
 		public int getIndex() {
 			return index;
+		}
+		
+		@Override
+		public String toString() {
+			return "PersistedWabitObject: uuid " + uuid + ", parent uuid " + parentUUID + 
+				", type " + type + ", index " + index + "\n";
+		}
+
+		public void setLoaded(boolean loaded) {
+			this.loaded = loaded;
+		}
+
+		public boolean isLoaded() {
+			return loaded;
 		}
 
 	}
@@ -374,249 +397,265 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitObjects() throws WabitPersistenceException {
 
 		for (PersistedWabitObject pwo : persistedObjects) {
-			String uuid = pwo.getUUID();
-			String type = pwo.getType();
-			WabitObject wo = null;
+			if (pwo.isLoaded()) continue;
 			WabitObject parent = WabitUtils.findByUuid(root, pwo.getParentUUID(),
 					WabitObject.class);
-
-			if (type.equals(CellSetRenderer.class.getSimpleName())) {
-				OlapQuery olapQuery = (OlapQuery) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "content"), OlapQuery.class);
-				wo = new CellSetRenderer(olapQuery);
-
-			} else if (type.equals(Chart.class.getSimpleName())) {
-				wo = new Chart();
-
-			} else if (type.equals(ChartColumn.class.getSimpleName())) {
-				String columnName = (String) getPropertyAndRemove(uuid, "columnName");
-				ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = 
-					(ca.sqlpower.wabit.report.chart.ChartColumn.DataType) 
-						converter.convertToComplexType(
-								getPropertyAndRemove(uuid, "dataType"), 
-								ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
-
-				wo = new ChartColumn(columnName, dataType);
-
-			} else if (type.equals(ChartRenderer.class.getSimpleName())) {
-				Chart chart = (Chart) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "chart"), Chart.class);
-				wo = new ChartRenderer(chart);
-
-			} else if (type.equals(ColumnInfo.class.getSimpleName())) {
-				
-				if (containsProperty(uuid, "columnInfoItem")) {
-					wo = new ColumnInfo((String) converter.convertToComplexType(
-							getPropertyAndRemove(uuid, "columnInfoItem"), Item.class));
-				} else {
-					wo = new ColumnInfo((String) converter.convertToComplexType(
-							getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS), String.class));
-				}
-
-			} else if (type.equals(ContentBox.class.getSimpleName())) {
-				wo = new ContentBox();
-				
-			} else if (type.equals(Grant.class.getSimpleName())) {
-				String subject = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "subject"), String.class);
-				String grantType = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "type"), String.class);
-				boolean create = (Boolean) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "createPrivilege"), Boolean.class);
-				boolean modify = (Boolean) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "modifyPrivilege"), Boolean.class);
-				boolean delete = (Boolean) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "deletePrivilege"), Boolean.class);
-				boolean execute = (Boolean) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "executePrivilege"), Boolean.class);
-				boolean grant = (Boolean) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "grantPrivilege"), Boolean.class);
-				
-				wo = new Grant(subject, grantType, create, modify, delete, execute, grant);
-				
-			} else if (type.equals(Group.class.getSimpleName())) {
-				String name = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-				
-				wo = new Group(name);
-				
-			} else if (type.equals(GroupMember.class.getSimpleName())) {
-				User user = (User) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "user"), User.class);
-				
-				wo = new GroupMember(user);
-
-			} else if (type.equals(Guide.class.getSimpleName())) {
-				Axis axis = (Axis) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "axis"), Axis.class);
-				double offset = (Double) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "offset"), Double.class);
-
-				wo = new Guide(axis, offset);
-
-			} else if (type.equals(ImageRenderer.class.getSimpleName())) {
-				wo = new ImageRenderer();
-
-			} else if (type.equals(Label.class.getSimpleName())) {
-				wo = new Label();
-
-			} else if (type.equals(OlapQuery.class.getSimpleName())) {
-				String name = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-				String queryName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "queryName"), String.class);
-				String catalogName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "catalogName"), String.class);
-				String schemaName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "schemaName"), String.class);
-				String cubeName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "cubeName"), String.class);
-				
-				wo = new OlapQuery(uuid, session.getContext(), name, queryName,
-						catalogName, schemaName, cubeName);
-
-			} else if (type.equals(Page.class.getSimpleName())) {
-				String name = (String) converter.convertToComplexType(getPropertyAndRemove(uuid, "name"), String.class);
-				int width = (Integer) converter.convertToComplexType(getPropertyAndRemove(uuid, "width"), Integer.class);
-				int height = (Integer) converter.convertToComplexType(getPropertyAndRemove(uuid, "height"), Integer.class);
-				PageOrientation orientation = (PageOrientation) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "orientation"), PageOrientation.class);
-
-				wo = new Page(name, width, height, orientation);
-
-			} else if (type.equals(QueryCache.class.getSimpleName())) {
-				wo = new QueryCache(session.getContext());
-
-			} else if (type.equals(Report.class.getSimpleName())) {
-				String name = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-
-				wo = new Report(name);
-
-			} else if (type.equals(ReportTask.class.getSimpleName())) {
-				wo = new ReportTask();
-				
-			} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
-				String contentID = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "content"), String.class);
-				
-				QueryCache query = (QueryCache) converter.convertToComplexType(
-						contentID, QueryCache.class);
-				
-				if (query == null) {
-					throw new WabitPersistenceException(uuid, 
-							"Cannot commit ResultSetRenderer with UUID " + uuid 
-							+ " as its QueryCache reference with UUID " + contentID 
-							+ " does not exist in the workspace.");
-				}
-				
-				wo = new ResultSetRenderer(query);
-
-			} else if (type.equals(Template.class.getSimpleName())) {
-				String name = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-
-				wo = new Template(name);
-				
-			} else if (type.equals(User.class.getSimpleName())) {
-				String username = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-				String password = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "password"), String.class);
-				
-				wo = new User(username, password);
-
-			} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
-				SQLObjectItem item = (SQLObjectItem) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "delegate"), SQLObjectItem.class);
-
-				wo = new WabitColumnItem(item);
-
-			} else if (type.equals(WabitConstantsContainer.class
-					.getSimpleName())) {
-				wo = ((QueryCache) parent).getWabitConstantsContainer();
-
-			} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
-				StringItem item = (StringItem) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "delegate"), StringItem.class);
-
-				wo = new WabitConstantItem(item);
-
-			} else if (type.equals(WabitDataSource.class.getSimpleName())) {
-				String dsName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "SPDataSource"), String.class);
-				SPDataSource spds = session.getDataSources()
-						.getDataSource(dsName);
-				
-				if (spds == null) {
-					throw new WabitPersistenceException(uuid, 
-							"The Wabit does not know about Datasource '" + dsName + "'");
-				}
-				
-				wo = new WabitDataSource(spds);
-
-			} else if (type.equals(WabitImage.class.getSimpleName())) {
-				wo = new WabitImage();
-
-			} else if (type.equals(WabitJoin.class.getSimpleName())) {
-				
-				QueryCache query = (QueryCache) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "query"), QueryCache.class);
-				SQLJoin delegate = (SQLJoin) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "delegate"), SQLJoin.class);
-				
-				wo = new WabitJoin(query, delegate);
-
-			} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
-				Object ordinal = getPropertyAndRemove(uuid, "ordinal");
-				
-				org.olap4j.Axis axis = (org.olap4j.Axis) converter.convertToComplexType(
-						ordinal, org.olap4j.Axis.class); 
-
-				wo = new WabitOlapAxis(axis);
-
-			} else if (type.equals(WabitOlapDimension.class.getSimpleName())) {
-				String name = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "name"), String.class);
-
-				wo = new WabitOlapDimension(name);
-
-			} else if (type.equals(WabitOlapExclusion.class.getSimpleName())) {
-				Operator operator = (Operator) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "operator"), Operator.class);
-				String uniqueMemberName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "uniqueMemberName"), String.class);
-
-				wo = new WabitOlapExclusion(operator, uniqueMemberName);
-
-			} else if (type.equals(WabitOlapInclusion.class.getSimpleName())) {
-				Operator operator = (Operator) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "operator"), Operator.class);
-				String uniqueMemberName = (String) converter.convertToComplexType(
-						getPropertyAndRemove(uuid, "uniqueMemberName"), String.class);
-
-				wo = new WabitOlapInclusion(operator, uniqueMemberName);
-
-			} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
-				TableContainer tableContainer = 
-					(TableContainer) converter.convertToComplexType(
-							getPropertyAndRemove(uuid, "delegate"), TableContainer.class);
-
-				wo = new WabitTableContainer(tableContainer);
-
-			} else {
-				throw new WabitPersistenceException(uuid,
-						"Unknown WabitObject type: " + type);
-			}
-
+			WabitObject wo = loadWabitObject(pwo);
 			if (wo != null) {
-				wo.setUUID(uuid);
 				parent.addChild(wo, pwo.getIndex());
 			}
 
 		}
 
 		persistedObjects.clear();
+	}
+	
+	private WabitObject loadWabitObject(PersistedWabitObject pwo) throws WabitPersistenceException {
+		String uuid = pwo.getUUID();
+		String type = pwo.getType();
+		WabitObject wo = null;
+
+		if (type.equals(CellSetRenderer.class.getSimpleName())) {
+			OlapQuery olapQuery = (OlapQuery) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "content"), OlapQuery.class);
+			wo = new CellSetRenderer(olapQuery);
+
+		} else if (type.equals(Chart.class.getSimpleName())) {
+			wo = new Chart();
+
+		} else if (type.equals(ChartColumn.class.getSimpleName())) {
+			String columnName = (String) getPropertyAndRemove(uuid, "columnName");
+			ca.sqlpower.wabit.report.chart.ChartColumn.DataType dataType = 
+				(ca.sqlpower.wabit.report.chart.ChartColumn.DataType) 
+					converter.convertToComplexType(
+							getPropertyAndRemove(uuid, "dataType"), 
+							ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
+
+			wo = new ChartColumn(columnName, dataType);
+
+		} else if (type.equals(ChartRenderer.class.getSimpleName())) {
+			Chart chart = (Chart) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "chart"), Chart.class);
+			wo = new ChartRenderer(chart);
+
+		} else if (type.equals(ColumnInfo.class.getSimpleName())) {
+			
+			if (containsProperty(uuid, "columnInfoItem")) {
+				wo = new ColumnInfo((String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "columnInfoItem"), Item.class));
+			} else {
+				wo = new ColumnInfo((String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS), String.class));
+			}
+
+		} else if (type.equals(ContentBox.class.getSimpleName())) {
+			wo = new ContentBox();
+			
+		} else if (type.equals(Grant.class.getSimpleName())) {
+			String subject = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "subject"), String.class);
+			String grantType = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "type"), String.class);
+			boolean create = (Boolean) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "createPrivilege"), Boolean.class);
+			boolean modify = (Boolean) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "modifyPrivilege"), Boolean.class);
+			boolean delete = (Boolean) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "deletePrivilege"), Boolean.class);
+			boolean execute = (Boolean) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "executePrivilege"), Boolean.class);
+			boolean grant = (Boolean) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "grantPrivilege"), Boolean.class);
+			
+			wo = new Grant(subject, grantType, create, modify, delete, execute, grant);
+			
+		} else if (type.equals(Group.class.getSimpleName())) {
+			String name = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+			
+			wo = new Group(name);
+			
+		} else if (type.equals(GroupMember.class.getSimpleName())) {
+			User user = (User) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "user"), User.class);
+			
+			wo = new GroupMember(user);
+
+		} else if (type.equals(Guide.class.getSimpleName())) {
+			Axis axis = (Axis) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "axis"), Axis.class);
+			double offset = (Double) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "offset"), Double.class);
+
+			wo = new Guide(axis, offset);
+
+		} else if (type.equals(ImageRenderer.class.getSimpleName())) {
+			wo = new ImageRenderer();
+
+		} else if (type.equals(Label.class.getSimpleName())) {
+			wo = new Label();
+
+		} else if (type.equals(OlapQuery.class.getSimpleName())) {
+			String name = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+			String queryName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "queryName"), String.class);
+			String catalogName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "catalogName"), String.class);
+			String schemaName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "schemaName"), String.class);
+			String cubeName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "cubeName"), String.class);
+			
+			wo = new OlapQuery(uuid, session.getContext(), name, queryName,
+					catalogName, schemaName, cubeName);
+
+		} else if (type.equals(Page.class.getSimpleName())) {
+			String name = (String) converter.convertToComplexType(getPropertyAndRemove(uuid, "name"), String.class);
+			int width = (Integer) converter.convertToComplexType(getPropertyAndRemove(uuid, "width"), Integer.class);
+			int height = (Integer) converter.convertToComplexType(getPropertyAndRemove(uuid, "height"), Integer.class);
+			PageOrientation orientation = (PageOrientation) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "orientation"), PageOrientation.class);
+
+			wo = new Page(name, width, height, orientation);
+
+		} else if (type.equals(QueryCache.class.getSimpleName())) {
+			WabitConstantsContainer constantsContainer = (WabitConstantsContainer) 
+				createObjectByCalls(uuid, WabitConstantsContainer.class.getSimpleName());
+			
+			wo = new QueryCache(session.getContext(), false, constantsContainer);
+
+		} else if (type.equals(Report.class.getSimpleName())) {
+			String name = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+
+			wo = new Report(name);
+
+		} else if (type.equals(ReportTask.class.getSimpleName())) {
+			wo = new ReportTask();
+			
+		} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
+			String contentID = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "content"), String.class);
+			
+			QueryCache query = (QueryCache) converter.convertToComplexType(
+					contentID, QueryCache.class);
+			
+			if (query == null) {
+				throw new WabitPersistenceException(uuid, 
+						"Cannot commit ResultSetRenderer with UUID " + uuid 
+						+ " as its QueryCache reference with UUID " + contentID 
+						+ " does not exist in the workspace.");
+			}
+			
+			wo = new ResultSetRenderer(query);
+
+		} else if (type.equals(Template.class.getSimpleName())) {
+			String name = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+
+			wo = new Template(name);
+			
+		} else if (type.equals(User.class.getSimpleName())) {
+			String username = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+			String password = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "password"), String.class);
+			
+			wo = new User(username, password);
+
+		} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
+			SQLObjectItem item = (SQLObjectItem) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "delegate"), SQLObjectItem.class);
+
+			wo = new WabitColumnItem(item);
+
+		} else if (type.equals(WabitConstantsContainer.class
+				.getSimpleName())) {
+			Container delegate = (Container) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "delegate"), Container.class); 
+			
+			wo = new WabitConstantsContainer(delegate);
+
+		} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
+			StringItem item = (StringItem) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "delegate"), StringItem.class);
+
+			wo = new WabitConstantItem(item);
+
+		} else if (type.equals(WabitDataSource.class.getSimpleName())) {
+			String dsName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "SPDataSource"), String.class);
+			SPDataSource spds = session.getDataSources()
+					.getDataSource(dsName);
+			
+			if (spds == null) {
+				throw new WabitPersistenceException(uuid, 
+						"The Wabit does not know about Datasource '" + dsName + "'");
+			}
+			
+			wo = new WabitDataSource(spds);
+
+		} else if (type.equals(WabitImage.class.getSimpleName())) {
+			wo = new WabitImage();
+
+		} else if (type.equals(WabitJoin.class.getSimpleName())) {
+			
+			QueryCache query = (QueryCache) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "query"), QueryCache.class);
+			SQLJoin delegate = (SQLJoin) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "delegate"), SQLJoin.class);
+			
+			wo = new WabitJoin(query, delegate);
+
+		} else if (type.equals(WabitOlapAxis.class.getSimpleName())) {
+			Object ordinal = getPropertyAndRemove(uuid, "ordinal");
+			
+			org.olap4j.Axis axis = (org.olap4j.Axis) converter.convertToComplexType(
+					ordinal, org.olap4j.Axis.class); 
+
+			wo = new WabitOlapAxis(axis);
+
+		} else if (type.equals(WabitOlapDimension.class.getSimpleName())) {
+			String name = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "name"), String.class);
+
+			wo = new WabitOlapDimension(name);
+
+		} else if (type.equals(WabitOlapExclusion.class.getSimpleName())) {
+			Operator operator = (Operator) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "operator"), Operator.class);
+			String uniqueMemberName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "uniqueMemberName"), String.class);
+
+			wo = new WabitOlapExclusion(operator, uniqueMemberName);
+
+		} else if (type.equals(WabitOlapInclusion.class.getSimpleName())) {
+			Operator operator = (Operator) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "operator"), Operator.class);
+			String uniqueMemberName = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "uniqueMemberName"), String.class);
+
+			wo = new WabitOlapInclusion(operator, uniqueMemberName);
+
+		} else if (type.equals(WabitTableContainer.class.getSimpleName())) {
+			TableContainer tableContainer = 
+				(TableContainer) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "delegate"), TableContainer.class);
+
+			wo = new WabitTableContainer(tableContainer);
+
+		} else {
+			throw new WabitPersistenceException(uuid,
+					"Unknown WabitObject type: " + type);
+		}
+
+		if (wo != null) {
+			wo.setUUID(uuid);
+		}
+		
+		pwo.setLoaded(true);
+		return wo;
 	}
 
 	/**
@@ -689,6 +728,21 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * This will create a wabit object based on persist calls that we have already pooled.
+	 */
+	private WabitObject createObjectByCalls(String parentUUID, String classType) throws WabitPersistenceException {
+		for (PersistedWabitObject pwo : persistedObjects) {
+			if (pwo.isLoaded()) continue;
+			if (pwo.getType().equals(classType) && pwo.getParentUUID().equals(parentUUID)) {
+				return loadWabitObject(pwo);
+			}
+		}
+		throw new IllegalArgumentException("Cannot find the object " + classType + 
+				" that is the child of " 
+				+ parentUUID + " that we are loading.");
 	}
 
 	/**

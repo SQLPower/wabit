@@ -252,7 +252,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        createWabitObjectWrappers();
+        createWabitObjectWrappers(false);
     }
     
     /**
@@ -283,20 +283,41 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      *            useful default constants, false otherwise.
      */
     public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants) {
-        query = new QueryImpl(dbMapping, prepopulateConstants);
+    	this(dbMapping, prepopulateConstants, null);
+    }
+    	
+    /**
+     * Creates a {@link Query} that caches the last set of results that were
+     * returned when during the last execution.
+     *
+     * @see QueryImpl the query implementation constructor with the same args
+     */
+    public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants, 
+    		WabitConstantsContainer newConstantsContainer) {
+    	if (newConstantsContainer != null) {
+    		query = new QueryImpl(dbMapping, prepopulateConstants, newConstantsContainer.getDelegate());
+    	} else {
+    		query = new QueryImpl(dbMapping, prepopulateConstants);
+    	}
         query.addQueryChangeListener(queryChangeListener);
         query.setUUID(getUUID());
-        createWabitObjectWrappers();
+        if (newConstantsContainer != null) {
+        	constantContainer = newConstantsContainer;
+        	newConstantsContainer.setParent(this);
+        }
+        createWabitObjectWrappers(newConstantsContainer != null);
     }
 
     /**
      * Helper method for the constructors. This creates WabitObjects based on
      * the current objects in the query set in the constructor.
      */
-    private void createWabitObjectWrappers() {
-        WabitConstantsContainer constants = new WabitConstantsContainer(query.getConstantsContainer());
-        constants.setParent(this);
-        constantContainer = constants;
+    private void createWabitObjectWrappers(boolean constantsWrapperExists) {
+    	if (!constantsWrapperExists) {
+    		WabitConstantsContainer constants = new WabitConstantsContainer(query.getConstantsContainer());
+    		constants.setParent(this);
+    		constantContainer = constants;
+    	}
         for (Container c : query.getFromTableList()) {
             WabitTableContainer child = new WabitTableContainer(c);
             child.setParent(this);

@@ -44,9 +44,23 @@ public class SessionPersisterUtils {
 	static String[] splitByDelimiter(String toSplit, int numPieces) {
 		String[] pieces = toSplit.split(BidirectionalConverter.DELIMITER);
 
-		if (pieces.length != numPieces) {
+		if (pieces.length > numPieces) {
 			throw new IllegalArgumentException("Cannot convert string \""
 					+ toSplit + "\" with an invalid number of properties.");
+		} else if (pieces.length < numPieces) {
+			//split will strip off empty space that comes after a delimiter instead of
+			//appending an empty string to the array so we have to do that ourselves.
+			String[] allPieces = new String[numPieces];
+			
+			int i = 0;
+			for (String piece : pieces) {
+				allPieces[i] = piece;
+				i++;
+			}
+			for (; i < numPieces; i++) {
+				allPieces[i] = "";
+			}
+			return allPieces;
 		}
 		return pieces;
 	}

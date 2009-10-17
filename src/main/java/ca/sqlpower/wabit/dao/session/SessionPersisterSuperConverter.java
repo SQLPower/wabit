@@ -29,11 +29,10 @@ import java.text.Format;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
 
-import ca.sqlpower.query.ItemContainer;
+import ca.sqlpower.query.Container;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
-import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitObject;
@@ -57,8 +56,6 @@ public class SessionPersisterSuperConverter {
 	
 	private static final Point2DConverter point2DConverter = new Point2DConverter();
 	
-	private final TableContainerConverter tableContainerConverter;
-	
 	private final SQLJoinConverter sqlJoinConverter;
 	
 	private final JDBCDataSourceConverter jdbcDataSourceConverter;
@@ -69,7 +66,7 @@ public class SessionPersisterSuperConverter {
 	
 	private final SQLObjectItemConverter sqlObjectItemConverter = new SQLObjectItemConverter();
 	
-	private final ItemContainerConverter itemContainerConverter = new ItemContainerConverter();
+	private final ContainerConverter containerConverter;
 	
 	private final PNGImageConverter pngImageConverter = new PNGImageConverter();
 	
@@ -91,7 +88,7 @@ public class SessionPersisterSuperConverter {
 	public SessionPersisterSuperConverter(WabitSession session, WabitObject root) {
 		wabitObjectConverter = new WabitObjectConverter(root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
-		tableContainerConverter = new TableContainerConverter(session);
+		containerConverter = new ContainerConverter(session);
 		sqlJoinConverter = new SQLJoinConverter(root);
 		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getWorkspace());
 		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());
@@ -138,10 +135,6 @@ public class SessionPersisterSuperConverter {
 			Point2D p = (Point2D) convertFrom;
 			return point2DConverter.convertToSimpleType(p);
 			
-		} else if (convertFrom instanceof TableContainer) {
-			TableContainer table = (TableContainer) convertFrom;
-			return tableContainerConverter.convertToSimpleType(table);
-			
 		} else if (convertFrom instanceof SQLJoin) {
 			SQLJoin join = (SQLJoin) convertFrom;
 			return sqlJoinConverter.convertToSimpleType(join);
@@ -160,8 +153,8 @@ public class SessionPersisterSuperConverter {
 		} else if (convertFrom instanceof StringItem) {
 			return stringItemConverter.convertToSimpleType((StringItem) convertFrom);
 			
-		} else if (convertFrom instanceof ItemContainer) {
-			return itemContainerConverter.convertToSimpleType((ItemContainer) convertFrom);
+		} else if (convertFrom instanceof Container) {
+			return containerConverter.convertToSimpleType((Container) convertFrom);
 			
 		} else if (convertFrom instanceof Image) {
 			return pngImageConverter.convertToSimpleType((Image) convertFrom);
@@ -217,8 +210,8 @@ public class SessionPersisterSuperConverter {
 		} else if (Point2D.class.isAssignableFrom(type)) {
 			return point2DConverter.convertToComplexType((String) o);
 			
-		} else if (TableContainer.class.isAssignableFrom(type)) {
-			return tableContainerConverter.convertToComplexType((String) o);
+		} else if (Container.class.isAssignableFrom(type)) {
+			return containerConverter.convertToComplexType((String) o);
 			
 		} else if (SQLJoin.class.isAssignableFrom(type)) {
 			return sqlJoinConverter.convertToComplexType((String) o);

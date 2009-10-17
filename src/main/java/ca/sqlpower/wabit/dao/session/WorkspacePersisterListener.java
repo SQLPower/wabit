@@ -228,7 +228,10 @@ public class WorkspacePersisterListener implements WabitListener {
 		if (root.getParent() != null) {
 			index = root.getParent().getChildren().indexOf(root);
 		}
-		persistChild(root.getParent(), root, root.getClass(), index);
+		//XXX Hack to see if this will work to unblock others
+		if (!root.getClass().equals(WabitConstantsContainer.class)) {
+			persistChild(root.getParent(), root, root.getClass(), index);
+		}
 		for (WabitObject child : root.getChildren()) {
 			persistObject(child);
 		}
@@ -485,8 +488,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "olapDataSource", DataType.STRING, 
 						converter.convertToBasicType(olapQuery.getOlapDataSource()));
 				target.persistProperty(uuid, "currentCube", DataType.STRING,
-						converter.convertToBasicType(
-								olapQuery.getCurrentCube()));
+						converter.convertToBasicType(olapQuery.getCurrentCube(), olapQuery.getOlapDataSource()));
 
 			} else if (child instanceof Page) {
 				Page page = (Page) child;
@@ -505,6 +507,10 @@ public class WorkspacePersisterListener implements WabitListener {
 
 			} else if (child instanceof QueryCache) {
 				QueryCache query = (QueryCache) child;
+				
+				//Constructor argument, this is a final child that is given to the constructor.
+				persistChild(query, query.getWabitConstantsContainer(), 
+						WabitConstantsContainer.class, 0);
 				
 				// Remaining properties
 				target.persistProperty(uuid, "zoomLevel", DataType.INTEGER,
