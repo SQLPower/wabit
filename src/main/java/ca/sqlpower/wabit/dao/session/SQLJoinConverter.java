@@ -85,7 +85,6 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 		}
 		
 		SQLJoin join = new SQLJoin(leftItem, rightItem);
-		query.addJoin(join);
 		return join;
 	}
 
