@@ -436,7 +436,7 @@ public class WabitSessionPersister implements WabitPersister {
 
 		} else if (type.equals(ChartRenderer.class.getSimpleName())) {
 			Chart chart = (Chart) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "chart"), Chart.class);
+					getPropertyAndRemove(uuid, "content"), Chart.class);
 			wo = new ChartRenderer(chart);
 
 		} else if (type.equals(ColumnInfo.class.getSimpleName())) {
@@ -499,7 +499,14 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new Guide(axis, offset);
 
 		} else if (type.equals(ImageRenderer.class.getSimpleName())) {
-			wo = new ImageRenderer();
+			ImageRenderer renderer = new ImageRenderer();
+			
+			WabitImage image = (WabitImage) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "content"), WabitImage.class);
+			
+			renderer.setImage(image);
+			
+			wo = renderer;
 
 		} else if (type.equals(Label.class.getSimpleName())) {
 			wo = new Label();
@@ -2896,6 +2903,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitImageRendererProperty(ImageRenderer iRenderer,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
+		
 		if (propertyName.equals("image")) {
 			iRenderer.setImage((WabitImage) converter.convertToComplexType(
 					newValue, WabitImage.class));

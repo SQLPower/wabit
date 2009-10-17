@@ -335,13 +335,8 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(chart.getBackgroundColour()));
 
 			} else if (child instanceof ChartRenderer) {
-				ChartRenderer cRenderer = (ChartRenderer) child;
-
-				// Constructor argument
-				target.persistProperty(uuid, "chart", DataType.REFERENCE,
-						converter.convertToBasicType(cRenderer.getChart()));
-
-				// Remaining properties
+				//The only argument to this class is handled later by the
+				//report content renderer section
 
 			} else if (child instanceof ColumnInfo) {
 				ColumnInfo columnInfo = (ColumnInfo) child;
