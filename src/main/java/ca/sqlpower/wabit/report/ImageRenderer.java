@@ -44,6 +44,9 @@ public class ImageRenderer extends AbstractWabitObject implements
 	
 	private static final Logger logger = Logger.getLogger(ImageRenderer.class);
 	
+	/**
+	 * XXX This should be a final value given to the constructor rather than be settable.
+	 */
 	private WabitImage image;
 
 	/**
