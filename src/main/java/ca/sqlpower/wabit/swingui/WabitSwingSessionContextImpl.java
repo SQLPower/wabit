@@ -175,7 +175,6 @@ import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
 import ca.sqlpower.wabit.swingui.action.NewReportTaskAction;
-import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
@@ -1443,12 +1442,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         fileMenu.addSeparator();
         
-        fileMenu.add(createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
-                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, serviceInfo, WabitSwingSessionContextImpl.this));
-            }
-        }));
-        fileMenu.add(createServerListMenu(frame, "Open Server Workspace", new ServerListMenuItemFactory() {
+        fileMenu.add(createServerListMenu(frame, "Log In to Wabit Server", new ServerListMenuItemFactory() {
             public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
                 return new JMenuItem(new LogInToServerAction(dialogOwner, serviceInfo, WabitSwingSessionContextImpl.this));
             }
