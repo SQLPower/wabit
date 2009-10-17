@@ -99,4 +99,19 @@ public class StubWabitObject implements WabitObject {
         // TODO Auto-generated method stub
     }
 
+	public void begin(String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void commit() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void rollback(String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
