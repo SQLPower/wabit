@@ -175,5 +175,28 @@ public interface WabitObject {
      *         cleanup if any occurred.
      */
     CleanupExceptions cleanup();
+
+	/**
+	 * Starts a transaction that will pool multiple events into a compound
+	 * event.
+	 * 
+	 * @param message
+	 *            Description of the compound event.
+	 */
+    void begin(String message);
+    
+    /**
+     * Signals the end of a transaction of a compound event.
+     */
+    void commit();
+
+	/**
+	 * Signals the roll back of a transaction. The events of the transaction
+	 * should not be acted on and/or should be undone.
+	 * 
+	 * @param message
+	 *            Reason for the roll back.
+	 */
+    void rollback(String message);
     
 }

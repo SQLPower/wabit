@@ -378,9 +378,13 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 
 			if (transactionCount == 1) {
+				//XXX Oh if only the begin and commit knew which object sent 
+				//the begin and commit and what the message was.
+				session.getWorkspace().begin("Begin transaction on some object, we lost which one it was.");
 				commitObjects();
 				commitProperties();
 				commitRemovals();
+				session.getWorkspace().commit();
 			}
 			transactionCount--;
 		} finally {

@@ -492,4 +492,16 @@ public abstract class AbstractWabitObject implements WabitObject {
 		}
 		return false;
 	}
+	
+	public void begin(String message) {
+		fireTransactionStarted(message);
+	}
+	
+	public void commit() {
+		fireTransactionEnded();
+	}
+	
+	public void rollback(String message) {
+		fireTransactionRollback(message);
+	}
 }
