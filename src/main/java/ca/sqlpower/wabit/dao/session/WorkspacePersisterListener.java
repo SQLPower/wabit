@@ -704,12 +704,7 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(tableContainer.getPosition()));
 
 			} else if (child instanceof WabitWorkspace) {
-				WabitWorkspace workspace = (WabitWorkspace) child;
-				
-				// Remaining properties
-				target.persistProperty(uuid, "editorPanelModel", DataType.REFERENCE,
-						converter.convertToBasicType(workspace.getEditorPanelModel(),
-								DataType.REFERENCE));
+				//no current properties
 				
 			}
 			
@@ -757,6 +752,10 @@ public class WorkspacePersisterListener implements WabitListener {
 		String propertyName = evt.getPropertyName();
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
+		
+		//ignoring this property to not force all users to view the same
+		//editor.
+		if (propertyName.equals("editorPanelModel") && source instanceof WabitWorkspace) return;
 		
 		//XXX special case that I want to remove even though I'm implementing it
 		SPDataSource ds = null;

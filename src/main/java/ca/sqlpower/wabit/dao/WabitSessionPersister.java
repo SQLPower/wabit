@@ -1345,14 +1345,9 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getWabitWorkspaceProperty(WabitWorkspace workspace,
 			String propertyName) throws WabitPersistenceException {
-		if (propertyName.equals("editorPanelModel")) {
-			return converter
-					.convertToBasicType(workspace.getEditorPanelModel());
-		} else {
-			throw new WabitPersistenceException(
-					workspace.getUUID(),
-					getWabitPersistenceExceptionMessage(workspace, propertyName));
-		}
+		throw new WabitPersistenceException(
+				workspace.getUUID(),
+				getWabitPersistenceExceptionMessage(workspace, propertyName));
 	}
 
 	/**
@@ -1374,22 +1369,9 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		String uuid = workspace.getUUID();
 
-		if (propertyName.equals("editorPanelModel")) {
-			WabitObject editorPanel = (WabitObject) converter
-					.convertToComplexType(newValue, WabitObject.class);
-
-			if (editorPanel == null) {
-				throw new WabitPersistenceException(uuid,
-						getNotDefinedPropertyExceptionMessage(workspace,
-								propertyName, newValue));
-			}
-
-			workspace.setEditorPanelModel(editorPanel);
-		} else {
-			throw new WabitPersistenceException(
-					uuid,
-					getWabitPersistenceExceptionMessage(workspace, propertyName));
-		}
+		throw new WabitPersistenceException(
+				uuid,
+				getWabitPersistenceExceptionMessage(workspace, propertyName));
 	}
 
 	/**
