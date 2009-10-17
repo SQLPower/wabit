@@ -117,20 +117,18 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 					persister.persistObject(parentUUID, type, uuid, index);
 					break;
 				case changeProperty:
-					parentUUID = jsonObject.getString("parentUUID");
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
 					newValue = getNullable(jsonObject, "newValue");
 					Object oldValue = getNullable(jsonObject, "oldValue");
-					persister.persistProperty(parentUUID, propertyName,
+					persister.persistProperty(uuid, propertyName,
 							propertyType, oldValue, newValue);
 					break;
 				case persistProperty:
-					parentUUID = jsonObject.getString("uuid");
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
 					newValue = getNullable(jsonObject, "newValue");
-					persister.persistProperty(parentUUID, propertyName,
+					persister.persistProperty(uuid, propertyName,
 							propertyType, newValue);
 					break;
 				case removeObject:
