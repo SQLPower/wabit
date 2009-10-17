@@ -403,6 +403,12 @@ public class Page extends AbstractWabitObject {
      *            page.
      */
     public void addGuide(Guide addme, int index) {
+    	//Setting the parent of the guide to this page. If the addChild method
+    	//is used the parent will be set to this page twice but only fire one event which
+    	//is fine. TODO See if we can remove the addGuide methods to not have to set
+    	//the parent twice.
+    	addme.setParent(this);
+    	
         setUniqueName(addme, addme.getName());
         guides.add(index, addme);
         fireChildAdded(Guide.class, addme, index);
