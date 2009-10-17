@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
+import javax.swing.SwingUtilities;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -65,6 +65,7 @@ import ca.sqlpower.wabit.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
 import ca.sqlpower.wabit.dao.json.WabitJSONPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
  * A special kind of session that binds itself to a remote Wabit Enterprise
@@ -357,5 +358,19 @@ public class WabitServerSession extends WabitSessionImpl {
 	public WabitWorkspace getSystemWorkspace() {
 		return systemWorkspace;
 	}
-    
+ 
+	@Override
+	public void runInForeground(Runnable runner) {
+		// If we're in a SwingContext, run on the Swing Event Dispatch thread.
+		// XXX: This is a bit of a quickfix and I think a better way to possibly fix
+		// this could be to have WabitServerSession implement WabitSession, and
+		// use a delegate session to delegate most of the server calls (instead
+		// of extending WabitSessionImpl). Then if it's in a swing context, it would
+		// have a WabitSwingSession instead.
+		if (getContext() instanceof WabitSwingSessionContext) {
+			SwingUtilities.invokeLater(runner);
+		} else {
+			super.runInForeground(runner);
+		}
+	}
 }
