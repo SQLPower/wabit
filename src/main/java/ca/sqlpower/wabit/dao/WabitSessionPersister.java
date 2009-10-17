@@ -361,34 +361,38 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Begins a transaction
 	 */
 	public void begin() {
-		logger.debug("wsp.begin();");
-		transactionCount++;
+		synchronized (session) {
+			logger.debug("wsp.begin();");
+			transactionCount++;
+		}
 	}
 
 	/**
 	 * Commits the persisted {@link WabitObject}s, its properties and removals
 	 */
 	public void commit() throws WabitPersistenceException {
-		logger.debug("wsp.commit();");
-		try {
-			updateDepth++;
-			if (transactionCount <= 0) {
-				throw new WabitPersistenceException(null,
-						"Commit attempted while not in a transaction");
-			}
+		synchronized (session) {
+			logger.debug("wsp.commit();");
+			try {
+				updateDepth++;
+				if (transactionCount <= 0) {
+					throw new WabitPersistenceException(null,
+					"Commit attempted while not in a transaction");
+				}
 
-			if (transactionCount == 1) {
-				//XXX Oh if only the begin and commit knew which object sent 
-				//the begin and commit and what the message was.
-				session.getWorkspace().begin("Begin transaction on some object, we lost which one it was.");
-				commitObjects();
-				commitProperties();
-				commitRemovals();
-				session.getWorkspace().commit();
+				if (transactionCount == 1) {
+					//XXX Oh if only the begin and commit knew which object sent 
+					//the begin and commit and what the message was.
+					session.getWorkspace().begin("Begin transaction on some object, we lost which one it was.");
+					commitObjects();
+					commitProperties();
+					commitRemovals();
+					session.getWorkspace().commit();
+				}
+				transactionCount--;
+			} finally {
+				updateDepth--;
 			}
-			transactionCount--;
-		} finally {
-			updateDepth--;
 		}
 	}
 
@@ -946,28 +950,30 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
-		logger.debug(String.format(
-				"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
-				type, uuid, index));
-		try {
-			updateDepth++;
-			if (exists(uuid)) {
-				throw new WabitPersistenceException(uuid,
-						"A WabitObject with UUID " + uuid + " and type " + type
-								+ " under parent with UUID " + parentUUID
-								+ " already exists.");
+		synchronized (session) {
+			logger.debug(String.format(
+					"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
+					type, uuid, index));
+			try {
+				updateDepth++;
+				if (exists(uuid)) {
+					throw new WabitPersistenceException(uuid,
+							"A WabitObject with UUID " + uuid + " and type " + type
+							+ " under parent with UUID " + parentUUID
+							+ " already exists.");
+				}
+
+				PersistedWabitObject pwo = new PersistedWabitObject(parentUUID,
+						type, uuid, index);
+
+				persistedObjects.add(pwo);
+
+				if (transactionCount == 0) {
+					commitObjects();
+				}
+			} finally {
+				updateDepth--;
 			}
-
-			PersistedWabitObject pwo = new PersistedWabitObject(parentUUID,
-					type, uuid, index);
-
-			persistedObjects.add(pwo);
-
-			if (transactionCount == 0) {
-				commitObjects();
-			}
-		} finally {
-			updateDepth--;
 		}
 
 	}
@@ -993,15 +999,17 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
-		logger.debug(String.format(
-				"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
-				uuid, propertyName, propertyType.name(), oldValue, newValue));
-		try {
-			updateDepth++;
-			persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
-					newValue, false);
-		} finally {
-			updateDepth--;
+		synchronized (session) {
+			logger.debug(String.format(
+					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
+					uuid, propertyName, propertyType.name(), oldValue, newValue));
+			try {
+				updateDepth++;
+				persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
+						newValue, false);
+			} finally {
+				updateDepth--;
+			}
 		}
 	}
 
@@ -1024,18 +1032,18 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
-		logger
-				.debug(String
-						.format(
-								"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
-								uuid, propertyName, propertyType.name(),
-								newValue));
-		try {
-			updateDepth++;
-			persistPropertyHelper(uuid, propertyName, propertyType, null,
-					newValue, true);
-		} finally {
-			updateDepth--;
+		synchronized (session) {
+			logger.debug(String.format(
+					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
+					uuid, propertyName, propertyType.name(),
+					newValue));
+			try {
+				updateDepth++;
+				persistPropertyHelper(uuid, propertyName, propertyType, null,
+						newValue, true);
+			} finally {
+				updateDepth--;
+			}
 		}
 	}
 
@@ -1226,14 +1234,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            cannot be found.
 	 * @return An error message for exceptions that describes the above.
 	 */
-	public String getWabitPersistenceExceptionMessage(WabitObject wo,
+	private String getWabitPersistenceExceptionMessage(WabitObject wo,
 			String propertyName) {
 		return "Cannot persist property \"" + propertyName + "\" on "
 				+ wo.getClass() + " with name \"" + wo.getName()
 				+ "\" and UUID \"" + wo.getUUID() + "\"";
 	}
 
-	public String getNotDefinedPropertyExceptionMessage(WabitObject wo,
+	private String getNotDefinedPropertyExceptionMessage(WabitObject wo,
 			String propertyName, Object newValue) {
 		return "Could not commit the property \"" + propertyName + "\" on "
 				+ wo.getClass() + " with name \"" + wo.getName()
@@ -3616,24 +3624,26 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
-		logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
-				parentUUID, uuid));
-		try {
-			updateDepth++;
-			if (!exists(uuid)) {
-				throw new WabitPersistenceException(uuid,
-						"Cannot remove the WabitObject with UUID " + uuid
-								+ " from parent UUID " + parentUUID
-								+ " as it does not exist.");
-			}
+		synchronized (session) {
+			logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
+					parentUUID, uuid));
+			try {
+				updateDepth++;
+				if (!exists(uuid)) {
+					throw new WabitPersistenceException(uuid,
+							"Cannot remove the WabitObject with UUID " + uuid
+							+ " from parent UUID " + parentUUID
+							+ " as it does not exist.");
+				}
 
-			objectsToRemove.put(uuid, parentUUID);
+				objectsToRemove.put(uuid, parentUUID);
 
-			if (transactionCount == 0) {
-				commitRemovals();
+				if (transactionCount == 0) {
+					commitRemovals();
+				}
+			} finally {
+				updateDepth--;
 			}
-		} finally {
-			updateDepth--;
 		}
 	}
 
@@ -3644,35 +3654,18 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	public void rollback() throws WabitPersistenceException {
-		logger.debug("wsp.rollback();");
-		try {
-			updateDepth++;
-			if (transactionCount <= 0) {
-				throw new WabitPersistenceException(null,
-						"Cannot rollback while not in a transaction.");
+		synchronized (session) {
+			logger.debug("wsp.rollback();");
+			try {
+				updateDepth++;
+				if (transactionCount <= 0) {
+					throw new WabitPersistenceException(null,
+					"Cannot rollback while not in a transaction.");
+				}
+			} finally {
+				updateDepth--;
 			}
-		} finally {
-			updateDepth--;
 		}
-	}
-
-	/**
-	 * Accessor for the {@link WabitSession} object.
-	 * 
-	 * @return The {@link WabitSession} object this class refers to
-	 */
-	public WabitSession getWabitSession() {
-		return session;
-	}
-
-	/**
-	 * Mutator for the {@link WabitSession} object.
-	 * 
-	 * @param session
-	 *            The {@link WabitSession} object to make this class refer to
-	 */
-	public void setWabitSession(WabitSession session) {
-		this.session = session;
 	}
 
 	/**
