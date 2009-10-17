@@ -219,7 +219,6 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		JSONObject json = new JSONObject();
 		json.put("method", WabitPersistMethod.changeProperty);
 		json.put("uuid", "uuid");
-		json.put("parentUUID", "parent");
 		json.put("type", Datatype.BOOLEAN);
 		json.put("propertyName", "property");
 		json.put("newValue", "new");
