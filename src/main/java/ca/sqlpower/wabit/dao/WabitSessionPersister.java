@@ -1928,7 +1928,6 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("comparator")) {
 			wabitJoin.setComparator((String) converter.convertToComplexType(
 					newValue, String.class));
-			;
 
 		} else {
 			throw new WabitPersistenceException(
