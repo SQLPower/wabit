@@ -20,7 +20,9 @@
 package ca.sqlpower.wabit.dao.session;
 
 import java.beans.PropertyChangeEvent;
+import java.beans.PropertyDescriptor;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.query.Item;
@@ -755,6 +757,16 @@ public class WorkspacePersisterListener implements WabitListener {
 		String propertyName = evt.getPropertyName();
 		Object oldValue = evt.getOldValue();
 		Object newValue = evt.getNewValue();
+		
+		PropertyDescriptor propertyDescriptor;
+		try {
+			propertyDescriptor= PropertyUtils.getPropertyDescriptor(source, propertyName);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+		
+		//Not persisting non-settable properties
+		if (propertyDescriptor.getWriteMethod() == null) return;
 		
 		//ignoring this property to not force all users to view the same
 		//editor.
