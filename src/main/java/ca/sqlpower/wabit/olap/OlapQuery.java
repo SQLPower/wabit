@@ -303,10 +303,14 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
+    	setCurrentCube(currentCube, true);
+    }
+    
+    public void setCurrentCube(Cube currentCube, boolean resetQuery) throws SQLException {
         Cube oldCube = this.currentCube;
         this.currentCube = currentCube;
         
-        if (currentCube != oldCube && currentCube != null) {
+        if (currentCube != oldCube && currentCube != null && resetQuery) {
         	setMdxQuery(new Query(OLAP4J_QUERY_NAME, currentCube));
         }
         
@@ -1366,6 +1370,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	    axes.add(index, axis);
 	    WabitUtils.listenToHierarchy(axis, childListener);
 	    axis.setParent(this);
+	    wasLoadedFromDao = true;
 	    fireChildAdded(child.getClass(), child, index);
 	}
 	

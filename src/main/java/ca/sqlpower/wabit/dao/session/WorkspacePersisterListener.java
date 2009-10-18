@@ -487,8 +487,11 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(olapQuery.isNonEmpty()));
 				target.persistProperty(uuid, "olapDataSource", DataType.STRING, 
 						converter.convertToBasicType(olapQuery.getOlapDataSource()));
-				target.persistProperty(uuid, "currentCube", DataType.STRING,
-						converter.convertToBasicType(olapQuery.getCurrentCube(), olapQuery.getOlapDataSource()));
+				
+				if (olapQuery.getCurrentCube() != null) {
+					target.persistProperty(uuid, "currentCube", DataType.STRING,
+							converter.convertToBasicType(olapQuery.getCurrentCube(), olapQuery.getOlapDataSource()));
+				}
 
 			} else if (child instanceof Page) {
 				Page page = (Page) child;

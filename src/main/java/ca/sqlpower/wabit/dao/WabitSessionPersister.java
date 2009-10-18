@@ -2008,7 +2008,7 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("currentCube")) {
 			try {
 				olapQuery.setCurrentCube((Cube) converter.convertToComplexType(
-						newValue, Cube.class));
+						newValue, Cube.class), false);
 			} catch (SQLException e) {
 				throw new WabitPersistenceException(olapQuery.getUUID(),
 						"Cannot commit currentCube property for OlapQuery with name \""
