@@ -65,5 +65,10 @@ public class UserTest extends AbstractWabitObjectTest {
 	public WabitObject getObjectUnderTest() {
 		return user;
 	}
+	
+	@Override
+	public Class<? extends WabitObject> getParentClass() {
+		return WabitWorkspace.class;
+	}
 
 }
