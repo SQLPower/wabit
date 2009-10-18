@@ -388,7 +388,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * @param context The context this session belongs to.
      * @param delegateSession The session to delegate some WabitSession operations to.
      */
-	WabitSwingSessionImpl(WabitSwingSessionContext context, WabitSession delegateSession) {
+	protected WabitSwingSessionImpl(WabitSwingSessionContext context, WabitSession delegateSession) {
 	    this.delegateSession = delegateSession;
 		sessionContext = context;
 		
