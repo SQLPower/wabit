@@ -96,9 +96,9 @@ public class GrantPanel implements DataEntryPanel {
 
 	public GrantPanel(WabitWorkspace workspace, WabitWorkspace systemWorkspace, String objectType, String objectUuid, String label) {
 		
-		if (objectUuid == null && objectType != null) {
+		if (objectUuid == null) {
 			this.systemMode = true;
-		} else if (objectUuid != null && objectType == null) {
+		} else if (objectUuid != null && objectType != null) {
 			this.systemMode = false;
 		} else {
 			throw new RuntimeException ("One of objectType or objectName has to be given.");
@@ -234,7 +234,7 @@ public class GrantPanel implements DataEntryPanel {
 			grant = new Grant(null, this.objectType, false,false,false,false,false);
 			grant.setDirty(true);
 		} else if(grant == null && !systemMode) {
-			grant = new Grant(this.objectUuid, null, false,false,false,false,false);
+			grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, WabitObject.class).getClass().getSimpleName(), false,false,false,false,false);
 			grant.setDirty(true);
 		}
 		

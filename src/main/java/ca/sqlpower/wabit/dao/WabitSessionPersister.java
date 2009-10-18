@@ -463,8 +463,13 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new ContentBox();
 
 		} else if (type.equals(Grant.class.getSimpleName())) {
-			String subject = (String) converter.convertToComplexType(
+			String subject = null;
+			try {
+				subject = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "subject"), String.class);
+			} catch (WabitPersistenceException e) {
+				// no op
+			}
 			String grantType = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "type"), String.class);
 			boolean create = (Boolean) converter.convertToComplexType(
