@@ -1565,8 +1565,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSourceWithoutReset((JDBCDataSource) converter
-					.convertToComplexType(newValue, JDBCDataSource.class));
+			query.setDataSourceWithoutReset((JDBCDataSource) ((WabitDataSource) converter
+					.convertToComplexType(newValue, WabitDataSource.class)).getSPDataSource());
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Invalid property: "
