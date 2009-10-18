@@ -1255,8 +1255,8 @@ public class WabitSessionPersister implements WabitPersister {
 		return "Could not commit the property \"" + propertyName + "\" on "
 				+ wo.getClass() + " with name \"" + wo.getName()
 				+ "\" and UUID \"" + wo.getUUID() + " with new value \""
-				+ newValue.toString() + "\" which is of data type \""
-				+ newValue.getClass() + "\"";
+				+ newValue + "\"" + ((newValue != null) ? " which is of data type \""
+				+ newValue.getClass() + "\"" : "");
 	}
 
 	/**
@@ -2309,12 +2309,6 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("query")) {
 			ResultSetProducer rsProducer = (ResultSetProducer) converter
 					.convertToComplexType(newValue, ResultSetProducer.class);
-			if (rsProducer == null) {
-				throw new WabitPersistenceException(uuid,
-						getNotDefinedPropertyExceptionMessage(chart,
-								propertyName, newValue));
-			}
-
 			try {
 				chart.setQuery(rsProducer);
 			} catch (SQLException e) {

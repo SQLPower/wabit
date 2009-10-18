@@ -119,15 +119,16 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 				case changeProperty:
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
-					newValue = getNullable(jsonObject, "newValue");
-					Object oldValue = getNullable(jsonObject, "oldValue");
+					newValue = getWithType(jsonObject, propertyType, "newValue");
+					Object oldValue = getWithType(jsonObject, propertyType, "oldValue");
 					persister.persistProperty(uuid, propertyName,
 							propertyType, oldValue, newValue);
 					break;
 				case persistProperty:
 					propertyName = jsonObject.getString("propertyName");
 					propertyType = DataType.valueOf(jsonObject.getString("type"));
-					newValue = getNullable(jsonObject, "newValue");
+					newValue = getWithType(jsonObject, propertyType, "newValue");
+					if (newValue == null) logger.debug("newValue was null for propertyName " + propertyName);
 					persister.persistProperty(uuid, propertyName,
 							propertyType, newValue);
 					break;
@@ -151,12 +152,31 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		}
 	}
 
-	private static Object getNullable(JSONObject jo, String propName) throws JSONException {
+	private static Object getNullable(JSONObject jo, DataType type, String propName) throws JSONException {
 		final Object value = jo.get(propName);
 		if (value == JSONObject.NULL) {
 			return null;
 		} else {
 			return value;
+		}
+	}
+	
+	private static Object getWithType(JSONObject jo, DataType type, String propName) throws JSONException {
+		if (getNullable(jo, type, propName) == null) return null;
+		
+		switch (type) {
+		case BOOLEAN:
+			return Boolean.valueOf(jo.getBoolean(propName));
+		case DOUBLE:
+			return Double.valueOf(jo.getDouble(propName));
+		case INTEGER:	
+			return Integer.valueOf(jo.getInt(propName));
+		case NULL:
+		case PNG_IMG:
+		case STRING:
+		case REFERENCE:
+		default:
+			return getNullable(jo, type, propName);
 		}
 	}
 }
