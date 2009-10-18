@@ -59,5 +59,10 @@ public class GrantTest extends AbstractWabitObjectTest {
 	public WabitObject getObjectUnderTest() {
 		return grant;
 	}
+	
+	@Override
+	public Class<? extends WabitObject> getParentClass() {
+		return Group.class;
+	}
 
 }
