@@ -450,9 +450,12 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (type.equals(ColumnInfo.class.getSimpleName())) {
 
 			if (containsProperty(uuid, "columnInfoItem")) {
-				wo = new ColumnInfo((String) converter.convertToComplexType(
+				String label = (String) converter.convertToComplexType(
+						getPropertyAndRemove(uuid, "name"),
+						String.class);
+				wo = new ColumnInfo((Item) converter.convertToComplexType(
 						getPropertyAndRemove(uuid, "columnInfoItem"),
-						Item.class));
+						Item.class), label);
 			} else {
 				wo = new ColumnInfo((String) converter.convertToComplexType(
 						getPropertyAndRemove(uuid, ColumnInfo.COLUMN_ALIAS),
