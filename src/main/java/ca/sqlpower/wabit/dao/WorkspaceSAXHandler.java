@@ -1396,6 +1396,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("missing-columns")) {
             readingMissingChartCols = false;
             
+        } else if (name.equals("chart")) {
+        	//XXX Fix for broken references in chart columns. The chart columns x axis references
+        	//are actual new chart columns and therefore have the wrong uuid. The chart column
+        	//uuids should be stored and used to reference each other instead of name.
+        	for (ChartColumn column : chart.getColumns()) {
+        		if (column.getXAxisIdentifier() != null) {
+        			for (ChartColumn otherColumn : chart.getColumns()) {
+        				if (column.getXAxisIdentifier().getColumnName().equals(otherColumn.getColumnName())) {
+        					column.setXAxisIdentifier(otherColumn);
+        					break;
+        				}
+        			}
+        		}
+        	}
+            
         } else if (name.equals("text") && parentIs("content-label")) {
             ((Label) contentBox.getContentRenderer()).setText(byteStream.toString());
             loadingText = false;

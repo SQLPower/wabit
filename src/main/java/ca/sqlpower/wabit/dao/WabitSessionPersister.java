@@ -441,6 +441,7 @@ public class WabitSessionPersister implements WabitPersister {
 							ca.sqlpower.wabit.report.chart.ChartColumn.DataType.class);
 
 			wo = new ChartColumn(columnName, dataType);
+			wo.setUUID(uuid);
 
 		} else if (type.equals(ChartRenderer.class.getSimpleName())) {
 			Chart chart = (Chart) converter.convertToComplexType(
