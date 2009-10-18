@@ -23,6 +23,7 @@ import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 public class GroupTest extends AbstractWabitObjectTest {
 	
@@ -38,11 +39,16 @@ public class GroupTest extends AbstractWabitObjectTest {
 	}
 	
 	@Override
+	public Class<? extends WabitObject> getParentClass() {
+		return WabitWorkspace.class;
+	}
+	
+	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 		group = new Group("group");
 		
-		getWorkspace().setUUID("system");
+		getWorkspace().setUUID(WabitWorkspace.SYSTEM_WORKSPACE_UUID);
 		getWorkspace().addChild(group, 0);
 	}
 

@@ -357,6 +357,10 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	} else {
         		newValue = OrderByArgument.ASC;
         	}
+        } else if (valueType.equals(WabitWorkspace.class)) {
+        	//The new workspace has to be in the workspace, 
+        	//but the workspace cannot have a new workspace in the workspace....?
+        	newValue = workspace;
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
