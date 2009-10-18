@@ -63,7 +63,7 @@ public class PageTest extends AbstractWabitObjectTest {
         workspace.setSession(session);
         Report report = new Report("Report");
         workspace.addReport(report);
-        page = new Page("test page", LETTER_WIDTH, LETTER_HEIGHT, PageOrientation.PORTRAIT);
+        page = new Page("test page", LETTER_WIDTH, LETTER_HEIGHT, PageOrientation.PORTRAIT, true);
         report.page = this.page;
         page.setParent(report);
         
@@ -122,7 +122,7 @@ public class PageTest extends AbstractWabitObjectTest {
     }
     
     public void testConstructLandscapePage() throws Exception {
-        Page newPage = new Page("test", LETTER_HEIGHT, LETTER_WIDTH, PageOrientation.LANDSCAPE);
+        Page newPage = new Page("test", LETTER_HEIGHT, LETTER_WIDTH, PageOrientation.LANDSCAPE, true);
         assertEquals(LETTER_WIDTH, newPage.getHeight());
         assertEquals(LETTER_HEIGHT, newPage.getWidth());
     }

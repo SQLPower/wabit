@@ -554,7 +554,7 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(getPropertyAndRemove(uuid,
 							"orientation"), PageOrientation.class);
 
-			wo = new Page(name, width, height, orientation);
+			wo = new Page(name, width, height, orientation, false);
 
 		} else if (type.equals(QueryCache.class.getSimpleName())) {
 			WabitConstantsContainer constantsContainer = (WabitConstantsContainer) createObjectByCalls(

@@ -121,36 +121,41 @@ public class Page extends AbstractWabitObject {
      */
     private final List<Guide> guides = new ArrayList<Guide>();
 
-    /**
-     * Creates a page with the given custom width and height, and 1-inch
-     * margins. The units for width and height are 1/72 of an inch, which
-     * correspond well with screen pixels in Java 2D (72 pixels = 1 inch).
-     * 
-     * @param width
-     *            The page width in units of 1/72 inch. The is the real apparent
-     *            width of the page. If you are creating a landscape page, this
-     *            value should be larger than the one you specify for height.
-     * @param height
-     *            The page height in units of 1/72 inch. The is the real
-     *            apparent height of the page. If you are creating a landscape
-     *            page, this value should be smaller than the one you specify
-     *            for width.
-     * @param orientation
-     *            The page orientation. This value has a fun interplay with width
-     *            and height, so be sure to specify this correctly based on the
-     *            type of page you are creating.
-     */
-    public Page(String name, int width, int height, PageOrientation orientation) {
+	/**
+	 * Creates a page with the given custom width and height, and 1-inch
+	 * margins. The units for width and height are 1/72 of an inch, which
+	 * correspond well with screen pixels in Java 2D (72 pixels = 1 inch).
+	 * 
+	 * @param width
+	 *            The page width in units of 1/72 inch. The is the real apparent
+	 *            width of the page. If you are creating a landscape page, this
+	 *            value should be larger than the one you specify for height.
+	 * @param height
+	 *            The page height in units of 1/72 inch. The is the real
+	 *            apparent height of the page. If you are creating a landscape
+	 *            page, this value should be smaller than the one you specify
+	 *            for width.
+	 * @param orientation
+	 *            The page orientation. This value has a fun interplay with
+	 *            width and height, so be sure to specify this correctly based
+	 *            on the type of page you are creating.
+	 * @param startWithGuides
+	 *            If true guides will be added to the page defining a 1 inch
+	 *            margin. If false the page will start guideless.
+	 */
+    public Page(String name, int width, int height, PageOrientation orientation, boolean startWithGuides) {
         setName(name);
         this.orientation = orientation;
         this.width = width;
         this.height = height;
-        
-        // Default margins of 1 inch
-        addGuide(new Guide(Axis.VERTICAL, DPI));
-        addGuide(new Guide(Axis.VERTICAL, width - DPI));
-        addGuide(new Guide(Axis.HORIZONTAL, DPI));
-        addGuide(new Guide(Axis.HORIZONTAL, height - DPI));
+       
+        if (startWithGuides) {
+        	// Default margins of 1 inch
+        	addGuide(new Guide(Axis.VERTICAL, DPI));
+        	addGuide(new Guide(Axis.VERTICAL, width - DPI));
+        	addGuide(new Guide(Axis.HORIZONTAL, DPI));
+        	addGuide(new Guide(Axis.HORIZONTAL, height - DPI));
+        }
         
         setDefaultFont(Font.decode("Arial-10"));
     }
@@ -194,7 +199,7 @@ public class Page extends AbstractWabitObject {
      */
     public Page(String name, PageFormat pageFormat) {
         this(name, (int) pageFormat.getWidth(), (int) pageFormat.getHeight(),
-                PageOrientation.forPrintApiCode(pageFormat.getOrientation()));
+                PageOrientation.forPrintApiCode(pageFormat.getOrientation()), true);
     }
 
     /**
