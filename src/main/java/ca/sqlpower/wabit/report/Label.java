@@ -131,7 +131,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     }
 
     public void setFont(Font font) {
-        Font oldFont = this.font;
+        Font oldFont = getFont();
         this.font = font;
         firePropertyChange("font", oldFont, font);
     }
