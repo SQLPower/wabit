@@ -65,15 +65,13 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	 */
 	public WabitOlapDimension(WabitOlapDimension dimension) {
 		this(dimension.getName());
-		this.dimension = dimension.getDimension();
-		this.hierarchy = dimension.getHierarchy();
 		
 		for (WabitOlapInclusion inclusion : dimension.inclusions) {
 			addInclusion(new WabitOlapInclusion(inclusion));
 		}
 		
 		for (WabitOlapExclusion exclusion : dimension.exclusions) {
-			addExclusion(exclusion);
+			addExclusion(new WabitOlapExclusion(exclusion));
 		}
 	}
 	

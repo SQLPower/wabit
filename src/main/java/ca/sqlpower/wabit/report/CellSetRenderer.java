@@ -199,16 +199,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (this.initDone) return;
         try {
         	if (modifiedOlapQuery == null) {
-            	try {
-    				setModifiedOlapQuery(OlapQuery.copyOlapQuery(olapQuery));
-    				
-    				// This code will eventually fire the change and set the cellset
-    				// (must be done synchronously--don't use asyncExecute!)
-    				modifiedOlapQuery.executeOlapQuery();
-    				
-    			} catch (Exception e) {
-    				throw new RuntimeException(e);
-    			}
+        		setModifiedOlapQuery(OlapQuery.copyOlapQuery(olapQuery));
+
+        		// This code will eventually fire the change and set the cellset
+        		// (must be done synchronously--don't use asyncExecute!)
+        		modifiedOlapQuery.executeOlapQuery();
             } else if (modifiedOlapQuery.hasCachedAttributes()) {
             	modifiedOlapQuery.executeOlapQuery();
             }

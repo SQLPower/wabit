@@ -147,6 +147,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		Iterator<QueryDimension> queryDimensions = olapDimensions.iterator();
 		while (queryDimensions.hasNext()) {
 			WabitOlapDimension dimension = new WabitOlapDimension(queryDimensions.next());
+			dimension.setParent(this);
 			addDimension(dimension);
 			dimension.updateChildren();
 		}

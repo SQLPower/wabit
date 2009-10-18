@@ -263,7 +263,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newReport);
 					menu.addSeparator();
 					menu.add(new CopyReportAction((Report) lastPathComponent, session, session.getContext().getFrame()));
-					menu.add(new ScheduleReportAction((Report) lastPathComponent, session));
+					if (this.session instanceof WabitServerSession) {
+						menu.add(new ScheduleReportAction((Report) lastPathComponent, session));
+					}
 				} else if (lastPathComponent instanceof Template) {
 					JMenuItem item = new JMenuItem(new ReportFromTemplateAction(session, (Template) lastPathComponent));
 					item.setIcon(WabitIcons.REPORT_ICON_16);
