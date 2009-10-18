@@ -19,19 +19,41 @@
 
 package ca.sqlpower.wabit.dao.session;
 
+import java.util.List;
+
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 public class ItemConverter implements BidirectionalConverter<String, Item> {
+	
+	private final WabitWorkspace workspace;
+
+	public ItemConverter(WabitWorkspace workspace) {
+		this.workspace = workspace;
+	}
 
 	public Item convertToComplexType(String convertFrom)
 			throws ConversionException {
 		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 3);
 		
+		
 		if (pieces[0].equals(SQLObjectItem.class.getSimpleName())) {
+			List<QueryCache> queries = workspace.getQueries();
+			for (QueryCache query : queries) {
+				for (Container table : query.getFromTableList()) {
+					for (Item item : table.getItems()) {
+						if (item.getUUID().equals(pieces[2])) {
+							return item;
+						}
+					}
+				}
+			}
 			return new SQLObjectItem(pieces[1], pieces[2]);
 		} else if (pieces[0].equals(StringItem.class.getSimpleName())) {
 			return new StringItem(pieces[1], pieces[2]);

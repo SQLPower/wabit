@@ -61,7 +61,7 @@ public class SessionPersisterSuperConverter {
 	
 	private final Olap4jDataSourceConverter olap4jDataSourceConverter;
 	
-	private final ItemConverter sqlObjectItemConverter = new ItemConverter();
+	private final ItemConverter itemConverter;
 	
 	private final ContainerConverter containerConverter;
 	
@@ -89,6 +89,8 @@ public class SessionPersisterSuperConverter {
 		sqlJoinConverter = new SQLJoinConverter(root);
 		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getWorkspace());
 		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());
+		
+		itemConverter = new ItemConverter(session.getWorkspace());
 	}
 
 	/**
@@ -145,7 +147,7 @@ public class SessionPersisterSuperConverter {
 			return olap4jDataSourceConverter.convertToSimpleType(olap4jDataSource);
 			
 		} else if (convertFrom instanceof Item) {
-			return sqlObjectItemConverter.convertToSimpleType((Item) convertFrom);
+			return itemConverter.convertToSimpleType((Item) convertFrom);
 			
 		} else if (convertFrom instanceof Container) {
 			return containerConverter.convertToSimpleType((Container) convertFrom);
@@ -217,7 +219,7 @@ public class SessionPersisterSuperConverter {
 			return olap4jDataSourceConverter.convertToComplexType((String) o);
 			
 		} else if (Item.class.isAssignableFrom(type)) {
-			return sqlObjectItemConverter.convertToComplexType((String) o);
+			return itemConverter.convertToComplexType((String) o);
 			
 		} else if (Image.class.isAssignableFrom(type)) { 
 			//TODO we should pass this the data type to know that we want a PNG 

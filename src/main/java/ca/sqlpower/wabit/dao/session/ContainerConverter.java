@@ -46,7 +46,7 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 
 	public ContainerConverter(WabitSession session) {
 		this.session = session;
-		itemConverter = new ItemConverter();
+		itemConverter = new ItemConverter(session.getWorkspace());
 	}
 
 	public Container convertToComplexType(String convertFrom)
