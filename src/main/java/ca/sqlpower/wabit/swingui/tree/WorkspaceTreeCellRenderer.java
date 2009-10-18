@@ -206,7 +206,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                     setupForWabitImage((WorkspaceTreeCellRenderer) r, ((ImageRenderer) cbChild).getImage());
                 } else if (cbChild instanceof ChartRenderer) {
                 	ChartRenderer chartRenderer = (ChartRenderer) cbChild;
-                	setupForChart(r, chartRenderer.getChart());
+                	setupForChart(r, chartRenderer.getContent());
                 } else if (cbChild instanceof Label) {
                 	r.setIcon(LABEL_ICON); 
 	                r.setText(((Label) cbChild).getText());

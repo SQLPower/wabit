@@ -413,7 +413,7 @@ public class WorkspaceXMLDAO {
 						ChartRenderer chartRenderer = (ChartRenderer) box.getContentRenderer();
 						xml.print(out, "<chart-renderer");
 						printCommonAttributes(chartRenderer);
-						printAttribute("chart-uuid", chartRenderer.getChart().getUUID());
+						printAttribute("chart-uuid", chartRenderer.getContent().getUUID());
 						xml.println(out, " />");
 						
 					} else if (box.getContentRenderer() instanceof CellSetRenderer) {

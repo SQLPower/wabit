@@ -1073,7 +1073,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				} else if (content instanceof Label) {
 					name = ((Label) content).getText();
 				} else if (content instanceof ChartRenderer) {
-					name = ((ChartRenderer) content).getChart().getName();
+					name = ((ChartRenderer) content).getContent().getName();
 				} else if (content instanceof ImageRenderer) {
 					name = ((ImageRenderer) content).getImage().getName();
 				}

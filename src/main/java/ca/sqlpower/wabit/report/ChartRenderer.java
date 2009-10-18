@@ -71,7 +71,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 		return chart.getBackgroundColour();
 	}
 	
-	public WabitObject getContent(){
+	public @Nonnull Chart getContent(){
 		return chart;
 	}
 
@@ -173,16 +173,6 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     public CleanupExceptions cleanup() {
         chart.removeChartDataListener(chartListener);
         return new CleanupExceptions();
-    }
-
-    /**
-     * Returns the chart that this chart renderer renders.
-     * 
-     * @return the same Chart as supplied to this instance's constructor. Never
-     *         null.
-     */
-    public @Nonnull Chart getChart() {
-        return chart;
     }
 
 	public void refresh() {
