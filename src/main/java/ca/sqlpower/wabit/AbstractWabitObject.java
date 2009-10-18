@@ -504,4 +504,9 @@ public abstract class AbstractWabitObject implements WabitObject {
 	public void rollback(String message) {
 		fireTransactionRollback(message);
 	}
+	
+	@Override
+	public String toString() {
+		return super.toString() + ", " + getName() + ":" + getUUID();
+	}
 }
