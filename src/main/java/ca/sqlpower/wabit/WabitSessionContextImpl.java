@@ -55,6 +55,7 @@ import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
@@ -477,6 +478,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			new WorkspaceLocation("Unnamed Workspace", newWorkspaceId, serverInfo);
 		WabitWorkspace systemWorkspace = WabitServerSession.getSystemWorkspace(serverInfo, this);
 		WabitServerSession newSession = new WabitServerSession(workspaceLocation, systemWorkspace, this);
+		try {
+			newSession.persistWorkspaceToServer();
+		} catch (WabitPersistenceException e) {
+			throw new RuntimeException("An error occured while persisting new workspace to the Server");
+		}
 		//TODO
 		logger.error("have to actually create the session on the server here (following call will cause update thread failure)");
 		newSession.startUpdaterThread();

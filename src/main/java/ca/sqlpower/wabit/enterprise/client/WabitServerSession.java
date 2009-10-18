@@ -281,6 +281,11 @@ public class WabitServerSession extends WabitSessionImpl {
 		WorkspacePersisterListener.attachListener(this, jsonPersister, sessionPersister);
 	}
 
+	public void persistWorkspaceToServer() throws WabitPersistenceException {
+		WorkspacePersisterListener tempListener = new WorkspacePersisterListener(this, jsonPersister);
+		tempListener.persistObject(this.getWorkspace());
+	}
+	
 	/**
 	 * Polls this session's server for updates until interrupted. There should
 	 * be exactly one instance of this class per WabitServerSession.
