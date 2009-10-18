@@ -36,6 +36,11 @@ public class GroupMemberTest extends AbstractWabitObjectTest {
 	}
 	
 	@Override
+	public Class<? extends WabitObject> getParentClass() {
+		return Group.class;
+	}
+	
+	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 		User user = new User("name", "pass");
@@ -46,6 +51,7 @@ public class GroupMemberTest extends AbstractWabitObjectTest {
 		
 		getWorkspace().setUUID("system");
 		getWorkspace().addChild(group, 0);
+		getWorkspace().addChild(user, 0);
 		
 	}
 	

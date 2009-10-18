@@ -41,8 +41,8 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     protected boolean removeChildImpl(WabitObject child) {
         if (child instanceof Grant) {
             return this.grants.remove((Grant)child);
-        } else if (child instanceof User) {
-            return this.members.remove((User)child);
+        } else if (child instanceof GroupMember) {
+            return this.members.remove((GroupMember)child);
         } else {
             return false;
         }
