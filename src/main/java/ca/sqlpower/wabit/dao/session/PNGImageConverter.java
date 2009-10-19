@@ -43,12 +43,7 @@ public class PNGImageConverter implements BidirectionalConverter<InputStream, Im
 	public Image convertToComplexType(InputStream convertFrom)
 			throws ConversionException {
 		try {
-			StringBuffer buffer = new StringBuffer();
-			InputStreamReader reader = new InputStreamReader(convertFrom);
-			for (int next = reader.read(); next != -1; next = reader.read()) {
-				buffer.append((char) next);
-			}
-			BufferedImage img = ImageIO.read(new ByteArrayInputStream(buffer.toString().getBytes()));
+			BufferedImage img = ImageIO.read(convertFrom);
 			return img;
 		} catch (Exception e) {
 			throw new ConversionException("Cannot convert the given image", e);
