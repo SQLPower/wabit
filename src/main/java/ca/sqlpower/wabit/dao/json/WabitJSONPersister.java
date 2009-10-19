@@ -145,7 +145,7 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
-			if (type == DataType.PNG_IMG) {
+			if (type == DataType.PNG_IMG && newValue != null) {
 				ByteArrayInputStream in = (ByteArrayInputStream) newValue;
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				SQLPowerUtils.copyStream(in, out);
