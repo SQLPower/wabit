@@ -570,6 +570,12 @@ public class ChartPanel implements WabitPanel {
         	if (chart.findRoleColumns(ColumnRole.SERIES).isEmpty()) {
         		throw new RuntimeException("Chart has no series.");
         	}
+        	
+        	//If the result set is null try to force the query to execute and wait for it.
+        	if (chart.getUnfilteredResultSet() == null) {
+        		chart.getQuery().execute().get();
+        	}
+        	
             JFreeChart newJFreeChart = ChartSwingUtil.createChartFromQuery(chart);
             logger.debug("Created new JFree chart: " + newJFreeChart);
             chartPanel.setChart(newJFreeChart);
@@ -579,7 +585,7 @@ public class ChartPanel implements WabitPanel {
             showError(null);
         } catch (Exception ex) {
             if (ex.getMessage() == null){
-            	showError(new RuntimeException("Unable to create chart from current settings."));
+            	showError(new RuntimeException("Unable to create chart " + chart.getName() + " from current settings.", ex));
             }
             else{
             	showError(ex);

@@ -101,9 +101,12 @@ public class Chart extends AbstractWabitObject {
             runInForeground(new Runnable() {
                 public void run() {
                     try {
+                    	begin("Updating chart from GUI");
                         setUnfilteredResultSet(evt.getResults().getFirstNonNullResultSet());
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
+                    } finally {
+                    	commit();
                     }
                 }
             });
@@ -334,9 +337,16 @@ public class Chart extends AbstractWabitObject {
         }
         
         // this part fires childRemoved and childAdded events
-        removeAllColumns();
+        for (int i =  chartColumns.size() - 1; i >= 0; i--) {
+        	ChartColumn col = chartColumns.get(i);
+        	if (!newCols.contains(col)) {
+        		removeColumnIdentifier(col);
+        	}
+        }
         for (ChartColumn col : newCols) {
-            addChartColumn(col);
+        	if (!chartColumns.contains(col)) {
+        		addChartColumn(col);
+        	}
         }
         
         if (unfilteredResults != null) {
