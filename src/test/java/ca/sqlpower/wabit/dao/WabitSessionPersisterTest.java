@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.awt.Font;
 import java.io.IOException;
 
 import junit.framework.TestCase;
@@ -32,7 +33,15 @@ import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.wabit.dao.session.FontConverter;
+import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Report;
 
 public class WabitSessionPersisterTest extends TestCase {
 
@@ -40,6 +49,8 @@ public class WabitSessionPersisterTest extends TestCase {
 			.getLogger(WabitSessionPersisterTest.class);
 
 	private WabitSessionPersister wsp;
+
+    private StubWabitSession session;
 
 	public void setUp() {
 		final PlDotIni defaultPlIni = new PlDotIni();
@@ -70,7 +81,8 @@ public class WabitSessionPersisterTest extends TestCase {
 			}
 		};
 
-		wsp = new WabitSessionPersister("testing persister", new StubWabitSession(context));
+		session = new StubWabitSession(context);
+        wsp = new WabitSessionPersister("testing persister", session);
 
 	}
 
@@ -81,4 +93,56 @@ public class WabitSessionPersisterTest extends TestCase {
 		wsp.begin();
 		wsp.commit();
 	}
+	
+	public void testChangePropNullToNonNull() throws Exception {
+	    WabitWorkspace workspace = session.getWorkspace();
+	    workspace.setUUID(WabitWorkspace.SYSTEM_WORKSPACE_UUID);
+        User user = new User("name", "pass");
+	    workspace.addUser(user);
+	    user.setEmail(null);
+	    
+	    assertNotNull(WabitUtils.findByUuid(workspace, user.getUUID(), WabitObject.class));
+	    
+        wsp.begin();
+        wsp.persistProperty(
+                user.getUUID(), "email", DataType.STRING, null, "new@email.com");
+        wsp.commit();
+        
+        assertEquals("new@email.com", user.getEmail());
+    }
+	
+    public void testChangePropNonNullToNull() throws Exception {
+        WabitWorkspace workspace = session.getWorkspace();
+        workspace.setUUID(WabitWorkspace.SYSTEM_WORKSPACE_UUID);
+        User user = new User("name", "pass");
+        workspace.addUser(user);
+        user.setEmail("not@null");
+
+        assertNotNull(WabitUtils.findByUuid(workspace, user.getUUID(), WabitObject.class));
+
+        wsp.begin();
+        wsp.persistProperty(
+                user.getUUID(), "email", DataType.STRING, "not@null", null);
+        wsp.commit();
+        
+        assertNull(user.getEmail());
+    }
+
+    public void testChangePropNullToNull() throws Exception {
+        WabitWorkspace workspace = session.getWorkspace();
+        workspace.setUUID(WabitWorkspace.SYSTEM_WORKSPACE_UUID);
+        User user = new User("name", "pass");
+        workspace.addUser(user);
+        user.setEmail(null);
+
+        assertNotNull(WabitUtils.findByUuid(workspace, user.getUUID(), WabitObject.class));
+
+        wsp.begin();
+        wsp.persistProperty(
+                user.getUUID(), "email", DataType.STRING, null, null);
+        wsp.commit();
+        
+        assertNull(user.getEmail());
+    }
+
 }
