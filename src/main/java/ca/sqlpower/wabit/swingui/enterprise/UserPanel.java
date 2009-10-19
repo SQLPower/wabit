@@ -162,7 +162,7 @@ public class UserPanel implements WabitPanel {
 		this.fullNameTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			public void textChanged(DocumentEvent e) {
-				user.setName(fullNameTextField.getText());
+				user.setFullName(fullNameTextField.getText());
 			}
 			
 			public void changedUpdate(DocumentEvent e) {
@@ -184,7 +184,7 @@ public class UserPanel implements WabitPanel {
 		this.emailTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			public void textChanged(DocumentEvent e) {
-				user.setName(emailTextField.getText());
+				user.setEmail(emailTextField.getText());
 			}
 			
 			public void changedUpdate(DocumentEvent e) {
