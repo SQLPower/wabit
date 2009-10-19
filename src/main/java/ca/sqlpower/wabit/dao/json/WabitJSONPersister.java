@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.dao.json;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -129,8 +128,8 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
-			jsonObject.put("oldValue", oldValue);
-			jsonObject.put("newValue", newValue);
+			jsonObject.put("oldValue", oldValue == null ? JSONObject.NULL : oldValue);
+			jsonObject.put("newValue", newValue == null ? JSONObject.NULL : newValue);
 		} catch (JSONException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
