@@ -1128,7 +1128,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <column-info>: " + aname + "=" + aval);
         		}
         	}
-        	columnInfoList.add(colInfo);
+        	rsRenderer.addChild(colInfo, rsRenderer.getChildren().size());
         } else if (name.equals("date-format")) {
             createdObject = null;
         	if (parentIs("column-info")) {
