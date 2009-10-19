@@ -150,6 +150,10 @@ public class ContentBox extends AbstractWabitObject {
      *            incontent.
      */
     public void setContentRenderer(ReportContentRenderer contentRenderer) {
+    	//not setting the content renderer if it is already set as it would
+    	//clean up the content renderer.
+    	if (contentRenderer == this.contentRenderer)  return;
+    	
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
         	CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(oldContentRenderer);
