@@ -226,9 +226,7 @@ public class ContentBox extends AbstractWabitObject {
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        
     	if (ReportContentRenderer.class.isAssignableFrom(childType)) {
     		return 0;
     	} else {
