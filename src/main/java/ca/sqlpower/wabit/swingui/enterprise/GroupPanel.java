@@ -45,6 +45,8 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -103,15 +105,20 @@ public class GroupPanel implements WabitPanel {
 		this.nameTextField = new JTextField();
 		this.nameTextField.setText(group.getName());
 		this.nameLabel = new JLabel("Group name");
-		this.nameTextField.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {
+		this.nameTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+			public void textChanged(DocumentEvent e) {
 				group.setName(nameTextField.getText());
 			}
-			public void keyReleased(KeyEvent e) {
-				// no-op
+			
+			public void changedUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
-			public void keyPressed(KeyEvent e) {
-				// no-op
+			public void insertUpdate(DocumentEvent e) {
+				textChanged(e);
+			}
+			public void removeUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
 		});
 		

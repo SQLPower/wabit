@@ -118,6 +118,9 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
+		if (transactionCount == 0) {
+			messageSender.flush();
+		}
 	}
 
 	public void persistProperty(String uuid, String propertyName, DataType type,
@@ -135,6 +138,9 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
+		if (transactionCount == 0) {
+			messageSender.flush();
+		}
 	}
 	
 	public void persistProperty(String uuid, String propertyName, DataType type, Object newValue) throws WabitPersistenceException {
@@ -161,6 +167,9 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
+		if (transactionCount == 0) {
+			messageSender.flush();
+		}
 	};
 	
 	public void removeObject(String parentUUID, String uuid)
@@ -175,6 +184,9 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		logger.debug(jsonObject);
 		messageSender.send(jsonObject);
+		if (transactionCount == 0) {
+			messageSender.flush();
+		}
 	}
 	
 	public void rollback() throws WabitPersistenceException {

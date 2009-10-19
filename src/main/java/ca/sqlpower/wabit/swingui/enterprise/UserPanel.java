@@ -47,6 +47,8 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -114,15 +116,20 @@ public class UserPanel implements WabitPanel {
 		this.loginTextField = new JTextField();
 		this.loginTextField.setText(user.getName());
 		this.loginLabel = new JLabel("User name");
-		this.loginTextField.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {
+		this.loginTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+			public void textChanged(DocumentEvent e) {
 				user.setName(loginTextField.getText());
 			}
-			public void keyReleased(KeyEvent e) {
-				// no-op
+			
+			public void changedUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
-			public void keyPressed(KeyEvent e) {
-				// no-op
+			public void insertUpdate(DocumentEvent e) {
+				textChanged(e);
+			}
+			public void removeUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
 		});
 		
@@ -130,15 +137,20 @@ public class UserPanel implements WabitPanel {
 		this.passwordTextField = new JPasswordField();
 		this.passwordTextField.setText(user.getPassword());
 		this.passwordLabel = new JLabel("Password");
-		this.passwordTextField.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {
-				user.setPassword(new String(passwordTextField.getPassword()));
+		this.passwordTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+			public void textChanged(DocumentEvent e) {
+				user.setPassword(loginTextField.getText());
 			}
-			public void keyReleased(KeyEvent e) {
-				// no-op
+			
+			public void changedUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
-			public void keyPressed(KeyEvent e) {
-				// no-op
+			public void insertUpdate(DocumentEvent e) {
+				textChanged(e);
+			}
+			public void removeUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
 		});
 		
@@ -147,15 +159,20 @@ public class UserPanel implements WabitPanel {
 		this.fullNameTextField = new JTextField();
 		this.fullNameTextField.setText(user.getFullName());
 		this.fullNameLabel = new JLabel("Full name");
-		this.fullNameTextField.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {
-				user.setFullName(new String(fullNameTextField.getText()));
+		this.fullNameTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+			public void textChanged(DocumentEvent e) {
+				user.setName(fullNameTextField.getText());
 			}
-			public void keyReleased(KeyEvent e) {
-				// no-op
+			
+			public void changedUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
-			public void keyPressed(KeyEvent e) {
-				// no-op
+			public void insertUpdate(DocumentEvent e) {
+				textChanged(e);
+			}
+			public void removeUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
 		});
 		
@@ -164,15 +181,20 @@ public class UserPanel implements WabitPanel {
 		this.emailTextField = new JTextField();
 		this.emailTextField.setText(user.getEmail());
 		this.emailLabel = new JLabel("Email");
-		this.emailTextField.addKeyListener(new KeyListener() {
-			public void keyTyped(KeyEvent e) {
-				user.setEmail(new String(emailTextField.getText()));
+		this.emailTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+			public void textChanged(DocumentEvent e) {
+				user.setName(emailTextField.getText());
 			}
-			public void keyReleased(KeyEvent e) {
-				// no-op
+			
+			public void changedUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
-			public void keyPressed(KeyEvent e) {
-				// no-op
+			public void insertUpdate(DocumentEvent e) {
+				textChanged(e);
+			}
+			public void removeUpdate(DocumentEvent e) {
+				textChanged(e);
 			}
 		});
 		
@@ -222,8 +244,13 @@ public class UserPanel implements WabitPanel {
 				if (selection.length==0) {
 					return;
 				}
-				for (Object object : selection) {
-					((Group)object).addMember(new GroupMember(user));
+				try {
+					workspace.begin("Add user to groups");
+					for (Object object : selection) {
+						((Group)object).addMember(new GroupMember(user));
+					}
+				} finally {
+					workspace.commit();
 				}
 			}
 		});
@@ -237,16 +264,21 @@ public class UserPanel implements WabitPanel {
 				if (selection.length==0) {
 					return;
 				}
-				Map<Group,GroupMember> toRemove = new ArrayMap<Group, GroupMember>();
-				for (Object object : selection) {
-					for (GroupMember membership : ((Group)object).getMembers()) {
-						if (membership.getUser().getUUID().equals(user.getUUID())) {
-							toRemove.put((Group)object, membership);
+				try {
+					workspace.begin("Remove user from groups");
+					Map<Group,GroupMember> toRemove = new ArrayMap<Group, GroupMember>();
+					for (Object object : selection) {
+						for (GroupMember membership : ((Group)object).getMembers()) {
+							if (membership.getUser().getUUID().equals(user.getUUID())) {
+								toRemove.put((Group)object, membership);
+							}
 						}
 					}
-				}
-				for (Entry<Group, GroupMember> entry : toRemove.entrySet()) {
-					entry.getKey().removeMember(entry.getValue());
+					for (Entry<Group, GroupMember> entry : toRemove.entrySet()) {
+						entry.getKey().removeMember(entry.getValue());
+					}
+				} finally {
+					workspace.commit();
 				}
 			}
 		});
