@@ -115,7 +115,6 @@ public abstract class AbstractWabitObject implements WabitObject {
         synchronized(listeners) {
             if (listeners.isEmpty()) return null;
         }
-        index += childPositionOffset(type);
         final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.ADDED);
         Runnable runner = new Runnable() {
             public void run() {
@@ -152,7 +151,6 @@ public abstract class AbstractWabitObject implements WabitObject {
         synchronized(listeners) {
             if (listeners.isEmpty()) return null;
         }
-        index += childPositionOffset(type);
         final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.REMOVED);
         Runnable runner = new Runnable() {
             public void run() {

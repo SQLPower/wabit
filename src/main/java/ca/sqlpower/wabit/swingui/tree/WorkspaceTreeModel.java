@@ -554,7 +554,7 @@ public class WorkspaceTreeModel implements TreeModel {
 		    }
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
-			int index = getCorrectIndex(e);
+			int index = e.getIndex();
 			
 		    TreeModelEvent treeEvent = new TreeModelEvent(this, treePath.getParentPath(), 
 		    		new int[] {index},
@@ -569,7 +569,7 @@ public class WorkspaceTreeModel implements TreeModel {
             }
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
-			int index = getCorrectIndex(e);
+			int index = e.getIndex();
 //			if (treePath.getParentPath() != null) {
 //				treePath = treePath.getParentPath();
 //			}
@@ -578,24 +578,24 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesRemoved(treeEvent);
 		}
 
-        /**
-         * For each child type, rebases the child index of Workspace children to
-         * 0 because this tree model puts them in folders. The indices of other
-         * children are returned as-is.
-         * 
-         * @param e
-         *            A WabitEvent for either an added or removed child of any
-         *            WabitObject.
-         */
-		private int getCorrectIndex(WabitChildEvent e) {
-		    return getCorrectIndex(e.getChild(), e.getIndex());
-		}
-		
+		/**
+		 * Given the index of an object in the workspace in relation to all of
+		 * the children of its parent, this method will convert the index into
+		 * the correct index in relation to the other children in the same
+		 * folder. If the object given is not a direct child of the workspace
+		 * the same index given will be returned.
+		 * 
+		 * @param wabitObject
+		 * @param actualIndex
+		 * @return
+		 */
 		private int getCorrectIndex(WabitObject wabitObject, final int actualIndex) {
 		    
 			// Unfortunately, can't use WabitObject.childPositionOffset because
 			// MDX and SQL query objects are mixed in the same folder and therefore
 			// need the same offset.
+			
+			if (wabitObject.getParent() != workspace) return actualIndex;
 			
 			int index = actualIndex;
 			
