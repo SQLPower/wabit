@@ -59,8 +59,7 @@ public class PNGImageConverter implements BidirectionalConverter<InputStream, Im
 	public InputStream convertToSimpleType(Image convertFrom,
 			Object... additionalInfo) {
 		ByteArrayOutputStream byteStream = PersisterUtils.convertImageToStreamAsPNG(convertFrom);
-		byte[] byteArray = new Base64().encode(byteStream.toByteArray());
-        return new ByteArrayInputStream(byteArray);
+        return new ByteArrayInputStream(byteStream.toByteArray());
 	}
 
 }

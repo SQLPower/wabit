@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.dao.json;
 
+import java.io.ByteArrayInputStream;
+
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -171,8 +173,15 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 			return Double.valueOf(jo.getDouble(propName));
 		case INTEGER:	
 			return Integer.valueOf(jo.getInt(propName));
-		case NULL:
 		case PNG_IMG:
+			getNullable(jo, type, propName);
+			JSONArray array = jo.getJSONArray(propName);
+			byte[] bytes = new byte[array.length()];
+			for (int i = 0; i < array.length(); i++) {
+				bytes[i]=(byte) array.getInt(i);
+			}
+			return new ByteArrayInputStream(bytes);
+		case NULL:
 		case STRING:
 		case REFERENCE:
 		default:

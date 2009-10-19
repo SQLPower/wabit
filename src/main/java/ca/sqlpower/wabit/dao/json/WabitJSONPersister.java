@@ -19,10 +19,17 @@
 
 package ca.sqlpower.wabit.dao.json;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
@@ -138,8 +145,19 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
-			jsonObject.put("newValue", newValue == null ? JSONObject.NULL : newValue);
+			if (type == DataType.PNG_IMG) {
+				ByteArrayInputStream in = (ByteArrayInputStream) newValue;
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				SQLPowerUtils.copyStream(in, out);
+				byte[] bytes = out.toByteArray();
+				byte[] base64Bytes = Base64.encodeBase64(bytes);
+				jsonObject.put("newValue", base64Bytes);
+			} else {
+				jsonObject.put("newValue", newValue == null ? JSONObject.NULL : newValue);
+			}
 		} catch (JSONException e) {
+			throw new WabitPersistenceException(uuid, e);
+		} catch (IOException e) {
 			throw new WabitPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
