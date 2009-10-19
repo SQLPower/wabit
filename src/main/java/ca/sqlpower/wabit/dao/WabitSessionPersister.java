@@ -1100,7 +1100,7 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 
 		if (lastPropertyValueFound != null) {
-			if (!unconditional && !oldValue.equals(lastPropertyValueFound)) {
+			if (!unconditional && !lastPropertyValueFound.equals(oldValue)) {
 				throw new WabitPersistenceException(uuid, "For property \""
 						+ propertyName + "\", the expected property value \""
 						+ oldValue
