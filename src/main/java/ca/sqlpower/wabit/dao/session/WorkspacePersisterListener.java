@@ -459,6 +459,9 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "verticalAlignment",
 						DataType.STRING, converter.convertToBasicType(
 								label.getVerticalAlignment()));
+				target.persistProperty(uuid, "backgroundColour",
+						DataType.STRING,
+						converter.convertToBasicType(label.getBackgroundColour()));
 
 			} else if (child instanceof Layout) {
 				Layout layout = (Layout) child;
@@ -585,6 +588,9 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(renderer.getNullString()));
 				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
 						converter.convertToBasicType(renderer.isPrintingGrandTotals()));
+				target.persistProperty(uuid, "backgroundColour",
+						DataType.STRING,
+						converter.convertToBasicType(renderer.getBackgroundColour()));
 				
 			} else if (child instanceof User) {
 				User user = (User) child;
@@ -713,12 +719,6 @@ public class WorkspacePersisterListener implements WabitListener {
 				
 			}
 			
-			if (child instanceof ReportContentRenderer) {
-				ReportContentRenderer rcr = (ReportContentRenderer) child;
-				target.persistProperty(uuid, "backgroundColour",
-						DataType.STRING,
-						converter.convertToBasicType(rcr.getBackgroundColour()));
-			}
 			if (child instanceof WabitObjectReportRenderer) {
 				WabitObjectReportRenderer renderer = (WabitObjectReportRenderer) child;
 				target.persistProperty(uuid, "content", DataType.REFERENCE, 
