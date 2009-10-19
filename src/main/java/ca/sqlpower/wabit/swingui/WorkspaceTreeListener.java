@@ -46,7 +46,6 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -263,7 +262,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					menu.add(newReport);
 					menu.addSeparator();
 					menu.add(new CopyReportAction((Report) lastPathComponent, session, session.getContext().getFrame()));
-					if (this.session instanceof WabitServerSession) {
+					if (this.session.isEnterpriseServerSession() &&
+							this.session.getSystemWorkspace() != null) {
 						menu.add(new ScheduleReportAction((Report) lastPathComponent, session));
 					}
 				} else if (lastPathComponent instanceof Template) {
@@ -335,7 +335,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			menu.add(newImage);
 			menu.add(newTemplate);
 			menu.add(newReport);
-			if (this.session.getWorkspace().isServerWorkspace()) {
+			if (this.session.isEnterpriseServerSession()) {
 				menu.add(newReportTask);
 			}
 		}
@@ -348,12 +348,13 @@ public class WorkspaceTreeListener extends MouseAdapter {
 	
     private void securityMenu(JPopupMenu menu, String simpleName, WabitObject object) {
     	
+    	WabitWorkspace systemWorkspace = this.session.getSystemWorkspace();
     	
-    	if (!(this.session instanceof WabitServerSession)) {
+    	if (!this.session.isEnterpriseServerSession() ||
+    			systemWorkspace == null) {
     		return;
     	}
     	
-    	WabitWorkspace systemWorkspace = ((WabitServerSession)this.session).getSystemWorkspace();
 
 		if (simpleName != null && object == null) {
 			String label = null;

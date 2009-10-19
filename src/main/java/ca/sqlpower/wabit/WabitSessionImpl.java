@@ -110,5 +110,13 @@ public class WabitSessionImpl implements WabitSession {
     public void runInForeground(Runnable runner) {
         runner.run();
     }
+
+	public boolean isEnterpriseServerSession() {
+		return false;
+	}
+
+	public WabitWorkspace getSystemWorkspace() {
+		return null;
+	}
 	
 }

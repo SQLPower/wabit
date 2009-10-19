@@ -476,8 +476,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		String newWorkspaceId = UUID.randomUUID().toString();
 		WorkspaceLocation workspaceLocation =
 			new WorkspaceLocation("Unnamed Workspace", newWorkspaceId, serverInfo);
-		WabitWorkspace systemWorkspace = WabitServerSession.getSystemWorkspace(serverInfo, this);
-		WabitServerSession newSession = new WabitServerSession(workspaceLocation, systemWorkspace, this);
+		WabitServerSession newSession = new WabitServerSession(workspaceLocation, this);
 		try {
 			newSession.persistWorkspaceToServer();
 		} catch (WabitPersistenceException e) {

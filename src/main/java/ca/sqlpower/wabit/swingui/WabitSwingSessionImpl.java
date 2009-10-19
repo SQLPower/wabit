@@ -649,5 +649,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             SwingUtilities.invokeLater(runner);
         }
     }
+
+	public boolean isEnterpriseServerSession() {
+		return this.delegateSession.isEnterpriseServerSession();
+	}
+
+	public WabitWorkspace getSystemWorkspace() {
+		return this.delegateSession.getSystemWorkspace();
+	}
     
 }

@@ -482,9 +482,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public void addReportTask(ReportTask task, int index) {
-    	reportTasks.add(index, task);
+    	try {
+    		reportTasks.add(index, task);
+    	} catch (IndexOutOfBoundsException e) {
+    		reportTasks.add(task);
+    	}
     	task.setParent(this);
-        fireChildAdded(ReportTask.class, task, index);
+        fireChildAdded(ReportTask.class, task, reportTasks.indexOf(task));
         setEditorPanelModel(task);
     }
     
@@ -893,6 +897,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public boolean isServerWorkspace() {
-    	return this.session instanceof WabitServerSession;
+    	return this.session.isEnterpriseServerSession();
     }
 }

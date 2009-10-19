@@ -109,4 +109,21 @@ public interface WabitSession {
      *            The runnable to run in the background.
      */
     void runInBackground(Runnable runner);
+    
+    /**
+     * Returns true if the current session is in fact a remote session
+     * with the wabit enterprise server.
+     * @return
+     */
+    public boolean isEnterpriseServerSession();
+    
+    /**
+     * This method might return a WabitWorkspace, the system one, located on the
+     * Wabit server, if the current session is backed by a remote server session.
+     * It will return null if it is not a server session or the user doesn't
+     * have access to the system workspace. One can also use isEnterpriseSession()
+     * to verify if this call will return null beforehand.
+     * @return
+     */
+    public WabitWorkspace getSystemWorkspace();
 }

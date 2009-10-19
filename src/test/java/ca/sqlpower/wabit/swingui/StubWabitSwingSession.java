@@ -166,4 +166,12 @@ public class StubWabitSwingSession implements WabitSwingSession {
     public void runInForeground(Runnable runner) {
         runner.run();
     }
+
+	public boolean isEnterpriseServerSession() {
+		return this.delegateSession.isEnterpriseServerSession();
+	}
+
+	public WabitWorkspace getSystemWorkspace() {
+		return this.delegateSession.getSystemWorkspace();
+	}
 }
