@@ -48,8 +48,7 @@ public class PNGImageConverter implements BidirectionalConverter<InputStream, Im
 			for (int next = reader.read(); next != -1; next = reader.read()) {
 				buffer.append((char) next);
 			}
-			byte[] byteArray = new Base64().decode(buffer.toString().getBytes());
-			BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));
+			BufferedImage img = ImageIO.read(new ByteArrayInputStream(buffer.toString().getBytes()));
 			return img;
 		} catch (Exception e) {
 			throw new ConversionException("Cannot convert the given image", e);
