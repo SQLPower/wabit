@@ -733,7 +733,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				//Not rethrowing this exception to not squish the actual exception.
 				logger.error(e);
 			}
-			throw new RuntimeException("Could not add WabitObject as a child.",
+			throw new RuntimeException("Could not add WabitObject " + child.getName() + " with id " + child.getUUID() + " as a child of " + parent.getName() + " with id " + parent.getUUID() + ".",
 					e1);
 		}
 	}
