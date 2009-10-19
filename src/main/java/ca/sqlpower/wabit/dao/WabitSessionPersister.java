@@ -1465,10 +1465,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getQueryCacheProperty(QueryCache query, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("zoomLevel")) {
-			return converter.convertToBasicType(query.getZoomLevel());
 
-		} else if (propertyName.equals("streaming")) {
+		if (propertyName.equals("streaming")) {
 			return converter.convertToBasicType(query.isStreaming());
 
 		} else if (propertyName.equals("streamingRowLimit")) {
@@ -1525,11 +1523,7 @@ public class WabitSessionPersister implements WabitPersister {
 			throws WabitPersistenceException {
 		String uuid = query.getUUID();
 
-		if (propertyName.equals("zoomLevel")) {
-			query.setZoomLevel((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
-
-		} else if (propertyName.equals("streaming")) {
+		if (propertyName.equals("streaming")) {
 			query.setStreaming((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
 
@@ -2492,13 +2486,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getLayoutProperty(Layout layout, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("zoomLevel")) {
-			return converter.convertToBasicType(layout.getZoomLevel());
-
-		} else {
-			throw new WabitPersistenceException(layout.getUUID(),
-					getWabitPersistenceExceptionMessage(layout, propertyName));
-		}
+		throw new WabitPersistenceException(layout.getUUID(),
+				getWabitPersistenceExceptionMessage(layout, propertyName));
 	}
 
 	/**
@@ -2516,14 +2505,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private void commitLayoutProperty(Layout layout, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		if (propertyName.equals("zoomLevel")) {
-			layout.setZoomLevel((Integer) converter.convertToComplexType(
-					newValue, Integer.class));
-
-		} else {
-			throw new WabitPersistenceException(layout.getUUID(),
-					getWabitPersistenceExceptionMessage(layout, propertyName));
-		}
+		throw new WabitPersistenceException(layout.getUUID(),
+				getWabitPersistenceExceptionMessage(layout, propertyName));
 	}
 
 	/**

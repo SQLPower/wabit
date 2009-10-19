@@ -68,6 +68,8 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	public Set<String> getPropertiesToNotPersistOnObjectPersist() {
 		Set<String> noPersist = super.getPropertiesToNotPersistOnObjectPersist();
 		
+		noPersist.add("zoomLevel");
+		
 		//SQLDatabase information that is not persisted. The data source is the persisted part
 		//of the connection.
 		noPersist.add("DBMapping");
@@ -100,6 +102,16 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		noPersist.add("wabitDataSource");
 		
 		return noPersist;
+	}
+	
+	@Override
+	public Set<String> getPropertiesToIgnoreForPersisting() {
+		Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
+		
+		// Not persisted because it does not make sense to change the zoom level for all users.
+		// It should really be independent of how the user prefers to view the query.
+		ignored.add("zoomLevel");
+		return ignored;
 	}
 	
 	protected void setUp() throws Exception {

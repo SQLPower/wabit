@@ -45,6 +45,14 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	ignored.add("pageFormat");
     	ignored.add("printable");
     	ignored.add("varContext");
+    	ignored.add("zoomLevel");
+    	return ignored;
+    }
+    
+    @Override
+    public Set<String> getPropertiesToIgnoreForPersisting() {
+    	Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
+    	ignored.add("zoomLevel");
     	return ignored;
     }
     

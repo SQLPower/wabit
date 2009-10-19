@@ -471,8 +471,9 @@ public class WorkspacePersisterListener implements WabitListener {
 						Page.class, 0);
 
 				// Remaining parameters
-				target.persistProperty(uuid, Layout.PROPERTY_ZOOM,
-						DataType.INTEGER, converter.convertToBasicType(layout.getZoomLevel()));
+				
+				// The zoom property is being ignored here because it does not make much
+				// sense to have the layout zoom change for all users working on it.
 
 			} else if (child instanceof OlapQuery) {
 				OlapQuery olapQuery = (OlapQuery) child;
@@ -521,8 +522,10 @@ public class WorkspacePersisterListener implements WabitListener {
 						WabitConstantsContainer.class, 0);
 				
 				// Remaining properties
-				target.persistProperty(uuid, "zoomLevel", DataType.INTEGER,
-						converter.convertToBasicType(query.getZoomLevel()));
+				
+				// The zoom property is being ignored here because it does not make much
+				// sense to have the query zoom change for all users working on it.
+				
 				target.persistProperty(uuid, "streaming", DataType.BOOLEAN,
 						converter.convertToBasicType(query.isStreaming()));
 				target.persistProperty(uuid, "streamingRowLimit",
