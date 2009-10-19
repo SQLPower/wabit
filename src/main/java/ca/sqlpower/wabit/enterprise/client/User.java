@@ -55,7 +55,11 @@ public class User extends AbstractWabitObject implements UserDetails {
     }
 
     public int childPositionOffset(Class<? extends WabitObject> childType) {
-        return 0;
+    	if (Grant.class.isAssignableFrom(childType)) {
+    		return 0;
+    	} else {
+    		throw new IllegalArgumentException("Users don't have children of type " + childType);
+    	}
     }
 
     public List<? extends WabitObject> getChildren() {
@@ -81,9 +85,13 @@ public class User extends AbstractWabitObject implements UserDetails {
     }
 
     public void addGrant(Grant grant) {
-        this.grants.add(grant);
+    	addGrant(grant, grants.size());
+    }
+    
+    public void addGrant(Grant grant, int index) {
+        this.grants.add(index, grant);
         grant.setParent(this);
-        fireChildAdded(Grant.class, grant, this.grants.indexOf(grant));
+        fireChildAdded(Grant.class, grant, index);
     }
     
     public void removeGrant(Grant grant) {
@@ -92,6 +100,12 @@ public class User extends AbstractWabitObject implements UserDetails {
             this.grants.remove(grant);
             fireChildRemoved(Grant.class, grant, index);
         }
+    }
+    
+    @Override
+    protected void addChildImpl(WabitObject child, int index) {
+    	childPositionOffset(child.getClass());
+    	addGrant((Grant) child, index);
     }
     
     public String getFullName() {
@@ -151,5 +165,10 @@ public class User extends AbstractWabitObject implements UserDetails {
 
 	public boolean isEnabled() {
 		return true;
+	}
+	
+	@Override
+	public String toString() {
+		return "Wabit User \"" + getName() + "\"";
 	}
 }
