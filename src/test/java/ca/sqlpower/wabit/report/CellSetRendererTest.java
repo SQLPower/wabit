@@ -57,6 +57,10 @@ public class CellSetRendererTest extends AbstractWabitObjectTest {
     	//These properties are only defined when a user hovers over a member with their mouse.
     	ignorable.add("memberSelectedAtPoint");
     	ignorable.add("selectedMember");
+    	
+    	//This is always null, there is no actual field for this.
+    	ignorable.add("backgroundColour");
+    	
     	return ignorable;
     }
     

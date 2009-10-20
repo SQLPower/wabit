@@ -65,7 +65,6 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;

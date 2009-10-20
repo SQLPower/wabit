@@ -607,10 +607,10 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new User(username, password);
 
 		} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
-			SQLObjectItem item = (SQLObjectItem) converter
+			StringItem item = (StringItem) converter
 					.convertToComplexType(
 							getPropertyAndRemove(uuid, "delegate"),
-							SQLObjectItem.class);
+							StringItem.class);
 
 			wo = new WabitColumnItem(item);
 
