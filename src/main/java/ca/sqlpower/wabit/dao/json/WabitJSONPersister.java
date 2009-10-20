@@ -22,6 +22,8 @@ package ca.sqlpower.wabit.dao.json;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -55,14 +57,17 @@ public class WabitJSONPersister implements WabitPersister {
 	 * A MessagePasser object that is responsible for transmitting the
 	 * JSONObject contents.
 	 */
-	private MessageSender<JSONObject> messageSender;
+	private final MessageSender<JSONObject> messageSender;
 
+	private final List<JSONObject> messageBuffer;
+	
 	/**
 	 * Create a {@link WabitJSONPersister} that uses the given
 	 * {@link MessageSender} to transmit the JSON content
 	 */
 	public WabitJSONPersister(MessageSender<JSONObject> messageSender) {
 		this.messageSender = messageSender;
+		this.messageBuffer = new ArrayList<JSONObject>();
 	}
 	
 	public void begin() throws WabitPersistenceException{
@@ -76,7 +81,7 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(null, e);
 		}
 		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
+		messageBuffer.add(jsonObject);
 		transactionCount++;
 	}
 
@@ -94,9 +99,12 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(null, e);
 		}
 		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
+		messageBuffer.add(jsonObject);
 		transactionCount--;
 		if (transactionCount == 0) {
+			for (JSONObject obj: messageBuffer) {
+				messageSender.send(obj);
+			}
 			messageSender.flush();
 		}
 	}
@@ -117,9 +125,11 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
 		if (transactionCount == 0) {
+			messageSender.send(jsonObject);
 			messageSender.flush();
+		} else {
+			messageBuffer.add(jsonObject);
 		}
 	}
 
@@ -137,9 +147,11 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
 		if (transactionCount == 0) {
+			messageSender.send(jsonObject);
 			messageSender.flush();
+		} else {
+			messageBuffer.add(jsonObject);
 		}
 	}
 	
@@ -166,9 +178,11 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
 		if (transactionCount == 0) {
+			messageSender.send(jsonObject);
 			messageSender.flush();
+		} else {
+			messageBuffer.add(jsonObject);
 		}
 	};
 	
@@ -183,28 +197,22 @@ public class WabitJSONPersister implements WabitPersister {
 			throw new WabitPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
 		if (transactionCount == 0) {
+			messageSender.send(jsonObject);
 			messageSender.flush();
+		} else {
+			messageBuffer.add(jsonObject);
 		}
 	}
 	
 	public void rollback() throws WabitPersistenceException {
+		// Since this persister does not send messages in a transaction until
+		// commit gets called, rollback doesn't need to send anything. It just
+		// clears the messageBuffer.
 		if (transactionCount <= 0) {
 			throw new WabitPersistenceException(null, "Rollback attempted while not in a transaction");
 		}
-		JSONObject jsonObject = new JSONObject();
-		try {
-			jsonObject.put("method", WabitPersistMethod.rollback);
-			// Need to put this in or anything calling get on the key "uuid"
-			// will throw a JSONException
-			jsonObject.put("uuid", JSONObject.NULL);
-		} catch (JSONException e) {
-			throw new WabitPersistenceException(null, e);
-		}
-		logger.debug(jsonObject);
-		messageSender.send(jsonObject);
-		messageSender.flush();
+		messageBuffer.clear();
 	}
 	
 	public MessageSender<JSONObject> getMessageSender() {

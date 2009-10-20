@@ -207,36 +207,38 @@ public class WabitJSONPersisterTest extends TestCase {
 		persister.rollback();
 	}
 
+	
+	private class TestingMessageSender implements MessageSender<JSONObject> {
+		private boolean commitCalled = false;
+		
+		public void send(JSONObject content) throws WabitPersistenceException {
+			try {
+				String method = content.getString("method");
+				if (!method.equals(WabitPersistMethod.commit.toString())) {
+					assertEquals("WabitJSONPersister sent calls to the message sender in a transaction before commit got called!", true, commitCalled);
+				} else {
+					commitCalled = true;
+				}
+			} catch (JSONException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		public void flush() throws WabitPersistenceException {
+			// no-op
+		}
+	}
 
 	public void testTransactionOnlyCommitSendsMessages() throws Exception {
-		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
-			private boolean commitCalled = false;
-			
-			public void send(JSONObject content) throws WabitPersistenceException {
-				try {
-					String method = content.getString("method");
-					if (!method.equals(WabitPersistMethod.commit.toString())) {
-						assertEquals("WabitJSONPersister sent calls to the message sender in a transaction before commit got called!", true, commitCalled);
-					} else {
-						commitCalled = true;
-					}
-				} catch (JSONException e) {
-					throw new RuntimeException(e);
-				}
-			}
-			
-			public void flush() throws WabitPersistenceException {
-				// no-op
-			}
-		};
-		
-		persister = new WabitJSONPersister(messagePasser);
+		TestingMessageSender messageSender = new TestingMessageSender();
+		persister = new WabitJSONPersister(messageSender);
 		
 		persister.begin();
 		persister.persistObject("parentUUID", "type", "uuid", 0);
 		persister.persistProperty("uuid", "propertyName", DataType.STRING, "old");
 		persister.persistProperty("uuid", "propertyName", DataType.STRING, "old", "new");
 		persister.removeObject("parentUUID", "uuid");
+		messageSender.commitCalled = true;
 		persister.commit();
 	}
 }
