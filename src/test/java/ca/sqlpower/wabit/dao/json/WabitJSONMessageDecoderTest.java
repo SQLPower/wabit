@@ -221,8 +221,8 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("uuid", "uuid");
 		json.put("type", Datatype.BOOLEAN);
 		json.put("propertyName", "property");
-		json.put("newValue", "new");
-		json.put("oldValue", "old");
+		json.put("newValue", true);
+		json.put("oldValue", false);
 		JSONArray messages = new JSONArray();
 		messages.put(json);
 		
@@ -272,7 +272,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		json.put("uuid", "uuid");
 		json.put("type", Datatype.BOOLEAN);
 		json.put("propertyName", "property");
-		json.put("newValue", "new");
+		json.put("newValue", true);
 		JSONArray messages = new JSONArray();
 		messages.put(json);
 		
