@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.dao.json;
 
 import java.io.ByteArrayInputStream;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -61,7 +63,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 *            The {@link WabitPersister} that this decoder will make method
 	 *            calls to
 	 */
-	public WabitJSONMessageDecoder(WabitPersister persister) {
+	public WabitJSONMessageDecoder(@Nonnull WabitPersister persister) {
 		this.persister = persister;
 	}
 
@@ -92,7 +94,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 * See the method documentation of {@link WabitPersister} for full details
 	 * on the expected values
 	 */
-	public void decode(String message) throws WabitPersistenceException {
+	public void decode(@Nonnull String message) throws WabitPersistenceException {
 		String uuid = null;
 		JSONObject jsonObject = null;
 		try {
@@ -155,7 +157,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		}
 	}
 
-	private static Object getNullable(JSONObject jo, DataType type, String propName) throws JSONException {
+	private static Object getNullable(@Nonnull JSONObject jo, String propName) throws JSONException {
 		final Object value = jo.get(propName);
 		if (value == JSONObject.NULL) {
 			return null;
@@ -164,8 +166,8 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		}
 	}
 	
-	private static Object getWithType(JSONObject jo, DataType type, String propName) throws JSONException {
-		if (getNullable(jo, type, propName) == null) return null;
+	private static Object getWithType(@Nonnull JSONObject jo, DataType type, String propName) throws JSONException {
+		if (getNullable(jo, propName) == null) return null;
 		
 		switch (type) {
 		case BOOLEAN:
@@ -175,7 +177,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		case INTEGER:	
 			return Integer.valueOf(jo.getInt(propName));
 		case PNG_IMG:
-			getNullable(jo, type, propName);
+			getNullable(jo, propName);
 			JSONArray array = jo.getJSONArray(propName);
 			byte[] bytes = new byte[array.length()];
 			for (int i = 0; i < array.length(); i++) {
@@ -187,7 +189,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		case STRING:
 		case REFERENCE:
 		default:
-			return getNullable(jo, type, propName);
+			return getNullable(jo, propName);
 		}
 	}
 }
