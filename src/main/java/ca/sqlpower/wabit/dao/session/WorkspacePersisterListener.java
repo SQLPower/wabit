@@ -553,7 +553,7 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(query.getExecuteQueriesWithCrossJoins()));
 				target.persistProperty(uuid, "dataSource",
 						DataType.STRING,
-						converter.convertToBasicType(query.getWabitDataSource()));
+						converter.convertToBasicType(query.getDataSource()));
 				
 			} else if (child instanceof ReportTask) {
 				ReportTask task = (ReportTask) child;

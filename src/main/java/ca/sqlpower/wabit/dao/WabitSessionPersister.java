@@ -1496,7 +1496,7 @@ public class WabitSessionPersister implements WabitPersister {
 					.getExecuteQueriesWithCrossJoins());
 
 		} else if (propertyName.equals("dataSource")) {
-			return converter.convertToBasicType(query.getWabitDataSource());
+			return converter.convertToBasicType(query.getDataSource());
 
 		} else {
 			throw new WabitPersistenceException(query.getUUID(),
@@ -1560,8 +1560,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSourceWithoutReset((JDBCDataSource) ((WabitDataSource) converter
-					.convertToComplexType(newValue, WabitDataSource.class)).getSPDataSource());
+			query.setDataSourceWithoutReset((JDBCDataSource) converter.convertToComplexType(
+					newValue, JDBCDataSource.class)); 
 
 		} else {
 			throw new WabitPersistenceException(uuid, "Invalid property: "

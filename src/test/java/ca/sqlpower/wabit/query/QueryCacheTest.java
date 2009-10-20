@@ -160,7 +160,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		WabitChildEvent evt = listener.getLastEvent();
 		assertEquals(queryCache, evt.getSource());
 		assertEquals(queryChild, evt.getChild());
-		assertEquals(1, evt.getIndex());
+		assertEquals(0, evt.getIndex());
 		assertEquals(container, ((WabitTableContainer) queryChild).getDelegate());
 	}
 	
@@ -190,7 +190,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
         WabitChildEvent evt = listener.getLastEvent();
         assertEquals(queryCache, evt.getSource());
         assertEquals(container, ((WabitTableContainer) evt.getChild()).getDelegate());
-        assertEquals(1, evt.getIndex());
+        assertEquals(0, evt.getIndex());
     }
 	
 	
