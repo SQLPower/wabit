@@ -2866,9 +2866,6 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("VAlign")) {
 			return converter.convertToBasicType(iRenderer.getVAlign());
 			
-		} else if (propertyName.equals("backgroundColour")) {
-			return converter.convertToBasicType(iRenderer.getBackgroundColour());
-
 		} else {
 			throw new WabitPersistenceException(
 					iRenderer.getUUID(),
@@ -2912,9 +2909,6 @@ public class WabitSessionPersister implements WabitPersister {
 			iRenderer.setVAlign((VerticalAlignment) converter
 					.convertToComplexType(newValue, VerticalAlignment.class));
 			
-		} else if (propertyName.equals("backgroundColour")) {
-			//This is not implemented yet, placeholder for the future.
-
 		} else {
 			throw new WabitPersistenceException(
 					iRenderer.getUUID(),

@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -27,6 +29,13 @@ public class ImageRendererTest extends AbstractWabitObjectTest {
     
     private ImageRenderer renderer;
     private WabitImage image;
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignored.add("backgroundColour");
+    	return ignored;
+    }
     
     @Override
     protected void setUp() throws Exception {
