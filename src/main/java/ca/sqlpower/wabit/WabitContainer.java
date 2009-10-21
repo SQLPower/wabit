@@ -68,7 +68,7 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 
         public void containerChildAdded(ContainerChildEvent evt) {
             if (children.size() > evt.getIndex() && 
-                    children.get(evt.getIndex()).equals(evt.getChild())) {
+                    children.get(evt.getIndex()).getDelegate().equals(evt.getChild())) {
                 //a child object was added for this event already from addChildImpl
                 //and doesn't need to be added again.
                 return;
