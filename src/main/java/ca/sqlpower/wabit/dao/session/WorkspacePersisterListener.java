@@ -96,7 +96,8 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            This persister will have persist methods called on it when
 	 *            events occur in the workspace in the given session.
 	 */
-	public static WorkspacePersisterListener attachListener(final WabitSession session, WabitPersister targetPersister, WabitSessionPersister eventSource) {
+	public static WorkspacePersisterListener attachListener(
+			final WabitSession session, WabitPersister targetPersister, WabitSessionPersister eventSource) {
 		final WorkspacePersisterListener listener = 
 			new WorkspacePersisterListener(session, targetPersister, eventSource);
 		WabitUtils.listenToHierarchy(session.getWorkspace(), listener);
@@ -772,7 +773,10 @@ public class WorkspacePersisterListener implements WabitListener {
 		
 		//ignoring this property to not force all users to view the same
 		//editor.
+		// FIXME These exceptions should be factored out of here. Create a list of non persisted properties.
 		if (propertyName.equals("editorPanelModel") && source instanceof WabitWorkspace) return;
+		if (propertyName.equals("zoomLevel")) return;
+		
 		
 		//XXX special case that I want to remove even though I'm implementing it
 		SPDataSource ds = null;
