@@ -22,7 +22,9 @@ package ca.sqlpower.wabit;
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
@@ -42,6 +44,8 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class StubWabitSessionContext implements WabitSessionContext {
+	
+	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
 	public void deregisterChildSession(WabitSession child) {
 	    // no op
@@ -140,8 +144,14 @@ public class StubWabitSessionContext implements WabitSessionContext {
     }
 
     public SQLDatabase getDatabase(JDBCDataSource ds) {
-        // TODO Auto-generated method stub
-        return null;
+    	if (ds == null) return null;
+        SQLDatabase db = databases.get(ds);
+        if (db == null) {
+            ds = new JDBCDataSource(ds);
+            db = new SQLDatabase(ds);
+            databases.put(ds, db);
+        }
+        return db;
     }
 
     public OlapConnection createConnection(Olap4jDataSource dataSource)
