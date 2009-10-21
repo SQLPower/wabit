@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.TableContainer;
 
 /**
@@ -39,7 +40,13 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
 
     @Override
     protected WabitColumnItem createWabitItemChild(Item item) {
-        return new WabitColumnItem(item);
+    	if (!(item instanceof SQLObjectItem)) {
+    		throw new IllegalArgumentException("The item to add to " + getClass() + " with" +
+    				" name \"" + getName() + "\" and UUID + \"" + getUUID() + "\" must" +
+    						" be of type " + SQLObjectItem.class.getName() + ", not " + 
+    						item.getClass() + ".");
+    	}
+        return new WabitColumnItem((SQLObjectItem) item);
     }
 
     @Override

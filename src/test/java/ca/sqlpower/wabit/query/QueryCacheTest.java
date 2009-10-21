@@ -27,6 +27,7 @@ import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.QueryChangeAdapter;
 import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
@@ -144,7 +145,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	 * {@link WabitItem}s.
 	 */
 	public void testWabitContainerAdded() throws Exception {
-		Item item = new StringItem("ItemName");
+		Item item = new SQLObjectItem("ItemName", "ItemUUID");
 		Container container = new ItemContainer("Container");
 		container.addItem(item);
 		item.setSelected(null);
@@ -169,7 +170,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	 * is removed from the query and an event is fired appropriately.
 	 */
 	public void testContainerRemovedFiresEvents() throws Exception {
-	    Item item = new StringItem("ItemName");
+	    Item item = new SQLObjectItem("ItemName", "ItemUUID");
         Container container = new ItemContainer("Container");
         container.addItem(item);
         item.setSelected(null);
@@ -200,8 +201,8 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
      */
     public void testAddAndRemoveContainer() throws Exception {
         Container tableContainer = new ItemContainer("container");
-        Item item1 = new StringItem("item1");
-        Item item2 = new StringItem("item2");
+        Item item1 = new SQLObjectItem("item1", "item1-uuid");
+        Item item2 = new SQLObjectItem("item2", "item2-uuid");
         tableContainer.addItem(item1);
         tableContainer.addItem(item2);
         WabitTableContainer container = new WabitTableContainer(tableContainer);
@@ -217,14 +218,14 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
     
     public void testAddAndRemoveJoin() throws Exception {
         Container tableContainer = new ItemContainer("container");
-        Item item1 = new StringItem("item1");
-        Item item2 = new StringItem("item2");
+        Item item1 = new SQLObjectItem("item1", "item1-uuid");
+        Item item2 = new SQLObjectItem("item2", "item2-uuid");
         tableContainer.addItem(item1);
         tableContainer.addItem(item2);
         queryCache.addTable(tableContainer);
         Container tableContainer2 = new ItemContainer("container2");
-        Item item3 = new StringItem("item3");
-        Item item4 = new StringItem("item4");
+        Item item3 = new SQLObjectItem("item3", "item4-uuid");
+        Item item4 = new SQLObjectItem("item4", "item4-uuid");
         tableContainer2.addItem(item3);
         tableContainer2.addItem(item4);
         queryCache.addTable(tableContainer2);

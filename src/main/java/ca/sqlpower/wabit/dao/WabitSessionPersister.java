@@ -607,12 +607,17 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new User(username, password);
 
 		} else if (type.equals(WabitColumnItem.class.getSimpleName())) {
-			SQLObjectItem item = (SQLObjectItem) converter
+			Item item = (Item) converter
 					.convertToComplexType(
 							getPropertyAndRemove(uuid, "delegate"),
-							SQLObjectItem.class);
+							Item.class);
+			
+			if (!(item instanceof SQLObjectItem)) {
+				throw new ClassCastException("WabitColumnItem with UUID " + uuid + 
+						" cannot contain a delegate of type " + item.getClass());
+			}
 
-			wo = new WabitColumnItem(item);
+			wo = new WabitColumnItem((SQLObjectItem) item);
 
 		} else if (type.equals(WabitConstantsContainer.class.getSimpleName())) {
 			Container delegate = (Container) converter.convertToComplexType(
@@ -621,10 +626,15 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new WabitConstantsContainer(delegate);
 
 		} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
-			StringItem item = (StringItem) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "delegate"), StringItem.class);
+			Item item = (Item) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "delegate"), Item.class);
+			
+			if (!(item instanceof StringItem)) {
+				throw new ClassCastException("WabitConstantItem with UUID " + uuid + 
+						" cannot contain a delegate of type " + item.getClass());
+			}
 
-			wo = new WabitConstantItem(item);
+			wo = new WabitConstantItem((StringItem) item);
 
 		} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 			String dsName = (String) converter.convertToComplexType(
@@ -1248,15 +1258,6 @@ public class WabitSessionPersister implements WabitPersister {
 		return "Cannot persist property \"" + propertyName + "\" on "
 				+ wo.getClass() + " with name \"" + wo.getName()
 				+ "\" and UUID \"" + wo.getUUID() + "\"";
-	}
-
-	private String getNotDefinedPropertyExceptionMessage(WabitObject wo,
-			String propertyName, Object newValue) {
-		return "Could not commit the property \"" + propertyName + "\" on "
-				+ wo.getClass() + " with name \"" + wo.getName()
-				+ "\" and UUID \"" + wo.getUUID() + " with new value \""
-				+ newValue + "\"" + ((newValue != null) ? " which is of data type \""
-				+ newValue.getClass() + "\"" : "");
 	}
 
 	/**
@@ -2669,10 +2670,9 @@ public class WabitSessionPersister implements WabitPersister {
 					Double.class));
 
 		} else if (propertyName.equals("contentRenderer")) {
-			contentBox
-					.setContentRenderer((ReportContentRenderer) converter
-							.convertToComplexType(newValue,
-									ReportContentRenderer.class));
+			contentBox.setContentRenderer(
+					(ReportContentRenderer) converter.convertToComplexType(
+							newValue, ReportContentRenderer.class));
 
 		} else if (propertyName.equals("font")) {
 			contentBox.setFont((Font) converter.convertToComplexType(newValue,

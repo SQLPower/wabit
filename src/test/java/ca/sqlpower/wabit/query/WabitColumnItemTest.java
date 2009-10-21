@@ -20,7 +20,7 @@
 package ca.sqlpower.wabit.query;
 
 import ca.sqlpower.query.ItemContainer;
-import ca.sqlpower.query.StringItem;
+import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.QueryCache;
@@ -35,7 +35,7 @@ public class WabitColumnItemTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        StringItem delegate = new StringItem("name"); 
+        SQLObjectItem delegate = new SQLObjectItem("name", "SQLObjectItem"); 
         
         ItemContainer delContainer = new ItemContainer("container");
         delContainer.addItem(delegate);

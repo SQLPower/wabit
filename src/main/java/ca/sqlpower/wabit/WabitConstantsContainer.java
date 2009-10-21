@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.StringItem;
 
 /**
  * This class represents a specific implementation of {@link WabitContainer} that
@@ -35,7 +36,13 @@ public class WabitConstantsContainer extends WabitContainer<WabitConstantItem> {
 
     @Override
     protected WabitConstantItem createWabitItemChild(Item item) {
-        return new WabitConstantItem(item);
+    	if (!(item instanceof StringItem)) {
+    		throw new IllegalArgumentException("The item to add to " + getClass() + " with" +
+    				" name \"" + getName() + "\" and UUID + \"" + getUUID() + "\" must" +
+    						" be of type " + StringItem.class.getName() + ", not " + 
+    						item.getClass() + ".");
+    	}
+        return new WabitConstantItem((StringItem) item);
     }
 
     @Override

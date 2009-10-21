@@ -19,14 +19,14 @@
 
 package ca.sqlpower.wabit;
 
-import ca.sqlpower.query.Item;
+import ca.sqlpower.query.SQLObjectItem;
 
 /**
  * This {@link WabitItem} is more specific to a column in a table.
  */
 public class WabitColumnItem extends WabitItem {
 
-    public WabitColumnItem(Item delegate) {
+    public WabitColumnItem(SQLObjectItem delegate) {
         super(delegate);
     }
 

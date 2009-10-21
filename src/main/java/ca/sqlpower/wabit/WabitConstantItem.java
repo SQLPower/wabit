@@ -19,14 +19,14 @@
 
 package ca.sqlpower.wabit;
 
-import ca.sqlpower.query.Item;
+import ca.sqlpower.query.StringItem;
 
 /**
  * Defines a {@link WabitItem} to be in the constants table.
  */
 public class WabitConstantItem extends WabitItem {
 
-    public WabitConstantItem(Item delegate) {
+    public WabitConstantItem(StringItem delegate) {
         super(delegate);
     }
 
