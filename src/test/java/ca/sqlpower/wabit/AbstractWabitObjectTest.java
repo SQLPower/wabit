@@ -632,8 +632,15 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		assertTrue(foundChange.isUnconditional());
     		assertEquals(wo.getUUID(), foundChange.getUUID());
     		Object value = PropertyUtils.getSimpleProperty(wo, descriptor);
-    		System.out.println("Property \"" + descriptor + "\": expected \"" + value + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
-			Object valueConvertedToBasic = factory.convertToBasicType(value);
+    		
+    		//XXX will replace this later
+    		List<Object> additionalVals = new ArrayList<Object>();
+    		if (wo instanceof OlapQuery && descriptor.equals("currentCube")) {
+    			additionalVals.add(((OlapQuery) wo).getOlapDataSource());
+    		}
+    		Object valueConvertedToBasic = factory.convertToBasicType(value, additionalVals.toArray());
+    		System.out.println("Property \"" + descriptor + "\": expected \"" + valueConvertedToBasic + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
+    		
 			assertEquals(valueConvertedToBasic, foundChange.getNewValue());
     	}
 	}

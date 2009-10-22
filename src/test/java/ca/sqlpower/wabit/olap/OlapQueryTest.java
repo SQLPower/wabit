@@ -28,10 +28,14 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 
+import org.apache.commons.beanutils.ConversionException;
 import org.olap4j.Axis;
 import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
+import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
+import org.olap4j.metadata.Schema;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
@@ -111,6 +115,27 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
             }
         });
         
+        String catalogName = query.getCatalogName();
+        String schemaName = query.getSchemaName();
+        String cubeName = query.getCubeName();
+        
+		Catalog catalog;
+		try {
+			catalog = connectionMapping.createConnection(ds).getCatalogs().get(catalogName);
+		} catch (Exception ex) {
+			throw new ConversionException("Error connecting to data source " + catalogName + 
+					" to get cube", ex);
+		}
+		Schema schema;
+		try {
+			schema = catalog.getSchemas().get(schemaName);
+			Cube cube = schema.getCubes().get(cubeName);
+			query.setCurrentCube(cube, false);
+			
+		} catch (OlapException e) {
+			throw new ConversionException("The cube could not be retrieved.", e);
+		}
+		
         getWorkspace().addOlapQuery(query);
     }
     
