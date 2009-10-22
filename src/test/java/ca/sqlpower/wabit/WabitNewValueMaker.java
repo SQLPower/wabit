@@ -98,7 +98,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 }
             });
         } catch (Exception e) {
-            throw new RuntimeException(e);
+        	throw new RuntimeException(e);
         }
     }
 
@@ -108,14 +108,22 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         
         if (valueType.equals(WabitObject.class)) {
         	WabitImage image = new WabitImage();
-        	workspace.addImage(image);
+        	
+        	if (!propName.equals("addImage")) {
+        		workspace.addImage(image);
+        	}
+        	
             newValue = image;
             
         } else if (valueType.equals(WabitDataSource.class)) {
             final JDBCDataSource ds = new JDBCDataSource(new PlDotIni());
             ds.setName("test");
             WabitDataSource wabitDataSource = new WabitDataSource(ds);
-            workspace.addDataSource(wabitDataSource);
+            
+            if (!propName.equals("addDataSource")) {
+            	workspace.addDataSource(wabitDataSource);
+            }
+            
             newValue = wabitDataSource;
             
         } else if (valueType.equals(QueryCache.class)) {
@@ -125,24 +133,37 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
                 }
             });
             
-            workspace.addQuery(query, workspace.getSession());
+            if (!propName.equals("addQuery")) {
+            	workspace.addQuery(query, workspace.getSession());
+            }
+            
             newValue = query;
             
         } else if (valueType.equals(Report.class)) {
         	Report report = new Report("testing layout");
-            workspace.addReport(report);
+        	
+        	if (!propName.equals("addReport")) {
+        		workspace.addReport(report);
+        	}
+        	
             newValue = report;
             
         } else if (valueType.equals(ContentBox.class)) {
         	ContentBox cb = new ContentBox();
-        	Report report = (Report) makeNewValue(Report.class, null, "Made for ContentBox");
-        	report.getPage().addContentBox(cb);
+        	
+        	if (!propName.equals("addContentBox")) {
+        		Report report = (Report) makeNewValue(Report.class, null, "Made for ContentBox");
+        		report.getPage().addContentBox(cb);
+        	}
+        	
         	newValue = cb;
         	
         } else if (valueType.equals(ReportContentRenderer.class)) {
         	Label label = new Label();
+        	
         	ContentBox cb = (ContentBox) makeNewValue(ContentBox.class, null, "Made for Label");
         	cb.setContentRenderer(label);
+        	
         	newValue = label;
         	
         } else if (valueType.equals(Guide.class)) {
@@ -152,8 +173,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 guide = new Guide(Axis.HORIZONTAL, 123);
             }
-            Report report = (Report) makeNewValue(Report.class, null, "Made for Guide");
-            report.getPage().addGuide(guide);
+            
+            if (!propName.equals("addGuide")) {
+            	Report report = (Report) makeNewValue(Report.class, null, "Made for Guide");
+            	report.getPage().addGuide(guide);
+            }
+            
             newValue = guide;
             
         } else if (valueType.equals(HorizontalAlignment.class)) {
@@ -162,86 +187,119 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = HorizontalAlignment.CENTER;
             }
+            
         } else if (valueType.equals(VerticalAlignment.class)) {
             if (oldVal == VerticalAlignment.MIDDLE) {
                 newValue = VerticalAlignment.TOP;
             } else {
                 newValue = VerticalAlignment.MIDDLE;
             }
+            
         } else if (valueType.equals(PageOrientation.class)) {
             if (oldVal == PageOrientation.PORTRAIT) {
                 newValue = PageOrientation.LANDSCAPE;
             } else {
                 newValue = PageOrientation.PORTRAIT;
             }
+            
         } else if (valueType.equals(DataType.class)) {
             if (oldVal == DataType.DATE) {
                 newValue = DataType.NUMERIC;
             } else {
                 newValue = DataType.DATE;
             }
+            
         } else if (valueType.equals(Item.class)) {
         	newValue = new StringItem("item");
+        	
         } else if (valueType.equals(Color.class)) {
         	if (oldVal != null) {
         		newValue = new Color(0x224466);
         	} else {
         		newValue = new Color(0x001122);
         	}
+        	
         } else if (valueType.equals(BorderStyles.class)) {
         	if (oldVal != null) {
         		newValue = BorderStyles.FULL;
         	} else {
         		newValue = BorderStyles.NONE;
         	}
+        	
         } else if (valueType.equals(Container.class)) {
         	if (oldVal != null) {
         		newValue = new ItemContainer("New Item Container");
         	} else {
         		newValue = new ItemContainer("Newer Item Container");
         	}
+        	
         } else if (valueType.equals(Item.class)) {
         	if (oldVal != null) {
         		newValue = new StringItem("New String Item");
         	} else {
         		newValue = new StringItem("Newer String Item");
         	}
+        	
         } else if (valueType.equals(OlapQuery.class)) {
         	OlapQuery olapQuery = new OlapQuery(new StubWabitSessionContext());
-        	workspace.addOlapQuery(olapQuery);
+        	
+        	if (!propName.equals("addOlapQuery")) {
+        		workspace.addOlapQuery(olapQuery);
+        	}
+        	
         	newValue = olapQuery;
         	
-        } else if (valueType.equals(WabitOlapAxis.class)) { 
+        } else if (valueType.equals(WabitOlapAxis.class)) {
         	WabitOlapAxis axis = new WabitOlapAxis(org.olap4j.Axis.ROWS);
-        	OlapQuery olapQuery = (OlapQuery) makeNewValue(OlapQuery.class, null, 
-        			"Made for WabitOlapAxis");
-        	olapQuery.addAxis(axis);
+        	
+        	if (!propName.equals("addAxis")) {
+        		OlapQuery olapQuery = (OlapQuery) makeNewValue(OlapQuery.class, null, 
+        				"Made for WabitOlapAxis");
+        		olapQuery.addAxis(axis);
+        	}
+        	
         	newValue = axis;
         	
         } else if (valueType.equals(WabitOlapDimension.class)) {
         	WabitOlapDimension dimension = new WabitOlapDimension("Geography");
-        	WabitOlapAxis axis = (WabitOlapAxis) makeNewValue(WabitOlapAxis.class, null, 
-        			"Made for WabitOlapDimension");
-        	axis.addDimension(dimension);
+        	
+        	if (!propName.equals("addDimension")) {
+        		WabitOlapAxis axis = (WabitOlapAxis) makeNewValue(WabitOlapAxis.class, null, 
+        				"Made for WabitOlapDimension");
+        		axis.addDimension(dimension);
+        	}
+        	
         	newValue = dimension;
         	
         } else if (valueType.equals(WabitOlapInclusion.class)) {
         	WabitOlapInclusion inclusion = new WabitOlapInclusion(Operator.MEMBER, "[Geography].[World]");
-        	WabitOlapDimension dimension = (WabitOlapDimension) makeNewValue(
-        			WabitOlapDimension.class, null, "Made for WabitOlapInclusion");
-        	dimension.addInclusion(inclusion);
+        	
+        	if (!propName.equals("addInclusion")) {
+        		WabitOlapDimension dimension = (WabitOlapDimension) makeNewValue(
+        				WabitOlapDimension.class, null, "Made for WabitOlapInclusion");
+        		dimension.addInclusion(inclusion);
+        	}
+        	
         	newValue = inclusion;
         	
         } else if (valueType.equals(WabitOlapExclusion.class)) {
         	WabitOlapExclusion exclusion = new WabitOlapExclusion(Operator.MEMBER, "[Geography].[World].[Africa]");
-        	WabitOlapDimension dimension = (WabitOlapDimension) makeNewValue(
-        			WabitOlapDimension.class, null, "Made for WabitOlapExclusion");
-        	dimension.addExclusion(exclusion);
+        	
+        	if (!propName.equals("addExclusion")) {
+        		WabitOlapDimension dimension = (WabitOlapDimension) makeNewValue(
+        				WabitOlapDimension.class, null, "Made for WabitOlapExclusion");
+        		dimension.addExclusion(exclusion);
+        	}
+        	
         	newValue = exclusion;
         	
         } else if (valueType.equals(WabitImage.class)) {
             WabitImage image = new WabitImage();
-            workspace.addImage(image);
+            
+            if (!propName.equals("addImage")) {
+            	workspace.addImage(image);
+            }
+            
             newValue = image;
             
         } else if (valueType.equals(GroupAndBreak.class)) {
@@ -250,17 +308,26 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = GroupAndBreak.GROUP;
             }
+            
         } else if (valueType.equals(WabitSession.class)) {
             newValue = new StubWabitSession(new StubWabitSessionContext());
             
         } else if (valueType.equals(Chart.class)) {
             Chart chart = new Chart();
-            workspace.addChart(chart);
+            
+            if (!propName.equals("addChart")) {
+            	workspace.addChart(chart);
+            }
+            
             newValue = chart;
             
         } else if (valueType.equals(Template.class)) {
             Template template = new Template("Some name");
-            workspace.addTemplate(template);
+            
+            if (!propName.equals("addTemplate")) {
+            	workspace.addTemplate(template);
+            }
+            
             newValue = template;
             
         } else if (valueType.equals(Page.class)) {
@@ -269,8 +336,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         } else if (valueType.equals(ChartColumn.class)) {
             ChartColumn chartColumn = new ChartColumn("New column", 
                     ca.sqlpower.wabit.report.chart.ChartColumn.DataType.NUMERIC);
-            Chart chart = (Chart) makeNewValue(Chart.class, null, "Made for ChartColumn");
-            chart.addChartColumn(chartColumn);
+            
+            if (!propName.equals("addChartColumn")) {
+            	Chart chart = (Chart) makeNewValue(Chart.class, null, "Made for ChartColumn");
+            	chart.addChartColumn(chartColumn);
+            }
+            
             newValue = chartColumn;
             
         } else if (valueType.equals(LegendPosition.class)) {
@@ -279,16 +350,22 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = LegendPosition.LEFT;
             }
+            
         } else if (valueType.equals(DecimalFormat.class)) {
             if (oldVal != null && oldVal.equals(new DecimalFormat("##,##"))) {
                 newValue = new DecimalFormat("##0#");
             } else {
                 newValue = new DecimalFormat("##,##");
             }
+            
         } else if (valueType.equals(ResultSetProducer.class)) {
             QueryCache query = new QueryCache(new StubSQLDatabaseMapping());
             query.setName("New query");
-            workspace.addQuery(query, workspace.getSession());
+            
+            if (!propName.equals("addQuery")) {
+            	workspace.addQuery(query, workspace.getSession());
+            }
+            
             newValue = query;
             
         } else if (valueType.equals(ColumnRole.class)) {
@@ -297,18 +374,21 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             } else {
                 newValue = ColumnRole.CATEGORY;
             }
+            
         } else if (valueType.equals(ChartType.class)) {
             if (oldVal != null && oldVal.equals(ChartType.BAR)) {
                 newValue = ChartType.PIE;
             } else {
                 newValue = ChartType.BAR;
             }
+            
         } else if (valueType.equals(Cube.class)) {
             try {
                 newValue = connectionPool.getConnection().getSchema().getCubes().get("World Countries");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+            
         } else if (valueType.equals(Member.class)) {
         	try {
         		//This train wreck gets the first member in the first dimension of a basic cube.
@@ -317,26 +397,42 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
+			
         } else if (valueType.equals(User.class)) {
         	User user = new User("New User", "");
-        	workspace.addUser(user);
+        	
+        	if (!propName.equals("addUser")) {
+        		workspace.addUser(user);
+        	}
         	newValue = user;
         	
         } else if (valueType.equals(Group.class)) {
         	Group group = new Group("New Group");
-        	workspace.addGroup(group);
+        	
+        	if (!propName.equals("addGroup")) {
+        		workspace.addGroup(group);
+        	}
+        	
         	newValue = group;
         	
         } else if (valueType.equals(Grant.class)) {
         	Grant grant = new Grant(null, WabitWorkspace.class.getCanonicalName(), 
         			false, false, false, false, false);
-        	Group group = (Group) makeNewValue(Group.class, null, "Made for Grant");
-        	group.addGrant(grant);
+        	
+        	if (!propName.equals("addGrant")) {
+        		Group group = (Group) makeNewValue(Group.class, null, "Made for Grant");
+        		group.addGrant(grant);
+        	}
+        	
         	newValue = grant;
         	
         } else if (valueType.equals(ReportTask.class)) {
         	ReportTask reportTask = new ReportTask();
-        	workspace.addReportTask(reportTask);
+        	
+        	if (!propName.equals("addReportTask")) {
+        		workspace.addReportTask(reportTask);
+        	}
+        	
         	newValue = reportTask;
         	
         } else if (valueType.equals(Image.class)) {
@@ -345,10 +441,15 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	} else {
         		newValue = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
         	}
+        	
         } else if (valueType.equals(GroupMember.class)) {
         	GroupMember groupMember = new GroupMember(new User("username", "password"));
-        	Group group = (Group) makeNewValue(Group.class, null, "Made for GroupMember");
-        	group.addMember(groupMember);
+        	
+        	if (!propName.equals("addMember")) {
+        		Group group = (Group) makeNewValue(Group.class, null, "Made for GroupMember");
+        		group.addMember(groupMember);
+        	}
+        	
         	newValue = groupMember;
         	
         } else if (valueType.equals(OrderByArgument.class)) {
@@ -357,6 +458,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	} else {
         		newValue = OrderByArgument.ASC;
         	}
+        	
         } else if (valueType.equals(WabitWorkspace.class)) {
         	//The new workspace has to be in the workspace, 
         	//but the workspace cannot have a new workspace in the workspace....?
