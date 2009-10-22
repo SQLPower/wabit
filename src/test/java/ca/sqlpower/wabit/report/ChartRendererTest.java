@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.util.Set;
+
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
@@ -34,10 +36,18 @@ public class ChartRendererTest extends AbstractWabitObjectTest {
     }
     
     @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignored.add("backgroundColour");
+    	return ignored;
+    }
+    
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         chart = new Chart();
         chart.setName("Main chart");
+        getWorkspace().addChart(chart);
         renderer = new ChartRenderer(chart);
         renderer.setName("Main chart renderer");
         
