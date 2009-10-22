@@ -61,6 +61,9 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      */
     public static final String DISABLE_QUERY_AUTO_EXECUTE = "disableQueryAutoExecute";
     
+	public static final String NEW_WORKSPACE_URL = "/ca/sqlpower/wabit/new_workspace.wabit";
+	
+    
 	DataSourceCollection<SPDataSource> getDataSources();
 	
 	/**
