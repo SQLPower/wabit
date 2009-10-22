@@ -26,8 +26,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.TestCase;
@@ -47,6 +49,8 @@ import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.dao.PersisterUtils;
+import ca.sqlpower.wabit.dao.StubWabitPersister;
+import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
@@ -80,6 +84,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     private WabitSession session;
     
     private NewValueMaker valueMaker;
+
+    /**
+     * A converter for use in tests involving persisting objects.
+     */
+	private SessionPersisterSuperConverter converterFactory;
     
     public WabitWorkspace getWorkspace() {
     	return session.getWorkspace();
@@ -159,6 +168,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	};
     	
     	valueMaker = new WabitNewValueMaker(getWorkspace());
+    	
+    	converterFactory = new SessionPersisterSuperConverter(session, getWorkspace());
     }
 
 	/**
@@ -671,6 +682,109 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             }
         }
     }
+    
+    /**
+     * This test will set all of the properties in a WabitObject in one transaction then
+     * after committing the next persister after it will throw an exception causing the
+     * persister to undo all of the changes it just made.
+     */
+    public void testPersisterCommitCanRollback() throws Exception {
+    	
+    	WabitObject wo = getObjectUnderTest();
+    	
+		WabitSessionPersister persister = 
+			new WabitSessionPersister("test persister", session, getWorkspace());
+		
+		WabitPersister errorPersister = new StubWabitPersister() {
+			public void commit() throws WabitPersistenceException {
+				throw new WabitPersistenceException(null, "Cause everything to rollback");
+			}
+		};
+		
+		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
+		
+		wo.addWabitListener(listener);
+		
+		List<PropertyDescriptor> settableProperties;
+        settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
+
+        Set<String> propertiesToIgnore = new HashSet<String>(getPropertiesToIgnoreForEvents());
+        
+        propertiesToIgnore.addAll(getPropertiesToIgnoreForPersisting());
+        
+        //Track old and new property values to test they are set properly
+        Map<String, Object> propertyNameToOldVal = new HashMap<String, Object>();
+        Map<String, Object> propertyNameToNewVal = new HashMap<String, Object>();
+    	
+        //Set all of the properties of the object under test in one transaction.
+        wo.begin("Start test");
+    	for (PropertyDescriptor property : settableProperties) {
+            Object oldVal;
+            
+            if (propertiesToIgnore.contains(property.getName())) continue;
+            
+            try {
+                oldVal = PropertyUtils.getSimpleProperty(wo, property.getName());
+
+                // check for a setter
+                if (property.getWriteMethod() == null) continue;
+                
+            } catch (NoSuchMethodException e) {
+                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                continue;
+            }
+            
+            propertyNameToOldVal.put(property.getName(), oldVal);
+            
+            //special case for parent types. If a specific wabit object has a tighter parent then
+            //WabitObject the getParentClass should return the parent type.
+            Class<?> propertyType = property.getPropertyType();
+            if (property.getName().equals("parent")) {
+            	propertyType = getParentClass();
+            }
+            Object newVal = valueMaker.makeNewValue(propertyType, oldVal, property.getName());
+            
+            System.out.println("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
+            
+            //XXX will replace this later
+            List<Object> additionalVals = new ArrayList<Object>();
+            if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
+            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
+            }
+            
+            DataType type = SessionPersisterUtils.getDataType(property.getPropertyType());
+			Object basicNewValue = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
+			persister.persistProperty(wo.getUUID(), property.getName(), type, 
+					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
+					basicNewValue);
+			
+			propertyNameToNewVal.put(property.getName(), newVal);
+    	}
+    	
+    	//Commit the transaction causing the rollback to occur
+    	wo.commit();
+    	
+    	for (PropertyDescriptor property : settableProperties) {
+            Object currentVal;
+            
+            if (propertiesToIgnore.contains(property.getName())) continue;
+            
+            try {
+                currentVal = PropertyUtils.getSimpleProperty(wo, property.getName());
+
+                // check for a setter
+                if (property.getWriteMethod() == null) continue;
+                
+            } catch (NoSuchMethodException e) {
+                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                continue;
+            }
+            
+            assertEquals(propertyNameToOldVal.get(property.getName()), currentVal);
+            assertFalse(propertyNameToNewVal.get(property.getName()).equals(currentVal));
+    	}
+            
+	}
     
     /**
      * No WabitObject is allowed to return null from getChildren(). Objects that
