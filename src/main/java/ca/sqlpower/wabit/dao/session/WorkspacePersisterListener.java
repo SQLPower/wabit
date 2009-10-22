@@ -276,8 +276,6 @@ public class WorkspacePersisterListener implements WabitListener {
 			if (childClassType != WabitWorkspace.class) {
 				target.persistObject(parentUUID, className, uuid, indexOfChild);
 			}
-			target.persistProperty(uuid, "name", DataType.STRING, child
-					.getName());
 
 			// Persist any properties required for WabitObject constructor
 			if (child instanceof CellSetRenderer) {
@@ -727,6 +725,13 @@ public class WorkspacePersisterListener implements WabitListener {
 				target.persistProperty(uuid, "content", DataType.REFERENCE, 
 						converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
 			}
+
+			// Persisting the name property last because WabitObjects such as ContentBox
+			// have methods that calls setName on certain events or method calls.
+			// We do not want those calls to affect the name property. However, this should
+			// really only be a concern for reflective tests.
+			target.persistProperty(uuid, "name", DataType.STRING, child.getName());
+			
 			target.commit();
 			
 		} catch (WabitPersistenceException e1) {
