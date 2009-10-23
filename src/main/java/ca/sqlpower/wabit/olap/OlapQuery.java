@@ -972,6 +972,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * @throws QueryInitializationException 
      */
     public synchronized String getMdxText() throws QueryInitializationException {
+    	if (getMDXQuery() == null) return null;
         StringWriter sw = new StringWriter();
         ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
         
