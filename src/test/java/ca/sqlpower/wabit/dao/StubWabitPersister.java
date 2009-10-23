@@ -54,7 +54,7 @@ public class StubWabitPersister implements WabitPersister {
 		//do nothing
 	}
 
-	public void rollback() throws WabitPersistenceException {
+	public void rollback() {
 		//do nothing
 	}
 

@@ -206,7 +206,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (property.getWriteMethod() == null) continue;
                 
             } catch (NoSuchMethodException e) {
-                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+            	logger.debug("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
                 continue;
             }
             
@@ -214,7 +214,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             int oldChangeCount = listener.getPropertyChangeCount();
             
             try {
-                System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
+                logger.debug("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
                 BeanUtils.copyProperty(wo, property.getName(), newVal);
                 
                 // some setters fire multiple events (they change more than one property)
@@ -229,7 +229,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                             listener.getLastPropertyEvent().getNewValue());  
                 }
             } catch (InvocationTargetException e) {
-                System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
+                logger.debug("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
         }
 
@@ -275,7 +275,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (property.getWriteMethod() == null) continue;
                 
             } catch (NoSuchMethodException e) {
-                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                logger.debug("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
                 continue;
             }
             
@@ -283,7 +283,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             int oldChangeCount = countingPersister.getPersistPropertyCount();
             
             try {
-                System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
+                logger.debug("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
                 BeanUtils.copyProperty(wo, property.getName(), newVal);
 
                 assertTrue("Did not persist property " + property.getName(), 
@@ -316,7 +316,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	            }
 				//Input streams from images are being compared by hash code not values
 				if (Image.class.isAssignableFrom(property.getPropertyType())) {
-					System.out.println(propertyChange.getNewValue().getClass());
+					logger.debug(propertyChange.getNewValue().getClass());
 					assertTrue(Arrays.equals(PersisterUtils.convertImageToStreamAsPNG(
 								(Image) newVal).toByteArray(),
 							PersisterUtils.convertImageToStreamAsPNG(
@@ -334,7 +334,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 }
                 assertEquals(SessionPersisterUtils.getDataType(classType), propertyChange.getDataType());
             } catch (InvocationTargetException e) {
-                System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
+                logger.debug("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
         }
 		
@@ -385,7 +385,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (property.getWriteMethod() == null) continue;
                 
             } catch (NoSuchMethodException e) {
-                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                logger.debug("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
                 continue;
             }
             
@@ -397,7 +397,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             }
             Object newVal = valueMaker.makeNewValue(propertyType, oldVal, property.getName());
             
-            System.out.println("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
+            logger.debug("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
             
             //XXX will replace this later
             List<Object> additionalVals = new ArrayList<Object>();
@@ -491,18 +491,18 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (property.getWriteMethod() == null) continue;
                 
             } catch (NoSuchMethodException e) {
-                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                logger.debug("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
                 continue;
             }
             
             Object newVal = valueMaker.makeNewValue(property.getPropertyType(), oldVal, property.getName());
             
             try {
-                System.out.println("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
+                logger.debug("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
                 BeanUtils.copyProperty(wo, property.getName(), newVal);
                 
             } catch (InvocationTargetException e) {
-                System.out.println("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
+                logger.debug("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
         }
         
@@ -535,7 +535,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     			}
     		}
     		
-    		System.out.println("Persisted object is of type " + persistedObject.getClass());
+    		logger.debug("Persisted object is of type " + persistedObject.getClass());
     		Object oldVal = PropertyUtils.getSimpleProperty(wo, persistedPropertyName);
     		Object newVal = PropertyUtils.getSimpleProperty(persistedObject, persistedPropertyName);
     		
@@ -548,7 +548,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             Object basicOldVal = converterFactory.convertToBasicType(oldVal, additionalVals.toArray());
             Object basicNewVal = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
             
-            System.out.println("Property " + persistedPropertyName + ". oldVal is \"" + basicOldVal + "\" but newVal is \"" + basicNewVal + "\"");
+            logger.debug("Property " + persistedPropertyName + ". oldVal is \"" + basicOldVal + "\" but newVal is \"" + basicNewVal + "\"");
     		
             assertPersistedValuesAreEqual(oldVal, newVal, basicOldVal, basicNewVal, classType);
     	}
@@ -615,7 +615,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         		assertNotNull("The property " + descriptor + " was not persisted", foundChange);
     		}
     	}
-    	System.out.println("Property names" + settablePropertyNames);
+    	logger.debug("Property names" + settablePropertyNames);
     	assertEquals(settablePropertyNames.size(), changesOnObject.size());
     	
     	SessionPersisterSuperConverter factory = new SessionPersisterSuperConverter(
@@ -639,7 +639,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     			additionalVals.add(((OlapQuery) wo).getOlapDataSource());
     		}
     		Object valueConvertedToBasic = factory.convertToBasicType(value, additionalVals.toArray());
-    		System.out.println("Property \"" + descriptor + "\": expected \"" + valueConvertedToBasic + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
+    		logger.debug("Property \"" + descriptor + "\": expected \"" + valueConvertedToBasic + "\" but was \"" + foundChange.getNewValue() + "\" of type " + foundChange.getDataType());
     		
 			assertEquals(valueConvertedToBasic, foundChange.getNewValue());
     	}
@@ -761,7 +761,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (property.getWriteMethod() == null) continue;
                 
             } catch (NoSuchMethodException e) {
-                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                logger.debug("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
                 continue;
             }
             
@@ -775,7 +775,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             }
             Object newVal = valueMaker.makeNewValue(propertyType, oldVal, property.getName());
             
-            System.out.println("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
+            logger.debug("Persisting property \"" + property.getName() + "\" from oldVal \"" + oldVal + "\" to newVal \"" + newVal + "\"");
             
             //XXX will replace this later
             List<Object> additionalVals = new ArrayList<Object>();
@@ -814,7 +814,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 if (property.getWriteMethod() == null) continue;
                 
             } catch (NoSuchMethodException e) {
-                System.out.println("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
+                logger.debug("Skipping non-settable property "+property.getName()+" on "+wo.getClass().getName());
                 continue;
             }
             

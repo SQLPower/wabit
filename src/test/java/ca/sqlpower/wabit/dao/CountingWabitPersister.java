@@ -75,7 +75,7 @@ public class CountingWabitPersister implements WabitPersister {
 		removeObjectCount++;
 	}
 
-	public void rollback() throws WabitPersistenceException {
+	public void rollback() {
 		// TODO Auto-generated method stub
 
 	}

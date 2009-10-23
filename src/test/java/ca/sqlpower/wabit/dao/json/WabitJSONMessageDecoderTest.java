@@ -34,7 +34,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 
 	public void testDecodeBegin() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				fail("Expected to call begin() but instead called rollback()");
 			}
 			
@@ -82,7 +82,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	
 	public void testDecodeCommit() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				fail("Expected to call commit() but instead called rollback()");
 			}
 			
@@ -130,7 +130,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 
 	public void testDecodePersistObject() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				fail("Expected to call persistObject() but instead called rollback()");
 			}
 			
@@ -181,7 +181,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	
 	public void testDecodeChangeProperty() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				fail("Expected to call persistProperty() but instead called rollback()");
 			}
 			
@@ -232,7 +232,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	
 	public void testDecodePersistProperty() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				fail("Expected to call persistProperty() but instead called rollback()");
 			}
 			
@@ -282,7 +282,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	
 	public void testDecodeRemoveObject() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				fail("Expected to call removeObject() but instead called rollback()");
 			}
 			
@@ -330,7 +330,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	
 	public void testDecodeRollback() throws Exception {
 		WabitPersister dummyPersister = new WabitPersister() {
-			public void rollback() throws WabitPersistenceException {
+			public void rollback() {
 				// We expect this method to get called.
 			}
 			

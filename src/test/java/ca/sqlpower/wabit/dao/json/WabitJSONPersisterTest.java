@@ -197,7 +197,7 @@ public class WabitJSONPersisterTest extends TestCase {
 		try {
 			persister.rollback();
 			fail("Expected WabitPersistenceException to be thrown");
-		} catch (WabitPersistenceException e) {
+		} catch (RuntimeException e) {
 			if (!e.getMessage().equals("Rollback attempted while not in a transaction")) {
 				throw e;
 			}

@@ -258,12 +258,6 @@ public interface WabitPersister {
 	 * transaction (that is, a begin() call after another begin() call before
 	 * commit()), then the state of the WabitObjects must be rolled back to the
 	 * state they were in before the highest level transaction began.
-	 * 
-	 * @throws WabitPersistenceException
-	 *             A general Exception that is thrown if any Exception occurs
-	 *             while persisting the WabitObject. It can be used to wrap the
-	 *             specific cause Exception and provide other details like the
-	 *             WabitObject UUID.
 	 */
-	public void rollback() throws WabitPersistenceException;
+	public void rollback();
 }

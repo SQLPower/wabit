@@ -79,9 +79,8 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
  */
 public class WorkspacePersisterListener implements WabitListener {
 	
-	private static final Logger logger = Logger
-			.getLogger(WorkspacePersisterListener.class);
-	
+	private final static Logger logger = Logger.getLogger(WorkspacePersisterListener.class);
+
 	/**
 	 * This will connect a new instance of this listener to the workspace and
 	 * all of its descendants. When the children of a workspace change the
@@ -190,12 +189,7 @@ public class WorkspacePersisterListener implements WabitListener {
 
 	public void transactionRollback(TransactionEvent e) {
 		if (wouldEcho()) return;
-		try {
-			target.rollback();
-		} catch (WabitPersistenceException e1) {
-			throw new RuntimeException("Could not rollback the transaction.",
-					e1);
-		}
+		target.rollback();
 	}
 
 	public void transactionStarted(TransactionEvent e) {
@@ -224,21 +218,27 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            object and all of its children will be persisted.
 	 */
 	 public void persistObject(WabitObject wo) throws WabitPersistenceException {
+		 
 		target.begin();
 
-		int index = 0;
-		WabitObject parent = wo.getParent();
-		if (parent != null) {
-			index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
+		try {
+			int index = 0;
+			WabitObject parent = wo.getParent();
+			if (parent != null) {
+				index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
+			}
+			//XXX Hack to see if this will work to unblock others
+			if (!wo.getClass().equals(WabitConstantsContainer.class) && !wo.getClass().equals(Page.class)) {
+				persistChild(wo.getParent(), wo, wo.getClass(), index);
+			}
+			for (WabitObject child : wo.getChildren()) {
+				persistObject(child);
+			}
+			target.commit();
+		} catch (Throwable t) {
+			target.rollback();
+			throw new WabitPersistenceException(wo.getUUID(),t);
 		}
-		//XXX Hack to see if this will work to unblock others
-		if (!wo.getClass().equals(WabitConstantsContainer.class) && !wo.getClass().equals(Page.class)) {
-			persistChild(wo.getParent(), wo, wo.getClass(), index);
-		}
-		for (WabitObject child : wo.getChildren()) {
-			persistObject(child);
-		}
-		target.commit();
 	}
 
 	/**
@@ -273,6 +273,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			String uuid = child.getUUID();
 
 			target.begin();
+			
 			if (childClassType != WabitWorkspace.class) {
 				target.persistObject(parentUUID, className, uuid, indexOfChild);
 			}
@@ -735,12 +736,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			target.commit();
 			
 		} catch (WabitPersistenceException e1) {
-			try {
-				target.rollback();
-			} catch (WabitPersistenceException e) {
-				//Not rethrowing this exception to not squish the actual exception.
-				logger.error(e);
-			}
+			target.rollback();
 			throw new RuntimeException("Could not add WabitObject " + child.getName() + " with id " + child.getUUID() + " as a child of " + parent.getName() + " with id " + parent.getUUID() + ".",
 					e1);
 		}
@@ -750,16 +746,22 @@ public class WorkspacePersisterListener implements WabitListener {
 		e.getChild().removeWabitListener(this);
 		if (wouldEcho()) return;
 		try {
+			target.begin();
 			target.removeObject(e.getSource().getUUID(), e.getChild()
 							.getUUID());
+			target.commit();
 		} catch (WabitPersistenceException e1) {
+			target.rollback();
 			throw new RuntimeException(
 					"Could not remove WabitObject from its parent.", e1);
 		}
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
+		
 		if (wouldEcho()) return;
+		
+		
 		WabitObject source = (WabitObject) evt.getSource();
 		String uuid = source.getUUID();
 		String propertyName = evt.getPropertyName();
@@ -802,9 +804,15 @@ public class WorkspacePersisterListener implements WabitListener {
 				newBasicType = converter.convertToBasicType(newValue, typeForClass, ds);
 			}
 			
+			target.begin();
+			
 			target.persistProperty(uuid, propertyName, typeForClass, 
 					oldBasicType, newBasicType);
+			
+			target.commit();
+			
 		} catch (WabitPersistenceException e) {
+			target.rollback();
 			throw new RuntimeException(e);
 		}
 	}
