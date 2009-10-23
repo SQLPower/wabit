@@ -41,7 +41,6 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
