@@ -150,8 +150,7 @@ public class StubWabitSession implements WabitSession {
     }
 
     public DataSourceCollection<SPDataSource> getDataSources() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.context.getDataSources();
     }
 
 	public UserPrompter createDatabaseUserPrompter(String question,
