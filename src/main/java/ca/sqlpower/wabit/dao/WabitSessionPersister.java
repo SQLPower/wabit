@@ -1228,8 +1228,10 @@ public class WabitSessionPersister implements WabitPersister {
 			DataType propertyType, Object oldValue, Object newValue,
 			boolean unconditional) throws WabitPersistenceException {
 		if (!exists(uuid)) {
-			throw new WabitPersistenceException(uuid, "WabitObject with UUID "
-					+ uuid + " does not exist.");
+			throw new WabitPersistenceException(uuid,
+					"WabitObject with UUID " + uuid + " could not be found." +
+					" Was trying to set its property \"" + propertyName + "\" " +
+					"to value \"" + newValue + "\".");
 		}
 
 		Object lastPropertyValueFound = null;
