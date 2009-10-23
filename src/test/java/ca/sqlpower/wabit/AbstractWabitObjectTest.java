@@ -824,7 +824,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 					converterFactory.convertToBasicType(currentVal));
     	}
     	
-    	assertEquals(propertyChangeCount * 2, countingListener.getPropertyChangeCount());
+    	assertTrue(propertyChangeCount * 2 <= countingListener.getPropertyChangeCount());
             
 	}
     
