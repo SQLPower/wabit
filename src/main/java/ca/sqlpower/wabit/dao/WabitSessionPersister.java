@@ -472,6 +472,7 @@ public class WabitSessionPersister implements WabitPersister {
 					this.persistedPropertiesRollbackList.clear();
 					rollback();
 				}
+				throw new WabitPersistenceException(null, t);
 			} finally {
 				updateDepth--;
 			}
@@ -917,7 +918,7 @@ public class WabitSessionPersister implements WabitPersister {
 				
 				this.persistedPropertiesRollbackList.add(
 					new PersistedPropertiesEntry(
-						wop.uuid, 
+						wo.getUUID(), //The uuid can be changed so using the currently set one.
 						wop.propertyName, 
 						wop.dataType, 
 						wop.getOldValue()));

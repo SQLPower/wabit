@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public interface WabitObject {
 
@@ -121,12 +122,13 @@ public interface WabitObject {
     /**
      * Returns the short name for this object.
      */
+    @Nullable
     String getName();
     
     /**
      * Sets the name for this object 
      */
-    void setName(String name);
+    void setName(@Nullable String name);
     
     String getUUID();
     

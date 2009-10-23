@@ -352,9 +352,6 @@ public abstract class AbstractWabitObject implements WabitObject {
 	}
 	
 	public void setName(String name) {
-	    if (name == null) {
-	        throw new NullPointerException("Null name not allowed");
-	    }
 	    String oldName = this.name;
         this.name = name;
         firePropertyChange("name", oldName, name);

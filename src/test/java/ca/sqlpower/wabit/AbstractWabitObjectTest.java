@@ -744,7 +744,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         
         //Track old and new property values to test they are set properly
         Map<String, Object> propertyNameToOldVal = new HashMap<String, Object>();
-        Map<String, Object> propertyNameToNewVal = new HashMap<String, Object>();
     	
         //Set all of the properties of the object under test in one transaction.
         persister.begin();
@@ -790,7 +789,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
 					basicNewValue);
 			
-			propertyNameToNewVal.put(property.getName(), newVal);
 			propertyChangeCount++;
     	}
     	
@@ -824,7 +822,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             System.out.println("Checking property " + property.getName() + " was set to " + oldVal + ", actual value is " + currentVal);
 			assertEquals(converterFactory.convertToBasicType(oldVal), 
 					converterFactory.convertToBasicType(currentVal));
-            assertFalse(propertyNameToNewVal.get(property.getName()).equals(currentVal));
     	}
     	
     	assertEquals(propertyChangeCount * 2, countingListener.getPropertyChangeCount());
