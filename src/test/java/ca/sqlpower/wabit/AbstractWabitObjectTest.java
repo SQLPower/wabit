@@ -702,15 +702,38 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		WabitSessionPersister persister = 
 			new WabitSessionPersister("test persister", session, getWorkspace());
 		
-		WabitPersister errorPersister = new StubWabitPersister() {
+		CountingWabitListener countingListener = new CountingWabitListener();
+		
+		/*
+		 * Small implementation of the WabitPersister that will throw an exception on commit
+		 * when its error state is set to true.
+		 */
+		class ErrorWabitPersister extends StubWabitPersister {
+			private int transactionCount = 0;
+			
+			private boolean throwError = false;
+			@Override
+			public void begin() throws WabitPersistenceException {
+				transactionCount++;
+			}
 			public void commit() throws WabitPersistenceException {
-				throw new WabitPersistenceException(null, "Cause everything to rollback");
+				transactionCount--;
+				if (transactionCount == 0 && throwError) {
+					throw new WabitPersistenceException(null, "Cause everything to rollback");
+				}
+			}
+			
+			public void setThrowError(boolean willThrowError) {
+				throwError = willThrowError;
 			}
 		};
 		
+		ErrorWabitPersister errorPersister = new ErrorWabitPersister();
+		
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
-		wo.addWabitListener(listener);
+		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		wo.addWabitListener(countingListener);
 		
 		List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
@@ -724,7 +747,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         Map<String, Object> propertyNameToNewVal = new HashMap<String, Object>();
     	
         //Set all of the properties of the object under test in one transaction.
-        wo.begin("Start test");
+        persister.begin();
+        
+        int propertyChangeCount = 0;
     	for (PropertyDescriptor property : settableProperties) {
             Object oldVal;
             
@@ -766,10 +791,18 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 					basicNewValue);
 			
 			propertyNameToNewVal.put(property.getName(), newVal);
+			propertyChangeCount++;
     	}
     	
     	//Commit the transaction causing the rollback to occur
-    	wo.commit();
+    	errorPersister.setThrowError(true);
+    	
+    	try {
+    		persister.commit();
+    		fail("The commit method should have an error sent to it and it should rethrow the exception.");
+    	} catch (Throwable t) {
+    		//continue
+    	}
     	
     	for (PropertyDescriptor property : settableProperties) {
             Object currentVal;
@@ -787,9 +820,14 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 continue;
             }
             
-            assertEquals(propertyNameToOldVal.get(property.getName()), currentVal);
+            Object oldVal = propertyNameToOldVal.get(property.getName());
+            System.out.println("Checking property " + property.getName() + " was set to " + oldVal + ", actual value is " + currentVal);
+			assertEquals(converterFactory.convertToBasicType(oldVal), 
+					converterFactory.convertToBasicType(currentVal));
             assertFalse(propertyNameToNewVal.get(property.getName()).equals(currentVal));
     	}
+    	
+    	assertEquals(propertyChangeCount * 2, countingListener.getPropertyChangeCount());
             
 	}
     
