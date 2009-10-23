@@ -102,6 +102,7 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This class represents a Data Access Object for {@link WabitSession}s.
@@ -125,21 +126,74 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Persisted property buffer, mapping of {@link WabitObject} UUIDs to each
 	 * individual persisted property
 	 */
-	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap
-			.create();
+	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap.create();
 
+	private final class PersistedPropertiesEntry {
+		private final Object rollbackValue;
+		private final String propertyName;
+		private final String uuid;
+		public PersistedPropertiesEntry(
+				String uuid, 
+				String propertyName,
+				DataType propertyType, 
+				Object rollbackValue) {
+					this.uuid = uuid;
+					this.propertyName = propertyName;
+					this.rollbackValue = rollbackValue;
+		}
+	}
+	
+	/**
+	 * This will be the list we will use to rollback persisted properties
+	 */
+	private List<PersistedPropertiesEntry> persistedPropertiesRollbackList = new LinkedList<PersistedPropertiesEntry>();
+	
 	/**
 	 * Persisted {@link WabitObject} buffer, contains all the data that was
 	 * passed into the persistedObject call in the order of insertion
 	 */
 	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
 
+	private final class PersistedObjectEntry {
+		private final String parentId;
+		private final String childrenId;
+		public PersistedObjectEntry(String parentId, String childrenId) {
+			this.parentId = parentId;
+			this.childrenId = childrenId;
+		}
+	}
+	/**
+	 * This will be the list we use to rollback persisted objects.
+	 * It contains UUIDs of objects that were created.
+	 */
+	private List<PersistedObjectEntry> persistedObjectsRollbackList = new LinkedList<PersistedObjectEntry>();
+	
 	/**
 	 * {@link WabitObject} removal buffer, mapping of {@link WabitObject} UUIDs
 	 * to their parents
 	 */
 	private Map<String, String> objectsToRemove = new LinkedHashMap<String, String>();
 
+	/**
+	 * These describe the entries in the removed objects rollback list
+	 * @author luc
+	 */
+	private final class RemovedObjectEntry {
+		private final String parentUUID;
+		private final WabitObject removedChildren;
+		private final int index;
+		public RemovedObjectEntry(String parentUUID, WabitObject removedChildren, int index) {
+			this.parentUUID = parentUUID;
+			this.removedChildren = removedChildren;
+			this.index = index;
+		}
+	}
+	
+	/**
+	 * This is the list we use to rollback object removal
+	 */
+	private List<RemovedObjectEntry> objectsToRemoveRollbackList = new LinkedList<RemovedObjectEntry>();
+	
 	/**
 	 * A class representing an individual persisted {@link WabitObject}
 	 * property.
@@ -373,6 +427,12 @@ public class WabitSessionPersister implements WabitPersister {
 	public void commit() throws WabitPersistenceException {
 		synchronized (session) {
 			logger.debug("wsp.commit();");
+			
+			// Make sure the rollback lists are empty.
+			this.objectsToRemoveRollbackList.clear();
+			this.persistedObjectsRollbackList.clear();
+			this.persistedPropertiesRollbackList.clear();
+			
 			try {
 				updateDepth++;
 				if (transactionCount <= 0) {
@@ -390,6 +450,28 @@ public class WabitSessionPersister implements WabitPersister {
 					session.getWorkspace().commit();
 				}
 				transactionCount--;
+			} catch (Throwable t) {
+				logger.error("WabitSesisonPersister caught an exception while performing a commit operation. Will try to rollback...", t);
+				try {
+					// We catch ANYTHING that comes out of here and rollback.
+					// Some exceptions are Runtimes, so we must catch those too.
+					rollbackRemovals();
+					rollbackProperties();
+					rollbackCreations();
+				} catch (Throwable t2) {
+					// This is a major fuck up. We could not rollback so now we must restore
+					// by whatever means
+					logger.fatal("First try at restore failed.", t2);
+					// TODO Monitor this
+				} finally {
+					this.objectsToRemove.clear();
+					this.objectsToRemoveRollbackList.clear();
+					this.persistedObjects.clear();
+					this.persistedObjectsRollbackList.clear();
+					this.persistedProperties.clear();
+					this.persistedPropertiesRollbackList.clear();
+					rollback();
+				}
 			} finally {
 				updateDepth--;
 			}
@@ -402,7 +484,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	private void commitObjects() throws WabitPersistenceException {
-
 		for (PersistedWabitObject pwo : persistedObjects) {
 			if (pwo.isLoaded())
 				continue;
@@ -411,10 +492,12 @@ public class WabitSessionPersister implements WabitPersister {
 			WabitObject wo = loadWabitObject(pwo);
 			if (wo != null) {
 				parent.addChild(wo, pwo.getIndex());
+				this.persistedObjectsRollbackList.add(
+					new PersistedObjectEntry(
+						parent.getUUID(), 
+						wo.getUUID()));
 			}
-
 		}
-
 		persistedObjects.clear();
 	}
 
@@ -826,102 +909,110 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 
 			for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+				
 				propertyName = wop.getPropertyName();
 				newValue = wop.getNewValue();
 
-				if (isCommonProperty(propertyName)) {
-					commitCommonProperty(wo, propertyName, newValue);
-				} else if (wo instanceof CellSetRenderer) {
-					commitCellSetRendererProperty((CellSetRenderer) wo,
-							propertyName, newValue);
-				} else if (wo instanceof Chart) {
-					commitChartProperty((Chart) wo, propertyName, newValue);
-				} else if (wo instanceof ChartColumn) {
-					commitChartColumnProperty((ChartColumn) wo, propertyName,
-							newValue);
-				} else if (wo instanceof ChartRenderer) {
-					commitChartRendererProperty((ChartRenderer) wo,
-							propertyName, newValue);
-				} else if (wo instanceof ColumnInfo) {
-					commitColumnInfoProperty((ColumnInfo) wo, propertyName,
-							newValue);
-				} else if (wo instanceof ContentBox) {
-					commitContentBoxProperty((ContentBox) wo, propertyName,
-							newValue);
-				} else if (wo instanceof Grant) {
-					commitGrantProperty((Grant) wo, propertyName, newValue);
-				} else if (wo instanceof Group) {
-					commitGroupProperty((Group) wo, propertyName, newValue);
-				} else if (wo instanceof GroupMember) {
-					commitGroupMemberProperty((GroupMember) wo, propertyName,
-							newValue);
-				} else if (wo instanceof Guide) {
-					commitGuideProperty((Guide) wo, propertyName, newValue);
-				} else if (wo instanceof ImageRenderer) {
-					commitImageRendererProperty((ImageRenderer) wo,
-							propertyName, newValue);
-				} else if (wo instanceof Label) {
-					commitLabelProperty((Label) wo, propertyName, newValue);
-				} else if (wo instanceof Layout) {
-					commitLayoutProperty((Layout) wo, propertyName, newValue);
-				} else if (wo instanceof OlapQuery) {
-					commitOlapQueryProperty((OlapQuery) wo, propertyName,
-							newValue);
-				} else if (wo instanceof Page) {
-					commitPageProperty((Page) wo, propertyName, newValue);
-				} else if (wo instanceof QueryCache) {
-					commitQueryCacheProperty((QueryCache) wo, propertyName,
-							newValue);
-				} else if (wo instanceof ReportTask) {
-					commitReportTaskProperty((ReportTask) wo, propertyName,
-							newValue);
-				} else if (wo instanceof ResultSetRenderer) {
-					commitResultSetRendererProperty((ResultSetRenderer) wo,
-							propertyName, newValue);
-				} else if (wo instanceof User) {
-					commitUserProperty((User) wo, propertyName, newValue);
-				} else if (wo instanceof WabitConstantsContainer) {
-					commitWabitConstantsContainerProperty(
-							(WabitConstantsContainer) wo, propertyName,
-							newValue);
-				} else if (wo instanceof WabitDataSource) {
-					commitWabitDataSourceProperty((WabitDataSource) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitImage) {
-					commitWabitImageProperty((WabitImage) wo, propertyName,
-							newValue);
-				} else if (wo instanceof WabitItem) {
-					commitWabitItemProperty((WabitItem) wo, propertyName,
-							newValue);
-				} else if (wo instanceof WabitJoin) {
-					commitWabitJoinProperty((WabitJoin) wo, propertyName,
-							newValue);
-				} else if (wo instanceof WabitOlapAxis) {
-					commitWabitOlapAxisProperty((WabitOlapAxis) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitOlapDimension) {
-					commitWabitOlapDimensionProperty((WabitOlapDimension) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitOlapSelection) {
-					commitWabitOlapSelectionProperty((WabitOlapSelection) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitTableContainer) {
-					commitWabitTableContainerProperty((WabitTableContainer) wo,
-							propertyName, newValue);
-				} else if (wo instanceof WabitWorkspace) {
-					commitWabitWorkspaceProperty((WabitWorkspace) wo,
-							propertyName, newValue);
-				} else {
-					throw new WabitPersistenceException(uuid,
-							"Invalid WabitObject of type " + wo.getClass());
-				}
-
+				applyProperty(wo, propertyName, newValue);
+				
+				this.persistedPropertiesRollbackList.add(
+					new PersistedPropertiesEntry(
+						wop.uuid, 
+						wop.propertyName, 
+						wop.dataType, 
+						wop.getOldValue()));
 			}
-
 		}
-
 		persistedProperties.clear();
+	}
 
+	private void applyProperty(WabitObject wo, String propertyName, Object newValue) throws WabitPersistenceException {
+		if (isCommonProperty(propertyName)) {
+			commitCommonProperty(wo, propertyName, newValue);
+		} else if (wo instanceof CellSetRenderer) {
+			commitCellSetRendererProperty((CellSetRenderer) wo,
+					propertyName, newValue);
+		} else if (wo instanceof Chart) {
+			commitChartProperty((Chart) wo, propertyName, newValue);
+		} else if (wo instanceof ChartColumn) {
+			commitChartColumnProperty((ChartColumn) wo, propertyName,
+					newValue);
+		} else if (wo instanceof ChartRenderer) {
+			commitChartRendererProperty((ChartRenderer) wo,
+					propertyName, newValue);
+		} else if (wo instanceof ColumnInfo) {
+			commitColumnInfoProperty((ColumnInfo) wo, propertyName,
+					newValue);
+		} else if (wo instanceof ContentBox) {
+			commitContentBoxProperty((ContentBox) wo, propertyName,
+					newValue);
+		} else if (wo instanceof Grant) {
+			commitGrantProperty((Grant) wo, propertyName, newValue);
+		} else if (wo instanceof Group) {
+			commitGroupProperty((Group) wo, propertyName, newValue);
+		} else if (wo instanceof GroupMember) {
+			commitGroupMemberProperty((GroupMember) wo, propertyName,
+					newValue);
+		} else if (wo instanceof Guide) {
+			commitGuideProperty((Guide) wo, propertyName, newValue);
+		} else if (wo instanceof ImageRenderer) {
+			commitImageRendererProperty((ImageRenderer) wo,
+					propertyName, newValue);
+		} else if (wo instanceof Label) {
+			commitLabelProperty((Label) wo, propertyName, newValue);
+		} else if (wo instanceof Layout) {
+			commitLayoutProperty((Layout) wo, propertyName, newValue);
+		} else if (wo instanceof OlapQuery) {
+			commitOlapQueryProperty((OlapQuery) wo, propertyName,
+					newValue);
+		} else if (wo instanceof Page) {
+			commitPageProperty((Page) wo, propertyName, newValue);
+		} else if (wo instanceof QueryCache) {
+			commitQueryCacheProperty((QueryCache) wo, propertyName,
+					newValue);
+		} else if (wo instanceof ReportTask) {
+			commitReportTaskProperty((ReportTask) wo, propertyName,
+					newValue);
+		} else if (wo instanceof ResultSetRenderer) {
+			commitResultSetRendererProperty((ResultSetRenderer) wo,
+					propertyName, newValue);
+		} else if (wo instanceof User) {
+			commitUserProperty((User) wo, propertyName, newValue);
+		} else if (wo instanceof WabitConstantsContainer) {
+			commitWabitConstantsContainerProperty(
+					(WabitConstantsContainer) wo, propertyName,
+					newValue);
+		} else if (wo instanceof WabitDataSource) {
+			commitWabitDataSourceProperty((WabitDataSource) wo,
+					propertyName, newValue);
+		} else if (wo instanceof WabitImage) {
+			commitWabitImageProperty((WabitImage) wo, propertyName,
+					newValue);
+		} else if (wo instanceof WabitItem) {
+			commitWabitItemProperty((WabitItem) wo, propertyName,
+					newValue);
+		} else if (wo instanceof WabitJoin) {
+			commitWabitJoinProperty((WabitJoin) wo, propertyName,
+					newValue);
+		} else if (wo instanceof WabitOlapAxis) {
+			commitWabitOlapAxisProperty((WabitOlapAxis) wo,
+					propertyName, newValue);
+		} else if (wo instanceof WabitOlapDimension) {
+			commitWabitOlapDimensionProperty((WabitOlapDimension) wo,
+					propertyName, newValue);
+		} else if (wo instanceof WabitOlapSelection) {
+			commitWabitOlapSelectionProperty((WabitOlapSelection) wo,
+					propertyName, newValue);
+		} else if (wo instanceof WabitTableContainer) {
+			commitWabitTableContainerProperty((WabitTableContainer) wo,
+					propertyName, newValue);
+		} else if (wo instanceof WabitWorkspace) {
+			commitWabitWorkspaceProperty((WabitWorkspace) wo,
+					propertyName, newValue);
+		} else {
+			throw new WabitPersistenceException(wo.getUUID(),
+					"Invalid WabitObject of type " + wo.getClass());
+		}
 	}
 
 	/**
@@ -937,17 +1028,63 @@ public class WabitSessionPersister implements WabitPersister {
 					WabitObject.class);
 			WabitObject parent = WabitUtils.findByUuid(root, objectsToRemove
 					.get(uuid), WabitObject.class);
-
 			try {
+				int index = parent.getChildren().indexOf(wo);
 				parent.removeChild(wo);
+				this.objectsToRemoveRollbackList.add(
+					new RemovedObjectEntry(
+						parent.getUUID(), 
+						wo,
+						index));
 			} catch (IllegalArgumentException e) {
 				throw new WabitPersistenceException(uuid, e);
 			} catch (ObjectDependentException e) {
 				throw new WabitPersistenceException(uuid, e);
 			}
 		}
-
 		objectsToRemove.clear();
+	}
+	
+	/**
+	 * Rolls back the removal of persisted {@link WabitObject}s
+	 * 
+	 * @throws WabitPersistenceException
+	 *             Thrown if a WabitObject could not be rolled back from its parent.
+	 */
+	private void rollbackRemovals() throws IllegalStateException {
+		// We must rollback in the inverse order the operations were performed.
+		Collections.reverse(this.objectsToRemoveRollbackList);
+		for (RemovedObjectEntry entry : this.objectsToRemoveRollbackList) {
+			final String parentUuid = entry.parentUUID;
+			final WabitObject objectToRestore = entry.removedChildren;
+			final int index = entry.index;
+			final WabitObject parent = WabitUtils.findByUuid(root, parentUuid, WabitObject.class);
+			try {
+				parent.addChild(objectToRestore, index);
+			} catch (IllegalArgumentException e) {
+				throw new IllegalStateException();
+			}
+		}
+	}
+	
+	private void rollbackProperties() throws WabitPersistenceException {
+		Collections.reverse(this.persistedPropertiesRollbackList);
+		for (PersistedPropertiesEntry entry : this.persistedPropertiesRollbackList) {
+			final String parentUuid = entry.uuid;
+			final String propertyName = entry.propertyName;
+			final Object rollbackValue = entry.rollbackValue;
+			final WabitObject parent = WabitUtils.findByUuid(root, parentUuid, WabitObject.class);
+			this.applyProperty(parent, propertyName, rollbackValue);
+		}
+	}
+	
+	private void rollbackCreations() throws Exception {
+		Collections.reverse(this.persistedObjectsRollbackList);
+		for (PersistedObjectEntry entry : this.persistedObjectsRollbackList) {
+			final WabitObject parent = WabitUtils.findByUuid(root, entry.parentId, WabitObject.class);
+			final WabitObject child = WabitUtils.findByUuid(root, entry.childrenId, WabitObject.class);
+			parent.removeChild(child);
+		}
 	}
 
 	/**
