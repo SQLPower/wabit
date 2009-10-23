@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.dao.session;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
@@ -28,7 +30,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
-import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.TransactionEvent;
@@ -786,9 +787,9 @@ public class WorkspacePersisterListener implements WabitListener {
 		
 		
 		//XXX special case that I want to remove even though I'm implementing it
-		SPDataSource ds = null;
+		List<Object> additionalParams = new ArrayList<Object>();
 		if (source instanceof OlapQuery && propertyName.equals("currentCube")) {
-			ds = ((OlapQuery) source).getOlapDataSource();
+			additionalParams.add(((OlapQuery) source).getOlapDataSource());
 		}
 
 		try {
@@ -796,13 +797,8 @@ public class WorkspacePersisterListener implements WabitListener {
 					getDataType(newValue == null ? Void.class : newValue.getClass());
 			Object oldBasicType;
 			Object newBasicType; 
-			if (ds == null) {
-				oldBasicType = converter.convertToBasicType(oldValue, typeForClass);
-				newBasicType = converter.convertToBasicType(newValue, typeForClass);
-			} else {
-				oldBasicType = converter.convertToBasicType(oldValue, typeForClass, ds);
-				newBasicType = converter.convertToBasicType(newValue, typeForClass, ds);
-			}
+			oldBasicType = converter.convertToBasicType(oldValue, additionalParams.toArray());
+			newBasicType = converter.convertToBasicType(newValue, additionalParams.toArray());
 			
 			target.begin();
 			
