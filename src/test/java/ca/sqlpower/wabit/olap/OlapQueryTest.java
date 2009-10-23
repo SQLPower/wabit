@@ -137,6 +137,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
 		}
 		
         getWorkspace().addOlapQuery(query);
+        getWorkspace().addDataSource(query.getOlapDataSource());
     }
     
     @Override
