@@ -258,7 +258,7 @@ public abstract class AbstractWabitObject implements WabitObject {
     }
     
     public void rollbackTransaction() {
-    	this.rollbackTransaction();
+    	this.fireTransactionRollback("Transaction was rolledback.");
     }
     
     /**
