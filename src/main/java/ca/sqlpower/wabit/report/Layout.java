@@ -54,10 +54,6 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 	 */
 	private static final String COUNTING_PAGES = "counting_pages";
 	
-	public Layout() {
-		super();
-	}
-	
 	public Layout(String uuid) {
 		super(uuid);
 		PageFormat pageFormat = new PageFormat();
