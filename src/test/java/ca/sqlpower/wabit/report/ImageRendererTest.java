@@ -53,6 +53,7 @@ public class ImageRendererTest extends AbstractWabitObjectTest {
         report.getPage().addContentBox(contentBox);
         
         getWorkspace().addReport(report);
+        getWorkspace().addImage(image);
     }
 
     @Override
