@@ -131,6 +131,7 @@ public class ServerListMenu extends JMenu {
     public ServerListMenu(WabitSwingSessionContext context, String name,
             Component dialogOwner, ServerListMenuItemFactory itemFactory) {
         super(name);
+        super.setIcon(SPSUtils.createIcon("wabitServer-16", ""));
         this.context = context;
         this.dialogOwner = dialogOwner;
         this.itemFactory = itemFactory;
