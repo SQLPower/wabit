@@ -1204,7 +1204,7 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue));
 			try {
 				updateDepth++;
-				persistPropertyHelper(uuid, propertyName, propertyType, null,
+				persistPropertyHelper(uuid, propertyName, propertyType, newValue,
 						newValue, true);
 			} finally {
 				updateDepth--;
@@ -1257,6 +1257,9 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 
+		Object propertyValue = null;
+		WabitObject wo = WabitUtils.findByUuid(root, uuid,
+				WabitObject.class);
 		if (lastPropertyValueFound != null) {
 			if (!unconditional && !lastPropertyValueFound.equals(oldValue)) {
 				throw new WabitPersistenceException(uuid, "For property \""
@@ -1265,122 +1268,129 @@ public class WabitSessionPersister implements WabitPersister {
 						+ "\" does not match with the actual property value \""
 						+ lastPropertyValueFound + "\"");
 			}
-		} else if (!unconditional) {
-			WabitObject wo = WabitUtils.findByUuid(root, uuid,
-					WabitObject.class);
-			Object propertyValue = null;
+		} else {
+			if (wo != null) {
 
-			if (isCommonProperty(propertyName)) {
-				propertyValue = getCommonProperty(wo, propertyName);
-			} else if (wo instanceof CellSetRenderer) {
-				propertyValue = getCellSetRendererProperty(
-						(CellSetRenderer) wo, propertyName);
-			} else if (wo instanceof Chart) {
-				propertyValue = getChartProperty((Chart) wo, propertyName);
-			} else if (wo instanceof ChartColumn) {
-				propertyValue = getChartColumnProperty((ChartColumn) wo,
-						propertyName);
-			} else if (wo instanceof ChartRenderer) {
-				propertyValue = getChartRendererProperty((ChartRenderer) wo,
-						propertyName);
-			} else if (wo instanceof ColumnInfo) {
-				propertyValue = getColumnInfoProperty((ColumnInfo) wo,
-						propertyName);
-			} else if (wo instanceof ContentBox) {
-				propertyValue = getContentBoxProperty((ContentBox) wo,
-						propertyName);
-			} else if (wo instanceof Grant) {
-				propertyValue = getGrantProperty((Grant) wo, propertyName);
-			} else if (wo instanceof Group) {
-				propertyValue = getGroupProperty((Group) wo, propertyName);
-			} else if (wo instanceof GroupMember) {
-				propertyValue = getGroupMemberProperty((GroupMember) wo,
-						propertyName);
-			} else if (wo instanceof Guide) {
-				propertyValue = getGuideProperty((Guide) wo, propertyName);
-			} else if (wo instanceof ImageRenderer) {
-				propertyValue = getImageRendererProperty((ImageRenderer) wo,
-						propertyName);
-			} else if (wo instanceof Label) {
-				propertyValue = getLabelProperty((Label) wo, propertyName);
-			} else if (wo instanceof Layout) {
-				propertyValue = getLayoutProperty((Layout) wo, propertyName);
-			} else if (wo instanceof OlapQuery) {
-				propertyValue = getOlapQueryProperty((OlapQuery) wo,
-						propertyName);
-			} else if (wo instanceof Page) {
-				propertyValue = getPageProperty((Page) wo, propertyName);
-			} else if (wo instanceof QueryCache) {
-				propertyValue = getQueryCacheProperty((QueryCache) wo,
-						propertyName);
-			} else if (wo instanceof ReportTask) {
-				propertyValue = getReportTaskProperty((ReportTask) wo,
-						propertyName);
-			} else if (wo instanceof ResultSetRenderer) {
-				propertyValue = getResultSetRendererProperty(
-						(ResultSetRenderer) wo, propertyName);
-			} else if (wo instanceof User) {
-				propertyValue = getUserProperty((User) wo, propertyName);
-			} else if (wo instanceof WabitConstantsContainer) {
-				propertyValue = getWabitConstantsContainerProperty(
-						(WabitConstantsContainer) wo, propertyName);
-			} else if (wo instanceof WabitDataSource) {
-				propertyValue = getWabitDataSourceProperty(
-						(WabitDataSource) wo, propertyName);
-			} else if (wo instanceof WabitImage) {
-				propertyValue = getWabitImageProperty((WabitImage) wo,
-						propertyName);
+				if (isCommonProperty(propertyName)) {
+					propertyValue = getCommonProperty(wo, propertyName);
+				} else if (wo instanceof CellSetRenderer) {
+					propertyValue = getCellSetRendererProperty(
+							(CellSetRenderer) wo, propertyName);
+				} else if (wo instanceof Chart) {
+					propertyValue = getChartProperty((Chart) wo, propertyName);
+				} else if (wo instanceof ChartColumn) {
+					propertyValue = getChartColumnProperty((ChartColumn) wo,
+							propertyName);
+				} else if (wo instanceof ChartRenderer) {
+					propertyValue = getChartRendererProperty((ChartRenderer) wo,
+							propertyName);
+				} else if (wo instanceof ColumnInfo) {
+					propertyValue = getColumnInfoProperty((ColumnInfo) wo,
+							propertyName);
+				} else if (wo instanceof ContentBox) {
+					propertyValue = getContentBoxProperty((ContentBox) wo,
+							propertyName);
+				} else if (wo instanceof Grant) {
+					propertyValue = getGrantProperty((Grant) wo, propertyName);
+				} else if (wo instanceof Group) {
+					propertyValue = getGroupProperty((Group) wo, propertyName);
+				} else if (wo instanceof GroupMember) {
+					propertyValue = getGroupMemberProperty((GroupMember) wo,
+							propertyName);
+				} else if (wo instanceof Guide) {
+					propertyValue = getGuideProperty((Guide) wo, propertyName);
+				} else if (wo instanceof ImageRenderer) {
+					propertyValue = getImageRendererProperty((ImageRenderer) wo,
+							propertyName);
+				} else if (wo instanceof Label) {
+					propertyValue = getLabelProperty((Label) wo, propertyName);
+				} else if (wo instanceof Layout) {
+					propertyValue = getLayoutProperty((Layout) wo, propertyName);
+				} else if (wo instanceof OlapQuery) {
+					propertyValue = getOlapQueryProperty((OlapQuery) wo,
+							propertyName);
+				} else if (wo instanceof Page) {
+					propertyValue = getPageProperty((Page) wo, propertyName);
+				} else if (wo instanceof QueryCache) {
+					propertyValue = getQueryCacheProperty((QueryCache) wo,
+							propertyName);
+				} else if (wo instanceof ReportTask) {
+					propertyValue = getReportTaskProperty((ReportTask) wo,
+							propertyName);
+				} else if (wo instanceof ResultSetRenderer) {
+					propertyValue = getResultSetRendererProperty(
+							(ResultSetRenderer) wo, propertyName);
+				} else if (wo instanceof User) {
+					propertyValue = getUserProperty((User) wo, propertyName);
+				} else if (wo instanceof WabitConstantsContainer) {
+					propertyValue = getWabitConstantsContainerProperty(
+							(WabitConstantsContainer) wo, propertyName);
+				} else if (wo instanceof WabitDataSource) {
+					propertyValue = getWabitDataSourceProperty(
+							(WabitDataSource) wo, propertyName);
+				} else if (wo instanceof WabitImage) {
+					propertyValue = getWabitImageProperty((WabitImage) wo,
+							propertyName);
 
-				// We are converting the expected old value InputStream in this
-				// way because
-				// we want to ensure that the conversion process is the same as
-				// the one
-				// used to convert the current image into a byte array.
-				if (oldValue != null) {
-					oldValue = PersisterUtils.convertImageToStreamAsPNG(
-							(Image) converter.convertToComplexType(oldValue,
-									Image.class)).toByteArray();
+					// We are converting the expected old value InputStream in this
+					// way because
+					// we want to ensure that the conversion process is the same as
+					// the one
+					// used to convert the current image into a byte array.
+					if (oldValue != null) {
+						oldValue = PersisterUtils.convertImageToStreamAsPNG(
+								(Image) converter.convertToComplexType(oldValue,
+										Image.class)).toByteArray();
+					}
+
+				} else if (wo instanceof WabitItem) {
+					propertyValue = getWabitItemProperty((WabitItem) wo,
+							propertyName);
+				} else if (wo instanceof WabitJoin) {
+					propertyValue = getWabitJoinProperty((WabitJoin) wo,
+							propertyName);
+				} else if (wo instanceof WabitOlapAxis) {
+					propertyValue = getWabitOlapAxisProperty((WabitOlapAxis) wo,
+							propertyName);
+				} else if (wo instanceof WabitOlapDimension) {
+					propertyValue = getWabitOlapDimensionProperty(
+							(WabitOlapDimension) wo, propertyName);
+				} else if (wo instanceof WabitOlapSelection) {
+					propertyValue = getWabitOlapSelectionProperty(
+							(WabitOlapSelection) wo, propertyName);
+				} else if (wo instanceof WabitTableContainer) {
+					propertyValue = getWabitTableContainerProperty(
+							(WabitTableContainer) wo, propertyName);
+				} else if (wo instanceof WabitWorkspace) {
+					propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
+							propertyName);
+				} else {
+					throw new WabitPersistenceException(uuid,
+							"Invalid WabitObject type " + wo.getClass());
 				}
 
-			} else if (wo instanceof WabitItem) {
-				propertyValue = getWabitItemProperty((WabitItem) wo,
-						propertyName);
-			} else if (wo instanceof WabitJoin) {
-				propertyValue = getWabitJoinProperty((WabitJoin) wo,
-						propertyName);
-			} else if (wo instanceof WabitOlapAxis) {
-				propertyValue = getWabitOlapAxisProperty((WabitOlapAxis) wo,
-						propertyName);
-			} else if (wo instanceof WabitOlapDimension) {
-				propertyValue = getWabitOlapDimensionProperty(
-						(WabitOlapDimension) wo, propertyName);
-			} else if (wo instanceof WabitOlapSelection) {
-				propertyValue = getWabitOlapSelectionProperty(
-						(WabitOlapSelection) wo, propertyName);
-			} else if (wo instanceof WabitTableContainer) {
-				propertyValue = getWabitTableContainerProperty(
-						(WabitTableContainer) wo, propertyName);
-			} else if (wo instanceof WabitWorkspace) {
-				propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
-						propertyName);
-			} else {
-				throw new WabitPersistenceException(uuid,
-						"Invalid WabitObject type " + wo.getClass());
-			}
-
-			if ((oldValue == null && propertyValue != null)
-					|| (oldValue != null && !oldValue.equals(propertyValue))) {
-				throw new WabitPersistenceException(uuid, "For property \""
-						+ propertyName + "\" on WabitObject of type "
-						+ wo.getClass() + " and UUID + " + wo.getUUID()
-						+ ", the expected property value \"" + oldValue
-						+ "\" does not match with the actual property value \""
-						+ propertyValue + "\"");
+				if ((oldValue == null && propertyValue != null)
+						|| (oldValue != null && !oldValue.equals(propertyValue))) {
+					throw new WabitPersistenceException(uuid, "For property \""
+							+ propertyName + "\" on WabitObject of type "
+							+ wo.getClass() + " and UUID + " + wo.getUUID()
+							+ ", the expected property value \"" + oldValue
+							+ "\" does not match with the actual property value \""
+							+ propertyValue + "\"");
+				}
+			} else if (!unconditional) {
+				throw new WabitPersistenceException(uuid, "Could not find the object with id " + 
+						uuid + " to set property " + propertyValue);
 			}
 		}
 
-		persistedProperties.put(uuid, new WabitObjectProperty(uuid,
-				propertyName, propertyType, oldValue, newValue, unconditional));
+		if (wo != null) {
+			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
+					propertyName, propertyType, propertyValue, newValue, unconditional));
+		} else {
+			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
+					propertyName, propertyType, oldValue, newValue, unconditional));
+		}
 
 		if (transactionCount == 0) {
 			commitProperties();
