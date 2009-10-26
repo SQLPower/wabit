@@ -90,6 +90,15 @@ public class PageTest extends AbstractWabitObjectTest {
     	//no-op
     }
     
+    /**
+     * Cannot roll back the removing of a Page as a child as Pages as children cannot
+     * be modified on a layout.
+     */
+    @Override
+    public void testPersisterCommitCanRollbackRemovedChild() throws Exception {
+    	//no-op
+    }
+    
     public void testAddContentBoxParenting() throws Exception {
         ContentBox cb = new ContentBox();
         page.addContentBox(cb);

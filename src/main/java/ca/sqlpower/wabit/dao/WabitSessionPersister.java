@@ -1066,6 +1066,7 @@ public class WabitSessionPersister implements WabitPersister {
 					.get(uuid), WabitObject.class);
 			try {
 				int index = parent.getChildren().indexOf(wo);
+				index -= parent.childPositionOffset(wo.getClass());
 				parent.removeChild(wo);
 				this.objectsToRemoveRollbackList.add(
 					new RemovedObjectEntry(

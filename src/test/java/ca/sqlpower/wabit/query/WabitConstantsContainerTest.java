@@ -78,5 +78,14 @@ public class WabitConstantsContainerTest extends AbstractWabitObjectTest {
     public void testPersisterCommitCanRollbackNewChild() throws Exception {
     	//no-op
     }
+
+	/**
+	 * The constants container cannot be removed from a query except as a
+	 * constructor argument.
+	 */
+    @Override
+    public void testPersisterCommitCanRollbackRemovedChild() throws Exception {
+    	//no-op
+    }
     
 }

@@ -837,9 +837,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 
 	/**
 	 * Tests that if an error occurs while adding a child to a parent the child
-	 * will be removed from the parent when rolled back. This will create a
-	 * child that is the same type as the object under test and add it to the
-	 * parent of the child under test.
+	 * will be removed from the parent when rolled back.
 	 */
     public void testPersisterCommitCanRollbackNewChild() throws Exception {
     	WabitObject wo = getObjectUnderTest();
@@ -893,6 +891,52 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		assertEquals("Incorrect number of children", childrenBefore, parent.getChildren().size());
 		
 		assertFalse(parent.getChildren().contains(wo));
+		
+		assertEquals("Child added event was not fired", 1, countingListener.getAddedCount());
+		
+		assertEquals("Child removed event was not fired", 1, countingListener.getRemovedCount());
+	}
+    
+    /**
+	 * Tests that if an error occurs while removing a child on a parent the child
+	 * will be added to the parent when rolled back.
+	 */
+    public void testPersisterCommitCanRollbackRemovedChild() throws Exception {
+    	WabitObject wo = getObjectUnderTest();
+		WabitObject parent = wo.getParent();
+		
+		WabitSessionPersister persister = 
+			new WabitSessionPersister("test persister", session, getWorkspace());
+		
+		CountingWabitListener countingListener = new CountingWabitListener();
+		
+		ErrorWabitPersister errorPersister = new ErrorWabitPersister();
+		
+		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
+		
+		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		parent.addWabitListener(countingListener);
+		
+		int childrenBefore = parent.getChildren().size();
+		
+		persister.begin();
+		
+		persister.removeObject(parent.getUUID(), wo.getUUID());
+		
+		errorPersister.setThrowError(true);
+		boolean exceptionThrown;
+		try {
+			persister.commit();
+			exceptionThrown = false;
+		} catch (Throwable t) {
+			//an error that made the commit failed was successfully passed on.
+			exceptionThrown = true;
+		}
+		if (!exceptionThrown) fail("The exception from the errorPersister should be rethrown.");
+		
+		assertEquals("Incorrect number of children", childrenBefore, parent.getChildren().size());
+		
+		assertTrue(parent.getChildren().contains(wo));
 		
 		assertEquals("Child added event was not fired", 1, countingListener.getAddedCount());
 		
