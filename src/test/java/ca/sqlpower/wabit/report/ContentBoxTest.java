@@ -22,9 +22,15 @@ package ca.sqlpower.wabit.report;
 import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.dao.WabitPersister;
+import ca.sqlpower.wabit.dao.WabitSessionPersister;
+import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 
 public class ContentBoxTest extends AbstractWabitObjectTest {
 
@@ -79,4 +85,59 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
         cb.removeChild(renderer);
         assertNull(cb.getContentRenderer());
     }
+    
+    /**
+     * This is a test for rolling back on persisting a renderer that the original
+     * renderer of the content box is replaced.
+     */
+    public void testPersistingChildAndRollbackResetsRenderer() throws Exception {
+    	Label label = new Label();
+    	cb.setContentRenderer(label);
+    	
+    	Label newLabel = new Label();
+    	
+    	WabitSession session = getWorkspace().getSession();
+		WabitSessionPersister persister = 
+			new WabitSessionPersister("test persister", session, getWorkspace());
+		
+		CountingWabitListener countingListener = new CountingWabitListener();
+		
+		ErrorWabitPersister errorPersister = new ErrorWabitPersister();
+		
+		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
+		
+		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		cb.addWabitListener(countingListener);
+		
+		persister.begin();
+		
+		class PublicListener extends WorkspacePersisterListener {
+			public PublicListener(WabitSession session, WabitPersister persister) {
+				super(session, persister);
+			}
+			
+			@Override
+			public void persistChild(WabitObject parent, WabitObject child,
+					Class<? extends WabitObject> childClassType,
+					int indexOfChild) {
+				super.persistChild(parent, child, childClassType, indexOfChild);
+			}
+		};
+		
+		PublicListener listenerToPeristObject = new PublicListener(session, persister);
+		listenerToPeristObject.persistChild(cb, newLabel, newLabel.getClass(), 0);
+		
+		errorPersister.setThrowError(true);
+		boolean exceptionThrown;
+		try {
+			persister.commit();
+			exceptionThrown = false;
+		} catch (Throwable t) {
+			//an error that made the commit failed was successfully passed on.
+			exceptionThrown = true;
+		}
+		if (!exceptionThrown) fail("The exception from the errorPersister should be rethrown.");
+		
+		assertEquals(label, cb.getContentRenderer());
+	}
 }

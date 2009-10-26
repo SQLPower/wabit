@@ -73,7 +73,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 * Small implementation of the WabitPersister that will throw an exception on commit
 	 * when its error state is set to true.
 	 */
-	private static class ErrorWabitPersister extends StubWabitPersister {
+	public static class ErrorWabitPersister extends StubWabitPersister {
 		private int transactionCount = 0;
 		
 		private boolean throwError = false;

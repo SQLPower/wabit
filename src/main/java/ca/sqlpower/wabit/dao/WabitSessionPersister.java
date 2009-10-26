@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
+import java.beans.PropertyChangeEvent;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
@@ -47,14 +48,17 @@ import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitItem;
 import ca.sqlpower.wabit.WabitJoin;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
@@ -497,7 +501,30 @@ public class WabitSessionPersister implements WabitPersister {
 					.getParentUUID(), WabitObject.class);
 			WabitObject wo = loadWabitObject(pwo);
 			if (wo != null) {
+				WabitListener removeChildOnAddListener = new WabitListener() {
+					public void propertyChange(PropertyChangeEvent arg0) {
+						//do nothing
+					}
+					public void wabitChildRemoved(WabitChildEvent e) {
+						objectsToRemoveRollbackList.add(
+								new RemovedObjectEntry(e.getSource().getUUID(), e.getChild(), e.getIndex()));
+					}
+					public void wabitChildAdded(WabitChildEvent e) {
+						//do nothing
+					}
+					public void transactionStarted(TransactionEvent e) {
+						//do nothing
+					}
+					public void transactionRollback(TransactionEvent e) {
+						//do nothing
+					}
+					public void transactionEnded(TransactionEvent e) {
+						//do nothing
+					}
+				};
+				parent.addWabitListener(removeChildOnAddListener);
 				parent.addChild(wo, pwo.getIndex());
+				parent.removeWabitListener(removeChildOnAddListener);
 				this.persistedObjectsRollbackList.add(
 					new PersistedObjectEntry(
 						parent.getUUID(), 
