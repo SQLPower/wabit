@@ -843,7 +843,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         for (WabitObject importObject : getChildren()) {
             generateNewUUIDsForMerge(importObject);
             if (importObject instanceof WabitDataSource) {
-                if (!session.getWorkspace().dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
+                if (!workspace.dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
                     removeDataSource((WabitDataSource) importObject);
                     workspace.addDataSource((WabitDataSource) importObject);
                 }
