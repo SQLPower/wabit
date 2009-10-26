@@ -575,11 +575,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     	childListener.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
     }
 
-    private Query getMdxQueryCopy() throws SQLException, QueryInitializationException {
-        Query copyQuery = OlapUtils.copyMDXQuery(getMDXQuery());
-        return copyQuery;
-    }
-
 	/**
 	 * This is and must remain a package private method. The modifier on this
 	 * method should not be changed in order to maintain our encapsulation of
