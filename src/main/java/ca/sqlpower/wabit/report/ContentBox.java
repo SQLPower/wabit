@@ -42,6 +42,8 @@ import ca.sqlpower.wabit.WabitUtils;
  * values will
  */
 public class ContentBox extends AbstractWabitObject {
+	
+	private static final String EMPTY_BOX_NAME = "Empty Content Box";
 
     private double x;
     private double y;
@@ -94,7 +96,7 @@ public class ContentBox extends AbstractWabitObject {
 	};
     
     public ContentBox() {
-        setName("Empty Content Box");
+        setName(EMPTY_BOX_NAME);
     }
     
     /**
@@ -175,7 +177,7 @@ public class ContentBox extends AbstractWabitObject {
             WabitUtils.listenToHierarchy(contentRenderer, childListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         } else {
-            setName("Empty content box");
+            setName(EMPTY_BOX_NAME);
         }
     }
     
