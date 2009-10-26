@@ -69,4 +69,14 @@ public class WabitConstantsContainerTest extends AbstractWabitObjectTest {
 		// object, it is persisted as a child of a QueryCache
     }
     
+    /**
+     * The constants container cannot be added to or removed from a query except
+     * as a constructor argument. This test is disabled as it does not make sense
+     * for constants containers.
+     */
+    @Override
+    public void testPersisterCommitCanRollbackNewChild() throws Exception {
+    	//no-op
+    }
+    
 }
