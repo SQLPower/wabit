@@ -480,7 +480,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		try {
 			newSession.persistWorkspaceToServer();
 		} catch (WabitPersistenceException e) {
-			throw new RuntimeException("An error occured while persisting new workspace to the Server");
+			throw new RuntimeException("An error occured while persisting new workspace to the Server", e);
 		}
 		//TODO
 		logger.error("have to actually create the session on the server here (following call will cause update thread failure)");
