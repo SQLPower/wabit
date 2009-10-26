@@ -40,9 +40,9 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     @Override
     protected boolean removeChildImpl(WabitObject child) {
         if (child instanceof Grant) {
-            return this.grants.remove((Grant)child);
+            return removeGrant((Grant)child);
         } else if (child instanceof GroupMember) {
-            return this.members.remove((GroupMember)child);
+            return removeMember((GroupMember)child);
         } else {
             return false;
         }
@@ -100,13 +100,15 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         fireChildAdded(Grant.class, grant, this.grants.indexOf(grant));
     }
     
-    public void removeGrant(Grant grant) {
+    public boolean removeGrant(Grant grant) {
+    	boolean wasRemoved = false;
         if (this.grants.contains(grant)) {
             int index = this.grants.indexOf(grant);
-            this.grants.remove(grant);
+            wasRemoved = this.grants.remove(grant);
             grant.setParent(null);
             fireChildRemoved(Grant.class, grant, index);
         }
+        return wasRemoved;
     }
     
     public void addMember(GroupMember member, int index) {
@@ -119,13 +121,15 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         addMember(member, members.size());
     }
     
-    public void removeMember(GroupMember member) {
+    public boolean removeMember(GroupMember member) {
+    	boolean wasRemoved = false;
         if (this.members.contains(member)) {
             int index = this.members.indexOf(member);
-            this.members.remove(member);
+            wasRemoved = this.members.remove(member);
             member.setParent(null);
             fireChildRemoved(GroupMember.class, member, index);
         }
+        return wasRemoved;
     }
 
 	public String getAuthority() {
