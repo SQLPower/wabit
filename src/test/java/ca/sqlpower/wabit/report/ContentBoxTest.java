@@ -25,7 +25,6 @@ import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.report.Page.PageOrientation;
 
 public class ContentBoxTest extends AbstractWabitObjectTest {
 
@@ -55,6 +54,11 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return cb;
+    }
+    
+    @Override
+    public Class<? extends WabitObject> getParentClass() {
+    	return Page.class;
     }
 
     /**
