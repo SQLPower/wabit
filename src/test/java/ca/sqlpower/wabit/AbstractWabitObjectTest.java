@@ -68,6 +68,30 @@ import ca.sqlpower.wabit.olap.OlapQuery;
  * inheriting the baseline tests.
  */
 public abstract class AbstractWabitObjectTest extends TestCase {
+	
+	/**
+	 * Small implementation of the WabitPersister that will throw an exception on commit
+	 * when its error state is set to true.
+	 */
+	private static class ErrorWabitPersister extends StubWabitPersister {
+		private int transactionCount = 0;
+		
+		private boolean throwError = false;
+		@Override
+		public void begin() throws WabitPersistenceException {
+			transactionCount++;
+		}
+		public void commit() throws WabitPersistenceException {
+			transactionCount--;
+			if (transactionCount == 0 && throwError) {
+				throw new WabitPersistenceException(null, "Cause everything to rollback");
+			}
+		}
+		
+		public void setThrowError(boolean willThrowError) {
+			throwError = willThrowError;
+		}
+	};
 
     private static final Logger logger = Logger.getLogger(AbstractWabitObjectTest.class);
     
@@ -697,7 +721,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * after committing the next persister after it will throw an exception causing the
      * persister to undo all of the changes it just made.
      */
-    public void testPersisterCommitCanRollback() throws Exception {
+    public void testPersisterCommitCanRollbackProperties() throws Exception {
     	
     	WabitObject wo = getObjectUnderTest();
     	
@@ -705,30 +729,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 			new WabitSessionPersister("test persister", session, getWorkspace());
 		
 		CountingWabitListener countingListener = new CountingWabitListener();
-		
-		/*
-		 * Small implementation of the WabitPersister that will throw an exception on commit
-		 * when its error state is set to true.
-		 */
-		class ErrorWabitPersister extends StubWabitPersister {
-			private int transactionCount = 0;
-			
-			private boolean throwError = false;
-			@Override
-			public void begin() throws WabitPersistenceException {
-				transactionCount++;
-			}
-			public void commit() throws WabitPersistenceException {
-				transactionCount--;
-				if (transactionCount == 0 && throwError) {
-					throw new WabitPersistenceException(null, "Cause everything to rollback");
-				}
-			}
-			
-			public void setThrowError(boolean willThrowError) {
-				throwError = willThrowError;
-			}
-		};
 		
 		ErrorWabitPersister errorPersister = new ErrorWabitPersister();
 		
@@ -833,6 +833,70 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	logger.debug("Received " + countingListener.getPropertyChangeCount() + " change events.");
     	assertTrue(propertyChangeCount * 2 <= countingListener.getPropertyChangeCount());
+	}
+
+	/**
+	 * Tests that if an error occurs while adding a child to a parent the child
+	 * will be removed from the parent when rolled back. This will create a
+	 * child that is the same type as the object under test and add it to the
+	 * parent of the child under test.
+	 */
+    public void testPersisterCommitCanRollbackNewChild() throws Exception {
+    	WabitObject wo = getObjectUnderTest();
+		WabitObject parent = wo.getParent();
+		
+		wo.getParent().removeChild(wo);
+		
+		WabitSessionPersister persister = 
+			new WabitSessionPersister("test persister", session, getWorkspace());
+		
+		CountingWabitListener countingListener = new CountingWabitListener();
+		
+		ErrorWabitPersister errorPersister = new ErrorWabitPersister();
+		
+		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
+		
+		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		parent.addWabitListener(countingListener);
+		
+		int childrenBefore = parent.getChildren().size();
+		
+		persister.begin();
+		
+		class PublicListener extends WorkspacePersisterListener {
+			public PublicListener(WabitSession session, WabitPersister persister) {
+				super(session, persister);
+			}
+			
+			@Override
+			public void persistChild(WabitObject parent, WabitObject child,
+					Class<? extends WabitObject> childClassType,
+					int indexOfChild) {
+				super.persistChild(parent, child, childClassType, indexOfChild);
+			}
+		};
+		
+		PublicListener listenerToPeristObject = new PublicListener(session, persister);
+		listenerToPeristObject.persistChild(parent, wo, wo.getClass(), 0);
+		
+		errorPersister.setThrowError(true);
+		boolean exceptionThrown;
+		try {
+			persister.commit();
+			exceptionThrown = false;
+		} catch (Throwable t) {
+			//an error that made the commit failed was successfully passed on.
+			exceptionThrown = true;
+		}
+		if (!exceptionThrown) fail("The exception from the errorPersister should be rethrown.");
+		
+		assertEquals("Incorrect number of children", childrenBefore, parent.getChildren().size());
+		
+		assertFalse(parent.getChildren().contains(wo));
+		
+		assertEquals("Child added event was not fired", 1, countingListener.getAddedCount());
+		
+		assertEquals("Child removed event was not fired", 1, countingListener.getRemovedCount());
 	}
     
     /**

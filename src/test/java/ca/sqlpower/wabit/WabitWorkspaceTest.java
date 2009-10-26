@@ -65,6 +65,15 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	//no-op
     }
     
+    /**
+     * The workspace cannot be persisted as a new child of a WabitObject as it is
+     * the root object.
+     */
+    @Override
+    public void testPersisterCommitCanRollbackNewChild() throws Exception {
+    	//no-op
+    }
+    
     @Override
     public Set<String> getPropertiesToIgnoreForPersisting() {
     	Set<String> ignored = super.getPropertiesToIgnoreForPersisting();

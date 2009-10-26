@@ -258,7 +258,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 * @param indexOfChild
 	 *            The index of the child in the child list of the parent.
 	 */
-	private void persistChild(WabitObject parent, WabitObject child, 
+	 protected void persistChild(WabitObject parent, WabitObject child, 
 			Class<? extends WabitObject> childClassType, int indexOfChild) {
 		try {
 			final String parentUUID;

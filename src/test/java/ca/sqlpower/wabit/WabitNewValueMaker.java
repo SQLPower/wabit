@@ -463,6 +463,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	//The new workspace has to be in the workspace, 
         	//but the workspace cannot have a new workspace in the workspace....?
         	newValue = workspace;
+        } else if (valueType.equals(Label.class)) {
+        	newValue = new Label();
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
