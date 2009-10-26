@@ -27,24 +27,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
-import javax.swing.ButtonGroup;
-import javax.swing.ComboBoxModel;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
-import javax.swing.event.ListDataListener;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
@@ -59,9 +53,6 @@ import com.jgoodies.forms.layout.FormLayout;
 public class NewWorkspaceScreen {
 	
 	private static Logger logger = Logger.getLogger(NewWorkspaceScreen.class);
-	
-	public static final String NEW_WORKSPACE_URL = 
-	    "/ca/sqlpower/wabit/new_workspace.wabit";
 	
 	/**
 	 * The new session that needs a starting data source added to it.
@@ -128,7 +119,7 @@ public class NewWorkspaceScreen {
 	                WabitObject currentEditor = session.getWorkspace().getEditorPanelModel();
 	                try {
 	                    final URI resource = WabitSwingSessionContextImpl.class.getResource(
-	                            NEW_WORKSPACE_URL).toURI();
+	                            WabitSessionContext.NEW_WORKSPACE_URL).toURI();
 	                    URL importURL = resource.toURL();
 	                    URLConnection urlConnection = importURL.openConnection();
 	                    InputStream in = new BufferedInputStream(urlConnection.getInputStream());
@@ -137,7 +128,7 @@ public class NewWorkspaceScreen {
 	                    workspaceLoader.importWorkspaces(session);
 	                } catch (Exception ex) {
 	                    throw new RuntimeException("Cannot find the templates file at " +
-	                    		"location " + NEW_WORKSPACE_URL);
+	                    		"location " + WabitSessionContext.NEW_WORKSPACE_URL);
 	                }
 	                session.getWorkspace().setEditorPanelModel(currentEditor);
 	                
@@ -155,31 +146,6 @@ public class NewWorkspaceScreen {
 		final JLabel additionalDSLabel = new JLabel("(Additional data sources can be added later.)");
 		additionalDSLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		builder.append(additionalDSLabel);
-		builder.nextLine();
-		
-		final JPanel sessionTypesPanel = new JPanel();
-		final JRadioButton localSessionButton = new JRadioButton("Local Session");
-		final JRadioButton serverSessionButton = new JRadioButton("Server Session");
-		
-		List<WabitServerInfo> serverList = session.getContext().getEnterpriseServers(true);
-		final JComboBox serverComboBox;
-		if (serverList.size() == 0) {
-			String[] noServerArray = {"No Server Defined"};
-			serverComboBox = new JComboBox(noServerArray);
-			serverSessionButton.setEnabled(false);
-			serverComboBox.setEnabled(false);
-		} else {
-			serverComboBox = new JComboBox(serverList.toArray());
-		}
-		
-		final ButtonGroup sessionButtonGroup = new ButtonGroup();
-		sessionButtonGroup.add(localSessionButton);
-		sessionButtonGroup.add(serverSessionButton);
-		localSessionButton.setSelected(true);
-		sessionTypesPanel.add(localSessionButton);
-		sessionTypesPanel.add(serverSessionButton);
-		sessionTypesPanel.add(serverComboBox);
-		builder.append(sessionTypesPanel);
 		builder.nextLine();
 		builder.append(WorkspacePanel.createDBConnectionManager(session, dialog).getPanel());
 		

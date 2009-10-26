@@ -175,6 +175,7 @@ import ca.sqlpower.wabit.swingui.action.NewOLAPQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewQueryAction;
 import ca.sqlpower.wabit.swingui.action.NewReportAction;
 import ca.sqlpower.wabit.swingui.action.NewReportTaskAction;
+import ca.sqlpower.wabit.swingui.action.NewServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
@@ -653,6 +654,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     			JButton source = (JButton) e.getSource();
     			JPopupMenu popupMenu = new JPopupMenu();
     			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
+    			JMenu newWorkspaceServerSubMenu = new JMenu("New Server Workspace...");
+				for (WabitServerInfo server : getEnterpriseServers(true)) {
+					newWorkspaceServerSubMenu.add(new NewServerWorkspaceAction(frame,
+							WabitSwingSessionContextImpl.this, server));
+				}
+    			popupMenu.add(newWorkspaceServerSubMenu);
     			WabitSwingSession activeSession = getActiveSwingSession();
     			if (activeSession != null) {
     				if (activeSession.getWorkspace().isSystemWorkspace()) {

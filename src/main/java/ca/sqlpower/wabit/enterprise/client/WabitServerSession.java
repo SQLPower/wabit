@@ -20,17 +20,14 @@
 package ca.sqlpower.wabit.enterprise.client;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
-import javax.jmdns.ServiceInfo;
 import javax.swing.SwingUtilities;
 
 import org.apache.http.HttpResponse;
@@ -40,6 +37,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -209,7 +207,54 @@ public class WabitServerSession extends WabitSessionImpl {
     		httpClient.getConnectionManager().shutdown();
     	}
     }
-    
+
+	/**
+	 * Sends an HTTP request to a Wabit Enterprise Server to create a new remote
+	 * Wabit Workspace on that server.
+	 * 
+	 * @param serviceInfo
+	 *            A {@link WabitServerInfo} containing the connection
+	 *            information for that server
+	 * @return The {@link WorkspaceLocation} of the newly created remote
+	 *         WabitWorkspace
+	 * @throws URISyntaxException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+    public static WorkspaceLocation createNewServerSession(WabitServerInfo serviceInfo) throws URISyntaxException, ClientProtocolException, IOException, JSONException {
+    	HttpClient httpClient = createHttpClient(serviceInfo);
+    	try {
+    		HttpUriRequest request = new HttpPost(getServerURI(serviceInfo, "workspaces"));
+    		String responseBody = httpClient.execute(request, new BasicResponseHandler());
+    		JSONObject response = new JSONObject(responseBody);
+    		logger.debug("New Workspace:" + responseBody);
+    		return new WorkspaceLocation(
+    					response.getString("name"),
+    					response.getString("UUID"),
+    					serviceInfo);
+    	} finally {
+    		httpClient.getConnectionManager().shutdown();
+    	}
+    }
+
+	/**
+	 * Finds and opens a specific Wabit Workspace from the given
+	 * {@link WorkspaceLocation}.
+	 * 
+	 * @param context
+	 *            The context to register the new remote WabitSession with
+	 * @param workspaceLoc
+	 *            A {@link WorkspaceLocation} detailing the location of the
+	 *            remote workspace to be opened
+	 * @return A remote WabitSession based on the given workspace
+	 */
+    public static WabitSession openServerSession(WabitSessionContext context, WorkspaceLocation workspaceLoc) {
+    	final WabitServerSession session = new WabitServerSession(workspaceLoc, context);
+		context.registerChildSession(session);
+		session.startUpdaterThread();
+		return session;
+    }
 	
 	/**
 	 * Finds and opens all visible Wabit workspaces on the given Wabit Enterprise Server.
@@ -225,10 +270,7 @@ public class WabitServerSession extends WabitSessionImpl {
 	public static List<WabitSession> openServerSessions(WabitSessionContext context, WabitServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
 		List<WabitSession> openedSessions = new ArrayList<WabitSession>();
 		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
-			final WabitServerSession session = new WabitServerSession(workspaceLoc, context);
-			context.registerChildSession(session);
-			session.startUpdaterThread();
-			openedSessions.add(session);
+			openedSessions.add(openServerSession(context, workspaceLoc));
 		}
         return openedSessions;
     }
