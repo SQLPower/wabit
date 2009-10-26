@@ -206,13 +206,26 @@ public class WabitJSONPersister implements WabitPersister {
 	}
 	
 	public void rollback() {
-		// Since this persister does not send messages in a transaction until
-		// commit gets called, rollback doesn't need to send anything. It just
-		// clears the messageBuffer.
-		if (transactionCount <= 0) {
-			throw new RuntimeException("Rollback attempted while not in a transaction");
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("method", WabitPersistMethod.rollback);
+			// Need to put this in or anything calling get on the key "uuid"
+			// will throw a JSONException
+			jsonObject.put("uuid", JSONObject.NULL);
+			logger.debug(jsonObject);
+			messageBuffer.add(jsonObject);
+			transactionCount--;
+			if (transactionCount == 0) {
+				for (JSONObject obj: messageBuffer) {
+					messageSender.send(obj);
+				}
+				messageSender.flush();
+			}
+		} catch (JSONException e) {
+			throw new RuntimeException("Could not create rollback message to send to server. Bad bad bad.", e);
+		} catch (WabitPersistenceException e) {
+			throw new RuntimeException("Could not create rollback message to send to server. Bad bad bad.", e);
 		}
-		messageBuffer.clear();
 	}
 	
 	public MessageSender<JSONObject> getMessageSender() {
