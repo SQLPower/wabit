@@ -304,16 +304,18 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 
                 assertEquals(wo.getUUID(), propertyChange.getUUID());
                 assertEquals(property.getName(), propertyChange.getPropertyName());
-				Object oldConvertedType = converterFactory.convertToBasicType(oldVal);
+                
+                //XXX will replace this later
+                List<Object> additionalVals = new ArrayList<Object>();
+                if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
+                	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
+                }
+                
+				Object oldConvertedType = converterFactory.convertToBasicType(oldVal, additionalVals.toArray());
 				assertEquals("Old value of property " + property.getName() + " was wrong, value expected was  " + oldConvertedType + 
 						" but is " + countingPersister.getLastOldValue(), oldConvertedType, 
                 		propertyChange.getOldValue());
 				
-	            //XXX will replace this later
-	            List<Object> additionalVals = new ArrayList<Object>();
-	            if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
-	            	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
-	            }
 				//Input streams from images are being compared by hash code not values
 				if (Image.class.isAssignableFrom(property.getPropertyType())) {
 					logger.debug(propertyChange.getNewValue().getClass());
