@@ -193,18 +193,17 @@ public class WabitJSONPersisterTest extends TestCase {
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
+		persister.rollback();
 		
 		try {
-			persister.rollback();
+			persister.commit();
 			fail("Expected WabitPersistenceException to be thrown");
-		} catch (RuntimeException e) {
-			if (!e.getMessage().equals("Rollback attempted while not in a transaction")) {
+		} catch (WabitPersistenceException e) {
+			if (!e.getMessage().equals("Commit attempted while not in a transaction")) {
 				throw e;
 			}
 		}
-		
-		persister.begin();
-		persister.rollback();
 	}
 
 	
