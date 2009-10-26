@@ -1397,8 +1397,10 @@ public class WabitSessionPersister implements WabitPersister {
 							"Invalid WabitObject type " + wo.getClass());
 				}
 
-				if ((oldValue == null && propertyValue != null)
-						|| (oldValue != null && !oldValue.equals(propertyValue))) {
+				
+				if (!unconditional && 
+						((oldValue == null && propertyValue != null)
+						|| (oldValue != null && !oldValue.equals(propertyValue)))) {
 					throw new WabitPersistenceException(uuid, "For property \""
 							+ propertyName + "\" on WabitObject of type "
 							+ wo.getClass() + " and UUID + " + wo.getUUID()
