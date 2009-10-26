@@ -737,6 +737,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			target.commit();
 			
 		} catch (WabitPersistenceException e1) {
+			logger.error(e1);
 			target.rollback();
 			throw new RuntimeException("Could not add WabitObject " + child.getName() + " with id " + child.getUUID() + " as a child of " + parent.getName() + " with id " + parent.getUUID() + ".",
 					e1);
