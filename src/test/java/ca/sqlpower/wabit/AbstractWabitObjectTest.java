@@ -824,14 +824,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		if (wo instanceof OlapQuery && property.getName().equals("currentCube")) {
     			additionalVals.add(((OlapQuery) wo).getOlapDataSource());
     		}
-            System.out.println("Checking property " + property.getName() + " was set to " + oldVal + ", actual value is " + currentVal);
+            logger.debug("Checking property " + property.getName() + " was set to " + oldVal + ", actual value is " + currentVal);
 			assertEquals(converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
 					converterFactory.convertToBasicType(currentVal, additionalVals.toArray()));
     	}
     	
-    	System.out.println("Received " + countingListener.getPropertyChangeCount() + " change events.");
+    	logger.debug("Received " + countingListener.getPropertyChangeCount() + " change events.");
     	assertTrue(propertyChangeCount * 2 <= countingListener.getPropertyChangeCount());
-            
 	}
     
     /**
