@@ -157,4 +157,10 @@ public class PageTest extends AbstractWabitObjectTest {
         page.removeChild(guide);
         assertFalse(page.getChildren().contains(guide));
     }
+    
+    @Override
+    public void testPersisterAddsNewObject() throws Exception {
+		// no-op because Page is never persisted as a new object, it is
+		// persisted as a child of a Layout
+    }
 }
