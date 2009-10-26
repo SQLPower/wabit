@@ -416,8 +416,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void begin() {
 		synchronized (session) {
-			logger.debug("wsp.begin();");
 			transactionCount++;
+			logger.debug("wsp.begin(); - transaction count : "+transactionCount);
 		}
 	}
 
@@ -426,7 +426,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void commit() throws WabitPersistenceException {
 		synchronized (session) {
-			logger.debug("wsp.commit();");
+			logger.debug("wsp.commit(); - transaction count : "+transactionCount);
 			
 			// Make sure the rollback lists are empty.
 			this.objectsToRemoveRollbackList.clear();
@@ -443,11 +443,14 @@ public class WabitSessionPersister implements WabitPersister {
 				if (transactionCount == 1) {
 					//XXX Oh if only the begin and commit knew which object sent 
 					//the begin and commit and what the message was.
-					session.getWorkspace().begin("Begin transaction on some object, we lost which one it was.");
-					commitObjects();
-					commitProperties();
-					commitRemovals();
-					session.getWorkspace().commit();
+					final WabitWorkspace workspace = session.getWorkspace();
+					synchronized (workspace) {
+						workspace.begin("Begin transaction on some object, we lost which one it was.");
+						commitObjects();
+						commitProperties();
+						commitRemovals();
+						workspace.commit();
+					}
 				}
 				transactionCount--;
 			} catch (Throwable t) {
@@ -826,8 +829,11 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 
-		throw new WabitPersistenceException(uuid, "Cannot find the property "
-				+ propertyName + " for object " + uuid);
+		// Property might not be persisted because it might be null. 
+		// We therefore need to return null.
+		return null;
+//		throw new WabitPersistenceException(uuid, "Cannot find the property "
+//				+ propertyName + " for object " + uuid);
 
 	}
 
@@ -3789,7 +3795,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void rollback() {
 		synchronized (session) {
-			logger.debug("wsp.rollback();");
+			logger.debug("wsp.rollback(); - transaction count : "+transactionCount);
 			try {
 				updateDepth++;
 				if (transactionCount <= 0) {
