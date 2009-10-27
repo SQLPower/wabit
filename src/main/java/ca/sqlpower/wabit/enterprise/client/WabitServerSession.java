@@ -32,11 +32,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
@@ -96,6 +98,8 @@ public class WabitServerSession extends WabitSessionImpl {
 	 */
 	private final WabitSessionPersister sessionPersister;
 	
+	private static CookieStore cookieStore = new BasicCookieStore();
+	
     public WabitServerSession(
     		@Nonnull WorkspaceLocation workspaceLocation,
     		@Nonnull WabitSessionContext context) {
@@ -125,6 +129,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(params, 2000);
         DefaultHttpClient httpClient = new DefaultHttpClient(params);
+        httpClient.setCookieStore(cookieStore);
         httpClient.getCredentialsProvider().setCredentials(
             new AuthScope(serviceInfo.getServerAddress(), AuthScope.ANY_PORT), 
             new UsernamePasswordCredentials(serviceInfo.getUsername(), serviceInfo.getPassword()));

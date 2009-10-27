@@ -448,6 +448,7 @@ public class WabitSessionPersister implements WabitPersister {
 					this.persistedPropertiesRollbackList.clear();
 					
 					if (transactionCount == 1) {
+						logger.debug("Begin of commit phase...");
 						workspace.begin("Begin batch transaction...");
 						commitObjects();
 						commitProperties();
@@ -461,6 +462,7 @@ public class WabitSessionPersister implements WabitPersister {
 						this.persistedPropertiesRollbackList.clear();
 						this.currentThread = null;
 						transactionCount = 0;
+						logger.debug("...commit succeeded.");
 					} else {
 						transactionCount--;
 					}

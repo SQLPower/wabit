@@ -220,6 +220,8 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	 public void persistObject(WabitObject wo) throws WabitPersistenceException {
 		 
+		 if (wouldEcho()) return;
+		
 		target.begin();
 
 		try {
@@ -260,6 +262,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	 protected void persistChild(WabitObject parent, WabitObject child, 
 			Class<? extends WabitObject> childClassType, int indexOfChild) {
+		 
+		 if (wouldEcho()) return;
+		 
 		try {
 			final String parentUUID;
 			if (child instanceof WabitWorkspace) {
