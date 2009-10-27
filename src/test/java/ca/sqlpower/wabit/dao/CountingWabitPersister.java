@@ -23,9 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.wabit.dao.WabitSessionPersister.PersistedWabitObject;
-import ca.sqlpower.wabit.dao.WabitSessionPersister.WabitObjectProperty;
-
 public class CountingWabitPersister implements WabitPersister {
 	
 	private int persistObjectCount = 0;
