@@ -405,7 +405,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 						this.session.getWorkspace(), 
 						systemWorkspace, 
 						object.getUUID(),
-						null,
+						object.getClass().getSimpleName(),
 						object.getName())));
 			} else if (object instanceof WabitWorkspace) {
 				menu.add(new JMenuItem(
@@ -413,7 +413,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							this.session.getWorkspace(), 
 							systemWorkspace, 
 							object.getUUID(),
-							null,
+							object.getClass().getSimpleName(),
 							object.getName().concat(" workspace"))));
 			}
 		} else {

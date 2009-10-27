@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
@@ -94,14 +96,19 @@ public class GrantPanel implements DataEntryPanel {
 	private final JPanel checkboxPanel = new JPanel(new MigLayout());
 	private final boolean systemMode;
 
-	public GrantPanel(WabitWorkspace workspace, WabitWorkspace systemWorkspace, String objectType, String objectUuid, String label) {
+	public GrantPanel(
+			@Nonnull WabitWorkspace workspace, 
+			@Nonnull WabitWorkspace systemWorkspace, 
+			@Nonnull String objectType, 
+			@Nullable String objectUuid, 
+			@Nonnull String label) {
 		
-		if (objectUuid == null) {
+		if (objectUuid == null && objectType != null) {
 			this.systemMode = true;
 		} else if (objectUuid != null && objectType != null) {
 			this.systemMode = false;
 		} else {
-			throw new RuntimeException ("One of objectType or objectName has to be given.");
+			throw new RuntimeException ("You must either supply objectType or both objectType and objectUuid parameters.");
 		}
 		
 		this.topLabel = new JLabel("Security settings for "+label);
@@ -198,7 +205,7 @@ public class GrantPanel implements DataEntryPanel {
 		updateGrantsList();
 	}
 	
-	public void updateGrantsList() {
+	void updateGrantsList() {
 		// We need to inspect each group and each user and select
 		// from the list those that have a grant on the required type
 		for (int i = 0; i < this.list.getModel().getSize(); i++) {
@@ -207,7 +214,7 @@ public class GrantPanel implements DataEntryPanel {
 				for (Grant grant : group.getGrants()) {
 					if (this.systemMode && grant.getType().equals(this.objectType)) {
 						this.grants.put(group.getUUID(), grant);
-					} else if (!this.systemMode && grant.getSubject().equals(this.objectUuid)) {
+					} else if (!this.systemMode && this.objectUuid.equals(grant.getSubject())) {
 						this.grants.put(group.getUUID(), grant);
 					}
 				}
@@ -216,7 +223,7 @@ public class GrantPanel implements DataEntryPanel {
 				for (Grant grant : user.getGrants()) {
 					if (this.systemMode && grant.getType().equals(this.objectType)) {
 						this.grants.put(user.getUUID(), grant);
-					} else if (!this.systemMode && grant.getSubject().equals(this.objectUuid)) {
+					} else if (!this.systemMode && this.objectUuid.equals(grant.getSubject())) {
 						this.grants.put(user.getUUID(), grant);
 					}
 				}
@@ -224,7 +231,7 @@ public class GrantPanel implements DataEntryPanel {
 		}
 	}
 	
-	public void updateGrantSettings() {
+	void updateGrantSettings() {
 		
 		WabitObject currentSelection = (WabitObject)this.list.getSelectedValue();
 		Grant grant = this.grants.get(currentSelection.getUUID());

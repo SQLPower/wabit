@@ -487,6 +487,12 @@ public class WabitSessionPersister implements WabitPersister {
 						logger.fatal("First try at restore failed.", t2);
 						// TODO Monitor this
 					} finally {
+						this.objectsToRemove.clear();
+						this.objectsToRemoveRollbackList.clear();
+						this.persistedObjects.clear();
+						this.persistedObjectsRollbackList.clear();
+						this.persistedProperties.clear();
+						this.persistedPropertiesRollbackList.clear();
 						rollback();
 					}
 					throw new WabitPersistenceException(null, t);
