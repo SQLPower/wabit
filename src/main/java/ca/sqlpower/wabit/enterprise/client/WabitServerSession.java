@@ -24,8 +24,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.swing.SwingUtilities;
@@ -80,8 +78,6 @@ public class WabitServerSession extends WabitSessionImpl {
     
     
     private final Updater updater;
-    
-    private final static Map<WabitServerInfo, WabitSession> systemWorkspaces = new ConcurrentHashMap<WabitServerInfo, WabitSession>();
 
     /**
      * This workspace's location information.
@@ -402,7 +398,7 @@ public class WabitServerSession extends WabitSessionImpl {
 	 */
 	public WabitWorkspace getSystemWorkspace() {
 		for (WabitSession session : this.getContext().getSessions()) {
-			if (session.getWorkspace().getName().equals("system")) {
+			if (session.getWorkspace().getUUID().equals("system")) {
 				return session.getWorkspace();
 			}
 		}
