@@ -376,15 +376,6 @@ public class WabitSessionPersister implements WabitPersister {
 	private final WabitObject root;
 
 	/**
-	 * This is the key to the echo cancellation scheme. When its value is 0,
-	 * there is not currently a modification to the target session in progress.
-	 * When > 0, there is currently an update in progress.
-	 * 
-	 * @see #isUpdatingWabitWorkspace()
-	 */
-	private int updateDepth;
-
-	/**
 	 * Name of this persister (for debugging purposes).
 	 */
 	private final String name;
@@ -446,8 +437,7 @@ public class WabitSessionPersister implements WabitPersister {
 			final WabitWorkspace workspace = session.getWorkspace();
 			synchronized (workspace) {
 				try {
-					updateDepth++;
-					if (transactionCount <= 0) {
+					if (transactionCount == 0) {
 						throw new WabitPersistenceException(null,
 						"Commit attempted while not in a transaction");
 					}
@@ -458,7 +448,7 @@ public class WabitSessionPersister implements WabitPersister {
 					this.persistedPropertiesRollbackList.clear();
 					
 					if (transactionCount == 1) {
-						workspace.begin("Begin batch transaction.");
+						workspace.begin("Begin batch transaction...");
 						commitObjects();
 						commitProperties();
 						commitRemovals();
@@ -470,35 +460,14 @@ public class WabitSessionPersister implements WabitPersister {
 						this.persistedProperties.clear();
 						this.persistedPropertiesRollbackList.clear();
 						this.currentThread = null;
+						transactionCount = 0;
+					} else {
+						transactionCount--;
 					}
 				} catch (Throwable t) {
 					logger.error("WabitSesisonPersister caught an exception while performing a commit operation. Will try to rollback...", t);
-					try {
-						// We catch ANYTHING that comes out of here and rollback.
-						// Some exceptions are Runtimes, so we must catch those too.
-						session.getWorkspace().begin("Transaction UNDO beginning...");
-						rollbackRemovals();
-						rollbackProperties();
-						rollbackCreations();
-						session.getWorkspace().rollback("...done.");
-					} catch (Throwable t2) {
-						// This is a major fuck up. We could not rollback so now we must restore
-						// by whatever means
-						logger.fatal("First try at restore failed.", t2);
-						// TODO Monitor this
-					} finally {
-						this.objectsToRemove.clear();
-						this.objectsToRemoveRollbackList.clear();
-						this.persistedObjects.clear();
-						this.persistedObjectsRollbackList.clear();
-						this.persistedProperties.clear();
-						this.persistedPropertiesRollbackList.clear();
-						rollback();
-					}
+					this.rollback();
 					throw new WabitPersistenceException(null, t);
-				} finally {
-					updateDepth--;
-					transactionCount--;
 				}
 			}
 		}
@@ -877,9 +846,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getPropertyAndRemove(String uuid, String propertyName)
 			throws WabitPersistenceException {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Call to getPropertyAndRemove - uuid :'" + uuid + "' - propertyName :'" +propertyName + "'");
-		}
 		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 			if (wop.getPropertyName().equals(propertyName)) {
 				Object value = wop.getNewValue();
@@ -893,9 +859,6 @@ public class WabitSessionPersister implements WabitPersister {
 		// Property might not be persisted because it might be null. 
 		// We therefore need to return null.
 		return null;
-//		throw new WabitPersistenceException(uuid, "Cannot find the property "
-//				+ propertyName + " for object " + uuid);
-
 	}
 
 	/**
@@ -1182,28 +1145,22 @@ public class WabitSessionPersister implements WabitPersister {
 			logger.debug(String.format(
 					"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
 					type, uuid, index));
-			try {
-				updateDepth++;
-				if (exists(uuid)) {
-					throw new WabitPersistenceException(uuid,
-							"A WabitObject with UUID " + uuid + " and type " + type
-							+ " under parent with UUID " + parentUUID
-							+ " already exists.");
-				}
-
-				PersistedWabitObject pwo = new PersistedWabitObject(parentUUID,
-						type, uuid, index);
-
-				persistedObjects.add(pwo);
-
-				if (transactionCount == 0) {
-					commitObjects();
-				}
-			} finally {
-				updateDepth--;
+			if (transactionCount == 0) {
+				this.rollback();
+				throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
 			}
-		}
+			if (exists(uuid)) {
+				this.rollback();
+				throw new WabitPersistenceException(uuid,
+						"A WabitObject with UUID " + uuid + " and type " + type
+						+ " under parent with UUID " + parentUUID
+						+ " already exists.");
+			}
 
+			PersistedWabitObject pwo = new PersistedWabitObject(parentUUID,
+					type, uuid, index);
+			persistedObjects.add(pwo);
+		}
 	}
 
 	/**
@@ -1228,16 +1185,20 @@ public class WabitSessionPersister implements WabitPersister {
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
 		this.enforeThreadSafety();
+		if (transactionCount <= 0) {
+			this.rollback();
+			throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
+		}
 		synchronized (session) {
 			logger.debug(String.format(
 					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
 					uuid, propertyName, propertyType.name(), oldValue, newValue));
 			try {
-				updateDepth++;
 				persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
 						newValue, false);
-			} finally {
-				updateDepth--;
+			} catch (WabitPersistenceException e) {
+				this.rollback();
+				throw e;
 			}
 		}
 	}
@@ -1262,17 +1223,21 @@ public class WabitSessionPersister implements WabitPersister {
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
 		this.enforeThreadSafety();
+		if (transactionCount <= 0) {
+			this.rollback();
+			throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
+		}
 		synchronized (session) {
 			logger.debug(String.format(
 					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
 					uuid, propertyName, propertyType.name(),
 					newValue));
 			try {
-				updateDepth++;
 				persistPropertyHelper(uuid, propertyName, propertyType, newValue,
-						newValue, true);
-			} finally {
-				updateDepth--;
+					newValue, true);
+			} catch (WabitPersistenceException e) {
+				this.rollback();
+				throw e;
 			}
 		}
 	}
@@ -3845,23 +3810,19 @@ public class WabitSessionPersister implements WabitPersister {
 		synchronized (session) {
 			logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
 					parentUUID, uuid));
-			try {
-				updateDepth++;
-				if (!exists(uuid)) {
-					throw new WabitPersistenceException(uuid,
-							"Cannot remove the WabitObject with UUID " + uuid
-							+ " from parent UUID " + parentUUID
-							+ " as it does not exist.");
-				}
-
-				objectsToRemove.put(uuid, parentUUID);
-
-				if (transactionCount == 0) {
-					commitRemovals();
-				}
-			} finally {
-				updateDepth--;
+			if (this.transactionCount==0) {
+				logger.error("Remove Object attempted while not in a transaction. Rollback initiated.");
+				this.rollback();
+				throw new WabitPersistenceException(uuid,"Remove Object attempted while not in a transaction. Rollback initiated.");
 			}
+			if (!exists(uuid)) {
+				this.rollback();
+				throw new WabitPersistenceException(uuid,
+						"Cannot remove the WabitObject with UUID " + uuid
+						+ " from parent UUID " + parentUUID
+						+ " as it does not exist.");
+			}
+			objectsToRemove.put(uuid, parentUUID);
 		}
 	}
 
@@ -3873,9 +3834,31 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void rollback() {
 		this.enforeThreadSafety();
-		synchronized (session) {
-			logger.debug("wsp.rollback(); - closing transaction : "+transactionCount);
-			transactionCount--;
+		final WabitWorkspace workspace = session.getWorkspace();
+		synchronized (workspace) {
+			try {
+				// We catch ANYTHING that comes out of here and rollback.
+				// Some exceptions are Runtimes, so we must catch those too.
+				workspace.begin("Transaction UNDO beginning...");
+				rollbackRemovals();
+				rollbackProperties();
+				rollbackCreations();
+				workspace.rollback("...done.");
+			} catch (Throwable t2) {
+				// This is a major fuck up. We could not rollback so now we must restore
+				// by whatever means
+				logger.fatal("First try at restore failed.", t2);
+				// TODO Monitor this
+			} finally {
+				this.objectsToRemove.clear();
+				this.objectsToRemoveRollbackList.clear();
+				this.persistedObjects.clear();
+				this.persistedObjectsRollbackList.clear();
+				this.persistedProperties.clear();
+				this.persistedPropertiesRollbackList.clear();
+				transactionCount = 0;
+				logger.debug("wsp.rollback(); - Killed all current transactions.");
+			}
 		}
 	}
 
@@ -3885,12 +3868,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 * ignore modifications to that session.
 	 */
 	public boolean isUpdatingWabitWorkspace() {
-		if (updateDepth > 0) {
+		if (transactionCount > 0) {
 			return true;
-		} else if (updateDepth == 0) {
+		} else if (transactionCount == 0) {
 			return false;
 		} else {
-			throw new IllegalStateException("This persister is in an illegal state. updateDepth was :"+updateDepth);
+			this.rollback();
+			throw new IllegalStateException("This persister is in an illegal state. transactionCount was :"+transactionCount);
 		}
 	}
 
@@ -3899,6 +3883,7 @@ public class WabitSessionPersister implements WabitPersister {
 			this.currentThread = Thread.currentThread();
 		} else {
 			if (this.currentThread!=Thread.currentThread()) {
+				this.rollback();
 				throw new RuntimeException("A call from two different threads was detected. Callers of a sessionPersister should synchronize prior to opening transactions.");
 			}
 		}
