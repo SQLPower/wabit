@@ -43,8 +43,10 @@ public class WabitIcons {
 	public static final Icon REFRESH_ICON_32 = makeIcon("32x32/refresh");
 	public static final Icon USER_ICON_16 = makeIcon("user-16");
 	public static final Icon SECURITY_ICON_16 = makeIcon("badge");
+	public static final Icon SECURITY_ICON_32 = makeIcon("32x32/badge-32");
 	public static final Icon GROUP_ICON_16 = makeIcon("group-16");
 	public static final Icon DELETE_ICON_32 = makeIcon("32x32/cancel");
+	public static final Icon SERVER_ICON_32 = makeIcon("32x32/wabitServer-32");
 	
 	 
 	

@@ -21,7 +21,10 @@ package ca.sqlpower.wabit.swingui.enterprise;
 
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -61,8 +64,22 @@ public class UsersAndGroupsListModel implements ListModel, WabitListener {
 	
 	private void updateList() {
 		this.items.clear();
-		this.items.addAll(this.workspace.getGroups());
-		this.items.addAll(this.workspace.getUsers());
+		List<Group> groups = new LinkedList<Group>();
+		groups.addAll(this.workspace.getGroups());
+		Collections.sort(groups, new Comparator<Group>() {
+			public int compare(Group o1, Group o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
+		this.items.addAll(groups);
+		List<User> users = new LinkedList<User>();
+		users.addAll(this.workspace.getUsers());
+		Collections.sort(users, new Comparator<User>() {
+			public int compare(User o1, User o2) {
+				return o2.getName().compareTo(o1.getName());
+			}
+		});
+		this.items.addAll(users);
 	}
 	
 	private void fireChange() {

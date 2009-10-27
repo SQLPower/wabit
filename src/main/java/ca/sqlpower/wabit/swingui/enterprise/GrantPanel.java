@@ -66,6 +66,7 @@ import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
 public class GrantPanel implements DataEntryPanel {
@@ -91,10 +92,15 @@ public class GrantPanel implements DataEntryPanel {
 	private final Map<String,Grant> grants = new HashMap<String, Grant>();
 	
 	private final JLabel topLabel;
+	private final JLabel bottomLabel;
+	private final JPanel labelPanel = new JPanel(new MigLayout());
 	
 	private final JPanel panel = new JPanel(new MigLayout());
 	private final JPanel checkboxPanel = new JPanel(new MigLayout());
 	private final boolean systemMode;
+	
+	private final JLabel icon;
+	
 
 	public GrantPanel(
 			@Nonnull WabitWorkspace workspace, 
@@ -105,13 +111,17 @@ public class GrantPanel implements DataEntryPanel {
 		
 		if (objectUuid == null && objectType != null) {
 			this.systemMode = true;
+			this.topLabel = new JLabel("Server Wide Security Settings");
+			this.bottomLabel = new JLabel("Please configure system level permissions for " + label);
+			this.icon = new JLabel(WabitIcons.SERVER_ICON_32);
 		} else if (objectUuid != null && objectType != null) {
 			this.systemMode = false;
+			this.topLabel = new JLabel("Sharing and Security Settings");
+			this.bottomLabel = new JLabel("Please configure who has access to " + label);
+			this.icon = new JLabel(WabitIcons.SECURITY_ICON_32);
 		} else {
 			throw new RuntimeException ("You must either supply objectType or both objectType and objectUuid parameters.");
 		}
-		
-		this.topLabel = new JLabel("Security settings for "+label);
 		
 		this.workspace = workspace;
 		this.systemWorkspace = systemWorkspace;
@@ -143,9 +153,12 @@ public class GrantPanel implements DataEntryPanel {
 		
 		
 		
+		String suffix = "";
+		if (this.systemMode) {
+			suffix = " any";
+		}
 		
-		
-		this.createCheckBox = new JCheckBox("Create");
+		this.createCheckBox = new JCheckBox("Create"+suffix);
 		this.createCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
@@ -154,7 +167,7 @@ public class GrantPanel implements DataEntryPanel {
 				dirty = true;
 			}
 		});
-		this.modifyCheckBox = new JCheckBox("Modify");
+		this.modifyCheckBox = new JCheckBox("Modify"+suffix);
 		this.modifyCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
@@ -163,7 +176,7 @@ public class GrantPanel implements DataEntryPanel {
 				dirty = true;
 			}
 		});
-		this.deleteCheckBox = new JCheckBox("Delete");
+		this.deleteCheckBox = new JCheckBox("Delete"+suffix);
 		this.deleteCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
@@ -172,7 +185,7 @@ public class GrantPanel implements DataEntryPanel {
 				dirty = true;
 			}
 		});
-		this.executeCheckBox = new JCheckBox("Execute");
+		this.executeCheckBox = new JCheckBox("Execute"+suffix);
 		this.executeCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
@@ -181,7 +194,7 @@ public class GrantPanel implements DataEntryPanel {
 				dirty = true;
 			}
 		});
-		this.grantCheckBox = new JCheckBox("Grant");
+		this.grantCheckBox = new JCheckBox("Grant"+suffix);
 		this.grantCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
@@ -197,8 +210,13 @@ public class GrantPanel implements DataEntryPanel {
 		this.checkboxPanel.add(this.executeCheckBox, "wrap");
 		this.checkboxPanel.add(this.grantCheckBox, "wrap");
 		
+		this.topLabel.setFont(this.topLabel.getFont().deriveFont(new Float(this.topLabel.getFont().getSize()+8)));
+		this.labelPanel.add(this.icon, "spany 2, gapright 10");
+		this.labelPanel.add(this.topLabel, "wrap");
+		this.labelPanel.add(this.bottomLabel);
+		panel.add(labelPanel, "north, gapbottom 20, gaptop 10");
 		
-		panel.add(topLabel, "north, gapbottom 20, gaptop 10");
+		
 		panel.add(scrollPane, "west, wmin 500, hmin 400");
 		panel.add(this.checkboxPanel, "east");
 		
