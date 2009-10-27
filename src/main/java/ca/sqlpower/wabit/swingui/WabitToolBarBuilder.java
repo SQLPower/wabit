@@ -243,14 +243,35 @@ public class WabitToolBarBuilder {
 	/**
 	 * This is the Wabit logo button that takes the user to the forums.
 	 */
-    private JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+    private final JButton forumButton = new JButton(WabitSwingSessionContextImpl.FORUM_ACTION);
+
+	private final boolean addForumButton;
 	
+	/**
+	 * Creates a WabitToolBarBuilder with a 'Wabit' button on the end of the
+	 * toolbar that takes you to the support forum when clicked.
+	 */
 	public WabitToolBarBuilder() {
+		this(true);
+	}
+	
+	/**
+	 * Creates a WabitToolBarBuilder with the option to add a 'Wabit' button on
+	 * the end of the toolbar that takes you to the support forum when clicked.
+	 * 
+	 * @param addForumButton
+	 *            Set to true to include the Wabit forum button. Set to false to
+	 *            not include the Wabit forum button.
+	 */
+	public WabitToolBarBuilder(boolean addForumButton) {
+		this.addForumButton = addForumButton;
 		forumButton.setBorder(new EmptyBorder(0, 0, 0, 0));
 		buttonBar = new JToolBar();
 		buttonBar.setFloatable(false);
 		buttonBar.setLayout(new ExpandLayout());
-		buttonBar.add(forumButton, ExpandLayout.RIGHT_IMAGE_CONSTRAINT);
+		if (addForumButton) {
+			buttonBar.add(forumButton, ExpandLayout.RIGHT_IMAGE_CONSTRAINT);
+		}
 	}
 	
 	/**
@@ -363,6 +384,9 @@ public class WabitToolBarBuilder {
      */
     public void clear() {
         buttonBar.removeAll();
+        if (addForumButton) {
+        	buttonBar.add(forumButton, ExpandLayout.RIGHT_IMAGE_CONSTRAINT);
+        }
     }
 
 }
