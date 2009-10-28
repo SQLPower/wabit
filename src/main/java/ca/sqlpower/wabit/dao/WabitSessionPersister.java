@@ -3668,6 +3668,12 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				// We catch ANYTHING that comes out of here and rollback.
 				// Some exceptions are Runtimes, so we must catch those too.
+				try {
+					workspace.begin(null);
+				} catch (Exception e) {
+					// We have no idea to know if the transaction was started or not. If it wasn't,
+					// this will fail. We still have to undo afterwards.
+				}
 				rollbackRemovals();
 				rollbackProperties();
 				rollbackCreations();
