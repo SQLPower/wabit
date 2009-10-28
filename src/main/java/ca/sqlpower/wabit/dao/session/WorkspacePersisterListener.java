@@ -203,7 +203,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void wabitChildAdded(WabitChildEvent e) {
-		e.getChild().addWabitListener(this);
+		WabitUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
 		persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
 	}
