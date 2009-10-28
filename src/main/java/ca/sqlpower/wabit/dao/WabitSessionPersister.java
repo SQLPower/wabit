@@ -280,7 +280,7 @@ public class WabitSessionPersister implements WabitPersister {
 				try {
 					if (transactionCount == 0) {
 						throw new WabitPersistenceException(null,
-						"Commit attempted while not in a transaction");
+							"Commit attempted while not in a transaction");
 					}
 	
 					// Make sure the rollback lists are empty.
@@ -289,7 +289,7 @@ public class WabitSessionPersister implements WabitPersister {
 					this.persistedPropertiesRollbackList.clear();
 					
 					if (transactionCount == 1) {
-						logger.debug("Begin of commit phase...");
+						logger.info("Begin of commit phase...");
 						workspace.begin("Begin batch transaction...");
 						commitObjects();
 						commitProperties();
@@ -303,7 +303,7 @@ public class WabitSessionPersister implements WabitPersister {
 						this.persistedPropertiesRollbackList.clear();
 						this.currentThread = null;
 						transactionCount = 0;
-						logger.debug("...commit succeeded.");
+						logger.info("...commit succeeded.");
 					} else {
 						transactionCount--;
 					}
@@ -3709,7 +3709,6 @@ public class WabitSessionPersister implements WabitPersister {
 			this.currentThread = Thread.currentThread();
 		} else {
 			if (this.currentThread!=Thread.currentThread()) {
-				this.rollback();
 				throw new RuntimeException("A call from two different threads was detected. Callers of a sessionPersister should synchronize prior to opening transactions.");
 			}
 		}
