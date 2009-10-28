@@ -29,9 +29,9 @@ import org.apache.log4j.Logger;
  * This {@link WabitPersister} tracks each method call made to it for the sole
  * purpose of being used in tests.
  */
-public class TrackingPersister implements WabitPersister {
+public class TrackingWabitPersister implements WabitPersister {
 	
-	private static final Logger logger = Logger.getLogger(TrackingPersister.class);
+	private static final Logger logger = Logger.getLogger(TrackingWabitPersister.class);
 	
 	private final List<Object> persisterCalls = new ArrayList<Object>();
 	
@@ -42,27 +42,47 @@ public class TrackingPersister implements WabitPersister {
 	private int persistPropertyCount = 0;
 	private int removeObjectCount = 0;
 
+	/**
+	 * Increments the begin counter and adds this begin call to the list of
+	 * persister calls.
+	 */
 	public void begin() throws WabitPersistenceException {
 		beginCount++;
 		persisterCalls.add(WabitPersistMethod.begin);
 	}
 
+	/**
+	 * Increments the commit counter and adds this commit call to the list of
+	 * persister calls.
+	 */
 	public void commit() throws WabitPersistenceException {
 		commitCount++;
 		persisterCalls.add(WabitPersistMethod.commit);
 	}
 	
+	/**
+	 * Increments the rollback counter and adds this rollback call to the list of
+	 * persister calls.
+	 */
 	public void rollback() {
 		rollbackCount++;
 		persisterCalls.add(WabitPersistMethod.rollback);
 	}
 
+	/**
+	 * Increments the persistObject counter and adds this persistObject call to the list
+	 * of persister calls.
+	 */
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
 		persistObjectCount++;
 		persisterCalls.add(new PersistedWabitObject(parentUUID, type, uuid, index));
 	}
 
+	/**
+	 * Increments the persistProperty counter and adds this persistProperty call to the
+	 * list of persister calls.
+	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
@@ -70,6 +90,10 @@ public class TrackingPersister implements WabitPersister {
 		persisterCalls.add(new WabitObjectProperty(uuid, propertyName, propertyType, oldValue, newValue, false));
 	}
 
+	/**
+	 * Increments the persistProperty counter and adds this persistProperty call to the
+	 * list of persister calls.
+	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
@@ -77,36 +101,61 @@ public class TrackingPersister implements WabitPersister {
 		persisterCalls.add(new WabitObjectProperty(uuid, propertyName, propertyType, null, newValue, true));
 	}
 
+	/**
+	 * Increments the removeObject counter and adds this removeObject call to the
+	 * list of persister calls.
+	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
 		removeObjectCount++;
 		persisterCalls.add(new RemovedWabitObject(parentUUID, uuid));
 	}
 	
+	/**
+	 * Returns the number of begin method calls this persister has received.
+	 */
 	public int getBeginCount() {
 		return beginCount;
 	}
 	
+	/**
+	 * Returns the number of commit method calls this persister has received.
+	 */
 	public int getCommitCount() {
 		return commitCount;
 	}
-	
+
+	/**
+	 * Returns the number of rollback method calls this persister has received.
+	 */
 	public int getRollbackCount() {
 		return rollbackCount;
 	}
 	
+	/**
+	 * Returns the number of persistObject method calls this persister has received. 
+	 */
 	public int getPersistObjectCount() {
 		return persistObjectCount;
 	}
 	
+	/**
+	 * Returns the number of persistProperty method calls this persister has received. 
+	 */
 	public int getPersistPropertyCount() {
 		return persistPropertyCount;
 	}
 	
+	/**
+	 * Returns the number of persistProperty method calls this persister has received.
+	 */
 	public int getRemoveObjectCount() {
 		return removeObjectCount;
 	}
 	
+	/**
+	 * Returns an unmodifiable {@link List} of stored persister calls.  
+	 */
 	public List<Object> getPersisterCalls() {
 		return Collections.unmodifiableList(persisterCalls);
 	}
