@@ -138,7 +138,7 @@ public class UserPanel implements WabitPanel {
 		this.passwordTextField.getDocument().addDocumentListener(new DocumentListener() {
 
 			public void textChanged(DocumentEvent e) {
-				user.setPassword(loginTextField.getText());
+				user.setPassword(new String(passwordTextField.getPassword()));
 			}
 			
 			public void changedUpdate(DocumentEvent e) {
