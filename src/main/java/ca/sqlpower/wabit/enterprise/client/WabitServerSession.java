@@ -118,6 +118,8 @@ public class WabitServerSession extends WabitSessionImpl {
         sessionPersister = new WabitSessionPersister(
         		"inbound-" + workspaceLocation.getUuid(),
         		WabitServerSession.this);
+        // Whatever updates come from the server, it can override the user's stuff.
+        sessionPersister.setGodMode(true);
         updater = new Updater(workspaceLocation.getUuid(), new WabitJSONMessageDecoder(sessionPersister));
         
         MessageSender<JSONObject> httpSender = new JSONHttpMessageSender(outboundHttpClient, workspaceLocation.getServiceInfo(),

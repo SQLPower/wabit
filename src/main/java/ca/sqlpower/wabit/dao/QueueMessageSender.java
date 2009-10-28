@@ -47,4 +47,8 @@ public class QueueMessageSender<T> implements MessageSender<T> {
 	public void flush() throws WabitPersistenceException {
 		// no-op. Not sure what 'flushing' a queue would really do
 	}
+	
+	public void clear() {
+		queue.clear();
+	}
 }

@@ -31,8 +31,6 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -46,9 +44,6 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
  * href="http://www.json.org">www.json.org</a>).
  */
 public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
-	
-	private static final Logger logger = Logger
-			.getLogger(JSONHttpMessageSender.class);
 	
 	private JSONArray messageArray;
 	
@@ -91,6 +86,10 @@ public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 		} finally {
 			clearMessageArray();
 		}
+	}
+	
+	public void clear() {
+		this.clearMessageArray();
 	}
 	
 	private void clearMessageArray() {

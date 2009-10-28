@@ -100,8 +100,8 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		try {
 			JSONArray messageArray = new JSONArray(message);
 			for (int i=0; i < messageArray.length(); i++) {
-				logger.debug("Decoding Message: " + jsonObject);
 				jsonObject = messageArray.getJSONObject(i);
+				logger.debug("Decoding Message: " + jsonObject);
 				uuid = jsonObject.getString("uuid");
 				WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
 				String parentUUID;

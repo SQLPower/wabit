@@ -113,6 +113,13 @@ import com.rc.retroweaver.runtime.Collections;
  */
 public class WabitSessionPersister implements WabitPersister {
 
+	/**
+	 * The god mode means that this listener will output
+	 * events that are unconditional, always. This makes it the
+	 * purveyor of the truth.
+	 */
+	private boolean godMode = false;
+	
 	private static final Logger logger = Logger
 			.getLogger(WabitSessionPersister.class);
 
@@ -1031,7 +1038,7 @@ public class WabitSessionPersister implements WabitPersister {
 					uuid, propertyName, propertyType.name(), oldValue, newValue));
 			try {
 				persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
-						newValue, false);
+						newValue, this.godMode);
 			} catch (WabitPersistenceException e) {
 				this.rollback();
 				throw e;
@@ -1109,19 +1116,6 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 
 		Object lastPropertyValueFound = null;
-
-		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
-			if (propertyName.equals(wop.getPropertyName())) {
-				lastPropertyValueFound = wop.getNewValue();
-				if (wop.isUnconditional() && unconditional) {
-					throw new WabitPersistenceException(uuid,
-							"Cannot make more than one unconditional persist property call for property \""
-									+ propertyName
-									+ "\" in the same transaction.");
-				}
-
-			}
-		}
 
 		Object propertyValue = null;
 		WabitObject wo = WabitUtils.findByUuid(root, uuid,
@@ -1258,10 +1252,6 @@ public class WabitSessionPersister implements WabitPersister {
 		} else {
 			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
 					propertyName, propertyType, oldValue, newValue, unconditional));
-		}
-
-		if (transactionCount == 0) {
-			commitProperties();
 		}
 	}
 
@@ -3723,5 +3713,15 @@ public class WabitSessionPersister implements WabitPersister {
 				throw new RuntimeException("A call from two different threads was detected. Callers of a sessionPersister should synchronize prior to opening transactions.");
 			}
 		}
+	}
+	
+	
+	/**
+	 * Turns this persister as a preacher of the truth and
+	 * always the truth. All calls are turned into unconditionals.
+	 * @param godMode True or False
+	 */
+	public void setGodMode(boolean godMode) {
+		this.godMode = godMode;
 	}
 }

@@ -46,4 +46,9 @@ public interface MessageSender<T> {
 	 * @throws WabitPersistenceException
 	 */
 	public void flush() throws WabitPersistenceException;
+	
+	/**
+	 * Empties the current queue of messages to be sent.
+	 */
+	public void clear();
 }

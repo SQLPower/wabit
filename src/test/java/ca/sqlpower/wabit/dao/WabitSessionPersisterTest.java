@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.dao;
 
-import java.awt.Font;
 import java.io.IOException;
 
 import junit.framework.TestCase;
@@ -38,10 +37,7 @@ import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
-import ca.sqlpower.wabit.dao.session.FontConverter;
 import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.report.Page;
-import ca.sqlpower.wabit.report.Report;
 
 public class WabitSessionPersisterTest extends TestCase {
 
@@ -84,6 +80,14 @@ public class WabitSessionPersisterTest extends TestCase {
 		session = new StubWabitSession(context);
         wsp = new WabitSessionPersister("testing persister", session);
 
+	}
+	
+	public WabitPersister getTestedPersister() {
+		return this.wsp;
+	}
+	
+	public WabitObject getRootObject() {
+		return this.session.getWorkspace();
 	}
 
 	public void testForwardReferenceFollowedByNestedTransaction() throws Exception {

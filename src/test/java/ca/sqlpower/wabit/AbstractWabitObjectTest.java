@@ -433,9 +433,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             
             DataType type = SessionPersisterUtils.getDataType(property.getPropertyType());
 			Object basicNewValue = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
+			persister.begin();
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
 					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
 					basicNewValue);
+			persister.commit();
 			
 			Object newValAfterSet = PropertyUtils.getSimpleProperty(wo, property.getName());
 			Object basicExpectedValue = converterFactory.convertToBasicType(newValAfterSet, additionalVals.toArray());

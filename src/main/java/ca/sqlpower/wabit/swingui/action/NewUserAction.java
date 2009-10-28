@@ -43,7 +43,9 @@ public class NewUserAction extends AbstractAction {
 	
 	public void actionPerformed(ActionEvent e) {
 		User user = new User("New User", "");
+		session.getWorkspace().begin("Adding user");
 		session.getWorkspace().addUser(user);
+		session.getWorkspace().commit();
 	}
 
 }

@@ -46,6 +46,10 @@ public class WabitJSONPersisterTest extends TestCase {
 			public void flush() throws WabitPersistenceException {
 				// no-op
 			}
+			
+			public void clear() {
+				// no op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
@@ -68,6 +72,9 @@ public class WabitJSONPersisterTest extends TestCase {
 			public void flush() throws WabitPersistenceException {
 				// no-op
 			}
+			public void clear() {
+				// no op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
@@ -89,11 +96,14 @@ public class WabitJSONPersisterTest extends TestCase {
 		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
-					assertEquals(content.getString("method"), WabitPersistMethod.persistObject.toString());
-					assertEquals(content.getString("parentUUID"), "parent");
-					assertEquals(content.getString("uuid"), "uuid");
-					assertEquals(content.getString("type"), "type");
-					assertEquals(content.getInt("index"), 0);
+					if (content.getString("method").equals(WabitPersistMethod.persistObject.toString())) {						
+						assertEquals(content.getString("parentUUID"), "parent");
+						assertEquals(content.getString("uuid"), "uuid");
+						assertEquals(content.getString("type"), "type");
+						assertEquals(content.getInt("index"), 0);
+					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+						fail();
+					}
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
@@ -102,21 +112,29 @@ public class WabitJSONPersisterTest extends TestCase {
 			public void flush() throws WabitPersistenceException {
 				// no-op
 			}
+			public void clear() {
+				// no op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
 		persister.persistObject("parent", "type", "uuid", 0);
+		persister.commit();
 	}
 
 	public void testChangeProperty() throws Exception {
 		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
-					assertEquals(content.getString("method"), WabitPersistMethod.changeProperty.toString());
-					assertEquals(content.getString("propertyName"), "property");
-					assertEquals(content.getString("type"), DataType.STRING.name());
-					assertEquals(content.getString("oldValue"), "old");
-					assertEquals(content.getString("newValue"), "new");
+					if (content.getString("method").equals(WabitPersistMethod.changeProperty.toString())) {
+						assertEquals(content.getString("propertyName"), "property");
+						assertEquals(content.getString("type"), DataType.STRING.name());
+						assertEquals(content.getString("oldValue"), "old");
+						assertEquals(content.getString("newValue"), "new");
+					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+						fail();
+					}
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
@@ -125,20 +143,28 @@ public class WabitJSONPersisterTest extends TestCase {
 			public void flush() throws WabitPersistenceException {
 				// no-op
 			}
+			public void clear() {
+				// no op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
 		persister.persistProperty("uuid", "property", DataType.STRING, "old", "new");
+		persister.commit();
 	}
 
 	public void testPersistProperty() throws Exception {
 		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
-					assertEquals(content.getString("method"), WabitPersistMethod.persistProperty.toString());
-					assertEquals(content.getString("propertyName"), "property");
-					assertEquals(content.getString("type"), DataType.STRING.name());
-					assertEquals(content.getString("newValue"), "new");
+					if (content.getString("method").equals(WabitPersistMethod.persistProperty.toString())) {
+						assertEquals(content.getString("propertyName"), "property");
+						assertEquals(content.getString("type"), DataType.STRING.name());
+						assertEquals(content.getString("newValue"), "new");
+					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+						fail();
+					}
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
@@ -147,19 +173,27 @@ public class WabitJSONPersisterTest extends TestCase {
 			public void flush() throws WabitPersistenceException {
 				// no-op
 			}
+			public void clear() {
+				// no op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
 		persister.persistProperty("uuid", "property", DataType.STRING, "new");
+		persister.commit();
 	}
 
 	public void testRemoveObject() throws Exception {
 		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {
 				try {
-					assertEquals(content.getString("method"), WabitPersistMethod.removeObject.toString());
-					assertEquals(content.getString("parentUUID"), "parent");
-					assertEquals(content.getString("uuid"), "uuid");
+					if (content.getString("method").equals(WabitPersistMethod.removeObject.toString())) {
+						assertEquals(content.getString("parentUUID"), "parent");
+						assertEquals(content.getString("uuid"), "uuid");
+					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+						fail();
+					}
 				} catch (JSONException e) {
 					throw new RuntimeException(e);
 				}
@@ -168,10 +202,15 @@ public class WabitJSONPersisterTest extends TestCase {
 			public void flush() throws WabitPersistenceException {
 				// no-op
 			}
+			public void clear() {
+				// no op
+			}
 		};
 		
 		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
 		persister.removeObject("parent", "uuid");
+		persister.commit();
 	}
 
 	public void testRollback() throws Exception {
@@ -189,6 +228,9 @@ public class WabitJSONPersisterTest extends TestCase {
 			
 			public void flush() throws WabitPersistenceException {
 				// no-op
+			}
+			public void clear() {
+				// no op
 			}
 		};
 		
@@ -225,6 +267,9 @@ public class WabitJSONPersisterTest extends TestCase {
 		
 		public void flush() throws WabitPersistenceException {
 			// no-op
+		}
+		public void clear() {
+			// no op
 		}
 	}
 
