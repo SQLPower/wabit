@@ -3665,11 +3665,10 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				// We catch ANYTHING that comes out of here and rollback.
 				// Some exceptions are Runtimes, so we must catch those too.
-				workspace.begin("Transaction UNDO beginning...");
 				rollbackRemovals();
 				rollbackProperties();
 				rollbackCreations();
-				workspace.rollback("...done.");
+				workspace.rollback("Canceling transaction.");
 			} catch (Throwable t2) {
 				// This is a major fuck up. We could not rollback so now we must restore
 				// by whatever means
