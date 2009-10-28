@@ -98,55 +98,57 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 		String uuid = null;
 		JSONObject jsonObject = null;
 		try {
-			JSONArray messageArray = new JSONArray(message);
-			for (int i=0; i < messageArray.length(); i++) {
-				jsonObject = messageArray.getJSONObject(i);
-				logger.debug("Decoding Message: " + jsonObject);
-				uuid = jsonObject.getString("uuid");
-				WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
-				String parentUUID;
-				String propertyName;
-				DataType propertyType;
-				Object newValue;
-				switch (method) {
-				case begin:
-					persister.begin();
-					break;
-				case commit:
-					persister.commit();
-					break;
-				case persistObject:
-					parentUUID = jsonObject.getString("parentUUID");
-					String type = jsonObject.getString("type");
-					int index = jsonObject.getInt("index");
-					persister.persistObject(parentUUID, type, uuid, index);
-					break;
-				case changeProperty:
-					propertyName = jsonObject.getString("propertyName");
-					propertyType = DataType.valueOf(jsonObject.getString("type"));
-					newValue = getWithType(jsonObject, propertyType, "newValue");
-					Object oldValue = getWithType(jsonObject, propertyType, "oldValue");
-					persister.persistProperty(uuid, propertyName,
-							propertyType, oldValue, newValue);
-					break;
-				case persistProperty:
-					propertyName = jsonObject.getString("propertyName");
-					propertyType = DataType.valueOf(jsonObject.getString("type"));
-					newValue = getWithType(jsonObject, propertyType, "newValue");
-					if (newValue == null) logger.debug("newValue was null for propertyName " + propertyName);
-					persister.persistProperty(uuid, propertyName,
-							propertyType, newValue);
-					break;
-				case removeObject:
-					parentUUID = jsonObject.getString("parentUUID");
-					persister.removeObject(parentUUID, uuid);
-					break;
-				case rollback:
-					persister.rollback();
-					break;
-				default:
-					throw new WabitPersistenceException(uuid,
-							"Does not support Wabit persistence method " + method);
+			synchronized (persister) {
+				JSONArray messageArray = new JSONArray(message);
+				for (int i=0; i < messageArray.length(); i++) {
+					jsonObject = messageArray.getJSONObject(i);
+					logger.debug("Decoding Message: " + jsonObject);
+					uuid = jsonObject.getString("uuid");
+					WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
+					String parentUUID;
+					String propertyName;
+					DataType propertyType;
+					Object newValue;
+					switch (method) {
+					case begin:
+						persister.begin();
+						break;
+					case commit:
+						persister.commit();
+						break;
+					case persistObject:
+						parentUUID = jsonObject.getString("parentUUID");
+						String type = jsonObject.getString("type");
+						int index = jsonObject.getInt("index");
+						persister.persistObject(parentUUID, type, uuid, index);
+						break;
+					case changeProperty:
+						propertyName = jsonObject.getString("propertyName");
+						propertyType = DataType.valueOf(jsonObject.getString("type"));
+						newValue = getWithType(jsonObject, propertyType, "newValue");
+						Object oldValue = getWithType(jsonObject, propertyType, "oldValue");
+						persister.persistProperty(uuid, propertyName,
+								propertyType, oldValue, newValue);
+						break;
+					case persistProperty:
+						propertyName = jsonObject.getString("propertyName");
+						propertyType = DataType.valueOf(jsonObject.getString("type"));
+						newValue = getWithType(jsonObject, propertyType, "newValue");
+						if (newValue == null) logger.debug("newValue was null for propertyName " + propertyName);
+						persister.persistProperty(uuid, propertyName,
+								propertyType, newValue);
+						break;
+					case removeObject:
+						parentUUID = jsonObject.getString("parentUUID");
+						persister.removeObject(parentUUID, uuid);
+						break;
+					case rollback:
+						persister.rollback();
+						break;
+					default:
+						throw new WabitPersistenceException(uuid,
+								"Does not support Wabit persistence method " + method);
+					}
 				}
 			}
 		} catch (JSONException e) {

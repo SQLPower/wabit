@@ -20,149 +20,101 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 
+import javax.annotation.Nullable;
+
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.Page;
-
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfWriter;
+import ca.sqlpower.wabit.report.LayoutToPDF;
 
 /**
  * This worker will write a layout as a PDF to a file.
  */
 public class LayoutToPDFWorker extends SPSwingWorker {
 	
-	public interface PDFWatermarker {
-		public void watermarkPDF(Graphics g, Rectangle size);
-	}
-	
-    private boolean cancelled;
-    private int numPages;
-    private int pageNum;
-	private final File file;
-	private final Layout layout;
+	private final LayoutToPDF pdfMaker;
 	private final Component dialogOwner;
-	private final PDFWatermarker watermarker;
-	
-	/**
-	 * Tracks if this PDF worker actually was able to start writing to PDF. The
-	 * PDF worker may not be able to write a layout to PDF if it is already currently
-	 * printing.
-	 */
-    private boolean startedWriting;
 
+	/**
+	 * Creates a PDF worker which does not watermark its output.
+	 * 
+	 * @param registry
+	 *            The swing worker registry to register with (usually the
+	 *            WabitSession)
+	 * @param file
+	 *            The file to save to
+	 * @param layout
+	 *            The layout to transform into a PDF
+	 * @param dialogOwner
+	 *            The Component that should own all GUI dialogs generated while
+	 *            making the PDF
+	 */
     public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner) {
-    	this(registry, file, layout, dialogOwner, new PDFWatermarker(){
-    		public void watermarkPDF(Graphics g, Rectangle size) {
-    	        // no-op
-    		}
-    	});
+    	this(registry, file, layout, dialogOwner, null);
     }
-    
-	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner, PDFWatermarker watermarker) {
+
+	/**
+	 * Creates a PDF worker which watermarks its output using the given
+	 * watermarker.
+	 * 
+	 * @param registry
+	 *            The swing worker registry to register with (usually the
+	 *            WabitSession)
+	 * @param file
+	 *            The file to save to
+	 * @param layout
+	 *            The layout to transform into a PDF
+	 * @param dialogOwner
+	 *            The Component that should own all GUI dialogs generated while
+	 *            making the PDF
+	 * @param watermarker
+	 *            The watermarker to use. null means do not watermark.
+	 */
+	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner,
+			@Nullable LayoutToPDF.PDFWatermarker watermarker) {
 		super(registry);
-		this.file = file;
-		this.layout = layout;
 		this.dialogOwner = dialogOwner;
-		this.watermarker = watermarker;
+		pdfMaker = new LayoutToPDF(file, layout, watermarker);
 	}
 
 	@Override
 	public void doStuff() throws Exception {
-		if (layout.compareAndSetCurrentlyPrinting(false, true)) {
-		    startedWriting = true;
-			writePDF(file, layout);
-		} else {
-		    startedWriting = false;
-		    throw new IllegalStateException("Could not export to PDF. The layout is currently being exported. Please try again later.");
-		}
+		pdfMaker.writePDF();
 	}
 	
 	@Override
 	public void cleanup() throws Exception {
-		if (startedWriting) {
-			layout.compareAndSetCurrentlyPrinting(true, false);
-		}
 		if (getDoStuffException() != null) {
-			throw new RuntimeException(getDoStuffException());
+			SPSUtils.showExceptionDialogNoReport(dialogOwner, "PDF Export Failed", getDoStuffException());
 		}
 	}
-	
-	public void writePDF(File file, Layout layout)
-    throws DocumentException, FileNotFoundException, PrinterException {
-    	cancelled = false;
-    	pageNum = 0;
 
-    	numPages = layout.getNumberOfPages();
-    	Page page = layout.getPage();
-    	OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-    	Rectangle pageSize;
-    	pageSize = new Rectangle(page.getWidth(), page.getHeight());
-
-    	Document pdfDoc = new Document(pageSize, 0f, 0f, 0f, 0f);
-
-    	PdfWriter pdfOut = PdfWriter.getInstance(pdfDoc, out);
-    	pdfDoc.open();
-    	pdfDoc.addCreator("Wabit " + WabitVersion.VERSION);
-    	PdfContentByte pdfContent = pdfOut.getDirectContent();
-    	Graphics2D pdfGraphics = null;
-    	try {
-    	    while(pageNum < numPages) {
-    	        pdfGraphics = pdfContent.createGraphics(pageSize.getWidth(), pageSize.getHeight());
-    	        int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
-
-    	        watermarker.watermarkPDF(pdfGraphics, pageSize);
-    	        
-    	        pdfGraphics.dispose();
-    	        pdfGraphics = null;
-
-    	        if (flag == Printable.NO_SUCH_PAGE) break;
-
-    	        pdfDoc.newPage();
-
-    	        pageNum++;
-    	    }
-    	} finally {
-    	    if (pdfGraphics != null) pdfGraphics.dispose();
-    	    if (pdfDoc != null) pdfDoc.close();
-    	}
-	}
-	
-	@Override 
+	@Override
 	protected Integer getJobSizeImpl() {
-		return numPages;
+		return pdfMaker.getJobSize();
 	}
 
 	@Override
 	protected String getMessageImpl() {
-		return "Exporting page " + pageNum + ".";
+		return pdfMaker.getMessage();
 	}
 
 	@Override
 	protected int getProgressImpl() {
-		return pageNum;
+		return pdfMaker.getProgress();
 	}
 
-	public boolean isCancelled() {
-		return cancelled;
+	@Override
+	protected boolean hasStartedImpl() {
+		return pdfMaker.hasStarted();
 	}
 
-	public void setCancelled(boolean cancelled) {
-		this.cancelled = cancelled;
+	@Override
+	protected boolean isFinishedImpl() {
+		return pdfMaker.isFinished();
 	}
+	
 }

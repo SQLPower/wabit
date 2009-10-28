@@ -260,8 +260,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Begins a transaction
 	 */
 	public void begin() {
-		this.enforeThreadSafety();
 		synchronized (session) {
+			this.enforeThreadSafety();
 			transactionCount++;
 			logger.debug("wsp.begin(); - transaction count : "+transactionCount);
 		}
@@ -271,8 +271,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Commits the persisted {@link WabitObject}s, its properties and removals
 	 */
 	public void commit() throws WabitPersistenceException {
-		this.enforeThreadSafety();
 		synchronized (session) {
+			this.enforeThreadSafety();
 			logger.debug("wsp.commit(); - transaction count : "+transactionCount);
 			
 			final WabitWorkspace workspace = session.getWorkspace();
@@ -983,8 +983,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws WabitPersistenceException {
-		this.enforeThreadSafety();
 		synchronized (session) {
+			this.enforeThreadSafety();
 			logger.debug(String.format(
 					"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
 					type, uuid, index));
@@ -1027,12 +1027,12 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
 			throws WabitPersistenceException {
-		this.enforeThreadSafety();
 		if (transactionCount <= 0) {
 			this.rollback();
 			throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
 		}
 		synchronized (session) {
+			this.enforeThreadSafety();
 			logger.debug(String.format(
 					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
 					uuid, propertyName, propertyType.name(), oldValue, newValue));
@@ -1065,12 +1065,12 @@ public class WabitSessionPersister implements WabitPersister {
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
 			throws WabitPersistenceException {
-		this.enforeThreadSafety();
 		if (transactionCount <= 0) {
 			this.rollback();
 			throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
 		}
 		synchronized (session) {
+			this.enforeThreadSafety();
 			logger.debug(String.format(
 					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
 					uuid, propertyName, propertyType.name(),
@@ -3632,8 +3632,8 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void removeObject(String parentUUID, String uuid)
 			throws WabitPersistenceException {
-		this.enforeThreadSafety();
 		synchronized (session) {
+			this.enforeThreadSafety();
 			logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
 					parentUUID, uuid));
 			if (this.transactionCount==0) {
@@ -3659,9 +3659,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @throws WabitPersistenceException
 	 */
 	public void rollback() {
-		this.enforeThreadSafety();
+		if (transactionCount==0) {
+			return;
+		}
 		final WabitWorkspace workspace = session.getWorkspace();
 		synchronized (workspace) {
+			this.enforeThreadSafety();
 			try {
 				// We catch ANYTHING that comes out of here and rollback.
 				// Some exceptions are Runtimes, so we must catch those too.
