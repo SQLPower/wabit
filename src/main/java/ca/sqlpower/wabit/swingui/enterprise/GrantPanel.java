@@ -252,23 +252,24 @@ public class GrantPanel implements DataEntryPanel {
 	void updateGrantSettings() {
 		
 		WabitObject currentSelection = (WabitObject)this.list.getSelectedValue();
-		Grant grant = this.grants.get(currentSelection.getUUID());
-		
-		// if grant is null, this means there was no grant given so far.
-		if(grant == null && systemMode) {
-			grant = new Grant(null, this.objectType, false,false,false,false,false);
-			grant.setDirty(true);
-		} else if(grant == null && !systemMode) {
-			grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, WabitObject.class).getClass().getSimpleName(), false,false,false,false,false);
-			grant.setDirty(true);
+		if (currentSelection!=null) {
+			Grant grant = this.grants.get(currentSelection.getUUID());
+			
+			// if grant is null, this means there was no grant given so far.
+			if(grant == null && systemMode) {
+				grant = new Grant(null, this.objectType, false,false,false,false,false);
+				grant.setDirty(true);
+			} else if(grant == null && !systemMode) {
+				grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, WabitObject.class).getClass().getSimpleName(), false,false,false,false,false);
+				grant.setDirty(true);
+			}
+			
+			this.createCheckBox.setSelected(grant.isCreatePrivilege());
+			this.modifyCheckBox.setSelected(grant.isModifyPrivilege());
+			this.deleteCheckBox.setSelected(grant.isDeletePrivilege());
+			this.executeCheckBox.setSelected(grant.isExecutePrivilege());
+			this.grantCheckBox.setSelected(grant.isGrantPrivilege());
 		}
-		
-		this.createCheckBox.setSelected(grant.isCreatePrivilege());
-		this.modifyCheckBox.setSelected(grant.isModifyPrivilege());
-		this.deleteCheckBox.setSelected(grant.isDeletePrivilege());
-		this.executeCheckBox.setSelected(grant.isExecutePrivilege());
-		this.grantCheckBox.setSelected(grant.isGrantPrivilege());
-		
 	}
 
 	public boolean applyChanges() {
