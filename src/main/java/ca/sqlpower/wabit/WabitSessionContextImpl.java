@@ -135,6 +135,12 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     private WabitSession activeSession;
     
     /**
+     * If the data sources have been loaded this will be set to true. It will be false
+     * if the data sources still need to be loaded.
+     */
+    private boolean dataSourcesLoaded = false;
+    
+    /**
      * This lifecycle listener will remove the session's tree from the tabbed
      * pane when the session is removed.
      */
@@ -149,7 +155,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * These listeners will be notified when server information is added or removed from the context.
      */
     private final List<ServerListListener> serverListeners = new ArrayList<ServerListListener>();
-	
+
 	/**
 	 * Creates a new Wabit session context.
 	 * 
@@ -165,7 +171,32 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *             If the pl.ini is invalid.
 	 */
 	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS) throws IOException, SQLObjectException {
+		this(terminateWhenLastSessionCloses, useJmDNS, null);
+	}
+
+	/**
+	 * Creates a new Wabit session context.
+	 * 
+	 * @param terminateWhenLastSessionCloses
+	 *            If this flag is true, this session context will halt the VM
+	 *            when its last session closes.
+	 * @param useJmDNS
+	 *            If this flag is true, then this session will create a JmDNS
+	 *            instance for searching for Wabit servers.
+	 * @param initialCollection
+	 *            This collection will be used to load the data sources and data
+	 *            source types when they are first retrieved. If this is null a
+	 *            new data source collection will be created to do the loading.
+	 * @throws IOException
+	 *             If the startup configuration files can't be read
+	 * @throws SQLObjectException
+	 *             If the pl.ini is invalid.
+	 */
+	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS, 
+			DataSourceCollection<SPDataSource> initialCollection) 
+			throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
+		dataSources = initialCollection;
 		if (useJmDNS) {
 			try {
 				jmdns = JmDNS.create();
@@ -203,8 +234,10 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         String path = getPlDotIniPath();
         if (path == null) return null;
         
-        if (dataSources == null) {
-        	dataSources = new PlDotIni();
+        if (!dataSourcesLoaded) {
+        	if (dataSources == null) {
+        		dataSources = new PlDotIni();
+        	}
         	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
             try {
                 logger.debug("Reading PL.INI defaults");
@@ -222,6 +255,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             } catch (IOException e) {
                 throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read pl.ini at \""+getPlDotIniPath()+"\"", e));
             }
+            dataSourcesLoaded = true;
         }
         return dataSources;
     }

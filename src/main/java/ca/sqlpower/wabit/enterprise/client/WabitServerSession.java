@@ -77,8 +77,6 @@ public class WabitServerSession extends WabitSessionImpl {
     
     private static final Logger logger = Logger.getLogger(WabitServerSession.class);
     
-    
-    
     private final Updater updater;
 
     /**
@@ -165,8 +163,9 @@ public class WabitServerSession extends WabitSessionImpl {
                 }
                 PlDotIni plIni;
                 try {
-                    plIni = new PlDotIni(getServerURI(workspaceLocation.getServiceInfo(), "/"));
+                    plIni = new PlDotIni(getServerURI(workspaceLocation.getServiceInfo(), "data-sources/jdbc/"));
                     plIni.read(response.getEntity().getContent());
+                    logger.debug("Data source collection has URI " + plIni.getServerBaseURI());
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
@@ -311,8 +310,10 @@ public class WabitServerSession extends WabitSessionImpl {
     private static URI getServerURI(WabitServerInfo serviceInfo, String contextRelativePath) throws URISyntaxException {
         logger.debug("Getting server URI for: " + serviceInfo);
         String contextPath = serviceInfo.getPath();
-        return new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
+        URI serverURI = new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),
                 contextPath + contextRelativePath, null, null);
+        logger.debug("Created URI " + serverURI);
+        return serverURI;
     }
 
 	public void startUpdaterThread() {
