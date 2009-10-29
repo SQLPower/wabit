@@ -3665,13 +3665,17 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 	}
 
+	public void rollback() {
+		this.rollback(false);
+	}
+	
 	/**
 	 * Rollback all changes to persistent storage to the beginning of the
 	 * transaction
 	 * 
 	 * @throws WabitPersistenceException
 	 */
-	public void rollback() {
+	public void rollback(boolean force) {
 		if (transactionCount==0) {
 			return;
 		}
@@ -3730,6 +3734,7 @@ public class WabitSessionPersister implements WabitPersister {
 			this.currentThread = Thread.currentThread();
 		} else {
 			if (this.currentThread!=Thread.currentThread()) {
+				this.rollback(true);
 				throw new RuntimeException("A call from two different threads was detected. Callers of a sessionPersister should synchronize prior to opening transactions.");
 			}
 		}
