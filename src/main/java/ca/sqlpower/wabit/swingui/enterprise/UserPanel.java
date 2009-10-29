@@ -25,6 +25,9 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,6 +53,7 @@ import javax.swing.event.DocumentListener;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.apache.commons.codec.binary.Hex;
 import org.olap4j.impl.ArrayMap;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -108,6 +112,12 @@ public class UserPanel implements WabitPanel {
 	
 	
 	public UserPanel(User baseUser) {
+		final MessageDigest digester;
+		try {
+			digester = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e1) {
+			throw new RuntimeException(e1);
+		}
 		this.user = baseUser;
 		this.workspace = (WabitWorkspace)this.user.getParent();
 		
@@ -133,14 +143,18 @@ public class UserPanel implements WabitPanel {
 		
 		
 		this.passwordTextField = new JPasswordField();
-		this.passwordTextField.setText(user.getPassword());
+		this.passwordTextField.setText("******************");
 		this.passwordLabel = new JLabel("Password");
 		this.passwordTextField.getDocument().addDocumentListener(new DocumentListener() {
-
 			public void textChanged(DocumentEvent e) {
-				user.setPassword(new String(passwordTextField.getPassword()));
+				try {
+					String pass = new String(passwordTextField.getPassword());
+					String encoded = new String(Hex.encodeHex(digester.digest(pass.getBytes("UTF-8"))));
+					user.setPassword(encoded);
+				} catch (UnsupportedEncodingException e1) {
+					throw new RuntimeException(e1);
+				}
 			}
-			
 			public void changedUpdate(DocumentEvent e) {
 				textChanged(e);
 			}
