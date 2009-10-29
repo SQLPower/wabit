@@ -42,6 +42,10 @@ public class StubWabitObject implements WabitObject {
     public List<? extends WabitObject> getChildren() {
         return Collections.emptyList();
     }
+    
+    public <T extends WabitObject> List<T> getChildren(Class<T> type) {
+    	return Collections.emptyList();
+    }
 
     public String getName() {
         return null;

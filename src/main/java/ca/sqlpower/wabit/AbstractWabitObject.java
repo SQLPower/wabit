@@ -335,6 +335,16 @@ public abstract class AbstractWabitObject implements WabitObject {
         return evt;
     }
     
+    public <T extends WabitObject> List<T> getChildren(Class<T> type) {
+    	List<T> children = new ArrayList<T>();
+    	for (WabitObject child : getChildren()) {
+    		if (type.isAssignableFrom(child.getClass())) {
+    			children.add(type.cast(child));
+    		}
+    	}
+    	return children;
+    }
+    
 	public WabitObject getParent() {
 		return parent;
 	}

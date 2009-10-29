@@ -351,7 +351,8 @@ public class WabitSessionPersister implements WabitPersister {
 					}
 				};
 				parent.addWabitListener(removeChildOnAddListener);
-				parent.addChild(wo, pwo.getIndex());
+				// FIXME Terrible hack, see bug 2326
+				parent.addChild(wo, Math.min(pwo.getIndex(), parent.getChildren(wo.getClass()).size()));
 				parent.removeWabitListener(removeChildOnAddListener);
 				this.persistedObjectsRollbackList.add(
 					new PersistedObjectEntry(

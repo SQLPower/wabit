@@ -24,6 +24,10 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import ca.sqlpower.wabit.dao.WabitObjectProperty;
+
+import com.google.common.collect.Multimap;
+
 public interface WabitObject {
 
     /**
@@ -200,5 +204,10 @@ public interface WabitObject {
 	 *            Reason for the roll back.
 	 */
     void rollback(String message);
+
+    /**
+     * Returns a list of all children of the given type
+     */
+    public <T extends WabitObject> List<T> getChildren(Class<T> type);
     
 }
