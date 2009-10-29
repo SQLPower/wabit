@@ -135,12 +135,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     private WabitSession activeSession;
     
     /**
-     * If the data sources have been loaded this will be set to true. It will be false
-     * if the data sources still need to be loaded.
-     */
-    private boolean dataSourcesLoaded = false;
-    
-    /**
      * This lifecycle listener will remove the session's tree from the tabbed
      * pane when the session is removed.
      */
@@ -184,9 +178,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *            If this flag is true, then this session will create a JmDNS
 	 *            instance for searching for Wabit servers.
 	 * @param initialCollection
-	 *            This collection will be used to load the data sources and data
-	 *            source types when they are first retrieved. If this is null a
-	 *            new data source collection will be created to do the loading.
+	 *            If this is not null it will be used as the default collection of 
+	 *            data sources for this context.
 	 * @throws IOException
 	 *             If the startup configuration files can't be read
 	 * @throws SQLObjectException
@@ -234,10 +227,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         String path = getPlDotIniPath();
         if (path == null) return null;
         
-        if (!dataSourcesLoaded) {
-        	if (dataSources == null) {
-        		dataSources = new PlDotIni();
-        	}
+        if (dataSources == null) {
+        	dataSources = new PlDotIni();
         	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
             try {
                 logger.debug("Reading PL.INI defaults");
@@ -255,7 +246,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             } catch (IOException e) {
                 throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read pl.ini at \""+getPlDotIniPath()+"\"", e));
             }
-            dataSourcesLoaded = true;
         }
         return dataSources;
     }
