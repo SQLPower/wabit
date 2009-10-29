@@ -502,19 +502,23 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new Page(name, width, height, orientation, false);
 
 		} else if (type.equals(QueryCache.class.getSimpleName())) {
-			WabitConstantsContainer constantsContainer = (WabitConstantsContainer) createObjectByCalls(
-					uuid, WabitConstantsContainer.class.getSimpleName());
-
-			wo = new QueryCache(session.getContext(), false, constantsContainer);
-
+			try {
+				WabitConstantsContainer constantsContainer = (WabitConstantsContainer) createObjectByCalls(
+						uuid, WabitConstantsContainer.class.getSimpleName());
+				wo = new QueryCache(session.getContext(), false, constantsContainer);
+			} catch (IllegalArgumentException e) {
+				wo = new QueryCache(session.getContext(), false);
+			}
 		} else if (type.equals(Report.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "name"), String.class);
-			Page page = (Page) createObjectByCalls(uuid, Page.class
+			try {
+				Page page = (Page) createObjectByCalls(uuid, Page.class
 					.getSimpleName());
-
-			wo = new Report(name, uuid, page);
-
+				wo = new Report(name, uuid, page);
+			} catch (IllegalArgumentException e) {
+				wo = new Report(name, uuid);
+			}
 		} else if (type.equals(ReportTask.class.getSimpleName())) {
 			wo = new ReportTask();
 
@@ -1249,9 +1253,9 @@ public class WabitSessionPersister implements WabitPersister {
 							+ "\" does not match with the actual property value \""
 							+ propertyValue + "\"");
 				}
-			} else if (!unconditional) {
-				throw new WabitPersistenceException(uuid, "Could not find the object with id " + 
-						uuid + " to set property " + propertyValue);
+//			} else if (!unconditional) {
+//				throw new WabitPersistenceException(uuid, "Could not find the object with id " + 
+//						uuid + " to set property " + propertyValue);
 			}
 		}
 

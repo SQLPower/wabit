@@ -37,6 +37,13 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     private ContentBox cb;
     
     private Page parentPage;
+ 
+    @Override
+    public Set<String> getPropertiesToIgnoreForEvents() {
+    	Set<String> ignores = super.getPropertiesToIgnoreForEvents();
+    	ignores.add("contentRenderer");
+    	return ignores;
+    }
     
     @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {

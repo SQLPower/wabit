@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -43,6 +44,11 @@ public class ReportFromTemplateAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
 		Report newReport = new Report(template, session);
 		newReport.setName(template.getName() + " Report");
-		session.getWorkspace().addReport(newReport);
+		final WabitWorkspace workspace = session.getWorkspace();
+		synchronized (workspace) {
+			workspace.begin(null);
+			workspace.addReport(newReport);
+			workspace.commit();
+		}
     }
 }

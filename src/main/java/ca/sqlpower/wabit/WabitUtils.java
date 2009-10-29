@@ -247,5 +247,20 @@ public class WabitUtils {
         }
         return null;
     }
+    
+    /**
+     * This inserts a child into it's parent and does that for all the hierarchy recursively.
+     * Wraps everything in a transaction.
+     * @param parent
+     * @param child
+     */
+    public static void addRecursivelyWithTransaction(WabitObject parent, WabitObject child) {
+    	parent.begin(null);
+    	parent.addChild(child, parent.getChildren().size());
+    	for (WabitObject grandChild : child.getChildren()) {
+    		addRecursivelyWithTransaction(parent, grandChild);
+    	}
+    	parent.commit();
+    }
 
 }

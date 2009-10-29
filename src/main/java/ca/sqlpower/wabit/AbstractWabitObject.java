@@ -396,7 +396,14 @@ public abstract class AbstractWabitObject implements WabitObject {
 	        }
 	    }
 	    
-	    return removeChildImpl(child);
+	    
+	    boolean removed = removeChildImpl(child);
+	    if (removed) {
+	    	child.setParent(null);
+	    	return true;
+	    } else {
+	    	return false;
+	    }
 	}
 	
     /**

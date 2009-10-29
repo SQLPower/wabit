@@ -78,7 +78,7 @@ public class WabitJSONPersister implements WabitPersister {
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
 		} catch (JSONException e) {
-			logger.error("Exception encountered while building JSON message. Rollback initiated.");
+			logger.error("Exception encountered while building JSON message. Rollback initiated.",e);
 			rollback();
 			throw new WabitPersistenceException(null, e);
 		}
@@ -98,7 +98,7 @@ public class WabitJSONPersister implements WabitPersister {
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
 		} catch (JSONException e) {
-			logger.error("Exception encountered while building JSON message. Rollback initiated.");
+			logger.error("Exception encountered while building JSON message. Rollback initiated.",e);
 			rollback();
 			throw new WabitPersistenceException(null, e);
 		}
@@ -116,7 +116,7 @@ public class WabitJSONPersister implements WabitPersister {
 				transactionCount--;
 			}
 		} catch (Throwable t) {
-			logger.error("Exception encountered while building JSON message. Rollback initiated.");
+			logger.error("Exception encountered while building JSON message. Rollback initiated.",t);
 			messageBuffer.clear();
 			messageSender.clear();
 			transactionCount = 0;

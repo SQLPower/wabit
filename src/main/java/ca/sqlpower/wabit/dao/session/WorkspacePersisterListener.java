@@ -205,7 +205,13 @@ public class WorkspacePersisterListener implements WabitListener {
 	public void wabitChildAdded(WabitChildEvent e) {
 		WabitUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
-		persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
+		//persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
+		try {
+			persistObject(e.getChild());
+		} catch (Throwable t) {
+			target.rollback();
+			throw new RuntimeException("Could not persist child:"+e.getChild().getUUID(),t);
+		}
 	}
 	
 	/**
@@ -229,11 +235,13 @@ public class WorkspacePersisterListener implements WabitListener {
 			WabitObject parent = wo.getParent();
 			if (parent != null) {
 				index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
+				if (index < 0) {
+					index = 0;
+				}
 			}
-			//XXX Hack to see if this will work to unblock others
-			if (!wo.getClass().equals(WabitConstantsContainer.class) && !wo.getClass().equals(Page.class)) {
-				persistChild(wo.getParent(), wo, wo.getClass(), index);
-			}
+			
+			persistChild(parent, wo, wo.getClass(), index);
+			
 			for (WabitObject child : wo.getChildren()) {
 				persistObject(child);
 			}
@@ -469,12 +477,15 @@ public class WorkspacePersisterListener implements WabitListener {
 						converter.convertToBasicType(label.getBackgroundColour()));
 
 			} else if (child instanceof Layout) {
-				Layout layout = (Layout) child;
-
+//				Layout layout = (Layout) child;
+//
 				// Constructor argument
-				persistChild(layout, layout.getPage(), 
-						Page.class, 0);
-
+//				persistChild(layout, layout.getPage(), 
+//						Page.class, 0);
+//
+//				for (WabitObject wo : layout.getPage().getChildren()) {
+//					persistObject(wo);
+//				}
 				// Remaining parameters
 				
 				// The zoom property is being ignored here because it does not make much
@@ -523,8 +534,8 @@ public class WorkspacePersisterListener implements WabitListener {
 				QueryCache query = (QueryCache) child;
 				
 				//Constructor argument, this is a final child that is given to the constructor.
-				persistChild(query, query.getWabitConstantsContainer(), 
-						WabitConstantsContainer.class, 0);
+//				persistChild(query, query.getWabitConstantsContainer(), 
+//						WabitConstantsContainer.class, 0);
 				
 				// Remaining properties
 				
@@ -783,7 +794,10 @@ public class WorkspacePersisterListener implements WabitListener {
 		}
 		
 		//Not persisting non-settable properties
-		if (propertyDescriptor.getWriteMethod() == null) return;
+		if (propertyDescriptor == null 
+				|| propertyDescriptor.getWriteMethod() == null) {
+			return;
+		}
 		
 		//ignoring this property to not force all users to view the same
 		//editor.
