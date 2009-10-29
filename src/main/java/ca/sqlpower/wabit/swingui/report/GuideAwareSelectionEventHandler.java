@@ -26,6 +26,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.wabit.WabitObject;
+
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PInputManager;
 import edu.umd.cs.piccolo.PNode;
@@ -53,10 +55,17 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
      * The canvas that the nodes are on.
      */
 	private final PCanvas canvas;
+
+	/**
+     * This object will have a transaction begin and commit called on it when the
+     * dragging starts and stops to group the events of a single drag together.
+     */
+	private final WabitObject transactionObject;
     
-    public GuideAwareSelectionEventHandler(PCanvas canvas, PNode marqueeParent, PNode selectableParent) {
+    public GuideAwareSelectionEventHandler(PCanvas canvas, PNode marqueeParent, PNode selectableParent, WabitObject transactionObject) {
         super(marqueeParent, selectableParent);
 		this.canvas = canvas;
+		this.transactionObject = transactionObject;
     }
     
     /**
@@ -87,14 +96,22 @@ public class GuideAwareSelectionEventHandler extends PSelectionEventHandler {
     @Override
     public void decorateSelectedNode(PNode node) {
         Collection<GuideNode> guides = getGuides();
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createEastLocator(node), snapThreshold, guides)); 
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createWestLocator(node), snapThreshold, guides)); 
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createNorthLocator(node), snapThreshold, guides)); 
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthLocator(node), snapThreshold, guides));
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createNorthEastLocator(node), snapThreshold, guides)); 
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createNorthWestLocator(node), snapThreshold, guides)); 
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthEastLocator(node), snapThreshold, guides)); 
-        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthWestLocator(node), snapThreshold, guides));    
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createEastLocator(node), 
+        		snapThreshold, guides, transactionObject)); 
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createWestLocator(node), 
+        		snapThreshold, guides, transactionObject)); 
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createNorthLocator(node), 
+        		snapThreshold, guides, transactionObject)); 
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthLocator(node), 
+        		snapThreshold, guides, transactionObject));
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createNorthEastLocator(node), 
+        		snapThreshold, guides, transactionObject)); 
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createNorthWestLocator(node), 
+        		snapThreshold, guides, transactionObject)); 
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthEastLocator(node), 
+        		snapThreshold, guides, transactionObject)); 
+        node.addChild(new GuideAwareBoundsHandle(PBoundsLocator.createSouthWestLocator(node), 
+        		snapThreshold, guides, transactionObject));    
     }
     
     /**

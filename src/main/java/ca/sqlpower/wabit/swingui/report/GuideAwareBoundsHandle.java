@@ -19,9 +19,12 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
+import java.awt.geom.Point2D;
 import java.util.Collection;
 
 import javax.swing.SwingConstants;
+
+import ca.sqlpower.wabit.WabitObject;
 
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -38,11 +41,30 @@ public class GuideAwareBoundsHandle extends PBoundsHandle {
      */
     private final double threshold;
     private final Collection<GuideNode> guides;
+    
+    /**
+     * This object will have a transaction begin and commit called on it when the
+     * dragging starts and stops to group the events of a single drag together.
+     */
+	private final WabitObject transactionObject;
 
-    public GuideAwareBoundsHandle(PBoundsLocator locator, double threshold, Collection<GuideNode> guides) {
+    public GuideAwareBoundsHandle(PBoundsLocator locator, double threshold, Collection<GuideNode> guides, WabitObject transactionObject) {
         super(locator);
         this.threshold = threshold;
         this.guides = guides;
+		this.transactionObject = transactionObject;
+    }
+    
+    @Override
+    public void startHandleDrag(Point2D point, PInputEvent event) {
+    	super.startHandleDrag(point, event);
+    	transactionObject.begin("Starting drag of a handle");
+    }
+    
+    @Override
+    public void endHandleDrag(Point2D point, PInputEvent event) {
+    	super.endHandleDrag(point, event);
+    	transactionObject.commit();
     }
 
     @Override

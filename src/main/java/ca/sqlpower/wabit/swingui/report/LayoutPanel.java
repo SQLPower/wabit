@@ -381,7 +381,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
         pageNode.setBounds(0, 0, pageNode.getWidth(), pageNode.getHeight());
         
         PSelectionEventHandler selectionEventHandler = 
-        	new GuideAwareSelectionEventHandler(canvas, pageNode, pageNode);
+        	new GuideAwareSelectionEventHandler(canvas, pageNode, pageNode, layout);
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
         canvas.getRoot().getDefaultInputManager().setKeyboardFocus(selectionEventHandler);

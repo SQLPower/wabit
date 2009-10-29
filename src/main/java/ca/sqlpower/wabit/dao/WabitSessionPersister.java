@@ -1117,6 +1117,14 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 
 		Object lastPropertyValueFound = null;
+		
+		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+			if (propertyName.equals(wop.getPropertyName())) {
+				lastPropertyValueFound = wop.getNewValue();
+			}
+		}
+		
+		
 
 		Object propertyValue = null;
 		WabitObject wo = WabitUtils.findByUuid(root, uuid,

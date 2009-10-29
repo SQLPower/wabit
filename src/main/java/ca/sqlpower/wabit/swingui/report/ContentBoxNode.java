@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -90,7 +90,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     
     private PInputEventListener inputHandler = new PInputManager() {
-        
+    	
         @Override
         public void mouseClicked(PInputEvent event) {
             super.mouseClicked(event);
@@ -115,12 +115,14 @@ public class ContentBoxNode extends PNode implements ReportNode {
         public void mousePressed(PInputEvent arg0) {
         	super.mousePressed(arg0);
         	maybeShowPopup(arg0);
+        	contentBox.begin("Begin dragging");
         }
         
         @Override
         public void mouseReleased(PInputEvent arg0) {
         	super.mouseReleased(arg0);
         	maybeShowPopup(arg0);
+        	contentBox.commit();
         }
         
         @Override
@@ -223,25 +225,34 @@ public class ContentBoxNode extends PNode implements ReportNode {
      * This is the {@link ContentBox} listener which listens to changes is the
      * content box that is the model to this swing component. 
      */
-    private WabitListener contentRendererListener = new AbstractWabitListener() {
+    private WabitListener contentRendererListener = new WabitListener() {
         
-        @Override
-		public void wabitChildRemovedImpl(WabitChildEvent e) {
+		public void wabitChildRemoved(WabitChildEvent e) {
 			setSwingContentRenderer(null);
 		}
 		
-		@Override
-		public void wabitChildAddedImpl(WabitChildEvent e) {
+		public void wabitChildAdded(WabitChildEvent e) {
 			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
 	        setSwingContentRenderer(renderer);
 
 		}
 
-        @Override
-        public void propertyChangeImpl(PropertyChangeEvent evt) {
+        public void propertyChange(PropertyChangeEvent evt) {
             updateBoundsFromContentBox();
             repaint();
         }
+
+		public void transactionEnded(TransactionEvent e) {
+			//no-op
+		}
+
+		public void transactionRollback(TransactionEvent e) {
+			//no-op			
+		}
+
+		public void transactionStarted(TransactionEvent e) {
+			//no-op			
+		}
 
 	};
     

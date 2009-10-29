@@ -38,6 +38,7 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.image.WabitImage;
 
 public class WabitSessionPersisterTest extends TestCase {
 
@@ -147,6 +148,25 @@ public class WabitSessionPersisterTest extends TestCase {
         wsp.commit();
         
         assertNull(user.getEmail());
+    }
+    
+    /**
+     * This test will start a transaction on an object, change a property multiple times,
+     * and then commit the transaction. The end result should change the property on the
+     * opposite side of the persister to the correct value on the object to start.
+     */
+    public void testMultiplePropertyChangesInOneTx() throws Exception {
+    	WabitImage image = new WabitImage();
+    	session.getWorkspace().addImage(image);
+    	image.setName("name");
+
+    	wsp.begin();
+    	wsp.persistProperty(image.getUUID(), "name", DataType.STRING, image.getName(), "name1");
+    	wsp.persistProperty(image.getUUID(), "name", DataType.STRING, "name1", "name2");
+    	wsp.persistProperty(image.getUUID(), "name", DataType.STRING, "name2", "name3");
+    	wsp.commit();
+    	
+    	assertEquals("name3", image.getName());
     }
 
 }
