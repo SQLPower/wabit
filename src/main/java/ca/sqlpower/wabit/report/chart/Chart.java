@@ -781,12 +781,12 @@ public class Chart extends AbstractWabitObject {
     public CleanupExceptions cleanup() {
         CleanupExceptions exceptions = new CleanupExceptions();
         try {
-            setQuery(null);
+        	query.removeResultSetListener(resultSetListener);
         } catch (Exception e) {
             exceptions.add(e);
         }
         try {
-            setUnfilteredResultSet(null);
+        	unfilteredResults.removeRowSetListener(rowSetListener);
         } catch (Exception e) {
             exceptions.add(e);
         }
