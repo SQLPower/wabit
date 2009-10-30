@@ -57,8 +57,8 @@ import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
-import edu.umd.cs.piccolo.PInputManager;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.event.PDragSequenceEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -89,7 +89,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
      */
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     
-    private PInputEventListener inputHandler = new PInputManager() {
+    private PInputEventListener inputHandler = new PDragSequenceEventHandler() {
     	
         @Override
         public void mouseClicked(PInputEvent event) {
@@ -115,14 +115,12 @@ public class ContentBoxNode extends PNode implements ReportNode {
         public void mousePressed(PInputEvent arg0) {
         	super.mousePressed(arg0);
         	maybeShowPopup(arg0);
-        	contentBox.begin("Begin dragging");
         }
         
         @Override
         public void mouseReleased(PInputEvent arg0) {
         	super.mouseReleased(arg0);
         	maybeShowPopup(arg0);
-        	contentBox.commit();
         }
         
         @Override
@@ -137,6 +135,18 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	super.mouseExited(event);
         	paintBorders = false;
         	repaint();
+        }
+        
+        @Override
+        protected void startDrag(PInputEvent arg0) {
+        	super.startDrag(arg0);
+        	contentBox.begin("Begin dragging content box " + contentBox.getName());
+        }
+        
+        @Override
+        protected void endDrag(PInputEvent arg0) {
+        	super.endDrag(arg0);
+        	contentBox.commit();
         }
         
         /**
