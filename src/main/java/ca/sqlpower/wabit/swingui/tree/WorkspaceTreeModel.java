@@ -554,7 +554,12 @@ public class WorkspaceTreeModel implements TreeModel {
 		    }
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
-			int index = e.getIndex();
+			int index;
+			if (e.getSource() instanceof WabitWorkspace) {
+				index = getCorrectIndex(e.getChild(), e.getSource().getChildren().indexOf(e.getChild()));
+			} else {
+				index = e.getIndex();
+			}
 			
 		    TreeModelEvent treeEvent = new TreeModelEvent(this, treePath.getParentPath(), 
 		    		new int[] {index},
@@ -569,7 +574,12 @@ public class WorkspaceTreeModel implements TreeModel {
             }
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
-			int index = e.getIndex();
+		    int index;
+			if (e.getSource() instanceof WabitWorkspace) {
+				index = getCorrectIndex(e.getChild(), e.getSource().getChildren().indexOf(e.getChild()));
+			} else {
+				index = e.getIndex();
+			}
 //			if (treePath.getParentPath() != null) {
 //				treePath = treePath.getParentPath();
 //			}
@@ -586,8 +596,10 @@ public class WorkspaceTreeModel implements TreeModel {
 		 * the same index given will be returned.
 		 * 
 		 * @param wabitObject
+		 *            The object to find its location in a folder.
 		 * @param actualIndex
-		 * @return
+		 *            The index of the child in relation to all of its siblings.
+		 * @return The index of the object within a folder.
 		 */
 		private int getCorrectIndex(WabitObject wabitObject, final int actualIndex) {
 		    
