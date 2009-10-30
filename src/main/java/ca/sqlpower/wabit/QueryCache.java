@@ -224,7 +224,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     private final List<WabitJoin> joins = new ArrayList<WabitJoin>();
     
 	/**
-	 * XXX This enum defines the {@link WabitObject} child classes a
+	 * FIXME This enum defines the {@link WabitObject} child classes a
 	 * {@link QueryCache} takes as well as the ordinal order of these child
 	 * classes such that the class going before does not depend on the class
 	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.

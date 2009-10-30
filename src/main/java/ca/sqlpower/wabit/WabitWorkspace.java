@@ -138,7 +138,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private WabitSession session;
 
 	/**
-	 * XXX This enum defines the {@link WabitObject} child classes a
+	 * FIXME This enum defines the {@link WabitObject} child classes a
 	 * {@link WabitWorkspace} takes as well as the ordinal order of these child
 	 * classes such that the class going before does not depend on the class
 	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.

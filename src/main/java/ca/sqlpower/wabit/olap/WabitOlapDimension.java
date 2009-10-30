@@ -61,7 +61,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	boolean initialized = false;
 	
 	/**
-	 * XXX This enum defines the {@link WabitObject} child classes a
+	 * FIXME This enum defines the {@link WabitObject} child classes a
 	 * {@link WabitOlapDimension} takes as well as the ordinal order of these child
 	 * classes such that the class going before does not depend on the class
 	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
