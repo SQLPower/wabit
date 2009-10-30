@@ -186,6 +186,7 @@ public class Chart extends AbstractWabitObject {
      */
     public Chart(String uuid) {
         super(uuid);
+        setName("New chart");
     }
     
     // TODO copy constructor
