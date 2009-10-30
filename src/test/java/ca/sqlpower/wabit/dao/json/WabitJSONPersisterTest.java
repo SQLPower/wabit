@@ -101,7 +101,7 @@ public class WabitJSONPersisterTest extends TestCase {
 						assertEquals(content.getString("uuid"), "uuid");
 						assertEquals(content.getString("type"), "type");
 						assertEquals(content.getInt("index"), 0);
-					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+					} else if (!content.getString("method").equals(WabitPersistMethod.commit.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
 						fail();
 					}
 				} catch (JSONException e) {
@@ -132,7 +132,7 @@ public class WabitJSONPersisterTest extends TestCase {
 						assertEquals(content.getString("type"), DataType.STRING.name());
 						assertEquals(content.getString("oldValue"), "old");
 						assertEquals(content.getString("newValue"), "new");
-					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+					} else if (!content.getString("method").equals(WabitPersistMethod.commit.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
 						fail();
 					}
 				} catch (JSONException e) {
@@ -162,7 +162,7 @@ public class WabitJSONPersisterTest extends TestCase {
 						assertEquals(content.getString("propertyName"), "property");
 						assertEquals(content.getString("type"), DataType.STRING.name());
 						assertEquals(content.getString("newValue"), "new");
-					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+					} else if (!content.getString("method").equals(WabitPersistMethod.commit.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
 						fail();
 					}
 				} catch (JSONException e) {
@@ -191,7 +191,7 @@ public class WabitJSONPersisterTest extends TestCase {
 					if (content.getString("method").equals(WabitPersistMethod.removeObject.toString())) {
 						assertEquals(content.getString("parentUUID"), "parent");
 						assertEquals(content.getString("uuid"), "uuid");
-					} else if (!content.getString("method").equals(WabitPersistMethod.rollback.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+					} else if (!content.getString("method").equals(WabitPersistMethod.commit.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
 						fail();
 					}
 				} catch (JSONException e) {
