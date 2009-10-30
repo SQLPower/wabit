@@ -34,18 +34,7 @@ import org.olap4j.query.Selection;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.WabitWorkspace.WabitObjectOrder;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.report.Report;
-import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.report.chart.Chart;
 
 /**
  * Wrapper class to an Olap4j Dimension. Used to load and save Olap4j Dimensions.
@@ -82,9 +71,9 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		WABIT_OLAP_INCLUSION(WabitOlapInclusion.class),
 		WABIT_OLAP_EXCLUSION(WabitOlapExclusion.class);
 		
-		private final Class clazz;
+		private final Class<? extends WabitObject> clazz;
 		
-		private WabitObjectOrder(Class clazz) {
+		private WabitObjectOrder(Class<? extends WabitObject> clazz) {
 			this.clazz = clazz;
 		}
 		
@@ -116,7 +105,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	}
 	
 	/**
-	 * Creates a WabitOlapDimension to wrap the given {@link Dimension}.
+	 * Creates a WabitOlapDimension to wrap the given {@link QueryDimension}.
 	 */
 	public WabitOlapDimension(QueryDimension dimension) {
 		this.dimension = dimension;
@@ -326,7 +315,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	
 	/**
 	 * Adds an inclusion to this dimension. Note that this will not affect the
-	 * wrapped {@link Dimension}.
+	 * wrapped {@link QueryDimension}.
 	 */
 	public void addInclusion(WabitOlapInclusion inclusion) {
 		inclusions.add(inclusion);
@@ -337,7 +326,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 
 	/**
 	 * Adds an exclusion to this dimension. Note that this will not affect the
-	 * wrapped {@link Dimension}.
+	 * wrapped {@link QueryDimension}.
 	 */
 	public void addExclusion(WabitOlapExclusion exclusion) {
 		exclusions.add(exclusion);

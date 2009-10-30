@@ -53,15 +53,6 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitWorkspace.WabitObjectOrder;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.report.Report;
-import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
@@ -244,9 +235,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		WABIT_TABLE_CONTAINER(WabitTableContainer.class),
 		WABIT_JOIN(WabitJoin.class);
 		
-		private final Class clazz;
+		private final Class<? extends WabitObject> clazz;
 		
-		private WabitObjectOrder(Class clazz) {
+		private WabitObjectOrder(Class<? extends WabitObject> clazz) {
 			this.clazz = clazz;
 		}
 		

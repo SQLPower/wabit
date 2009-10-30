@@ -156,10 +156,14 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 		USER(User.class),
 		GROUP(Group.class);
 		
-		private final Class clazz;
+		private final Class<? extends WabitObject> clazz;
 		
-		private WabitObjectOrder(Class clazz) {
+		private WabitObjectOrder(Class<? extends WabitObject> clazz) {
 			this.clazz = clazz;
+		}
+		
+		public Class<? extends WabitObject> getChildClass() {
+			return clazz;
 		}
 		
 		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
