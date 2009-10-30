@@ -19,13 +19,16 @@
 
 package ca.sqlpower.wabit;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -263,4 +266,59 @@ public class WabitUtils {
     	parent.commit();
     }
 
+	/**
+	 * Generates a new UUID in the format suitable for use with any
+	 * WabitObject's UUID property.
+	 */
+	public static String randomWabitUUID() {
+		return "w" + UUID.randomUUID().toString();
+	}
+
+	/**
+	 * Prints the subtree rooted at the given WabitObject to the given output
+	 * stream. This is only intended for debugging; any machine parsing of the
+	 * output of this method is incorrect!
+	 * 
+	 * @param out the target of the debug information (often System.out)
+	 * @param startWith the root object for the dump
+	 */
+	public static void printSubtree(PrintWriter out, WabitObject startWith) {
+		printSubtree(out, startWith, 0);
+	}
+
+	/**
+	 * Recursive subroutine of {@link #printSubtree(PrintWriter, WabitObject)}.
+	 * 
+	 * @param out
+	 *            The print stream to print to
+	 * @param startWith
+	 *            The object to print (and whose children to process
+	 *            recursively)
+	 * @param indentDepth
+	 *            The amount of indent to print before printing the object
+	 *            information
+	 */
+	private static void printSubtree(PrintWriter out, WabitObject startWith, int indentDepth) {
+		out.printf("%s%s \"%s\" (%s)\n",
+				spaces(indentDepth * 2), startWith.getClass().getSimpleName(),
+				startWith.getName(), startWith.getUUID());
+		for (WabitObject child : startWith.getChildren()) {
+			printSubtree(out, child, indentDepth + 1);
+		}
+	}
+
+	/**
+	 * Creates a string consisting of the desired number of spaces.
+	 * 
+	 * @param n
+	 *            The number of spaces in the string.
+	 * @return A string of length n which consists entirely of spaces.
+	 */
+	private static String spaces(int n) {
+		StringBuilder sb = new StringBuilder(n);
+		for (int i = 0; i < n; i++) {
+			sb.append(" ");
+		}
+		return sb.toString();
+	}
 }

@@ -23,7 +23,6 @@ import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import net.jcip.annotations.GuardedBy;
 
@@ -76,7 +75,7 @@ public abstract class AbstractWabitObject implements WabitObject {
     }
     
     public void generateNewUUID() {
-        uuid = "w" + UUID.randomUUID().toString();
+        uuid = WabitUtils.randomWabitUUID();
     }
     
     public void addWabitListener(WabitListener l) {
