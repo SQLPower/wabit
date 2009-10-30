@@ -121,6 +121,13 @@ public class WabitJSONPersister implements WabitPersister {
 			messageSender.clear();
 			transactionCount = 0;
 			rollback();
+			if (t instanceof WabitPersistenceException) {
+				throw (WabitPersistenceException) t;
+			} else if (t instanceof RuntimeException) {
+				throw (RuntimeException) t;
+			} else {
+				throw new RuntimeException(t);
+			}
 		}
 	}
 
