@@ -431,9 +431,9 @@ public class Page extends AbstractWabitObject {
     public double getRightMarginOffset() {
         Guide rightMargin = getGuideWithLargestOffset(Axis.VERTICAL);
         if (rightMargin != null) {
-            return rightMargin.getOffset();
+            return new Double(rightMargin.getOffset());
         } else {
-            return width;
+            return new Double(width);
         }
     }
 
