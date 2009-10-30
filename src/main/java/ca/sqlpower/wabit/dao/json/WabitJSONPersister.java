@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.dao.json;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -166,9 +167,13 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
-			jsonObject.put("oldValue", oldValue == null ? JSONObject.NULL : oldValue);
-			jsonObject.put("newValue", newValue == null ? JSONObject.NULL : newValue);
+			setValueInJSONObject(jsonObject, "oldValue", type, oldValue);
+			setValueInJSONObject(jsonObject, "newValue", type, newValue);
 		} catch (JSONException e) {
+			logger.error(e);
+			rollback();
+			throw new WabitPersistenceException(uuid, e);
+		} catch (IOException e) {
 			logger.error(e);
 			rollback();
 			throw new WabitPersistenceException(uuid, e);
@@ -187,16 +192,7 @@ public class WabitJSONPersister implements WabitPersister {
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
-			if (type == DataType.PNG_IMG && newValue != null) {
-				ByteArrayInputStream in = (ByteArrayInputStream) newValue;
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				SQLPowerUtils.copyStream(in, out);
-				byte[] bytes = out.toByteArray();
-				byte[] base64Bytes = Base64.encodeBase64(bytes);
-				jsonObject.put("newValue", base64Bytes);
-			} else {
-				jsonObject.put("newValue", newValue == null ? JSONObject.NULL : newValue);
-			}
+			setValueInJSONObject(jsonObject, "newValue", type, newValue);
 		} catch (JSONException e) {
 			logger.error(e);
 			rollback();
@@ -208,6 +204,35 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		logger.debug(jsonObject);
 		messageBuffer.add(jsonObject);
+	}
+
+	/**
+	 * Sets the named property of the given JSON object to the given value. This
+	 * is a nontrivial operation because JSON nulls are special, and so are
+	 * values of type PNG_IMAGE.
+	 * 
+	 * @param jsonObject
+	 *            The object whose property to set.
+	 * @param jsonPropName
+	 *            The property name to set on jsonObject.
+	 * @param type
+	 *            the Wabit Persister framework datatype for value.
+	 * @param value
+	 *            The actual value to set. Values for all possible DataTypes are
+	 *            properly converted to a JavaScript data type before being set.
+	 */
+	private void setValueInJSONObject(JSONObject jsonObject, String jsonPropName, DataType type, Object value)
+	throws IOException, JSONException, UnsupportedEncodingException {
+		if (type == DataType.PNG_IMG && value != null) {
+			ByteArrayInputStream in = (ByteArrayInputStream) value;
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			SQLPowerUtils.copyStream(in, out);
+			byte[] bytes = out.toByteArray();
+			byte[] base64Bytes = Base64.encodeBase64(bytes);
+			jsonObject.put(jsonPropName, new String(base64Bytes, "ascii"));
+		} else {
+			jsonObject.put(jsonPropName, value == null ? JSONObject.NULL : value);
+		}
 	};
 	
 	public void removeObject(String parentUUID, String uuid)

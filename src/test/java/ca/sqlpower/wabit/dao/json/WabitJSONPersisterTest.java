@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.dao.json;
 
+import java.io.ByteArrayInputStream;
+
 import junit.framework.TestCase;
 
 import org.json.JSONException;
@@ -154,6 +156,73 @@ public class WabitJSONPersisterTest extends TestCase {
 		persister.commit();
 	}
 
+	public void testPersistImagePropertyConditional() throws Exception {
+		final String binaryDataBase64 = "AQIDBAUGBwgJCg==";
+		final byte[] binaryData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
+			public void send(JSONObject content) throws WabitPersistenceException {
+				try {
+					if (content.getString("method").equals(WabitPersistMethod.changeProperty.toString())) {
+						assertEquals(content.getString("propertyName"), "property");
+						assertEquals(content.getString("type"), DataType.PNG_IMG.name());
+						assertSame(content.get("oldValue"), JSONObject.NULL);
+						assertEquals(content.getString("newValue"), binaryDataBase64);
+					} else if (!content.getString("method").equals(WabitPersistMethod.commit.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+						fail("Unexpected method \""+content.getString("method")+"\"");
+					}
+				} catch (JSONException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
+			}
+			public void clear() {
+				// no op
+			}
+		};
+		
+		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
+		persister.persistProperty("uuid", "property", DataType.PNG_IMG, null, new ByteArrayInputStream(binaryData));
+		persister.commit();
+	}
+	
+	public void testPersistImagePropertyUnconditional() throws Exception {
+		final String binaryDataBase64 = "AQIDBAUGBwgJCg==";
+		final byte[] binaryData = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		
+		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
+			public void send(JSONObject content) throws WabitPersistenceException {
+				try {
+					if (content.getString("method").equals(WabitPersistMethod.persistProperty.toString())) {
+						assertEquals(content.getString("propertyName"), "property");
+						assertEquals(content.getString("type"), DataType.PNG_IMG.name());
+						assertEquals(content.getString("newValue"), binaryDataBase64);
+					} else if (!content.getString("method").equals(WabitPersistMethod.commit.toString()) && !content.getString("method").equals(WabitPersistMethod.begin.toString())) {
+						fail("Unexpected method \""+content.getString("method")+"\"");
+					}
+				} catch (JSONException e) {
+					throw new RuntimeException(e);
+				}
+			}
+			
+			public void flush() throws WabitPersistenceException {
+				// no-op
+			}
+			public void clear() {
+				// no op
+			}
+		};
+		
+		persister = new WabitJSONPersister(messagePasser);
+		persister.begin();
+		persister.persistProperty("uuid", "property", DataType.PNG_IMG, new ByteArrayInputStream(binaryData));
+		persister.commit();
+	}
+	
 	public void testPersistProperty() throws Exception {
 		MessageSender<JSONObject> messagePasser = new MessageSender<JSONObject>() {
 			public void send(JSONObject content) throws WabitPersistenceException {

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.dao.json;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 
 import javax.annotation.Nonnull;
 
@@ -180,12 +181,13 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 			return Integer.valueOf(jo.getInt(propName));
 		case PNG_IMG:
 			getNullable(jo, propName);
-			JSONArray array = jo.getJSONArray(propName);
-			byte[] bytes = new byte[array.length()];
-			for (int i = 0; i < array.length(); i++) {
-				bytes[i]=(byte) array.getInt(i);
+			String base64Data = jo.getString(propName);
+			byte[] decodedBytes;
+			try {
+				decodedBytes = Base64.decodeBase64(base64Data.getBytes("ascii"));
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException("ASCII should always be supported!", e);
 			}
-			byte[] decodedBytes = Base64.decodeBase64(bytes);
 			return new ByteArrayInputStream(decodedBytes);
 		case NULL:
 		case STRING:
