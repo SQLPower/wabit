@@ -137,6 +137,43 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     private WabitSession session;
 
+	/**
+	 * XXX This enum defines the {@link WabitObject} child classes a
+	 * {@link WabitWorkspace} takes as well as the ordinal order of these child
+	 * classes such that the class going before does not depend on the class
+	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
+	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
+	 */
+	public enum WabitObjectOrder {
+		WABIT_DATA_SOURCE(WabitDataSource.class),
+		QUERY_CACHE(QueryCache.class),
+		OLAP_QUERY(OlapQuery.class),
+		CHART(Chart.class),
+		WABIT_IMAGE(WabitImage.class),
+		TEMPLATE(Template.class),
+		REPORT(Report.class),
+		REPORT_TASK(ReportTask.class),
+		USER(User.class),
+		GROUP(Group.class);
+		
+		private final Class clazz;
+		
+		private WabitObjectOrder(Class clazz) {
+			this.clazz = clazz;
+		}
+		
+		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
+			for (WabitObjectOrder order : values()) {
+				if (order.clazz.getSimpleName().equals(name)) {
+					return order;
+				}
+			}
+			throw new IllegalArgumentException("The WabitObject class \"" + name + 
+					"\" does not exist or is not a child type of WabitWorkspace.");
+		}
+		
+	}
+
     /**
      * Creates a new Wabit workspace. This is normally done by the session it
      * belongs to.

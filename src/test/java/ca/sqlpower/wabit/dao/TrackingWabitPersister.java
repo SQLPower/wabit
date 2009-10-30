@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.dao;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
 
@@ -33,6 +34,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	
 	private static final Logger logger = Logger.getLogger(TrackingWabitPersister.class);
 	
+	private final CountDownLatch latch;
 	private final List<Object> persisterCalls = new ArrayList<Object>();
 	
 	private int beginCount = 0;
@@ -41,6 +43,10 @@ public class TrackingWabitPersister implements WabitPersister {
 	private int persistObjectCount = 0;
 	private int persistPropertyCount = 0;
 	private int removeObjectCount = 0;
+	
+	public TrackingWabitPersister(CountDownLatch latch) {
+		this.latch = latch;
+	}
 
 	/**
 	 * Increments the begin counter and adds this begin call to the list of
@@ -58,6 +64,10 @@ public class TrackingWabitPersister implements WabitPersister {
 	public void commit() throws WabitPersistenceException {
 		commitCount++;
 		persisterCalls.add(WabitPersistMethod.commit);
+		
+		if (beginCount == commitCount) {
+			latch.countDown();
+		}
 	}
 	
 	/**

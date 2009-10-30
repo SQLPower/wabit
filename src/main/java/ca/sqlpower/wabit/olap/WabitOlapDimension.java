@@ -34,7 +34,18 @@ import org.olap4j.query.Selection;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.WabitWorkspace.WabitObjectOrder;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
+import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Template;
+import ca.sqlpower.wabit.report.chart.Chart;
 
 /**
  * Wrapper class to an Olap4j Dimension. Used to load and save Olap4j Dimensions.
@@ -59,6 +70,35 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	private List<WabitOlapExclusion> exclusions = new ArrayList<WabitOlapExclusion>();
 	
 	boolean initialized = false;
+	
+	/**
+	 * XXX This enum defines the {@link WabitObject} child classes a
+	 * {@link WabitOlapDimension} takes as well as the ordinal order of these child
+	 * classes such that the class going before does not depend on the class
+	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
+	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
+	 */
+	public enum WabitObjectOrder {
+		WABIT_OLAP_INCLUSION(WabitOlapInclusion.class),
+		WABIT_OLAP_EXCLUSION(WabitOlapExclusion.class);
+		
+		private final Class clazz;
+		
+		private WabitObjectOrder(Class clazz) {
+			this.clazz = clazz;
+		}
+		
+		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
+			for (WabitObjectOrder order : values()) {
+				if (order.clazz.getSimpleName().equals(name)) {
+					return order;
+				}
+			}
+			throw new IllegalArgumentException("The WabitObject class \"" + name + 
+					"\" does not exist or is not a child type of WabitWorkspace.");
+		}
+		
+	}
 	
 	/**
 	 * Copy Constructor. Creates a deep copy of the given WabitOlapDimension and its children.

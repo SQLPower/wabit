@@ -53,6 +53,15 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.util.TransactionEvent;
+import ca.sqlpower.wabit.WabitWorkspace.WabitObjectOrder;
+import ca.sqlpower.wabit.enterprise.client.Group;
+import ca.sqlpower.wabit.enterprise.client.ReportTask;
+import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.wabit.image.WabitImage;
+import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Template;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
@@ -222,6 +231,36 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * and placed in this list to let the query fire Wabit events based on it.
      */
     private final List<WabitJoin> joins = new ArrayList<WabitJoin>();
+    
+	/**
+	 * XXX This enum defines the {@link WabitObject} child classes a
+	 * {@link QueryCache} takes as well as the ordinal order of these child
+	 * classes such that the class going before does not depend on the class
+	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
+	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
+	 */
+	public enum WabitObjectOrder {
+		WABIT_CONSTANTS_CONTAINER(WabitConstantsContainer.class),
+		WABIT_TABLE_CONTAINER(WabitTableContainer.class),
+		WABIT_JOIN(WabitJoin.class);
+		
+		private final Class clazz;
+		
+		private WabitObjectOrder(Class clazz) {
+			this.clazz = clazz;
+		}
+		
+		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
+			for (WabitObjectOrder order : values()) {
+				if (order.clazz.getSimpleName().equals(name)) {
+					return order;
+				}
+			}
+			throw new IllegalArgumentException("The WabitObject class \"" + name + 
+					"\" does not exist or is not a child type of WabitWorkspace.");
+		}
+		
+	}
 
     /**
      * This makes a copy of the given query cache. The query in the given query cache
