@@ -34,7 +34,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	
 	private static final Logger logger = Logger.getLogger(TrackingWabitPersister.class);
 	
-	private final CountDownLatch latch;
+	private CountDownLatch latch;
 	private final List<Object> persisterCalls = new ArrayList<Object>();
 	
 	private int beginCount = 0;
@@ -181,6 +181,15 @@ public class TrackingWabitPersister implements WabitPersister {
 		removeObjectCount = 0;
 		rollbackCount = 0;
 		persisterCalls.clear();
+		latch = new CountDownLatch(1);
+	}
+	
+	public CountDownLatch getLatch() {
+		return latch;
+	}
+	
+	public void setLatch(CountDownLatch latch) {
+		this.latch = latch;
 	}
 
 }

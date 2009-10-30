@@ -41,5 +41,22 @@ public class RemovedWabitObject {
 	public String getUUID() {
 		return uuid;
 	}
-
+	
+	@Override
+	public String toString() {
+		return "RemovedWabitObject: parentUUID " + getParentUUID() + ", uuid " + getUUID() + "\n";
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj.getClass() != this.getClass()) {
+			return false;
+		}
+		
+		RemovedWabitObject pwo = (RemovedWabitObject) obj;
+		
+		return getParentUUID().equals(pwo.getParentUUID()) 
+				&& getUUID().equals(pwo.getUUID()); 
+		
+	}
 }
