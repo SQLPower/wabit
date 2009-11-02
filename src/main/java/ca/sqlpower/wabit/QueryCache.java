@@ -814,13 +814,21 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean isScriptModified() {
         return query.isScriptModified();
     }
+    
 
-    public boolean setDataSource(JDBCDataSource ds) {
-        return query.setDataSource(ds);
+    public void setDataSource(JDBCDataSource ds) {
+    	JDBCDataSource oldValue = this.getDataSource();
+    	query.setDataSource(ds);
+		firePropertyChange("dataSource", oldValue, ds);
     }
     
     public boolean setDataSourceWithoutReset(JDBCDataSource dataSource) {
-        return query.setDataSourceWithoutReset(dataSource);
+    	JDBCDataSource oldValue = this.getDataSource();
+    	boolean returnValue = query.setDataSourceWithoutReset(dataSource);
+    	if (returnValue) {
+    		firePropertyChange("dataSource", oldValue, dataSource);
+    	}
+    	return returnValue;
     }
     
     public JDBCDataSource getDataSource() {
