@@ -186,6 +186,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
 		dataSources = initialCollection;
 		this.writeDSCollectionPathToPrefs = writeDSCollectionPathToPrefs;
+		setPlDotIniPath(dataSourceCollectionPath);
 		
 		if (useJmDNS) {
 			try {

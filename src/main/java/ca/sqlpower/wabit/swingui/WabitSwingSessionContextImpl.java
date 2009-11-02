@@ -211,7 +211,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     
     private static final String plDotIniPath() throws SQLObjectException {
     	Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
-    	return ArchitectUtils.checkForValidPlDotIni(prefs.get(WabitSessionContextImpl.PREFS_PL_INI_PATH, null), "Wabit");
+    	String plIniPath = ArchitectUtils.checkForValidPlDotIni(prefs.get(WabitSessionContextImpl.PREFS_PL_INI_PATH, null), "Wabit");
+    	prefs.put(WabitSessionContextImpl.PREFS_PL_INI_PATH, plIniPath);
+    	return plIniPath;
     }
     
     private static final DataSourceCollection<SPDataSource> loadPlDotIni() throws SQLObjectException {
