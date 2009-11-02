@@ -537,11 +537,15 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         WabitObject parent = wo.getParent();
         int oldChildCount = parent.getChildren().size();
   
+        listener.transactionStarted(null);
         listener.wabitChildRemoved(new WabitChildEvent(parent, wo.getClass(), wo, parent.getChildren().indexOf(wo), EventType.REMOVED));
+        listener.transactionEnded(null);
         
         //persist the object
         wo.setParent(parent);
+        listener.transactionStarted(null);
         listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
+        listener.transactionEnded(null);
         
         //the object must now be added to the super parent
         assertEquals(oldChildCount, parent.getChildren().size());
@@ -793,7 +797,6 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
 					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 
 					basicNewValue);
-			
 			propertyChangeCount++;
     	}
     	
@@ -803,7 +806,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	try {
     		persister.commit();
     		fail("The commit method should have an error sent to it and it should rethrow the exception.");
-    	} catch (Throwable t) {
+    	} catch (WabitPersistenceException t) {
     		//continue
     	}
     	
