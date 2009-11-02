@@ -139,21 +139,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap.create();
 
-	private final class PersistedPropertiesEntry {
-		private final Object rollbackValue;
-		private final String propertyName;
-		private final String uuid;
-		public PersistedPropertiesEntry(
-				String uuid, 
-				String propertyName,
-				DataType propertyType, 
-				Object rollbackValue) {
-					this.uuid = uuid;
-					this.propertyName = propertyName;
-					this.rollbackValue = rollbackValue;
-		}
-	}
-	
 	/**
 	 * This will be the list we will use to rollback persisted properties
 	 */
@@ -165,14 +150,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
 
-	private final class PersistedObjectEntry {
-		private final String parentId;
-		private final String childrenId;
-		public PersistedObjectEntry(String parentId, String childrenId) {
-			this.parentId = parentId;
-			this.childrenId = childrenId;
-		}
-	}
 	/**
 	 * This will be the list we use to rollback persisted objects.
 	 * It contains UUIDs of objects that were created.
@@ -184,21 +161,6 @@ public class WabitSessionPersister implements WabitPersister {
 	 * to their parents
 	 */
 	private Map<String, String> objectsToRemove = new LinkedHashMap<String, String>();
-
-	/**
-	 * These describe the entries in the removed objects rollback list
-	 * @author luc
-	 */
-	private final class RemovedObjectEntry {
-		private final String parentUUID;
-		private final WabitObject removedChildren;
-		private final int index;
-		public RemovedObjectEntry(String parentUUID, WabitObject removedChildren, int index) {
-			this.parentUUID = parentUUID;
-			this.removedChildren = removedChildren;
-			this.index = index;
-		}
-	}
 	
 	/**
 	 * This is the list we use to rollback object removal
@@ -222,6 +184,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private final String name;
 
 	private Thread currentThread;
+
+	private boolean headingToWisconsin;
 
 	/**
 	 * Creates a session persister that can update any object at or a descendant
@@ -937,14 +901,15 @@ public class WabitSessionPersister implements WabitPersister {
 		// We must rollback in the inverse order the operations were performed.
 		Collections.reverse(this.objectsToRemoveRollbackList);
 		for (RemovedObjectEntry entry : this.objectsToRemoveRollbackList) {
-			final String parentUuid = entry.parentUUID;
-			final WabitObject objectToRestore = entry.removedChildren;
-			final int index = entry.index;
+			final String parentUuid = entry.getParentUUID();
+			final WabitObject objectToRestore = entry.getRemovedChildren();
+			final int index = entry.getIndex();
 			final WabitObject parent = WabitUtils.findByUuid(root, parentUuid, WabitObject.class);
 			try {
 				parent.addChild(objectToRestore, index);
-			} catch (IllegalArgumentException e) {
-				throw new IllegalStateException();
+			} catch (Throwable t) {
+				// Keep going. We need to rollback as much as ewe can.
+				logger.warn(t);
 			}
 		}
 	}
@@ -952,20 +917,36 @@ public class WabitSessionPersister implements WabitPersister {
 	private void rollbackProperties() throws WabitPersistenceException {
 		Collections.reverse(this.persistedPropertiesRollbackList);
 		for (PersistedPropertiesEntry entry : this.persistedPropertiesRollbackList) {
-			final String parentUuid = entry.uuid;
-			final String propertyName = entry.propertyName;
-			final Object rollbackValue = entry.rollbackValue;
-			final WabitObject parent = WabitUtils.findByUuid(root, parentUuid, WabitObject.class);
-			this.applyProperty(parent, propertyName, rollbackValue);
+			try {
+				final String parentUuid = entry.uuid;
+				final String propertyName = entry.propertyName;
+				final Object rollbackValue = entry.rollbackValue;
+				final WabitObject parent = WabitUtils.findByUuid(root, parentUuid, WabitObject.class);
+				if (parent != null) {
+					this.applyProperty(parent, propertyName, rollbackValue);
+				}
+			} catch (Throwable t) {
+				// Keep going. We need to rollback as much as ewe can.
+				logger.warn(t);
+			}
 		}
 	}
 	
 	private void rollbackCreations() throws Exception {
 		Collections.reverse(this.persistedObjectsRollbackList);
 		for (PersistedObjectEntry entry : this.persistedObjectsRollbackList) {
-			final WabitObject parent = WabitUtils.findByUuid(root, entry.parentId, WabitObject.class);
-			final WabitObject child = WabitUtils.findByUuid(root, entry.childrenId, WabitObject.class);
-			parent.removeChild(child);
+			try {
+				// We need to verify if the entry specifies a parent.
+				// WabitWorkspaces don't have parents so we can't remove them really...
+				if (entry.parentId != null) {
+					final WabitObject parent = WabitUtils.findByUuid(root, entry.parentId, WabitObject.class);
+					final WabitObject child = WabitUtils.findByUuid(root, entry.childrenId, WabitObject.class);
+					parent.removeChild(child);
+				}
+			} catch (Throwable t) {
+				// Keep going. We need to rollback as much as ewe can.
+				logger.warn(t);
+			}
 		}
 	}
 
@@ -3673,15 +3654,20 @@ public class WabitSessionPersister implements WabitPersister {
 	 * Rollback all changes to persistent storage to the beginning of the
 	 * transaction
 	 * 
+	 * @pa
+	 * 
 	 * @throws WabitPersistenceException
 	 */
 	public void rollback(boolean force) {
-		if (transactionCount==0) {
-			return;
-		}
 		final WabitWorkspace workspace = session.getWorkspace();
 		synchronized (workspace) {
-			this.enforeThreadSafety();
+			if (this.headingToWisconsin) {
+				return;
+			}
+			this.headingToWisconsin = true;
+			if (!force) {
+				this.enforeThreadSafety();
+			}
 			try {
 				// We catch ANYTHING that comes out of here and rollback.
 				// Some exceptions are Runtimes, so we must catch those too.
@@ -3708,6 +3694,7 @@ public class WabitSessionPersister implements WabitPersister {
 				this.persistedProperties.clear();
 				this.persistedPropertiesRollbackList.clear();
 				transactionCount = 0;
+				this.headingToWisconsin = false;
 				logger.debug("wsp.rollback(); - Killed all current transactions.");
 			}
 		}
@@ -3748,5 +3735,42 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	public void setGodMode(boolean godMode) {
 		this.godMode = godMode;
+	}
+	
+	/**
+	 * This static accessible method allows 
+	 * @param session
+	 * @param creations
+	 * @param properties
+	 * @param removals
+	 * @throws WabitPersistenceException
+	 */
+	public static void undoForSession(
+			WabitSession session,
+			List<PersistedObjectEntry> creations,
+			List<PersistedPropertiesEntry> properties,
+			List<RemovedObjectEntry> removals) throws WabitPersistenceException
+	{
+		WabitSessionPersister persister = new WabitSessionPersister("undoer", session);
+		persister.setGodMode(true);
+		persister.setObjectsToRemoveRollbackList(removals);
+		persister.setPersistedObjectsRollbackList(creations);
+		persister.setPersistedPropertiesRollbackList(properties);
+		persister.rollback(true);
+	}
+	
+	private void setObjectsToRemoveRollbackList(
+			List<RemovedObjectEntry> objectsToRemoveRollbackList) {
+		this.objectsToRemoveRollbackList = objectsToRemoveRollbackList;
+	}
+	
+	private void setPersistedObjectsRollbackList(
+			List<PersistedObjectEntry> persistedObjectsRollbackList) {
+		this.persistedObjectsRollbackList = persistedObjectsRollbackList;
+	}
+	
+	private void setPersistedPropertiesRollbackList(
+			List<PersistedPropertiesEntry> persistedPropertiesRollbackList) {
+		this.persistedPropertiesRollbackList = persistedPropertiesRollbackList;
 	}
 }

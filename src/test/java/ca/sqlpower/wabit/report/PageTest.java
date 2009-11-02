@@ -74,6 +74,7 @@ public class PageTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToIgnoreForEvents() {
         Set<String> ignore = super.getPropertiesToIgnoreForEvents();
         ignore.add("fontMetrics"); // this just depends on the font
+        ignore.add("orientation");
         return ignore;
     }
     @Override
@@ -180,5 +181,22 @@ public class PageTest extends AbstractWabitObjectTest {
     public void testPersisterAddsNewObject() throws Exception {
 		// no-op because Page is never persisted as a new object, it is
 		// persisted as a child of a Layout
+    }
+    
+    public void testPageOrientation() throws Exception {
+        ContentBox box = new ContentBox();
+        page.addContentBox(box);
+
+        int oldWidth = page.getWidth();
+        page.setOrientation(PageOrientation.PORTRAIT);
+        PageOrientation oldOrientation = page.getOrientation();
+        
+        page.setOrientation(PageOrientation.LANDSCAPE);
+        
+        assertTrue(page.getWidth()!=oldWidth);
+        
+        page.setOrientation(oldOrientation);
+        
+        assertEquals(oldWidth, page.getWidth());
     }
 }

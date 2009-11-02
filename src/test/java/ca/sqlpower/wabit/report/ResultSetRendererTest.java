@@ -64,6 +64,13 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
     }
     
     @Override
+    public Set<String> getPropertiesToIgnoreForEvents() {
+    	Set<String> ignorable = super.getPropertiesToIgnoreForEvents();
+    	ignorable.add("headerFont");
+    	return ignorable;
+    }
+    
+    @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignorable = super.getPropertiesToNotPersistOnObjectPersist();
     	ignorable.add("colBeingDragged");
