@@ -138,6 +138,18 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private WabitSession session;
 
 	/**
+	 * If magic is disabled secondary side effects of methods or events should
+	 * not be performed. Magic is disabled if the disabled value is greater than
+	 * 0. For example, if a guide is moved in a report the content boxes
+	 * attached to it will normally be moved with it. If magic is disabled the
+	 * content boxes attached to a guide should not be moved as the guide moves.
+	 * The guide that is moved while magic is disabled should still fire an
+	 * event that it was moved but the secondary event of moving the content
+	 * boxes and any other side effects should not take place.
+	 */
+    private int magicDisabled = 0;
+
+	/**
 	 * FIXME This enum defines the {@link WabitObject} child classes a
 	 * {@link WabitWorkspace} takes as well as the ordinal order of these child
 	 * classes such that the class going before does not depend on the class
@@ -939,4 +951,16 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public boolean isServerWorkspace() {
     	return this.session.isEnterpriseServerSession();
     }
+    
+    public boolean isMagicDisabled() {
+		return magicDisabled > 0;
+	}
+    
+    public void setMagicDisabled(boolean magicDisabled) {
+		if (magicDisabled) {
+			this.magicDisabled++;
+		} else {
+			this.magicDisabled--;
+		}
+	}
 }

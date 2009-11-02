@@ -28,7 +28,6 @@ import javax.annotation.Nonnull;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -180,6 +179,27 @@ public class WabitUtils {
     }
 
     /**
+     * Walks up the parent chain of WabitObjects and returns the WabitWorkspace
+     * that these objects belong to or null if the workspace does not exist.
+     * 
+     * @param o
+     *            The object to follow the parent chain.
+     * @return A {@link WabitWorkspace} that contains the given WabitObject and all of its
+     *         children or null if the given object is not in a workspace.
+     */
+    public static WabitWorkspace getWorkspace(WabitObject o) {
+        WabitObject ancestor = o;
+        while (ancestor.getParent() != null) {
+            ancestor = ancestor.getParent();
+        }
+        if (ancestor instanceof WabitWorkspace) {
+            return ((WabitWorkspace) ancestor);
+        } else {
+        	return null;
+        }
+    }
+    
+    /**
      * Walks up the parent chain of WabitObjects and returns the WabitSession
      * that these objects belong to. This can throw a
      * {@link SessionNotFoundException} if the object is not attached to a
@@ -191,12 +211,9 @@ public class WabitUtils {
      *         children.
      */
     public static WabitSession getSession(WabitObject o) {
-        WabitObject ancestor = o;
-        while (ancestor.getParent() != null) {
-            ancestor = ancestor.getParent();
-        }
-        if (ancestor instanceof WabitWorkspace && ((WabitWorkspace) ancestor).getSession() != null) 
-            return ((WabitWorkspace) ancestor).getSession();
+    	WabitWorkspace workspace = getWorkspace(o);
+    	if (workspace != null  && workspace.getSession() != null) 
+    		return workspace.getSession();
         throw new SessionNotFoundException("No session exists for " + o.getName() + " of type " +
                 o.getClass());
     }

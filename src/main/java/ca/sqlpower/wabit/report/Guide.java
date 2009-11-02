@@ -24,6 +24,8 @@ import java.util.List;
 
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 public class Guide extends AbstractWabitObject {
 
@@ -77,7 +79,10 @@ public class Guide extends AbstractWabitObject {
         double oldOffset = this.offset;
         this.offset = guideOffset;
         firePropertyChange("offset", oldOffset, guideOffset);
-        dragSnappedEdges(oldOffset, guideOffset);
+        WabitWorkspace workspace = WabitUtils.getWorkspace(this);
+        if (workspace != null && !workspace.isMagicDisabled()) {
+        	dragSnappedEdges(oldOffset, guideOffset);
+        }
     }
 
     public Axis getAxis() {

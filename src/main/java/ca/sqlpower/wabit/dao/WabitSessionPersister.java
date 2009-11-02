@@ -242,6 +242,7 @@ public class WabitSessionPersister implements WabitPersister {
 			final WabitWorkspace workspace = session.getWorkspace();
 			synchronized (workspace) {
 				try {
+					workspace.setMagicDisabled(true);
 					if (transactionCount == 0) {
 						throw new WabitPersistenceException(null,
 							"Commit attempted while not in a transaction");
@@ -275,6 +276,8 @@ public class WabitSessionPersister implements WabitPersister {
 					logger.error("WabitSesisonPersister caught an exception while performing a commit operation. Will try to rollback...", t);
 					this.rollback();
 					throw new WabitPersistenceException(null, t);
+				} finally {
+					workspace.setMagicDisabled(false);
 				}
 			}
 		}
