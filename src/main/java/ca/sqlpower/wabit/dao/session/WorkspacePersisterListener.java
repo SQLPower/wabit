@@ -22,7 +22,9 @@ package ca.sqlpower.wabit.dao.session;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
@@ -45,6 +47,11 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.dao.PersistedObjectEntry;
+import ca.sqlpower.wabit.dao.PersistedPropertiesEntry;
+import ca.sqlpower.wabit.dao.PersistedWabitObject;
+import ca.sqlpower.wabit.dao.RemovedObjectEntry;
+import ca.sqlpower.wabit.dao.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
@@ -64,13 +71,15 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
-import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
+
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * An implementation of {@link WabitListener} used exclusively for listening to
@@ -81,6 +90,43 @@ import ca.sqlpower.wabit.rs.ResultSetProducer;
 public class WorkspacePersisterListener implements WabitListener {
 	
 	private final static Logger logger = Logger.getLogger(WorkspacePersisterListener.class);
+	
+	/**
+	 * This will be the list we will use to rollback persisted properties
+	 */
+	private List<PersistedPropertiesEntry> persistedPropertiesRollbackList = new LinkedList<PersistedPropertiesEntry>();
+	
+	/**
+	 * This will be the list we use to rollback persisted objects.
+	 * It contains UUIDs of objects that were created.
+	 */
+	private List<PersistedObjectEntry> persistedObjectsRollbackList = new LinkedList<PersistedObjectEntry>();
+	
+	/**
+	 * This is the list we use to rollback object removal
+	 */
+	private List<RemovedObjectEntry> objectsToRemoveRollbackList = new LinkedList<RemovedObjectEntry>();
+	
+	/**
+	 * Persisted property buffer, mapping of {@link WabitObject} UUIDs to each
+	 * individual persisted property
+	 */
+	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap.create();
+	
+	/**
+	 * Persisted {@link WabitObject} buffer, contains all the data that was
+	 * passed into the persistedObject call in the order of insertion
+	 */
+	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
+	
+	/**
+	 * {@link WabitObject} removal buffer, mapping of {@link WabitObject} UUIDs
+	 * to their parents
+	 */
+	private List<RemovedObjectEntry> objectsToRemove = new LinkedList<RemovedObjectEntry>();
+	
+	private int transactionCount = 0;
+
 
 	/**
 	 * This will connect a new instance of this listener to the workspace and
@@ -124,6 +170,10 @@ public class WorkspacePersisterListener implements WabitListener {
 
 	private final WabitSessionPersister eventSource;
 
+	private final WabitSession session;
+
+	private boolean headingToWinconsin;
+
 	/**
 	 * This listener should be added through the static method for attaching a
 	 * listener to a session.
@@ -162,6 +212,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 */
 	public WorkspacePersisterListener(WabitSession session,
 			WabitPersister targetPersister, WabitSessionPersister eventSource) {
+		this.session = session;
 		this.converter = new SessionPersisterSuperConverter(session, session.getWorkspace());
 		this.target = targetPersister;
 		this.eventSource = eventSource;
@@ -176,42 +227,33 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *         constitute an echo.
 	 */
 	private boolean wouldEcho() {
+		if (this.headingToWinconsin) return true;
 		return eventSource != null && eventSource.isUpdatingWabitWorkspace();
 	}
 
 	public void transactionEnded(TransactionEvent e) {
 		if (wouldEcho()) return;
 		try {
-			target.commit();
+			this.commit();
 		} catch (WabitPersistenceException e1) {
-			throw new RuntimeException("Could not commit the transaction.", e1);
+			throw new RuntimeException(e1);
 		}
 	}
 
 	public void transactionRollback(TransactionEvent e) {
 		if (wouldEcho()) return;
-		target.rollback();
+		this.rollback();
 	}
 
 	public void transactionStarted(TransactionEvent e) {
 		if (wouldEcho()) return;
-		try {
-			target.begin();
-		} catch (WabitPersistenceException e1) {
-			throw new RuntimeException("Could not begin the transaction.", e1);
-		}
+		transactionCount++;
 	}
 
 	public void wabitChildAdded(WabitChildEvent e) {
 		WabitUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
-		//persistChild(e.getSource(), e.getChild(), e.getChildType(), e.getIndex());
-		try {
-			persistObject(e.getChild());
-		} catch (Throwable t) {
-			target.rollback();
-			throw new RuntimeException("Could not persist child:"+e.getChild().getUUID(),t);
-		}
+		persistObject(e.getChild());
 	}
 	
 	/**
@@ -224,32 +266,28 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            The root of the tree of objects that will be persisted. This
 	 *            object and all of its children will be persisted.
 	 */
-	 public void persistObject(WabitObject wo) throws WabitPersistenceException {
+	 public void persistObject(WabitObject wo) {
 		 
-		 if (wouldEcho()) return;
-		
-		target.begin();
+		if (wouldEcho()) return;
 
-		try {
-			int index = 0;
-			WabitObject parent = wo.getParent();
-			if (parent != null) {
-				index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
-				if (index < 0) {
-					index = 0;
-				}
+		this.transactionStarted(null);
+		
+		int index = 0;
+		WabitObject parent = wo.getParent();
+		if (parent != null) {
+			index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
+			if (index < 0) {
+				index = 0;
 			}
-			
-			persistChild(parent, wo, wo.getClass(), index);
-			
-			for (WabitObject child : wo.getChildren()) {
-				persistObject(child);
-			}
-			target.commit();
-		} catch (Throwable t) {
-			target.rollback();
-			throw new WabitPersistenceException(wo.getUUID(),t);
 		}
+		
+		persistChild(parent, wo, wo.getClass(), index);
+		
+		for (WabitObject child : wo.getChildren()) {
+			persistObject(child);
+		}
+		
+		this.transactionEnded(null);
 	}
 
 	/**
@@ -271,514 +309,490 @@ public class WorkspacePersisterListener implements WabitListener {
 	 protected void persistChild(WabitObject parent, WabitObject child, 
 			Class<? extends WabitObject> childClassType, int indexOfChild) {
 		 
-		 if (wouldEcho()) return;
-		 
-		try {
-			final String parentUUID;
-			if (child instanceof WabitWorkspace) {
-				parentUUID = null;
-			} else if (parent == null) {
-				throw new NullPointerException("Child is not a WabitWorkspace, but has a null parent ID: " + child);
-			} else {
-				parentUUID = parent.getUUID();
-			}
-			
-			String className = childClassType.getSimpleName();
-			String uuid = child.getUUID();
-
-			target.begin();
-			
-			if (childClassType != WabitWorkspace.class) {
-				target.persistObject(parentUUID, className, uuid, indexOfChild);
-			}
-
-			// Persist any properties required for WabitObject constructor
-			if (child instanceof CellSetRenderer) {
-				CellSetRenderer csRenderer = (CellSetRenderer) child;
-
-				// Remaining properties
-				target.persistProperty(uuid, "bodyAlignment", DataType.STRING,
-						converter.convertToBasicType(csRenderer.getBodyAlignment()));
-				target.persistProperty(uuid, "bodyFont", DataType.STRING,
-						converter.convertToBasicType(csRenderer.getBodyFont()));
-				target.persistProperty(uuid, "bodyFormat", DataType.STRING,
-						converter.convertToBasicType(csRenderer.getBodyFormat()));
-				target.persistProperty(uuid, "headerFont", DataType.STRING,
-						converter.convertToBasicType(csRenderer.getHeaderFont()));
-
-			} else if (child instanceof ChartColumn) {
-				ChartColumn chartColumn = (ChartColumn) child;
-
-				// Constructor arguments
-				target.persistProperty(uuid, "columnName", DataType.STRING,
-						converter.convertToBasicType(chartColumn.getColumnName()));
-				target.persistProperty(uuid, "dataType", DataType.STRING,
-						converter.convertToBasicType(chartColumn.getDataType()));
-
-				// Remaining properties
-				target.persistProperty(uuid, "roleInChart", DataType.STRING,
-						converter.convertToBasicType(chartColumn.getRoleInChart()));
-
-				target.persistProperty(uuid, "XAxisIdentifier",
-						DataType.REFERENCE, converter.convertToBasicType(
-								chartColumn.getXAxisIdentifier(), DataType.REFERENCE));
-
-
-			} else if (child instanceof Chart) {
-				Chart chart = (Chart) child;
-
-				// Remaining properties
-				target.persistProperty(uuid, "gratuitouslyAnimated",
-						DataType.BOOLEAN, converter.convertToBasicType(
-								chart.isGratuitouslyAnimated()));
-				target.persistProperty(uuid, "legendPosition", DataType.STRING,
-						converter.convertToBasicType(chart.getLegendPosition()));
-				
-				ResultSetProducer rsProducer = chart.getQuery();
-				target.persistProperty(uuid, "query", DataType.REFERENCE, 
-						converter.convertToBasicType(rsProducer));
-				target.persistProperty(uuid, "type", DataType.STRING,
-						converter.convertToBasicType(chart.getType()));
-				target.persistProperty(uuid, "XAxisLabelRotation",
-						DataType.DOUBLE, converter.convertToBasicType(
-								chart.getXAxisLabelRotation()));
-				target.persistProperty(uuid, "xaxisName", DataType.STRING,
-						converter.convertToBasicType(chart.getXaxisName()));
-				target.persistProperty(uuid, "yaxisName", DataType.STRING,
-						converter.convertToBasicType(chart.getYaxisName()));
-				target.persistProperty(uuid, "backgroundColour", DataType.STRING,
-						converter.convertToBasicType(chart.getBackgroundColour()));
-
-			} else if (child instanceof ChartRenderer) {
-				//The only argument to this class is handled later by the
-				//report content renderer section
-
-			} else if (child instanceof ColumnInfo) {
-				ColumnInfo columnInfo = (ColumnInfo) child;
-
-				// Constructor argument
-				target.persistProperty(uuid, ColumnInfo.COLUMN_ALIAS,
-						DataType.STRING, converter.convertToBasicType(
-								columnInfo.getColumnAlias()));
-				Item item = columnInfo.getColumnInfoItem();
-				if (item != null) {
-					target.persistProperty(uuid,
-							ColumnInfo.COLUMN_INFO_ITEM_CHANGED,
-							DataType.STRING, converter.convertToBasicType(item));
-				}
-
-				// Remaining properties
-				target.persistProperty(uuid, ColumnInfo.DATATYPE_CHANGED,
-						DataType.STRING, converter.convertToBasicType(
-								columnInfo.getDataType()));
-
-				target.persistProperty(uuid,
-						ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED,
-						DataType.STRING, converter.convertToBasicType(
-								columnInfo.getHorizontalAlignment()));
-				target.persistProperty(uuid, ColumnInfo.WIDTH_CHANGED,
-						DataType.INTEGER, columnInfo.getWidth());
-				target.persistProperty(uuid,
-						ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED,
-						DataType.STRING, converter.convertToBasicType(
-								columnInfo.getWillGroupOrBreak()));
-				target.persistProperty(uuid, ColumnInfo.WILL_SUBTOTAL_CHANGED,
-						DataType.BOOLEAN, converter.convertToBasicType(
-								columnInfo.getWillSubtotal()));
-				target.persistProperty(uuid, "format", DataType.STRING, 
-						converter.convertToBasicType(columnInfo.getFormat()));
-
-			} else if (child instanceof ContentBox) {
-				ContentBox contentBox = (ContentBox) child;
-
-				// Remaining arguments
-				target.persistProperty(uuid, "contentRenderer",	DataType.REFERENCE,
-						converter.convertToBasicType(contentBox.getContentRenderer(), DataType.REFERENCE));
-				target.persistProperty(uuid, "font", DataType.STRING,
-						converter.convertToBasicType(contentBox.getFont()));
-				target.persistProperty(uuid, "height", DataType.DOUBLE,	
-						converter.convertToBasicType(contentBox.getHeight()));
-				target.persistProperty(uuid, "width", DataType.DOUBLE, 
-						converter.convertToBasicType(contentBox.getWidth()));
-				target.persistProperty(uuid, "x", DataType.DOUBLE, 
-						converter.convertToBasicType(contentBox.getX()));
-				target.persistProperty(uuid, "y", DataType.DOUBLE, 
-						converter.convertToBasicType(contentBox.getY()));
-
-			} else if (child instanceof Grant) {
-				Grant grant = (Grant) child;
-				
-				// Constructor arguments
-				target.persistProperty(uuid, "subject", DataType.STRING, 
-						converter.convertToBasicType(grant.getSubject()));
-				target.persistProperty(uuid, "type", DataType.STRING, 
-						converter.convertToBasicType(grant.getType()));
-				target.persistProperty(uuid, "createPrivilege", DataType.BOOLEAN, 
-						converter.convertToBasicType(grant.isCreatePrivilege()));
-				target.persistProperty(uuid, "deletePrivilege", DataType.BOOLEAN, 
-						converter.convertToBasicType(grant.isDeletePrivilege()));
-				target.persistProperty(uuid, "executePrivilege", DataType.BOOLEAN, 
-						converter.convertToBasicType(grant.isExecutePrivilege()));
-				target.persistProperty(uuid, "grantPrivilege", DataType.BOOLEAN, 
-						converter.convertToBasicType(grant.isGrantPrivilege()));
-				target.persistProperty(uuid, "modifyPrivilege", DataType.BOOLEAN, 
-						converter.convertToBasicType(grant.isModifyPrivilege()));
-				
-			} else if (child instanceof GroupMember) {
-				GroupMember groupMember = (GroupMember) child;
-				
-				// Constructor argument
-				target.persistProperty(uuid, "user", DataType.REFERENCE, 
-						converter.convertToBasicType(groupMember.getUser()));
-				
-			} else if (child instanceof Guide) {
-				Guide guide = (Guide) child;
-
-				// Constructor arguments
-				target.persistProperty(uuid, "axis", DataType.STRING,
-						converter.convertToBasicType(guide.getAxis()));
-				target.persistProperty(uuid, "offset", DataType.DOUBLE, 
-						converter.convertToBasicType(guide.getOffset()));
-
-				// Remaining properties
-
-			} else if (child instanceof ImageRenderer) {
-				ImageRenderer iRenderer = (ImageRenderer) child;
-
-				// Remaining arguments
-				target.persistProperty(uuid, "HAlign", DataType.STRING,
-						converter.convertToBasicType(iRenderer.getHAlign()));
-				target.persistProperty(uuid, "VAlign", DataType.STRING,
-						converter.convertToBasicType(iRenderer.getVAlign()));
-				target.persistProperty(uuid, "image", DataType.REFERENCE,
-						converter.convertToBasicType(iRenderer.getImage()));
-				target.persistProperty(uuid, "preserveAspectRatioWhenResizing",
-						DataType.BOOLEAN, converter.convertToBasicType(
-								iRenderer.isPreserveAspectRatioWhenResizing()));
-				target.persistProperty(uuid, "preservingAspectRatio",
-						DataType.BOOLEAN, converter.convertToBasicType(
-								iRenderer.isPreservingAspectRatio()));
-
-			} else if (child instanceof Label) {
-				Label label = (Label) child;
-
-				target.persistProperty(uuid, "font", DataType.STRING,
-						converter.convertToBasicType(label.getFont()));
-				target.persistProperty(uuid, "horizontalAlignment",
-						DataType.STRING, converter.convertToBasicType(
-								label.getHorizontalAlignment()));
-				target.persistProperty(uuid, "text", DataType.STRING,
-						converter.convertToBasicType(label.getText()));
-				target.persistProperty(uuid, "verticalAlignment",
-						DataType.STRING, converter.convertToBasicType(
-								label.getVerticalAlignment()));
-				target.persistProperty(uuid, "backgroundColour",
-						DataType.STRING,
-						converter.convertToBasicType(label.getBackgroundColour()));
-
-			} else if (child instanceof Layout) {
-//				Layout layout = (Layout) child;
-//
-				// Constructor argument
-//				persistChild(layout, layout.getPage(), 
-//						Page.class, 0);
-//
-//				for (WabitObject wo : layout.getPage().getChildren()) {
-//					persistObject(wo);
-//				}
-				// Remaining parameters
-				
-				// The zoom property is being ignored here because it does not make much
-				// sense to have the layout zoom change for all users working on it.
-
-			} else if (child instanceof OlapQuery) {
-				OlapQuery olapQuery = (OlapQuery) child;
-
-				// Constructor arguments
-				target.persistProperty(uuid, "queryName", DataType.STRING,
-						converter.convertToBasicType(olapQuery.getQueryName()));
-				target.persistProperty(uuid, "catalogName", DataType.STRING,
-						converter.convertToBasicType(olapQuery.getCatalogName()));
-				target.persistProperty(uuid, "schemaName", DataType.STRING,
-						converter.convertToBasicType(olapQuery.getSchemaName()));
-				target.persistProperty(uuid, "cubeName", DataType.STRING,
-						converter.convertToBasicType(olapQuery.getCubeName()));
-
-				// Remaining properties
-				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
-						converter.convertToBasicType(olapQuery.isNonEmpty()));
-				target.persistProperty(uuid, "olapDataSource", DataType.STRING, 
-						converter.convertToBasicType(olapQuery.getOlapDataSource()));
-				
-				if (olapQuery.getCurrentCube() != null) {
-					target.persistProperty(uuid, "currentCube", DataType.STRING,
-							converter.convertToBasicType(olapQuery.getCurrentCube(), olapQuery.getOlapDataSource()));
-				}
-
-			} else if (child instanceof Page) {
-				Page page = (Page) child;
-
-				// Constructor arguments
-				target.persistProperty(uuid, "width", DataType.INTEGER, 
-						converter.convertToBasicType(page.getWidth()));
-				target.persistProperty(uuid, "height", DataType.INTEGER, 
-						converter.convertToBasicType(page.getHeight()));
-				target.persistProperty(uuid, "orientation", DataType.STRING,
-						converter.convertToBasicType(page.getOrientation()));
-
-				// Remaining properties
-				target.persistProperty(uuid, "defaultFont", DataType.STRING,
-						converter.convertToBasicType(page.getDefaultFont()));
-
-			} else if (child instanceof QueryCache) {
-				QueryCache query = (QueryCache) child;
-				
-				//Constructor argument, this is a final child that is given to the constructor.
-//				persistChild(query, query.getWabitConstantsContainer(), 
-//						WabitConstantsContainer.class, 0);
-				
-				// Remaining properties
-				
-				// The zoom property is being ignored here because it does not make much
-				// sense to have the query zoom change for all users working on it.
-				
-				target.persistProperty(uuid, "streaming", DataType.BOOLEAN,
-						converter.convertToBasicType(query.isStreaming()));
-				target.persistProperty(uuid, "streamingRowLimit",
-						DataType.INTEGER, converter.convertToBasicType(
-								query.getStreamingRowLimit()));
-				target.persistProperty(uuid, QueryImpl.ROW_LIMIT,
-						DataType.INTEGER, 
-						converter.convertToBasicType(query.getRowLimit()));
-				target.persistProperty(uuid, QueryImpl.GROUPING_ENABLED,
-						DataType.BOOLEAN, 
-						converter.convertToBasicType(query.isGroupingEnabled()));
-				target.persistProperty(uuid, "promptForCrossJoins",
-						DataType.BOOLEAN, 
-						converter.convertToBasicType(query.getPromptForCrossJoins()));
-				target.persistProperty(uuid, "automaticallyExecuting",
-						DataType.BOOLEAN, 
-						converter.convertToBasicType(query.isAutomaticallyExecuting()));
-				target.persistProperty(uuid, QueryImpl.GLOBAL_WHERE_CLAUSE,
-						DataType.STRING, 
-						converter.convertToBasicType(query.getGlobalWhereClause()));
-				target.persistProperty(uuid, QueryImpl.USER_MODIFIED_QUERY,
-						DataType.STRING, 
-						converter.convertToBasicType(query.getUserModifiedQuery()));
-				target.persistProperty(uuid, "executeQueriesWithCrossJoins",
-						DataType.BOOLEAN, 
-						converter.convertToBasicType(query.getExecuteQueriesWithCrossJoins()));
-				target.persistProperty(uuid, "dataSource",
-						DataType.STRING,
-						converter.convertToBasicType(query.getDataSource()));
-				
-			} else if (child instanceof ReportTask) {
-				ReportTask task = (ReportTask) child;
-				
-				// Remaining arguments
-				target.persistProperty(uuid, "email", DataType.STRING, 
-						converter.convertToBasicType(task.getEmail()));
-				target.persistProperty(uuid, "triggerType", DataType.STRING, 
-						converter.convertToBasicType(task.getTriggerType()));
-				target.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerMinuteParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerDayOfWeekParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerDayOfMonthParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "triggerIntervalParam", DataType.INTEGER, 
-						converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER));
-				target.persistProperty(uuid, "report", DataType.REFERENCE, 
-						converter.convertToBasicType(task.getReport(), DataType.REFERENCE));
-				
-			} else if (child instanceof ResultSetRenderer) {
-				ResultSetRenderer renderer = (ResultSetRenderer) child;
-				
-				// Remaining properties
-				target.persistProperty(uuid, "bodyFont", DataType.STRING, 
-						converter.convertToBasicType(renderer.getBodyFont()));
-				target.persistProperty(uuid, "headerFont", DataType.STRING, 
-						converter.convertToBasicType(renderer.getHeaderFont()));
-				target.persistProperty(uuid, "borderType", DataType.STRING, 
-						converter.convertToBasicType(renderer.getBorderType()));
-				target.persistProperty(uuid, "nullString", DataType.STRING, 
-						converter.convertToBasicType(renderer.getNullString()));
-				target.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
-						converter.convertToBasicType(renderer.isPrintingGrandTotals()));
-				target.persistProperty(uuid, "backgroundColour",
-						DataType.STRING,
-						converter.convertToBasicType(renderer.getBackgroundColour()));
-				
-			} else if (child instanceof User) {
-				User user = (User) child;
-				
-				// Constructor arguments
-				target.persistProperty(uuid, "password", DataType.STRING, 
-						converter.convertToBasicType(user.getPassword()));
-				target.persistProperty(uuid, "email", DataType.STRING, 
-						converter.convertToBasicType(user.getEmail()));
-				target.persistProperty(uuid, "fullName", DataType.STRING, 
-						converter.convertToBasicType(user.getFullName()));
-				
-			} else if (child instanceof WabitConstantsContainer) {
-				WabitConstantsContainer container = (WabitConstantsContainer) child;
-				
-				// Constructor argument
-				target.persistProperty(uuid, "delegate", DataType.STRING,
-						converter.convertToBasicType(container.getDelegate()));
-				
-				// Remaining properties
-				target.persistProperty(uuid, "alias", DataType.STRING, 
-						converter.convertToBasicType(container.getAlias()));
-				target.persistProperty(uuid, "position", DataType.STRING, 
-						converter.convertToBasicType(container.getPosition()));
-				
-			} else if (child instanceof WabitImage) {
-				WabitImage image = (WabitImage) child;
-				
-				// Remaining properties
-				target.persistProperty(uuid, "image", DataType.PNG_IMG, 
-						converter.convertToBasicType(image.getImage(), DataType.PNG_IMG));
-				
-			} else if (child instanceof WabitItem) {
-				WabitItem item = (WabitItem) child;
-				
-				// Constructor argument
-				target.persistProperty(uuid, "delegate", DataType.STRING, 
-						converter.convertToBasicType(item.getDelegate()));
-				
-				// Remaining properties
-				target.persistProperty(uuid, "alias", DataType.STRING, 
-						converter.convertToBasicType(item.getAlias()));
-				target.persistProperty(uuid, "selected", DataType.INTEGER, 
-						converter.convertToBasicType(item.getSelected()));
-				target.persistProperty(uuid, "where", DataType.STRING, 
-						converter.convertToBasicType(item.getWhere()));
-				target.persistProperty(uuid, "groupBy", DataType.STRING, 
-						converter.convertToBasicType(item.getGroupBy()));
-				target.persistProperty(uuid, "having", DataType.STRING, 
-						converter.convertToBasicType(item.getHaving()));
-				target.persistProperty(uuid, "orderBy", DataType.STRING, 
-						converter.convertToBasicType(item.getOrderBy()));
-				target.persistProperty(uuid, "orderByOrdering", DataType.INTEGER,
-						converter.convertToBasicType(item.getOrderByOrdering()));
-				target.persistProperty(uuid, "columnWidth", DataType.INTEGER, 
-						converter.convertToBasicType(item.getColumnWidth()));
-				
-
-			} else if (child instanceof WabitDataSource) {
-				WabitDataSource ds = (WabitDataSource) child;
-				
-				// Constructor argument
-				target.persistProperty(uuid, "SPDataSource", DataType.STRING, 
-						converter.convertToBasicType(ds.getSPDataSource()));
-
-			} else if (child instanceof WabitJoin) {
-				WabitJoin sqlJoin = ((WabitJoin) child);
-				
-				// Constructor arguments
-				target.persistProperty(uuid, "query", DataType.REFERENCE, 
-						converter.convertToBasicType(sqlJoin.getQuery()));
-				target.persistProperty(uuid, "delegate", DataType.STRING, 
-						converter.convertToBasicType(sqlJoin.getDelegate()));
-
-				// Remaining properties
-				target.persistProperty(uuid, "comparator", DataType.STRING,
-						converter.convertToBasicType(sqlJoin.getComparator()));
-				target.persistProperty(uuid, "leftColumnOuterJoin", DataType.BOOLEAN, 
-						converter.convertToBasicType(sqlJoin.isLeftColumnOuterJoin()));
-				target.persistProperty(uuid, "rightColumnOuterJoin", DataType.BOOLEAN, 
-						converter.convertToBasicType(sqlJoin.isRightColumnOuterJoin()));
-
-			} else if (child instanceof WabitOlapAxis) {
-				WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
-
-				// Constructor argument
-				target.persistProperty(uuid, "ordinal", DataType.STRING,
-						converter.convertToBasicType(wabitOlapAxis.getOrdinal()));
-
-				// Remaining properties
-				target.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
-						converter.convertToBasicType(wabitOlapAxis.isNonEmpty()));
-				target.persistProperty(uuid, "sortEvaluationLiteral",
-						DataType.STRING, 
-						converter.convertToBasicType(wabitOlapAxis.getSortEvaluationLiteral()));
-				target.persistProperty(uuid, "sortOrder", DataType.STRING,
-						converter.convertToBasicType(wabitOlapAxis.getSortOrder()));
-
-			} else if (child instanceof WabitOlapSelection) {
-				WabitOlapSelection wabitOlapSelection = (WabitOlapSelection) child;
-
-				// Constructor argument
-				target.persistProperty(uuid, "operator", DataType.STRING,
-						converter.convertToBasicType(wabitOlapSelection.getOperator()));
-				target.persistProperty(uuid, "uniqueMemberName", DataType.STRING, 
-						converter.convertToBasicType(wabitOlapSelection.getUniqueMemberName()));
-
-			} else if (child instanceof WabitTableContainer) {
-				WabitTableContainer wabitTableContainer = (WabitTableContainer) child;
-				TableContainer tableContainer = (TableContainer) wabitTableContainer
-						.getDelegate();
-
-				// Constructor arguments
-				target.persistProperty(uuid, "delegate",
-						DataType.STRING, converter.convertToBasicType(
-								tableContainer));
-
-				// Remaining properties
-				target.persistProperty(uuid, "alias", DataType.STRING,
-						converter.convertToBasicType(tableContainer.getAlias()));
-				target.persistProperty(uuid, "position", DataType.STRING,
-						converter.convertToBasicType(tableContainer.getPosition()));
-
-			} else if (child instanceof WabitWorkspace) {
-				//no current properties
-				
-			}
-			
-			if (child instanceof WabitObjectReportRenderer) {
-				WabitObjectReportRenderer renderer = (WabitObjectReportRenderer) child;
-				target.persistProperty(uuid, "content", DataType.REFERENCE, 
-						converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
-			}
-
-			// Persisting the name property last because WabitObjects such as ContentBox
-			// have methods that calls setName on certain events or method calls.
-			// We do not want those calls to affect the name property. However, this should
-			// really only be a concern for reflective tests.
-			target.persistProperty(uuid, "name", DataType.STRING, child.getName());
-			
-			target.commit();
-			
-		} catch (WabitPersistenceException e1) {
-			logger.error(e1);
-			target.rollback();
-			throw new RuntimeException("Could not add WabitObject " + child.getName() + " with id " + child.getUUID() + " as a child of " + parent.getName() + " with id " + parent.getUUID() + ".",
-					e1);
+		if (wouldEcho()) return;
+		
+		this.transactionStarted(null);
+		
+		final String parentUUID;
+		if (child instanceof WabitWorkspace) {
+			parentUUID = null;
+		} else if (parent == null) {
+			this.rollback();
+			throw new NullPointerException("Child is not a WabitWorkspace, but has a null parent ID: " + child);
+		} else {
+			parentUUID = parent.getUUID();
 		}
+		
+		if (childClassType != WabitWorkspace.class) {
+			this.persistedObjects.add(
+				new PersistedWabitObject(
+					parentUUID, 
+					child.getClass().getSimpleName(), 
+					child.getUUID(),
+					indexOfChild));
+		}
+		
+		String uuid = child.getUUID();
+
+		// Persist any properties required for WabitObject constructor
+		if (child instanceof CellSetRenderer) {
+			CellSetRenderer csRenderer = (CellSetRenderer) child;
+
+			// Remaining properties
+			this.persistProperty(uuid, "bodyAlignment", DataType.STRING,
+					converter.convertToBasicType(csRenderer.getBodyAlignment()));
+			this.persistProperty(uuid, "bodyFont", DataType.STRING,
+					converter.convertToBasicType(csRenderer.getBodyFont()));
+			this.persistProperty(uuid, "bodyFormat", DataType.STRING,
+					converter.convertToBasicType(csRenderer.getBodyFormat()));
+			this.persistProperty(uuid, "headerFont", DataType.STRING,
+					converter.convertToBasicType(csRenderer.getHeaderFont()));
+
+		} else if (child instanceof ChartColumn) {
+			ChartColumn chartColumn = (ChartColumn) child;
+
+			// Constructor arguments
+			this.persistProperty(uuid, "columnName", DataType.STRING,
+					converter.convertToBasicType(chartColumn.getColumnName()));
+			this.persistProperty(uuid, "dataType", DataType.STRING,
+					converter.convertToBasicType(chartColumn.getDataType()));
+
+			// Remaining properties
+			this.persistProperty(uuid, "roleInChart", DataType.STRING,
+					converter.convertToBasicType(chartColumn.getRoleInChart()));
+
+			this.persistProperty(uuid, "XAxisIdentifier",
+					DataType.REFERENCE, converter.convertToBasicType(
+							chartColumn.getXAxisIdentifier(), DataType.REFERENCE));
+
+
+		} else if (child instanceof Chart) {
+			Chart chart = (Chart) child;
+
+			// Remaining properties
+			this.persistProperty(uuid, "gratuitouslyAnimated",
+					DataType.BOOLEAN, converter.convertToBasicType(
+							chart.isGratuitouslyAnimated()));
+			this.persistProperty(uuid, "legendPosition", DataType.STRING,
+					converter.convertToBasicType(chart.getLegendPosition()));
+			
+			ResultSetProducer rsProducer = chart.getQuery();
+			this.persistProperty(uuid, "query", DataType.REFERENCE, 
+					converter.convertToBasicType(rsProducer));
+			this.persistProperty(uuid, "type", DataType.STRING,
+					converter.convertToBasicType(chart.getType()));
+			this.persistProperty(uuid, "XAxisLabelRotation",
+					DataType.DOUBLE, converter.convertToBasicType(
+							chart.getXAxisLabelRotation()));
+			this.persistProperty(uuid, "xaxisName", DataType.STRING,
+					converter.convertToBasicType(chart.getXaxisName()));
+			this.persistProperty(uuid, "yaxisName", DataType.STRING,
+					converter.convertToBasicType(chart.getYaxisName()));
+			this.persistProperty(uuid, "backgroundColour", DataType.STRING,
+					converter.convertToBasicType(chart.getBackgroundColour()));
+
+		} else if (child instanceof ChartRenderer) {
+			//The only argument to this class is handled later by the
+			//report content renderer section
+
+		} else if (child instanceof ColumnInfo) {
+			ColumnInfo columnInfo = (ColumnInfo) child;
+
+			// Constructor argument
+			this.persistProperty(uuid, ColumnInfo.COLUMN_ALIAS,
+					DataType.STRING, converter.convertToBasicType(
+							columnInfo.getColumnAlias()));
+			Item item = columnInfo.getColumnInfoItem();
+			if (item != null) {
+				this.persistProperty(uuid,
+						ColumnInfo.COLUMN_INFO_ITEM_CHANGED,
+						DataType.STRING, converter.convertToBasicType(item));
+			}
+
+			// Remaining properties
+			this.persistProperty(uuid, ColumnInfo.DATATYPE_CHANGED,
+					DataType.STRING, converter.convertToBasicType(
+							columnInfo.getDataType()));
+
+			this.persistProperty(uuid,
+					ColumnInfo.HORIZONAL_ALIGNMENT_CHANGED,
+					DataType.STRING, converter.convertToBasicType(
+							columnInfo.getHorizontalAlignment()));
+			this.persistProperty(uuid, ColumnInfo.WIDTH_CHANGED,
+					DataType.INTEGER, columnInfo.getWidth());
+			this.persistProperty(uuid,
+					ColumnInfo.WILL_GROUP_OR_BREAK_CHANGED,
+					DataType.STRING, converter.convertToBasicType(
+							columnInfo.getWillGroupOrBreak()));
+			this.persistProperty(uuid, ColumnInfo.WILL_SUBTOTAL_CHANGED,
+					DataType.BOOLEAN, converter.convertToBasicType(
+							columnInfo.getWillSubtotal()));
+			this.persistProperty(uuid, "format", DataType.STRING, 
+					converter.convertToBasicType(columnInfo.getFormat()));
+
+		} else if (child instanceof ContentBox) {
+			ContentBox contentBox = (ContentBox) child;
+
+			// Remaining arguments
+			this.persistProperty(uuid, "contentRenderer",	DataType.REFERENCE,
+					converter.convertToBasicType(contentBox.getContentRenderer(), DataType.REFERENCE));
+			this.persistProperty(uuid, "font", DataType.STRING,
+					converter.convertToBasicType(contentBox.getFont()));
+			this.persistProperty(uuid, "height", DataType.DOUBLE,	
+					converter.convertToBasicType(contentBox.getHeight()));
+			this.persistProperty(uuid, "width", DataType.DOUBLE, 
+					converter.convertToBasicType(contentBox.getWidth()));
+			this.persistProperty(uuid, "x", DataType.DOUBLE, 
+					converter.convertToBasicType(contentBox.getX()));
+			this.persistProperty(uuid, "y", DataType.DOUBLE, 
+					converter.convertToBasicType(contentBox.getY()));
+
+		} else if (child instanceof Grant) {
+			Grant grant = (Grant) child;
+			
+			// Constructor arguments
+			this.persistProperty(uuid, "subject", DataType.STRING, 
+					converter.convertToBasicType(grant.getSubject()));
+			this.persistProperty(uuid, "type", DataType.STRING, 
+					converter.convertToBasicType(grant.getType()));
+			this.persistProperty(uuid, "createPrivilege", DataType.BOOLEAN, 
+					converter.convertToBasicType(grant.isCreatePrivilege()));
+			this.persistProperty(uuid, "deletePrivilege", DataType.BOOLEAN, 
+					converter.convertToBasicType(grant.isDeletePrivilege()));
+			this.persistProperty(uuid, "executePrivilege", DataType.BOOLEAN, 
+					converter.convertToBasicType(grant.isExecutePrivilege()));
+			this.persistProperty(uuid, "grantPrivilege", DataType.BOOLEAN, 
+					converter.convertToBasicType(grant.isGrantPrivilege()));
+			this.persistProperty(uuid, "modifyPrivilege", DataType.BOOLEAN, 
+					converter.convertToBasicType(grant.isModifyPrivilege()));
+			
+		} else if (child instanceof GroupMember) {
+			GroupMember groupMember = (GroupMember) child;
+			
+			// Constructor argument
+			this.persistProperty(uuid, "user", DataType.REFERENCE, 
+					converter.convertToBasicType(groupMember.getUser()));
+			
+		} else if (child instanceof Guide) {
+			Guide guide = (Guide) child;
+
+			// Constructor arguments
+			this.persistProperty(uuid, "axis", DataType.STRING,
+					converter.convertToBasicType(guide.getAxis()));
+			this.persistProperty(uuid, "offset", DataType.DOUBLE, 
+					converter.convertToBasicType(guide.getOffset()));
+
+			// Remaining properties
+
+		} else if (child instanceof ImageRenderer) {
+			ImageRenderer iRenderer = (ImageRenderer) child;
+
+			// Remaining arguments
+			this.persistProperty(uuid, "HAlign", DataType.STRING,
+					converter.convertToBasicType(iRenderer.getHAlign()));
+			this.persistProperty(uuid, "VAlign", DataType.STRING,
+					converter.convertToBasicType(iRenderer.getVAlign()));
+			this.persistProperty(uuid, "image", DataType.REFERENCE,
+					converter.convertToBasicType(iRenderer.getImage()));
+			this.persistProperty(uuid, "preserveAspectRatioWhenResizing",
+					DataType.BOOLEAN, converter.convertToBasicType(
+							iRenderer.isPreserveAspectRatioWhenResizing()));
+			this.persistProperty(uuid, "preservingAspectRatio",
+					DataType.BOOLEAN, converter.convertToBasicType(
+							iRenderer.isPreservingAspectRatio()));
+
+		} else if (child instanceof Label) {
+			Label label = (Label) child;
+
+			this.persistProperty(uuid, "font", DataType.STRING,
+					converter.convertToBasicType(label.getFont()));
+			this.persistProperty(uuid, "horizontalAlignment",
+					DataType.STRING, converter.convertToBasicType(
+							label.getHorizontalAlignment()));
+			this.persistProperty(uuid, "text", DataType.STRING,
+					converter.convertToBasicType(label.getText()));
+			this.persistProperty(uuid, "verticalAlignment",
+					DataType.STRING, converter.convertToBasicType(
+							label.getVerticalAlignment()));
+			this.persistProperty(uuid, "backgroundColour",
+					DataType.STRING,
+					converter.convertToBasicType(label.getBackgroundColour()));
+
+		} else if (child instanceof OlapQuery) {
+			OlapQuery olapQuery = (OlapQuery) child;
+
+			// Constructor arguments
+			this.persistProperty(uuid, "queryName", DataType.STRING,
+					converter.convertToBasicType(olapQuery.getQueryName()));
+			this.persistProperty(uuid, "catalogName", DataType.STRING,
+					converter.convertToBasicType(olapQuery.getCatalogName()));
+			this.persistProperty(uuid, "schemaName", DataType.STRING,
+					converter.convertToBasicType(olapQuery.getSchemaName()));
+			this.persistProperty(uuid, "cubeName", DataType.STRING,
+					converter.convertToBasicType(olapQuery.getCubeName()));
+
+			// Remaining properties
+			this.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
+					converter.convertToBasicType(olapQuery.isNonEmpty()));
+			this.persistProperty(uuid, "olapDataSource", DataType.STRING, 
+					converter.convertToBasicType(olapQuery.getOlapDataSource()));
+			
+			if (olapQuery.getCurrentCube() != null) {
+				this.persistProperty(uuid, "currentCube", DataType.STRING,
+						converter.convertToBasicType(olapQuery.getCurrentCube(), olapQuery.getOlapDataSource()));
+			}
+
+		} else if (child instanceof Page) {
+			Page page = (Page) child;
+
+			// Constructor arguments
+			this.persistProperty(uuid, "width", DataType.INTEGER, 
+					converter.convertToBasicType(page.getWidth()));
+			this.persistProperty(uuid, "height", DataType.INTEGER, 
+					converter.convertToBasicType(page.getHeight()));
+			this.persistProperty(uuid, "orientation", DataType.STRING,
+					converter.convertToBasicType(page.getOrientation()));
+
+			// Remaining properties
+			this.persistProperty(uuid, "defaultFont", DataType.STRING,
+					converter.convertToBasicType(page.getDefaultFont()));
+
+		} else if (child instanceof QueryCache) {
+			QueryCache query = (QueryCache) child;
+			// Remaining properties
+			
+			// The zoom property is being ignored here because it does not make much
+			// sense to have the query zoom change for all users working on it.
+			
+			this.persistProperty(uuid, "streaming", DataType.BOOLEAN,
+					converter.convertToBasicType(query.isStreaming()));
+			this.persistProperty(uuid, "streamingRowLimit",
+					DataType.INTEGER, converter.convertToBasicType(
+							query.getStreamingRowLimit()));
+			this.persistProperty(uuid, QueryImpl.ROW_LIMIT,
+					DataType.INTEGER, 
+					converter.convertToBasicType(query.getRowLimit()));
+			this.persistProperty(uuid, QueryImpl.GROUPING_ENABLED,
+					DataType.BOOLEAN, 
+					converter.convertToBasicType(query.isGroupingEnabled()));
+			this.persistProperty(uuid, "promptForCrossJoins",
+					DataType.BOOLEAN, 
+					converter.convertToBasicType(query.getPromptForCrossJoins()));
+			this.persistProperty(uuid, "automaticallyExecuting",
+					DataType.BOOLEAN, 
+					converter.convertToBasicType(query.isAutomaticallyExecuting()));
+			this.persistProperty(uuid, QueryImpl.GLOBAL_WHERE_CLAUSE,
+					DataType.STRING, 
+					converter.convertToBasicType(query.getGlobalWhereClause()));
+			this.persistProperty(uuid, QueryImpl.USER_MODIFIED_QUERY,
+					DataType.STRING, 
+					converter.convertToBasicType(query.getUserModifiedQuery()));
+			this.persistProperty(uuid, "executeQueriesWithCrossJoins",
+					DataType.BOOLEAN, 
+					converter.convertToBasicType(query.getExecuteQueriesWithCrossJoins()));
+			this.persistProperty(uuid, "dataSource",
+					DataType.STRING,
+					converter.convertToBasicType(query.getDataSource()));
+			
+		} else if (child instanceof ReportTask) {
+			ReportTask task = (ReportTask) child;
+			
+			// Remaining arguments
+			this.persistProperty(uuid, "email", DataType.STRING, 
+					converter.convertToBasicType(task.getEmail()));
+			this.persistProperty(uuid, "triggerType", DataType.STRING, 
+					converter.convertToBasicType(task.getTriggerType()));
+			this.persistProperty(uuid, "triggerHourParam", DataType.INTEGER, 
+					converter.convertToBasicType(task.getTriggerHourParam(), DataType.INTEGER));
+			this.persistProperty(uuid, "triggerMinuteParam", DataType.INTEGER, 
+					converter.convertToBasicType(task.getTriggerMinuteParam(), DataType.INTEGER));
+			this.persistProperty(uuid, "triggerDayOfWeekParam", DataType.INTEGER, 
+					converter.convertToBasicType(task.getTriggerDayOfWeekParam(), DataType.INTEGER));
+			this.persistProperty(uuid, "triggerDayOfMonthParam", DataType.INTEGER, 
+					converter.convertToBasicType(task.getTriggerDayOfMonthParam(), DataType.INTEGER));
+			this.persistProperty(uuid, "triggerIntervalParam", DataType.INTEGER, 
+					converter.convertToBasicType(task.getTriggerIntervalParam(), DataType.INTEGER));
+			this.persistProperty(uuid, "report", DataType.REFERENCE, 
+					converter.convertToBasicType(task.getReport(), DataType.REFERENCE));
+			
+		} else if (child instanceof ResultSetRenderer) {
+			ResultSetRenderer renderer = (ResultSetRenderer) child;
+			
+			// Remaining properties
+			this.persistProperty(uuid, "bodyFont", DataType.STRING, 
+					converter.convertToBasicType(renderer.getBodyFont()));
+			this.persistProperty(uuid, "headerFont", DataType.STRING, 
+					converter.convertToBasicType(renderer.getHeaderFont()));
+			this.persistProperty(uuid, "borderType", DataType.STRING, 
+					converter.convertToBasicType(renderer.getBorderType()));
+			this.persistProperty(uuid, "nullString", DataType.STRING, 
+					converter.convertToBasicType(renderer.getNullString()));
+			this.persistProperty(uuid, "printingGrandTotals", DataType.BOOLEAN, 
+					converter.convertToBasicType(renderer.isPrintingGrandTotals()));
+			this.persistProperty(uuid, "backgroundColour",
+					DataType.STRING,
+					converter.convertToBasicType(renderer.getBackgroundColour()));
+			
+		} else if (child instanceof User) {
+			User user = (User) child;
+			
+			// Constructor arguments
+			this.persistProperty(uuid, "password", DataType.STRING, 
+					converter.convertToBasicType(user.getPassword()));
+			this.persistProperty(uuid, "email", DataType.STRING, 
+					converter.convertToBasicType(user.getEmail()));
+			this.persistProperty(uuid, "fullName", DataType.STRING, 
+					converter.convertToBasicType(user.getFullName()));
+			
+		} else if (child instanceof WabitConstantsContainer) {
+			WabitConstantsContainer container = (WabitConstantsContainer) child;
+			
+			// Constructor argument
+			this.persistProperty(uuid, "delegate", DataType.STRING,
+					converter.convertToBasicType(container.getDelegate()));
+			
+			// Remaining properties
+			this.persistProperty(uuid, "alias", DataType.STRING, 
+					converter.convertToBasicType(container.getAlias()));
+			this.persistProperty(uuid, "position", DataType.STRING, 
+					converter.convertToBasicType(container.getPosition()));
+			
+		} else if (child instanceof WabitImage) {
+			WabitImage image = (WabitImage) child;
+			
+			// Remaining properties
+			this.persistProperty(uuid, "image", DataType.PNG_IMG, 
+					converter.convertToBasicType(image.getImage(), DataType.PNG_IMG));
+			
+		} else if (child instanceof WabitItem) {
+			WabitItem item = (WabitItem) child;
+			
+			// Constructor argument
+			this.persistProperty(uuid, "delegate", DataType.STRING, 
+					converter.convertToBasicType(item.getDelegate()));
+			
+			// Remaining properties
+			this.persistProperty(uuid, "alias", DataType.STRING, 
+					converter.convertToBasicType(item.getAlias()));
+			this.persistProperty(uuid, "selected", DataType.INTEGER, 
+					converter.convertToBasicType(item.getSelected()));
+			this.persistProperty(uuid, "where", DataType.STRING, 
+					converter.convertToBasicType(item.getWhere()));
+			this.persistProperty(uuid, "groupBy", DataType.STRING, 
+					converter.convertToBasicType(item.getGroupBy()));
+			this.persistProperty(uuid, "having", DataType.STRING, 
+					converter.convertToBasicType(item.getHaving()));
+			this.persistProperty(uuid, "orderBy", DataType.STRING, 
+					converter.convertToBasicType(item.getOrderBy()));
+			this.persistProperty(uuid, "orderByOrdering", DataType.INTEGER,
+					converter.convertToBasicType(item.getOrderByOrdering()));
+			this.persistProperty(uuid, "columnWidth", DataType.INTEGER, 
+					converter.convertToBasicType(item.getColumnWidth()));
+			
+
+		} else if (child instanceof WabitDataSource) {
+			WabitDataSource ds = (WabitDataSource) child;
+			
+			// Constructor argument
+			this.persistProperty(uuid, "SPDataSource", DataType.STRING, 
+					converter.convertToBasicType(ds.getSPDataSource()));
+
+		} else if (child instanceof WabitJoin) {
+			WabitJoin sqlJoin = ((WabitJoin) child);
+			
+			// Constructor arguments
+			this.persistProperty(uuid, "query", DataType.REFERENCE, 
+					converter.convertToBasicType(sqlJoin.getQuery()));
+			this.persistProperty(uuid, "delegate", DataType.STRING, 
+					converter.convertToBasicType(sqlJoin.getDelegate()));
+
+			// Remaining properties
+			this.persistProperty(uuid, "comparator", DataType.STRING,
+					converter.convertToBasicType(sqlJoin.getComparator()));
+			this.persistProperty(uuid, "leftColumnOuterJoin", DataType.BOOLEAN, 
+					converter.convertToBasicType(sqlJoin.isLeftColumnOuterJoin()));
+			this.persistProperty(uuid, "rightColumnOuterJoin", DataType.BOOLEAN, 
+					converter.convertToBasicType(sqlJoin.isRightColumnOuterJoin()));
+
+		} else if (child instanceof WabitOlapAxis) {
+			WabitOlapAxis wabitOlapAxis = (WabitOlapAxis) child;
+
+			// Constructor argument
+			this.persistProperty(uuid, "ordinal", DataType.STRING,
+					converter.convertToBasicType(wabitOlapAxis.getOrdinal()));
+
+			// Remaining properties
+			this.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
+					converter.convertToBasicType(wabitOlapAxis.isNonEmpty()));
+			this.persistProperty(uuid, "sortEvaluationLiteral",
+					DataType.STRING, 
+					converter.convertToBasicType(wabitOlapAxis.getSortEvaluationLiteral()));
+			this.persistProperty(uuid, "sortOrder", DataType.STRING,
+					converter.convertToBasicType(wabitOlapAxis.getSortOrder()));
+
+		} else if (child instanceof WabitOlapSelection) {
+			WabitOlapSelection wabitOlapSelection = (WabitOlapSelection) child;
+
+			// Constructor argument
+			this.persistProperty(uuid, "operator", DataType.STRING,
+					converter.convertToBasicType(wabitOlapSelection.getOperator()));
+			this.persistProperty(uuid, "uniqueMemberName", DataType.STRING, 
+					converter.convertToBasicType(wabitOlapSelection.getUniqueMemberName()));
+
+		} else if (child instanceof WabitTableContainer) {
+			WabitTableContainer wabitTableContainer = (WabitTableContainer) child;
+			TableContainer tableContainer = (TableContainer) wabitTableContainer
+					.getDelegate();
+
+			// Constructor arguments
+			this.persistProperty(uuid, "delegate",
+					DataType.STRING, converter.convertToBasicType(
+							tableContainer));
+
+			// Remaining properties
+			this.persistProperty(uuid, "alias", DataType.STRING,
+					converter.convertToBasicType(tableContainer.getAlias()));
+			this.persistProperty(uuid, "position", DataType.STRING,
+					converter.convertToBasicType(tableContainer.getPosition()));
+
+		} else if (child instanceof WabitWorkspace) {
+			//no current properties
+			
+		}
+		
+		if (child instanceof WabitObjectReportRenderer) {
+			WabitObjectReportRenderer renderer = (WabitObjectReportRenderer) child;
+			this.persistProperty(uuid, "content", DataType.REFERENCE, 
+					converter.convertToBasicType(renderer.getContent(), DataType.REFERENCE));
+		}
+
+		// Persisting the name property last because WabitObjects such as ContentBox
+		// have methods that calls setName on certain events or method calls.
+		// We do not want those calls to affect the name property. However, this should
+		// really only be a concern for reflective tests.
+		this.persistProperty(uuid, "name", DataType.STRING, child.getName());
+		
+		this.transactionEnded(null);
+
 	}
 
 	public void wabitChildRemoved(WabitChildEvent e) {
 		e.getChild().removeWabitListener(this);
 		if (wouldEcho()) return;
-		try {
-			target.begin();
-			target.removeObject(e.getSource().getUUID(), e.getChild()
-							.getUUID());
-			target.commit();
-		} catch (WabitPersistenceException e1) {
-			target.rollback();
-			throw new RuntimeException(
-					"Could not remove WabitObject from its parent.", e1);
-		}
+		this.transactionStarted(null);
+		this.objectsToRemove.add(
+			new RemovedObjectEntry(
+				e.getSource().getUUID(),
+				e.getChild(),
+				e.getIndex()));
+		this.transactionEnded(null);
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
 		
 		if (wouldEcho()) return;
 		
+		this.transactionStarted(null);
 		
 		WabitObject source = (WabitObject) evt.getSource();
 		String uuid = source.getUUID();
@@ -790,20 +804,28 @@ public class WorkspacePersisterListener implements WabitListener {
 		try {
 			propertyDescriptor= PropertyUtils.getPropertyDescriptor(source, propertyName);
 		} catch (Exception ex) {
+			this.rollback();
 			throw new RuntimeException(ex);
 		}
 		
 		//Not persisting non-settable properties
 		if (propertyDescriptor == null 
 				|| propertyDescriptor.getWriteMethod() == null) {
+			this.transactionEnded(null);
 			return;
 		}
 		
 		//ignoring this property to not force all users to view the same
 		//editor.
 		// FIXME These exceptions should be factored out of here. Create a list of non persisted properties.
-		if (propertyName.equals("editorPanelModel") && source instanceof WabitWorkspace) return;
-		if (propertyName.equals("zoomLevel")) return;
+		if (propertyName.equals("editorPanelModel") && source instanceof WabitWorkspace) {
+			this.transactionEnded(null);
+			return;
+		}
+		if (propertyName.equals("zoomLevel")) {
+			this.transactionEnded(null);
+			return;
+		}
 		
 		
 		//XXX special case that I want to remove even though I'm implementing it
@@ -812,24 +834,158 @@ public class WorkspacePersisterListener implements WabitListener {
 			additionalParams.add(((OlapQuery) source).getOlapDataSource());
 		}
 
+		DataType typeForClass = SessionPersisterUtils.
+				getDataType(newValue == null ? Void.class : newValue.getClass());
+		Object oldBasicType;
+		Object newBasicType; 
+		oldBasicType = converter.convertToBasicType(oldValue, additionalParams.toArray());
+		newBasicType = converter.convertToBasicType(newValue, additionalParams.toArray());
+		
+		this.persistProperty(uuid, propertyName, typeForClass, 
+				oldBasicType, newBasicType);
+		
+		this.transactionEnded(null);
+	}
+	
+	private void persistProperty(
+			String uuid, 
+			String propertyName,
+			DataType propertyType, 
+			Object newValue)
+	{
+		this.persistedProperties.put(
+				uuid,
+				new WabitObjectProperty(
+					uuid,
+					propertyName, 
+					propertyType, 
+					newValue, 
+					newValue, 
+					true));
+	}
+	
+	private void persistProperty(
+			String uuid, 
+			String propertyName,
+			DataType propertyType, 
+			Object oldValue, 
+			Object newValue)
+	{
+		this.persistedProperties.put(
+				uuid,
+				new WabitObjectProperty(
+					uuid,
+					propertyName, 
+					propertyType, 
+					oldValue, 
+					newValue, 
+					false));
+	}
+
+	private void rollback() {
+		if (this.headingToWinconsin) {
+			// This happens when we pick up our own events.
+			return;
+		}
+		this.headingToWinconsin = true;
 		try {
-			DataType typeForClass = SessionPersisterUtils.
-					getDataType(newValue == null ? Void.class : newValue.getClass());
-			Object oldBasicType;
-			Object newBasicType; 
-			oldBasicType = converter.convertToBasicType(oldValue, additionalParams.toArray());
-			newBasicType = converter.convertToBasicType(newValue, additionalParams.toArray());
-			
-			target.begin();
-			
-			target.persistProperty(uuid, propertyName, typeForClass, 
-					oldBasicType, newBasicType);
-			
-			target.commit();
-			
+			WabitSessionPersister.undoForSession(
+				session, 
+				this.persistedObjectsRollbackList, 
+				this.persistedPropertiesRollbackList, 
+				this.objectsToRemoveRollbackList);
 		} catch (WabitPersistenceException e) {
+			logger.error(e);
+		} finally {
+			this.objectsToRemoveRollbackList.clear();
+			this.persistedObjectsRollbackList.clear();
+			this.persistedPropertiesRollbackList.clear();
+			this.objectsToRemove.clear();
+			this.persistedObjects.clear();
+			this.persistedProperties.clear();
+			this.transactionCount = 0;
+			this.headingToWinconsin = false;
 			target.rollback();
-			throw new RuntimeException(e);
+		}
+	}
+	
+	private void commit() throws WabitPersistenceException {
+		if (transactionCount==1) {
+			try {
+				target.begin();
+				commitObjects();
+				commitProperties();
+				commitRemovals();
+				target.commit();
+			} catch (Throwable t) {
+				this.rollback();
+				throw new WabitPersistenceException(null,t);
+			} finally {
+				this.objectsToRemove.clear();
+				this.objectsToRemoveRollbackList.clear();
+				this.persistedObjects.clear();
+				this.persistedObjectsRollbackList.clear();
+				this.persistedProperties.clear();
+				this.persistedPropertiesRollbackList.clear();
+				this.transactionCount = 0;
+			}
+		} else {
+			transactionCount--;
+		}
+	}
+	
+	/**
+	 * Commits the persisted {@link WabitObject}s
+	 * 
+	 * @throws WabitPersistenceException
+	 */
+	private void commitObjects() throws WabitPersistenceException {
+		for (PersistedWabitObject pwo : persistedObjects) {
+			target.persistObject(
+				pwo.getParentUUID(), 
+				pwo.getType(),
+				pwo.getUUID(),
+				pwo.getIndex());
+			this.persistedObjectsRollbackList.add(
+				new PersistedObjectEntry(
+					pwo.getParentUUID(),
+					pwo.getUUID()));
+		}
+	}
+	
+	private void commitProperties() throws WabitPersistenceException {
+		for (Entry<String, WabitObjectProperty> entry : persistedProperties.entries()) {
+			WabitObjectProperty wop = entry.getValue();
+			String uuid = entry.getKey();
+			if (wop.isUnconditional()) {
+				target.persistProperty(
+					uuid,
+					wop.getPropertyName(),
+					wop.getDataType(),
+					wop.getNewValue());
+			} else {
+				target.persistProperty(
+					uuid, 
+					wop.getPropertyName(), 
+					wop.getDataType(), 
+					wop.getOldValue(),
+					wop.getNewValue());
+			}
+			this.persistedPropertiesRollbackList.add(
+				new PersistedPropertiesEntry(
+					uuid, 
+					wop.getPropertyName(),
+					wop.getDataType(), 
+					wop.getOldValue()));
+		}
+	}
+	
+	private void commitRemovals() throws WabitPersistenceException {
+		for (RemovedObjectEntry entry: this.objectsToRemove) {
+			target.removeObject(
+				entry.getParentUUID(), 
+				entry.getRemovedChildren().getUUID());
+			this.objectsToRemoveRollbackList.add(entry);
 		}
 	}
 }
