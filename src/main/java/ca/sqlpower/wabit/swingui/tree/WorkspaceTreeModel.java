@@ -527,20 +527,21 @@ public class WorkspaceTreeModel implements TreeModel {
 			} else {
                 TreePath treePath = createTreePathForObject(node);
                 treePath = treePath.getParentPath();
-                int actualIndex = node.getParent().getChildren().indexOf(node);
-                if (actualIndex < 0) {
+                int index = node.getParent().getChildren(node.getClass()).indexOf(node);
+                if (index < 0) {
                     throw new IllegalStateException(
                             "Got an event from a WabitObject that isn't one " +
                             "of its own parent's children! Parent : " + node.getParent().getName());
                 }
-	            int treeIndex = getCorrectIndex(node, actualIndex);
+                if (node instanceof OlapQuery) {
+                	index += workspace.getChildren(QueryCache.class).size();
+                }
 				e = new TreeModelEvent(this, treePath,
-						new int[] { treeIndex }, new Object[] { node });
+						new int[] { index }, new Object[] { node });
 				
 				if (logger.isDebugEnabled()) {
 				    logger.debug("Created change event for tree path " + treePath);
-				    logger.debug("actualIndex = " + actualIndex);
-				    logger.debug("treeIndex = " + treeIndex);
+				    logger.debug("treeIndex = " + index);
 				    logger.debug("node = " + node);
 				}
 			}
@@ -555,8 +556,8 @@ public class WorkspaceTreeModel implements TreeModel {
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
 			int index;
-			if (e.getSource() instanceof WabitWorkspace) {
-				index = getCorrectIndex(e.getChild(), e.getSource().getChildren().indexOf(e.getChild()));
+			if (e.getChild() instanceof OlapQuery) {
+				index = e.getIndex() + workspace.getChildren(QueryCache.class).size();
 			} else {
 				index = e.getIndex();
 			}
@@ -575,8 +576,8 @@ public class WorkspaceTreeModel implements TreeModel {
 		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
 		    int index;
-			if (e.getSource() instanceof WabitWorkspace) {
-				index = getCorrectIndex(e.getChild(), e.getSource().getChildren().indexOf(e.getChild()));
+			if (e.getChild() instanceof OlapQuery) {
+				index = e.getIndex() + workspace.getChildren(QueryCache.class).size();
 			} else {
 				index = e.getIndex();
 			}

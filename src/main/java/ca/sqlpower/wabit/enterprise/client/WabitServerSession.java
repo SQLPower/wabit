@@ -110,6 +110,7 @@ public class WabitServerSession extends WabitSessionImpl {
         outboundHttpClient = createHttpClient(workspaceLocation.getServiceInfo());
         
         getWorkspace().setUUID(workspaceLocation.getUuid());
+        getWorkspace().setName("Loading Workspace...");
         getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
         
         
