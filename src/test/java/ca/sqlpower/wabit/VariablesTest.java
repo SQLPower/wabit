@@ -30,6 +30,7 @@ public class VariablesTest extends TestCase {
         varContext = new TestingVariableContext();
         varContext.setVariable("animal", "cow");
         varContext.setVariable("name", "Bessie");
+        varContext.setVariable("animal.cow.plural", "cows");
     }
 
     protected void tearDown() throws Exception {
@@ -74,6 +75,11 @@ public class VariablesTest extends TestCase {
     public void testSubstituteEscapedDollarsign() {
         String substituted = Variables.substitute("bowling for ${$} escaped", varContext);
         assertEquals("bowling for $ escaped", substituted);
+    }
+    
+    public void testDottedName() {
+    	String substituted = Variables.substitute("bowling for ${animal.cow.plural}", varContext);
+        assertEquals("bowling for cows", substituted);
     }
 
 }

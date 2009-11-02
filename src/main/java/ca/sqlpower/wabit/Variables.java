@@ -30,11 +30,11 @@ import org.apache.log4j.Logger;
  * <h2>Variables</h2>
  * 
  * Variable references take the form ${name}, where name is the name of the
- * variable being referenced. The variable name must be alphanumeric (a-z, 0-9,
- * underscore) and is case sensitive. Currently, only simple substitution is
- * possible; in the future, we plan to provide a rich set of modifiers similar
- * to those described in the Parameter Expansion section of the zshexpn(1) man
- * page.
+ * variable being referenced. The variable name must contain only alphanumeric
+ * characters (a-z, 0-9), the dot '.' character, and underscore. The name is
+ * case sensitive. Currently, only simple substitution is possible; in the
+ * future, we plan to provide a rich set of modifiers similar to those described
+ * in the Parameter Expansion section of the zshexpn(1) man page.
  */
 public class Variables {
 
@@ -50,7 +50,7 @@ public class Variables {
      * @return
      */
     public static String substitute(String textWithVars, VariableContext variableContext) {
-        Pattern p = Pattern.compile("\\$\\{([$a-zA-Z0-9_]+)\\}");
+        Pattern p = Pattern.compile("\\$\\{([$a-zA-Z0-9_.]+)\\}");
         
         logger.debug("Performing variable substitution on " + textWithVars);
         
