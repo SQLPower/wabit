@@ -3672,16 +3672,11 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				// We catch ANYTHING that comes out of here and rollback.
 				// Some exceptions are Runtimes, so we must catch those too.
-				try {
-					workspace.begin(null);
-				} catch (Exception e) {
-					// We have no idea to know if the transaction was started or not. If it wasn't,
-					// this will fail. We still have to undo afterwards.
-				}
+				workspace.begin(null);
 				rollbackRemovals();
 				rollbackProperties();
 				rollbackCreations();
-				workspace.rollback("Canceling transaction.");
+				workspace.commit();
 			} catch (Throwable t2) {
 				// This is a major fuck up. We could not rollback so now we must restore
 				// by whatever means
@@ -3699,6 +3694,10 @@ public class WabitSessionPersister implements WabitPersister {
 				logger.debug("wsp.rollback(); - Killed all current transactions.");
 			}
 		}
+	}
+	
+	public boolean isHeadingToWisconsin() {
+		return headingToWisconsin;
 	}
 
 	/**

@@ -887,6 +887,19 @@ public class WorkspacePersisterListener implements WabitListener {
 			// This happens when we pick up our own events.
 			return;
 		}
+		if (eventSource.isHeadingToWisconsin()) {
+			// This means that the SessionPersister is cleaning his stuff and
+			// we need to do the same. Close all current transactions... bla bla bla.
+			this.objectsToRemoveRollbackList.clear();
+			this.persistedObjectsRollbackList.clear();
+			this.persistedPropertiesRollbackList.clear();
+			this.objectsToRemove.clear();
+			this.persistedObjects.clear();
+			this.persistedProperties.clear();
+			this.transactionCount = 0;
+			target.rollback();
+			return;
+		}
 		this.headingToWinconsin = true;
 		try {
 			WabitSessionPersister.undoForSession(
@@ -912,6 +925,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	private void commit() throws WabitPersistenceException {
 		if (transactionCount==1) {
 			try {
+				this.objectsToRemoveRollbackList.clear();
+				this.persistedObjectsRollbackList.clear();
+				this.persistedPropertiesRollbackList.clear();
 				target.begin();
 				commitObjects();
 				commitProperties();
