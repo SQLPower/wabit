@@ -40,15 +40,12 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
-import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.DefaultUserPrompter;
@@ -71,16 +68,16 @@ import com.rc.retroweaver.runtime.Collections;
 public class WabitSessionContextImpl implements WabitSessionContext {
 	
 	private static final Logger logger = Logger.getLogger(WabitSessionContextImpl.class);
-
+	
 	/**
 	 * This is a preference that stores the location of the pl.ini.
 	 */
-	private static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
+	public static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
 	
     protected JmDNS jmdns;
     private final List<WabitServerInfo> manuallyConfiguredServers = new ArrayList<WabitServerInfo>();
     
-	private DataSourceCollection<SPDataSource> dataSources;
+	private final DataSourceCollection<SPDataSource> dataSources;
 	protected final List<WabitSession> childSessions = new ArrayList<WabitSession>();
 	
 	/**
@@ -151,22 +148,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     private final List<ServerListListener> serverListeners = new ArrayList<ServerListListener>();
 
 	/**
-	 * Creates a new Wabit session context.
-	 * 
-	 * @param terminateWhenLastSessionCloses
-	 *            If this flag is true, this session context will halt the VM
-	 *            when its last session closes.
-	 * @param useJmDNS
-	 *            If this flag is true, then this session will create a JmDNS
-	 *            instance for searching for Wabit servers.
-	 * @throws IOException
-	 *             If the startup configuration files can't be read
-	 * @throws SQLObjectException
-	 *             If the pl.ini is invalid.
+	 * If true the location of the data source collection file will be saved to
+	 * Java Prefs. If false the current location of the data source collection
+	 * file will be left as is.
 	 */
-	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS) throws IOException, SQLObjectException {
-		this(terminateWhenLastSessionCloses, useJmDNS, null);
-	}
+	private final boolean writeDSCollectionPathToPrefs;
 
 	/**
 	 * Creates a new Wabit session context.
@@ -178,18 +164,29 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	 *            If this flag is true, then this session will create a JmDNS
 	 *            instance for searching for Wabit servers.
 	 * @param initialCollection
-	 *            If this is not null it will be used as the default collection of 
-	 *            data sources for this context.
+	 *            The default collection of data sources for this context.
+	 * @param dataSourceCollectionPath
+	 *            The path to the file representing the data source collection.
+	 *            This will be used to write changes to the collection to save
+	 *            the collection's state. If this is null then no data source
+	 *            collection files will be modified.
+	 * @param writeDSCollectionPathToPrefs
+	 *            If true the location of the data source collection file will
+	 *            be saved to Java Prefs. If false the current location of the
+	 *            data source collection file will be left as is.
 	 * @throws IOException
 	 *             If the startup configuration files can't be read
 	 * @throws SQLObjectException
 	 *             If the pl.ini is invalid.
 	 */
 	public WabitSessionContextImpl(boolean terminateWhenLastSessionCloses, boolean useJmDNS, 
-			DataSourceCollection<SPDataSource> initialCollection) 
+			DataSourceCollection<SPDataSource> initialCollection,
+			String dataSourceCollectionPath, boolean writeDSCollectionPathToPrefs) 
 			throws IOException, SQLObjectException {
 		this.terminateWhenLastSessionCloses = terminateWhenLastSessionCloses;
 		dataSources = initialCollection;
+		this.writeDSCollectionPathToPrefs = writeDSCollectionPathToPrefs;
+		
 		if (useJmDNS) {
 			try {
 				jmdns = JmDNS.create();
@@ -200,8 +197,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			jmdns = null;
 		}
 		
-        setPlDotIniPath(ArchitectUtils.checkForValidPlDotIni(prefs.get(PREFS_PL_INI_PATH, null), "Wabit"));
-        
         try {
             manuallyConfiguredServers.addAll(readServersFromPrefs());
         } catch (BackingStoreException ex) {
@@ -224,29 +219,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * returns null and leaves the plDotIni property as null as well. See {@link #plDotIni}.
      */
     public DataSourceCollection<SPDataSource> getDataSources() {
-        String path = getPlDotIniPath();
-        if (path == null) return null;
-        
-        if (dataSources == null) {
-        	dataSources = new PlDotIni();
-        	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
-            try {
-                logger.debug("Reading PL.INI defaults");
-                dataSources.read(getClass().getClassLoader().getResourceAsStream(iniToLoad));
-                iniToLoad = "/ca/sqlpower/demodata/example_database.ini";
-                dataSources.read(WabitSessionContextImpl.class.getResourceAsStream(iniToLoad));
-            } catch (IOException e) {
-                throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read system resource " + iniToLoad,e));
-            }
-            try {
-                if (dataSources != null) {
-                    logger.debug("Reading new PL.INI instance");
-                    dataSources.read(new File(path));
-                }
-            } catch (IOException e) {
-                throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read pl.ini at \""+getPlDotIniPath()+"\"", e));
-            }
-        }
         return dataSources;
     }
 
@@ -301,7 +273,9 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
 	        }
 	    }
-		prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
+	    if (writeDSCollectionPathToPrefs) {
+	    	prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
+	    }
 		if (jmdns != null) {
 			jmdns.close();
 		}	

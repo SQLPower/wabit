@@ -552,6 +552,7 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (type.equals(WabitDataSource.class.getSimpleName())) {
 			String dsName = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "SPDataSource"), String.class);
+			if (session.getDataSources() == null) throw new RuntimeException("No data sources exist.");
 			SPDataSource spds = session.getDataSources().getDataSource(dsName);
 			
 			if (spds == null) {

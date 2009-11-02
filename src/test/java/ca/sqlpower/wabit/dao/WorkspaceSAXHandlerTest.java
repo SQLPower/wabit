@@ -90,7 +90,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
 	public void testMissingDSIsReplaced() throws Exception {
 		JDBCDataSource newDS = new JDBCDataSource(db.getDataSource());
 		newDS.setName("Missing DS is replaced");
-		final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false);
+		final WabitSessionContext beforeSaveContext = new WabitSessionContextImpl(false, false, plIni, "", false);
 		final WabitSession session = beforeSaveContext.createSession();
 		beforeSaveContext.registerChildSession(session);
 		beforeSaveContext.setActiveSession(session);

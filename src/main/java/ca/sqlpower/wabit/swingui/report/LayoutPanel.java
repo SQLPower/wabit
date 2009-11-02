@@ -377,9 +377,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
         pageNode = new PageNode(session, this, layout.getPage());
         canvas.getLayer().addChild(pageNode);
         
-        // XXX why is this being done? skipping it appears to have no effect
-        pageNode.setBounds(0, 0, pageNode.getWidth(), pageNode.getHeight());
-        
         PSelectionEventHandler selectionEventHandler = 
         	new GuideAwareSelectionEventHandler(canvas, pageNode, pageNode, layout);
         canvas.addInputEventListener(selectionEventHandler);

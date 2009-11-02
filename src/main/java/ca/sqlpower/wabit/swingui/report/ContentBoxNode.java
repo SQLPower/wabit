@@ -311,7 +311,6 @@ public class ContentBoxNode extends PNode implements ReportNode {
         
         setSwingContentRenderer(contentBox.getContentRenderer());
 		contentBox.addWabitListener(contentRendererListener);
-        setBounds(contentBox.getX(), contentBox.getY(), contentBox.getWidth(), contentBox.getHeight());
         contentBox.addRepaintListener(modelRepaintListener);
         addInputEventListener(inputHandler);
         updateBoundsFromContentBox();

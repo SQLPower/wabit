@@ -114,13 +114,16 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.MemoryMonitor;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SPSUtils;
@@ -205,6 +208,35 @@ import edu.umd.cs.findbugs.annotations.OverrideMustInvoke;
 public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
+    
+    private static final String plDotIniPath() throws SQLObjectException {
+    	Preferences prefs = Preferences.userNodeForPackage(WabitSessionContextImpl.class);
+    	return ArchitectUtils.checkForValidPlDotIni(prefs.get(WabitSessionContextImpl.PREFS_PL_INI_PATH, null), "Wabit");
+    }
+    
+    private static final DataSourceCollection<SPDataSource> loadPlDotIni() throws SQLObjectException {
+    	String path = plDotIniPath();
+
+    	DataSourceCollection<SPDataSource> dataSources = new PlDotIni();
+    	String iniToLoad = "ca/sqlpower/sql/default_database_types.ini";
+    	try {
+    		logger.debug("Reading PL.INI defaults");
+    		dataSources.read(WabitSwingSessionContextImpl.class.getClassLoader().getResourceAsStream(iniToLoad));
+    		iniToLoad = "/ca/sqlpower/demodata/example_database.ini";
+    		dataSources.read(WabitSessionContextImpl.class.getResourceAsStream(iniToLoad));
+    	} catch (IOException e) {
+    		throw new ca.sqlpower.sqlobject.SQLObjectRuntimeException(new SQLObjectException("Failed to read system resource " + iniToLoad,e));
+    	}
+    	try {
+    		if (dataSources != null) {
+    			logger.debug("Reading new PL.INI instance");
+    			dataSources.read(new File(path));
+    		}
+    	} catch (IOException e) {
+    		throw new SQLObjectRuntimeException(new SQLObjectException("Failed to read pl.ini at \"" + path + "\"", e));
+    	}
+    	return dataSources;
+	}
 
     /**
      * Action map key for the "select search tab" (accel-F) action.
@@ -1945,7 +1977,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 	System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Wabit");
                 	System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-                	WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true);
+                	DataSourceCollection<SPDataSource> dsCollection = loadPlDotIni();
+                	String path = plDotIniPath();
+                	
+                	WabitSessionContextImpl coreContext = new WabitSessionContextImpl(false, true, dsCollection, path, true);
                     WabitSwingSessionContext context = new WabitSwingSessionContextImpl(coreContext, false);
                     context.setEditorPanel();
                     

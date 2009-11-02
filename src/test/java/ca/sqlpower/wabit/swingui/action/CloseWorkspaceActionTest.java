@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import junit.framework.TestCase;
+import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
@@ -30,7 +31,7 @@ public class CloseWorkspaceActionTest extends TestCase {
 
     public void testClose() throws Exception {
         WabitSwingSessionContext context = new WabitSwingSessionContextImpl(
-                new WabitSessionContextImpl(false, false), true, 
+                new WabitSessionContextImpl(false, false, new PlDotIni(), null, false), true, 
                 new DefaultUserPrompterFactory());
         WabitSession session = context.createSession();
         context.registerChildSession(session);

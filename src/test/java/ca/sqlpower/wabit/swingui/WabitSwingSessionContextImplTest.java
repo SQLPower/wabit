@@ -23,8 +23,10 @@ import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.wabit.QueryCache;
@@ -45,9 +47,10 @@ public class WabitSwingSessionContextImplTest extends TestCase {
             extends WabitSessionContextImpl {
 
         public TestingWabitSessionContextImpl(
-                boolean terminateWhenLastSessionCloses, boolean useJmDNS)
+                boolean terminateWhenLastSessionCloses, boolean useJmDNS,
+                DataSourceCollection<SPDataSource> dsCollection, String path, boolean saveCollection)
                 throws IOException, SQLObjectException {
-            super(terminateWhenLastSessionCloses, useJmDNS);
+            super(terminateWhenLastSessionCloses, useJmDNS, dsCollection, path, saveCollection);
         }
 
         @Override
@@ -69,7 +72,7 @@ public class WabitSwingSessionContextImplTest extends TestCase {
     
     public void testImportingIntoActiveSession() throws Exception {
         TestingWabitSessionContextImpl delegateContext = 
-            new TestingWabitSessionContextImpl(true, false);
+            new TestingWabitSessionContextImpl(true, false, plIni, "", false);
         delegateContext.setPlDotIniPath("src/test/java/pl.regression.ini");
         
         WabitSwingSessionContextImpl context = 
