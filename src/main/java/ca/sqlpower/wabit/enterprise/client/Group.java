@@ -94,10 +94,15 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     public List<GroupMember> getMembers() {
         return members;
     }
+    
     public void addGrant(Grant grant) {
-        this.grants.add(grant);
+    	addGrant(grant, grants.size());
+    }
+    
+    public void addGrant(Grant grant, int index) {
+    	this.grants.add(index, grant);
         grant.setParent(this);
-        fireChildAdded(Grant.class, grant, this.grants.indexOf(grant));
+        fireChildAdded(Grant.class, grant, index);    	
     }
     
     public boolean removeGrant(Grant grant) {
@@ -112,7 +117,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     }
     
     public void addMember(GroupMember member, int index) {
-        this.members.add(member);
+        this.members.add(index, member);
         member.setParent(this);
         fireChildAdded(GroupMember.class, member, index);
     }
@@ -149,9 +154,9 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
 	@Override
 	protected void addChildImpl(WabitObject child, int index) {
 		if (child instanceof GroupMember) {
-			addMember((GroupMember) child);
+			addMember((GroupMember) child, index);
 		} else if (child instanceof Grant) {
-			addGrant((Grant) child);
+			addGrant((Grant) child, index);
 		} else {
 			throw new IllegalArgumentException("Group does not accept this child: " + child);
 		}
