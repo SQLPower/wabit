@@ -46,8 +46,11 @@ public class User extends AbstractWabitObject implements UserDetails {
     }
 
     protected boolean removeChildImpl(WabitObject child) {
-        assert child instanceof Grant;
-        return grants.remove((Grant)child);
+    	if (child instanceof Grant) {
+    		return removeGrant((Grant) child);
+    	} else {
+    		return false;
+    	}
     }
 
     public boolean allowsChildren() {
@@ -94,12 +97,15 @@ public class User extends AbstractWabitObject implements UserDetails {
         fireChildAdded(Grant.class, grant, index);
     }
     
-    public void removeGrant(Grant grant) {
+    public boolean removeGrant(Grant grant) {
+    	boolean wasRemoved = false;
         if (this.grants.contains(grant)) {
             int index = this.grants.indexOf(grant);
-            this.grants.remove(grant);
+            wasRemoved = this.grants.remove(grant);
+            grant.setParent(null);
             fireChildRemoved(Grant.class, grant, index);
         }
+        return wasRemoved;
     }
     
     @Override
