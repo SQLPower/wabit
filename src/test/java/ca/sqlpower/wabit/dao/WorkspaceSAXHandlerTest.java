@@ -156,9 +156,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         OpenWorkspaceXMLDAO loadDAO =
             new OpenWorkspaceXMLDAO(context, in, OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
 	
-        final List<WabitSession> loadedWorkspaces = loadDAO.openWorkspaces();
-        assertEquals(1, loadedWorkspaces.size());
-        WabitSession loadedSession = loadedWorkspaces.get(0);
+        final WabitSession loadedSession = loadDAO.openWorkspaces();
         assertEquals(1, loadedSession.getWorkspace().getQueries().size());
         QueryCache loadedQuery = (QueryCache) loadedSession.getWorkspace().getQueries().get(0);
         assertEquals(replacementDS, loadedQuery.getDatabase().getDataSource());

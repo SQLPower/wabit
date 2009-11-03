@@ -138,9 +138,14 @@ public class StubWabitSessionContext implements WabitSessionContext {
         return false;
     }
 
-    public void setLoading(boolean loading) {
-        // TODO Auto-generated method stub
-        
+    public void startLoading() {
+    	// TODO Auto-generated method stub
+    	
+    }
+    
+    public void endLoading() {
+    	// TODO Auto-generated method stub
+    	
     }
 
     public SQLDatabase getDatabase(JDBCDataSource ds) {

@@ -293,7 +293,7 @@ public class WorkspaceXMLDAOTest extends TestCase {
         OpenWorkspaceXMLDAO loadDAO =
             new OpenWorkspaceXMLDAO(context, in, OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
         
-        WabitSession loadedSession = loadDAO.openWorkspaces().get(0);
+        WabitSession loadedSession = loadDAO.openWorkspaces();
         
         assertNotNull(loadedSession.getWorkspace());
         assertPropertiesEqual(p, loadedSession.getWorkspace(), "UUID", "children", "dataSources", "queries", "layouts", "editorPanelModel");

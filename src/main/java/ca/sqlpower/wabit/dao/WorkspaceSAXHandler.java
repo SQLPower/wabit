@@ -31,7 +31,6 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +51,7 @@ import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.query.Container;
@@ -117,32 +117,20 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private static final Logger logger = Logger.getLogger(WorkspaceSAXHandler.class);
 	
 	/**
-	 * This list will store all of the sessions loaded by this SAX handler.
-	 */
-	private final List<WabitSession> sessions;
-
-	/**
 	 * This will track the tags and depth of the XML tags.
 	 */
 	private final Stack<String> xmlContext = new Stack<String>();
 	
 	/**
-	 * This is the session that the workspace will be loaded into. This session
-	 * is also the current one being loaded into by this SAX handler.
+	 * This is the session that the workspace will be loaded into.
 	 */
-	private WabitSession session;
+	private final WabitSession session;
 	
 	/**
 	 * This is the current query being loaded in from the file.
 	 */
 	private QueryCache cache;
 
-    /**
-     * If true the text contained by the current tag being loaded will be placed in the
-     * {@link #byteStream} output stream.
-     */
-	private boolean loadingText = false;
-	
 	/**
 	 * This maps all of the currently loaded Items with their UUIDs. This
 	 * will let the loaded elements of a query be able to hook up to the correct
@@ -238,14 +226,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private final UserPrompterFactory promptFactory;
     
     /**
-     * This server info is set if the workspace is being loaded from a server.
-     * This lets the context create an appropriate server session from the
-     * server information. If this is null the session and workspace being
-     * loaded is a local session and workspace.
-     */
-    private WabitServerInfo serverInfo = null;
-
-    /**
      * This is the current WabitImage being loaded.
      */
     private WabitImage currentWabitImage;
@@ -280,28 +260,71 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private String olapName;
 
 	private String olapID;
-
+	
     /**
      * Creates a new SAX handler which is capable of reading in a series of
      * workspace descriptions from an XML stream. The list of workspaces
      * encountered in the stream become available as a Wabit Session.
+     * <p>
+     * This constructor must be called from the foreground thread
      * 
      * @param context The context that will create sessions for loading and
      * creates user prompters if input is required.
      */
 	public WorkspaceSAXHandler(WabitSessionContext context) {
-		this.context = context;
-        this.promptFactory = context;
-		sessions = new ArrayList<WabitSession>();
-		oldToNewDSNames = new HashMap<String, String>();
-		setCancelled(false);
-	}
-	
-	public WorkspaceSAXHandler(WabitSessionContext context, WabitServerInfo serverInfo) {
-	    this(context);
-	    this.serverInfo = serverInfo;
+		this(context, null);
 	}
 
+	/**
+	 * Creates a new SAX handler which is capable of reading in a series of
+	 * workspace descriptions from an XML stream. The list of workspaces
+	 * encountered in the stream become available as a Wabit Session.
+	 * <p>
+	 * This constructor must be called from the foreground thread
+	 * 
+	 * @param context
+	 *            The context that will create sessions for loading and creates
+	 *            user prompters if input is required.
+	 * @param serverInfo
+	 *            Describes a connection to a server. If this is not null, a
+	 *            server session will be created that is connected to a server.
+	 */
+	public WorkspaceSAXHandler(WabitSessionContext context, WabitServerInfo serverInfo) {
+	    this.context = context;
+        this.promptFactory = context;
+		oldToNewDSNames = new HashMap<String, String>();
+		setCancelled(false);
+	    if (serverInfo == null) {
+            session = context.createSession();
+        } else {
+            session = context.createServerSession(serverInfo);
+        }
+	}
+
+	@Override
+	public void startElement(final String uri, final String localName, final String name,
+			final Attributes attr) throws SAXException {
+		if (isCancelled()) {
+		    throw new CancellationException();
+		}
+		byteStream = new ByteArrayOutputStream();
+		final Attributes attributes = new AttributesImpl(attr);
+		Runnable runner = new Runnable() {
+			public void run() {
+				try {
+					context.startLoading();
+					startElementImpl(uri, localName, name, attributes);
+				} catch (SAXException e) {
+					setCancelled(true);
+					throw new RuntimeException(e);
+				} finally {
+					context.endLoading();
+				}
+			}
+		};
+		session.runInForeground(runner);
+	}
+	
     /**
      * Throws a {@link CancellationException} if either the loading of the file
      * was cancelled by a method call or cancelled internally due to a problem
@@ -311,11 +334,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
      * 
      * @see WorkspaceXMLDAO#FILE_VERSION
      */
-	@Override
-	public void startElement(String uri, String localName, String name,
+	private void startElementImpl(final String uri, final String localName, final String name,
 			Attributes attributes) throws SAXException {
 		if (isCancelled()) {
-		    throw new CancellationException();
+			return;
 		}
 
 		xmlContext.push(name);
@@ -389,15 +411,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 		        if (isCancelled()) throw new CancellationException();
 		    }
 
-		    context.setLoading(true);
         } else if (name.equals("project")) {
-            if (serverInfo == null) {
-                session = context.createSession();
-            } else {
-                session = context.createServerSession(serverInfo);
-            }
             createdObject = session.getWorkspace();
-            sessions.add(session);
             for (int i = 0; i < attributes.getLength(); i++) {
                 String aname = attributes.getQName(i);
                 String aval = attributes.getValue(i);
@@ -698,8 +713,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	cache.setUserModifiedQuery(queryString);
         } else if (name.equals("text") && parentIs("query")) {
             createdObject = null;
-            byteStream = new ByteArrayOutputStream();
-            loadingText = true;
         } else if (name.equals("olap-query")) {
         	olapName = attributes.getValue("name");
         	olapID = attributes.getValue("uuid");
@@ -766,7 +779,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     logger.warn("Unexpected attribute of <wabit-image>: " + aname + "=" + aval);
                 }
             }
-            byteStream = new ByteArrayOutputStream();
             
         } else if (name.equals("chart")) {
             chart = new Chart();
@@ -962,8 +974,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
          	}
         } else if (name.equals("text") && parentIs("content-label")) {
             createdObject = null;
-         	byteStream = new ByteArrayOutputStream();
-         	loadingText = true;
         } else if (name.equals("image-renderer")) {
         	imageRenderer = new ImageRenderer();
         	createdObject = imageRenderer;
@@ -1001,7 +1011,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			logger.warn("Unexpected attribute of <image-renderer>: " + aname + "=" + aval);
         		}
          	}
-         	byteStream = new ByteArrayOutputStream();
          	
         } else if (name.equals("chart-renderer")) {
             String chartUuid = attributes.getValue("chart-uuid");
@@ -1335,16 +1344,48 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     private boolean parentIs(String qName) {
         return xmlContext.get(xmlContext.size() - 2).equals(qName);
     }
-      
+
     @Override
-    public void endElement(String uri, String localName, String name)
+    public void endElement(final String uri, final String localName, final String name)
     		throws SAXException {
     	if (isCancelled()) throw new CancellationException();
     	
-    	if (name.equals("wabit")) {
-    	    context.setLoading(false);
-    	    
-    	} else if (name.equals("project")) {
+    	final ByteArrayOutputStream copyStream;
+    	if (byteStream != null) {
+    		logger.debug("Byte stream contains " + byteStream.size() + " bytes.");
+    		copyStream = new ByteArrayOutputStream(byteStream.size());
+    		try {
+    			byteStream.writeTo(copyStream);
+    		} catch (IOException ex) {
+    			logger.error(ex);
+    			throw new CancellationException("Could not copy the stream. See the logs for more details.");
+    		}
+    	} else {
+    		copyStream = null;
+    	}
+    	Runnable runner = new Runnable() {
+			public void run() {
+				try {
+					context.startLoading();
+					endElementImpl(uri, localName, name, copyStream);
+				} catch (SAXException e) {
+					setCancelled(true);
+					throw new RuntimeException(e);
+				} finally {
+					context.endLoading();
+				}
+		
+			}
+		};
+		session.runInForeground(runner);
+    }
+    
+    private void endElementImpl(final String uri, final String localName, final String name, 
+    		ByteArrayOutputStream stream)
+    		throws SAXException {
+    	if (isCancelled()) return;
+    	
+    	if (name.equals("project")) {
     	    WabitObject initialView = session.getWorkspace();
     		for (WabitObject obj : session.getWorkspace().getChildren()) {
     			if (obj.getUUID().equals(currentEditorPanelModel)) {
@@ -1367,9 +1408,9 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		cache.addTable(table);
     	} else if (name.equals("image-renderer")) {
     	    //This was loading an image for 1.1.2 and older.
-    		byte[] byteArray = new Base64().decode(byteStream.toByteArray());
+    		byte[] byteArray = new Base64().decode(stream.toByteArray());
     		if (byteArray.length > 0) {
-    		    logger.debug("Decoding byte stream: Stream has " + byteStream.toString().length() + " and array has " + Arrays.toString(byteArray));
+    		    logger.debug("Decoding byte stream: Stream has " + stream.toString().length() + " and array has " + Arrays.toString(byteArray));
     		    try {
     		        BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));
     		        WabitImage wabitImage = new WabitImage();
@@ -1384,7 +1425,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 			imageRenderer = null;
 			
     	} else if (name.equals("wabit-image")) {
-            byte[] byteArray = new Base64().decode(byteStream.toByteArray());
+            byte[] byteArray = new Base64().decode(stream.toByteArray());
             try {
                 BufferedImage img = ImageIO.read(new ByteArrayInputStream(byteArray));
                 currentWabitImage.setImage(img);
@@ -1412,12 +1453,10 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	}
             
         } else if (name.equals("text") && parentIs("content-label")) {
-            ((Label) contentBox.getContentRenderer()).setText(byteStream.toString());
-            loadingText = false;
+            ((Label) contentBox.getContentRenderer()).setText(stream.toString());
             
         } else if (name.equals("text") && parentIs("query")) {
-            cache.setUserModifiedQuery(byteStream.toString());
-            loadingText = false;
+            cache.setUserModifiedQuery(stream.toString());
         }
     	
     	xmlContext.pop();
@@ -1428,19 +1467,17 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		throws SAXException {
         if (isCancelled()) throw new CancellationException();
         
-    	if (imageRenderer != null || currentWabitImage != null || loadingText) {
-    		for (int i = start; i < start+length; i++) {
-    		    byteStream.write((byte)ch[i]);
-    		}
-    		if (logger.isDebugEnabled()) {
-    		    logger.debug("Starting characters at " + start + " and ending at " + length);
-    		    logger.debug("Byte stream has " + byteStream.toString());
-    		}
-    	}
+        for (int i = start; i < start+length; i++) {
+        	byteStream.write((byte)ch[i]);
+        }
+        if (logger.isDebugEnabled()) {
+        	logger.debug("Starting characters at " + start + " and ending at " + length);
+        	logger.debug("Byte stream has " + byteStream.toString());
+        }
     }
 
-	public List<WabitSession> getSessions() {
-		return Collections.unmodifiableList(sessions);
+	public WabitSession getSession() {
+		return session;
 	}
 	
     public String getMessage() {

@@ -92,6 +92,14 @@ public interface WabitSession {
      */
     void runInForeground(Runnable runner);
 
+	/**
+	 * Returns true if the current thread is the thread defined as the
+	 * foreground thread.
+	 * 
+	 * @see #runInForeground(Runnable)
+	 */
+    boolean isForegroundThread();
+
     /**
      * This will execute the runnable in a manner that will try to avoid
      * blocking the user interface. This will be done by creating a new thread

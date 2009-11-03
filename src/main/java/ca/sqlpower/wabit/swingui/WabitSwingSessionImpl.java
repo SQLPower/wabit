@@ -369,7 +369,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      */
     private final PropertyChangeListener loadingContextListener = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent evt) {
-            if (evt.getPropertyName().equals("loading") && !((Boolean) evt.getNewValue())
+            if (evt.getPropertyName().equals("loading") && ((Integer) evt.getNewValue()) <= 0
                     && getWorkspace().getEditorPanelModel() != null) {
                 final TreePath createTreePathForObject = 
                     getWorkspaceTreeModel().createTreePathForObject(getWorkspace().getEditorPanelModel());
@@ -648,6 +648,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         } else {
             SwingUtilities.invokeLater(runner);
         }
+    }
+    
+    public boolean isForegroundThread() {
+    	return SwingUtilities.isEventDispatchThread();
     }
 
 	public boolean isEnterpriseServerSession() {

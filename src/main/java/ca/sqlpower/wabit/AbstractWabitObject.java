@@ -111,21 +111,20 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected WabitChildEvent fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
     	logger.debug("Child Added: " + type + " notifying " + listeners.size() + " listeners");
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for adding the child " + child.getName() + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized(listeners) {
             if (listeners.isEmpty()) return null;
         }
         final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.ADDED);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized(listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        final WabitListener listener = listeners.get(i);
-                        listener.wabitChildAdded(e);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized(listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		final WabitListener listener = listeners.get(i);
+        		listener.wabitChildAdded(e);
+        	}
+        }
         return e;
     }
 
@@ -147,21 +146,20 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected WabitChildEvent fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
     	logger.debug("Child Removed: " + type + " notifying " + listeners.size() + " listeners: " + listeners);
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for removing the child " + child.getName() + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized(listeners) {
             if (listeners.isEmpty()) return null;
         }
         final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.REMOVED);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized(listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        final WabitListener listener = listeners.get(i);
-                        listener.wabitChildRemoved(e);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized(listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		final WabitListener listener = listeners.get(i);
+        		listener.wabitChildRemoved(e);
+        	}
+        }
         return e;
     }
 
@@ -174,20 +172,19 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected PropertyChangeEvent firePropertyChange(final String propertyName, final boolean oldValue, 
             final boolean newValue) {
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for property change " + propertyName + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized(listeners) {
             if (listeners.size() == 0) return null;
         }
         final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized(listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        listeners.get(i).propertyChange(evt);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized(listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		listeners.get(i).propertyChange(evt);
+        	}
+        }
         return evt;
     }
 
@@ -200,20 +197,19 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected PropertyChangeEvent firePropertyChange(final String propertyName, final int oldValue, 
             final int newValue) {
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for property change " + propertyName + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized(listeners) {
             if (listeners.size() == 0) return null;
         }
         final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized(listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        listeners.get(i).propertyChange(evt);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized(listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		listeners.get(i).propertyChange(evt);
+        	}
+        }
         return evt;
     }
 
@@ -226,6 +222,10 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected PropertyChangeEvent firePropertyChange(final String propertyName, final Object oldValue, 
             final Object newValue) {
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for property change " + propertyName + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized(listeners) {
             if (listeners.size() == 0) return null;
             if (logger.isDebugEnabled()) {
@@ -235,16 +235,11 @@ public abstract class AbstractWabitObject implements WabitObject {
             }
         }
         final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized(listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        listeners.get(i).propertyChange(evt);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized(listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		listeners.get(i).propertyChange(evt);
+        	}
+        }
         return evt;
     }
     
@@ -268,20 +263,19 @@ public abstract class AbstractWabitObject implements WabitObject {
      *         testing purposes.
      */
     protected TransactionEvent fireTransactionStarted(final String message) {
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for a transaction start" + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized (listeners) {
             if (listeners.size() == 0) return null;            
         }
         final TransactionEvent evt = TransactionEvent.createStartTransactionEvent(this, message);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized (listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        listeners.get(i).transactionStarted(evt);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized (listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		listeners.get(i).transactionStarted(evt);
+        	}
+        }
         return evt;
     }
 
@@ -292,20 +286,19 @@ public abstract class AbstractWabitObject implements WabitObject {
      *         testing purposes.
      */
     protected TransactionEvent fireTransactionEnded() {
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for a transaction end" + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized (listeners) {
             if (listeners.size() == 0) return null;            
         }
         final TransactionEvent evt = TransactionEvent.createEndTransactionEvent(this);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized (listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        listeners.get(i).transactionEnded(evt);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized (listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		listeners.get(i).transactionEnded(evt);
+        	}
+        }
         return evt;
     }
 
@@ -317,20 +310,19 @@ public abstract class AbstractWabitObject implements WabitObject {
      *         testing purposes.
      */
     protected TransactionEvent fireTransactionRollback(final String message) {
+    	if (!isForegroundThread()) {
+    		throw new IllegalStateException("Event for a transaction rollback" + 
+    				" must fired on the foreground thread.");
+    	}
         synchronized (listeners) {
             if (listeners.size() == 0) return null;            
         }
         final TransactionEvent evt = TransactionEvent.createRollbackTransactionEvent(this, message);
-        Runnable runner = new Runnable() {
-            public void run() {
-                synchronized (listeners) {
-                    for (int i = listeners.size() - 1; i >= 0; i--) {
-                        listeners.get(i).transactionRollback(evt);
-                    }
-                }
-            }
-        };
-        runInForeground(runner);
+        synchronized (listeners) {
+        	for (int i = listeners.size() - 1; i >= 0; i--) {
+        		listeners.get(i).transactionRollback(evt);
+        	}
+        }
         return evt;
     }
     
@@ -492,6 +484,14 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    } catch (SessionNotFoundException e) {
 	        runner.run();
 	    }
+	}
+	
+	protected boolean isForegroundThread() {
+		try {
+			return getSession().isForegroundThread();
+		} catch (SessionNotFoundException e) {
+			return true;
+		}
 	}
 	
 	@Override

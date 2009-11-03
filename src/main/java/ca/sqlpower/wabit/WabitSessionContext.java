@@ -204,12 +204,20 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
     public boolean isLoading();
 
     /**
-     * The DAO can tell this session that it's currently being configured based
+     * The DAO can tell this context that it's currently being configured based
      * on a workspace file being loaded. When this is the case, certain things
      * (such as GUI updates) will not be performed. If you're not a DAO, it's
      * not necessary or desirable for you to call this method!
      */
-    public void setLoading(boolean loading);
+    public void startLoading();
+    
+    /**
+     * The DAO can tell this context that it's no longer being configured based
+     * on a workspace file being loaded. When this is the case, certain things
+     * (such as GUI updates) will not be performed. If you're not a DAO, it's
+     * not necessary or desirable for you to call this method!
+     */
+    public void endLoading();
     
     /**
      * Returns the number of rows that should be retrieved from the database for

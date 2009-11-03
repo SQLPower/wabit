@@ -178,4 +178,8 @@ public class StubWabitSession implements WabitSession {
 	public WabitWorkspace getSystemWorkspace() {
 		return null;
 	}
+	
+	public boolean isForegroundThread() {
+		return true;
+	}
 }

@@ -1411,10 +1411,16 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    private void setRunning(boolean running) {
-        boolean oldValue = backgroundWorkerRunning;
-        backgroundWorkerRunning = running;
-        firePropertyChange("running", oldValue, running);
+    private void setRunning(final boolean running) {
+        
+        Runnable runner = new Runnable() {
+			public void run() {
+				final boolean oldValue = backgroundWorkerRunning;
+				backgroundWorkerRunning = running;
+				firePropertyChange("running", oldValue, running);
+			}
+		};
+		getSession().runInForeground(runner);
     }
     
     public boolean isRunning() {

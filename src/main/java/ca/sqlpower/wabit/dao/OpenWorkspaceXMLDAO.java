@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -38,8 +37,6 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This DAO will load workspaces to a context from a given input stream. Each
@@ -96,7 +93,7 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 	/**
 	 * The sax handler used to load workspaces.
 	 */
-	private WorkspaceSAXHandler saxHandler;
+	private final WorkspaceSAXHandler saxHandler;
 	   
     /**
      * Describes if this SAXHandler has started parsing an input stream.
@@ -125,7 +122,8 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
     public static final long UNKNOWN_STREAM_LENGTH = -1L;
 
     /**
-     * Creates a new XML DAO for Wabit workspaces.
+     * Creates a new XML DAO for Wabit workspaces. This must be constructed on
+     * the foreground thread.
      * 
      * @param context
      *            The session context to create new sessions in.
@@ -139,6 +137,7 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 		this.context = context;
         this.bytesInStream = bytesInStream;
 		this.in = new CountingInputStream(in);
+		saxHandler = new WorkspaceSAXHandler(context);
 	}
 
     /**
@@ -155,7 +154,6 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 	        "of this class should be created instead of calling this method again.");
 	    started.set(true);
 	    SAXParser parser;
-	    saxHandler = new WorkspaceSAXHandler(context);
 
 	    try {
 	        parser = SAXParserFactory.newInstance().newSAXParser();
@@ -164,37 +162,27 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
 	        //do nothing on a cancellation
 	    } catch (Exception e) {
 	        throw new RuntimeException(e);
-	    } finally {
-	        context.setLoading(false);
 	    }
 	    finished.set(true);
 	}
 
     /**
-     * Call this method to register the loaded workspaces with the context in
+     * Call this method to register the loaded workspace with the context in
      * this DAO. This is the last step to loading a file into Wabit.
      * <p>
      * If loading is done on multiple threads this operation must be done on the
      * event dispatch thread. This should only be called once for each DAO or
      * the same workspace will be added to the context multiple times.
      * 
-     * @return The sessions that contain the workspaces that have been added to
-     *         Wabit.
+     * @return The session that contain the workspaces that have been added to
+     *         Wabit. This may be null if the load was cancelled.
      */
-	@SuppressWarnings("unchecked")
-    public List<WabitSession> addLoadedWorkspacesToContext() {
-	    try {
-	        context.setLoading(true);
-	        if (cancelled.get()) return Collections.emptyList();
+    public WabitSession addLoadedWorkspacesToContext() {
+    	if (cancelled.get()) return null;
 
-	        for (WabitSession session : saxHandler.getSessions()) {
-	            context.registerChildSession(session);
-	        }
+    	context.registerChildSession(saxHandler.getSession());
 
-	        return saxHandler.getSessions();
-	    } finally {
-	        context.setLoading(false);
-	    }
+    	return saxHandler.getSession();
 	}
 	
     /**
@@ -220,23 +208,19 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
         if (cancelled.get()) return;
 
         try {
-            context.setLoading(true);
             final WabitWorkspace workspace = session.getWorkspace();
             int importObjectCount = 0;
-            for (WabitSession importingSession : saxHandler.getSessions()) {
-                final WabitWorkspace importingWorkspace = importingSession.getWorkspace();
-                importObjectCount += importingWorkspace.mergeIntoWorkspace(workspace);
-            }
+            WabitSession importingSession = saxHandler.getSession();
+            final WabitWorkspace importingWorkspace = importingSession.getWorkspace();
+            importObjectCount += importingWorkspace.mergeIntoWorkspace(workspace);
             logger.debug("Imported " + importObjectCount + " objects into " + session.getWorkspace().getName());
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            context.setLoading(false);
         }
     }
 	
     /**
-     * Calling this method will load all of the workspaces from the input stream
+     * Calling this method will load the workspaces from the input stream
      * into the context that was given to this class when its constructor was
      * called. This is a complete version of loading a file into Wabit. If this
      * method is used no other methods need to be called.
@@ -244,7 +228,7 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
      * Use this method to load a file into Wabit if there is no concerns about
      * multi threading.
      */
-    public List<WabitSession> openWorkspaces() {
+    public WabitSession openWorkspaces() {
         loadWorkspacesFromStream();
         return addLoadedWorkspacesToContext();
     }

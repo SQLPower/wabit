@@ -587,16 +587,21 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      *            An argument of true means a new query execution is beginning;
      *            false means a query execution has just completed.
      */
-    private synchronized void setRunning(boolean isRunning) {
-        int prevExecCount;
-        if (isRunning) {
-            prevExecCount = currentExecutionCount++;
-        } else {
-            prevExecCount = currentExecutionCount--;
-        }
-        
-        boolean wasRunning = prevExecCount > 0;
-        firePropertyChange("running", wasRunning, isRunning);
+    private synchronized void setRunning(final boolean isRunning) {
+        Runnable runner = new Runnable() {
+			public void run() {
+				int prevExecCount;
+				if (isRunning) {
+					prevExecCount = currentExecutionCount++;
+				} else {
+					prevExecCount = currentExecutionCount--;
+				}
+				
+				final boolean wasRunning = prevExecCount > 0;
+				firePropertyChange("running", wasRunning, isRunning);
+			}
+		};
+		getSession().runInForeground(runner);
     }
     
     public boolean allowsChildren() {

@@ -118,13 +118,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     
     /**
-     * This flag will be true if the context is in the process of loading from a
+     * This flag will be > 0 if the context is in the process of loading from a
      * file. During loading some operations may be different because the frame
      * has not been realized.
      * 
      * @see #isLoading()
      */
-    private boolean loading;
+    private int loading = 0;
     
     /**
      * This is the current session that is being changed by the user.
@@ -408,12 +408,18 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     }
 
     public boolean isLoading() {
-        return loading;
+        return loading > 0;
     }
     
-    public void setLoading(boolean loading) {
-        boolean oldLoading = this.loading;
-        this.loading = loading;
+    public void startLoading() {
+        int oldLoading = this.loading;
+        this.loading++;
+        pcs.firePropertyChange("loading", oldLoading, loading);
+    }
+    
+    public void endLoading() {
+        int oldLoading = this.loading;
+        this.loading--;
         pcs.firePropertyChange("loading", oldLoading, loading);
     }
 

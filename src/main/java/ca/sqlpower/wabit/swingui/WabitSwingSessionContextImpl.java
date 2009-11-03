@@ -1945,8 +1945,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return delegateContext.isLoading();
     }
 
-    public void setLoading(boolean loading) {
-        delegateContext.setLoading(loading);
+    public void startLoading() {
+    	delegateContext.startLoading();
+    }
+    
+    public void endLoading() {
+    	delegateContext.endLoading();
     }
 
     public SQLDatabase getDatabase(JDBCDataSource ds) {

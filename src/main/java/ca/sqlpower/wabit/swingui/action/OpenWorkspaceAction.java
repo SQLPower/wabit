@@ -190,11 +190,11 @@ public class OpenWorkspaceAction extends AbstractAction {
 
                 if (!isCancelled()) {
                     for (Map.Entry<URI, OpenWorkspaceXMLDAO> entry : workspaceLoaders.entrySet()) {
-                        List<WabitSession> registeredSession = null;
+                        WabitSession registeredSession = null;
                         try {
                             registeredSession = entry.getValue().addLoadedWorkspacesToContext();
-                            for (WabitSession session : registeredSession) {
-                                ((WabitSwingSession) session).setCurrentURI(entry.getKey());
+                            if (registeredSession != null) {
+                                ((WabitSwingSession) registeredSession).setCurrentURI(entry.getKey());
                             }
                             
                             // TODO convert recent file menu to recent URI menu

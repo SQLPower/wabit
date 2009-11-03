@@ -110,7 +110,11 @@ public class WabitSessionImpl implements WabitSession {
     public void runInForeground(Runnable runner) {
         runner.run();
     }
-
+    
+    public boolean isForegroundThread() {
+    	return true;
+    }
+    
 	public boolean isEnterpriseServerSession() {
 		return false;
 	}
