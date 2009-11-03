@@ -198,7 +198,7 @@ public class ChartColumn extends AbstractWabitObject {
         if (getRoleInChart() != ColumnRole.NONE) {
             sb.append(" (").append(getRoleInChart());
             if (getXAxisIdentifier() != null) {
-                sb.append(" vs. ").append(getXAxisIdentifier());
+                sb.append(" vs. ").append(getXAxisIdentifier().getName());
             }
             sb.append(")");
         }
