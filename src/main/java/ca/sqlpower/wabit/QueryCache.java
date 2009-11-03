@@ -241,6 +241,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			this.clazz = clazz;
 		}
 		
+		public Class<? extends WabitObject> getChildClass() {
+			return clazz;
+		}
+		
 		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
 			for (WabitObjectOrder order : values()) {
 				if (order.clazz.getSimpleName().equals(name)) {
