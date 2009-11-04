@@ -255,6 +255,9 @@ public class WabitSessionPersister implements WabitPersister {
 					
 					if (transactionCount == 1) {
 						logger.info("Begin of commit phase...");
+						logger.debug("Committing " + persistedObjects.size() + " new objects, " + 
+								persistedProperties.size() + " changes to different property names, " +
+										"and " + objectsToRemove.size() + " objects are being removed.");
 						workspace.begin("Begin batch transaction...");
 						commitObjects();
 						commitProperties();
@@ -1344,8 +1347,18 @@ public class WabitSessionPersister implements WabitPersister {
 			wo.setUUID((String) converter.convertToComplexType(newValue,
 					String.class));
 		} else if (propertyName.equals("parent")) {
-			wo.setParent((WabitObject) converter.convertToComplexType(newValue,
-					WabitObject.class));
+			WabitObject parent = (WabitObject) converter.convertToComplexType(newValue,
+					WabitObject.class);
+			if (logger.isDebugEnabled()) {
+				if (parent != null) {
+					logger.debug("Setting property " + propertyName + " on " + wo.getName() + 
+							" to " + parent.getName());
+				} else {
+					logger.debug("Setting property " + propertyName + " on " + wo.getName() + 
+							" to null");
+				}
+			}
+			wo.setParent(parent);
 
 		} else {
 			throw new WabitPersistenceException(wo.getUUID(),
