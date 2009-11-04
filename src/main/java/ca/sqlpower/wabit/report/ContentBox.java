@@ -87,7 +87,8 @@ public class ContentBox extends AbstractWabitObject {
         @Override
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("name") && evt.getNewValue() != null 
-                    && ((String) evt.getNewValue()).length() > 0) {
+                    && ((String) evt.getNewValue()).length() > 0
+                    && evt.getSource() == contentRenderer) {
                 setName("Content from " + (String) evt.getNewValue());
             }
             repaint();           
