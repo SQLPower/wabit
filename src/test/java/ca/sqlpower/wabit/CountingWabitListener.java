@@ -21,12 +21,16 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeEvent;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.util.TransactionEvent;
 
 /**
  * A listener implementation that's useful for building unit tests.
  */
 public class CountingWabitListener implements WabitListener {
+	
+	private static final Logger logger = Logger.getLogger(CountingWabitListener.class);
 
     private int addedCount;
     private int removedCount;
@@ -89,6 +93,8 @@ public class CountingWabitListener implements WabitListener {
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
+    	logger.debug("Received event for " + evt.getPropertyName() + " on " + 
+    			evt.getSource() + " to value " + evt.getNewValue());
         propertyChangeCount++;
         lastPropertyEvent = evt;
     }
