@@ -94,9 +94,11 @@ public class ReportTaskPanel implements WabitPanel {
 	private final JLabel repeatHourLabel = new JLabel("hours");
 	
 	private final WabitToolBarBuilder toolbarBuilder = new WabitToolBarBuilder();
+	private final WabitWorkspace workspace;
 	
 	public ReportTaskPanel(ReportTask baseTask) {
 		this.task = baseTask;
+		this.workspace = (WabitWorkspace)this.task.getParent();
 		
 		this.reportComboBox = new JComboBox();
 		this.reportComboBox.addActionListener(new ActionListener() {
@@ -104,8 +106,6 @@ public class ReportTaskPanel implements WabitPanel {
 				dirty = true;
 			}
 		});
-		this.panel.add(reportLabel, "ax right, hidemode 3");
-		this.panel.add(reportComboBox, "span, wrap, growx, hidemode 3");
 		
 		this.emailTextField = new JTextField();
 		this.emailTextField.addKeyListener(new KeyListener() {
@@ -119,8 +119,7 @@ public class ReportTaskPanel implements WabitPanel {
 				// no-op
 			}
 		});
-		this.panel.add(this.emailLabel, "ax right, hidemode 3");
-		this.panel.add(this.emailTextField, "span, wrap, growx, hidemode 3");
+		
 		
 		this.scheduleTypeComboBox = new JComboBox();
 		this.scheduleTypeComboBox.addItem("minute");
@@ -128,8 +127,7 @@ public class ReportTaskPanel implements WabitPanel {
 		this.scheduleTypeComboBox.addItem("day");
 		this.scheduleTypeComboBox.addItem("week");
 		this.scheduleTypeComboBox.addItem("month");
-		this.panel.add(this.scheduleTypeLabel, "ax right, hidemode 3");
-		this.panel.add(this.scheduleTypeComboBox, "span, wrap, growx, hidemode 3");
+		
 
 		this.minutesComboBox = new JComboBox();
 		for (int i = 0; i < 60; i++) {
@@ -156,10 +154,7 @@ public class ReportTaskPanel implements WabitPanel {
 			}
 		});
 		
-		this.panel.add(this.timeLabel, "ax right, hidemode 3");
-		this.panel.add(this.hoursComboBox, "hidemode 3");
-		this.panel.add(this.timeSepLabel, "hidemode 3");
-		this.panel.add(this.minutesComboBox, "wrap, hidemode 3");
+		
 		
 		
 		this.dayOfWeekComboBox = new JComboBox();
@@ -176,8 +171,6 @@ public class ReportTaskPanel implements WabitPanel {
 			}
 		});
 		
-		this.panel.add(this.dowLabel, "ax right, hidemode 3");
-		this.panel.add(this.dayOfWeekComboBox, "span, wrap, growx, hidemode 3");
 		
 		
 		
@@ -190,9 +183,7 @@ public class ReportTaskPanel implements WabitPanel {
 				dirty = true;
 			}
 		});
-		this.panel.add(this.domLabel1, "ax right, hidemode 3");
-		this.panel.add(this.dayOfMonthComboBox, "growx, hidemode 3");
-		this.panel.add(this.domLabel2, "span, wrap, hidemode 3");
+		
 		
 		
 		
@@ -205,10 +196,7 @@ public class ReportTaskPanel implements WabitPanel {
 				dirty = true;
 			}
 		});
-		this.panel.add(this.repeatLabel, "ax right, hidemode 3");
-		this.panel.add(this.intervalComboBox, "hidemode 3");
-		this.panel.add(this.repeatHourLabel, "span, wrap, hidemode 3");
-		this.panel.add(this.repeatMinuteLabel, "span, wrap, hidemode 3");
+		
 		
 		
 		
@@ -222,7 +210,7 @@ public class ReportTaskPanel implements WabitPanel {
 		this.cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				discardChanges();
-				((WabitWorkspace)task.getParent()).setEditorPanelModel((WabitWorkspace)task.getParent());
+				workspace.setEditorPanelModel(workspace);
 			}
 		});
 		this.toolbarBuilder.add(this.okButton, "Update Scheduler", WabitIcons.REFRESH_ICON_32);
@@ -239,6 +227,33 @@ public class ReportTaskPanel implements WabitPanel {
 		updateParameters((String)scheduleTypeComboBox.getSelectedItem());
 		reinitGuiModel();	
 		this.dirty = task.isNoob();
+		
+		
+		this.panel.add(reportLabel, "ax right, hidemode 3");
+		this.panel.add(reportComboBox, "span, wrap, growx, hidemode 3, wmin 200, wmax 200");
+		
+		this.panel.add(this.emailLabel, "ax right, hidemode 3");
+		this.panel.add(this.emailTextField, "span, wrap, growx, hidemode 3, wmin 200, wmax 200");
+		
+		this.panel.add(this.scheduleTypeLabel, "ax right, hidemode 3");
+		this.panel.add(this.scheduleTypeComboBox, "span, wrap, growx, hidemode 3, wmin 200, wmax 200");
+		
+		this.panel.add(this.timeLabel, "ax right, hidemode 3");
+		this.panel.add(this.hoursComboBox, "hidemode 3");
+		this.panel.add(this.timeSepLabel, "hidemode 3");
+		this.panel.add(this.minutesComboBox, "wrap, hidemode 3");
+		
+		this.panel.add(this.dowLabel, "ax right, hidemode 3");
+		this.panel.add(this.dayOfWeekComboBox, "span, wrap, growx, hidemode 3");
+		
+		this.panel.add(this.domLabel1, "ax right, hidemode 3");
+		this.panel.add(this.dayOfMonthComboBox, "growx, hidemode 3");
+		this.panel.add(this.domLabel2, "span, wrap, hidemode 3");
+		
+		this.panel.add(this.repeatLabel, "ax right, hidemode 3");
+		this.panel.add(this.intervalComboBox, "hidemode 3");
+		this.panel.add(this.repeatHourLabel, "span, wrap, hidemode 3");
+		this.panel.add(this.repeatMinuteLabel, "span, wrap, hidemode 3");
 	}
 	
 	
