@@ -960,6 +960,11 @@ public class WorkspacePersisterListener implements WabitListener {
 	private void commit() throws WabitPersistenceException {
 		if (transactionCount==1) {
 			try {
+				//If nothing actually changed in the transaction do not send
+				//the begin and commit to reduce server traffic.
+				if (objectsToRemove.isEmpty() && persistedObjects.isEmpty() && 
+						persistedProperties.isEmpty()) return;
+				
 				this.objectsToRemoveRollbackList.clear();
 				this.persistedObjectsRollbackList.clear();
 				this.persistedPropertiesRollbackList.clear();
