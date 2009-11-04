@@ -1588,7 +1588,7 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, Boolean.class));
 
 		} else if (propertyName.equals("dataSource")) {
-			query.setDataSourceWithoutReset((JDBCDataSource) converter.convertToComplexType(
+			query.setDataSourceWithoutSideEffects((JDBCDataSource) converter.convertToComplexType(
 					newValue, JDBCDataSource.class)); 
 
 		} else {

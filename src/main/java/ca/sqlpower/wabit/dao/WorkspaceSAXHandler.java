@@ -491,7 +491,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         				}
         				logger.debug("Workspace has data sources " + session.getWorkspace().getDataSources());
         			}
-        			cache.setDataSourceWithoutReset(ds);
+        			cache.setDataSourceWithoutSideEffects(ds);
         		} else if (aname.equals("zoom")) {
         			cache.setZoomLevel(Integer.parseInt(aval));
         		} else if (aname.equals("streaming-row-limit")) {

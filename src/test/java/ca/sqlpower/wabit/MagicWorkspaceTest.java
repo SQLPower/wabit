@@ -19,7 +19,11 @@
 
 package ca.sqlpower.wabit;
 
+import java.io.File;
+
 import junit.framework.TestCase;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Report;
@@ -30,6 +34,15 @@ import ca.sqlpower.wabit.report.Guide.Axis;
  * are done when magic is disabled.
  */
 public class MagicWorkspaceTest extends TestCase {
+	
+    private PlDotIni plIni;
+
+	@Override
+    protected void setUp() throws Exception {
+    	super.setUp();
+    	plIni = new PlDotIni();
+    	plIni.read(new File("src/test/java/pl.regression.ini"));
+    }
 
 	/**
 	 * Tests that if there is a content box attached to a guide if you move the guide
@@ -62,5 +75,29 @@ public class MagicWorkspaceTest extends TestCase {
 		guide.setOffset(guide.getOffset() + 10);
 		
 		assertEquals(initialOffset + 10, box.getX());
+	}
+	
+	/**
+	 * Setting the data source of a {@link QueryCache} changes the streaming
+	 * flag normally. If magic is disabled the streaming flag should not change.
+	 */
+	public void testSettingDSDoesNotChangeStreaming() throws Exception {
+		WabitSessionContext context = new WabitSessionContextImpl(
+				true, false, plIni, null, false); 
+		WabitSession session = new WabitSessionImpl(context);
+		WabitWorkspace workspace = new WabitWorkspace();
+		
+		workspace.setMagicDisabled(true);
+		
+		QueryCache query = new QueryCache(context);
+		workspace.addQuery(query, session);
+		
+		JDBCDataSource ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
+		boolean streaming = ds.getParentType().getSupportsStreamQueries();
+		query.setStreaming(!streaming);
+		
+		query.setDataSource(ds);
+		
+		assertEquals(!streaming, query.isStreaming());
 	}
 }

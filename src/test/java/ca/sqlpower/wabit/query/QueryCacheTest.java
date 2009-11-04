@@ -244,5 +244,5 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
         assertFalse(queryCache.getJoins().contains(join));
         
     }
-
+    
 }

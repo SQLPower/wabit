@@ -827,13 +827,18 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     public void setDataSource(JDBCDataSource ds) {
     	JDBCDataSource oldValue = this.getDataSource();
-    	query.setDataSource(ds);
+    	WabitWorkspace workspace = WabitUtils.getWorkspace(this);
+    	if (workspace != null && workspace.isMagicDisabled()) {
+    		query.setDataSourceWithoutSideEffects(ds);
+    	} else {
+    		query.setDataSource(ds);
+    	}
 		firePropertyChange("dataSource", oldValue, ds);
     }
     
-    public boolean setDataSourceWithoutReset(JDBCDataSource dataSource) {
+    public boolean setDataSourceWithoutSideEffects(JDBCDataSource dataSource) {
     	JDBCDataSource oldValue = this.getDataSource();
-    	boolean returnValue = query.setDataSourceWithoutReset(dataSource);
+    	boolean returnValue = query.setDataSourceWithoutSideEffects(dataSource);
     	if (returnValue) {
     		firePropertyChange("dataSource", oldValue, dataSource);
     	}
