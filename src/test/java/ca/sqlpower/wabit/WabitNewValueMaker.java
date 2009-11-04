@@ -74,6 +74,8 @@ import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 
+import ca.sqlpower.sql.SPDataSource;
+
 public class WabitNewValueMaker extends GenericNewValueMaker {
     
     private PlDotIni plIni;
@@ -465,6 +467,11 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = workspace;
         } else if (valueType.equals(Label.class)) {
         	newValue = new Label();
+        } else if (SPDataSource.class.isAssignableFrom(valueType)) {
+        	newValue = super.makeNewValue(valueType, oldVal, propName);
+        	if (!workspace.dsAlreadyAdded((SPDataSource) newValue)) {
+        		workspace.addDataSource((SPDataSource) newValue);
+        	}
         } else {
             return super.makeNewValue(valueType, oldVal, propName);
         }
