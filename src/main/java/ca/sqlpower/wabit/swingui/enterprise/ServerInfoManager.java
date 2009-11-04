@@ -147,6 +147,9 @@ public class ServerInfoManager {
 
         Callable<Boolean> okCall = new Callable<Boolean>() {
             public Boolean call() throws Exception {
+            	if (!infoPanel.applyChanges()) {
+            		return false;
+            	}
                 if (serverInfo != null) {
                     context.removeServer(serverInfo);
                 }

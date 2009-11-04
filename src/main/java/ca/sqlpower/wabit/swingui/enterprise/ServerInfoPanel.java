@@ -19,13 +19,20 @@
 
 package ca.sqlpower.wabit.swingui.enterprise;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.net.URI;
+import java.net.URISyntaxException;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
@@ -100,23 +107,49 @@ public class ServerInfoPanel implements DataEntryPanel {
      *         invalid fields.
      */
     public boolean applyChanges() {
-        String path = this.path.getText();
-        if (path == null || path.length() < 1 || path.charAt(0) != '/') {
-            JOptionPane.showMessageDialog(
-                    dialogOwner, "Path must begin with /",
-                    "Invalid Setting", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
+    	
+    	if (this.name.getText()==null||this.name.getText().equals("")) {
+    		JOptionPane.showMessageDialog(
+    				dialogOwner, "Please give this conenction a name for future reference.",
+    				"Name Required", JOptionPane.ERROR_MESSAGE);
+    		return false;
+    	}
+    	
+    	String port = this.port.getText();
+    	try {
+    		Integer.parseInt(port);
+    	} catch (NumberFormatException ex) {
+    		JOptionPane.showMessageDialog(
+    				dialogOwner, "The server port must be a numeric value. It is usually either 80 or 8080. In doubt, contact your system administrator.",
+    				"Invalid Server Port Number", JOptionPane.ERROR_MESSAGE);
+    		return false;
+    	}
+    	
+    	if (!this.path.getText().startsWith("/")) {
+    		this.path.setText("/".concat(this.path.getText()==null?"":this.path.getText()));
+    	}
+    	String path = this.path.getText();
+    	if (path == null || path.length() < 2) {
+    		JOptionPane.showMessageDialog(
+    				dialogOwner, "Path must begin with /",
+    				"Invalid Setting", JOptionPane.ERROR_MESSAGE);
+    		return false;
+    	}
+    	
+    	if (this.host.getText().startsWith("http://")) {
+    		this.host.setText(this.host.getText().replace("http://", ""));
+    	}
+    	String host = this.host.getText();
+    	try {
+    		new URI("http", null, host, Integer.parseInt(port), path, null, null);
+    	} catch (URISyntaxException e) {
+    		JOptionPane.showMessageDialog(
+    				dialogOwner, "There seems to be a problem with the host name you provided. It can be a web URL (you can omit the http:// part) or a IP adress. Please verify the values provided are correct.",
+    				"", JOptionPane.ERROR_MESSAGE);
+    		return false;
+    	}
+    	
         
-        String port = this.port.getText();
-        try {
-            Integer.parseInt(port);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(
-                    dialogOwner, "Port must be numeric",
-                    "Invalid Setting", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
         
         return true;
     }
@@ -127,5 +160,27 @@ public class ServerInfoPanel implements DataEntryPanel {
 
     public boolean hasUnsavedChanges() {
         return true;
+    }
+    
+
+	public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                	ServerInfoPanel panel = new ServerInfoPanel(null);
+                	
+                    JFrame f = new JFrame("TEST PANEL");
+                    JPanel outerPanel = new JPanel(new BorderLayout());
+                    outerPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+                    outerPanel.add(panel.getPanel(), BorderLayout.CENTER);
+                    f.setContentPane(outerPanel);
+                    f.pack();
+                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    f.setVisible(true);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
     }
 }
