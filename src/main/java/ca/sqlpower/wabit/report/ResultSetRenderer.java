@@ -804,7 +804,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         if (bodyFont != null) {
             return bodyFont;
         } else if (getParent() != null) {
-            return Font.decode(getParent().getFont().toString());
+            return getParent().getFont();
         } else {
             return null;
         }
