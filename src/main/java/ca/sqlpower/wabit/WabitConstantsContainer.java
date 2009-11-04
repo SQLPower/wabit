@@ -33,6 +33,10 @@ public class WabitConstantsContainer extends WabitContainer<WabitConstantItem> {
     public WabitConstantsContainer(Container delegate) {
         super(delegate);
     }
+    
+    public WabitConstantsContainer(Container delegate, boolean createItemWrappers) {
+    	super(delegate, createItemWrappers);
+    }
 
     @Override
     protected WabitConstantItem createWabitItemChild(Item item) {

@@ -542,7 +542,7 @@ public class WabitSessionPersister implements WabitPersister {
 			Container delegate = (Container) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "delegate"), Container.class);
 
-			wo = new WabitConstantsContainer(delegate);
+			wo = new WabitConstantsContainer(delegate, false);
 
 		} else if (type.equals(WabitConstantItem.class.getSimpleName())) {
 			Item item = (Item) converter.convertToComplexType(
