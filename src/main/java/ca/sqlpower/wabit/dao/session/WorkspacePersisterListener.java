@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.dao.session;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -90,6 +91,42 @@ import com.google.common.collect.Multimap;
 public class WorkspacePersisterListener implements WabitListener {
 	
 	private final static Logger logger = Logger.getLogger(WorkspacePersisterListener.class);
+	
+	private static class PropertyToIgnore {
+		
+		private final String propertyName;
+		private final Class<? extends WabitObject> classType;
+
+		public PropertyToIgnore(String propertyName, Class<? extends WabitObject> classType) {
+			this.propertyName = propertyName;
+			this.classType = classType;
+		}
+
+		public String getPropertyName() {
+			return propertyName;
+		}
+
+		public Class<? extends WabitObject> getClassType() {
+			return classType;
+		}
+	}
+
+	/**
+	 * This list contains a description of all of the properties that fire
+	 * events in Wabit but are not be persisted in the server. These properties
+	 * are normally properties for use in a UI that are saved to a local file
+	 * but do not make sense to be saved to the server.
+	 */
+	private static final List<PropertyToIgnore> ignoreList;
+	
+	static {
+		//Creating the ignore list here
+		List<PropertyToIgnore> ignored = new ArrayList<PropertyToIgnore>();
+		ignored.add(new PropertyToIgnore("zoomLevel", WabitObject.class));
+		ignored.add(new PropertyToIgnore("editorPanelModel", WabitWorkspace.class));
+		ignored.add(new PropertyToIgnore("colBeingDragged", ResultSetRenderer.class));
+		ignoreList = Collections.unmodifiableList(ignored);
+	}
 	
 	/**
 	 * This will be the list we will use to rollback persisted properties
@@ -772,6 +809,8 @@ public class WorkspacePersisterListener implements WabitListener {
 		// really only be a concern for reflective tests.
 		this.persistProperty(uuid, "name", DataType.STRING, child.getName());
 		
+		this.persistProperty(uuid, "parent", DataType.REFERENCE, converter.convertToBasicType(child.getParent()));
+		
 		this.transactionEnded(null);
 
 	}
@@ -815,16 +854,12 @@ public class WorkspacePersisterListener implements WabitListener {
 			return;
 		}
 		
-		//ignoring this property to not force all users to view the same
-		//editor.
-		// FIXME These exceptions should be factored out of here. Create a list of non persisted properties.
-		if (propertyName.equals("editorPanelModel") && source instanceof WabitWorkspace) {
-			this.transactionEnded(null);
-			return;
-		}
-		if (propertyName.equals("zoomLevel")) {
-			this.transactionEnded(null);
-			return;
+		for (PropertyToIgnore ignoreProperty : ignoreList) {
+			if (ignoreProperty.getPropertyName().equals(propertyName) && 
+					ignoreProperty.getClassType().isAssignableFrom(source.getClass())) {
+				this.transactionEnded(null);
+				return;
+			}
 		}
 		
 		
