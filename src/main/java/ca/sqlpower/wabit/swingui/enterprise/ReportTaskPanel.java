@@ -366,8 +366,16 @@ public class ReportTaskPanel implements WabitPanel {
 	}
 	
 	private void reinitGuiModel() {
-		this.reportComboBox.setSelectedItem(task.getReport());
-		this.emailTextField.setText(task.getEmail());
+		if (task.getReport()!=null) {
+			this.reportComboBox.setSelectedItem(task.getReport());
+		} else {
+			this.reportComboBox.setSelectedIndex(0);
+		}
+		if (task.getEmail()==null) {
+			this.emailTextField.setText(task.getEmail());
+		} else {
+			this.emailTextField.setText("destination@example.com");
+		}
 		this.scheduleTypeComboBox.setSelectedItem(task.getTriggerType());
 		this.intervalComboBox.setSelectedIndex(task.getTriggerIntervalParam()-1);
 		this.hoursComboBox.setSelectedIndex(task.getTriggerHourParam());
@@ -380,11 +388,15 @@ public class ReportTaskPanel implements WabitPanel {
 	public void discardChanges() {
 		if (this.task.isNoob()) {
 			try {
-				this.task.getParent().removeChild(this.task);
+				if (this.workspace.getChildren().contains(this.task)) {
+					this.workspace.removeChild(this.task);
+				}
 			} catch (IllegalArgumentException e) {
 				log.error(e);
+				throw new RuntimeException(e);
 			} catch (ObjectDependentException e) {
 				log.error(e);
+				throw new RuntimeException(e);
 			}
 		}
 		this.dirty = false;
@@ -395,7 +407,7 @@ public class ReportTaskPanel implements WabitPanel {
 	}
 
 	public boolean hasUnsavedChanges() {
-		return this.dirty || task.isNoob();
+		return false;
 	}
 	
 	
