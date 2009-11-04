@@ -172,6 +172,8 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected PropertyChangeEvent firePropertyChange(final String propertyName, final boolean oldValue, 
             final boolean newValue) {
+    	if (oldValue == newValue) return null;
+    	
     	if (!isForegroundThread()) {
     		throw new IllegalStateException("Event for property change " + propertyName + 
     				" must fired on the foreground thread.");
@@ -197,6 +199,8 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected PropertyChangeEvent firePropertyChange(final String propertyName, final int oldValue, 
             final int newValue) {
+    	if (oldValue == newValue) return null;
+    	
     	if (!isForegroundThread()) {
     		throw new IllegalStateException("Event for property change " + propertyName + 
     				" must fired on the foreground thread.");
@@ -222,6 +226,9 @@ public abstract class AbstractWabitObject implements WabitObject {
      */
     protected PropertyChangeEvent firePropertyChange(final String propertyName, final Object oldValue, 
             final Object newValue) {
+    	if ((oldValue == null && newValue == null)
+    			|| (oldValue != null && oldValue.equals(newValue))) return null; 
+    	
     	if (!isForegroundThread()) {
     		throw new IllegalStateException("Event for property change " + propertyName + 
     				" must fired on the foreground thread.");
