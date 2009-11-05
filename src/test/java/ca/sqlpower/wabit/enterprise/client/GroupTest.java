@@ -39,6 +39,18 @@ public class GroupTest extends AbstractWabitObjectTest {
 	}
 	
 	@Override
+	public Set<String> getPropertiesToIgnoreForPersisting() {
+		Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
+		//The new value maker currently returns the workspace used in the test
+		//as the parent for this object so the parent object never changes.
+		//To properly test parents the new value would have to be a different
+		//workspace but the group in the test would still have to exist under
+		//the current workspace in the test.
+		ignored.add("parent");
+		return ignored;
+	}
+	
+	@Override
 	public Class<? extends WabitObject> getParentClass() {
 		return WabitWorkspace.class;
 	}
