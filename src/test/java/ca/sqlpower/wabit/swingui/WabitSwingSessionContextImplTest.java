@@ -35,6 +35,7 @@ import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
@@ -78,9 +79,26 @@ public class WabitSwingSessionContextImplTest extends TestCase {
         WabitSwingSessionContextImpl context = 
             new WabitSwingSessionContextImpl(delegateContext, true, 
                     new DefaultUserPrompterFactory());
-        WabitSwingSession session = context.createSession();
+        
+        //the current thread is the foreground thread in tests or else 
+        //exceptions will be thrown on events.
+        WabitSwingSession session = new WabitSwingSessionImpl(context, 
+        		new WabitSessionImpl(delegateContext)) {
+        	@Override
+        	public boolean isForegroundThread() {
+        		return true;
+        	}
+        };
         context.registerChildSession(session);
-        WabitSwingSession inactiveSession = context.createSession();
+        //the current thread is the foreground thread in tests or else 
+        //exceptions will be thrown on events.
+        WabitSwingSession inactiveSession = new WabitSwingSessionImpl(context, 
+        		new WabitSessionImpl(delegateContext)) {
+        	@Override
+        	public boolean isForegroundThread() {
+        		return true;
+        	}
+        };
         context.registerChildSession(inactiveSession);
         
         context.setActiveSession(session);
