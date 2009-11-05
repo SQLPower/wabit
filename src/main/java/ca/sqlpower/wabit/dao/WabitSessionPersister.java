@@ -915,8 +915,8 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				parent.addChild(objectToRestore, index);
 			} catch (Throwable t) {
-				// Keep going. We need to rollback as much as ewe can.
-				logger.warn(t);
+				// Keep going. We need to rollback as much as we can.
+				logger.error("Cannot rollback " + entry.getRemovedChildren() + " child removal", t);
 			}
 		}
 	}
@@ -933,8 +933,8 @@ public class WabitSessionPersister implements WabitPersister {
 					this.applyProperty(parent, propertyName, rollbackValue);
 				}
 			} catch (Throwable t) {
-				// Keep going. We need to rollback as much as ewe can.
-				logger.warn(t);
+				// Keep going. We need to rollback as much as we can.
+				logger.error("Cannot rollback change to " + entry.propertyName + " to value " + entry.rollbackValue, t);
 			}
 		}
 	}
@@ -951,8 +951,8 @@ public class WabitSessionPersister implements WabitPersister {
 					parent.removeChild(child);
 				}
 			} catch (Throwable t) {
-				// Keep going. We need to rollback as much as ewe can.
-				logger.warn(t);
+				// Keep going. We need to rollback as much as we can.
+				logger.error("Cannot rollback " + entry.childrenId + " child creation", t);
 			}
 		}
 	}
