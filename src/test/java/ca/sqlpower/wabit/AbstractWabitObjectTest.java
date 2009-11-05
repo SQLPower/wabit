@@ -234,8 +234,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 continue;
             }
             
-            Object newVal = valueMaker.makeNewValue(property.getPropertyType(), oldVal, property.getName());
             int oldChangeCount = listener.getPropertyChangeCount();
+            Object newVal = valueMaker.makeNewValue(property.getPropertyType(), oldVal, property.getName());
             
             try {
                 logger.debug("Setting property '"+property.getName()+"' to '"+newVal+"' ("+newVal.getClass().getName()+")");
