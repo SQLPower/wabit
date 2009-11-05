@@ -25,15 +25,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.query.Item;
+import ca.sqlpower.query.Join;
 import ca.sqlpower.query.SQLJoin;
 
 /**
  * Wraps a {@link SQLJoin} and converts events on the join to {@link WabitListener}
  * events.
  */
-public class WabitJoin extends AbstractWabitObject {
+public class WabitJoin extends AbstractWabitObject implements Join {
     
+	private static final Logger logger = Logger.getLogger(WabitJoin.class);
+	
     /**
      * The object that is listened to for join events.
      */
@@ -49,13 +54,21 @@ public class WabitJoin extends AbstractWabitObject {
      */
     private final WabitColumnItem rightItem;
 
+	/**
+	 * These are the property change listeners that listen directly to the
+	 * {@link SQLJoin} this object delegates to. The events that get fired to
+	 * this listener should have this object as the source instead of the
+	 * delegate.
+	 */
+    private final List<PropertyChangeListener> joinListeners = new ArrayList<PropertyChangeListener>();
+
     /**
      * A change listener on the delegate join that re-fires events as
      * {@link WabitObject} events.
      */
     private final PropertyChangeListener changeListener = new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent evt) {
-            firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+        	firePropertyChangeEvent(evt);
         }
     };
 
@@ -85,7 +98,21 @@ public class WabitJoin extends AbstractWabitObject {
                 + rightItem.getName() + " (" + rightItem.getParent().getName() + ")");
     }
     
-    @Override
+    protected void firePropertyChangeEvent(final PropertyChangeEvent evt) {
+    	final PropertyChangeEvent newEvent = new PropertyChangeEvent(this, evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+        runInForeground(new Runnable() {
+            public void run() {
+            	synchronized (joinListeners) {
+            		for (int i = joinListeners.size()-1; i >= 0; i--) {
+            			joinListeners.get(i).propertyChange(newEvent);
+            		}
+				}
+            }
+        });
+        super.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+	}
+
+	@Override
     public CleanupExceptions cleanup() {
     	delegate.removeJoinChangeListener(changeListener);
     	return new CleanupExceptions();
@@ -116,7 +143,11 @@ public class WabitJoin extends AbstractWabitObject {
         throw new IllegalStateException("The QueryCache is missing a WabitColumnItem for " + 
                 delegate.getName());
     }
-    
+
+	/**
+	 * Returns the {@link SQLJoin} delegate of this object.
+	 * XXX This method should be removed in the future to make its delegate a proper delegate.
+	 */
     public SQLJoin getDelegate() {
         return delegate;
     }
@@ -177,6 +208,39 @@ public class WabitJoin extends AbstractWabitObject {
     public String getComparator() {
     	return delegate.getComparator();
     }
+
+	public void addJoinChangeListener(PropertyChangeListener l) {
+		synchronized(joinListeners) {
+			joinListeners.add(l);
+		}
+	}
+
+	public Item getLeftColumn() {
+		return delegate.getLeftColumn();
+	}
+
+	public Item getRightColumn() {
+		return delegate.getRightColumn();
+	}
+
+    /**
+     * This remove all the listeners inside this object's delegate to ensure that
+     * listeners do not remain attached to the join when it is removed. Used for
+     * deleting a join.
+     * <p>
+     * XXX This should be removed and objects adding listeners to a join should
+     * remove the joins appropriately when they are not needed.
+     */
+	public void removeAllListeners() {
+		delegate.removeAllListeners();
+		joinListeners.clear();
+	}
+
+	public void removeJoinChangeListener(PropertyChangeListener l) {
+		synchronized(joinListeners) {
+			joinListeners.remove(l);
+		}
+	}
     
     //-----------End SQLJoin getters and setters -----------
 }
