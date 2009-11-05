@@ -24,13 +24,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -42,12 +39,10 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import org.apache.commons.codec.binary.Base64;
-import org.json.JSONObject;
-
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.enterprise.client.ServerInfoProvider;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -98,98 +93,78 @@ public class ServerInfoPanel implements DataEntryPanel {
         builder.append("", testButton = new JButton("Test connection"));
         this.testButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				HttpURLConnection conn = null;
-				InputStream is = null;
-				ByteArrayOutputStream baos = null;
-				try {
-					// Build the base URL
-					StringBuilder sb = new StringBuilder();
-					sb.append("http://");
-					sb.append(host.getText());
-					sb.append(":");
-					sb.append(port.getText());
-					sb.append(path.getText());
-					sb.append(path.getText().endsWith("/")?"workspaces":"/workspaces");
-					
-					// Spawn a connection object
-					URL url = new URL(sb.toString());
-					conn = (HttpURLConnection)url.openConnection();
-					conn.setRequestMethod("OPTIONS");
-					conn.setDoInput(true);
-					
-					// Add credentials
-					String hash = new String(
-						Base64.encodeBase64(
-							username.getText()
-								.concat(":")
-								.concat(new String(password.getPassword())).getBytes()));
-					conn.setRequestProperty(
-							"Authorization", "Basic " + hash);
-
-					// Get the response
-					conn.connect();
-					is = conn.getInputStream();
-					baos = new ByteArrayOutputStream();
-					byte[] buf = new byte[1024];
-					int count;
-					while ((count = is.read(buf)) > 0) {
-						baos.write(buf, 0, count);
-					}
-					
-					// Decode the message
-					JSONObject jsonObject = new JSONObject(baos.toString());
-					String version = jsonObject.getString("server.version");
-					String key = jsonObject.getString("server.key");
-					
-					// Validate versions
-					Version serverVersion = new Version(version);
-					Version clientVersion = WabitVersion.VERSION;
-					if (!serverVersion.equals(clientVersion)) {
-						JOptionPane.showMessageDialog(
-		    				dialogOwner, 
-		    				"The server does not use the same Wabit version as your client software.\n"
-		    					.concat("Server version is ")
-		    					.concat(serverVersion.toString())
-		    					.concat(" while your client version is ")
-		    					.concat(clientVersion.toString())
-		    					.concat("\nWe recommend using the same version as the server to prevent communication errors."),
-		    				"Different versions detected", 
-		    				JOptionPane.WARNING_MESSAGE);
-					}
-				} catch (Exception ex) {
-					if (ex.getMessage().contains("401")) {
-						// Auth exception
-						JOptionPane.showMessageDialog(
-		    				dialogOwner, 
-		    				"It appears that the username and password you provided are not valid."
-		    					.concat("\nPlease verify the provided values or contact your system administrator."),
-		    				"Authentication failed", 
-		    				JOptionPane.ERROR_MESSAGE);
-					} else {
-						// Generic message
-						JOptionPane.showMessageDialog(
-		    				dialogOwner, 
-		    				"There was an error while trying to reach the Wabit server : "
-		    					.concat(ex.getLocalizedMessage()),
-		    				"Test failed", 
-		    				JOptionPane.ERROR_MESSAGE);
-					}
-				} finally {
-					try {
-						if (is != null) is.close();
-					} catch (IOException e2) {
-						// no op
-					}
-					try {
-						if (baos != null) baos.close();
-					} catch (IOException e1) {
-						// no op
-					}
-				}
+				lookupServerInfo(true);
 			}
 		});
         
         return builder.getPanel();
+    }
+    
+    private void lookupServerInfo(boolean confirm) {
+    	try {
+			Version clientVersion = WabitVersion.VERSION;
+			Version serverVersion = ServerInfoProvider.getServerVersion(
+										host.getText(),
+										port.getText(),
+										path.getText(),
+										username.getText(), 
+										new String(password.getPassword()));
+			if (!serverVersion.equals(clientVersion)) {
+				JOptionPane.showMessageDialog(
+    				dialogOwner, 
+    				"The server does not use the same Wabit version as your client software.\n"
+    					.concat("Server version is ")
+    					.concat(serverVersion.toString())
+    					.concat(" while your client version is ")
+    					.concat(clientVersion.toString())
+    					.concat("\nWe recommend using the same version as the server to prevent communication errors."),
+    				"Different versions detected", 
+    				JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			
+			if (confirm) {
+				JOptionPane.showMessageDialog(
+						dialogOwner, 
+						"Connection valid and established.",
+						"Success!", 
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+    	} catch (MalformedURLException e1) {
+    		JOptionPane.showMessageDialog(
+    				dialogOwner, 
+    				"Cannot build a valid URL from the parameters you provided. Please review them or contact your system administrator.",
+    				"Connection Error", 
+    				JOptionPane.ERROR_MESSAGE);
+    		return;
+    	} catch (IOException e1) {
+    		if (e1.getMessage().contains("401")) {
+				// Auth exception
+				JOptionPane.showMessageDialog(
+    				dialogOwner, 
+    				"It appears that the username and password you provided are not valid."
+    					.concat("\nPlease verify the provided values or contact your system administrator."),
+    				"Authentication failed", 
+    				JOptionPane.ERROR_MESSAGE);
+			} else {
+	    		JOptionPane.showMessageDialog(
+	    				dialogOwner, 
+	    				"Could not establish a communication channel with the server. Please verify the provided parameters or contact your system administrator."
+	    					.concat("\nDetailed message : ").concat(e1.getLocalizedMessage()),
+	    				"Connection Error", 
+	    				JOptionPane.ERROR_MESSAGE);
+			}
+    		return;
+		} catch (Exception ex) {	
+			// Generic message
+			JOptionPane.showMessageDialog(
+				dialogOwner, 
+				"There was an error while trying to reach the Wabit server : "
+					.concat(ex.getLocalizedMessage()),
+				"Test failed", 
+				JOptionPane.ERROR_MESSAGE);
+			return;
+		}
     }
 
     /**
@@ -197,6 +172,7 @@ public class ServerInfoPanel implements DataEntryPanel {
      * settings currently in this panel's fields.
      */
     public WabitServerInfo getServerInfo() {
+    	lookupServerInfo(false);
         int port = Integer.parseInt(this.port.getText());
         WabitServerInfo si = new WabitServerInfo(
                 name.getText(), host.getText(), port, path.getText(), 
