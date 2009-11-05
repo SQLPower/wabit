@@ -48,6 +48,14 @@ public class UserTest extends AbstractWabitObjectTest {
 	public Set<String> getPropertiesToIgnoreForEvents() {
 		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
 		ignored.add("authorities");
+		
+		//The new value maker currently returns the workspace used in the test
+		//as the parent for this object so the parent object never changes.
+		//To properly test parents the new value would have to be a different
+		//workspace but the group in the test would still have to exist under
+		//the current workspace in the test.
+		ignored.add("parent");
+		
 		return ignored;
 	}
 	
