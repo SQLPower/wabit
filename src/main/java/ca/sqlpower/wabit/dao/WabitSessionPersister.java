@@ -254,7 +254,7 @@ public class WabitSessionPersister implements WabitPersister {
 					this.persistedPropertiesRollbackList.clear();
 					
 					if (transactionCount == 1) {
-						logger.info("Begin of commit phase...");
+						logger.debug("Begin of commit phase...");
 						logger.debug("Committing " + persistedObjects.size() + " new objects, " + 
 								persistedProperties.size() + " changes to different property names, " +
 										"and " + objectsToRemove.size() + " objects are being removed.");
@@ -271,7 +271,7 @@ public class WabitSessionPersister implements WabitPersister {
 						this.persistedPropertiesRollbackList.clear();
 						this.currentThread = null;
 						transactionCount = 0;
-						logger.info("...commit succeeded.");
+						logger.debug("...commit succeeded.");
 					} else {
 						transactionCount--;
 					}
