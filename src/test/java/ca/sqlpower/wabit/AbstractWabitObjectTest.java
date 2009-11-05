@@ -849,7 +849,12 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	WabitObject wo = getObjectUnderTest();
 		WabitObject parent = wo.getParent();
 		
+		//Removing the object under test from the parent but setting the object's parent
+		//back to have an object that we can add to the parent through the persister but
+		//is not currently a child of the object as that would cause two objects with the
+		//same UUID to exist under the parent causing exceptions.
 		wo.getParent().removeChild(wo);
+		wo.setParent(parent);
 		
 		WabitSessionPersister persister = 
 			new WabitSessionPersister("test persister", session, getWorkspace());
