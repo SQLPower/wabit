@@ -471,8 +471,6 @@ public class WorkspacePersisterListener implements WabitListener {
 			ContentBox contentBox = (ContentBox) child;
 
 			// Remaining arguments
-			this.persistProperty(uuid, "contentRenderer",	DataType.REFERENCE,
-					converter.convertToBasicType(contentBox.getContentRenderer(), DataType.REFERENCE));
 			this.persistProperty(uuid, "font", DataType.STRING,
 					converter.convertToBasicType(contentBox.getFont()));
 			this.persistProperty(uuid, "height", DataType.DOUBLE,	

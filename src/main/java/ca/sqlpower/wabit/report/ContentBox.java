@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
@@ -33,6 +35,7 @@ import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.WabitWorkspace;
 
 /**
  * Represents a box on the page which has an absolute position and size.
@@ -42,6 +45,8 @@ import ca.sqlpower.wabit.WabitUtils;
  * values will
  */
 public class ContentBox extends AbstractWabitObject {
+	
+	private static final Logger logger = Logger.getLogger(ContentBox.class);
 	
 	private static final String EMPTY_BOX_NAME = "Empty Content Box";
 
@@ -166,19 +171,23 @@ public class ContentBox extends AbstractWabitObject {
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
         this.contentRenderer = contentRenderer;
-        firePropertyChange("contentRenderer", oldContentRenderer, contentRenderer);
+        WabitWorkspace workspace = WabitUtils.getWorkspace(this);
         if (contentRenderer != null) {
-        	if (getParent() != null) {
-        		getParent().setUniqueName(ContentBox.this,
-        				"Content from " + contentRenderer.getName());
-        	} else {
-        		setName("Content from " + contentRenderer.getName());
+        	if (workspace == null || !workspace.isMagicDisabled()) {
+        		if (getParent() != null) {
+        			getParent().setUniqueName(ContentBox.this,
+        					"Content from " + contentRenderer.getName());
+        		} else {
+        			setName("Content from " + contentRenderer.getName());
+        		}
         	}
             contentRenderer.setParent(this);
             WabitUtils.listenToHierarchy(contentRenderer, childListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         } else {
-            setName(EMPTY_BOX_NAME);
+        	if (workspace == null || !workspace.isMagicDisabled()) {
+        		setName(EMPTY_BOX_NAME);
+        	}
         }
     }
     
@@ -317,5 +326,5 @@ public class ContentBox extends AbstractWabitObject {
             }
         });
     }
-
+    
 }

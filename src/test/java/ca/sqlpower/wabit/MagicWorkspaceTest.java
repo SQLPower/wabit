@@ -26,6 +26,8 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
+import ca.sqlpower.wabit.report.ImageRenderer;
+import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Guide.Axis;
 
@@ -99,5 +101,37 @@ public class MagicWorkspaceTest extends TestCase {
 		query.setDataSource(ds);
 		
 		assertEquals(!streaming, query.isStreaming());
+	}
+	
+	/**
+	 * If magic is disabled and the content renderer of a content box is changed
+	 * the name of the content box should remain the same as before.
+	 */
+	public void testSettingRendererDoesNotChangeName() throws Exception {
+		WabitSessionContext context = new WabitSessionContextImpl(
+				true, false, plIni, null, false); 
+		WabitSession session = new WabitSessionImpl(context);
+		WabitWorkspace workspace = session.getWorkspace();
+		
+		Report report = new Report("report");
+		workspace.addReport(report);
+		
+		Page page = report.getPage();
+		
+		ContentBox box = new ContentBox();
+		page.addContentBox(box);
+		ImageRenderer renderer1 = new ImageRenderer();
+		renderer1.setName("renderer1");
+		box.setContentRenderer(renderer1);
+		
+		ImageRenderer renderer2 = new ImageRenderer();
+		renderer2.setName("renderer2");
+		String boxName = box.getName();
+		
+		workspace.setMagicDisabled(true);
+		box.setContentRenderer(renderer2);
+		
+		assertEquals(boxName, box.getName());
+		
 	}
 }

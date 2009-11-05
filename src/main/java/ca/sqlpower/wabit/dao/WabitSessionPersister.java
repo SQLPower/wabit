@@ -259,9 +259,9 @@ public class WabitSessionPersister implements WabitPersister {
 								persistedProperties.size() + " changes to different property names, " +
 										"and " + objectsToRemove.size() + " objects are being removed.");
 						workspace.begin("Begin batch transaction...");
+						commitRemovals();
 						commitObjects();
 						commitProperties();
-						commitRemovals();
 						workspace.commit();
 						this.objectsToRemove.clear();
 						this.objectsToRemoveRollbackList.clear();
@@ -2696,11 +2696,6 @@ public class WabitSessionPersister implements WabitPersister {
 			contentBox.setY((Double) converter.convertToComplexType(newValue,
 					Double.class));
 
-		} else if (propertyName.equals("contentRenderer")) {
-			contentBox.setContentRenderer(
-					(ReportContentRenderer) converter.convertToComplexType(
-							newValue, ReportContentRenderer.class));
-
 		} else if (propertyName.equals("font")) {
 			contentBox.setFont((Font) converter.convertToComplexType(newValue,
 					Font.class));
@@ -3689,9 +3684,9 @@ public class WabitSessionPersister implements WabitPersister {
 				// We catch ANYTHING that comes out of here and rollback.
 				// Some exceptions are Runtimes, so we must catch those too.
 				workspace.begin(null);
-				rollbackRemovals();
 				rollbackProperties();
 				rollbackCreations();
+				rollbackRemovals();
 				workspace.commit();
 			} catch (Throwable t2) {
 				// This is a major fuck up. We could not rollback so now we must restore
