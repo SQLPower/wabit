@@ -24,8 +24,10 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
+import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 public class CloseWorkspaceActionTest extends TestCase {
 
@@ -33,7 +35,12 @@ public class CloseWorkspaceActionTest extends TestCase {
         WabitSwingSessionContext context = new WabitSwingSessionContextImpl(
                 new WabitSessionContextImpl(false, false, new PlDotIni(), null, false), true, 
                 new DefaultUserPrompterFactory());
-        WabitSession session = context.createSession();
+        WabitSession session = new WabitSwingSessionImpl(context, new WabitSessionImpl(context)) {
+        	@Override
+        	public boolean isForegroundThread() {
+        		return true;
+        	}
+        };
         context.registerChildSession(session);
         context.setActiveSession(session);
         
