@@ -386,7 +386,11 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             
         } else if (valueType.equals(Cube.class)) {
             try {
-                newValue = connectionPool.getConnection().getSchema().getCubes().get("World Countries");
+            	if (oldVal != null && ((Cube) oldVal).getName().equals("World Countries")) {
+            		newValue = connectionPool.getConnection().getSchema().getCubes().get("World Countries2");
+            	} else {
+            		newValue = connectionPool.getConnection().getSchema().getCubes().get("World Countries");
+            	}
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
