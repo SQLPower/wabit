@@ -277,29 +277,6 @@ public class WabitServerSession extends WabitSessionImpl {
 		}
         return openedSessions;
     }
-	
-//	/**
-//	 * Returns the system workspace from the given Wabit server. The system
-//	 * workspace for each server is cached; you will never get multiple system
-//	 * workspaces for the same server info.
-//	 * 
-//	 * @param serverInfo the server from which to retrieve the workspace
-//	 * @param context The context the system workspace will belong to
-//	 * @return the system Workspace for the given server
-//	 */
-//	public static WabitWorkspace getSystemWorkspace(WabitServerInfo serverInfo, WabitSessionContext context) {
-//		
-//		WabitSession session;
-//		if (systemWorkspaces.containsKey(serverInfo)) {
-//			session = systemWorkspaces.get(serverInfo);
-//		} else {
-//			WorkspaceLocation systemWorkspaceLoc = new WorkspaceLocation("System Workspace", "system", serverInfo);
-//			session = new WabitServerSession(systemWorkspaceLoc, context);
-//			context.registerChildSession(session);
-//			systemWorkspaces.put(serverInfo, session);
-//		}
-//		return session.getWorkspace();
-//	}
 
     private static <T> T executeServerRequest(HttpClient httpClient, WabitServerInfo serviceInfo, 
             String contextRelativePath, ResponseHandler<T> responseHandler)
