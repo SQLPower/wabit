@@ -22,19 +22,27 @@ package ca.sqlpower.wabit.enterprise.client;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
+/**
+ * A Grant object represents a set of permissions on a single object, or class
+ * of objects. Due to restrictions in the JCR, Grants should remain immutable.
+ * To change a User's permissions, remove the old Grant, and create a new one.
+ */
 public class Grant extends AbstractWabitObject {
 
     private final String type;
     private final String subject;
     private boolean dirty = false;
-    private boolean createPrivilege = false;
-    private boolean modifyPrivilege = false;
-    private boolean deletePrivilege = false;
-    private boolean executePrivilege = false;
-    private boolean grantPrivilege = false;
+    private final boolean createPrivilege;
+    private final boolean modifyPrivilege;
+    private final boolean deletePrivilege;
+    private final boolean executePrivilege;
+    private final boolean grantPrivilege;
 
     /**
      * Creates a grant object.
@@ -48,7 +56,7 @@ public class Grant extends AbstractWabitObject {
      * @param execute
      * @param grant
      */
-    public Grant(String subject, String type,
+    public Grant(@Nullable String subject, @Nonnull String type,
             boolean create, boolean modify, boolean delete, boolean execute,
             boolean grant) 
     {
@@ -102,50 +110,30 @@ public class Grant extends AbstractWabitObject {
         return createPrivilege;
     }
 
-    public void setCreatePrivilege(boolean createPrivilege) {
-        boolean oldValue = this.createPrivilege;
-        this.createPrivilege = createPrivilege;
-        firePropertyChange("createPrivilege", oldValue, this.createPrivilege);
-    }
-
     public boolean isModifyPrivilege() {
         return modifyPrivilege;
-    }
-
-    public void setModifyPrivilege(boolean modifyPrivilege) {
-        boolean oldValue = this.modifyPrivilege;
-        this.modifyPrivilege = modifyPrivilege;
-        firePropertyChange("modifyPrivilege", oldValue, this.modifyPrivilege);
     }
 
     public boolean isDeletePrivilege() {
         return deletePrivilege;
     }
 
-    public void setDeletePrivilege(boolean deletePrivilege) {
-        boolean oldValue = this.deletePrivilege;
-        this.deletePrivilege = deletePrivilege;
-        firePropertyChange("deletePrivilege", oldValue, this.deletePrivilege);
-    }
-
     public boolean isExecutePrivilege() {
         return executePrivilege;
-    }
-
-    public void setExecutePrivilege(boolean executePrivilege) {
-        boolean oldValue = this.executePrivilege;
-        this.executePrivilege = executePrivilege;
-        firePropertyChange("executePrivilege", oldValue, this.executePrivilege);
     }
 
     public boolean isGrantPrivilege() {
         return grantPrivilege;
     }
 
-    public void setGrantPrivilege(boolean grantPrivilege) {
-        boolean oldValue = this.grantPrivilege;
-        this.grantPrivilege = grantPrivilege;
-        firePropertyChange("grantPrivilege", oldValue, this.grantPrivilege);
+    public boolean isReadOnly() {
+    	return (executePrivilege && 
+    			!(createPrivilege || modifyPrivilege || deletePrivilege || grantPrivilege));
+    }
+    
+    public boolean hasPermissions() {
+    	return (executePrivilege || createPrivilege || modifyPrivilege
+				|| deletePrivilege || grantPrivilege);
     }
 
     public String getType() {

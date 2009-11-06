@@ -3601,30 +3601,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private void commitGrantProperty(Grant grant, String propertyName,
 			Object newValue) throws WabitPersistenceException {
-		if (propertyName.equals("createPrivilege")) {
-			grant.setCreatePrivilege((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-
-		} else if (propertyName.equals("deletePrivilege")) {
-			grant.setDeletePrivilege((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-
-		} else if (propertyName.equals("executePrivilege")) {
-			grant.setExecutePrivilege((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-
-		} else if (propertyName.equals("grantPrivilege")) {
-			grant.setGrantPrivilege((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-
-		} else if (propertyName.equals("modifyPrivilege")) {
-			grant.setModifyPrivilege((Boolean) converter.convertToComplexType(
-					newValue, Boolean.class));
-
-		} else {
-			throw new WabitPersistenceException(grant.getUUID(),
-					getWabitPersistenceExceptionMessage(grant, propertyName));
-		}
+		// Grants are immutable
 	}
 
 	/**
