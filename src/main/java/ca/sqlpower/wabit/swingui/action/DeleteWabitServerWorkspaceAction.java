@@ -53,7 +53,18 @@ public class DeleteWabitServerWorkspaceAction extends AbstractAction {
 	                    "but there is no workspace selected right now.");
 	            return;
 	        }
-	        activeSwingSession.delete();
+			int choice = JOptionPane.showConfirmDialog(
+							context.getFrame(),
+							"By deleting this workspace, " +
+							"you will not be able to recover any of its contents.\n" +
+							"Are you sure you want to delete it?",
+							"Are you sure?", 
+							JOptionPane.YES_NO_OPTION,
+							JOptionPane.WARNING_MESSAGE);
+
+	        if (choice == JOptionPane.YES_OPTION) {
+	        	activeSwingSession.delete();
+	        }
 		} catch (ClientProtocolException ex) {
 			throw new RuntimeException(ex);
 		} catch (URISyntaxException ex) {
