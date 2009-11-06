@@ -40,7 +40,9 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -60,6 +62,7 @@ import javax.swing.tree.TreePath;
 
 import net.jcip.annotations.GuardedBy;
 
+import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.DataSourceCollection;
@@ -688,6 +691,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         } else {
             JOptionPane.showMessageDialog(getContext().getFrame(),
                     "Refresh is currently only supported for server sessions");
+        }
+    }
+    
+    // XXX MORE EVIL BADNESS
+    public void delete() throws ClientProtocolException, URISyntaxException, IOException {
+    	if (delegateSession instanceof WabitServerSession) {
+            WabitServerSession wss = (WabitServerSession) delegateSession;
+            wss.deleteServerWorkspace();
+            close();
+        } else {
+            JOptionPane.showMessageDialog(getContext().getFrame(),
+                    "Delete is currently only supported for server sessions");
         }
     }
 }

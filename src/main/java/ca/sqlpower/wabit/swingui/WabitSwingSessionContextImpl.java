@@ -1939,7 +1939,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         final StackedTab tab = stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
         if (child instanceof WabitServerSession) {
         	final JPopupMenu tabMenu = new JPopupMenu();
-        	tabMenu.add(new DeleteWabitServerWorkspaceAction((WabitServerSession) child));
+        	tabMenu.add(new DeleteWabitServerWorkspaceAction(WabitSwingSessionContextImpl.this));
         	tabMenu.add(new RenameWabitServerWorkspaceAction((WabitServerSession) child, getFrame()));
 			tab.getTabComponent().addMouseListener(new MouseAdapter() {
 				public void mouseClicked(MouseEvent e) {

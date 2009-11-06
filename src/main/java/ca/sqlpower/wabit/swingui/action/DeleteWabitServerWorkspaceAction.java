@@ -24,10 +24,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
 
 import org.apache.http.client.ClientProtocolException;
 
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * A Swing Action that will send a request to a Wabit Server to delete the
@@ -35,16 +37,23 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
  */
 public class DeleteWabitServerWorkspaceAction extends AbstractAction {
 	
-	private final WabitServerSession session;
+	private final WabitSwingSessionContext context;
 
-	public DeleteWabitServerWorkspaceAction(WabitServerSession session) {
+	public DeleteWabitServerWorkspaceAction(WabitSwingSessionContext context) {
 		super("Delete this workspace");
-		this.session = session;
+		this.context = context;
 	}
 	
 	public void actionPerformed(ActionEvent e) {
 		try {
-			session.deleteServerWorkspace();
+			WabitSwingSessionImpl activeSwingSession = (WabitSwingSessionImpl) context.getActiveSwingSession();
+	        if (activeSwingSession == null) {
+	            JOptionPane.showMessageDialog(context.getFrame(),
+	                    "That button refreshes the current workspace,\n" +
+	                    "but there is no workspace selected right now.");
+	            return;
+	        }
+	        activeSwingSession.delete();
 		} catch (ClientProtocolException ex) {
 			throw new RuntimeException(ex);
 		} catch (URISyntaxException ex) {
@@ -52,6 +61,5 @@ public class DeleteWabitServerWorkspaceAction extends AbstractAction {
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
-		session.close();
 	}
 }
