@@ -41,7 +41,7 @@ public class NewServerWorkspaceAction extends AbstractAction {
 			Component dialogOwner, 
 			WabitSwingSessionContext context,
 			WabitServerInfo server) {
-		super(server.getName());
+		super(server.toString());
 		this.dialogOwner = dialogOwner;
 		this.context = context;
 		this.serviceInfo = server;
