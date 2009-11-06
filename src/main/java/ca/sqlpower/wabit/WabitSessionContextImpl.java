@@ -130,15 +130,30 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * This is the current session that is being changed by the user.
      */
     private WabitSession activeSession;
-    
+
     /**
-     * This lifecycle listener will remove the session's tree from the tabbed
-     * pane when the session is removed.
+     * Listens to all sessions which have been registered with this context, and
+     * performs cleanup when they have been closed.
      */
-    private final SessionLifecycleListener<WabitSession> sessionLifecycleListener = new SessionLifecycleListener<WabitSession>() {
+    private final SessionLifecycleListener<WabitSession> sessionLifecycleListener =
+        new SessionLifecycleListener<WabitSession>() {
     
         public void sessionClosing(SessionLifecycleEvent<WabitSession> e) {
-            deregisterChildSession(e.getSource());
+            WabitSession child = e.getSource();
+            
+            boolean removed = childSessions.remove(child);
+            if (!removed) {
+                throw new IllegalArgumentException(
+                        "Just received a SessionClosing event from session " +
+                        child.getWorkspace().getName() + ", but it does not " +
+                        "exist in this context.");
+            }
+            child.removeSessionLifecycleListener(sessionLifecycleListener);
+            logger.debug("Deregistered a child session. " + childSessions.size() + " sessions still remain.");
+            
+            if (terminateWhenLastSessionCloses && childSessions.isEmpty()) {
+                System.exit(0);
+            }
         }
     };
     
@@ -222,25 +237,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     public DataSourceCollection<SPDataSource> getDataSources() {
         return dataSources;
     }
-
-	/**
-	 * Removes the given Wabit session from the list of child sessions for this
-	 * context. This is normally done by the sessions themselves, so you
-	 * shouldn't need to call this method from your own code.
-	 */
-	public void deregisterChildSession(WabitSession child) {
-	    if (!childSessions.contains(child)) {
-	        throw new IllegalArgumentException("The session " + child.getWorkspace().getName() + 
-	                " does not exist in this context.");
-	    }
-		childSessions.remove(child);
-		child.removeSessionLifecycleListener(sessionLifecycleListener);
-		logger.debug("Deregistered a child session " + childSessions.size() + " sessions still remain.");
-		
-		if (terminateWhenLastSessionCloses && childSessions.isEmpty()) {
-			System.exit(0);
-		}
-	}
+    
 	/**
 	 * returns true if the OS is Mac
 	 * @return

@@ -75,13 +75,7 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
      *         component needs to be displayed. True otherwise.
      */
     boolean setEditorPanel();
-    
-    /**
-     *  Builds and displays the GUI.
-     * @throws SQLObjectException 
-     */
-    void buildUI() throws SQLObjectException;
-    
+
     /**
      * Returns the row limit component that affects all cached result sets.
      * @return

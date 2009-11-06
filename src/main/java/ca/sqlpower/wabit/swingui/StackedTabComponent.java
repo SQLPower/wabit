@@ -50,11 +50,11 @@ import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 /**
  * A custom JComponent to implement the idea of a 'stack' of tabs. The idea is
  * similar to the JTabbedPane, except the tabs are stacked on top of each other
- * vertically. When a 'tab' is selected, it's component is painted in between
- * the tab and the next tab (or at the every bottom of it's the last tab). The
+ * vertically. When a 'tab' is selected, its component is painted in between
+ * the tab and the next tab (or at the every bottom if it's the last tab). The
  * API is only a subset of the {@link JTabbedPane} API, so it's not yet a full
  * drop-in replacement for JTabbedPane. It currently only implements the subset
- * of menthods that are called from {@link WabitSwingSessionContextImpl}, so
+ * of methods that are called from {@link WabitSwingSessionContextImpl}, so
  * that it can be used in the Wabit.
  */
 public class StackedTabComponent extends JComponent {
@@ -111,7 +111,7 @@ public class StackedTabComponent extends JComponent {
 	 * is the tab itself, and a subcomponent which is the component contained by
 	 * the tab.
 	 */
-	private class StackedTab {
+	public class StackedTab {
 		/**
 		 * The title of this tab
 		 */
@@ -142,7 +142,7 @@ public class StackedTabComponent extends JComponent {
 		 * @param closeable
 		 *            If true, then renders the close button. If false, doesn't.
 		 */
-		public StackedTab(String title, Component component, boolean closeable) {
+		private StackedTab(String title, Component component, boolean closeable) {
 			this.title = title;
 			tabComponent = new JPanel(new MigLayout("hidemode 3, fill, ins 0, gap 0 0", "", ""));
 			if (closeable) {
@@ -235,13 +235,27 @@ public class StackedTabComponent extends JComponent {
 			this.subComponent = component;
 		}
 	}
-	
-	public void addTab(String title, Component comp, boolean closeable) {
+
+    /**
+     * Adds a new tab to the bottom of the stack.
+     * 
+     * @param title
+     *            The label to display on the tab itself.
+     * @param comp
+     *            The component to display beneath the tab when the tab is
+     *            selected.
+     * @param closeable
+     *            Whether or not the new tab will have a functioning close
+     *            button.
+     * @return The newly created tab object.
+     */
+	public StackedTab addTab(String title, Component comp, boolean closeable) {
 		final StackedTab tab = new StackedTab(title, comp, closeable);
 		tab.subComponent.setVisible(false);
 		tabs.add(tab);
 		add(tab.tabComponent, "grow 100 0, push 100 0");
 		add(tab.subComponent, "grow 100 100, push 100 100");
+		return tab;
 	}
 	
 	/**
@@ -327,6 +341,19 @@ public class StackedTabComponent extends JComponent {
 		}
 		return -1;
 	}
+
+    /**
+     * Returns the index of the given tab in this component's tab order.
+     * 
+     * @param tab
+     *            the tab to find the index of.
+     * @return The index of the given tab in this component's tab list, which
+     *         matches the visually displayed order of the tabs. If the tab is
+     *         not presently associated with this component, returns -1.
+     */
+    public int indexOfTab(StackedTab tab) {
+        return tabs.indexOf(tab);
+    }
 
 	/**
 	 * Returns the index of the current selected tab. If no tab is selected,

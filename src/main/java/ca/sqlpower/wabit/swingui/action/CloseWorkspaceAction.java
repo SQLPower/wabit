@@ -73,7 +73,6 @@ public class CloseWorkspaceAction extends AbstractAction {
     }
     
     public static void closeActiveWorkspace(WabitSwingSessionContext context) {
-        context.deregisterChildSession(context.getActiveSession());
         context.getActiveSession().close();
         context.setActiveSession(null);
     }

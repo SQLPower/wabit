@@ -33,11 +33,6 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class StubWabitSwingSessionContext extends StubWabitSessionContext implements WabitSwingSessionContext {
 
-    public void buildUI() throws SQLObjectException {
-        // TODO Auto-generated method stub
-        
-    }
-
     @Override
     public WabitSwingSession createSession() {
         return new StubWabitSwingSession();

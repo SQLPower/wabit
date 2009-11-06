@@ -145,6 +145,13 @@ public class WabitServerSession extends WabitSessionImpl {
     }
 
     /**
+     * Returns the location this workspace was loaded from.
+     */
+    public WorkspaceLocation getWorkspaceLocation() {
+        return workspaceLocation;
+    }
+    
+    /**
      * Retrieves the data source list from the server.
      * <p>
      * Future plans: In the future, the server will probably be a proxy for all
@@ -243,7 +250,9 @@ public class WabitServerSession extends WabitSessionImpl {
 
 	/**
 	 * Finds and opens a specific Wabit Workspace from the given
-	 * {@link WorkspaceLocation}.
+	 * {@link WorkspaceLocation}. The new session will keep itself up-to-date by
+	 * polling the server for new state. Likewise, local changes to the session will be pushed its own
+	 * updates back to the server.
 	 * 
 	 * @param context
 	 *            The context to register the new remote WabitSession with
@@ -252,7 +261,7 @@ public class WabitServerSession extends WabitSessionImpl {
 	 *            remote workspace to be opened
 	 * @return A remote WabitSession based on the given workspace
 	 */
-    public static WabitSession openServerSession(WabitSessionContext context, WorkspaceLocation workspaceLoc) {
+    public static WabitServerSession openServerSession(WabitSessionContext context, WorkspaceLocation workspaceLoc) {
     	final WabitServerSession session = new WabitServerSession(workspaceLoc, context);
 		context.registerChildSession(session);
 		session.startUpdaterThread();
@@ -270,8 +279,8 @@ public class WabitServerSession extends WabitSessionImpl {
 	 * @throws URISyntaxException 
 	 * @throws IOException 
 	 */
-	public static List<WabitSession> openServerSessions(WabitSessionContext context, WabitServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
-		List<WabitSession> openedSessions = new ArrayList<WabitSession>();
+	public static List<WabitServerSession> openServerSessions(WabitSessionContext context, WabitServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
+		List<WabitServerSession> openedSessions = new ArrayList<WabitServerSession>();
 		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
 			openedSessions.add(openServerSession(context, workspaceLoc));
 		}
@@ -390,7 +399,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		}
 		return null;
 	}
- 
+
 	@Override
 	public void runInForeground(Runnable runner) {
 		// If we're in a SwingContext, run on the Swing Event Dispatch thread.

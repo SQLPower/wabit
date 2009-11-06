@@ -52,6 +52,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -72,6 +73,7 @@ import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
+import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
@@ -87,6 +89,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -537,6 +540,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	        worker.getWorker().kill();
 	    }
 	    busyBadgeTimer.stop();
+
+	    SessionLifecycleEvent<WabitSession> lifecycleEvent =
+	        new SessionLifecycleEvent<WabitSession>(this);
+	    for (int i = lifecycleListeners.size() - 1; i >= 0; i--) {
+	        lifecycleListeners.get(i).sessionClosing(lifecycleEvent);
+	    }
+
 	    return true;
 	}
 
@@ -662,4 +672,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return this.delegateSession.getSystemWorkspace();
 	}
     
+    // XXX EVIL BADNESS
+    public void refresh() {
+        if (delegateSession instanceof WabitServerSession) {
+            WabitServerSession wss = (WabitServerSession) delegateSession;
+            if (close()) {
+                WabitServerSession.openServerSession(
+                        getContext(),
+                        wss.getWorkspaceLocation());
+            }
+        } else {
+            JOptionPane.showMessageDialog(getContext().getFrame(),
+                    "Refresh is currently only supported for server sessions");
+        }
+    }
 }

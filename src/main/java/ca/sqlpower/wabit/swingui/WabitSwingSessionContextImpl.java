@@ -56,7 +56,9 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.prefs.BackingStoreException;
@@ -133,6 +135,8 @@ import ca.sqlpower.swingui.SearchTextField;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.action.ForumAction;
+import ca.sqlpower.swingui.event.SessionLifecycleEvent;
+import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
@@ -167,6 +171,7 @@ import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.swingui.StackedTabComponent.StackedTab;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -190,6 +195,7 @@ import ca.sqlpower.wabit.swingui.chart.ChartPanel;
 import ca.sqlpower.wabit.swingui.enterprise.GroupPanel;
 import ca.sqlpower.wabit.swingui.enterprise.ReportTaskPanel;
 import ca.sqlpower.wabit.swingui.enterprise.UserPanel;
+import ca.sqlpower.wabit.swingui.enterprise.action.RefreshWorkspaceAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
@@ -587,6 +593,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private final UserPrompterFactory upf;
 
     /**
+     * Maps each currently-registered session to its tab in the stacked tab pane
+     * so that tabs can be removed reliably from the tabbed pane when their
+     * corresponding sessions are closed.
+     */
+    private final Map<WabitSwingSession, StackedTab> sessionTabs =
+        new HashMap<WabitSwingSession, StackedTab>();
+
+    /**
      * This is a preference that stores the absolute file location of each file
      * that should be started when Wabit starts up. Each file name is separated
      * by the {@link #WORKSPACE_PREFS_REGEX}. To get the files that need to be
@@ -648,12 +662,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * will cause cached result sets to be flushed.
      */
     private final JSpinner rowLimitSpinner;
-    
-    /**
-     * This tracks the old row limit for firing an appropriate event when the row
-     * limit spinner changes.
-     */
-    private int oldRowLimitValue;
     
     /**
      * This object will fire property changes for the context when values change.
@@ -827,10 +835,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 
     
 	/**
-	 * @param terminateWhenLastSessionCloses
-	 *            Set to true if the context should stop the app when the last
-	 *            session is closed. If false the app will have to be closed in
-	 *            a way other than closing all of the sessions.
+     * @param delegateContext
+     *            The context which this swing session delegates all its core
+     *            {@link WabitSessionContext} operations to. This core session
+     *            will also have joint ownership of all sessions registered with
+     *            this swing context. As such, the delegate context must not
+     *            contain any registered child sessions of its own when passed
+     *            in. If it does, an IllegalStateException will be thrown by
+     *            this constructor.
 	 * @param headless
 	 *            Set to true to not create any GUI objects when the context
 	 *            starts. This stops the welcome screen from being created.
@@ -841,6 +853,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     }
 
     /**
+     * @param delegateContext
+     *            The context which this swing session delegates all its core
+     *            {@link WabitSessionContext} operations to. This core session
+     *            will also have joint ownership of all sessions registered with
+     *            this swing context. As such, the delegate context must not
+     *            contain any registered child sessions of its own when passed
+     *            in. If it does, an IllegalStateException will be thrown by
+     *            this constructor.
      * @param terminateWhenLastSessionCloses
      *            Set to true if the context should stop the app when the last
      *            session is closed. If false the app will have to be closed in
@@ -848,7 +868,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * @param headless
      *            Set to true to not create any GUI objects when the context
      *            starts. This stops the welcome screen from being created.
-     * @param upd
+     * @param upf
      *            A user prompter factory that will be used to display
      *            appropriate prompts to the user. This can be set if a
      *            non-default prompt is desired for places like saving. This
@@ -859,6 +879,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			throws IOException, SQLObjectException {
 	    this.upf = upf;
 		this.delegateContext = delegateContext;
+		if (delegateContext.getSessions().size() > 0) {
+		    throw new IllegalStateException(
+		            "Can't establish a new SwingSessionContext around a delegate " +
+		            "which already contains existing child sessions of its own " +
+		            "(in other words, the delegate must be empty but it isn't)");
+		}
         this.headless = headless;
         Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		
@@ -1183,7 +1209,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 			if (tabIndex == -1 || tabIndex == 0) return; //The search tab should always have an index of 0
 			stackedTabPane.setSelectedIndex(tabIndex);
 			
-			ByteArrayOutputStream byteOut;
 			Transferable transferable = dtde.getTransferable();
 			if (isFileList == true) {
 				dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
@@ -1327,17 +1352,30 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		
 		return menu;
 	}
-//
-//	public JMenu createServerListMenu(Component dialogOwner) {
-//	    return new ServerListMenu(this, "Open On Server", dialogOwner);
-//	}
 	
-	public void deregisterChildSession(WabitSession child) {
-		stackedTabPane.removeTabAt(getSessions().indexOf(child) + 1);
-	    child.getWorkspace().removeWabitListener(nameChangeListener);
-	    delegateContext.deregisterChildSession(child);
-	}
-	
+	/**
+	 * Handles the cleanup required when a child session has closed.
+	 */
+	private SessionLifecycleListener<WabitSession> childSessionLifecycleListener =
+	    new SessionLifecycleListener<WabitSession>() {
+
+        public void sessionClosing(SessionLifecycleEvent<WabitSession> e) {
+            WabitSession child = e.getSource();
+            
+            StackedTabComponent.StackedTab tab = sessionTabs.get(child);
+            if (tab == null) {
+                throw new IllegalArgumentException("Session " + child + " is not in this context");
+            }
+            int tabIndex = stackedTabPane.indexOfTab(tab);
+            if (tabIndex == -1) {
+                throw new IllegalArgumentException("Session " + child + " doesn't appear in the tabbed pane!");
+            }
+            stackedTabPane.removeTabAt(tabIndex);
+            sessionTabs.remove(child);
+            child.getWorkspace().removeWabitListener(nameChangeListener);
+        }
+	};
+
 	/**
      * Registers this application in Mac OS X if we're running on that platform.
      *
@@ -1392,7 +1430,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      *  Builds the GUI
      * @throws SQLObjectException 
      */
-    public void buildUI() throws SQLObjectException {
+    private void buildUI() throws SQLObjectException {
         frame.setIconImage(FRAME_ICON.getImage());
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(windowClosingListener);
@@ -1416,21 +1454,27 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         saveButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         saveButton.setHorizontalTextPosition(SwingConstants.CENTER);
         
+        JButton refreshButton = new JButton(new RefreshWorkspaceAction(this));
+        refreshButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        refreshButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        
         // OS X specific client properties to modify the button appearance.
         // This only seems to affect OS X 10.5 Leopard's buttons.
         newButton.putClientProperty("JButton.buttonType", "toolbar");
         openButton.putClientProperty("JButton.buttonType", "toolbar");
         saveButton.putClientProperty("JButton.buttonType", "toolbar");
+        refreshButton.putClientProperty("JButton.buttonType", "toolbar");
 
         toolBar.add(newButton);
         toolBar.add(openButton);
 		toolBar.add(saveButton);
+        toolBar.add(refreshButton);
         
         JPanel leftPanel = new JPanel(new BorderLayout());
         
-        for (WabitSession session : getSessions()) {
-            stackedTabPane.addTab(session.getWorkspace().getName(), new JScrollPane(((WabitSwingSession) session).getTree()), true);
-        }
+        // this is checked in the constructor
+        assert getSessions().isEmpty();
+        
         final ChangeListener tabChangeListener = new ChangeListener() {
         
             public void stateChanged(ChangeEvent e) {
@@ -1759,7 +1803,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
         }
 
-        for (WabitSession session : delegateContext.getSessions()) {
+        /*
+         *  Must iterate over copy of session list because the
+         *  real list will shrink as we close the sessions!
+         */
+        List<WabitSession> sessionsToClose = new ArrayList<WabitSession>(getSessions());
+        for (WabitSession session : sessionsToClose) {
             session.close();
         }
 
@@ -1875,14 +1924,16 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     		child = new WabitSwingSessionImpl(this, child);
     	}
         WabitSwingSession swingSession = (WabitSwingSession) child;
+        swingSession.addSessionLifecycleListener(childSessionLifecycleListener);
         delegateContext.registerChildSession(swingSession);
         
         // mark the session clean (this is the correct way, according to interface docs)
         swingSession.setCurrentURI(swingSession.getCurrentURI());
         
         swingSession.getWorkspace().addWabitListener(nameChangeListener);
-        stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
-		stackedTabPane.setSelectedIndex(stackedTabPane.getTabCount() - 1);
+        StackedTab tab = stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
+		stackedTabPane.setSelectedIndex(stackedTabPane.indexOfTab(tab));
+		sessionTabs .put(swingSession, tab);
     }
 
     public Preferences getPrefs() {

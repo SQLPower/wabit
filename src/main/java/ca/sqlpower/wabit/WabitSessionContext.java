@@ -65,21 +65,23 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
 	
     
 	DataSourceCollection<SPDataSource> getDataSources();
-	
-	/**
-	 * Adds the given Wabit session to the list of child sessions for this
-	 * context. This is normally done by the sessions themselves, so you
-	 * shouldn't need to call this method from your own code.
-	 */
-	void registerChildSession(WabitSession child);
 
-	/**
-	 * Removes the given Wabit session from the list of child sessions for this
-	 * context. This is normally done by the sessions themselves, so you
-	 * shouldn't need to call this method from your own code.
-	 */
-	void deregisterChildSession(WabitSession child);
-		
+    /**
+     * Adds the given Wabit session to the list of child sessions for this
+     * context. This is normally done by the sessions themselves, so you
+     * shouldn't need to call this method from your own code.
+     * <p>
+     * A given session should only be registered with one context at a time. The
+     * context a session is registered with should generally be the one returned
+     * by the session's {@link WabitSession#getContext() getContext()} method.
+     * <p>
+     * There is no "deregsiter" method to remove a session from its context.
+     * Sessions fire a lifecycle event when they close down; the context listens
+     * to all its registered sessions and removes its references to them when
+     * they send a sessionClosing event.
+     */
+	void registerChildSession(WabitSession child);
+	
 	/**
 	 * returns true if the OS is Mac
 	 */

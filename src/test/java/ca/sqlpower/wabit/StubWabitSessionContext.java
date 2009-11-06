@@ -47,10 +47,6 @@ public class StubWabitSessionContext implements WabitSessionContext {
 	
 	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
 
-	public void deregisterChildSession(WabitSession child) {
-	    // no op
-	}
-
 	public DataSourceCollection getDataSources() {
 		return null;
 	}
