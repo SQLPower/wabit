@@ -32,7 +32,7 @@ public class GrantTest extends AbstractWabitObjectTest {
 	@Override
 	public Set<String> getPropertiesToIgnoreForEvents() {
 		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
-		ignored.add("dirty");
+		ignored.add("readOnly");
 		return ignored;
 	}
 	

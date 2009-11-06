@@ -37,13 +37,22 @@ public class Grant extends AbstractWabitObject {
 
     private final String type;
     private final String subject;
-    private boolean dirty = false;
     private final boolean createPrivilege;
     private final boolean modifyPrivilege;
     private final boolean deletePrivilege;
     private final boolean executePrivilege;
     private final boolean grantPrivilege;
 
+    /**
+     * Copy constructor
+     * @param grant Grant to copy
+     */
+    public Grant(@Nonnull Grant grant) {
+    	this(grant.getSubject(),grant.getType(),grant.isCreatePrivilege(),
+    		grant.isModifyPrivilege(),grant.isDeletePrivilege(),
+    		grant.isExecutePrivilege(),grant.isGrantPrivilege());
+    }
+    
     /**
      * Creates a grant object.
      * @param subject The object we want to grant access to. Can be null
@@ -163,12 +172,4 @@ public class Grant extends AbstractWabitObject {
         }
         return sb.toString();
     }
-
-	public boolean isDirty() {
-		return dirty;
-	}
-
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
-	}
 }

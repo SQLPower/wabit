@@ -174,7 +174,6 @@ public class GrantPanel implements DataEntryPanel {
 						oldGrant.isDeletePrivilege(), 
 						oldGrant.isExecutePrivilege(), 
 						oldGrant.isGrantPrivilege());
-					grants.remove(oldGrant);
 					grantsToDelete.add(oldGrant);
 					grants.put(uuid, newGrant);
 				} else {
@@ -205,7 +204,6 @@ public class GrantPanel implements DataEntryPanel {
 						oldGrant.isDeletePrivilege(), 
 						oldGrant.isExecutePrivilege(), 
 						oldGrant.isGrantPrivilege());
-					grants.remove(oldGrant);
 					grantsToDelete.add(oldGrant);
 					grants.put(uuid, newGrant);
 				} else {
@@ -236,7 +234,6 @@ public class GrantPanel implements DataEntryPanel {
 						deleteCheckBox.isSelected(), 
 						oldGrant.isExecutePrivilege(), 
 						oldGrant.isGrantPrivilege());
-					grants.remove(oldGrant);
 					grantsToDelete.add(oldGrant);
 					grants.put(uuid, newGrant);
 				} else {
@@ -267,7 +264,6 @@ public class GrantPanel implements DataEntryPanel {
 						oldGrant.isDeletePrivilege(), 
 						executeCheckBox.isSelected(), 
 						oldGrant.isGrantPrivilege());
-					grants.remove(oldGrant);
 					grantsToDelete.add(oldGrant);
 					grants.put(uuid, newGrant);
 				} else {
@@ -298,7 +294,6 @@ public class GrantPanel implements DataEntryPanel {
 						oldGrant.isDeletePrivilege(), 
 						oldGrant.isExecutePrivilege(), 
 						grantCheckBox.isSelected());
-					grants.remove(oldGrant);
 					grantsToDelete.add(oldGrant);
 					grants.put(uuid, newGrant);
 				} else {
@@ -390,7 +385,28 @@ public class GrantPanel implements DataEntryPanel {
 		synchronized (systemWorkspace) {
 			systemWorkspace.beginTransaction("Updating grants...");
 			try {
-				// First pass, save new grants
+				// First pass, delete all useless empty grants
+				for (Entry<String, Grant> entry : this.grants.entrySet()) {
+					
+					Grant grant = entry.getValue();
+					
+					if (!grant.isCreatePrivilege() && !grant.isDeletePrivilege()
+							&& !grant.isExecutePrivilege() && !grant.isGrantPrivilege()
+							&& !grant.isModifyPrivilege()) 
+					{
+						// Useless grant. Let's remove it altogether
+						grants.remove(grant);
+						grantsToDelete.remove(grant);
+						
+						// Also remove it from the workspace if it was a persisted one
+						if (systemWorkspace.findByUuid(grant.getUUID(), Grant.class)!=null) {
+							grant.getParent().removeChild(entry.getValue());
+						}
+					}
+					
+				}
+				
+				// Second pass, save new grants
 				for (Entry<String, Grant> entry : this.grants.entrySet()) {
 					Grant grant = entry.getValue();
 					Grant persistedGrant = systemWorkspace.findByUuid(grant.getUUID(), Grant.class);
@@ -399,12 +415,17 @@ public class GrantPanel implements DataEntryPanel {
 						systemWorkspace.findByUuid(entry.getKey(), WabitObject.class).addChild(grant,0);
 					}
 				}
-				// Second pass, remove deleted grants
+				// Third pass, remove deleted grants
 				for (Grant grant : this.grantsToDelete) {
-					systemWorkspace.findByUuid(
-						grant.getParent().getUUID(), 
-						WabitObject.class)
-							.removeChild(grant);
+					WabitObject persistedGrant = systemWorkspace.findByUuid(
+										grant.getUUID(), 
+										Grant.class);
+					if (persistedGrant!=null) {
+						WabitObject parent = persistedGrant.getParent();
+						if (parent.getChildren(Grant.class).contains(grant)) {
+							parent.removeChild(grant);
+						}
+					}
 				}
 				systemWorkspace.commitTransaction();
 				return true;
