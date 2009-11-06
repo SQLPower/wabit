@@ -162,7 +162,7 @@ public class PDFAction extends AbstractAction {
 				}
 			});
             final LayoutToPDFWorker pdfWorker = new LayoutToPDFWorker(session, targetFile, layout, dialogOwner);
-            ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, pdfWorker.getJobSize());
+            ProgressMonitor monitor = new ProgressMonitor(dialogOwner, "Exporting PDF...", "", 0, 1);
             monitor.setMillisToPopup(0);
 			ProgressWatcher watcher = new ProgressWatcher(monitor, pdfWorker) {
 				@Override
