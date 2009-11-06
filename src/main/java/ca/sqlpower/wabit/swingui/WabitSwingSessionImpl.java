@@ -615,6 +615,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	}
 
 	public boolean hasUnsavedChanges() {
+		if (delegateSession!=null &&
+				delegateSession.isEnterpriseServerSession()) {
+			return false;
+		}
         return unsavedChangesExist;
     }
 
