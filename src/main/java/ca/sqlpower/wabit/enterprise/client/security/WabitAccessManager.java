@@ -72,6 +72,10 @@ public class WabitAccessManager {
 		
 	}
 	
+	public void init(User currentUser, WabitSession systemSession) {
+		init(currentUser, null, systemSession);
+	}
+	
 	private List<Grant> aggregateGrants(User user) {
 		List<Grant> grants = new ArrayList<Grant>();
 		grants.addAll(user.getGrants());
@@ -95,6 +99,9 @@ public class WabitAccessManager {
 	 * Returns all objects that depend on the object represented by rootUuid
 	 */
 	private Collection<WabitObject> aggregateDependantObjects(String rootUuid) {
+		if (currentSession == null) {
+			return Collections.emptyList();
+		}
 		final WabitWorkspace workspace = currentSession.getWorkspace();
 		synchronized (workspace) {
 			WabitObject root = workspace
@@ -197,7 +204,7 @@ public class WabitAccessManager {
 	}
 	
 	public boolean isGranted(String type, Set<Permission> permissions) {
-		synchronized (currentSession.getWorkspace()) {
+		synchronized (systemSession.getWorkspace()) {
 			List<Grant> grants = aggregateGrants(currentUser);
 			Set<WabitObject> empty = Collections.emptySet();
 			return doSystemGrantsPermit(type, grants, empty, permissions);
@@ -207,8 +214,12 @@ public class WabitAccessManager {
 	public boolean isWorkspaceGranted(Set<Permission> permissions) {
 		// Everyone has read access to the system workspace
 		WabitWorkspace currentWorkspace = currentSession.getWorkspace();
-		if (currentWorkspace.getUUID().equals("system") && isReadOnly(permissions)) {
-			return true;
+		if (currentWorkspace.getUUID().equals("system")) {
+			if (isReadOnly(permissions)) {
+				return true;
+			} else if (permissions.contains(Permission.DELETE)) {
+				return false;
+			}
 		}
 
 		if (isGranted(currentWorkspace.getUUID(), WabitWorkspace.class.getSimpleName(), permissions)) {
