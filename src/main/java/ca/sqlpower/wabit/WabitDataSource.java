@@ -24,6 +24,8 @@ import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import ca.sqlpower.sql.SPDataSource;
 
 /**
@@ -38,9 +40,33 @@ public class WabitDataSource extends AbstractWabitObject {
 	 * Underlying {@link SPDataSource} object that actually contains all the
 	 * database connection info.
 	 */
-	private SPDataSource dataSource;
+	private final SPDataSource dataSource;
 
-	public WabitDataSource(SPDataSource ds) {
+	/**
+	 * Keeps this wrapper's name in sync with the data source it's wrapping.
+	 */
+	private final PropertyChangeListener dataSourceChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("name")) {
+                setName(dataSource.getName());
+            }
+        }
+    };
+
+    /**
+     * Creates a WabitDataSource wrapper for the given data source. The newly
+     * created WabitDataSource's name tracks changes to the underlying data
+     * source's name.
+     * <p>
+     * It is vitally important to call {@link #cleanup()} on a WabitDataSource
+     * when you are done with it. If you attach the WabitDataSource to a
+     * workspace, cleanup will be done automatically the session is closed, but
+     * if the object you create does not get attached to a session, cleanup is
+     * your own responsibility.
+     * 
+     * @param ds The data source to wrap. Must not be null.
+     */
+	public WabitDataSource(@Nonnull SPDataSource ds) {
 	    this.dataSource = ds;
 	    setName(ds.getName());
 	    
@@ -51,16 +77,15 @@ public class WabitDataSource extends AbstractWabitObject {
 	        dataSource.put(UUID_KEY_NAME, uuid);
 	    }
 	    
-	    ds.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (evt.getPropertyName().equals("name")) {
-					setName(dataSource.getName());
-				}
-			}
-		});
-	    // TODO listen for changes in DS and rebroadcast the appropriate ones
+	    ds.addPropertyChangeListener(dataSourceChangeListener);
 	}
 
+	@Override
+	public CleanupExceptions cleanup() {
+	    dataSource.removePropertyChangeListener(dataSourceChangeListener);
+	    return super.cleanup();
+	}
+	
     /**
      * Gets the UUID associated with this instance's data source. This class
      * does not store its own UUID, as in implementation, these instances are
