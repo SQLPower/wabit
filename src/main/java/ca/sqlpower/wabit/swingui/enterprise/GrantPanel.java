@@ -25,6 +25,7 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +91,7 @@ public class GrantPanel implements DataEntryPanel {
 	
 	private final UsersAndGroupsListModel listModel;
 	private final Map<String,Grant> grants = new HashMap<String, Grant>();
+	private final List<Grant> grantsToDelete = new ArrayList<Grant>();
 	
 	private final JLabel topLabel;
 	private final JLabel bottomLabel;
@@ -105,16 +107,16 @@ public class GrantPanel implements DataEntryPanel {
 	public GrantPanel(
 			@Nonnull WabitWorkspace workspace, 
 			@Nonnull WabitWorkspace systemWorkspace, 
-			@Nonnull String objectType, 
-			@Nullable String objectUuid, 
+			@Nonnull String xobjectType, 
+			@Nullable String xobjectUuid, 
 			@Nonnull String label) {
 		
-		if (objectUuid == null && objectType != null) {
+		if (xobjectUuid == null && xobjectType != null) {
 			this.systemMode = true;
 			this.topLabel = new JLabel("Server Wide Security Settings");
 			this.bottomLabel = new JLabel("Please configure system level permissions for " + label);
 			this.icon = new JLabel(WabitIcons.SERVER_ICON_32);
-		} else if (objectUuid != null && objectType != null) {
+		} else if (xobjectUuid != null && xobjectType != null) {
 			this.systemMode = false;
 			this.topLabel = new JLabel("Sharing and Security Settings");
 			this.bottomLabel = new JLabel("Please configure who has access to " + label);
@@ -125,8 +127,8 @@ public class GrantPanel implements DataEntryPanel {
 		
 		this.workspace = workspace;
 		this.systemWorkspace = systemWorkspace;
-		this.objectType = objectType;
-		this.objectUuid = objectUuid;
+		this.objectType = xobjectType;
+		this.objectUuid = xobjectUuid;
 		
 		
 		
@@ -162,8 +164,30 @@ public class GrantPanel implements DataEntryPanel {
 		this.createCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
-				grants.get(uuid).setCreatePrivilege(createCheckBox.isSelected());
-				grants.get(uuid).setDirty(true);
+				Grant oldGrant = grants.get(uuid);
+				if (oldGrant!=null) {
+					Grant newGrant = new Grant(
+						oldGrant.getSubject(), 
+						oldGrant.getType(), 
+						createCheckBox.isSelected(), 
+						oldGrant.isModifyPrivilege(), 
+						oldGrant.isDeletePrivilege(), 
+						oldGrant.isExecutePrivilege(), 
+						oldGrant.isGrantPrivilege());
+					grants.remove(oldGrant);
+					grantsToDelete.add(oldGrant);
+					grants.put(uuid, newGrant);
+				} else {
+					Grant newGrant = new Grant(
+						objectUuid, 
+						objectType, 
+						createCheckBox.isSelected(), 
+						false, 
+						false, 
+						false, 
+						false);
+					grants.put(uuid, newGrant);
+				}
 				dirty = true;
 			}
 		});
@@ -171,8 +195,30 @@ public class GrantPanel implements DataEntryPanel {
 		this.modifyCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
-				grants.get(uuid).setModifyPrivilege(modifyCheckBox.isSelected());
-				grants.get(uuid).setDirty(true);
+				Grant oldGrant = grants.get(uuid);
+				if (oldGrant!=null) {
+					Grant newGrant = new Grant(
+						oldGrant.getSubject(), 
+						oldGrant.getType(), 
+						oldGrant.isCreatePrivilege(), 
+						modifyCheckBox.isSelected(), 
+						oldGrant.isDeletePrivilege(), 
+						oldGrant.isExecutePrivilege(), 
+						oldGrant.isGrantPrivilege());
+					grants.remove(oldGrant);
+					grantsToDelete.add(oldGrant);
+					grants.put(uuid, newGrant);
+				} else {
+					Grant newGrant = new Grant(
+						objectUuid, 
+						objectType, 
+						false, 
+						modifyCheckBox.isSelected(), 
+						false, 
+						false, 
+						false);
+					grants.put(uuid, newGrant);
+				}
 				dirty = true;
 			}
 		});
@@ -180,8 +226,30 @@ public class GrantPanel implements DataEntryPanel {
 		this.deleteCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
-				grants.get(uuid).setDeletePrivilege(deleteCheckBox.isSelected());
-				grants.get(uuid).setDirty(true);
+				Grant oldGrant = grants.get(uuid);
+				if (oldGrant!=null) {
+					Grant newGrant = new Grant(
+						oldGrant.getSubject(), 
+						oldGrant.getType(), 
+						oldGrant.isExecutePrivilege(), 
+						oldGrant.isModifyPrivilege(), 
+						deleteCheckBox.isSelected(), 
+						oldGrant.isExecutePrivilege(), 
+						oldGrant.isGrantPrivilege());
+					grants.remove(oldGrant);
+					grantsToDelete.add(oldGrant);
+					grants.put(uuid, newGrant);
+				} else {
+					Grant newGrant = new Grant(
+						objectUuid, 
+						objectType, 
+						false, 
+						false, 
+						deleteCheckBox.isSelected(), 
+						false, 
+						false);
+					grants.put(uuid, newGrant);
+				}
 				dirty = true;
 			}
 		});
@@ -189,8 +257,30 @@ public class GrantPanel implements DataEntryPanel {
 		this.executeCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
-				grants.get(uuid).setExecutePrivilege(executeCheckBox.isSelected());
-				grants.get(uuid).setDirty(true);
+				Grant oldGrant = grants.get(uuid);
+				if (oldGrant!=null) {
+					Grant newGrant = new Grant(
+						oldGrant.getSubject(), 
+						oldGrant.getType(), 
+						oldGrant.isCreatePrivilege(), 
+						oldGrant.isModifyPrivilege(), 
+						oldGrant.isDeletePrivilege(), 
+						executeCheckBox.isSelected(), 
+						oldGrant.isGrantPrivilege());
+					grants.remove(oldGrant);
+					grantsToDelete.add(oldGrant);
+					grants.put(uuid, newGrant);
+				} else {
+					Grant newGrant = new Grant(
+						objectUuid, 
+						objectType, 
+						false, 
+						false, 
+						false, 
+						executeCheckBox.isSelected(), 
+						false);
+					grants.put(uuid, newGrant);
+				}
 				dirty = true;
 			}
 		});
@@ -198,8 +288,30 @@ public class GrantPanel implements DataEntryPanel {
 		this.grantCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
-				grants.get(uuid).setGrantPrivilege(grantCheckBox.isSelected());
-				grants.get(uuid).setDirty(true);
+				Grant oldGrant = grants.get(uuid);
+				if (oldGrant!=null) {
+					Grant newGrant = new Grant(
+						oldGrant.getSubject(), 
+						oldGrant.getType(), 
+						oldGrant.isCreatePrivilege(), 
+						oldGrant.isModifyPrivilege(), 
+						oldGrant.isDeletePrivilege(), 
+						oldGrant.isExecutePrivilege(), 
+						grantCheckBox.isSelected());
+					grants.remove(oldGrant);
+					grantsToDelete.add(oldGrant);
+					grants.put(uuid, newGrant);
+				} else {
+					Grant newGrant = new Grant(
+						objectUuid, 
+						objectType, 
+						false, 
+						false, 
+						false, 
+						false, 
+						grantCheckBox.isSelected());
+					grants.put(uuid, newGrant);
+				}
 				dirty = true;
 			}
 		});
@@ -258,10 +370,8 @@ public class GrantPanel implements DataEntryPanel {
 			// if grant is null, this means there was no grant given so far.
 			if(grant == null && systemMode) {
 				grant = new Grant(null, this.objectType, false,false,false,false,false);
-				grant.setDirty(true);
 			} else if(grant == null && !systemMode) {
 				grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, WabitObject.class).getClass().getSimpleName(), false,false,false,false,false);
-				grant.setDirty(true);
 			}
 			
 			this.createCheckBox.setSelected(grant.isCreatePrivilege());
@@ -276,40 +386,35 @@ public class GrantPanel implements DataEntryPanel {
 		if (!this.dirty) {
 			return true;
 		}
-		this.systemWorkspace.beginTransaction("Updating grants...");
-		try {
-			for (Entry<String, Grant> entry : this.grants.entrySet()) {
-				if (entry.getValue().isDirty()) {
+		final WabitWorkspace systemWorkspace = this.systemWorkspace;
+		synchronized (systemWorkspace) {
+			systemWorkspace.beginTransaction("Updating grants...");
+			try {
+				// First pass, save new grants
+				for (Entry<String, Grant> entry : this.grants.entrySet()) {
 					Grant grant = entry.getValue();
-					if (!grant.isCreatePrivilege() && !grant.isDeletePrivilege() &&
-							!grant.isExecutePrivilege() && !grant.isGrantPrivilege() &&
-							!grant.isModifyPrivilege()) {
-						// Grant is empty. we remove it.
-						this.systemWorkspace.findByUuid(entry.getKey(), WabitObject.class).removeChild(grant);
-					} else if (grant.isDirty()) {
-						// This means we need to save or update the grant
-						Grant persistedGrant = this.systemWorkspace.findByUuid(grant.getUUID(), Grant.class);
-						if (persistedGrant!=null) {
-							persistedGrant.setCreatePrivilege(grant.isCreatePrivilege());
-							persistedGrant.setModifyPrivilege(grant.isModifyPrivilege());
-							persistedGrant.setDeletePrivilege(grant.isDeletePrivilege());
-							persistedGrant.setExecutePrivilege(grant.isExecutePrivilege());
-							persistedGrant.setGrantPrivilege(grant.isGrantPrivilege());
-						} else {
-							// We're dealing with a new grant
-							this.systemWorkspace.findByUuid(entry.getKey(), WabitObject.class).addChild(grant,0);
-						}
+					Grant persistedGrant = systemWorkspace.findByUuid(grant.getUUID(), Grant.class);
+					if (persistedGrant==null) {
+						// Find the person / group to add the grant to
+						systemWorkspace.findByUuid(entry.getKey(), WabitObject.class).addChild(grant,0);
 					}
 				}
+				// Second pass, remove deleted grants
+				for (Grant grant : this.grantsToDelete) {
+					systemWorkspace.findByUuid(
+						grant.getParent().getUUID(), 
+						WabitObject.class)
+							.removeChild(grant);
+				}
+				systemWorkspace.commitTransaction();
+				return true;
+			} catch (IllegalArgumentException e) {
+				systemWorkspace.rollbackTransaction();
+				throw new RuntimeException(e);
+			} catch (ObjectDependentException e) {
+				systemWorkspace.rollbackTransaction();
+				throw new RuntimeException(e);
 			}
-			this.systemWorkspace.commitTransaction();
-			return true;
-		} catch (IllegalArgumentException e) {
-			this.systemWorkspace.rollbackTransaction();
-			throw new RuntimeException(e);
-		} catch (ObjectDependentException e) {
-			this.systemWorkspace.rollbackTransaction();
-			throw new RuntimeException(e);
 		}
 	}
 
