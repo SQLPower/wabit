@@ -691,43 +691,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     public static final Icon NEW_ICON = new ImageIcon(
             WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/32x32/new.png"));
     
-	/**
-	 * Creates a popup menu with all the possible 'New <insert Wabit object
-	 * here>' options
-	 */
-    private final Action newAction = new AbstractAction("New", NEW_ICON) {
-    	public void actionPerformed(ActionEvent e) {
-    		if (e.getSource() instanceof JButton) {
-    			JButton source = (JButton) e.getSource();
-    			JPopupMenu popupMenu = new JPopupMenu();
-    			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
-    			JMenu newWorkspaceServerSubMenu = new JMenu("New Server Workspace...");
-				for (WabitServerInfo server : getEnterpriseServers(true)) {
-					newWorkspaceServerSubMenu.add(new NewServerWorkspaceAction(frame,
-							WabitSwingSessionContextImpl.this, server));
-				}
-    			popupMenu.add(newWorkspaceServerSubMenu);
-    			WabitSwingSession activeSession = getActiveSwingSession();
-    			if (activeSession != null) {
-    				if (activeSession.getWorkspace().isSystemWorkspace()) {
-    					popupMenu.add(new NewUserAction(activeSession));
-    					popupMenu.add(new NewGroupAction(activeSession));
-    				} else {
-	    				popupMenu.add(new NewQueryAction(activeSession));
-	    				popupMenu.add(new NewOLAPQueryAction(activeSession));
-	                    popupMenu.add(new NewChartAction(activeSession));
-	                    popupMenu.add(new NewImageAction(activeSession));
-	    				popupMenu.add(new NewReportAction(activeSession));
-	    				popupMenu.add(new NewTemplateAction(activeSession));
-	    				if (activeSession.getWorkspace().isServerWorkspace()) {
-	    					popupMenu.add(new NewReportTaskAction(activeSession));
-	    				}
-    				}
-    			}
-    			popupMenu.show(source, 0, source.getHeight());
-    		}
-    	}
-    };
     
     public static final Icon OPEN_ICON = new ImageIcon(
     	WabitSwingSessionContextImpl.class.getClassLoader().getResource("icons/32x32/open.png"));
@@ -1447,6 +1410,44 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         JToolBar toolBar = new JToolBar(JToolBar.HORIZONTAL);
         toolBar.setFloatable(false);
         
+    	/**
+    	 * Creates a popup menu with all the possible 'New <insert Wabit object
+    	 * here>' options
+    	 */
+         Action newAction = new AbstractAction("New", NEW_ICON) {
+        	public void actionPerformed(ActionEvent e) {
+        		if (e.getSource() instanceof JButton) {
+        			JButton source = (JButton) e.getSource();
+        			JPopupMenu popupMenu = new JPopupMenu();
+        			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
+        			JMenu newWorkspaceServerSubMenu = createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
+        	            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+        	                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, WabitSwingSessionContextImpl.this, serviceInfo));
+        	            }
+        	        });
+        			popupMenu.add(newWorkspaceServerSubMenu);
+        			WabitSwingSession activeSession = getActiveSwingSession();
+        			if (activeSession != null) {
+        				if (activeSession.getWorkspace().isSystemWorkspace()) {
+        					popupMenu.add(new NewUserAction(activeSession));
+        					popupMenu.add(new NewGroupAction(activeSession));
+        				} else {
+    	    				popupMenu.add(new NewQueryAction(activeSession));
+    	    				popupMenu.add(new NewOLAPQueryAction(activeSession));
+    	                    popupMenu.add(new NewChartAction(activeSession));
+    	                    popupMenu.add(new NewImageAction(activeSession));
+    	    				popupMenu.add(new NewReportAction(activeSession));
+    	    				popupMenu.add(new NewTemplateAction(activeSession));
+    	    				if (activeSession.getWorkspace().isServerWorkspace()) {
+    	    					popupMenu.add(new NewReportTaskAction(activeSession));
+    	    				}
+        				}
+        			}
+        			popupMenu.show(source, 0, source.getHeight());
+        		}
+        	}
+        };
+        
         JButton newButton = new JButton(newAction);
         newButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         newButton.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -1527,6 +1528,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.setMnemonic('f');
         menuBar.add(fileMenu);
         fileMenu.add(new NewWorkspaceAction(this));
+		JMenu newWorkspaceServerSubMenu = createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
+            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, WabitSwingSessionContextImpl.this, serviceInfo));
+            }
+        });
+        fileMenu.add(newWorkspaceServerSubMenu);
         fileMenu.add(new OpenWorkspaceAction(this));
         fileMenu.add(createRecentMenu());
         
