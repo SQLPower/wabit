@@ -27,6 +27,7 @@ import java.beans.PropertyChangeEvent;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +90,6 @@ import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
-import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.VerticalAlignment;
@@ -1116,8 +1116,6 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 		
-		
-
 		Object propertyValue = null;
 		WabitObject wo = WabitUtils.findByUuid(root, uuid,
 				WabitObject.class);
@@ -1190,14 +1188,14 @@ public class WabitSessionPersister implements WabitPersister {
 					propertyValue = getWabitDataSourceProperty(
 							(WabitDataSource) wo, propertyName);
 				} else if (wo instanceof WabitImage) {
+					
 					propertyValue = getWabitImageProperty((WabitImage) wo,
 							propertyName);
 
 					// We are converting the expected old value InputStream in this
-					// way because
-					// we want to ensure that the conversion process is the same as
-					// the one
-					// used to convert the current image into a byte array.
+					// way because we want to ensure that the conversion process is
+					// the same as the one used to convert the current image into
+					// a byte array.
 					if (oldValue != null) {
 						oldValue = PersisterUtils.convertImageToStreamAsPNG(
 								(Image) converter.convertToComplexType(oldValue,
@@ -1229,11 +1227,14 @@ public class WabitSessionPersister implements WabitPersister {
 					throw new WabitPersistenceException(uuid,
 							"Invalid WabitObject type " + wo.getClass());
 				}
-
 				
-				if (!unconditional && 
-						((oldValue == null && propertyValue != null)
-						|| (oldValue != null && !oldValue.equals(propertyValue)))) {
+				if (!unconditional && propertyValue != null &&
+						((oldValue == null) ||
+								(oldValue != null &&
+										(wo instanceof WabitImage && propertyName.equals("image") && 
+												!Arrays.equals((byte[]) oldValue, (byte[]) propertyValue)) ||
+										(!(wo instanceof WabitImage && propertyName.equals("image")) && 
+												!oldValue.equals(propertyValue))))) {
 					throw new WabitPersistenceException(uuid, "For property \""
 							+ propertyName + "\" on WabitObject of type "
 							+ wo.getClass() + " and UUID + " + wo.getUUID()
