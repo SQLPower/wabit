@@ -1840,8 +1840,7 @@ public class WabitSessionPersister implements WabitPersister {
 						String.class));
 
 			} else if (propertyName.equals(Item.GROUP_BY)) {
-				item
-						.setGroupBy((SQLGroupFunction) converter
+				item.setGroupBy((SQLGroupFunction) converter
 								.convertToComplexType(newValue,
 										SQLGroupFunction.class));
 
@@ -3567,25 +3566,9 @@ public class WabitSessionPersister implements WabitPersister {
 	 */
 	private Object getGrantProperty(Grant grant, String propertyName)
 			throws WabitPersistenceException {
-		if (propertyName.equals("createPrivilege")) {
-			return converter.convertToBasicType(grant.isCreatePrivilege());
-
-		} else if (propertyName.equals("deletePrivilege")) {
-			return converter.convertToBasicType(grant.isDeletePrivilege());
-
-		} else if (propertyName.equals("executePrivilege")) {
-			return converter.convertToBasicType(grant.isExecutePrivilege());
-
-		} else if (propertyName.equals("grantPrivilege")) {
-			return converter.convertToBasicType(grant.isGrantPrivilege());
-
-		} else if (propertyName.equals("modifyPrivilege")) {
-			return converter.convertToBasicType(grant.isModifyPrivilege());
-
-		} else {
-			throw new WabitPersistenceException(grant.getUUID(),
-					getWabitPersistenceExceptionMessage(grant, propertyName));
-		}
+		// Grants are immutable
+		throw new WabitPersistenceException(grant.getUUID(),
+				getWabitPersistenceExceptionMessage(grant, propertyName));
 	}
 
 	/**
@@ -3603,6 +3586,8 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitGrantProperty(Grant grant, String propertyName,
 			Object newValue) throws WabitPersistenceException {
 		// Grants are immutable
+		throw new WabitPersistenceException(grant.getUUID(),
+				getWabitPersistenceExceptionMessage(grant, propertyName));
 	}
 
 	/**
