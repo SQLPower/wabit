@@ -287,7 +287,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         query.setParent(this);
         query.setDBMapping(session.getContext());
         fireChildAdded(QueryCache.class, query, index);
-        setEditorPanelModel(query);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(query);
+        }
     }
 
     private boolean removeQuery(QueryCache query, WabitSession session) {
@@ -313,7 +315,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         templates.add(index, template);
         template.setParent(this);
         fireChildAdded(Template.class, template, index);
-        setEditorPanelModel(template);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(template);
+        }
 	}
     
     private boolean removeTemplate(Template template) {
@@ -338,7 +342,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         reports.add(index, report);
         report.setParent(this);
         fireChildAdded(Report.class, report, index);
-        setEditorPanelModel(report);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(report);
+        }
     }
     
     private boolean removeReport(Report report) {
@@ -363,7 +369,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         images.add(index, image);
         image.setParent(this);
         fireChildAdded(WabitImage.class, image, index);
-        setEditorPanelModel(image);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(image);
+        }
     }
     
     private boolean removeImage(WabitImage image) {
@@ -392,7 +400,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         charts.add(index, chart);
         chart.setParent(this);
         fireChildAdded(Chart.class, chart, index);
-        setEditorPanelModel(chart);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(chart);
+        }
     }
     
     private boolean removeChart(Chart chart) {
@@ -489,7 +499,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	users.add(index, u);
     	u.setParent(this);
     	fireChildAdded(User.class, u, index);
-    	setEditorPanelModel(u);
+    	if (!isMagicDisabled()) {
+    		setEditorPanelModel(u);
+    	}
     }
     
     public boolean removeUser(User u) {
@@ -513,7 +525,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	groups.add(index, g);
     	g.setParent(this);
     	fireChildAdded(Group.class, g, index);
-    	setEditorPanelModel(g);
+    	if (!isMagicDisabled()) {
+    		setEditorPanelModel(g);
+    	}
     }
     
     public boolean removeGroup(Group g) {
@@ -541,7 +555,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	}
     	task.setParent(this);
         fireChildAdded(ReportTask.class, task, reportTasks.indexOf(task));
-        setEditorPanelModel(task);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(task);
+        }
     }
     
     public boolean removeReportTask(ReportTask task) {
@@ -775,7 +791,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         olapQueries.add(index, newQuery);
         newQuery.setParent(this);
         fireChildAdded(OlapQuery.class, newQuery, index);
-        setEditorPanelModel(newQuery);
+        if (!isMagicDisabled()) {
+        	setEditorPanelModel(newQuery);
+        }
     }
 
     private boolean removeOlapQuery(OlapQuery query) {
