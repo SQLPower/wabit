@@ -140,6 +140,15 @@ public class WabitServerSession extends WabitSessionImpl {
 
     @Override
     public boolean close() {
+    	try {
+    		HttpUriRequest request = new HttpDelete(getServerURI(workspaceLocation.getServiceInfo(), 
+    				"session/" + getWorkspace().getUUID()));
+			outboundHttpClient.execute(request, new BasicResponseHandler());
+		} catch (Exception e) {
+			logger.error(e);
+			getContext().createUserPrompter("Cannot access the server to close the server session", 
+					UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK, null);
+		}
         outboundHttpClient.getConnectionManager().shutdown();
         updater.interrupt();
         return super.close();
