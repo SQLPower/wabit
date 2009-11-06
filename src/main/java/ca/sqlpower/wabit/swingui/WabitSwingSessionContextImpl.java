@@ -1815,15 +1815,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
         }
 
-        /*
-         *  Must iterate over copy of session list because the
-         *  real list will shrink as we close the sessions!
-         */
-        List<WabitSession> sessionsToClose = new ArrayList<WabitSession>(getSessions());
-        for (WabitSession session : sessionsToClose) {
-            session.close();
-        }
-
         frame.dispose();
 
         getPrefs().remove(PREFS_OPEN_WORKSPACES);
