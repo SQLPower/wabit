@@ -234,6 +234,15 @@ public class StackedTabComponent extends JComponent {
 			
 			this.subComponent = component;
 		}
+
+		/**
+		 * Returns the Component representing the Tab in the stack of tabs
+		 */
+		public Component getTabComponent() {
+			return tabComponent;
+		}
+		
+		
 	}
 
     /**
@@ -409,5 +418,12 @@ public class StackedTabComponent extends JComponent {
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * Returns the StackedTab representing the currently selected tab.
+	 */
+	public StackedTab getSelectedTab() {
+		return selectedTab;
 	}
 }

@@ -38,6 +38,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -160,6 +162,7 @@ import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -174,6 +177,7 @@ import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.StackedTabComponent.StackedTab;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.DeleteWabitServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
@@ -188,6 +192,7 @@ import ca.sqlpower.wabit.swingui.action.NewTemplateAction;
 import ca.sqlpower.wabit.swingui.action.NewUserAction;
 import ca.sqlpower.wabit.swingui.action.NewWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.OpenWorkspaceAction;
+import ca.sqlpower.wabit.swingui.action.RenameWabitServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.SaveWorkspaceAsAction;
 import ca.sqlpower.wabit.swingui.action.ShowWabitApplicationPreferencesAction;
@@ -1920,20 +1925,46 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	 *            registered.
 	 */
     public void registerChildSession(WabitSession child) {
+    	WabitSwingSession swingSession;
     	if (!(child instanceof WabitSwingSession)) {
-    		child = new WabitSwingSessionImpl(this, child);
+    		swingSession = new WabitSwingSessionImpl(this, child);
+    	} else {
+    		swingSession = (WabitSwingSession) child;
     	}
-        WabitSwingSession swingSession = (WabitSwingSession) child;
         swingSession.addSessionLifecycleListener(childSessionLifecycleListener);
         delegateContext.registerChildSession(swingSession);
         
         // mark the session clean (this is the correct way, according to interface docs)
         swingSession.setCurrentURI(swingSession.getCurrentURI());
-        
         swingSession.getWorkspace().addWabitListener(nameChangeListener);
-        StackedTab tab = stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
+        
+        final StackedTab tab = stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
+        if (child instanceof WabitServerSession) {
+        	final JPopupMenu tabMenu = new JPopupMenu();
+        	tabMenu.add(new DeleteWabitServerWorkspaceAction((WabitServerSession) child));
+        	tabMenu.add(new RenameWabitServerWorkspaceAction((WabitServerSession) child, getFrame()));
+			tab.getTabComponent().addMouseListener(new MouseAdapter() {
+				public void mouseClicked(MouseEvent e) {
+	            	maybeShowPopup(e);
+	            }
+
+	            public void mousePressed(MouseEvent e) {
+	            	maybeShowPopup(e);
+	            }
+	            
+	            public void mouseReleased(MouseEvent e) {
+	            	maybeShowPopup(e);
+	            }
+	            
+	            private void maybeShowPopup(MouseEvent e) {
+	            	if (e.isPopupTrigger() && stackedTabPane.getSelectedTab() == tab) {
+	            		tabMenu.show(tab.getTabComponent(), e.getX(), e.getY());
+	            	}
+	            }
+			});
+        }
 		stackedTabPane.setSelectedIndex(stackedTabPane.indexOfTab(tab));
-		sessionTabs .put(swingSession, tab);
+		sessionTabs.put(swingSession, tab);
     }
 
     public Preferences getPrefs() {

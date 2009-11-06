@@ -69,4 +69,8 @@ public class WorkspaceLocation {
 		return serviceInfo;
 	}
 	
+	@Override
+	public String toString() {
+		return serviceInfo + ", uuid=" + uuid;
+	}
 }

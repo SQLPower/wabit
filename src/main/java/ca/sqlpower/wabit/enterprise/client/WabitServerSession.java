@@ -35,6 +35,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -248,6 +249,20 @@ public class WabitServerSession extends WabitSessionImpl {
     	}
     }
 
+    public void deleteServerWorkspace() throws URISyntaxException, ClientProtocolException, IOException {
+    	WabitServerInfo serviceInfo = workspaceLocation.getServiceInfo();
+    	HttpClient httpClient = createHttpClient(serviceInfo);
+    	try {
+    		HttpUriRequest request = new HttpDelete(getServerURI(serviceInfo, "workspaces/" + getWorkspace().getUUID()));
+    		httpClient.execute(request, new BasicResponseHandler());
+    	} catch (ClientProtocolException ex) {
+    		throw new ClientProtocolException("ClientProtocolException while trying to delete workspace at " + 
+    				workspaceLocation, ex);
+    	} finally {
+    		httpClient.getConnectionManager().shutdown();
+    	}
+    }
+    
 	/**
 	 * Finds and opens a specific Wabit Workspace from the given
 	 * {@link WorkspaceLocation}. The new session will keep itself up-to-date by
