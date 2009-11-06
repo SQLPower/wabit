@@ -57,9 +57,9 @@ public class WabitAccessManager {
 	
 	protected User currentUser;
 	
-	private WabitSession systemSession;
+	protected WabitSession systemSession;
 	
-	private WabitSession currentSession;
+	protected WabitSession currentSession;
 	
 	public WabitAccessManager() {
 		// Due to jackrabbit's access manager interface, state is defined in init
