@@ -67,6 +67,7 @@ import ca.sqlpower.wabit.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
 import ca.sqlpower.wabit.dao.json.WabitJSONPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
+import ca.sqlpower.wabit.http.WabitHttpResponseHandler;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
@@ -263,10 +264,7 @@ public class WabitServerSession extends WabitSessionImpl {
     	HttpClient httpClient = createHttpClient(serviceInfo);
     	try {
     		HttpUriRequest request = new HttpDelete(getServerURI(serviceInfo, "workspaces/" + getWorkspace().getUUID()));
-    		httpClient.execute(request, new BasicResponseHandler());
-    	} catch (ClientProtocolException ex) {
-    		throw new ClientProtocolException("ClientProtocolException while trying to delete workspace at " + 
-    				workspaceLocation, ex);
+    		httpClient.execute(request, new WabitHttpResponseHandler());
     	} finally {
     		httpClient.getConnectionManager().shutdown();
     	}

@@ -45,12 +45,12 @@ public class DeleteWabitServerWorkspaceAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 		try {
 			session.deleteServerWorkspace();
-		} catch (ClientProtocolException e1) {
-			throw new RuntimeException(e1);
-		} catch (URISyntaxException e1) {
-			throw new RuntimeException(e1);
-		} catch (IOException e1) {
-			throw new RuntimeException(e1);
+		} catch (ClientProtocolException ex) {
+			throw new RuntimeException(ex);
+		} catch (URISyntaxException ex) {
+			throw new RuntimeException(ex);
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
 		}
 		session.close();
 	}
