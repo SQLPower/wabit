@@ -23,15 +23,11 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.CharBuffer;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.beanutils.ConversionException;
-import org.apache.commons.codec.binary.Base64;
 
 import ca.sqlpower.wabit.dao.PersisterUtils;
 
