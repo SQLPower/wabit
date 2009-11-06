@@ -868,7 +868,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         wabitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         statusLabel= new JLabel();
-        stackedTabPane = new StackedTabComponent(this);
+        stackedTabPane = new StackedTabComponent();
         stackedTabPane.setDropTarget(new DropTarget(stackedTabPane, treeTabDropTargetListener));
 
         InputMap inputMap = stackedTabPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -1956,18 +1956,33 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	            }
 
 	            public void mousePressed(MouseEvent e) {
-	            	maybeShowPopup(e);
+	            	boolean showedPopup = maybeShowPopup(e);
+					if (!showedPopup && tab.isCloseable() && tab.closeButtonContains(e.getX(), e.getY())) {
+						CloseWorkspaceAction.closeActiveWorkspace(WabitSwingSessionContextImpl.this);
+					}
 	            }
 	            
 	            public void mouseReleased(MouseEvent e) {
 	            	maybeShowPopup(e);
 	            }
 	            
-	            private void maybeShowPopup(MouseEvent e) {
+	            private boolean maybeShowPopup(MouseEvent e) {
 	            	if (e.isPopupTrigger() && stackedTabPane.getSelectedTab() == tab) {
 	            		tabMenu.show(tab.getTabComponent(), e.getX(), e.getY());
+	            		return true;
+	            	} else {
+	            		return false;
 	            	}
 	            }
+			});
+        } else {
+        	tab.getTabComponent().addMouseListener(new MouseAdapter() {
+        		 public void mousePressed(MouseEvent e) {
+ 					if (tab.isCloseable() && tab.closeButtonContains(e.getX(), e.getY())
+ 							&& CloseWorkspaceAction.checkUnsavedChanges(WabitSwingSessionContextImpl.this)) {
+ 						CloseWorkspaceAction.closeActiveWorkspace(WabitSwingSessionContextImpl.this);
+ 					}
+ 	            }
 			});
         }
 		stackedTabPane.setSelectedIndex(stackedTabPane.indexOfTab(tab));

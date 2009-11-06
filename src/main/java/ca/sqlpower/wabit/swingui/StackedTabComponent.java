@@ -45,8 +45,6 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
-
 /**
  * A custom JComponent to implement the idea of a 'stack' of tabs. The idea is
  * similar to the JTabbedPane, except the tabs are stacked on top of each other
@@ -99,10 +97,7 @@ public class StackedTabComponent extends JComponent {
 	 */
 	private List<ChangeListener> changeListeners = new ArrayList<ChangeListener>();
 	
-	private final WabitSwingSessionContext context;
-	
-	public StackedTabComponent(WabitSwingSessionContext context) {
-		this.context = context;
+	public StackedTabComponent() {
 		setLayout(new MigLayout("flowy, hidemode 3, fill, ins 0, gap 0 0", "", ""));
 	}
 	
@@ -131,6 +126,8 @@ public class StackedTabComponent extends JComponent {
 		
 		private final JComponent tabComponent;
 
+		private final boolean closeable;
+
 		/**
 		 * Creates a new StackedTab with the given title and containing the
 		 * given {@link Component}
@@ -144,6 +141,7 @@ public class StackedTabComponent extends JComponent {
 		 */
 		private StackedTab(String title, Component component, boolean closeable) {
 			this.title = title;
+			this.closeable = closeable;
 			tabComponent = new JPanel(new MigLayout("hidemode 3, fill, ins 0, gap 0 0", "", ""));
 			if (closeable) {
 				closeIconComponent = new JLabel(closeIcon) {
@@ -208,21 +206,6 @@ public class StackedTabComponent extends JComponent {
 
 				public void mousePressed(MouseEvent e) {
 					setSelectedIndex(tabs.indexOf(StackedTab.this));
-					if (closeIconComponent != null) {
-						int relativeX = e.getX() - closeIconComponent.getX();
-						int relativeY = e.getY() - closeIconComponent.getY();
-						if (closeIconComponent.contains(relativeX, relativeY)) {
-							// XXX: Since the context linstens to this
-							// StackedTabComponent with a ChangeListener,
-							// there's probably a way to notify the context to
-							// close a workspace through that or another
-							// listener. Then CloseWorkspaceAction doesn't have
-							// to expose another public static method.
-							if (CloseWorkspaceAction.checkUnsavedChanges(context)) {
-							    CloseWorkspaceAction.closeActiveWorkspace(context);
-							}
-						}
-					}
 				}
 
 				public void mouseReleased(MouseEvent e) {
@@ -241,7 +224,25 @@ public class StackedTabComponent extends JComponent {
 		public Component getTabComponent() {
 			return tabComponent;
 		}
-		
+
+		public boolean isCloseable() {
+			return closeable;
+		}
+
+		/**
+		 * Returns true if the close 'button' is contained with the given
+		 * xy co-ordinates. The xy co-ordinates should be relative to the
+		 * StackedTab tab component.
+		 */
+		public boolean closeButtonContains(int x, int y) {
+			int relativeX = x - closeIconComponent.getX();
+			int relativeY = y - closeIconComponent.getY();
+			if (closeIconComponent.contains(relativeX, relativeY)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
 		
 	}
 
