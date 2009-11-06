@@ -428,17 +428,27 @@ public class WorkspaceTreeListener extends MouseAdapter {
      */
 	public JMenu createDataSourcesMenu() {
         JMenu dbcsMenu = new JMenu("Add Data Source"); //$NON-NLS-1$
-//        dbcsMenu.add(new JMenuItem(new NewDataSourceAction(this)));
-//        dbcsMenu.addSeparator();
 
-        for (SPDataSource dbcs : session.getContext().getDataSources().getConnections()) {
-        	JMenuItem newMenuItem = new JMenuItem(new AddDataSourceAction(session.getWorkspace(), dbcs));
-        	if (dbcs instanceof Olap4jDataSource) {
-        		newMenuItem.setIcon(OLAP_DB_ICON);
-        	} else if (dbcs instanceof JDBCDataSource) {
-        		newMenuItem.setIcon(DB_ICON);
+        if (session.isEnterpriseServerSession()) {
+        	for (SPDataSource dbcs : session.getDataSources().getConnections()) {
+        		JMenuItem newMenuItem = new JMenuItem(new AddDataSourceAction(session.getWorkspace(), dbcs));
+        		if (dbcs instanceof Olap4jDataSource) {
+        			newMenuItem.setIcon(OLAP_DB_ICON);
+        		} else if (dbcs instanceof JDBCDataSource) {
+        			newMenuItem.setIcon(DB_ICON);
+        		}
+        		dbcsMenu.add(newMenuItem);
         	}
-        	dbcsMenu.add(newMenuItem);
+        } else {
+        	for (SPDataSource dbcs : session.getContext().getDataSources().getConnections()) {
+        		JMenuItem newMenuItem = new JMenuItem(new AddDataSourceAction(session.getWorkspace(), dbcs));
+        		if (dbcs instanceof Olap4jDataSource) {
+        			newMenuItem.setIcon(OLAP_DB_ICON);
+        		} else if (dbcs instanceof JDBCDataSource) {
+        			newMenuItem.setIcon(DB_ICON);
+        		}
+        		dbcsMenu.add(newMenuItem);
+        	}
         }
         SPSUtils.breakLongMenu(context.getFrame(), dbcsMenu);
         
