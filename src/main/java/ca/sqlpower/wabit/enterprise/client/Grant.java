@@ -79,6 +79,11 @@ public class Grant extends AbstractWabitObject {
     }
 
     @Override
+    public void setName(String name) {
+    	// no op
+    }
+    
+    @Override
     public String getName() {
         if (this.subject != null) {
             return this.subject.concat(" - ").concat(this.getPermsString());
