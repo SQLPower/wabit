@@ -141,6 +141,7 @@ public class WabitServerSession extends WabitSessionImpl {
 
     @Override
     public boolean close() {
+    	logger.debug("Closing Client Session");
     	try {
     		HttpUriRequest request = new HttpDelete(getServerURI(workspaceLocation.getServiceInfo(), 
     				"session/" + getWorkspace().getUUID()));
@@ -357,6 +358,8 @@ public class WabitServerSession extends WabitSessionImpl {
 		 * Used by the Updater to handle inbound HTTP updates
 		 */
 		private final HttpClient inboundHttpClient;
+
+		private volatile boolean cancelled;
 		
 		/**
 		 * Creates, but does not start, the updater thread.
@@ -370,6 +373,12 @@ public class WabitServerSession extends WabitSessionImpl {
 			this.jsonDecoder = jsonDecoder;
 			inboundHttpClient = createHttpClient(workspaceLocation.getServiceInfo());
 		}
+		
+		public void interrupt() {
+			logger.debug("Updater Thread interrupt sent");
+			super.interrupt();
+			cancelled = true;
+		}
         
 		@Override
 		public void run() {
@@ -379,7 +388,7 @@ public class WabitServerSession extends WabitSessionImpl {
 			final String contextRelativePath = "workspaces/" + getWorkspace().getUUID();
 			
 			try {
-				for (;;) {
+				while (!this.isInterrupted() && !cancelled) {
 					try {
 						final String jsonArray = executeServerRequest(
 								inboundHttpClient, workspaceLocation.getServiceInfo(),
