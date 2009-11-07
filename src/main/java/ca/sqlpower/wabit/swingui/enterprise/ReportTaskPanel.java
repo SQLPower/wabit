@@ -368,7 +368,7 @@ public class ReportTaskPanel implements WabitPanel {
 	private void reinitGuiModel() {
 		if (task.getReport()!=null) {
 			this.reportComboBox.setSelectedItem(task.getReport());
-		} else {
+		} else if (this.reportComboBox.getItemCount() > 0){
 			this.reportComboBox.setSelectedIndex(0);
 		}
 		if (task.getEmail()==null) {
