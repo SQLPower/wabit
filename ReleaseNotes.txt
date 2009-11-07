@@ -1,5 +1,13 @@
 Wabit Release Notes
 
+Noteworthy Changes in 1.0.0
+
+  User Interface
+    * Added 'Gratuitous Animation' feature to charts
+    
+  Wabit Enterprise Server Support
+    * Added support for connecting to, and communicating with the Wabit Enterprise Server   
+
 Noteworthy Changes in 0.9.9
 
   User Interface
