@@ -146,9 +146,13 @@ public class WabitServerSession extends WabitSessionImpl {
     				"session/" + getWorkspace().getUUID()));
 			outboundHttpClient.execute(request, new BasicResponseHandler());
 		} catch (Exception e) {
-			logger.error(e);
-			getContext().createUserPrompter("Cannot access the server to close the server session", 
-					UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK, null);
+			try {
+				logger.error(e);
+				getContext().createUserPrompter("Cannot access the server to close the server session", 
+						UserPromptType.MESSAGE, UserPromptOptions.OK, UserPromptResponse.OK, UserPromptResponse.OK, "OK");
+			} catch (Throwable t) {
+				//do nothing here because we failed on logging the error.
+			}
 		}
         outboundHttpClient.getConnectionManager().shutdown();
         updater.interrupt();
