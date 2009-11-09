@@ -58,7 +58,7 @@ public abstract class ServerInfoProvider {
 			String password) throws MalformedURLException,IOException 
 	{
 		init(toURL(host, port, path), username, password);
-		return version.get(toURL(host, port, path).toString().concat(username).concat(password));
+		return version.get(generateServerKey(host, port, path, username, password));
 	}
 	
 	public static boolean isServerLicensed(WabitServerInfo infos) 
@@ -80,7 +80,7 @@ public abstract class ServerInfoProvider {
 			String password) throws MalformedURLException,IOException 
 	{
 		init(toURL(host, port, path), username, password);
-		return licenses.get(toURL(host, port, path).toString().concat(username).concat(password));
+		return licenses.get(generateServerKey(host, port, path, username, password));
 	}
 	
 	private static URL toURL(
@@ -99,12 +99,11 @@ public abstract class ServerInfoProvider {
 		
 		// Spawn a connection object
 		return new URL(sb.toString());
-		
 	}
 
 	private static void init(URL url, String username, String password) throws IOException {
 		
-		if (version.containsKey(url.toString().concat(username).concat(password))) return;
+		if (version.containsKey(generateServerKey(url, username, password))) return;
 		
 		try {
 			HttpParams params = new BasicHttpParams();
@@ -132,9 +131,9 @@ public abstract class ServerInfoProvider {
 			}
 			
 			// Save found values
-			version.put(url.toString().concat(username).concat(password), new Version(serverVersion));
-			licenses.put(url.toString().concat(username).concat(password), licensedServer);
-			watermarkMessages.put(url.toString().concat(username).concat(password), watermarkMessage);
+			version.put(generateServerKey(url, username, password), new Version(serverVersion));
+			licenses.put(generateServerKey(url, username, password), licensedServer);
+			watermarkMessages.put(generateServerKey(url, username, password), watermarkMessage);
 			
 		} catch (URISyntaxException e) {
 			throw new IOException(e.getLocalizedMessage());
@@ -162,7 +161,7 @@ public abstract class ServerInfoProvider {
 		String message = defaultWatermarkMessage;
 		try {
 			if (!isServerLicensed(host,port,path,username,password)) {
-				message = watermarkMessages.get(toURL(host, port, path).toString().concat(username).concat(password));
+				message = watermarkMessages.get(generateServerKey(host, port, path, username, password));
 			} else {
 				message = "";
 			}
@@ -170,5 +169,31 @@ public abstract class ServerInfoProvider {
 			// no op
 		}
 		return message;		
+	}
+	
+	private static String generateServerKey(
+			String host, 
+			String port, 
+			String path, 
+			String username, 
+			String password) throws MalformedURLException 
+	{
+		return generateServerKey(
+			toURL(host, port, path), 
+			username, 
+			password);
+	}
+	
+	private static String generateServerKey(
+			URL url, 
+			String username, 
+			String password) 
+	{
+		return 
+			String.valueOf(
+				url.toString()
+					.concat(username)
+					.concat(password)
+				.hashCode());
 	}
 }
