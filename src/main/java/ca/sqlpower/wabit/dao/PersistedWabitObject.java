@@ -108,8 +108,11 @@ public class PersistedWabitObject {
 		
 		PersistedWabitObject pwo = (PersistedWabitObject) obj;
 		
-		return getParentUUID().equals(pwo.getParentUUID()) 
-				&& getType().equals(pwo.getType()) && getUUID().equals(pwo.getUUID()) 
+		if ((getParentUUID() == null && pwo.getParentUUID() != null)
+				|| (getParentUUID() != null && !getParentUUID().equals(pwo.getParentUUID())))
+			return false;
+		
+		return getType().equals(pwo.getType()) && getUUID().equals(pwo.getUUID()) 
 				&& getIndex() == pwo.getIndex() && isLoaded() == pwo.isLoaded();
 		
 	}
