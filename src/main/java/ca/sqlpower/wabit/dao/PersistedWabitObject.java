@@ -116,5 +116,19 @@ public class PersistedWabitObject {
 				&& getIndex() == pwo.getIndex() && isLoaded() == pwo.isLoaded();
 		
 	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 17;
+		
+		result = prime * result + (parentUUID == null ? 0 : parentUUID.hashCode());
+		result = prime * result + type.hashCode();
+		result = prime * result + uuid.hashCode();
+		result = prime * result + index;
+		result = prime * result + (loaded ? 1 : 0);
+		
+		return result;
+	}
 
 }

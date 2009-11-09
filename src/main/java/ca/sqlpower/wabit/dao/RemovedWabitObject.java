@@ -59,4 +59,15 @@ public class RemovedWabitObject {
 				&& getUUID().equals(pwo.getUUID()); 
 		
 	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 17;
+		
+		result = prime * result + parentUUID.hashCode();
+		result = prime * result + uuid.hashCode();
+		
+		return result;
+	}
 }

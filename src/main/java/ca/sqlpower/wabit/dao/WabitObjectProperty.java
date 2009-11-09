@@ -126,4 +126,19 @@ public class WabitObjectProperty {
 				&& getNewValue().equals(wop.getNewValue());
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 17;
+		
+		result = prime * result + (unconditional ? 1 : 0);
+		result = prime * result + ((oldValue == null) ? 0 : oldValue.hashCode());
+		result = prime * result + uuid.hashCode();
+		result = prime * result + propertyName.hashCode();
+		result = prime * result + dataType.hashCode();
+		result = prime * result + ((newValue == null) ? 0 : newValue.hashCode());
+		
+		return result;
+	}
+	
 }
