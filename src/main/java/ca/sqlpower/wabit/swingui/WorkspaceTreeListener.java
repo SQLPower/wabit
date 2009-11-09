@@ -329,14 +329,19 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			securityMenu(menu, WabitWorkspace.class.getSimpleName(), null);
 			menu.addSeparator();
 			
-			menu.add(newQuery);
-			menu.add(newOlapQuery);
-			menu.add(newChart);
-			menu.add(newImage);
-			menu.add(newTemplate);
-			menu.add(newReport);
-			if (this.session.isEnterpriseServerSession()) {
-				menu.add(newReportTask);
+			if (this.session.getWorkspace().isSystemWorkspace()) {
+				menu.add(newUser);
+				menu.add(newGroup);
+			} else {
+				menu.add(newQuery);
+				menu.add(newOlapQuery);
+				menu.add(newChart);
+				menu.add(newImage);
+				menu.add(newTemplate);
+				menu.add(newReport);
+				if (this.session.isEnterpriseServerSession()) {
+					menu.add(newReportTask);
+				}
 			}
 		}
 		if (!(lastPathComponent instanceof ContentBox) && 
