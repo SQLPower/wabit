@@ -24,8 +24,6 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
@@ -36,9 +34,7 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
  * An action that, when invoked, opens all visible sessions on a specific target server.
  */
 public class LogInToServerAction extends AbstractAction {
-    
-    private static final Logger logger = Logger.getLogger(LogInToServerAction.class);
-    
+
     private final WabitServerInfo serviceInfo;
     private final Component dialogOwner;
     private final WabitSessionContext context;
