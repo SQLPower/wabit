@@ -88,14 +88,14 @@ public class ServerInfoPanel implements DataEntryPanel {
         builder.append("Username", username = new JTextField(si.getUsername()));
         builder.append("Password", password = new JPasswordField(si.getPassword()));
         
-        builder.appendSeparator();
-        
-        builder.append("", testButton = new JButton("Test connection"));
+        builder.append("Test this connection", testButton = new JButton("Test"));
         this.testButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				lookupServerInfo(true);
 			}
 		});
+        
+        builder.appendParagraphGapRow();
         
         return builder.getPanel();
     }
@@ -126,7 +126,7 @@ public class ServerInfoPanel implements DataEntryPanel {
 			if (confirm) {
 				JOptionPane.showMessageDialog(
 						dialogOwner, 
-						"Connection valid and established.",
+						"Connection parameters seem to be valid.",
 						"Success!", 
 						JOptionPane.INFORMATION_MESSAGE);
 			}

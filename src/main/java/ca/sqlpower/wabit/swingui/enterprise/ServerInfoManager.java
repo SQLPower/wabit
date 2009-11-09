@@ -23,6 +23,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.Callable;
@@ -40,6 +41,7 @@ import javax.swing.SwingUtilities;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.swingui.LogInToServerAction;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.factories.ButtonBarFactory;
@@ -54,6 +56,7 @@ public class ServerInfoManager {
     private final Component dialogOwner;
     private final JPanel panel;
     private JList serverInfos;
+    private final JButton connectButton;
     
     private Action removeAction = new AbstractAction("Remove") {
 
@@ -83,9 +86,9 @@ public class ServerInfoManager {
     	}
     };
 
-    public ServerInfoManager(WabitSessionContext context, Component dialogOwner) {
-        this.context = context;
-        this.dialogOwner = dialogOwner;
+    public ServerInfoManager(WabitSessionContext m_context, Component m_dialogOwner) {
+        this.context = m_context;
+        this.dialogOwner = m_dialogOwner;
         DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
         
         serverInfos = new JList(new DefaultListModel());
@@ -102,10 +105,40 @@ public class ServerInfoManager {
         JScrollPane scrollPane = new JScrollPane(serverInfos);
         scrollPane.setPreferredSize(new Dimension(400, 300));
 
-        refreshInfoList();
+        this.connectButton = new JButton("Connect");
+        this.connectButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) 
+			{
+				WabitServerInfo selectedItem = 
+					(WabitServerInfo) serverInfos.getSelectedValue();
+				
+				Window dialogParent;
+		        if (dialogOwner instanceof Window) {
+		            dialogParent = (Window) dialogOwner;
+		        } else {
+		            dialogParent = SwingUtilities.getWindowAncestor(dialogOwner);
+		        }
+		        
+				if (selectedItem != null) {
+				    LogInToServerAction action = 
+				    	new LogInToServerAction(
+				    		dialogParent, 
+				    		selectedItem, 
+				    		context);
+				    action.actionPerformed(e);
+				}
+			}
+		});
         
+        // Build the GUI
+        refreshInfoList();
         builder.append(scrollPane);
-        builder.append(ButtonBarFactory.buildAddRemovePropertiesLeftBar(new JButton(addAction), new JButton(removeAction), new JButton(editAction)));
+        builder.append(
+        	ButtonBarFactory.buildRightAlignedBar(new JButton[] {
+        		new JButton(addAction), 
+        		new JButton(removeAction), 
+        		new JButton(editAction),
+        		this.connectButton}));
         builder.setDefaultDialogBorder();
         panel = builder.getPanel();
     }
@@ -165,7 +198,7 @@ public class ServerInfoManager {
         };
 
         JDialog dialog = DataEntryPanelBuilder.createDataEntryPanelDialog(
-                infoPanel, dialogParent, "New Server Connection", "OK",
+                infoPanel, dialogParent, "Server Connection Properties", "OK",
                 okCall, cancelCall);
 
         dialog.setVisible(true);
