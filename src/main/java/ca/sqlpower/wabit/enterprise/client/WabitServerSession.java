@@ -19,22 +19,27 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.swing.SwingUtilities;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -42,15 +47,21 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.DatabaseListChangeEvent;
+import ca.sqlpower.sql.DatabaseListChangeListener;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -99,7 +110,21 @@ public class WabitServerSession extends WabitSessionImpl {
 	private final WabitSessionPersister sessionPersister;
 	
 	private static CookieStore cookieStore = new BasicCookieStore();
-	
+
+    /**
+     * The data source collection retrieved from the server. This field is
+     * lazy-loaded; it should always be accessed by calling
+     * {@link #getDataSources()}. This data source is monitored for changes, and
+     * those changes are posted back to the server.
+     */
+    private DataSourceCollection<SPDataSource> dataSourceCollection;
+
+    /**
+     * Sends changes to the local copy of the data source collection back to the
+     * server. Gets detached and shut down when this session is closed.
+     */
+    private final DataSourceCollectionUpdater dataSourceCollectionUpdater = new DataSourceCollectionUpdater();
+
     public WabitServerSession(
     		@Nonnull WorkspaceLocation workspaceLocation,
     		@Nonnull WabitSessionContext context) {
@@ -157,6 +182,11 @@ public class WabitServerSession extends WabitSessionImpl {
 		}
         outboundHttpClient.getConnectionManager().shutdown();
         updater.interrupt();
+        
+        if (dataSourceCollection != null) {
+            dataSourceCollectionUpdater.detach(dataSourceCollection);
+        }
+        
         return super.close();
     }
 
@@ -166,9 +196,186 @@ public class WabitServerSession extends WabitSessionImpl {
     public WorkspaceLocation getWorkspaceLocation() {
         return workspaceLocation;
     }
+
+    /**
+     * Sends local data source collection changes to the server. In order for
+     * this to work, the data source collection must be attached. To prevent
+     * memory leaks, the collection updater must be detached from all data
+     * source collections it was monitoring when the Wabit session is closed.
+     */
+    private class DataSourceCollectionUpdater implements DatabaseListChangeListener, PropertyChangeListener {
+
+        public void attach(DataSourceCollection<SPDataSource> dsCollection) {
+            dsCollection.addDatabaseListChangeListener(this);
+            for (SPDataSource ds : dsCollection.getConnections()) {
+                ds.addPropertyChangeListener(this);
+            }
+        }
+        
+        public void detach(DataSourceCollection<SPDataSource> dsCollection) {
+            dsCollection.removeDatabaseListChangeListener(this);
+            for (SPDataSource ds : dsCollection.getConnections()) {
+                ds.removePropertyChangeListener(this);
+            }
+        }
+
+        /**
+         * Handles the addition of a new database entry, relaying its current
+         * state to the server. Also begins listening to the new data source as
+         * would have happened if the new data source existed before
+         * {@link #attach(DataSourceCollection)} was invoked.
+         */
+        public void databaseAdded(DatabaseListChangeEvent e) {
+            SPDataSource newDS = e.getDataSource();
+            newDS.addPropertyChangeListener(this);
+            
+            List<NameValuePair> properties = new ArrayList<NameValuePair>();
+            for (Map.Entry<String, String> ent : newDS.getPropertiesMap().entrySet()) {
+                properties.add(new BasicNameValuePair(ent.getKey(), ent.getValue()));
+            }
+            
+            postPropertiesToServer(newDS, properties);
+        }
+
+        /**
+         * Handles changes to individual data sources by relaying their new
+         * state to the server.
+         * <p>
+         * <b>Implementation note:</b> Presently, all properties for the data
+         * source are sent back to the server every time one of them changes.
+         * This is not the desired behaviour, but without rethinking the
+         * SPDataSource event system, there is little else we can do: the
+         * property change events tell us JavaBeans property names, but in order
+         * to send incremental updates, we's need to know the pl.ini property
+         * key names.
+         * 
+         * @param evt
+         *            The event describing the change. Its source must be the
+         *            data source object which was modified.
+         */
+        public void propertyChange(PropertyChangeEvent evt) {
+            SPDataSource ds = (SPDataSource) evt.getSource();
+            ds.addPropertyChangeListener(this);
+            
+            // Updating all properties is less than ideal, but a property change event does
+            // not tell us what the "pl.ini" key for the property is.
+            List<NameValuePair> properties = new ArrayList<NameValuePair>();
+            for (Map.Entry<String, String> ent : ds.getPropertiesMap().entrySet()) {
+                properties.add(new BasicNameValuePair(ent.getKey(), ent.getValue()));
+            }
+            
+            postPropertiesToServer(ds, properties);
+        }
+
+        /**
+         * Modifies the properties of the given data source on the server. If
+         * the given data source does not exist on the server, it will be
+         * created with all of the given properties.
+         * 
+         * @param ds
+         *            The data source to update on the server.
+         * @param properties
+         *            The properties to update. No properties will be removed
+         *            from the server, and only the given properties will be
+         *            updated or created.
+         */
+        private void postPropertiesToServer(SPDataSource ds,
+                List<NameValuePair> properties) {
+            HttpClient httpClient = createHttpClient(workspaceLocation.getServiceInfo());
+            try {
+                
+                HttpPost request = new HttpPost(dataSourceURI(ds));
+                
+                request.setEntity(new UrlEncodedFormEntity(properties));
+                httpClient.execute(request, new ResponseHandler<Void>() {
+                    public Void handleResponse(HttpResponse response)
+                            throws ClientProtocolException, IOException {
+                        
+                        if (response.getStatusLine().getStatusCode() != 200) {
+                            throw new ClientProtocolException(
+                                    "Failed to create/update data source on server. Reason:\n" +
+                                    EntityUtils.toString(response.getEntity()));
+                        } else {
+                            // success!
+                            return null;
+                        }
+                        
+                    }
+                });
+                
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            } finally {
+                httpClient.getConnectionManager().shutdown();
+            }
+        }
+
+        /**
+         * Handles deleting of a database entry by requesting that the server
+         * deletes it. Also unlistens to the data source to prevent memory
+         * leaks.
+         */
+        public void databaseRemoved(DatabaseListChangeEvent e) {
+            HttpClient httpClient = createHttpClient(workspaceLocation.getServiceInfo());
+            try {
+                SPDataSource removedDS = e.getDataSource();
+                
+                HttpDelete request = new HttpDelete(dataSourceURI(removedDS));
+                
+                httpClient.execute(request, new ResponseHandler<Void>() {
+                    public Void handleResponse(HttpResponse response)
+                            throws ClientProtocolException, IOException {
+                        
+                        if (response.getStatusLine().getStatusCode() != 200) {
+                            throw new ClientProtocolException(
+                                    "Failed to delete data source on server. Reason:\n" +
+                                    EntityUtils.toString(response.getEntity()));
+                        } else {
+                            // success!
+                            return null;
+                        }
+                        
+                    }
+                });
+                
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            } finally {
+                httpClient.getConnectionManager().shutdown();
+            }
+        }
+        
+        /**
+         * Returns the URI that references the given data source on the server.
+         * 
+         * @param ds
+         *            The data source whose server URI to return.
+         * @return An absolute URI for the given data source on this session's
+         *         Wabit server.
+         */
+        private URI dataSourceURI(SPDataSource ds) throws URISyntaxException {
+            String type;
+            if (ds instanceof JDBCDataSource) {
+                type = "jdbc";
+            } else if (ds instanceof Olap4jDataSource) {
+                type = "olap4j";
+            } else {
+                throw new UnsupportedOperationException(
+                        "Data source type " + ds.getClass() + " is not known");
+            }
+            
+            return getServerURI(
+                    workspaceLocation.getServiceInfo(),
+                    "data-sources/" + type + "/" + ds.getName());
+        }
+    }
     
     /**
-     * Retrieves the data source list from the server.
+     * Returns the server's data source list, retrieving it from the server if
+     * that has not already been done during this session. Changes made to this
+     * data source collection will be sent back to the server, but the changes
+     * will not be applied on the server side unless the user has the
+     * appropriate permissions.
      * <p>
      * Future plans: In the future, the server will probably be a proxy for all
      * database operations, and we won't actually send the connection
@@ -177,6 +384,9 @@ public class WabitServerSession extends WabitSessionImpl {
      */
     @Override
     public DataSourceCollection<SPDataSource> getDataSources() {
+        
+        if (dataSourceCollection != null) return dataSourceCollection;
+        
         ResponseHandler<DataSourceCollection<SPDataSource>> plIniHandler = 
             new ResponseHandler<DataSourceCollection<SPDataSource>>() {
             public DataSourceCollection<SPDataSource> handleResponse(HttpResponse response)
@@ -197,10 +407,14 @@ public class WabitServerSession extends WabitSessionImpl {
             }
         };
         try {
-            return executeServerRequest(outboundHttpClient, workspaceLocation.getServiceInfo(), "data-sources/", plIniHandler);
+            dataSourceCollection = executeServerRequest(outboundHttpClient, workspaceLocation.getServiceInfo(), "data-sources/", plIniHandler);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+        
+        dataSourceCollectionUpdater.attach(dataSourceCollection);
+        
+        return dataSourceCollection;
     }
     
     /**
