@@ -454,4 +454,12 @@ public class WabitServerSession extends WabitSessionImpl {
 	public boolean isEnterpriseServerSession() {
 		return true;
 	}
+	
+	/**
+	 * Exposes the shared cookie store so we don't spawn useless sessions
+	 * through the client.
+	 */
+	public static CookieStore getCookieStore() {
+		return cookieStore;
+	}
 }
