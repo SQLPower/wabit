@@ -360,15 +360,15 @@ public class WorkspacePersisterListener implements WabitListener {
 			parentUUID = parent.getUUID();
 		}
 		
-		if (childClassType != WabitWorkspace.class) {
-			this.persistedObjects.add(
+		this.persistedObjects.add(
 				new PersistedWabitObject(
-					parentUUID, 
-					child.getClass().getSimpleName(), 
-					child.getUUID(),
-					indexOfChild));
-		}
+						parentUUID, 
+						child.getClass().getSimpleName(), 
+						child.getUUID(),
+						indexOfChild));
 		
+		logger.debug("Persisting " + child.getName() + " (" + child.getClass() + ")");
+
 		String uuid = child.getUUID();
 
 		// Persist any properties required for WabitObject constructor
@@ -791,6 +791,7 @@ public class WorkspacePersisterListener implements WabitListener {
 					converter.convertToBasicType(tableContainer.getPosition()));
 
 		} else if (child instanceof WabitWorkspace) {
+			logger.info("Sending workspace created event");
 			//no current properties
 			
 		}

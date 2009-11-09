@@ -110,6 +110,14 @@ import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This class represents a Data Access Object for {@link WabitSession}s.
+ * <p>
+ * Special Case: If this persister receives a new WabitWorkspace the workspace
+ * in the session this persister is attached to must be cleaned up or removed. A
+ * new workspace event signals that an entire new set of objects that make up
+ * the workspace as a whole is about to be sent to the session. If the objects
+ * still exist in the workspace when the persister tries to create new objects
+ * exceptions will be thrown as an object with the same UUID will exist in the
+ * workspace.
  */
 public class WabitSessionPersister implements WabitPersister {
 
@@ -333,6 +341,23 @@ public class WabitSessionPersister implements WabitPersister {
 		persistedObjects.clear();
 	}
 
+	/**
+	 * This method creates the actual new object defined by the
+	 * {@link PersistedWabitObject}. Additional properties may be retrieved from
+	 * the transaction to be used as constructor arguments depending on the
+	 * object being created.
+	 * <p>
+	 * A new {@link WabitWorkspace} object signals that there is a new workspace
+	 * being persisted and the current one attached to this listener must either
+	 * go away or clean up. See the class level documentation for more on this
+	 * special case.
+	 * 
+	 * @param pwo
+	 *            Describes what kind of object needs to be created and where to
+	 *            parent it to.
+	 * @return The object created by this method.
+	 * @throws WabitPersistenceException
+	 */
 	private WabitObject loadWabitObject(PersistedWabitObject pwo)
 			throws WabitPersistenceException {
 		String uuid = pwo.getUUID();
@@ -635,6 +660,8 @@ public class WabitSessionPersister implements WabitPersister {
 							TableContainer.class);
 
 			wo = new WabitTableContainer(tableContainer, false);
+		} else if (type.equals(WabitWorkspace.class.getSimpleName())) {
+			session.getWorkspace().reset();
 
 		} else {
 			throw new WabitPersistenceException(uuid,
@@ -960,6 +987,11 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Persists a {@link WabitObject} given by its UUID, class name, and parent
 	 * UUID
+	 * <p>
+	 * A new {@link WabitWorkspace} object signals that there is a new workspace
+	 * being persisted and the current one attached to this listener must either
+	 * go away or clean up. See the class level documentation for more on this special
+	 * case.
 	 * 
 	 * @param parentUUID
 	 *            The parent UUID of the {@link WabitObject} to persist
@@ -985,7 +1017,13 @@ public class WabitSessionPersister implements WabitPersister {
 				this.rollback();
 				throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
 			}
-			if (exists(uuid)) {
+			WabitObject objectToPersist = WabitUtils.findByUuid(root, uuid, WabitObject.class);
+			boolean isWorkspace= objectToPersist instanceof WabitWorkspace;
+			if (objectToPersist != null && isWorkspace) {
+				//reset now or the next object persisted will fail a few lines down.
+				((WabitWorkspace) objectToPersist).reset();
+			}
+			if (exists(uuid) && !isWorkspace) {
 				this.rollback();
 				throw new WabitPersistenceException(uuid,
 						"A WabitObject with UUID " + uuid + " and type " + type

@@ -59,6 +59,12 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	 */
 	public static final String SYSTEM_WORKSPACE_UUID = "system";
 	
+	/**
+	 * This is the default name given to a new workspace. The user will
+	 * be able to change it once the workspace has been created.
+	 */
+	private static final String DEFAULT_NAME = "Unsaved Workspace";
+	
 	
 	private static final Logger logger = Logger.getLogger(WabitWorkspace.class);
 	
@@ -196,7 +202,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     public WabitWorkspace() {
         listeners = new ArrayList<DatabaseListChangeListener>();
-        setName("Unsaved Workspace");
+		setName(DEFAULT_NAME);
     }
     
     public List<WabitObject> getChildren() {
@@ -579,7 +585,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     public boolean isSystemWorkspace() {
-    	logger.debug("Workspace UUID is " + getUUID());
     	return getUUID().equals(SYSTEM_WORKSPACE_UUID);
     }
     
@@ -981,4 +986,33 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 			this.magicDisabled--;
 		}
 	}
+
+	/**
+	 * Resets the workspace by removing all of the children in the workspace and
+	 * setting all of the values in the workspace to defaults. Child removed
+	 * events and other events will be thrown as children of the workspace are
+	 * removed and cleaned up.
+	 */
+    public void reset() {
+    	logger.debug("Resetting workspace " + getName() + " (" + getUUID() + ")");
+    	setName(DEFAULT_NAME);
+    	
+    	//Reversing the child list as the children are currently in order according
+    	//to their dependencies. If the list of children changes in the future
+    	//this may need to be defined more explicitly.
+    	//TODO When we add the method that returns a list of child types the object
+    	//supports make this list of children explicit and in the correct order.
+    	List<WabitObject> children = new ArrayList<WabitObject>(getChildren());
+    	Collections.reverse(children);
+    	
+    	for (WabitObject child : children) {
+    		try {
+				removeChild(child);
+			} catch (ObjectDependentException e) {
+				throw new IllegalStateException("The child " + child.getName() + " should not " +
+						"have any dependencies at this point.", e);
+			}
+    		child.cleanup();
+    	}
+    }
 }

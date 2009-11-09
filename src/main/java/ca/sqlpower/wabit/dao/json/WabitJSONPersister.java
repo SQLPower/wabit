@@ -143,7 +143,11 @@ public class WabitJSONPersister implements WabitPersister {
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("method", WabitPersistMethod.persistObject.toString());
-			jsonObject.put("parentUUID", parentUUID);
+			if (parentUUID == null) {
+				jsonObject.put("parentUUID", JSONObject.NULL);
+			} else {
+				jsonObject.put("parentUUID", parentUUID);
+			}
 			jsonObject.put("type", type);
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("index", index);

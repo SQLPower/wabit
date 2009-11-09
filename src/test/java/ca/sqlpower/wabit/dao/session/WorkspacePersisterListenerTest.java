@@ -45,7 +45,7 @@ public class WorkspacePersisterListenerTest extends TestCase {
 		
 		listener.persistObject(workspace);
 		
-		assertEquals(2, counter.getPersistObjectCount());
+		assertEquals(3, counter.getPersistObjectCount());
 		
 		assertEquals(image.getUUID(), counter.getLastPersistObject().getUUID());
 	}
