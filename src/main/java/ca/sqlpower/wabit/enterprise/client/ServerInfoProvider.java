@@ -35,10 +35,14 @@ import org.json.JSONObject;
 import ca.sqlpower.util.Version;
 
 public abstract class ServerInfoProvider {
-
+	
+	public static final String defaultWatermarkMessage = "This version of Wabit is for EVALUATION PURPOSES ONLY. To obtain a full Production License, please visit www.sqlpower.ca/wabit-ep";
+	
 	private static Map<String,Version> version = new HashMap<String, Version>();
 	
 	private static Map<String,Boolean> licenses = new HashMap<String, Boolean>();
+	
+	private static Map<String,String> watermarkMessages = new HashMap<String, String>();
 	
 	public static Version getServerVersion(
 			String host,
@@ -51,6 +55,17 @@ public abstract class ServerInfoProvider {
 		return version.get(toURL(host, port, path).toString().concat(username).concat(password));
 	}
 	
+	public static boolean isServerLicensed(WabitServerInfo infos) 
+			throws MalformedURLException,IOException 
+	{
+		return isServerLicensed(
+				infos.getServerAddress(), 
+				String.valueOf(infos.getPort()), 
+				infos.getPath(), 
+				infos.getUsername(), 
+				infos.getPassword());
+	}
+
 	public static boolean isServerLicensed(
 			String host,
 			String port,
@@ -85,9 +100,6 @@ public abstract class ServerInfoProvider {
 		
 		if (version.containsKey(url.toString().concat(username).concat(password))) return;
 		
-		// Adding a string object to explicitely include in the .class files a warning.
-		@SuppressWarnings("unused")
-		final String staticWarning = "Modifications to this section constitute a violation of the end user agreement. Retro-engineering or disabling of the license restrictions constitute a violation of the terms of use and is subject to legal actions to the full extend of the law.";
 		HttpURLConnection conn = null;
 		InputStream is = null;
 		ByteArrayOutputStream baos = null;
@@ -119,10 +131,12 @@ public abstract class ServerInfoProvider {
 			// Decode the message
 			String serverVersion;
 			Boolean licensedServer;
+			String watermarkMessage;
 			try {
 				JSONObject jsonObject = new JSONObject(baos.toString());
 				serverVersion = jsonObject.getString(ServerProperties.SERVER_VERSION.toString());
 				licensedServer = jsonObject.getBoolean(ServerProperties.SERVER_LICENSED.toString());
+				watermarkMessage = jsonObject.getString(ServerProperties.SERVER_WATERMARK_MESSAGE.toString());
 			} catch (JSONException e) {
 				throw new IOException(e.getMessage());
 			}
@@ -130,10 +144,7 @@ public abstract class ServerInfoProvider {
 			// Save found values
 			version.put(url.toString().concat(username).concat(password), new Version(serverVersion));
 			licenses.put(url.toString().concat(username).concat(password), licensedServer);
-			
-			// Adding a string object to explicitely include in the .class files a warning.
-			@SuppressWarnings("unused")
-			final String staticWarning2 = "Modifications to this section constitute a violation of the end user agreement. Retro-engineering or disabling of the license restrictions constitute a violation of the terms of use and is subject to legal actions to the full extend of the law.";
+			watermarkMessages.put(url.toString().concat(username).concat(password), watermarkMessage);
 			
 		} finally {
 			conn.disconnect();
@@ -148,5 +159,36 @@ public abstract class ServerInfoProvider {
 				// no op
 			}
 		}
+	}
+	
+	public static String getWatermarkMessage(WabitServerInfo infos) 
+			throws MalformedURLException,IOException 
+	{
+		return getWatermarkMessage(
+				infos.getServerAddress(), 
+				String.valueOf(infos.getPort()), 
+				infos.getPath(), 
+				infos.getUsername(), 
+				infos.getPassword());
+	}
+	
+	public static String getWatermarkMessage(
+			String host,
+			String port,
+			String path, 
+			String username, 
+			String password)
+	{
+		String message = defaultWatermarkMessage;
+		try {
+			if (!isServerLicensed(host,port,path,username,password)) {
+				message = watermarkMessages.get(toURL(host, port, path).toString().concat(username).concat(password));
+			} else {
+				message = "";
+			}
+		} catch (Exception e) {
+			// no op
+		}
+		return message;		
 	}
 }

@@ -21,5 +21,6 @@ package ca.sqlpower.wabit.enterprise.client;
 
 public enum ServerProperties {
 	SERVER_VERSION,
-	SERVER_LICENSED
+	SERVER_LICENSED,
+	SERVER_WATERMARK_MESSAGE
 }

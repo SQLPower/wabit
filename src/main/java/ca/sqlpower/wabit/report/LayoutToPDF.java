@@ -45,6 +45,7 @@ public class LayoutToPDF implements Monitorable {
 
 	public interface PDFWatermarker {
 		public void watermarkPDF(Graphics g, Rectangle size);
+		public void setWatermarkMessage(String message);
 	}
 
 	private final File file;

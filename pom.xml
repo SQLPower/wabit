@@ -861,6 +861,11 @@
             <artifactId>quartz</artifactId>
             <version>1.6.3</version>
         </dependency>
+        <dependency>
+        	<groupId>com.kitfox.svg</groupId>
+        	<artifactId>svg-salamander</artifactId>
+        	<version>1.0</version>
+        </dependency>
 	</dependencies>
 	<repositories>
 	   <repository>
