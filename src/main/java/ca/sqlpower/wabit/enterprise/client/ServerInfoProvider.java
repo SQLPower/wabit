@@ -19,16 +19,23 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -100,40 +107,24 @@ public abstract class ServerInfoProvider {
 		
 		if (version.containsKey(url.toString().concat(username).concat(password))) return;
 		
-		HttpURLConnection conn = null;
-		InputStream is = null;
-		ByteArrayOutputStream baos = null;
 		try {
-			conn = (HttpURLConnection)url.openConnection();
-			conn.setRequestMethod("OPTIONS");
-			conn.setDoInput(true);
-			conn.setConnectTimeout(5000);
-			
-			// Add credentials
-			String hash = new String(
-				Base64.encodeBase64(
-					username
-						.concat(":")
-						.concat(password).getBytes()));
-			conn.setRequestProperty(
-					"Authorization", "Basic " + hash);
-
-			// Get the response
-			conn.connect();
-			is = conn.getInputStream();
-			baos = new ByteArrayOutputStream();
-			byte[] buf = new byte[1024];
-			int count;
-			while ((count = is.read(buf)) > 0) {
-				baos.write(buf, 0, count);
-			}
+			HttpParams params = new BasicHttpParams();
+	        HttpConnectionParams.setConnectionTimeout(params, 2000);
+	        DefaultHttpClient httpClient = new DefaultHttpClient(params);
+	        httpClient.setCookieStore(new BasicCookieStore());
+	        httpClient.getCredentialsProvider().setCredentials(
+	            new AuthScope(url.getHost(), AuthScope.ANY_PORT), 
+	            new UsernamePasswordCredentials(username, password));
+	        
+	        HttpUriRequest request = new HttpOptions(url.toURI());
+    		String responseBody = httpClient.execute(request, new BasicResponseHandler());
 			
 			// Decode the message
 			String serverVersion;
 			Boolean licensedServer;
 			String watermarkMessage;
 			try {
-				JSONObject jsonObject = new JSONObject(baos.toString());
+				JSONObject jsonObject = new JSONObject(responseBody);
 				serverVersion = jsonObject.getString(ServerProperties.SERVER_VERSION.toString());
 				licensedServer = jsonObject.getBoolean(ServerProperties.SERVER_LICENSED.toString());
 				watermarkMessage = jsonObject.getString(ServerProperties.SERVER_WATERMARK_MESSAGE.toString());
@@ -146,18 +137,8 @@ public abstract class ServerInfoProvider {
 			licenses.put(url.toString().concat(username).concat(password), licensedServer);
 			watermarkMessages.put(url.toString().concat(username).concat(password), watermarkMessage);
 			
-		} finally {
-			conn.disconnect();
-			try {
-				if (is != null) is.close();
-			} catch (IOException e2) {
-				// no op
-			}
-			try {
-				if (baos != null) baos.close();
-			} catch (IOException e1) {
-				// no op
-			}
+		} catch (URISyntaxException e) {
+			throw new IOException(e.getLocalizedMessage());
 		}
 	}
 	
