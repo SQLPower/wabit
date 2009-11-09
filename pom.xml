@@ -14,7 +14,7 @@
 	<groupId>ca.sqlpower.wabit</groupId>
 	<artifactId>wabit</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.9-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>wabit</name>
 	<url>http://code.google.com/p/wabit</url>
 
@@ -197,6 +197,12 @@
 									   <include name="*.jar" />
 									</fileset>
 								</copy>
+								
+								<copy todir="target">
+									<fileset dir="">
+									   <include name="LICENSE" />
+									</fileset>
+								</copy>
 
 								<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
 
@@ -225,7 +231,7 @@
 								<exec executable="tar" dir="target">
 									<arg value="-cpzf" />
 									<arg value="Wabit-OSX-${app.version}.tar.gz"/>
-									<arg value="../LICENSE"/>
+									<arg value="LICENSE"/>
 									<arg value="Wabit.app"/>
 								</exec>
 
