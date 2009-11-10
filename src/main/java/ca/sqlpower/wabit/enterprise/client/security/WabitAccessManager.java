@@ -134,6 +134,7 @@ public class WabitAccessManager {
 
 		if (currentUser.getUUID().equals(subject)) {
 			permissions.remove(Permission.EXECUTE);
+			permissions.remove(Permission.MODIFY);
 			if (permissions.isEmpty()) {
 				//logger.debug("    User has sufficient permissions (Object is User)");
 				return true;
@@ -333,6 +334,7 @@ public class WabitAccessManager {
 				}
 			}
 		} else {
+			grantPrivilege = true;
 			List<Grant> grants = aggregateGrants(currentUser);
 			for (Grant grant : grants) {
 				if (grant.getSubject() == null
@@ -348,8 +350,8 @@ public class WabitAccessManager {
 					if (grant.isExecutePrivilege())
 						executePrivilege = false;
 				}
-				if (!(createPrivilege && modifyPrivilege && deletePrivilege
-						&& executePrivilege && grantPrivilege)) {
+				if (!(createPrivilege || modifyPrivilege || deletePrivilege
+						|| executePrivilege || grantPrivilege)) {
 					return true;
 				}
 			}
