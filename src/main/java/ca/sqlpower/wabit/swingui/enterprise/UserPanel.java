@@ -143,7 +143,6 @@ public class UserPanel implements WabitPanel {
 		
 		
 		this.passwordTextField = new JPasswordField();
-		this.passwordTextField.setText("******************");
 		this.passwordLabel = new JLabel("Password");
 		this.passwordTextField.getDocument().addDocumentListener(new DocumentListener() {
 			public void textChanged(DocumentEvent e) {
