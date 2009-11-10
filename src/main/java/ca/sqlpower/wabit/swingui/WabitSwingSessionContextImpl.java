@@ -58,6 +58,7 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,11 +159,14 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
+import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.security.CachingWabitAccessManager;
+import ca.sqlpower.wabit.enterprise.client.security.WabitAccessManager;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.CellSetRenderer;
@@ -171,8 +175,10 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.swingui.StackedTabComponent.StackedTab;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
@@ -217,6 +223,10 @@ import edu.umd.cs.findbugs.annotations.OverrideMustInvoke;
  * the context will be done in this implementation 
  */
 public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
+	
+	private WabitAccessManager accessManager = null;
+
+	private User currentUser = null;
 
     private static final Logger logger = Logger.getLogger(WabitSwingSessionContextImpl.class);
     
@@ -1417,6 +1427,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
          Action newAction = new AbstractAction("New", NEW_ICON) {
         	public void actionPerformed(ActionEvent e) {
         		if (e.getSource() instanceof JButton) {
+        			WabitSwingSession activeSession = getActiveSwingSession();
         			JButton source = (JButton) e.getSource();
         			JPopupMenu popupMenu = new JPopupMenu();
         			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
@@ -1425,21 +1436,85 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         	                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, WabitSwingSessionContextImpl.this, serviceInfo));
         	            }
         	        });
-        			popupMenu.add(newWorkspaceServerSubMenu);
-        			WabitSwingSession activeSession = getActiveSwingSession();
+        			
         			if (activeSession != null) {
+        				
+        				objectsMenu(
+        						popupMenu,
+        						WabitWorkspace.class.getSimpleName(),  
+        						null,
+        						newWorkspaceServerSubMenu,
+        						WabitAccessManager.Permission.CREATE);
+        				
         				if (activeSession.getWorkspace().isSystemWorkspace()) {
-        					popupMenu.add(new NewUserAction(activeSession));
-        					popupMenu.add(new NewGroupAction(activeSession));
+        					
+        					objectsMenu(
+        							popupMenu,
+        							User.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewUserAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
+        					objectsMenu(
+        							popupMenu,
+        							Group.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewGroupAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
         				} else {
-    	    				popupMenu.add(new NewQueryAction(activeSession));
-    	    				popupMenu.add(new NewOLAPQueryAction(activeSession));
-    	                    popupMenu.add(new NewChartAction(activeSession));
-    	                    popupMenu.add(new NewImageAction(activeSession));
-    	    				popupMenu.add(new NewReportAction(activeSession));
-    	    				popupMenu.add(new NewTemplateAction(activeSession));
+        					
+        					objectsMenu(
+        							popupMenu,
+        							QueryCache.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewQueryAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
+        					objectsMenu(
+        							popupMenu,
+        							OlapQuery.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewOLAPQueryAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
+        					objectsMenu(
+        							popupMenu,
+        							Chart.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewChartAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
+        					objectsMenu(
+        							popupMenu,
+        							WabitImage.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewImageAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
+        					objectsMenu(
+        							popupMenu,
+        							Report.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewReportAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+        					
+        					objectsMenu(
+        							popupMenu,
+        							Template.class.getSimpleName(),  
+        							null,
+        							new JMenuItem(new NewTemplateAction(activeSession)),
+        							WabitAccessManager.Permission.CREATE);
+
     	    				if (activeSession.getWorkspace().isServerWorkspace()) {
-    	    					popupMenu.add(new NewReportTaskAction(activeSession));
+    	    					
+    	    					objectsMenu(
+            							popupMenu,
+            							ReportTask.class.getSimpleName(),  
+            							null,
+            							new JMenuItem(new NewReportTaskAction(activeSession)),
+            							WabitAccessManager.Permission.CREATE);
+    	    					
     	    				}
         				}
         			}
@@ -2117,6 +2192,129 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         });
         
     }
+    
+    
+    /**
+	 * Will decide if we must insert or not in the menu a given menu item
+	 * based on access rights and object simple class name. 
+	 * If we are not in a server workspace, we insert all options.
+	 * @param menu The menu into which we insert if needed
+	 * @param simpleName The simple class name of the WabitObject concerned 
+	 * by the menu option
+	 * @param subjectUuid the particular object's UUID we want to check permissions for.
+	 * @param menuItem The menu item we might add to the menu.
+	 * @param permissions Permissions to lookup
+	 */
+	private void objectsMenu(
+			JPopupMenu menu, 
+			String simpleName, 
+			@Nullable String subjectUuid,
+			JMenuItem menuItem,
+			WabitAccessManager.Permission permission) {
+		this.objectsMenu(menu, simpleName, subjectUuid, menuItem, false, permission);
+	}
+	
+	/**
+	 * Will decide if we must insert or not in the menu a given menu item
+	 * based on access rights and object simple class name. 
+	 * If we are not in a server workspace, we insert all options.
+	 * @param menu The menu into which we insert if needed
+	 * @param simpleName The simple class name of the WabitObject concerned 
+	 * by the menu option
+	 * @param subjectUuid the particular object's UUID we want to check permissions for.
+	 * @param menuItem The menu item we might add to the menu.
+	 * @param appendSeparator Wether to append a separator after the menu item or not.
+	 * @param permissions Permissions to lookup
+	 */
+	private void objectsMenu(
+			JPopupMenu menu, 
+			String simpleName,
+			@Nullable String subjectUuid,
+			JMenuItem menuItem,
+			boolean appendSeparator,
+			WabitAccessManager.Permission permission) {
+		
+		// If we are not in a server session, we display everything.
+		if (this.delegateContext.getActiveSession() == null ||
+				!this.delegateContext.getActiveSession().isEnterpriseServerSession()) {
+			menu.add(menuItem);
+			return;
+		}
+		
+		if (this.currentUser==null) {
+			this.currentUser = this.getCurrentUser();
+			if (this.currentUser==null) {
+				// No way to resolve this. We add all menus
+				menu.add(menuItem);
+				return;
+			}
+		}
+		
+		// Init the access manager since we will need it
+		if (accessManager == null) {
+			accessManager = new CachingWabitAccessManager();
+			accessManager.init(
+					this.currentUser,
+					this.delegateContext.getActiveSession(),
+					this.delegateContext.getActiveSession().getSystemWorkspace().getSession());
+		}
+		
+		if (subjectUuid==null) {
+			if (WabitAccessManager.Permission.GRANT.equals(permission) &&
+					accessManager.isGrantGranted(
+						new Grant(
+							subjectUuid, 
+							simpleName, 
+							false, 
+							false, 
+							false, 
+							false, 
+							false))) {
+				menu.add(menuItem);
+				if (appendSeparator) {
+					menu.addSeparator();
+				}
+			} else if (accessManager.isGranted(simpleName,EnumSet.of(permission))) {
+				menu.add(menuItem);
+				if (appendSeparator) {
+					menu.addSeparator();
+				}
+			}
+		} else {
+			if (accessManager.isGranted(subjectUuid,simpleName,EnumSet.of(permission))) {
+				menu.add(menuItem);
+				if (appendSeparator) {
+					menu.addSeparator();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Returns the current user object, null if it cannot be found
+	 * or we are not on a server workspace.
+	 */
+    private User getCurrentUser() 
+    {
+    	if (!this.delegateContext.getActiveSession().isEnterpriseServerSession()) {
+    		return null;
+    	}
+    	
+    	WabitWorkspace systemWorkspace = this.delegateContext.getActiveSession().getSystemWorkspace();
+    	if (systemWorkspace == null) {
+    		return null;
+    	}
+    	
+    	String username = ((WabitSwingSessionImpl)this.delegateContext.getActiveSession()).getEnterpriseServerInfos().getUsername();
+    	User currentUser = null;
+    	for (User user : systemWorkspace.getUsers()) {
+    		if (user.getUsername().equals(username)) {
+    			currentUser = user;
+    			break;
+    		}
+    	}
+    	return currentUser;
+	}
     
     
 	public UserPrompter createUserPrompter(String question,

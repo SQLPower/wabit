@@ -39,7 +39,7 @@ public class NewWorkspaceAction extends AbstractAction {
 	private final WabitSwingSessionContext context;
 
 	public NewWorkspaceAction(WabitSwingSessionContext context) {
-		super("New Workspace...", NEW_WORKSPACE_ICON);
+		super("New Local Workspace...", NEW_WORKSPACE_ICON);
 		this.context = context;
 	}
 
