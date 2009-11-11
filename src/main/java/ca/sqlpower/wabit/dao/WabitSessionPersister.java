@@ -24,6 +24,9 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
@@ -806,6 +809,7 @@ public class WabitSessionPersister implements WabitPersister {
 	}
 
 	private void applyProperty(WabitObject wo, String propertyName, Object newValue) throws WabitPersistenceException {
+		logger.debug("Applying property " + propertyName + " to " + wo.getClass().getSimpleName() + " at " + wo.getUUID());
 		if (isCommonProperty(propertyName)) {
 			commitCommonProperty(wo, propertyName, newValue);
 		} else if (wo instanceof CellSetRenderer) {
@@ -1107,6 +1111,9 @@ public class WabitSessionPersister implements WabitPersister {
 					uuid, propertyName, propertyType.name(),
 					newValue));
 			try {
+				if (newValue instanceof InputStream && !((InputStream) newValue).markSupported()) {
+					newValue = new BufferedInputStream((InputStream) newValue);
+				}
 				persistPropertyHelper(uuid, propertyName, propertyType, newValue,
 					newValue, true);
 			} catch (WabitPersistenceException e) {
@@ -1139,12 +1146,16 @@ public class WabitSessionPersister implements WabitPersister {
 	private void persistPropertyHelper(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue,
 			boolean unconditional) throws WabitPersistenceException {
+		logger.debug("Checking if current value matches expected value");
+		
 		if (!exists(uuid)) {
 			throw new WabitPersistenceException(uuid,
 					"WabitObject with UUID " + uuid + " could not be found." +
 					" Was trying to set its property \"" + propertyName + "\" " +
 					"to value \"" + newValue + "\".");
 		}
+		
+		logger.debug("Parent object exists");
 
 		Object lastPropertyValueFound = null;
 		
@@ -1154,9 +1165,14 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 		
+		logger.debug("Finished searching for recent property changes");
+		
 		Object propertyValue = null;
 		WabitObject wo = WabitUtils.findByUuid(root, uuid,
 				WabitObject.class);
+		
+		logger.debug("Found parent WabitObject");
+		
 		if (lastPropertyValueFound != null) {
 			if (!unconditional && !lastPropertyValueFound.equals(oldValue)) {
 				throw new WabitPersistenceException(uuid, "For property \""
@@ -1229,15 +1245,24 @@ public class WabitSessionPersister implements WabitPersister {
 					
 					propertyValue = getWabitImageProperty((WabitImage) wo,
 							propertyName);
-
+					
 					// We are converting the expected old value InputStream in this
 					// way because we want to ensure that the conversion process is
 					// the same as the one used to convert the current image into
 					// a byte array.
 					if (oldValue != null) {
-						oldValue = PersisterUtils.convertImageToStreamAsPNG(
-								(Image) converter.convertToComplexType(oldValue,
-										Image.class)).toByteArray();
+						// We cannot destroy the old value here, because in some
+						// cases it is the same object as the new value.
+						try {
+							InputStream old = (InputStream) oldValue;
+							old.mark(old.available());
+							oldValue = PersisterUtils.convertImageToStreamAsPNG(
+									(Image) converter.convertToComplexType(oldValue,
+											Image.class)).toByteArray();
+							old.reset();
+						} catch (IOException e) {
+							throw new WabitPersistenceException(uuid, e);
+						}
 					}
 
 				} else if (wo instanceof WabitItem) {
@@ -1266,6 +1291,8 @@ public class WabitSessionPersister implements WabitPersister {
 							"Invalid WabitObject type " + wo.getClass());
 				}
 				
+				logger.debug("Found current property value");
+				
 				if (!unconditional && propertyValue != null &&
 						((oldValue == null) ||
 								(oldValue != null &&
@@ -1285,6 +1312,8 @@ public class WabitSessionPersister implements WabitPersister {
 //						uuid + " to set property " + propertyValue);
 			}
 		}
+		
+		logger.debug("Persist is valid. Buffering new value");
 
 		if (wo != null) {
 			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
@@ -2517,7 +2546,7 @@ public class WabitSessionPersister implements WabitPersister {
 	private void commitWabitImageProperty(WabitImage wabitImage,
 			String propertyName, Object newValue)
 			throws WabitPersistenceException {
-
+		
 		if (propertyName.equals("image")) {
 			wabitImage.setImage((Image) converter.convertToComplexType(
 					newValue, Image.class));
