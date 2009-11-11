@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URI;
@@ -32,13 +33,16 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.WorkspacePanel.FurryPanel;
 import ca.sqlpower.wabit.swingui.WorkspacePanel.LogoLayout;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -64,6 +68,12 @@ public class WabitWelcomeScreen {
 	private static final Icon OPEN_EXISTING_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/welcome-open.png"));
 	
 	/**
+	 * The icon for the "Connect to a Wabit Server" button.
+	 */
+	private static final Icon OPEN_SERVER_ICON = new ImageIcon(
+			WabitWelcomeScreen.class.getClassLoader().getResource("icons/workspace 170 server.png"));
+	
+	/**
 	 * The icon for the "Open Demonstration Workspace" button.
 	 */
 	private static final Icon OPEN_DEMO_ICON = new ImageIcon(WabitWelcomeScreen.class.getClassLoader().getResource("icons/welcome-demo.png"));
@@ -82,7 +92,8 @@ public class WabitWelcomeScreen {
 	}
 	
 	private JPanel buildButtonsPanel() {
-		JPanel buttonsPanel = new JPanel(new MigLayout("", "[right][][left]"));
+		JPanel buttonsPanel = new JPanel(new MigLayout("ins n 0 n 0",
+				"[right] para [] para [] para [left]"));
 		
 		//new workspace
 		JButton newWorkspaceButton = new JButton(new AbstractAction() {
@@ -90,7 +101,7 @@ public class WabitWelcomeScreen {
 				new NewWorkspaceScreen(context).showFrame();
 			}
 		});
-		JPanel newWorkspacePanel = new JPanel(new MigLayout("", "[center]"));
+		JPanel newWorkspacePanel = new JPanel(new MigLayout("ins 0", "[center]"));
 		newWorkspaceButton.setIcon(NEW_WORKSPACE_ICON);
 		newWorkspacePanel.setOpaque(false);
 		newWorkspacePanel.add(newWorkspaceButton, "wrap");
@@ -117,7 +128,7 @@ public class WabitWelcomeScreen {
 		});
 		
 		
-		JPanel existingWorkspacePanel = new JPanel(new MigLayout("", "[center]"));
+		JPanel existingWorkspacePanel = new JPanel(new MigLayout("ins 0", "[center]"));
 		existingWorkspacePanel.setOpaque(false);
 		openExistingButton.setIcon(OPEN_EXISTING_ICON);
 		existingWorkspacePanel.add(openExistingButton, "wrap");
@@ -125,19 +136,30 @@ public class WabitWelcomeScreen {
 		existingWorkspacePanel.add(new JLabel("Workspace"), "wrap");
 		buttonsPanel.add(existingWorkspacePanel, "");
 		
-		//No need for this after the gui makeover? everything from servers will just
-		//populate in your tree
-//		final JButton openOnServerButton = new JButton();
-//		openOnServerButton.setAction(new AbstractAction() {
-//            public void actionPerformed(ActionEvent e) {
-//                JPopupMenu popup = ServerListMenu.createPopupInstance(context, frame);
-//                popup.show(openOnServerButton, 0, 0);
-//            }
-//		});
-//		openOnServerButton.setIcon(OPEN_EXISTING_ICON);
-//		iconsPanel.add(openOnServerButton, "center");
-//        builder.append("Open On Server");
-//        builder.nextLine();
+		final JButton serverConnectionButton = new JButton();
+		serverConnectionButton.setAction(new AbstractAction() {
+		
+			public void actionPerformed(ActionEvent evt) {
+				ServerListMenuItemFactory serverListMenuItemFactory = 
+					new ServerListMenuItemFactory() {
+		            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, 
+		            		Component dialogOwner) {
+		                return new JMenuItem(new LogInToServerAction(dialogOwner, 
+		                		serviceInfo, context));
+		            }
+		        };
+		        JPopupMenu serverPopup = ServerListMenu.createPopupInstance(context, mainPanel);
+		        serverPopup.show(serverConnectionButton, 0, serverConnectionButton.getHeight());
+			}
+		});
+		
+		JPanel serverConnectionPanel = new JPanel(new MigLayout("ins 0", "[center]"));
+		serverConnectionPanel.setOpaque(false);
+		serverConnectionButton.setIcon(OPEN_SERVER_ICON);
+		serverConnectionPanel.add(serverConnectionButton, "wrap");
+		serverConnectionPanel.add(new JLabel("Connect to a"), "wrap, gapbottom 1");
+		serverConnectionPanel.add(new JLabel("Wabit Server"), "wrap");
+		buttonsPanel.add(serverConnectionPanel, "");
 		
 		//open demo
 		AbstractAction openDemoAction = new AbstractAction() {
@@ -153,7 +175,7 @@ public class WabitWelcomeScreen {
 		JButton openDemoButton = new JButton(openDemoAction);
 		
 		
-		JPanel demoWorkspacePanel = new JPanel(new MigLayout("", "[center]"));
+		JPanel demoWorkspacePanel = new JPanel(new MigLayout("ins 0", "[center]"));
 		demoWorkspacePanel.setOpaque(false);
 		openDemoButton.setIcon(OPEN_DEMO_ICON);
 		demoWorkspacePanel.add(openDemoButton, "wrap");
@@ -166,10 +188,8 @@ public class WabitWelcomeScreen {
 	
 	private void buildUI() {
 		//This panel is only here to center the icons panel in the middle of the dialog
-		JPanel centerPanel = new JPanel(new MigLayout("fill", "[center, grow]"));
-		centerPanel.setOpaque(false);
 		
-		JPanel iconsPanel = new JPanel(new MigLayout("gap 0 0", "[]"));
+		JPanel iconsPanel = new JPanel(new MigLayout("ins n 0 n 0", "[center, grow]"));
 		iconsPanel.setOpaque(false);
 		
 		JPanel generateLogoPanel = LogoLayout.generateLogoPanel();
@@ -192,9 +212,8 @@ public class WabitWelcomeScreen {
 		JButton helpButton = new JButton(new HelpAction(context.getFrame()));
 		bottomPanelBuilder.append(helpButton);
 		
-		centerPanel.add(iconsPanel, "");
 		mainPanel = new FurryPanel(new BorderLayout());
-		mainPanel.add(centerPanel, BorderLayout.CENTER);
+		mainPanel.add(iconsPanel, BorderLayout.CENTER);
 		mainPanel.add(bottomPanelBuilder.getPanel(), BorderLayout.SOUTH);
 		
 		mainScrollPane = new JScrollPane(mainPanel);
