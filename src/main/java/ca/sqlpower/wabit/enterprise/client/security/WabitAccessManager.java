@@ -55,11 +55,11 @@ public class WabitAccessManager {
 		}
 	}
 	
-	protected User currentUser;
+	private User currentUser;
 	
-	protected WabitSession systemSession;
+	private WabitSession systemSession;
 	
-	protected WabitSession currentSession;
+	private WabitSession currentSession;
 	
 	public WabitAccessManager() {
 		// Due to jackrabbit's access manager interface, state is defined in init
@@ -80,7 +80,7 @@ public class WabitAccessManager {
 		List<Grant> grants = new ArrayList<Grant>();
 		grants.addAll(user.getGrants());
 
-		final WabitWorkspace workspace = systemSession.getWorkspace();
+		final WabitWorkspace workspace = getSystemSession().getWorkspace();
 		synchronized (workspace) {
 			List<Group> groups = workspace.getGroups();
 			for (Group group : groups) {
@@ -99,10 +99,10 @@ public class WabitAccessManager {
 	 * Returns all objects that depend on the object represented by rootUuid
 	 */
 	private Collection<WabitObject> aggregateDependantObjects(String rootUuid) {
-		if (currentSession == null) {
+		if (getCurrentSession() == null) {
 			return Collections.emptyList();
 		}
-		final WabitWorkspace workspace = currentSession.getWorkspace();
+		final WabitWorkspace workspace = getCurrentSession().getWorkspace();
 		synchronized (workspace) {
 			WabitObject root = workspace
 					.findByUuid(rootUuid, WabitObject.class);
@@ -132,7 +132,7 @@ public class WabitAccessManager {
 	public boolean isGranted(String subject, String type, Set<Permission> permissions) {
 		//logger.debug("    User is " + user.getUsername());
 
-		if (currentUser.getUUID().equals(subject)) {
+		if (getCurrentUser().getUUID().equals(subject)) {
 			permissions.remove(Permission.EXECUTE);
 			permissions.remove(Permission.MODIFY);
 			if (permissions.isEmpty()) {
@@ -154,9 +154,9 @@ public class WabitAccessManager {
 
 		// This unsafe casting is allowed and desirable because if we ever
 		// nest the users elsewhere, we'll get an exception from the tests here.
-		WabitWorkspace workspace = (WabitWorkspace) currentUser.getParent();
+		WabitWorkspace workspace = (WabitWorkspace) getCurrentUser().getParent();
 		synchronized (workspace) {
-			List<Grant> grants = aggregateGrants(currentUser);
+			List<Grant> grants = aggregateGrants(getCurrentUser());
 			//logger.debug("    User has " + grants.size() + " grants");
 			for (Grant grant : grants) {
 				if (grant.getSubject() != null) {
@@ -205,8 +205,8 @@ public class WabitAccessManager {
 	}
 	
 	public boolean isGranted(String type, Set<Permission> permissions) {
-		synchronized (systemSession.getWorkspace()) {
-			List<Grant> grants = aggregateGrants(currentUser);
+		synchronized (getSystemSession().getWorkspace()) {
+			List<Grant> grants = aggregateGrants(getCurrentUser());
 			Set<WabitObject> empty = Collections.emptySet();
 			return doSystemGrantsPermit(type, grants, empty, permissions);
 		}
@@ -214,7 +214,7 @@ public class WabitAccessManager {
 	
 	public boolean isWorkspaceGranted(Set<Permission> permissions) {
 		// Everyone has read access to the system workspace
-		WabitWorkspace currentWorkspace = currentSession.getWorkspace();
+		WabitWorkspace currentWorkspace = getCurrentSession().getWorkspace();
 		if (currentWorkspace.getUUID().equals("system")) {
 			if (isReadOnly(permissions)) {
 				return true;
@@ -299,14 +299,14 @@ public class WabitAccessManager {
 		if (newGrant.getSubject() != null) {
 			String subject = newGrant.getSubject();
 			
-			if (subject.equals(currentUser.getUUID())
+			if (subject.equals(getCurrentUser().getUUID())
 					&& !(modifyPrivilege || deletePrivilege || grantPrivilege)) {
 				return true;
 			}
 			
 			grantPrivilege = true; // Require Grant privilege
 
-			List<Grant> grants = aggregateGrants(currentUser);
+			List<Grant> grants = aggregateGrants(getCurrentUser());
 			for (Grant grant : grants) {
 				if (grant.getSubject() != null) {
 					if (grant.getSubject().equals(subject)) {
@@ -335,7 +335,7 @@ public class WabitAccessManager {
 			}
 		} else {
 			grantPrivilege = true;
-			List<Grant> grants = aggregateGrants(currentUser);
+			List<Grant> grants = aggregateGrants(getCurrentUser());
 			for (Grant grant : grants) {
 				if (grant.getSubject() == null
 						&& grant.getType().equals(type)) {
@@ -357,6 +357,18 @@ public class WabitAccessManager {
 			}
 		}
 		return false;
+	}
+	
+	public WabitSession getCurrentSession() {
+		return currentSession;
+	}
+	
+	public WabitSession getSystemSession() {
+		return systemSession;
+	}
+	
+	public User getCurrentUser() {
+		return currentUser;
 	}
 	
 	private boolean isReadOnly(Set<Permission> permissions) {
