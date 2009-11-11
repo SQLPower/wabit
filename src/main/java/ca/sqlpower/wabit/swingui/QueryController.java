@@ -72,16 +72,6 @@ public class QueryController {
 	 */
 	private ComponentCellRenderer cellRenderer;
 
-	private final PropertyChangeListener fromChangeListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals(Container.PROPERTY_TABLE_ADDED)) {
-				query.addTable((Container)evt.getNewValue());
-			} else if (evt.getPropertyName().equals(Container.PROPERTY_TABLE_REMOVED)) {
-				query.removeTable((Container)evt.getOldValue());
-			}
-		}
-	};
-	
 	private final PropertyChangeListener whereListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent e) {
 			if (e.getPropertyName().equals(Container.PROPERTY_WHERE_MODIFIED)) {
@@ -275,7 +265,6 @@ public class QueryController {
 		this.dataSourceComboBox = dataSourceComboBox;
 		queryText = textComponent;
 		this.zoomSlider = zoomSlider;
-		pen.addQueryListener(fromChangeListener);
 		pen.addQueryListener(whereListener);
 		dataSourceComboBox.addActionListener(dataSourceListener);
 		queryText.getDocument().addDocumentListener(queryTextListener);
@@ -287,7 +276,6 @@ public class QueryController {
 	 * was created. This should be called when this controller is no longer needed.
 	 */
 	public void disconnect() {
-		pen.removeQueryListener(fromChangeListener);
 		pen.removeQueryListener(whereListener);
 		dataSourceComboBox.removeActionListener(dataSourceListener);
 		queryText.getDocument().removeDocumentListener(queryTextListener);
