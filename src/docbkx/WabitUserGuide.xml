@@ -103,9 +103,9 @@
       </itemizedlist>
 
       <para>From this screen, the user can choose to create a new workspace,
-      load an existing one, or explore a demo workspace provided with Wabit.
-      The user can also access the user guide from this screen or simply quit
-      the application.</para>
+      load an existing one, connect to a server, or explore a demo workspace 
+      provided with Wabit. The user can also access the user guide from this 
+      screen or simply quit the application.</para>
 
       <para>To create a new workspace, click the create new workspace button
       which will take you to a list of your data sources. You can either
@@ -118,6 +118,11 @@
       <para>To open an existing workspace, click the open existing workspace
       button which will then ask you to locate the workspace you want to
       load.</para>
+      
+      <para>To connect to a server, click on the log in to Wabit server. You 
+      can either choose a server from this menu to connect to or configure a 
+      new server to connect to instead. For information on how to configure 
+      a server connection see <xref linkend="welcome_screen.server"/></para>
 
       <para>To open the demo workspace, click the open demo workspace button.
       The demo workspace is for new users to get a feel of the application and
@@ -131,6 +136,151 @@
       or 'Open Workspace'. You can toggle between the workspaces and the
       search feature by selecting the desired tab at the top of the workspace
       tree.</para>
+    </section>
+    
+    <section id="welcome_screen.server">
+      <title>Connecting to a Server</title>
+      
+      <para>To configure a server connection click on the log in to Wabit server
+      button on the welcome screen and select configure server connections. This
+      option is also under the file menu for when you are not on the welcome screen.
+      </para>
+      
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="src/docbkx/images/server_connections.png" format="PNG"
+                   width="4in" />
+        </imageobject>
+      </mediaobject>
+      
+      <section id="welcome_screen.server.new_connection">
+        <title>Creating a new connection</title>
+        
+        <para>To create a new connection to a server:</para>
+        
+        <orderedlist>
+            <listitem>
+              <para>Click on the <guibutton>Add...</guibutton> button</para>
+            </listitem>
+
+            <listitem>
+              <mediaobject>
+                <imageobject>
+                  <imagedata fileref="src/docbkx/images/server_connection_properties.png"
+                             format="PNG" width="4in" />
+                </imageobject>
+              </mediaobject>
+
+              <informaltable frame="all">
+                <tgroup cols="2">
+                  <colspec colwidth="2in" />
+
+                  <colspec colwidth="3.5in" />
+
+                  <thead>
+                    <row>
+                      <entry>
+                        <para>In this field ...</para>
+                      </entry>
+
+                      <entry>
+                        <para>Do this ...</para>
+                      </entry>
+                    </row>
+                  </thead>
+
+                  <tbody>
+                    <row>
+                      <entry>
+                        <para>Display Name</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter a name for the server connection.</para>
+                      </entry>
+                    </row>
+
+                    <row>
+                      <entry>
+                        <para>Host</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter the name or IP address of the server to connect to.</para>
+                      </entry>
+                    </row>
+                    
+                    <row>
+                      <entry>
+                        <para>Port</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter the port number that the server allows a Wabit client
+                        to connect to.</para>
+                      </entry>
+                    </row>
+                    
+                    <row>
+                      <entry>
+                        <para>Path</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter the base URI path to the Wabit server. This is
+                        "/wabit-enterprise/" by default but can be changed in the server
+                        configuration.</para>
+                      </entry>
+                    </row>
+                    
+                    <row>
+                      <entry>
+                        <para>Username</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter your user name for the Wabit server. By default the
+                        admin username is "admin". It is strongly recommended to be changed
+                        after the server has been set up.</para>
+                      </entry>
+                    </row>
+                    
+                    <row>
+                      <entry>
+                        <para>Password</para>
+                      </entry>
+
+                      <entry>
+                        <para>Enter your password for the given user name. By default for
+                        the admin user the password is "admin". It is strongly recommended
+                        to change this password after the server has been set up.</para>
+                      </entry>
+                    </row>
+                  </tbody>
+                </tgroup>
+              </informaltable>
+            </listitem>
+
+            <listitem>
+              <para>Click the <guibutton>Test</guibutton> to ensure the server
+              information is correct</para>
+            </listitem>
+            
+            <listitem>
+              <para>Press the <guibutton>OK</guibutton> button. The connection
+              will be added to the list of server connections on the Server
+              Connection screen. Press <guibutton>Connect</guibutton> to connect
+              to the server.</para>
+            </listitem>
+          </orderedlist>
+          
+          <para>Once you have successfully connected to a server all of the workspaces
+          the user has permissions to see and the system workspace will be loaded from 
+          the server. Once the workspaces are fully loaded you will be able to navigate 
+          and modify the workspaces as you would a workspace loaded from a file as long 
+          as your user permissions allows you to make the desired changes.</para>
+      </section>
+    
     </section>
 
     <section id="welcome_screen.search">
@@ -169,7 +319,8 @@
     workspace, queries can be made on the workspace from the query builder.
     The left-hand side window is known as the workspace tree, and it is area
     where your connections, queries, charts, images, and reports will be
-    listed.</para>
+    listed. To navigate between different editors in Wabit double click on
+    the object in the tree to edit.</para>
   </chapter>
 
   <chapter id="setup_database">
@@ -1903,6 +2054,340 @@
       box is moved off the guide.</para>
     </section>
   </chapter>
+  
+  <chapter id="report_task">
+    <title>Scheduled Reports</title>
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/report_task.png"
+                   format="PNG" width="3.5in" />
+      </imageobject>
+    </mediaobject>
+    
+    <para>When connected to a server Wabit can schedule report bursts. If a report
+    is scheduled it will be e-mailed to the recipient address at the defined interval
+    as long as the server is running. After making changes to a scheduled report the
+    update button must be pressed to make the changes affect the server. To schedule
+    reports the mail.xml file must be configured to point to your smtp server. For 
+    instructions on configuring the mail.xml file see <xref linkend="server_configuration.smtp" />
+    </para>
+    
+    <para>Click the following toolbar buttons to...</para>
+
+    <orderedlist>
+      <listitem><para><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="src/docbkx/images/update_scheduler.png" format="PNG"
+                       width="0.20in" />
+          </imageobject>
+        </inlinemediaobject> - update the scheduled reports properties on the server.
+        </para></listitem>
+
+      <listitem>
+        <para><inlinemediaobject>
+            <imageobject>
+              <imagedata fileref="src/docbkx/images/cancel_scheduled_task.png" format="PNG"
+                         width="0.20in" />
+            </imageobject>
+          </inlinemediaobject> - cancel the scheduled report. This will remove the
+          scheduled report from the server.</para>
+      </listitem>
+    </orderedlist>
+    
+    <section id="report_task.create">
+      <title>Schedule a Report</title>
+      
+      <para>To schedule a report...</para>
+    
+      <orderedlist>
+        <listitem><para>Right click on the workspace tree and select "New Scheduled 
+        Report".</para></listitem>
+        
+        <listitem><para>Select a report that will be e-mailed at a regular interval.
+        </para></listitem>
+        
+        <listitem><para>Fill in the e-mail address of the recipient.</para></listitem>
+        
+        <listitem><para>Select the time interval to send the report.</para></listitem>
+        
+        <listitem><para>Update the schedule by pressing the "Update Scheduler" button.
+        </para></listitem>
+      </orderedlist>
+    </section>
+    
+  </chapter>
+  
+  <chapter id="system_workspace">
+    <title>Server System Workspace</title>
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/system_workspace.png" format="PNG" 
+                width="3.5in" />
+      </imageobject>
+    </mediaobject>
+    
+    <para>When Wabit is connected to a server a system workspace will be opened
+    along with the workspaces the user connected as has permissions to. The system
+    workspace is used by system administrators to create and modify users and groups.
+    Changing permissions to create and modify users and groups can also be done
+    from the system workspace.</para>
+  </chapter>
+  
+  <chapter id="users">
+    <title>Users</title>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/users.png" format="PNG" 
+                width="3.5in" />
+      </imageobject>
+    </mediaobject>
+    
+    <para>Users are defined on the server to allow others to connect and use
+    the server with different permissions. Each user must have a unique user name
+    and a password. Users can also be named to help remember who each user is and
+    an e-mail address that will be used in scheduling reports in the future. Each
+    user can be included in any number of groups in the system. To learn more about 
+    groups see <xref linkend="groups" />. When a user is first created it will start
+    with no permissions in the server. To define permissions for a user see 
+    <xref linkend="security"/></para>    
+    
+    <section id="users.create">
+      <title>Create a New User</title>
+    
+      <para>To create a new user...</para>
+      
+      <orderedlist>
+        <listitem><para>Right-click on the server system workspace or press the "New"
+        button in the tool bar with the server system workspace selected and choose 
+        "New User"</para></listitem>
+        
+        <listitem><para>Define a unique user name for the user.</para></listitem>
+        
+        <listitem><para>Define a password for the user.</para></listitem>
+      </orderedlist>
+      
+    </section>
+  </chapter>
+  
+  <chapter id="groups">
+    <title>Groups</title>
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="src/docbkx/images/groups.png" format="PNG" 
+                width="3.5in" />
+      </imageobject>
+    </mediaobject>
+    
+    <para>Groups allow defining multiple users to have the same permissions as each
+    other. When a group is created it can be given permissions on any object like a
+    user except all of the users in the group will gain the permission instead of just
+    one user. The users in the group will only keep the permissions gained from the
+    group as long as they are a member of that group. Additionally, any user can be
+    a member of any number of groups.</para>
+  
+  </chapter>
+  
+  <chapter id="security">
+    <title>Security</title>
+    
+    <para>When Wabit is connected to a workspace on the server each object has its own
+    set of permissions that users or groups can be granted or revoked. This fine grained
+    security can help people not accidentally modify or delete parts of a report when they
+    don't have permissions to.</para>
+    
+    <section id="security_policy.define">
+      <title>Setting security permissions.</title>
+      
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="src/docbkx/images/sharing_and_security.png" format="PNG" 
+                  width="3.5in" />
+        </imageobject>
+      </mediaobject>
+      
+      <para>To set or manage security permissions...</para>
+      
+      <orderedlist>
+        <listitem><para>Right click on the object to change permissions on and select 
+        "Manage <emphasis>Object</emphasis> sharing and security.</para></listitem>
+        
+        <listitem><para>Select the user or group to change permissions on from the list.
+        </para></listitem>
+        
+        <listitem><para>Check or un-check the types of permissions that the user should
+        have granted or revoked. Note that you can only change someone's permissions if
+        the user logged in as has the Grant privilege on the object and has the privilege
+        that is being given or revoked.</para></listitem>
+        
+        <listitem><para>Click the "Apply Changes" button when finished.</para></listitem>
+      
+      </orderedlist>
+    </section>
+    
+    <section id="security.policy">
+      <title>Security Policy</title>
+      
+      <para>The following describes the security policies in Wabit.</para>
+      
+      <para>A grant in Wabit is either on the system level or on the object level. 
+      A grant on the system level will apply to all objects of a specified type 
+      (eg Reports), while an object level grant will only apply to a specific 
+      object.</para>
+
+      <para>There are five types of grants in Wabit: Create, Modify, Delete, 
+      Execute, and Grant. An Execute privilege will allow a user to see and 
+      execute an object, or a type of object. Modify and Delete privileges both 
+      contain an implied Execute privilege. Modify is required to change any 
+      property on an object. It also allows a user to change, create, and remove 
+      children of that object (eg Add a content box to a report). Delete allows a 
+      user to remove an object from the workspace.</para>
+
+      <para>To read a workspace a user is required to have either read permission 
+      on that workspace, read permission on any workspace, or read permission on 
+      any object within that workspace, whether that permission comes from a 
+      system level or object level grant.</para>
+
+      <para>A modify privilege on a workspace is a special case. This privilege 
+      is required to create, modify, or delete any object inside that workspace. 
+      If a user has a system level delete privilege on charts, they would still 
+      need a modify privilege on the workspace to remove a chart from it. A delete 
+      all charts privilege and a modify all workspaces privilege would let a user 
+      delete any chart in any workspace.</para>
+
+      <para>Create privilege can only be granted on a system level, because any 
+      object that can have a grant has already been created. A create privilege, 
+      in conjunction with modify workspace, will allow a user to create any number 
+      of objects of a specific type, within that workspace.</para> 
+
+      <para>Grant privilege allows a user to grant access on an object to other 
+      users. If a user has grant privilege on an object, he can grant any privileges 
+      he has on that object to any other user. With a system level grant privilege 
+      on a type of object, a user could grant any privileges he has on any objects 
+      of that type.</para>
+
+      <para>When a user creates a new object, that user is automatically given 
+      modify, delete, execute, and grant on that object. This way, a user can 
+      perform any action on an object he created, including grant access to others. 
+      If this user grants all of his grants to another user, the second user can 
+      then do anything the creator can do.</para>
+
+      <para>By using multiple workspaces, a system administrator can grant others 
+      system level permissions, but have them only apply to specific workspaces. 
+      For example, a user with create any privilege can still only create objects 
+      in a workspace upon which he has modify privilege.</para>
+
+      <para>By adding a User to a Group, the user can perform any action permitted 
+      by his own grants, as well as any action permitted by the group's grants. 
+      Some example groups are listed below.</para>
+      
+      <section id="security.policy.example_groups">
+        <title>Example Groups</title>
+        
+        <para>Wabit comes with several groups defined that are common to most uses.
+        </para>
+        
+        <formalpara>
+          <title>System Administrators</title>
+          
+          <para>This group is given full system level grants on all objects, including 
+          Workspaces, Users, Groups, and Grants. Members of this group are allowed to 
+          make any change to any workspace. Because of the system level grants on 
+          Users and Groups, these users are allowed to create or remove any User or 
+          Group. They can also revoke any grant. In all circumstances, these users 
+          will have permission to perform the action.</para>
+        </formalpara>
+        
+        <formalpara>
+          <title>Demo Workspace Administrators</title>
+          
+          <para>This group is given full system level grants on all objects that 
+          exist within a workspace. That is, all objects except Workspaces, Users, 
+          Groups, and Grants. They are also given the object level modify permission 
+          on the Demo Workspace. This allows them to create, modify, or delete any 
+          object within the Demo Workspace. These users can perform almost any action 
+          the system administrators can perform, but are limited to the Demo workspace. 
+          They are also unable to modify Users and Groups, because those lie in the 
+          system workspace. Owing to their system-level execute permission on most object 
+          types, Demo Workspace Administrators are also allowed to view and execute all 
+          objects in all other workspaces.</para>
+          
+        </formalpara>
+        
+        <formalpara>
+          <title>Power Users</title>
+          
+          <para>This group is given create grants on all objects the workspace 
+          administrators have grants on. They are allowed to create queries, charts, 
+          images, and reports. They can also modify and delete objects they have 
+          created, as well as grant others access to them. They cannot view, modify, 
+          or delete any object that was created by another user, even if that user is 
+          a member of this group. They can, however, be granted explicit access to 
+          such an object by a user with sufficient permissions, such as the creator 
+          or an administrator. Members of this group must be granted explicit access 
+          to a workspace before they can start working in it. This can be done either 
+          by the workspace administrator or any system administrator.</para>
+          
+        </formalpara>
+
+        <formalpara>
+          <title>Report Creators</title>
+          
+          <para>This group is given a system level create grant on Reports, as well 
+          as system level execute grants on other queries, charts, and images. They 
+          are able to create new reports, and use objects that other users have created 
+          in the reports. They cannot modify or delete these objects. They also cannot 
+          see other users' reports without explicit permission. Like power users, they 
+          must be given access to a workspace by another user, such as the workspace 
+          administrator, or a system administrator.</para>
+        </formalpara>
+        
+        <formalpara>
+          <title>Report Consumers</title>
+          
+          <para>This group is only given system level execute grants on reports. With 
+          this grant, they are able to read any report, in any workspace. They do not 
+          need specific permission on the workspace before they can read its reports. 
+          They are limited to reading reports, and cannot change or remove anything. 
+          They are also not given any permission to create new objects, or to grant 
+          others their permissions.</para>
+          
+        </formalpara>
+      
+      </section>   
+      
+      <section id="security.policy.examples">
+        <title>Examples of Security</title>
+        
+        <para>The following are four examples of the type(s) of security a user must
+        have in order to see an object or perform an action.</para>
+        
+        <para>For a user to be able to see a workspace, they must either have an execute, 
+        modify, or delete grant on that specific workspace, a system level execute, 
+        modify, or delete grant on all workspaces, or be able to view any object in the 
+        workspace, either through object level or system level grants.</para>
+
+        <para>For a user to be able to read a report, they must have execute, modify, 
+        or delete privilege on that report, or a system level execute, modify, or delete 
+        privilege on reports.</para>
+
+        <para>For a user to be able to add a query to a report, they must have modify 
+        privilege on that report, modify privilege on the workspace that contains the 
+        report, and be able to view the relevant query.</para>
+
+        <para>For a user to be able to create a new report, they must have modify 
+        privilege on the workspace that they want to add the report to, as well as 
+        system level create privilege on reports. Note that by creating the new report, 
+        the user will be granted modify, delete, execute, and grant privilege on the 
+        new report.</para> 
+      
+      </section>   
+    
+    </section>
+  </chapter>
 
   <chapter id="walkthrough">
     <title>A Wabit Walkthrough</title>
@@ -2104,6 +2589,159 @@
         PDF file or printed from the toolbar.</para>
       </section>
     </section>
+  </chapter>
+  
+  <chapter id="server_configuration">
+    <title>Server Configuration</title>
+    
+    <para>When the Wabit Enterprise Edition is downloaded the server is 
+    contained in the "tomcat" directory. To start the server with its default 
+    settings navigate to the tomcat/bin directory and execute the startup.sh 
+    script for Mac or Linux or execute the startup.bat file for Windows. 
+    After a few minutes the server will be started and you will be able to connect
+    to it with one of the Wabit clients that comes in the Enterprise Edition
+    package. The default port used by Tomcat is 8080 and will have to be available
+    for Tomcat to use to allow the server to start. If you do not wish to use the
+    Tomcat instance that comes with the Enterprise Edition download the war file
+    is at tomcat/webapps/wabit-enterprise.war.</para>
+    
+    <section id="server_configuration.jdbc">
+      <title>Changing JDBC Drivers</title>
+      
+      <para>The server's JDBC drivers are located at 
+      tomcat/webapps/wabit-enterprise/WEB-INF/classes/jdbc. These JDBC drivers will
+      be used by the server to query databases and will also be used to respond to
+      client requests for driver and database information. The location of the JDBC
+      drivers is defined in the file at tomcat/webapps/wabit-enterprise/WEB-INF/web.xml 
+      under the parameter "jdbcDriverHome". The jdbcDriverHome can be changed to an
+      absolute path pointing to a different folder that contains the JDBC drivers that
+      will be used for the server.</para>
+    </section>
+    
+    <section id="server_configuration.repository">
+      <title>Changing the Repository Location</title>
+      
+      <para>When the server is first started it will create a Java Content Repository
+      under the user's home directory. The repository will be in the directory 
+      "wabit-enterprise-repository" and will contain all of the workspaces on the server.
+      The location of the repository can be changed in the web.xml file in the
+      tomcat/webapps/wabit-enterprise/WEB-INF directory. The parameter "repositoryHome"
+      points to the location of the repository and can be set to an absolute path of
+      a different directory where the repository should be stored.</para>
+    </section>
+    
+    <section id="server_configuration.smtp">
+      <title>Defining an SMTP Service</title>
+      
+      <para>To allow reports to be scheduled the mail.xml file must be configured to point
+      to a correct SMTP service. The mail.xml file is located at 
+      tomcat/webapps/wabit-enterprise/WEB-INF/classes.</para>
+      
+      <informaltable frame="all">
+          <tgroup cols="2">
+            <colspec colwidth="2in" />
+
+            <colspec colwidth="4in" />
+
+            <thead>
+              <row>
+                <entry>
+                  <para>Field</para>
+                </entry>
+
+                <entry>
+                  <para>Meaning</para>
+                </entry>
+              </row>
+            </thead>
+            
+            <tbody>
+              <row>
+                <entry>
+                  <para>wabit.mail.sender</para>
+                </entry>
+
+                <entry>
+                  <para>The address defined as the sender of the scheduled reports.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.mail.reply</para>
+                </entry>
+
+                <entry>
+                  <para>The address defined as the reply address of the scheduled reports.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.smtp.host</para>
+                </entry>
+
+                <entry>
+                  <para>The host name of the SMTP service.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.smtp.auth</para>
+                </entry>
+
+                <entry>
+                  <para>If true, attempt to authenticate the user using the AUTH command.
+                  The default of this value is false.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.smtp.username</para>
+                </entry>
+
+                <entry>
+                  <para>The username to connect to the SMTP service with.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.smtp.password</para>
+                </entry>
+
+                <entry>
+                  <para>The password of the user used to connect to the SMTP service.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.mail.report.subject</para>
+                </entry>
+
+                <entry>
+                  <para>The subject of the e-mail that will be sent with the report.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>wabit.mail.report.message</para>
+                </entry>
+
+                <entry>
+                  <para>The body of the e-mail that will be sent with the report. The
+                  report itself will be sent as a PDF attachment.</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+    </section>
+    
   </chapter>
 
   <chapter id="appendices">
