@@ -2688,7 +2688,28 @@
               
               <row>
                 <entry>
-                  <para>wabit.smtp.auth</para>
+                  <para>mail.smtp.port</para>
+                </entry>
+
+                <entry>
+                  <para>The port number on which the SMTP server is running. If not specified,
+                  port number 25 is used by default.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>mail.transport.protocol</para>
+                </entry>
+
+                <entry>
+                  <para>Specifies the default message access protocol.</para>
+                </entry>
+              </row>
+              
+              <row>
+                <entry>
+                  <para>mail.smtp.auth</para>
                 </entry>
 
                 <entry>
