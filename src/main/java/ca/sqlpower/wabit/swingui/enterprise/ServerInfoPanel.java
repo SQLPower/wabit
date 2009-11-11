@@ -88,7 +88,7 @@ public class ServerInfoPanel implements DataEntryPanel {
         builder.append("Username", username = new JTextField(si.getUsername()));
         builder.append("Password", password = new JPasswordField(si.getPassword()));
         
-        builder.append("Test this connection", testButton = new JButton("Test"));
+        builder.append(testButton = new JButton("Test Connection"));
         this.testButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				lookupServerInfo(true);

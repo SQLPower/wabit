@@ -95,21 +95,17 @@ public class ServerListMenu extends JMenu {
 
         return new AbstractAction("Configure Server Connections...") {
             public void actionPerformed(ActionEvent e) {
-                ServerInfoManager sim = new ServerInfoManager(context, dialogOwner);
-                final JDialog d = SPSUtils.makeOwnedDialog(dialogOwner, "Server Connections");
+            	
+            	final JDialog d = SPSUtils.makeOwnedDialog(dialogOwner, "Server Connections");
+            	Runnable closeAction = new Runnable() {
+					public void run() {
+                        d.dispose();
+					}
+				};
+                ServerInfoManager sim = new ServerInfoManager(context, dialogOwner, closeAction);
                 d.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                 
-                JButton closeButton = new JButton("Close");
-                closeButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        d.dispose();
-                    }
-                });
-                
-                JPanel cp = new JPanel(new BorderLayout(0, 12));
-                cp.add(sim.getPanel(), BorderLayout.CENTER);
-                cp.add(ButtonBarFactory.buildCloseBar(closeButton), BorderLayout.SOUTH);
-                d.setContentPane(cp);
+                d.setContentPane(sim.getPanel());
                 
                 SPSUtils.makeJDialogCancellable(d, null);
                 d.pack();

@@ -33,6 +33,7 @@ import javax.swing.Action;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -44,7 +45,7 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.LogInToServerAction;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
-import com.jgoodies.forms.factories.ButtonBarFactory;
+import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 
 /**
@@ -80,16 +81,31 @@ public class ServerInfoManager {
         
     };
     
-    private Action editAction = new AbstractAction("Properties...") {
+    private Action editAction = new AbstractAction("Edit...") {
     	public void actionPerformed(ActionEvent e) {
     		editSelectedServer();
     	}
     };
 
-    public ServerInfoManager(WabitSessionContext m_context, Component m_dialogOwner) {
+	/**
+	 * Creates a panel that displays the currently configured server
+	 * connections. New connections can be added from this panel and existing
+	 * connections can be modified or removed.
+	 * 
+	 * @param m_context
+	 *            A Wabit context that contains server connection information.
+	 * @param m_dialogOwner
+	 *            A component that will be used as the dialog owner for other
+	 *            panels.
+	 * @param closeAction
+	 *            An action that will properly close the object displaying the
+	 *            panel.
+	 */
+    public ServerInfoManager(WabitSessionContext m_context, Component m_dialogOwner, 
+    		final Runnable closeAction) {
         this.context = m_context;
         this.dialogOwner = m_dialogOwner;
-        DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow"));
+        DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref:grow, 5dlu, pref", "pref, pref, pref"));
         
         serverInfos = new JList(new DefaultListModel());
         serverInfos.addMouseListener(new MouseAdapter() {
@@ -132,13 +148,22 @@ public class ServerInfoManager {
         
         // Build the GUI
         refreshInfoList();
-        builder.append(scrollPane);
-        builder.append(
-        	ButtonBarFactory.buildRightAlignedBar(new JButton[] {
-        		new JButton(addAction), 
-        		new JButton(removeAction), 
-        		new JButton(editAction),
-        		this.connectButton}));
+        CellConstraints cc = new CellConstraints();
+        builder.add(new JLabel("Available Server Connections:"), cc.xyw(1, 1, 3));
+        builder.nextLine();
+        builder.add(scrollPane, cc.xywh(1, 2, 1, 2));
+        
+        DefaultFormBuilder buttonBarBuilder = new DefaultFormBuilder(new FormLayout("pref"));
+        buttonBarBuilder.append(new JButton(addAction));
+        buttonBarBuilder.append(new JButton(editAction));
+        buttonBarBuilder.append(new JButton(removeAction));
+        buttonBarBuilder.append(connectButton);
+        buttonBarBuilder.append(new JButton(new AbstractAction("Close") {
+			public void actionPerformed(ActionEvent arg0) {
+				closeAction.run();
+			}
+        }));
+        builder.add(buttonBarBuilder.getPanel(), cc.xy(3, 2));
         builder.setDefaultDialogBorder();
         panel = builder.getPanel();
     }
@@ -171,13 +196,6 @@ public class ServerInfoManager {
             infoPanel = new ServerInfoPanel(panel, serverInfo);
         }
 
-        Window dialogParent;
-        if (dialogOwner instanceof Window) {
-            dialogParent = (Window) dialogOwner;
-        } else {
-            dialogParent = SwingUtilities.getWindowAncestor(dialogOwner);
-        }
-
         Callable<Boolean> okCall = new Callable<Boolean>() {
             public Boolean call() throws Exception {
             	if (!infoPanel.applyChanges()) {
@@ -198,7 +216,7 @@ public class ServerInfoManager {
         };
 
         JDialog dialog = DataEntryPanelBuilder.createDataEntryPanelDialog(
-                infoPanel, dialogParent, "Server Connection Properties", "OK",
+                infoPanel, dialogOwner, "Server Connection Properties", "OK",
                 okCall, cancelCall);
 
         dialog.setVisible(true);
