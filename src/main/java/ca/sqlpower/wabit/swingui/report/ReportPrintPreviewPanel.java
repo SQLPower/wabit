@@ -25,8 +25,12 @@ import java.beans.PropertyChangeSupport;
 
 import javax.swing.JComponent;
 
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.Report;
+import ca.sqlpower.wabit.report.Page;
+
+import java.awt.Rectangle;
 
 /**
  * This is a JComponent which keeps track of what page you are on
@@ -75,6 +79,10 @@ public class ReportPrintPreviewPanel extends JComponent {
 	protected void paintComponent(Graphics g) {
 		try {
 			layout.print(g, layout.getPageFormat(pageIndex - 1), pageIndex - 1);
+			Watermarker watermarker = new Watermarker(WabitUtils.getWorkspace(layout).getSession());
+			Page page = layout.getPage();
+	    	Rectangle pageSize = new Rectangle(page.getWidth(), page.getHeight());
+	        watermarker.maybeWatermark(g, pageSize);
 		} catch (Exception e) {
 			throw new RuntimeException(e); //TODO make this nicer for the user
 		}

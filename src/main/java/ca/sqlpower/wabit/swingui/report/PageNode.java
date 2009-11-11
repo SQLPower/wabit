@@ -20,14 +20,16 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
@@ -35,6 +37,7 @@ import ca.sqlpower.wabit.swingui.WabitNode;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PPaintContext;
 
 public class PageNode extends PNode implements WabitNode {
 
@@ -72,6 +75,17 @@ public class PageNode extends PNode implements WabitNode {
 
         updateBoundsFromPage();
         setPaint(Color.WHITE);
+    }
+    
+    @Override
+    protected void paint(PPaintContext pc) {
+    	super.paint(pc);
+        Watermarker watermarker = 
+        	new Watermarker(
+        			WabitUtils.getWorkspace(page).getSession());
+        watermarker.maybeWatermark(
+        		pc.getGraphics(),
+        		new Rectangle(page.getWidth(), page.getHeight()));
     }
     
     private void updateBoundsFromPage() {

@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.LayoutToPDF;
 
@@ -74,7 +75,7 @@ public class LayoutToPDFWorker extends SPSwingWorker {
 	 *            The watermarker to use. null means do not watermark.
 	 */
 	public LayoutToPDFWorker(SwingWorkerRegistry registry, File file, Layout layout, Component dialogOwner,
-			@Nullable LayoutToPDF.PDFWatermarker watermarker) {
+			@Nullable Watermarker watermarker) {
 		super(registry);
 		this.dialogOwner = dialogOwner;
 		pdfMaker = new LayoutToPDF(file, layout, watermarker);

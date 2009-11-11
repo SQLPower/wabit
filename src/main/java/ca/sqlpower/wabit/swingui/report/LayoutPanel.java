@@ -372,6 +372,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
         canvas.setBackground(Color.LIGHT_GRAY);
         canvas.setPreferredSize(new Dimension(400,600));
         canvas.setZoomEventHandler(null);
+        
         cursorManager = new CursorManager(canvas);
         
         pageNode = new PageNode(session, this, layout.getPage());
@@ -382,7 +383,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
         canvas.addInputEventListener(selectionEventHandler);
         pageNode.setPickable(false);
         canvas.getRoot().getDefaultInputManager().setKeyboardFocus(selectionEventHandler);
-        
         
         AbstractAction cancelBoxCreateAction = new AbstractAction() {
         	public void actionPerformed(ActionEvent e) {

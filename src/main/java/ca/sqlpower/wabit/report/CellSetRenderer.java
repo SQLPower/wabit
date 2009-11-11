@@ -54,6 +54,8 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.olap.OlapQueryListener;

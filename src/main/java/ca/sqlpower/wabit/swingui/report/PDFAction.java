@@ -21,12 +21,8 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Component;
 import java.awt.Dialog;
-import java.awt.Dimension;
 import java.awt.FileDialog;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Frame;
-import java.awt.Graphics;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
@@ -35,31 +31,24 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.wabit.enterprise.client.ServerInfoProvider;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.report.Layout;
-import ca.sqlpower.wabit.report.LayoutToPDF;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
-
-import com.kitfox.svg.app.beans.SVGIcon;
-import com.lowagie.text.Rectangle;
 
 public class PDFAction extends AbstractAction {
 
@@ -80,48 +69,7 @@ public class PDFAction extends AbstractAction {
 	
 	private final JFrame parentFrame;
 	
-	private static LayoutToPDF.PDFWatermarker watermarker = new LayoutToPDF.PDFWatermarker() {
-		
-		private String watermarkMessage = ServerInfoProvider.defaultWatermarkMessage;
-
-		public void setWatermarkMessage(String message) {
-			this.watermarkMessage = message;
-		}
-		
-		public void watermarkPDF(Graphics g, Rectangle size) {
-	        FontMetrics fm = g.getFontMetrics();
-	        
-	        JLabel label = new JLabel();
-	        
-            int textWidth = fm.stringWidth(watermarkMessage);
-            int scaleWidth = (int) size.getWidth() - 50;
-            Font font = fm.getFont();
-            watermarkMessage = "<html><div style='font-family: " + font.getFamily() + "; font-size: " + (font.getSize()*((double)scaleWidth)/textWidth) + "pt; color: FF6600;'>" + watermarkMessage;
-            
-            label.setText(watermarkMessage);
-            label.setBounds(new java.awt.Rectangle(0, 20, (int) size.getWidth(), fm.getHeight() + 20));
-            label.setHorizontalAlignment(SwingConstants.HORIZONTAL);
-            
-            label.paint(g);
-            
-            URI resource = null;
-            try {
-            	resource = this.getClass().getClassLoader().getResource("ca/sqlpower/wabit/enterprise/client/notforproduction.svg").toURI();
-            } catch (URISyntaxException e) {
-            	throw new RuntimeException(e);
-            }
-            
-            SVGIcon logo = new SVGIcon();
-            logo.setSvgURI(resource);
-            
-            int scaleSize = (int) Math.min(size.getWidth(), size.getHeight());
-            int x = (int) (size.getWidth() - scaleSize)/2;
-            int y = (int) (size.getHeight() - scaleSize)/2;
-            logo.setPreferredSize(new Dimension(scaleSize, scaleSize));
-            logo.setScaleToFit(true);
-            logo.paintIcon(null, g, x, y);
-		}
-	};
+	private Watermarker watermarker = new Watermarker();
 
     public PDFAction(WabitSwingSession session, Component dialogOwner, Layout layout) {
         super("Create PDF...", ICON);
@@ -219,7 +167,7 @@ public class PDFAction extends AbstractAction {
 				}
 			});
             
-            LayoutToPDF.PDFWatermarker watermarkerToApply = null;
+            Watermarker watermarkerToApply = null;
             if (this.session.isEnterpriseServerSession()) {
             	WabitServerInfo infos = 
             		((WabitSwingSessionImpl)this.session).getEnterpriseServerInfos();

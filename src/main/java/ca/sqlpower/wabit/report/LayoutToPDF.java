@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -34,6 +33,7 @@ import javax.annotation.Nullable;
 import ca.sqlpower.util.Monitorable;
 import ca.sqlpower.util.MonitorableImpl;
 import ca.sqlpower.wabit.WabitVersion;
+import ca.sqlpower.wabit.enterprise.client.Watermarker;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -43,14 +43,9 @@ import com.lowagie.text.pdf.PdfWriter;
 
 public class LayoutToPDF implements Monitorable {
 
-	public interface PDFWatermarker {
-		public void watermarkPDF(Graphics g, Rectangle size);
-		public void setWatermarkMessage(String message);
-	}
-
 	private final File file;
 	private final Layout layout;
-	private final LayoutToPDF.PDFWatermarker watermarker;
+	private final Watermarker watermarker;
 
 	private final MonitorableImpl monitorableHelper = new MonitorableImpl();
 	
@@ -65,7 +60,7 @@ public class LayoutToPDF implements Monitorable {
 	 * @param watermarker
 	 *            The watermarker to use. null means do not watermark.
 	 */
-	public LayoutToPDF(File file, Layout layout, @Nullable PDFWatermarker watermarker) {
+	public LayoutToPDF(File file, Layout layout, @Nullable Watermarker watermarker) {
 		super();
 		this.file = file;
 		this.layout = layout;
@@ -99,7 +94,11 @@ public class LayoutToPDF implements Monitorable {
     	        int flag = layout.print(pdfGraphics, layout.getPageFormat(pageNum), pageNum);
 
     	        if (watermarker != null) {
-    	        	watermarker.watermarkPDF(pdfGraphics, pageSize);
+    	        	java.awt.Rectangle watermarkSize = new java.awt.Rectangle();
+    	        	watermarkSize.setSize(
+    	        			Math.round(pageSize.getWidth()),
+    	        			Math.round(pageSize.getHeight()));
+    	        	watermarker.watermark(pdfGraphics, watermarkSize);
     	        }
     	        
     	        pdfGraphics.dispose();
