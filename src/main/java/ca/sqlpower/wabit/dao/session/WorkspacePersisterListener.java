@@ -38,6 +38,7 @@ import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitChildEvent;
+import ca.sqlpower.wabit.WabitConstantItem;
 import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitItem;
@@ -125,6 +126,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		ignored.add(new PropertyToIgnore("zoomLevel", WabitObject.class));
 		ignored.add(new PropertyToIgnore("editorPanelModel", WabitWorkspace.class));
 		ignored.add(new PropertyToIgnore("colBeingDragged", ResultSetRenderer.class));
+		ignored.add(new PropertyToIgnore("delegate", WabitConstantItem.class));
 		ignoreList = Collections.unmodifiableList(ignored);
 	}
 	
@@ -271,6 +273,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	public void transactionEnded(TransactionEvent e) {
 		if (wouldEcho()) return;
 		try {
+			logger.debug("transactionEnded " + ((e == null) ? null : e.getMessage()));
 			this.commit();
 		} catch (WabitPersistenceException e1) {
 			throw new RuntimeException(e1);
@@ -279,17 +282,20 @@ public class WorkspacePersisterListener implements WabitListener {
 
 	public void transactionRollback(TransactionEvent e) {
 		if (wouldEcho()) return;
+		logger.debug("transactionRollback " + ((e == null) ? null : e.getMessage()));
 		this.rollback();
 	}
 
 	public void transactionStarted(TransactionEvent e) {
 		if (wouldEcho()) return;
+		logger.debug("transactionStarted " + ((e == null) ? null : e.getMessage()));
 		transactionCount++;
 	}
 
 	public void wabitChildAdded(WabitChildEvent e) {
 		WabitUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
+		logger.debug("wabitChildAdded " + e.getChildType() + " with UUID " + e.getChild().getUUID());
 		persistObject(e.getChild());
 	}
 	
@@ -371,6 +377,8 @@ public class WorkspacePersisterListener implements WabitListener {
 
 		String uuid = child.getUUID();
 
+		logger.debug("persistChild on " + childClassType + " with UUID " + uuid);
+		
 		// Persist any properties required for WabitObject constructor
 		if (child instanceof CellSetRenderer) {
 			CellSetRenderer csRenderer = (CellSetRenderer) child;
@@ -594,6 +602,12 @@ public class WorkspacePersisterListener implements WabitListener {
 
 		} else if (child instanceof QueryCache) {
 			QueryCache query = (QueryCache) child;
+			
+			// Constructor argument
+			this.persistProperty(uuid, "dataSource",
+					DataType.STRING,
+					converter.convertToBasicType(query.getDataSource()));
+			
 			// Remaining properties
 			
 			// The zoom property is being ignored here because it does not make much
@@ -625,9 +639,6 @@ public class WorkspacePersisterListener implements WabitListener {
 			this.persistProperty(uuid, "executeQueriesWithCrossJoins",
 					DataType.BOOLEAN, 
 					converter.convertToBasicType(query.getExecuteQueriesWithCrossJoins()));
-			this.persistProperty(uuid, "dataSource",
-					DataType.STRING,
-					converter.convertToBasicType(query.getDataSource()));
 			
 		} else if (child instanceof ReportTask) {
 			ReportTask task = (ReportTask) child;
@@ -815,15 +826,16 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	public void wabitChildRemoved(WabitChildEvent e) {
+		logger.debug("wabitChildRemoved(" + e.getChildType() + ")");
 		e.getChild().removeWabitListener(this);
 		if (wouldEcho()) return;
-		this.transactionStarted(null);
+		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Start of transaction triggered by wabitChildRemoved event"));
 		this.objectsToRemove.add(
 			new RemovedObjectEntry(
 				e.getSource().getUUID(),
 				e.getChild(),
 				e.getIndex()));
-		this.transactionEnded(null);
+		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 	}
 
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -875,6 +887,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		oldBasicType = converter.convertToBasicType(oldValue, additionalParams.toArray());
 		newBasicType = converter.convertToBasicType(newValue, additionalParams.toArray());
 		
+		logger.debug("Calling persistProperty on propertyChange");
 		this.persistProperty(uuid, propertyName, typeForClass, 
 				oldBasicType, newBasicType);
 		
@@ -887,6 +900,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			DataType propertyType, 
 			Object newValue)
 	{
+		logger.debug("persistProperty(" + uuid + ", " + propertyName + ", " + propertyType.name() + ", " + newValue + ", " + newValue + ")");
 		this.persistedProperties.put(
 				uuid,
 				new WabitObjectProperty(
@@ -905,6 +919,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			Object oldValue, 
 			Object newValue)
 	{
+		logger.debug("persistProperty(" + uuid + ", " + propertyName + ", " + propertyType.name() + ", " + oldValue + ", " + newValue + ")");
 		this.persistedProperties.put(
 				uuid,
 				new WabitObjectProperty(
@@ -957,8 +972,10 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 	
 	private void commit() throws WabitPersistenceException {
+		logger.debug("commit(): transactionCount = " + transactionCount);
 		if (transactionCount==1) {
 			try {
+				logger.debug("Calling commit...");
 				//If nothing actually changed in the transaction do not send
 				//the begin and commit to reduce server traffic.
 				if (objectsToRemove.isEmpty() && persistedObjects.isEmpty() && 
@@ -968,10 +985,11 @@ public class WorkspacePersisterListener implements WabitListener {
 				this.persistedObjectsRollbackList.clear();
 				this.persistedPropertiesRollbackList.clear();
 				target.begin();
+				commitRemovals();
 				commitObjects();
 				commitProperties();
-				commitRemovals();
 				target.commit();
+				logger.debug("...commit completed.");
 			} catch (Throwable t) {
 				this.rollback();
 				throw new WabitPersistenceException(null,t);
@@ -1009,6 +1027,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 	
 	private void commitProperties() throws WabitPersistenceException {
+		logger.debug("commitProperties()");
 		for (Entry<String, WabitObjectProperty> entry : persistedProperties.entries()) {
 			WabitObjectProperty wop = entry.getValue();
 			String uuid = entry.getKey();
@@ -1036,10 +1055,12 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 	
 	private void commitRemovals() throws WabitPersistenceException {
+		logger.debug("commitRemovals()");
 		for (RemovedObjectEntry entry: this.objectsToRemove) {
+			logger.debug("target.removeObject(" + entry.getParentUUID() + ", " + entry.getRemovedChild().getUUID() + ")");
 			target.removeObject(
 				entry.getParentUUID(), 
-				entry.getRemovedChildren().getUUID());
+				entry.getRemovedChild().getUUID());
 			this.objectsToRemoveRollbackList.add(entry);
 		}
 	}

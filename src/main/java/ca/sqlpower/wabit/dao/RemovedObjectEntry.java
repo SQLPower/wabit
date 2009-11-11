@@ -23,12 +23,12 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class RemovedObjectEntry {
 	private final String parentUUID;
-	private final WabitObject removedChildren;
+	private final WabitObject removedChild;
 	private final int index;
 
 	public RemovedObjectEntry(String parentUUID, WabitObject removedChildren, int index) {
 		this.parentUUID = parentUUID;
-		this.removedChildren = removedChildren;
+		this.removedChild = removedChildren;
 		this.index = index;
 	}
 
@@ -36,8 +36,8 @@ public class RemovedObjectEntry {
 		return parentUUID;
 	}
 
-	public WabitObject getRemovedChildren() {
-		return removedChildren;
+	public WabitObject getRemovedChild() {
+		return removedChild;
 	}
 
 	public int getIndex() {
@@ -47,7 +47,7 @@ public class RemovedObjectEntry {
 	@Override
 	public String toString() {
 		return "RemovedObjectEntry [parentUUID=" + parentUUID
-				+ ", removedChildren=" + removedChildren + ", index=" + index
+				+ ", removedChild=" + removedChild + ", index=" + index
 				+ "]";
 	}
 	

@@ -500,12 +500,15 @@ public class WabitSessionPersister implements WabitPersister {
 			wo = new Page(name, width, height, orientation, false);
 
 		} else if (type.equals(QueryCache.class.getSimpleName())) {
+			JDBCDataSource dataSource = (JDBCDataSource) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "dataSource"), JDBCDataSource.class);
 			try {
 				WabitConstantsContainer constantsContainer = (WabitConstantsContainer) createObjectByCalls(
 						uuid, WabitConstantsContainer.class.getSimpleName());
-				wo = new QueryCache(session.getContext(), false, constantsContainer);
+				
+				wo = new QueryCache(session.getContext(), false, constantsContainer, dataSource);
 			} catch (IllegalArgumentException e) {
-				wo = new QueryCache(session.getContext(), false);
+				wo = new QueryCache(session.getContext(), false, null, dataSource);
 			}
 		} else if (type.equals(Report.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
@@ -940,14 +943,14 @@ public class WabitSessionPersister implements WabitPersister {
 		Collections.reverse(this.objectsToRemoveRollbackList);
 		for (RemovedObjectEntry entry : this.objectsToRemoveRollbackList) {
 			final String parentUuid = entry.getParentUUID();
-			final WabitObject objectToRestore = entry.getRemovedChildren();
+			final WabitObject objectToRestore = entry.getRemovedChild();
 			final int index = entry.getIndex();
 			final WabitObject parent = WabitUtils.findByUuid(root, parentUuid, WabitObject.class);
 			try {
 				parent.addChild(objectToRestore, index);
 			} catch (Throwable t) {
 				// Keep going. We need to rollback as much as we can.
-				logger.error("Cannot rollback " + entry.getRemovedChildren() + " child removal", t);
+				logger.error("Cannot rollback " + entry.getRemovedChild() + " child removal", t);
 			}
 		}
 	}

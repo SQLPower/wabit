@@ -328,10 +328,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants, 
     		WabitConstantsContainer newConstantsContainer) {
+    	this(dbMapping, prepopulateConstants, newConstantsContainer, null);
+    }
+    
+    public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants,
+    		WabitConstantsContainer newConstantsContainer, JDBCDataSource dataSource) {
     	if (newConstantsContainer != null) {
-    		query = new QueryImpl(dbMapping, prepopulateConstants, newConstantsContainer.getDelegate());
+    		query = new QueryImpl(dbMapping, prepopulateConstants, 
+    				newConstantsContainer.getDelegate(), dataSource);
     	} else {
-    		query = new QueryImpl(dbMapping, prepopulateConstants);
+    		query = new QueryImpl(dbMapping, prepopulateConstants, null, dataSource);
     	}
         query.addQueryChangeListener(queryChangeListener);
         query.setUUID(getUUID());

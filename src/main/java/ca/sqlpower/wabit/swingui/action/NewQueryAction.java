@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.event.ActionEvent;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -47,19 +48,15 @@ public class NewQueryAction extends AbstractAction {
     private final String newQueryName;
 
 	/**
-	 * Creates a new query with no datasource. Typically, the user would then
-	 * set the datasource of this Query afterwards.
+	 * Creates a new query with the first available datasource, or no datasource
+	 * if one does not exist.
 	 * 
 	 * @param session
-	 *            The {@link WabitSwingSession} containing the workspace that the
-	 *            new query will be added to.
+	 *            The {@link WabitSwingSession} containing the workspace that
+	 *            the new query will be added to.
 	 */
     public NewQueryAction(WabitSwingSession session) {
-        super("New Relational Query", NEW_QUERY_ICON);
-        this.newQueryName = "New Relational Query";
-        this.workspace = session.getWorkspace();
-        this.session = session;
-        this.ds = null;
+        this(session, getFirstAvailableDataSource(session));
     }
 
 	/**
@@ -72,22 +69,28 @@ public class NewQueryAction extends AbstractAction {
 	 *            The datasource that the new query will use to start with
 	 */
     public NewQueryAction(WabitSwingSession session, JDBCDataSource ds) {
-    	super("New Relational Query on '" + ds.getName() + "'", NEW_QUERY_ICON);
-    	this.newQueryName = "New " + ds.getName() + " query";
+    	super("New Relational Query" + ((ds == null)? "" : " on '" + ds.getName() + "'"), NEW_QUERY_ICON);
+    	this.newQueryName = "New " + ((ds == null)? "Relational" : ds.getName()) + " Query";
     	this.workspace = session.getWorkspace();
     	this.session = session;
     	this.ds = ds;
     }
     
     public void actionPerformed(ActionEvent e) {
-        QueryCache query = new QueryCache(session.getContext());
+        QueryCache query = new QueryCache(session.getContext(), true, null, ds);
         query.setName(newQueryName);
-        if (ds != null) {
-        	query.setDataSource(ds);
-        }
 		workspace.addQuery(query, session);
 		JTree tree = session.getTree();
 		int queryIndex = tree.getModel().getIndexOfChild(workspace, query);
 		tree.setSelectionRow(queryIndex + 1);
+    }
+    
+    /**
+     * Returns the first available {@link JDBCDataSource} from a given {@link WabitSwingSession}
+     * or null if one does not exist.
+     */
+    private static JDBCDataSource getFirstAvailableDataSource(WabitSwingSession session) {
+    	List<JDBCDataSource> connections = session.getDataSources().getConnections(JDBCDataSource.class);
+    	return connections.isEmpty()? null : connections.get(0);
     }
 }
