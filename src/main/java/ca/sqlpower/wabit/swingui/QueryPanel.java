@@ -423,8 +423,14 @@ public class QueryPanel implements WabitPanel {
      * now that there are proper wabit events and objects for the query.
      */
 	private final QueryChangeListener queryListener = new QueryChangeListener() {
-	    
-	    private boolean inCompoundEdit = false;
+
+		/**
+		 * The number of times {@link #compoundEditStarted(TransactionEvent)}
+		 * has been called without a
+		 * {@link #compoundEditEnded(TransactionEvent)} being called. When this
+		 * level goes from 1 to 0, a compound edit event will occur
+		 */
+		private int compoundEditLevel = 0;
     
         public void propertyChangeEvent(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("groupingEnabled")) {
@@ -442,7 +448,7 @@ public class QueryPanel implements WabitPanel {
 
         private void executeQuery() {
             boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
-			if (!inCompoundEdit
+			if (compoundEditLevel == 0
                     && queryCache.isAutomaticallyExecuting() 
                     && !disableAutoExecute) {
                 executeQueryInCache();
@@ -478,12 +484,12 @@ public class QueryPanel implements WabitPanel {
         }
     
         public void compoundEditEnded(TransactionEvent evt) {
-            inCompoundEdit = false;
+        	compoundEditLevel--;
             executeQuery();
         }
 
         public void compoundEditStarted(TransactionEvent evt) {
-            inCompoundEdit = true;
+        	compoundEditLevel++;
         }
 
     };
