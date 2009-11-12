@@ -345,7 +345,7 @@ public class ReportTaskPanel implements WabitPanel {
 			return false;
 		}
 		
-		task.beginTransaction("Scheduled Report Modifications");
+		task.begin("Scheduled Report Modifications");
 		task.setReport((Report)this.reportComboBox.getSelectedItem());
 		task.setEmail(this.emailTextField.getText());
 		task.setTriggerType((String)this.scheduleTypeComboBox.getSelectedItem());
@@ -354,7 +354,7 @@ public class ReportTaskPanel implements WabitPanel {
 		task.setTriggerMinuteParam(this.minutesComboBox.getSelectedIndex());
 		task.setTriggerDayOfWeekParam(this.dayOfWeekComboBox.getSelectedIndex());
 		task.setTriggerDayOfMonthParam(this.dayOfMonthComboBox.getSelectedIndex()+1);
-		task.commitTransaction();
+		task.commit();
 		task.setNoob(false);
 		this.dirty = false;
 		JOptionPane.showMessageDialog(this.panel, "Your report schedule is now updated.", "Scheduled Report", JOptionPane.PLAIN_MESSAGE);

@@ -383,7 +383,7 @@ public class GrantPanel implements DataEntryPanel {
 		}
 		final WabitWorkspace systemWorkspace = this.systemWorkspace;
 		synchronized (systemWorkspace) {
-			systemWorkspace.beginTransaction("Updating grants...");
+			systemWorkspace.begin("Updating grants...");
 			try {
 				// First pass, delete all useless empty grants
 				for (Entry<String, Grant> entry : this.grants.entrySet()) {
@@ -427,13 +427,13 @@ public class GrantPanel implements DataEntryPanel {
 						}
 					}
 				}
-				systemWorkspace.commitTransaction();
+				systemWorkspace.commit();
 				return true;
 			} catch (IllegalArgumentException e) {
-				systemWorkspace.rollbackTransaction();
+				systemWorkspace.rollback("Could not update grants: " + e.getMessage());
 				throw new RuntimeException(e);
 			} catch (ObjectDependentException e) {
-				systemWorkspace.rollbackTransaction();
+				systemWorkspace.rollback("Could not update grants: " + e.getMessage());
 				throw new RuntimeException(e);
 			}
 		}

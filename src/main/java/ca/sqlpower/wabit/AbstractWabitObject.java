@@ -250,18 +250,6 @@ public abstract class AbstractWabitObject implements WabitObject {
         return evt;
     }
     
-    public void beginTransaction(final String message) {
-    	this.fireTransactionStarted(message);
-    }
-    
-    public void commitTransaction() {
-    	this.fireTransactionEnded();
-    }
-    
-    public void rollbackTransaction() {
-    	this.fireTransactionRollback("Transaction was rolledback.");
-    }
-    
     /**
      * Fires a transaction started event with a message indicating the
      * reason/type of the transaction.
