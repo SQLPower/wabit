@@ -313,7 +313,8 @@ public class WorkspacePersisterListener implements WabitListener {
 		 
 		if (wouldEcho()) return;
 
-		this.transactionStarted(null);
+		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, 
+				"Creating transaction started event from persistObject."));
 		
 		int index = 0;
 		WabitObject parent = wo.getParent();
@@ -330,7 +331,7 @@ public class WorkspacePersisterListener implements WabitListener {
 			persistObject(child);
 		}
 		
-		this.transactionEnded(null);
+		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 	}
 
 	/**
@@ -354,14 +355,16 @@ public class WorkspacePersisterListener implements WabitListener {
 		 
 		if (wouldEcho()) return;
 		
-		this.transactionStarted(null);
+		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, 
+				"Creating transaction started event from persistChild."));
 		
 		final String parentUUID;
 		if (child instanceof WabitWorkspace) {
 			parentUUID = null;
 		} else if (parent == null) {
 			this.rollback();
-			throw new NullPointerException("Child is not a WabitWorkspace, but has a null parent ID: " + child);
+			throw new NullPointerException("Child is not a WabitWorkspace, " +
+					"but has a null parent ID: " + child);
 		} else {
 			parentUUID = parent.getUUID();
 		}
@@ -582,7 +585,8 @@ public class WorkspacePersisterListener implements WabitListener {
 			
 			if (olapQuery.getCurrentCube() != null) {
 				this.persistProperty(uuid, "currentCube", DataType.STRING,
-						converter.convertToBasicType(olapQuery.getCurrentCube(), olapQuery.getOlapDataSource()));
+						converter.convertToBasicType(olapQuery.getCurrentCube(), 
+								olapQuery.getOlapDataSource()));
 			}
 
 		} else if (child instanceof Page) {
@@ -819,9 +823,10 @@ public class WorkspacePersisterListener implements WabitListener {
 		// really only be a concern for reflective tests.
 		this.persistProperty(uuid, "name", DataType.STRING, child.getName());
 		
-		this.persistProperty(uuid, "parent", DataType.REFERENCE, converter.convertToBasicType(child.getParent()));
+		this.persistProperty(uuid, "parent", DataType.REFERENCE, 
+				converter.convertToBasicType(child.getParent()));
 		
-		this.transactionEnded(null);
+		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 
 	}
 
@@ -829,7 +834,8 @@ public class WorkspacePersisterListener implements WabitListener {
 		logger.debug("wabitChildRemoved(" + e.getChildType() + ")");
 		e.getChild().removeWabitListener(this);
 		if (wouldEcho()) return;
-		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Start of transaction triggered by wabitChildRemoved event"));
+		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, 
+				"Start of transaction triggered by wabitChildRemoved event"));
 		this.objectsToRemove.add(
 			new RemovedObjectEntry(
 				e.getSource().getUUID(),
@@ -842,7 +848,8 @@ public class WorkspacePersisterListener implements WabitListener {
 		
 		if (wouldEcho()) return;
 		
-		this.transactionStarted(null);
+		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, 
+				"Creating start transaction event from propertyChange on object " + evt.getSource().getClass().getSimpleName() + " and property name " + evt.getPropertyName()));
 		
 		WabitObject source = (WabitObject) evt.getSource();
 		String uuid = source.getUUID();
@@ -861,14 +868,14 @@ public class WorkspacePersisterListener implements WabitListener {
 		//Not persisting non-settable properties
 		if (propertyDescriptor == null 
 				|| propertyDescriptor.getWriteMethod() == null) {
-			this.transactionEnded(null);
+			this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 			return;
 		}
 		
 		for (PropertyToIgnore ignoreProperty : ignoreList) {
 			if (ignoreProperty.getPropertyName().equals(propertyName) && 
 					ignoreProperty.getClassType().isAssignableFrom(source.getClass())) {
-				this.transactionEnded(null);
+				this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 				return;
 			}
 		}
@@ -891,7 +898,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		this.persistProperty(uuid, propertyName, typeForClass, 
 				oldBasicType, newBasicType);
 		
-		this.transactionEnded(null);
+		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 	}
 	
 	private void persistProperty(
@@ -900,7 +907,8 @@ public class WorkspacePersisterListener implements WabitListener {
 			DataType propertyType, 
 			Object newValue)
 	{
-		logger.debug("persistProperty(" + uuid + ", " + propertyName + ", " + propertyType.name() + ", " + newValue + ", " + newValue + ")");
+		logger.debug("persistProperty(" + uuid + ", " + propertyName + ", " + 
+				propertyType.name() + ", " + newValue + ", " + newValue + ")");
 		this.persistedProperties.put(
 				uuid,
 				new WabitObjectProperty(
@@ -1057,7 +1065,8 @@ public class WorkspacePersisterListener implements WabitListener {
 	private void commitRemovals() throws WabitPersistenceException {
 		logger.debug("commitRemovals()");
 		for (RemovedObjectEntry entry: this.objectsToRemove) {
-			logger.debug("target.removeObject(" + entry.getParentUUID() + ", " + entry.getRemovedChild().getUUID() + ")");
+			logger.debug("target.removeObject(" + entry.getParentUUID() + ", " + 
+					entry.getRemovedChild().getUUID() + ")");
 			target.removeObject(
 				entry.getParentUUID(), 
 				entry.getRemovedChild().getUUID());
