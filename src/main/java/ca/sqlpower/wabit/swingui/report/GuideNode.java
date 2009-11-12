@@ -192,12 +192,14 @@ public class GuideNode extends PNode implements WabitNode {
     	@Override
     	public void mousePressed(PInputEvent e) {
     		super.mousePressed(e);
+    		model.begin("Starting transaction event for dragging guide.");
     		maybeShowPopup(e);
     	}
     	
     	@Override
     	public void mouseReleased(PInputEvent e) {    	
     		super.mouseReleased(e);
+    		model.commit();
     		maybeShowPopup(e);
     	}
     	
@@ -214,6 +216,7 @@ public class GuideNode extends PNode implements WabitNode {
 			});
     		menu.show((Component)e.getComponent(), (int)e.getCanvasPosition().getX(), (int)e.getCanvasPosition().getY());
     	}
+    	
     }
     
     /**
