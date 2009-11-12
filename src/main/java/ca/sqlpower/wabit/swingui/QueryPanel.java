@@ -437,7 +437,8 @@ public class QueryPanel implements WabitPanel {
                 groupingCheckBox.setSelected(queryCache.isGroupingEnabled());
             }
             if (evt.getPropertyName() != QueryImpl.USER_MODIFIED_QUERY 
-                    && evt.getPropertyName() != "running") {
+                    && evt.getPropertyName() != "running"
+                    	&& evt.getPropertyName() != "zoomLevel") {
                 executeQuery();
             }
         }
