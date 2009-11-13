@@ -127,6 +127,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		ignored.add(new PropertyToIgnore("editorPanelModel", WabitWorkspace.class));
 		ignored.add(new PropertyToIgnore("colBeingDragged", ResultSetRenderer.class));
 		ignored.add(new PropertyToIgnore("delegate", WabitConstantItem.class));
+		ignored.add(new PropertyToIgnore("modifiedOlapQuery", CellSetRenderer.class));
 		ignoreList = Collections.unmodifiableList(ignored);
 	}
 	
