@@ -25,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.util.List;
 
@@ -46,8 +47,10 @@ import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -96,9 +99,18 @@ public class ReportTaskPanel implements WabitPanel {
 	private final WabitToolBarBuilder toolbarBuilder = new WabitToolBarBuilder();
 	private final WabitWorkspace workspace;
 	
+	private final WabitListener taskListener = new AbstractWabitListener() {
+		@Override
+		protected void propertyChangeImpl(PropertyChangeEvent evt) {
+			reinitGuiModel();
+		}
+	};
+	
 	public ReportTaskPanel(ReportTask baseTask) {
 		this.task = baseTask;
 		this.workspace = (WabitWorkspace)this.task.getParent();
+		
+		baseTask.addWabitListener(taskListener);
 		
 		this.reportComboBox = new JComboBox();
 		this.reportComboBox.addActionListener(new ActionListener() {
@@ -371,7 +383,7 @@ public class ReportTaskPanel implements WabitPanel {
 		} else if (this.reportComboBox.getItemCount() > 0){
 			this.reportComboBox.setSelectedIndex(0);
 		}
-		if (task.getEmail()==null) {
+		if (task.getEmail()!=null) {
 			this.emailTextField.setText(task.getEmail());
 		} else {
 			this.emailTextField.setText("destination@example.com");

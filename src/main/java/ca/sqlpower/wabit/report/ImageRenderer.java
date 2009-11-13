@@ -95,6 +95,18 @@ public class ImageRenderer extends AbstractWabitObject implements
 		}
 	};
 	
+	private final WabitListener imageListener = 
+		new AbstractWabitListener() {
+		
+		public void propertyChangeImpl(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().equals("image")) {
+				if (getParent() != null) {
+					((ContentBox) getParent()).repaint();
+				}
+			}
+		}
+	};
+	
 	public ImageRenderer() {
 		setName("ImageRenderer");
 	}
@@ -196,7 +208,13 @@ public class ImageRenderer extends AbstractWabitObject implements
 	
 	public void setImage(WabitImage image) {
 	    WabitImage oldImage = this.image;
+	    if (oldImage != null) {
+	    	oldImage.removeWabitListener(imageListener);
+	    }
 		this.image = image;
+		if (image != null) {
+			image.addWabitListener(imageListener);
+		} 
 		firePropertyChange("image", oldImage, image);
 	}
 
