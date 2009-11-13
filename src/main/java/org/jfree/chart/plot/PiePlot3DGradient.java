@@ -215,7 +215,7 @@ public class PiePlot3DGradient extends PiePlot3D {
 		// if too any elements
 		if (dataset.getKeys().size() > plotArea.getWidth()) {
 			String text = "Too many elements";
-			Font sfont = new Font("dialog", Font.BOLD, 10);
+			Font sfont = new Font("Arial", Font.BOLD, 10);
 			g2.setFont(sfont);
 			FontMetrics fm = g2.getFontMetrics(sfont);
 			int stringWidth = fm.stringWidth(text);
