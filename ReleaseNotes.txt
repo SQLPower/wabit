@@ -1,5 +1,15 @@
 Wabit Release Notes
 
+Noteworthy Changes in 1.0.1
+
+  Bug Fixes
+   * Fixes a bug with the server where modifying an image would make all clients crash
+   * Fixes a bug with the server where modifying a relational query would make all clients crash
+   * Fixes a bug where creating relational queries might corrupt the JCR repository
+   * Numerous performance/stability enhancements
+   * Ability to create server-side datasources from clients
+   * Licensing enforcement changes
+
 Noteworthy Changes in 1.0.0
 
   User Interface
