@@ -24,7 +24,6 @@ import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class ColumnInfoTest extends AbstractWabitObjectTest {
 

@@ -29,7 +29,6 @@ import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.swingui.WabitWelcomeScreen;
 
 /**
  * This test class is for testing problems with Wabit and the demo project.

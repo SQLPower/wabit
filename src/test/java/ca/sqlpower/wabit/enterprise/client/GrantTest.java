@@ -33,6 +33,7 @@ public class GrantTest extends AbstractWabitObjectTest {
 	public Set<String> getPropertiesToIgnoreForEvents() {
 		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
 		ignored.add("readOnly");
+		ignored.add("name");
 		return ignored;
 	}
 	
