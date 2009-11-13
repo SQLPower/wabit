@@ -36,14 +36,15 @@ import javax.swing.JPopupMenu;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.util.TransactionEvent;
+import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PDragSequenceEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
@@ -144,7 +145,7 @@ public class GuideNode extends PNode implements WabitNode {
 
     private final GuideMouseEventHandler inputEventHandler = new GuideMouseEventHandler();
 
-    private class GuideMouseEventHandler extends PBasicInputEventHandler {
+    private class GuideMouseEventHandler extends PDragSequenceEventHandler {
 
         boolean cursorPushed = false;
         
@@ -215,18 +216,55 @@ public class GuideNode extends PNode implements WabitNode {
     		menu.show((Component)e.getComponent(), (int)e.getCanvasPosition().getX(), (int)e.getCanvasPosition().getY());
     	}
     	
+    	@Override
+    	protected void startDrag(PInputEvent e) {
+    		super.startDrag(e);
+    		model.begin("Beginning drag guide " + model.getName());
+    	}
+    	
+    	@Override
+    	protected void endDrag(PInputEvent e) {
+    		super.endDrag(e);
+    		model.commit();
+    	}
+    	
     }
     
     /**
      * Adjusts this guide's position and length based on it's model.
      */
-    private final WabitListener modelChangeHandler = new AbstractWabitListener() {
+    private final WabitListener modelChangeHandler = new WabitListener() {
 
-        public void propertyChangeImpl(PropertyChangeEvent evt) {
+		public void transactionEnded(TransactionEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void transactionRollback(TransactionEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void transactionStarted(TransactionEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void wabitChildAdded(WabitChildEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void wabitChildRemoved(WabitChildEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("offset")) {
                 adjustBoundsForParent();
             }
-        }
+		}
         
     };
     
