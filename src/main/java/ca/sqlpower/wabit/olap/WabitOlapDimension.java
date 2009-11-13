@@ -160,9 +160,14 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	        if (child instanceof WabitOlapInclusion) {
 	            WabitOlapInclusion inclusion = (WabitOlapInclusion) child;
 	            try {
-	                fireTransactionStarted("Including member " + child.getName() + " on " + getName());
-                    query.addToAxis(0, inclusion.getSelection().getMember(), 
-                            inclusion.getOperator(), getParent().getOrdinal());
+	            	fireTransactionStarted("Including member " + child.getName() + " on " + getName());
+	            	if (inclusion.isInitialized()) {
+	            		query.addToAxis(0, inclusion.getSelection().getMember(), 
+	            				inclusion.getOperator(), getParent().getOrdinal());
+	            	} else {
+	            		query.addToAxis(0, query.findMember(inclusion.getUniqueMemberName()), inclusion.getOperator(), getParent().getOrdinal());
+	        			inclusion.init(query);
+	            	}
                     fireTransactionEnded();
                 } catch (OlapException e) {
                     fireTransactionRollback(e.getMessage());
@@ -177,8 +182,13 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	            WabitOlapExclusion exclusion = (WabitOlapExclusion) child;
 	            try {
 	                fireTransactionStarted("Excluding member " + child.getName() + " on " + getName());
-                    query.excludeMember(getDimension().getName(), exclusion.getSelection().getMember(), 
-                            exclusion.getOperator());
+	                if (exclusion.isInitialized()) {
+	                	query.excludeMember(getDimension().getName(), exclusion.getSelection().getMember(), 
+	                			exclusion.getOperator());
+	                } else {
+	                	query.excludeMember(getDimension().getName(), query.findMember(exclusion.getUniqueMemberName()), exclusion.getOperator());
+	        			exclusion.init(query);
+	                }
                     fireTransactionEnded();
                 } catch (QueryInitializationException e) {
                     fireTransactionRollback(e.getMessage());

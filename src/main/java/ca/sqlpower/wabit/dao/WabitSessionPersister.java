@@ -1149,7 +1149,6 @@ public class WabitSessionPersister implements WabitPersister {
 	private void persistPropertyHelper(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue,
 			boolean unconditional) throws WabitPersistenceException {
-		logger.debug("Checking if current value matches expected value");
 		
 		if (!exists(uuid)) {
 			throw new WabitPersistenceException(uuid,
@@ -1158,8 +1157,6 @@ public class WabitSessionPersister implements WabitPersister {
 					"to value \"" + newValue + "\".");
 		}
 		
-		logger.debug("Parent object exists");
-
 		Object lastPropertyValueFound = null;
 		
 		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
@@ -1168,13 +1165,9 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 		
-		logger.debug("Finished searching for recent property changes");
-		
 		Object propertyValue = null;
 		WabitObject wo = WabitUtils.findByUuid(root, uuid,
 				WabitObject.class);
-		
-		logger.debug("Found parent WabitObject");
 		
 		if (lastPropertyValueFound != null) {
 			if (!unconditional && !lastPropertyValueFound.equals(oldValue)) {
@@ -1294,8 +1287,6 @@ public class WabitSessionPersister implements WabitPersister {
 							"Invalid WabitObject type " + wo.getClass());
 				}
 				
-				logger.debug("Found current property value");
-				
 				if (!unconditional && propertyValue != null &&
 						((oldValue == null) ||
 								(oldValue != null &&
@@ -1316,8 +1307,6 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 		}
 		
-		logger.debug("Persist is valid. Buffering new value");
-
 		if (wo != null) {
 			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
 					propertyName, propertyType, propertyValue, newValue, unconditional));

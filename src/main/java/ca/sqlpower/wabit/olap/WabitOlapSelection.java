@@ -145,12 +145,19 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		}
 	}
 	
+	public boolean isInitialized() {
+		return initialized;
+	}
+	
 	/**
 	 * Returns the Selection wrapped by this object. This method is package
 	 * private to avoid leaking the Olap4j object wrapped inside, and to allow
 	 * other OLAP specific classes access.
 	 */
 	Selection getSelection() {
+		if (!initialized) {
+			throw new IllegalStateException("Olap Selection is not initialized");
+		}
 		return selection;
 	}
 
