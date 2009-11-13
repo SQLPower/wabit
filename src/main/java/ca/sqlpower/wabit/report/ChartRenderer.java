@@ -57,6 +57,10 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
             getParent().repaint();
         }
     };
+    
+    public ChartRenderer(@Nonnull ChartRenderer renderer) {
+    	this(renderer.chart);
+    }
 	
 	public ChartRenderer(@Nonnull Chart chart) {
 		if (chart == null) {

@@ -131,7 +131,7 @@ public class ContentBox extends AbstractWabitObject {
     		newLabel.setParent(this);
     	} else if (oldContentRenderer instanceof ChartRenderer) {
     		//TODO
-//    		newContentRenderer = new ChartRenderer((ChartRenderer) oldContentRenderer);
+    		newContentRenderer = new ChartRenderer((ChartRenderer) oldContentRenderer);
     	} else if (oldContentRenderer == null) {
     		newContentRenderer = null;
     	} else {
