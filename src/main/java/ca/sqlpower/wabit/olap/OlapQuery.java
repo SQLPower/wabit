@@ -1079,7 +1079,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      */
     void addDimensionToAxis(int ordinal, Axis axis, QueryDimension qd) throws QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
-        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + "(" + qa.getLocation().axisOrdinal() + ")" + " in ordinal " + ordinal);
+//        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + "(" + qa.getLocation().axisOrdinal() + ")" + " in ordinal " + ordinal);
         if (!qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
         	qa.addDimension(ordinal, qd);
