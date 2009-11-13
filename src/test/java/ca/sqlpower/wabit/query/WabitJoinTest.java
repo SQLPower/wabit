@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.query;
 
+import java.util.Set;
+
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
@@ -57,6 +59,14 @@ public class WabitJoinTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return wabitJoin;
+    }
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
+    	ignored.add("leftColumn");
+    	ignored.add("rightColumn");
+    	return ignored;
     }
 
 }
