@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.olap;
 
+import java.util.Set;
+
 import org.olap4j.Axis;
 import org.olap4j.query.Selection.Operator;
 
@@ -42,6 +44,13 @@ public class WabitOlapExclusionTest extends AbstractWabitObjectTest {
         axis.addDimension(wabitDimension);
         query.addChild(axis, 0);
         getWorkspace().addOlapQuery(query);
+    }
+    
+    @Override
+    public Set<String> getPropertiesToNotPersistOnObjectPersist() {
+    	Set<String> objects = super.getPropertiesToNotPersistOnObjectPersist();
+    	objects.add("initialized");
+    	return objects;
     }
 
     @Override
