@@ -117,6 +117,10 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public ImageRenderer(ImageRenderer imageRenderer) {
 	    this();
 		this.image = imageRenderer.getImage();
+		this.hAlign = imageRenderer.getHAlign();
+		this.vAlign = imageRenderer.getVAlign();
+		this.preserveAspectRatioWhenResizing = imageRenderer.isPreserveAspectRatioWhenResizing();
+		this.preservingAspectRatio = imageRenderer.isPreservingAspectRatio();
 	}
 	
 	public WabitObject getContent(){
