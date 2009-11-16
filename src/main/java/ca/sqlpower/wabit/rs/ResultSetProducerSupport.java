@@ -26,7 +26,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 
 /**
  * Convenient implementation support for the {@link ResultSetProducer} interface.

@@ -59,8 +59,8 @@ import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.SessionPersisterUtils;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
-import ca.sqlpower.wabit.olap.OlapConnectionPool;
-import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
 
 /**
  * A baseline test that all tests for WabitObject implementations should pass.

@@ -29,9 +29,9 @@ import java.util.Date;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import ca.sqlpower.wabit.olap.OlapResultSet;
-import ca.sqlpower.wabit.olap.RepeatedMember;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.rs.olap.OlapResultSet;
+import ca.sqlpower.wabit.rs.olap.RepeatedMember;
 
 /**
  * Cell renderer for the body of the chart result sets. This renderer knows how

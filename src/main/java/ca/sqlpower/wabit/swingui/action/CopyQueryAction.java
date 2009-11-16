@@ -22,10 +22,10 @@ package ca.sqlpower.wabit.swingui.action;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 /**
  * This method will copy a given query and add it to the same

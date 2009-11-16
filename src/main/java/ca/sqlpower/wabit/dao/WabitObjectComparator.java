@@ -26,24 +26,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitColumnItem;
-import ca.sqlpower.wabit.WabitConstantItem;
-import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitTableContainer;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.olap.WabitOlapExclusion;
-import ca.sqlpower.wabit.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
@@ -57,6 +46,17 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
+import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
+import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.query.WabitColumnItem;
+import ca.sqlpower.wabit.rs.query.WabitConstantItem;
+import ca.sqlpower.wabit.rs.query.WabitConstantsContainer;
+import ca.sqlpower.wabit.rs.query.WabitJoin;
+import ca.sqlpower.wabit.rs.query.WabitTableContainer;
 
 /**
  * This comparator orders the WabitObjects given based on the following

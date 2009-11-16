@@ -47,12 +47,6 @@ import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapConnectionPool;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.olap.WabitOlapExclusion;
-import ca.sqlpower.wabit.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
@@ -73,6 +67,13 @@ import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
+import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 import ca.sqlpower.sql.SPDataSource;
 

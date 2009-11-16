@@ -27,8 +27,8 @@ import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class ItemConverter implements BidirectionalConverter<String, Item> {
 	

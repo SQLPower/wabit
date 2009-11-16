@@ -49,8 +49,8 @@ import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 import com.lowagie.text.Font;

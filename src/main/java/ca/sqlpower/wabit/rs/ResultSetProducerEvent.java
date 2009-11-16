@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 
 import net.jcip.annotations.Immutable;
 import ca.sqlpower.sql.CachedRowSet;
-import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 
 /**
  * Event object that describes the outcome of a result set producer execution.

@@ -28,9 +28,9 @@ import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.query.WabitJoin;
 
 public class WabitJoinTest extends AbstractWabitObjectTest {
     

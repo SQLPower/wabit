@@ -23,8 +23,8 @@ import org.olap4j.Axis;
 import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class RemoveHierarchyAction extends OlapQueryAction {

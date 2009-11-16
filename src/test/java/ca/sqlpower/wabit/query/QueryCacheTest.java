@@ -31,14 +31,14 @@ import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitContainer;
-import ca.sqlpower.wabit.WabitItem;
-import ca.sqlpower.wabit.WabitJoin;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitTableContainer;
+import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.query.WabitContainer;
+import ca.sqlpower.wabit.rs.query.WabitItem;
+import ca.sqlpower.wabit.rs.query.WabitJoin;
+import ca.sqlpower.wabit.rs.query.WabitTableContainer;
 
 public class QueryCacheTest extends AbstractWabitObjectTest {
 	

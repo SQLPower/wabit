@@ -29,8 +29,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JTree;
 
 import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 

@@ -24,8 +24,8 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.chart.ChartColumn.DataType;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
 
 /**
  * A bucket of static goodness for dealing with the chart API.

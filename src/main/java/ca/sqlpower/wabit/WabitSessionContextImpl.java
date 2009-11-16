@@ -56,7 +56,7 @@ import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
-import ca.sqlpower.wabit.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 
 import com.rc.retroweaver.runtime.Collections;
 

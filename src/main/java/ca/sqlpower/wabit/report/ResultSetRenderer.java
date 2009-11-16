@@ -53,8 +53,6 @@ import ca.sqlpower.sql.CachedRowSet.RowComparator;
 import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.QueryException;
 import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
@@ -62,6 +60,8 @@ import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
+import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.query.QueryException;
 
 /**
  * Renders a JDBC result set using configurable absolute column widths.

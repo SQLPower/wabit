@@ -23,7 +23,6 @@ import java.util.concurrent.Future;
 
 import javax.annotation.Nonnull;
 
-import ca.sqlpower.wabit.ResultSetAndUpdateCountCollection;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 
 /**

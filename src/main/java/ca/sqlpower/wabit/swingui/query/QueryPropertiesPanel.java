@@ -29,7 +29,7 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.QueryPanel;
 
 /**

@@ -42,10 +42,11 @@ import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 /**
  * The WabitWorkspace is the root WabitObject of a WabitSession. It directly

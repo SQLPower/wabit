@@ -395,7 +395,7 @@ public class GrantPanel implements DataEntryPanel {
 							&& !grant.isModifyPrivilege()) 
 					{
 						// Useless grant. Let's remove it altogether
-						grants.remove(grant);
+						grants.remove(grant.getUUID());
 						grantsToDelete.remove(grant);
 						
 						// Also remove it from the workspace if it was a persisted one

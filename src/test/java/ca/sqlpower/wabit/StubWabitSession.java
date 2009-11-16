@@ -41,7 +41,7 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 
 public class StubWabitSession implements WabitSession {
 	

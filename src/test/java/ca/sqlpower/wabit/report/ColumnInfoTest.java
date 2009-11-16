@@ -22,8 +22,8 @@ package ca.sqlpower.wabit.report;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class ColumnInfoTest extends AbstractWabitObjectTest {
 

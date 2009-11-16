@@ -72,18 +72,12 @@ import ca.sqlpower.util.Version;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.olap.WabitOlapExclusion;
-import ca.sqlpower.wabit.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
@@ -108,6 +102,12 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
+import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 /**
  * This will be used with a parser to load a saved workspace from a file.

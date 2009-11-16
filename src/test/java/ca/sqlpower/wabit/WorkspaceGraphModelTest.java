@@ -22,13 +22,14 @@ package ca.sqlpower.wabit;
 import java.util.Collection;
 
 import junit.framework.TestCase;
-import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class WorkspaceGraphModelTest extends TestCase {
     

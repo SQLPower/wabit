@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.swingui.tree;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -30,10 +29,11 @@ import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
-import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 /**
  * This is the FolderNode class and it represents the folder object in the tree.

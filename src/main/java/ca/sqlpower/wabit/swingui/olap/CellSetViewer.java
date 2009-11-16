@@ -46,8 +46,8 @@ import org.olap4j.layout.RectangularCellSetFormatter;
 import org.olap4j.metadata.Hierarchy;
 
 import ca.sqlpower.swingui.table.TableUtils;
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.CellSetTableCornerComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;

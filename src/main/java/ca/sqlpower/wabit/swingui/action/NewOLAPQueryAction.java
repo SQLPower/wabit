@@ -27,7 +27,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JTree;
 
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.wabit.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 

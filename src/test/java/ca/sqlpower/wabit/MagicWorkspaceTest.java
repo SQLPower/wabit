@@ -30,6 +30,7 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Guide.Axis;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 /**
  * A collection of tests for different objects that ensure the correct events and actions

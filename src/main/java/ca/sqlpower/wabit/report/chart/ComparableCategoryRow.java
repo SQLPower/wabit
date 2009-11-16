@@ -25,7 +25,7 @@ import java.util.List;
 import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 
-import ca.sqlpower.wabit.olap.MemberHierarchyComparator;
+import ca.sqlpower.wabit.rs.olap.MemberHierarchyComparator;
 
 /**
  * This object is used to define a row in a category dataset for an OLAP

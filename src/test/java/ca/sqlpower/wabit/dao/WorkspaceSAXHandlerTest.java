@@ -40,13 +40,13 @@ import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.Version;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class WorkspaceSAXHandlerTest extends TestCase {
     

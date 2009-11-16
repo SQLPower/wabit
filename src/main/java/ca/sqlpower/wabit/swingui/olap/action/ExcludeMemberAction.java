@@ -22,8 +22,8 @@ package ca.sqlpower.wabit.swingui.olap.action;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
 
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**

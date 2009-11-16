@@ -23,8 +23,8 @@ import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.olap.OlapQuery;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class CellSetRendererTest extends AbstractWabitObjectTest {

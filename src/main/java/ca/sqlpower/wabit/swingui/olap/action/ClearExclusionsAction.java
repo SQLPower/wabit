@@ -21,8 +21,8 @@ package ca.sqlpower.wabit.swingui.olap.action;
 
 import org.olap4j.metadata.Hierarchy;
 
-import ca.sqlpower.wabit.olap.OlapQuery;
-import ca.sqlpower.wabit.olap.QueryInitializationException;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 /**

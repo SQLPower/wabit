@@ -30,10 +30,10 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitColumnItem;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitTableContainer;
+import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.query.WabitColumnItem;
+import ca.sqlpower.wabit.rs.query.WabitTableContainer;
 
 public class WabitTableContainerTest extends AbstractWabitObjectTest {
     

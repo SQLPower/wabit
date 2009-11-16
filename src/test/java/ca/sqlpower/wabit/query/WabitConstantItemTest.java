@@ -23,10 +23,10 @@ import ca.sqlpower.query.ItemContainer;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.QueryCache;
-import ca.sqlpower.wabit.WabitConstantItem;
-import ca.sqlpower.wabit.WabitConstantsContainer;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.query.WabitConstantItem;
+import ca.sqlpower.wabit.rs.query.WabitConstantsContainer;
 
 public class WabitConstantItemTest extends AbstractWabitObjectTest {
     

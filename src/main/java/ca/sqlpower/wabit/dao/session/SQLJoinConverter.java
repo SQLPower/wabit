@@ -26,9 +26,9 @@ import org.apache.commons.beanutils.ConversionException;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
-import ca.sqlpower.wabit.QueryCache;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin> {
 

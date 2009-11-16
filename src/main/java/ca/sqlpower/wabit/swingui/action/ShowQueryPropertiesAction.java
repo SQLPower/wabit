@@ -28,7 +28,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
-import ca.sqlpower.wabit.QueryCache;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.query.QueryPropertiesPanel;
 
 /**
