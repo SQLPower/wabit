@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.dao;
 
 import java.io.InputStream;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 
@@ -117,7 +118,7 @@ public interface WabitPersister {
 	 *            The expected previous value of the property
 	 * @param newValue
 	 *            The new value to set for the property
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the property. It can be used to wrap the
 	 *             specific cause Exception and provide other details like the
@@ -135,7 +136,7 @@ public interface WabitPersister {
 	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
-			throws WabitPersistenceException;
+			throws SPPersistenceException;
 
 	/**
 	 * Modifies the named property of the specified WabitObject in this
@@ -154,7 +155,7 @@ public interface WabitPersister {
 	 *            The type, and Java representation, of this property
 	 * @param newValue
 	 *            The new value to set for the property
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the property. It can be used to wrap the
 	 *             specific cause Exception and provide other details like the
@@ -169,7 +170,7 @@ public interface WabitPersister {
 	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
-			throws WabitPersistenceException;
+			throws SPPersistenceException;
 
 	/**
 	 * Adds a {@link WabitObject} into the persistent storage. If the
@@ -188,7 +189,7 @@ public interface WabitPersister {
 	 *            The UUID of the {@link WabitObject} to actually persist
 	 * @param index
 	 *            The index of the {@link WabitObject} in its parents' list of children
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
 	 *             specific cause Exception and provide other details like the
@@ -200,7 +201,7 @@ public interface WabitPersister {
 	 *             <li>A WabitObject with the given parent UUID does not exist</li>
 	 *             </ul>
 	 */
-	public void persistObject(String parentUUID, String type, String uuid, int index) throws WabitPersistenceException;
+	public void persistObject(String parentUUID, String type, String uuid, int index) throws SPPersistenceException;
 
 	/**
 	 * Removes a WabitObject from persistent storage
@@ -210,32 +211,32 @@ public interface WabitPersister {
 	 *            remove
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject} to remove
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
 	 *             specific cause Exception and provide other details like the
 	 *             WabitObject UUID.
 	 */
 	public void removeObject(String parentUUID, String uuid)
-			throws WabitPersistenceException;
+			throws SPPersistenceException;
 
 	/**
 	 * Indicates the start of an atomic transaction of persisting multiple
 	 * {@link WabitObject}s. To be used with a paired call to {@link #commit()}
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while persisting the WabitObject. It can be used to wrap the
 	 *             specific cause Exception and provide other details like the
 	 *             WabitObject UUID.
 	 */
-	public void begin() throws WabitPersistenceException;
+	public void begin() throws SPPersistenceException;
 
 	/**
 	 * Causes a current {@link WabitObject} persistence transaction to commit
 	 * its results.
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             A general Exception that is thrown if any Exception occurs
 	 *             while committing the transaction. This could be caused by one
 	 *             being thrown by {@link #persistObject(String, String)},
@@ -248,7 +249,7 @@ public interface WabitPersister {
 	 *             <li>Insufficient permissions in the backing store</li>
 	 *             </ul>
 	 */
-	public void commit() throws WabitPersistenceException;
+	public void commit() throws SPPersistenceException;
 
 	/**
 	 * Restores the persisted WabitObject back to the state it was in before the

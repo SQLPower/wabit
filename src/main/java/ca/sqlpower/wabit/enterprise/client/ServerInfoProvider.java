@@ -38,6 +38,7 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.enterprise.client.ServerProperties;
 import ca.sqlpower.util.Version;
 
 public abstract class ServerInfoProvider {

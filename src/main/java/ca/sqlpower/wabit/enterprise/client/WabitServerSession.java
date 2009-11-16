@@ -57,6 +57,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
@@ -72,7 +73,6 @@ import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.MessageSender;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
@@ -549,7 +549,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		WorkspacePersisterListener.attachListener(this, jsonPersister, sessionPersister);
 	}
 
-	public void persistWorkspaceToServer() throws WabitPersistenceException {
+	public void persistWorkspaceToServer() throws SPPersistenceException {
 		WorkspacePersisterListener tempListener = new WorkspacePersisterListener(this, jsonPersister);
 		tempListener.persistObject(this.getWorkspace());
 	}
@@ -611,7 +611,7 @@ public class WabitServerSession extends WabitSessionImpl {
 							public void run() {
 								try {
 									jsonDecoder.decode(jsonArray);
-								} catch (WabitPersistenceException e) {
+								} catch (SPPersistenceException e) {
 									logger.error("Update from server failed!", e);
 									createUserPrompter(
 											"Wabit failed to apply an update that was just received from the Enterprise Server.\n"

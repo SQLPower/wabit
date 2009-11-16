@@ -25,8 +25,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.olap4j.metadata.Datatype;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.wabit.dao.MessageDecoder;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
 
@@ -39,33 +39,33 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call begin() but instead called removeObject()");			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call begin() but instead called persistProperty()");
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call begin() but instead called persistProperty()");
 				
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call begin() but instead called persistObject()");
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				fail("Expected to call begin() but instead called commit()");				
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				// We expect this method to get called.
 			}
 		};
@@ -87,33 +87,33 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call commit() but instead called removeObject()");			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call commit() but instead called persistProperty()");
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call commit() but instead called persistProperty()");
 				
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call commit() but instead called persistObject()");
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				// We expect this method to get called.			
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				fail("Expected to call commit() but instead called begin()");
 			}
 		};
@@ -135,33 +135,33 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistObject() but instead called removeObject()");			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistObject() but instead called persistProperty()");
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistObject() but instead called persistProperty()");
 				
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				// We expect this method to get called.			
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				fail("Expected to call persistObject() but instead called commit()");
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				fail("Expected to call persistObject() but instead called begin()");
 			}
 		};
@@ -186,32 +186,32 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called removeObject()");			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistProperty() with oldValue but instead called persistProperty() without oldValue");
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				// We expect this method to get called.			
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called persistObject()");
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called commit()");
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called begin()");
 			}
 		};
@@ -237,32 +237,32 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called removeObject()");			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				// We expect this method to get called.			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistProperty() without oldValue but instead called persistProperty() with oldValue");
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called persistObject()");
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called commit()");
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				fail("Expected to call persistProperty() but instead called begin()");
 			}
 		};
@@ -287,32 +287,32 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				// We expect this method to get called.			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call removeObject() but instead called persistProperty()");
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call removeObject() but instead called persistProperty()");
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call removeObject() but instead called removeObject()");			
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				fail("Expected to call removeObject() but instead called commit()");
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				fail("Expected to call removeObject() but instead called begin()");
 			}
 		};
@@ -335,33 +335,33 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 			}
 			
 			public void removeObject(String parentUUID, String uuid)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call rollback() but instead called removeObject()");			
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call rollback() but instead called persistProperty()");
 			}
 			
 			public void persistProperty(String uuid, String propertyName,
 					DataType propertyType, Object oldValue, Object newValue)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call rollback() but instead called persistProperty()");
 				
 			}
 			
 			public void persistObject(String parentUUID, String type, String uuid, int index)
-					throws WabitPersistenceException {
+					throws SPPersistenceException {
 				fail("Expected to call rollback() but instead called persistObject()");
 			}
 			
-			public void commit() throws WabitPersistenceException {
+			public void commit() throws SPPersistenceException {
 				fail("Expected to call rollback() but instead called commit()");				
 			}
 			
-			public void begin() throws WabitPersistenceException {
+			public void begin() throws SPPersistenceException {
 				fail("Expected to call rollback() but instead called begin()");
 			}
 		};

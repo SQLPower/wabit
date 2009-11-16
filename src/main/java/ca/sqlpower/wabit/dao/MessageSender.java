@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.dao;
 
+import ca.sqlpower.dao.SPPersistenceException;
+
 /**
  * A simple interface for anything that sends a message. The implementation
  * can support buffering, but it is not mandatory.
@@ -34,18 +36,18 @@ public interface MessageSender<T> {
 	 * messages.
 	 * 
 	 * @param content
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
-	public void send(T content) throws WabitPersistenceException;
+	public void send(T content) throws SPPersistenceException;
 
 	/**
 	 * Should the implementation support buffering, calling this will clear the
 	 * buffered messages and send them. If the implementation chooses not to
 	 * support buffering, this can be a simply no-op.
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
-	public void flush() throws WabitPersistenceException;
+	public void flush() throws SPPersistenceException;
 	
 	/**
 	 * Empties the current queue of messages to be sent.

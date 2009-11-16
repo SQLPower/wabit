@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.dao;
 
 import java.util.Queue;
 
+import ca.sqlpower.dao.SPPersistenceException;
+
 /**
  * A {@link MessageSender} implementation that places message contents onto a
  * Queue.
@@ -40,11 +42,11 @@ public class QueueMessageSender<T> implements MessageSender<T> {
 		return queue;
 	}
 
-	public void send(T content) throws WabitPersistenceException {
+	public void send(T content) throws SPPersistenceException {
 		queue.add(content);
 	}
 
-	public void flush() throws WabitPersistenceException {
+	public void flush() throws SPPersistenceException {
 		// no-op. Not sure what 'flushing' a queue would really do
 	}
 	

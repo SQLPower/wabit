@@ -38,6 +38,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -52,7 +53,6 @@ import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.PersisterUtils;
 import ca.sqlpower.wabit.dao.StubWabitPersister;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
@@ -78,13 +78,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		
 		private boolean throwError = false;
 		@Override
-		public void begin() throws WabitPersistenceException {
+		public void begin() throws SPPersistenceException {
 			transactionCount++;
 		}
-		public void commit() throws WabitPersistenceException {
+		public void commit() throws SPPersistenceException {
 			transactionCount--;
 			if (transactionCount == 0 && throwError) {
-				throw new WabitPersistenceException(null, "Cause everything to rollback");
+				throw new SPPersistenceException(null, "Cause everything to rollback");
 			}
 		}
 		
@@ -806,7 +806,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	try {
     		persister.commit();
     		fail("The commit method should have an error sent to it and it should rethrow the exception.");
-    	} catch (WabitPersistenceException t) {
+    	} catch (SPPersistenceException t) {
     		//continue
     	}
     	

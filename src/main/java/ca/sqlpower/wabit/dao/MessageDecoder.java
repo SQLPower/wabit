@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.dao;
 
+import ca.sqlpower.dao.SPPersistenceException;
+
 /**
  * A simple interface for a class that receives messages and decodes them, and
  * performs actions according to the message contents.
@@ -27,5 +29,5 @@ package ca.sqlpower.wabit.dao;
  *            The Object type that represents the message contents
  */
 public interface MessageDecoder<T> {
-	public void decode(T message) throws WabitPersistenceException;
+	public void decode(T message) throws SPPersistenceException;
 }

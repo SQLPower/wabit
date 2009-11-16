@@ -30,8 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.wabit.dao.MessageDecoder;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
@@ -95,7 +95,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 * See the method documentation of {@link WabitPersister} for full details
 	 * on the expected values
 	 */
-	public void decode(@Nonnull String message) throws WabitPersistenceException {
+	public void decode(@Nonnull String message) throws SPPersistenceException {
 		String uuid = null;
 		JSONObject jsonObject = null;
 		try {
@@ -147,7 +147,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 						persister.rollback();
 						break;
 					default:
-						throw new WabitPersistenceException(uuid,
+						throw new SPPersistenceException(uuid,
 								"Does not support Wabit persistence method " + method);
 					}
 				}
@@ -156,7 +156,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 			if (jsonObject != null) {
 				logger.error("Error decoding JSONObject " + jsonObject);
 			}
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		}
 	}
 

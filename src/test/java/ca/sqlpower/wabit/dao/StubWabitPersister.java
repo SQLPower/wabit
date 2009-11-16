@@ -19,38 +19,40 @@
 
 package ca.sqlpower.wabit.dao;
 
+import ca.sqlpower.dao.SPPersistenceException;
+
 /**
  * Stubbed implementation of a WabitPersister.
  */
 public class StubWabitPersister implements WabitPersister {
 
-	public void begin() throws WabitPersistenceException {
+	public void begin() throws SPPersistenceException {
 		//do nothing
 	}
 
-	public void commit() throws WabitPersistenceException {
+	public void commit() throws SPPersistenceException {
 		//do nothing
 	}
 
 	public void persistObject(String parentUUID, String type, String uuid,
-			int index) throws WabitPersistenceException {
+			int index) throws SPPersistenceException {
 		//do nothing
 	}
 
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		//do nothing
 	}
 
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		//do nothing
 	}
 
 	public void removeObject(String parentUUID, String uuid)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		//do nothing
 	}
 

@@ -31,10 +31,10 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.MessageSender;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 
 /**
@@ -71,7 +71,7 @@ public class WabitJSONPersister implements WabitPersister {
 		this.messageBuffer = new ArrayList<JSONObject>();
 	}
 	
-	public void begin() throws WabitPersistenceException{
+	public void begin() throws SPPersistenceException{
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("method", WabitPersistMethod.begin);
@@ -81,16 +81,16 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			logger.error("Exception encountered while building JSON message. Rollback initiated.",e);
 			rollback();
-			throw new WabitPersistenceException(null, e);
+			throw new SPPersistenceException(null, e);
 		}
 		logger.debug(jsonObject);
 		messageBuffer.add(jsonObject);
 		transactionCount++;
 	}
 
-	public void commit() throws WabitPersistenceException {
+	public void commit() throws SPPersistenceException {
 		if (transactionCount == 0) {
-			throw new WabitPersistenceException(null, "Commit attempted while not in a transaction");
+			throw new SPPersistenceException(null, "Commit attempted while not in a transaction");
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -101,7 +101,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			logger.error("Exception encountered while building JSON message. Rollback initiated.",e);
 			rollback();
-			throw new WabitPersistenceException(null, e);
+			throw new SPPersistenceException(null, e);
 		}
 		try {
 			logger.debug(jsonObject);
@@ -122,8 +122,8 @@ public class WabitJSONPersister implements WabitPersister {
 			messageSender.clear();
 			transactionCount = 0;
 			rollback();
-			if (t instanceof WabitPersistenceException) {
-				throw (WabitPersistenceException) t;
+			if (t instanceof SPPersistenceException) {
+				throw (SPPersistenceException) t;
 			} else if (t instanceof RuntimeException) {
 				throw (RuntimeException) t;
 			} else {
@@ -133,12 +133,12 @@ public class WabitJSONPersister implements WabitPersister {
 	}
 
 	public void persistObject(String parentUUID, String type, String uuid, int index)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (! WabitWorkspace.class.getSimpleName().equals(type) && parentUUID == null) {
 			throw new NullPointerException("Child is not a WabitWorkspace, but has a null parent ID. Child's ID is " + uuid);
 		}
 		if (transactionCount == 0) {
-			throw new WabitPersistenceException("Operation attempted while not in a transaction.");
+			throw new SPPersistenceException("Operation attempted while not in a transaction.");
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -154,16 +154,16 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			logger.error(e);
 			rollback();
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
 		messageBuffer.add(jsonObject);
 	}
 
 	public void persistProperty(String uuid, String propertyName, DataType type,
-			Object oldValue, Object newValue) throws WabitPersistenceException {
+			Object oldValue, Object newValue) throws SPPersistenceException {
 		if (transactionCount == 0) {
-			throw new WabitPersistenceException("Operation attempted while not in a transaction.");
+			throw new SPPersistenceException("Operation attempted while not in a transaction.");
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -176,19 +176,19 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			logger.error(e);
 			rollback();
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		} catch (IOException e) {
 			logger.error(e);
 			rollback();
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
 		messageBuffer.add(jsonObject);
 	}
 	
-	public void persistProperty(String uuid, String propertyName, DataType type, Object newValue) throws WabitPersistenceException {
+	public void persistProperty(String uuid, String propertyName, DataType type, Object newValue) throws SPPersistenceException {
 		if (transactionCount == 0) {
-			throw new WabitPersistenceException("Operation attempted while not in a transaction.");
+			throw new SPPersistenceException("Operation attempted while not in a transaction.");
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -200,11 +200,11 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			logger.error(e);
 			rollback();
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		} catch (IOException e) {
 			logger.error(e);
 			rollback();
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
 		messageBuffer.add(jsonObject);
@@ -240,9 +240,9 @@ public class WabitJSONPersister implements WabitPersister {
 	};
 	
 	public void removeObject(String parentUUID, String uuid)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (transactionCount == 0) {
-			throw new WabitPersistenceException("Operation attempted while not in a transaction.");
+			throw new SPPersistenceException("Operation attempted while not in a transaction.");
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -252,7 +252,7 @@ public class WabitJSONPersister implements WabitPersister {
 		} catch (JSONException e) {
 			logger.error(e);
 			rollback();
-			throw new WabitPersistenceException(uuid, e);
+			throw new SPPersistenceException(uuid, e);
 		}
 		logger.debug(jsonObject);
 		messageBuffer.add(jsonObject);
@@ -276,7 +276,7 @@ public class WabitJSONPersister implements WabitPersister {
 			messageSender.flush();
 		} catch (JSONException e) {
 			throw new RuntimeException("Could not create rollback message to send. Bad bad bad.", e);
-		} catch (WabitPersistenceException e) {
+		} catch (SPPersistenceException e) {
 			throw new RuntimeException("Could not create rollback message to send. Bad bad bad.", e);
 		} finally {
 			messageBuffer.clear();

@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
@@ -48,7 +49,6 @@ import ca.sqlpower.wabit.dao.PersistedPropertiesEntry;
 import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.RemovedObjectEntry;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
@@ -276,7 +276,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		try {
 			logger.debug("transactionEnded " + ((e == null) ? null : e.getMessage()));
 			this.commit();
-		} catch (WabitPersistenceException e1) {
+		} catch (SPPersistenceException e1) {
 			throw new RuntimeException(e1);
 		}
 	}
@@ -965,7 +965,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				this.persistedObjectsRollbackList, 
 				this.persistedPropertiesRollbackList, 
 				this.objectsToRemoveRollbackList);
-		} catch (WabitPersistenceException e) {
+		} catch (SPPersistenceException e) {
 			logger.error(e);
 		} finally {
 			this.objectsToRemoveRollbackList.clear();
@@ -980,7 +980,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		}
 	}
 	
-	private void commit() throws WabitPersistenceException {
+	private void commit() throws SPPersistenceException {
 		logger.debug("commit(): transactionCount = " + transactionCount);
 		if (transactionCount==1) {
 			try {
@@ -1001,7 +1001,7 @@ public class WorkspacePersisterListener implements WabitListener {
 				logger.debug("...commit completed.");
 			} catch (Throwable t) {
 				this.rollback();
-				throw new WabitPersistenceException(null,t);
+				throw new SPPersistenceException(null,t);
 			} finally {
 				this.objectsToRemove.clear();
 				this.objectsToRemoveRollbackList.clear();
@@ -1019,9 +1019,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	/**
 	 * Commits the persisted {@link WabitObject}s
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
-	private void commitObjects() throws WabitPersistenceException {
+	private void commitObjects() throws SPPersistenceException {
 		for (PersistedWabitObject pwo : persistedObjects) {
 			target.persistObject(
 				pwo.getParentUUID(), 
@@ -1035,7 +1035,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		}
 	}
 	
-	private void commitProperties() throws WabitPersistenceException {
+	private void commitProperties() throws SPPersistenceException {
 		logger.debug("commitProperties()");
 		for (Entry<String, WabitObjectProperty> entry : persistedProperties.entries()) {
 			WabitObjectProperty wop = entry.getValue();
@@ -1063,7 +1063,7 @@ public class WorkspacePersisterListener implements WabitListener {
 		}
 	}
 	
-	private void commitRemovals() throws WabitPersistenceException {
+	private void commitRemovals() throws SPPersistenceException {
 		logger.debug("commitRemovals()");
 		for (RemovedObjectEntry entry: this.objectsToRemove) {
 			logger.debug("target.removeObject(" + entry.getParentUUID() + ", " + 

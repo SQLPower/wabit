@@ -40,6 +40,7 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -52,7 +53,6 @@ import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
@@ -481,7 +481,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		WabitServerSession newSession = new WabitServerSession(workspaceLocation, this);
 		try {
 			newSession.persistWorkspaceToServer();
-		} catch (WabitPersistenceException e) {
+		} catch (SPPersistenceException e) {
 			throw new RuntimeException("An error occured while persisting new workspace to the Server", e);
 		}
 		//TODO

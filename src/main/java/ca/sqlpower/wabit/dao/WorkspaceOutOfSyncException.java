@@ -19,8 +19,10 @@
 
 package ca.sqlpower.wabit.dao;
 
+import ca.sqlpower.dao.SPPersistenceException;
 
-public class WorkspaceOutOfSyncException extends WabitPersistenceException {
+
+public class WorkspaceOutOfSyncException extends SPPersistenceException {
 
 	public WorkspaceOutOfSyncException(String uuid) {
 		super(uuid);

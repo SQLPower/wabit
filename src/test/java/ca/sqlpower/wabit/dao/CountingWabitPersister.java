@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.dao.SPPersistenceException;
+
 public class CountingWabitPersister implements WabitPersister {
 	
 	private int persistObjectCount = 0;
@@ -34,18 +36,18 @@ public class CountingWabitPersister implements WabitPersister {
 	
 	private final List<PersistedWabitObject> persistedObjects = new ArrayList<PersistedWabitObject>();  
 
-	public void begin() throws WabitPersistenceException {
+	public void begin() throws SPPersistenceException {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void commit() throws WabitPersistenceException {
+	public void commit() throws SPPersistenceException {
 		// TODO Auto-generated method stub
 
 	}
 
 	public void persistObject(String parentUUID, String type, String uuid,
-			int index) throws WabitPersistenceException {
+			int index) throws SPPersistenceException {
 		persistObjectCount++;
 		persistedObjects.add(new PersistedWabitObject(parentUUID, type, uuid, index));
 	}
@@ -53,7 +55,7 @@ public class CountingWabitPersister implements WabitPersister {
 
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		persistPropertyCount++;
 		propertiesPersisted.add(new WabitObjectProperty(uuid, propertyName, propertyType, oldValue, 
 				newValue, false));
@@ -61,14 +63,14 @@ public class CountingWabitPersister implements WabitPersister {
 
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		persistPropertyUnconditionallyCount++;
 		propertiesPersisted.add(new WabitObjectProperty(uuid, propertyName, propertyType, null, 
 				newValue, true));
 	}
 
 	public void removeObject(String parentUUID, String uuid)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		removeObjectCount++;
 	}
 

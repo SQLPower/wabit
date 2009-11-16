@@ -26,6 +26,8 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.SPPersistenceException;
+
 /**
  * This {@link WabitPersister} tracks each method call made to it for the sole
  * purpose of being used in tests.
@@ -52,7 +54,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 * Increments the begin counter and adds this begin call to the list of
 	 * persister calls.
 	 */
-	public void begin() throws WabitPersistenceException {
+	public void begin() throws SPPersistenceException {
 		beginCount++;
 		persisterCalls.add(WabitPersistMethod.begin);
 	}
@@ -61,7 +63,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 * Increments the commit counter and adds this commit call to the list of
 	 * persister calls.
 	 */
-	public void commit() throws WabitPersistenceException {
+	public void commit() throws SPPersistenceException {
 		commitCount++;
 		persisterCalls.add(WabitPersistMethod.commit);
 		
@@ -84,7 +86,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 * of persister calls.
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
-			int index) throws WabitPersistenceException {
+			int index) throws SPPersistenceException {
 		persistObjectCount++;
 		persisterCalls.add(new PersistedWabitObject(parentUUID, type, uuid, index));
 	}
@@ -95,7 +97,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		persistPropertyCount++;
 		persisterCalls.add(new WabitObjectProperty(uuid, propertyName, propertyType, oldValue, newValue, false));
 	}
@@ -106,7 +108,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		persistPropertyCount++;
 		persisterCalls.add(new WabitObjectProperty(uuid, propertyName, propertyType, null, newValue, true));
 	}
@@ -116,7 +118,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 * list of persister calls.
 	 */
 	public void removeObject(String parentUUID, String uuid)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		removeObjectCount++;
 		persisterCalls.add(new RemovedWabitObject(parentUUID, uuid));
 	}

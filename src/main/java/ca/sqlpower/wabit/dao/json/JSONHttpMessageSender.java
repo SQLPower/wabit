@@ -34,8 +34,8 @@ import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.wabit.dao.HttpMessageSender;
-import ca.sqlpower.wabit.dao.WabitPersistenceException;
 import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
@@ -53,11 +53,11 @@ public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 		messageArray = new JSONArray();
 	}
 
-	public void send(JSONObject content) throws WabitPersistenceException {
+	public void send(JSONObject content) throws SPPersistenceException {
 		messageArray.put(content);
 	}
 	
-	public void flush() throws WabitPersistenceException {
+	public void flush() throws SPPersistenceException {
 		try {
 			URI serverURI = getServerURI();
 			HttpPost postRequest = new HttpPost(serverURI);
@@ -78,11 +78,11 @@ public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 				}
 	        });
 		} catch (URISyntaxException e) {
-			throw new WabitPersistenceException(null, e);
+			throw new SPPersistenceException(null, e);
 		} catch (ClientProtocolException e) {
-			throw new WabitPersistenceException(null, e);
+			throw new SPPersistenceException(null, e);
 		} catch (IOException e) {
-			throw new WabitPersistenceException(null, e);
+			throw new SPPersistenceException(null, e);
 		} finally {
 			clearMessageArray();
 		}
