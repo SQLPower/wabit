@@ -41,6 +41,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.StubSPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -53,7 +54,6 @@ import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.dao.PersistedWabitObject;
-import ca.sqlpower.wabit.dao.StubWabitPersister;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
@@ -73,7 +73,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 * Small implementation of the WabitPersister that will throw an exception on commit
 	 * when its error state is set to true.
 	 */
-	public static class ErrorWabitPersister extends StubWabitPersister {
+	public static class ErrorWabitPersister extends StubSPPersister {
 		private int transactionCount = 0;
 		
 		private boolean throwError = false;

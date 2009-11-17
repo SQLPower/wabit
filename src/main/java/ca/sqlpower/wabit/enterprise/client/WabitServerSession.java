@@ -59,6 +59,7 @@ import org.json.JSONObject;
 
 import ca.sqlpower.dao.MessageSender;
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.json.SPJSONMessageDecoder;
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
@@ -76,7 +77,6 @@ import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.json.JSONHttpMessageSender;
-import ca.sqlpower.wabit.dao.json.WabitJSONMessageDecoder;
 import ca.sqlpower.wabit.dao.json.WabitJSONPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.http.WabitHttpResponseHandler;
@@ -147,7 +147,7 @@ public class WabitServerSession extends WabitSessionImpl {
         		WabitServerSession.this);
         // Whatever updates come from the server, it can override the user's stuff.
         sessionPersister.setGodMode(true);
-        updater = new Updater(workspaceLocation.getUuid(), new WabitJSONMessageDecoder(sessionPersister));
+        updater = new Updater(workspaceLocation.getUuid(), new SPJSONMessageDecoder(sessionPersister));
         
         MessageSender<JSONObject> httpSender = new JSONHttpMessageSender(outboundHttpClient, workspaceLocation.getServiceInfo(),
         		workspaceLocation.getUuid());
@@ -567,7 +567,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		 */
 		private long retryDelay = 1000;
 		
-		private final WabitJSONMessageDecoder jsonDecoder;
+		private final SPJSONMessageDecoder jsonDecoder;
 
 		/**
 		 * Used by the Updater to handle inbound HTTP updates
@@ -583,7 +583,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		 *            the ID of the workspace this updater is responsible for. This is
 		 *            used in creating the thread's name.
 		 */
-		Updater(String workspaceUUID, WabitJSONMessageDecoder jsonDecoder) {
+		Updater(String workspaceUUID, SPJSONMessageDecoder jsonDecoder) {
 			super("updater-" + workspaceUUID);
 			this.jsonDecoder = jsonDecoder;
 			inboundHttpClient = createHttpClient(workspaceLocation.getServiceInfo());
