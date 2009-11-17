@@ -39,6 +39,8 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -53,9 +55,7 @@ import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.PersisterUtils;
 import ca.sqlpower.wabit.dao.StubWabitPersister;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
-import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.SessionPersisterUtils;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
@@ -488,7 +488,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 
 	/**
 	 * Tests that calling
-	 * {@link WabitPersister#persistObject(String, String, String, int)} for a
+	 * {@link SPPersister#persistObject(String, String, String, int)} for a
 	 * session persister will create a new object and set all of the properties
 	 * on the object.
 	 */
@@ -873,7 +873,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		persister.begin();
 		
 		class PublicListener extends WorkspacePersisterListener {
-			public PublicListener(WabitSession session, WabitPersister persister) {
+			public PublicListener(WabitSession session, SPPersister persister) {
 				super(session, persister);
 			}
 			

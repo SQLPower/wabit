@@ -20,11 +20,13 @@
 package ca.sqlpower.wabit.dao;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
 
 /**
  * Stubbed implementation of a WabitPersister.
  */
-public class StubWabitPersister implements WabitPersister {
+public class StubWabitPersister implements SPPersister {
 
 	public void begin() throws SPPersistenceException {
 		//do nothing

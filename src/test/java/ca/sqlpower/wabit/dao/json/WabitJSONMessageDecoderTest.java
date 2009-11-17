@@ -27,13 +27,14 @@ import org.olap4j.metadata.Datatype;
 
 import ca.sqlpower.dao.MessageDecoder;
 import ca.sqlpower.dao.SPPersistenceException;
-import ca.sqlpower.wabit.dao.WabitPersister;
-import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.dao.SPPersister.SPPersistMethod;
 
 public class WabitJSONMessageDecoderTest extends TestCase {
 
 	public void testDecodeBegin() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				fail("Expected to call begin() but instead called rollback()");
 			}
@@ -71,7 +72,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.begin);
+		json.put("method", SPPersistMethod.begin);
 		json.put("uuid", JSONObject.NULL);
 		JSONArray messages = new JSONArray();
 		messages.put(json);
@@ -81,7 +82,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	}
 	
 	public void testDecodeCommit() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				fail("Expected to call commit() but instead called rollback()");
 			}
@@ -119,7 +120,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.commit);
+		json.put("method", SPPersistMethod.commit);
 		json.put("uuid", JSONObject.NULL);
 		JSONArray messages = new JSONArray();
 		messages.put(json);
@@ -129,7 +130,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	}
 
 	public void testDecodePersistObject() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				fail("Expected to call persistObject() but instead called rollback()");
 			}
@@ -167,7 +168,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.persistObject);
+		json.put("method", SPPersistMethod.persistObject);
 		json.put("uuid", "uuid");
 		json.put("parentUUID", "parent");
 		json.put("type", "type");
@@ -180,7 +181,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	}
 	
 	public void testDecodeChangeProperty() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				fail("Expected to call persistProperty() but instead called rollback()");
 			}
@@ -217,7 +218,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.changeProperty);
+		json.put("method", SPPersistMethod.changeProperty);
 		json.put("uuid", "uuid");
 		json.put("type", Datatype.BOOLEAN);
 		json.put("propertyName", "property");
@@ -231,7 +232,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	}
 	
 	public void testDecodePersistProperty() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				fail("Expected to call persistProperty() but instead called rollback()");
 			}
@@ -268,7 +269,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.persistProperty);
+		json.put("method", SPPersistMethod.persistProperty);
 		json.put("uuid", "uuid");
 		json.put("type", Datatype.BOOLEAN);
 		json.put("propertyName", "property");
@@ -281,7 +282,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	}
 	
 	public void testDecodeRemoveObject() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				fail("Expected to call removeObject() but instead called rollback()");
 			}
@@ -318,7 +319,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.removeObject);
+		json.put("method", SPPersistMethod.removeObject);
 		json.put("uuid", "uuid");
 		json.put("parentUUID", "parent");
 		JSONArray messages = new JSONArray();
@@ -329,7 +330,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 	}
 	
 	public void testDecodeRollback() throws Exception {
-		WabitPersister dummyPersister = new WabitPersister() {
+		SPPersister dummyPersister = new SPPersister() {
 			public void rollback() {
 				// We expect this method to get called.
 			}
@@ -367,7 +368,7 @@ public class WabitJSONMessageDecoderTest extends TestCase {
 		};
 
 		JSONObject json = new JSONObject();
-		json.put("method", WabitPersistMethod.rollback);
+		json.put("method", SPPersistMethod.rollback);
 		json.put("uuid", JSONObject.NULL);
 		JSONArray messages = new JSONArray();
 		messages.put(json);

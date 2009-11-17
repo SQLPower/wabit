@@ -32,17 +32,17 @@ import org.json.JSONObject;
 
 import ca.sqlpower.dao.MessageDecoder;
 import ca.sqlpower.dao.SPPersistenceException;
-import ca.sqlpower.wabit.dao.WabitPersister;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
-import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.dao.SPPersister.SPPersistMethod;
 
 /**
  * An implementation of {@link MessageDecoder} that takes in a String that is
  * intended to be a JSON-formatted message, and constructs a JSONObject from it.
- * It then expects JSONObject key values that map to {@link WabitPersister}
+ * It then expects JSONObject key values that map to {@link SPPersister}
  * methods and their expected parameters. It then extracts this information from
  * the JSONObject and makes the appropriate method calls to a
- * {@link WabitPersister} provided in the constructor.
+ * {@link SPPersister} provided in the constructor.
  */
 public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 
@@ -50,21 +50,21 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 			.getLogger(WabitJSONMessageDecoder.class);
 	
 	/**
-	 * A {@link WabitPersister} that the decoder will make method calls on
+	 * A {@link SPPersister} that the decoder will make method calls on
 	 */
-	private WabitPersister persister;
+	private SPPersister persister;
 
 	/**
-	 * Creates a WabitMessageDecoder with the given {@link WabitPersister}. The
+	 * Creates a WabitMessageDecoder with the given {@link SPPersister}. The
 	 * messages that this class decodes will contain WabitPersister method calls
 	 * with their parameters. This decoder will use the messages to make method
 	 * calls to the given WabitPersister.
 	 * 
 	 * @param persister
-	 *            The {@link WabitPersister} that this decoder will make method
+	 *            The {@link SPPersister} that this decoder will make method
 	 *            calls to
 	 */
-	public WabitJSONMessageDecoder(@Nonnull WabitPersister persister) {
+	public WabitJSONMessageDecoder(@Nonnull SPPersister persister) {
 		this.persister = persister;
 	}
 
@@ -77,8 +77,8 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 * 
 	 * It expects the following key-value pairs in each JSONObject message:
 	 * <ul>
-	 * <li>method - The String value of a {@link WabitPersistMethod}. This is
-	 * used to determine which {@link WabitPersister} method to call.</li>
+	 * <li>method - The String value of a {@link SPPersistMethod}. This is
+	 * used to determine which {@link SPPersister} method to call.</li>
 	 * <li>uuid - The UUID of the WabitObject, if there is one, that the persist
 	 * method call will act on. If there is none, it expects
 	 * {@link JSONObject#NULL}</li>
@@ -92,7 +92,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 	 * <li>oldValue</li>
 	 * <li>propertyName</li>
 	 * </ul>
-	 * See the method documentation of {@link WabitPersister} for full details
+	 * See the method documentation of {@link SPPersister} for full details
 	 * on the expected values
 	 */
 	public void decode(@Nonnull String message) throws SPPersistenceException {
@@ -105,7 +105,7 @@ public class WabitJSONMessageDecoder implements MessageDecoder<String> {
 					jsonObject = messageArray.getJSONObject(i);
 					logger.debug("Decoding Message: " + jsonObject);
 					uuid = jsonObject.getString("uuid");
-					WabitPersistMethod method = WabitPersistMethod.valueOf(jsonObject.getString("method"));
+					SPPersistMethod method = SPPersistMethod.valueOf(jsonObject.getString("method"));
 					String parentUUID;
 					String propertyName;
 					DataType propertyType;

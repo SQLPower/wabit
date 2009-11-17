@@ -21,8 +21,8 @@ package ca.sqlpower.wabit.dao.session;
 
 import java.awt.Image;
 
+import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 
 /**
  * Utilities that are specific to the session persisters.

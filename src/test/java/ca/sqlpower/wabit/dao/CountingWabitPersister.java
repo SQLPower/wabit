@@ -24,8 +24,10 @@ import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
 
-public class CountingWabitPersister implements WabitPersister {
+public class CountingWabitPersister implements SPPersister {
 	
 	private int persistObjectCount = 0;
 	private int persistPropertyCount = 0;

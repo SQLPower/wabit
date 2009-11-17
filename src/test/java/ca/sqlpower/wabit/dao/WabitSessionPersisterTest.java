@@ -25,6 +25,8 @@ import junit.framework.TestCase;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.util.UserPrompter;
@@ -36,7 +38,6 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 
@@ -83,7 +84,7 @@ public class WabitSessionPersisterTest extends TestCase {
 
 	}
 	
-	public WabitPersister getTestedPersister() {
+	public SPPersister getTestedPersister() {
 		return this.wsp;
 	}
 	

@@ -19,8 +19,8 @@
 
 package ca.sqlpower.wabit.dao;
 
+import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 
 /**
  * A class representing an individual persisted {@link WabitObject}

@@ -22,7 +22,7 @@
  */
 package ca.sqlpower.wabit.dao;
 
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
+import ca.sqlpower.dao.SPPersister.DataType;
 
 public final class PersistedPropertiesEntry {
 	final Object rollbackValue;

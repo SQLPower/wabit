@@ -27,12 +27,15 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.dao.SPPersister.SPPersistMethod;
 
 /**
- * This {@link WabitPersister} tracks each method call made to it for the sole
+ * This {@link SPPersister} tracks each method call made to it for the sole
  * purpose of being used in tests.
  */
-public class TrackingWabitPersister implements WabitPersister {
+public class TrackingWabitPersister implements SPPersister {
 	
 	private static final Logger logger = Logger.getLogger(TrackingWabitPersister.class);
 	
@@ -56,7 +59,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 */
 	public void begin() throws SPPersistenceException {
 		beginCount++;
-		persisterCalls.add(WabitPersistMethod.begin);
+		persisterCalls.add(SPPersistMethod.begin);
 	}
 
 	/**
@@ -65,7 +68,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 */
 	public void commit() throws SPPersistenceException {
 		commitCount++;
-		persisterCalls.add(WabitPersistMethod.commit);
+		persisterCalls.add(SPPersistMethod.commit);
 		
 		if (beginCount == commitCount) {
 			latch.countDown();
@@ -78,7 +81,7 @@ public class TrackingWabitPersister implements WabitPersister {
 	 */
 	public void rollback() {
 		rollbackCount++;
-		persisterCalls.add(WabitPersistMethod.rollback);
+		persisterCalls.add(SPPersistMethod.rollback);
 	}
 
 	/**

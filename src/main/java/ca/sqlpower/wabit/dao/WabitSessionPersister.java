@@ -42,6 +42,7 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
@@ -123,7 +124,7 @@ import com.google.common.collect.Multimap;
  * exceptions will be thrown as an object with the same UUID will exist in the
  * workspace.
  */
-public class WabitSessionPersister implements WabitPersister {
+public class WabitSessionPersister implements SPPersister {
 
 	/**
 	 * The god mode means that this listener will output

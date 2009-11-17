@@ -22,7 +22,7 @@ package ca.sqlpower.wabit.dao;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
- * This class represents an individual removed {@link WabitObject} in a {@link WabitPersister}. 
+ * This class represents an individual removed {@link WabitObject} in a {@link SPPersister}. 
  */
 public class RemovedWabitObject {
 	

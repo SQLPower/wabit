@@ -33,18 +33,20 @@ import org.json.JSONObject;
 
 import ca.sqlpower.dao.MessageSender;
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.dao.SPPersister.SPPersistMethod;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.WabitPersister;
 
 /**
- * A {@link WabitPersister} implementation that serializes
- * {@link WabitPersister} method calls as {@link JSONObject}s and transmits them
+ * A {@link SPPersister} implementation that serializes
+ * {@link SPPersister} method calls as {@link JSONObject}s and transmits them
  * to a destination using a {@link MessageSender}. This allows these method
  * calls to be transmitted to other systems, typically (but not necessarily)
  * over a network connection.
  */
-public class WabitJSONPersister implements WabitPersister {
+public class WabitJSONPersister implements SPPersister {
 
 	private static final Logger logger = Logger
 			.getLogger(WabitJSONPersister.class);
@@ -74,7 +76,7 @@ public class WabitJSONPersister implements WabitPersister {
 	public void begin() throws SPPersistenceException{
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.begin);
+			jsonObject.put("method", SPPersistMethod.begin);
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
@@ -94,7 +96,7 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.commit);
+			jsonObject.put("method", SPPersistMethod.commit);
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
 			jsonObject.put("uuid", JSONObject.NULL);
@@ -142,7 +144,7 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.persistObject.toString());
+			jsonObject.put("method", SPPersistMethod.persistObject.toString());
 			if (parentUUID == null) {
 				jsonObject.put("parentUUID", JSONObject.NULL);
 			} else {
@@ -167,7 +169,7 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.changeProperty);
+			jsonObject.put("method", SPPersistMethod.changeProperty);
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
@@ -192,7 +194,7 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.persistProperty);
+			jsonObject.put("method", SPPersistMethod.persistProperty);
 			jsonObject.put("uuid", uuid);
 			jsonObject.put("propertyName", propertyName);
 			jsonObject.put("type", type.toString());
@@ -246,7 +248,7 @@ public class WabitJSONPersister implements WabitPersister {
 		}
 		JSONObject jsonObject = new JSONObject();
 		try {
-			jsonObject.put("method", WabitPersistMethod.removeObject);
+			jsonObject.put("method", SPPersistMethod.removeObject);
 			jsonObject.put("parentUUID", parentUUID);
 			jsonObject.put("uuid", uuid);
 		} catch (JSONException e) {
@@ -266,7 +268,7 @@ public class WabitJSONPersister implements WabitPersister {
 			messageSender.clear();
 			// Need to put this in or anything calling get on the key "uuid"
 			// will throw a JSONException
-			jsonObject.put("method", WabitPersistMethod.rollback);
+			jsonObject.put("method", SPPersistMethod.rollback);
 			jsonObject.put("uuid", JSONObject.NULL);
 			logger.debug(jsonObject);
 			messageBuffer.add(jsonObject);

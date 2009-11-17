@@ -31,6 +31,8 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
@@ -49,9 +51,7 @@ import ca.sqlpower.wabit.dao.PersistedPropertiesEntry;
 import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.RemovedObjectEntry;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
-import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
-import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
@@ -183,7 +183,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            events occur in the workspace in the given session.
 	 */
 	public static WorkspacePersisterListener attachListener(
-			final WabitSession session, WabitPersister targetPersister, WabitSessionPersister eventSource) {
+			final WabitSession session, SPPersister targetPersister, WabitSessionPersister eventSource) {
 		final WorkspacePersisterListener listener = 
 			new WorkspacePersisterListener(session, targetPersister, eventSource);
 		WabitUtils.listenToHierarchy(session.getWorkspace(), listener);
@@ -201,7 +201,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 * This is the persister to call the appropriate persist methods on when an
 	 * event occurs signaling a change to the model.
 	 */
-	private final WabitPersister target;
+	private final SPPersister target;
 
 	/**
 	 * Converts any object into a simple type and converts any simple type back.
@@ -220,7 +220,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 * <p>
 	 * A new listener should only be created in testing. To properly add a
 	 * listener to a session see
-	 * {@link #attachListener(WabitSession, WabitPersister)}.
+	 * {@link #attachListener(WabitSession, SPPersister)}.
 	 * 
 	 * @param session
 	 *            The session whose workspace will be listened to.
@@ -229,7 +229,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            persist calls.
 	 */
 	public WorkspacePersisterListener(WabitSession session,
-			WabitPersister targetPersister) {
+			SPPersister targetPersister) {
 		this(session, targetPersister, null);
 	}
 
@@ -239,7 +239,7 @@ public class WorkspacePersisterListener implements WabitListener {
 	 * <p>
 	 * A new listener should only be created in testing. To properly add a
 	 * listener to a session see
-	 * {@link #attachListener(WabitSession, WabitPersister)}.
+	 * {@link #attachListener(WabitSession, SPPersister)}.
 	 * 
 	 * @param session
 	 *            The session whose workspace will be listened to.
@@ -247,11 +247,11 @@ public class WorkspacePersisterListener implements WabitListener {
 	 *            The persister that will have the events be forwarded to as
 	 *            persist calls.
 	 * @param eventSource
-	 *            A {@link WabitPersister} that this listener will consult in
+	 *            A {@link SPPersister} that this listener will consult in
 	 *            order to perform 'echo-cancellation' of events.
 	 */
 	public WorkspacePersisterListener(WabitSession session,
-			WabitPersister targetPersister, WabitSessionPersister eventSource) {
+			SPPersister targetPersister, WabitSessionPersister eventSource) {
 		this.session = session;
 		this.converter = new SessionPersisterSuperConverter(session, session.getWorkspace());
 		this.target = targetPersister;
@@ -336,9 +336,9 @@ public class WorkspacePersisterListener implements WabitListener {
 	}
 
 	/**
-	 * Calls {@link WabitPersister#persistObject(String, String, String, int)}
+	 * Calls {@link SPPersister#persistObject(String, String, String, int)}
 	 * for the child object and
-	 * {@link WabitPersister#persistProperty(String, String, DataType, Object)}
+	 * {@link SPPersister#persistProperty(String, String, DataType, Object)}
 	 * for each property on the object.
 	 * 
 	 * @param parent
