@@ -62,6 +62,7 @@ import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.dao.json.SPJSONMessageDecoder;
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.http.HttpResponseHandler;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
@@ -79,7 +80,6 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.json.WabitJSONPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
-import ca.sqlpower.wabit.http.WabitHttpResponseHandler;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 /**
@@ -484,7 +484,7 @@ public class WabitClientSession extends WabitSessionImpl {
     	HttpClient httpClient = createHttpClient(serviceInfo);
     	try {
     		HttpUriRequest request = new HttpDelete(getServerURI(serviceInfo, "workspaces/" + getWorkspace().getUUID()));
-    		httpClient.execute(request, new WabitHttpResponseHandler());
+    		httpClient.execute(request, new HttpResponseHandler());
     	} finally {
     		httpClient.getConnectionManager().shutdown();
     	}
