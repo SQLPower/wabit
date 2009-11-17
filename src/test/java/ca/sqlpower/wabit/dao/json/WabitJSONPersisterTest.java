@@ -26,8 +26,8 @@ import junit.framework.TestCase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.MessageSender;
 import ca.sqlpower.dao.SPPersistenceException;
-import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
 

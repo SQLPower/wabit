@@ -30,8 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.MessageDecoder;
 import ca.sqlpower.dao.SPPersistenceException;
-import ca.sqlpower.wabit.dao.MessageDecoder;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.DataType;
 import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;

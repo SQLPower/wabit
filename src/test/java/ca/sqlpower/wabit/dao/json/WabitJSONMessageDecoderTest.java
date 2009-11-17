@@ -25,8 +25,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.olap4j.metadata.Datatype;
 
+import ca.sqlpower.dao.MessageDecoder;
 import ca.sqlpower.dao.SPPersistenceException;
-import ca.sqlpower.wabit.dao.MessageDecoder;
 import ca.sqlpower.wabit.dao.WabitPersister;
 import ca.sqlpower.wabit.dao.WabitPersister.WabitPersistMethod;
 

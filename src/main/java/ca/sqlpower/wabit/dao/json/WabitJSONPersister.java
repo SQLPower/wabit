@@ -31,10 +31,10 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.dao.MessageSender;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.MessageSender;
 import ca.sqlpower.wabit.dao.WabitPersister;
 
 /**

@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 
 import org.apache.http.client.HttpClient;
 
+import ca.sqlpower.dao.MessageSender;
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.wabit.WabitWorkspace;
 

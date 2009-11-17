@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
@@ -109,7 +111,6 @@ import ca.sqlpower.wabit.rs.query.WabitTableContainer;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This class represents a Data Access Object for {@link WabitSession}s.
@@ -245,7 +246,7 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Commits the persisted {@link WabitObject}s, its properties and removals
 	 */
-	public void commit() throws WabitPersistenceException {
+	public void commit() throws SPPersistenceException {
 		synchronized (session) {
 			this.enforeThreadSafety();
 			logger.debug("wsp.commit(); - transaction count : "+transactionCount);
@@ -255,7 +256,7 @@ public class WabitSessionPersister implements WabitPersister {
 				try {
 					workspace.setMagicDisabled(true);
 					if (transactionCount == 0) {
-						throw new WabitPersistenceException(null,
+						throw new SPPersistenceException(null,
 							"Commit attempted while not in a transaction");
 					}
 	
@@ -289,7 +290,7 @@ public class WabitSessionPersister implements WabitPersister {
 				} catch (Throwable t) {
 					logger.error("WabitSesisonPersister caught an exception while performing a commit operation. Will try to rollback...", t);
 					this.rollback();
-					throw new WabitPersistenceException(null, t);
+					throw new SPPersistenceException(null, t);
 				} finally {
 					workspace.setMagicDisabled(false);
 				}
@@ -300,9 +301,9 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Commits the persisted {@link WabitObject}s
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
-	private void commitObjects() throws WabitPersistenceException {
+	private void commitObjects() throws SPPersistenceException {
 		for (PersistedWabitObject pwo : persistedObjects) {
 			if (pwo.isLoaded())
 				continue;
@@ -359,10 +360,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            Describes what kind of object needs to be created and where to
 	 *            parent it to.
 	 * @return The object created by this method.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
 	private WabitObject loadWabitObject(PersistedWabitObject pwo)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = pwo.getUUID();
 		String type = pwo.getType();
 		WabitObject wo = null;
@@ -414,7 +415,7 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				subject = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "subject"), String.class);
-			} catch (WabitPersistenceException e) {
+			} catch (SPPersistenceException e) {
 				// no op
 			}
 			String grantType = (String) converter.convertToComplexType(
@@ -531,7 +532,7 @@ public class WabitSessionPersister implements WabitPersister {
 					contentID, QueryCache.class);
 
 			if (query == null) {
-				throw new WabitPersistenceException(uuid,
+				throw new SPPersistenceException(uuid,
 						"Cannot commit ResultSetRenderer with UUID " + uuid
 								+ " as its QueryCache reference with UUID "
 								+ contentID
@@ -607,7 +608,7 @@ public class WabitSessionPersister implements WabitPersister {
 				spds = session.getDataSources().getDataSource(dsName);
 				
 				if (spds == null) {
-					throw new WabitPersistenceException(uuid,
+					throw new SPPersistenceException(uuid,
 						"The Wabit does not know about Datasource '" + dsName
 						+ "'");
 				}
@@ -670,7 +671,7 @@ public class WabitSessionPersister implements WabitPersister {
 			session.getWorkspace().reset();
 
 		} else {
-			throw new WabitPersistenceException(uuid,
+			throw new SPPersistenceException(uuid,
 					"Unknown WabitObject type: " + type);
 		}
 
@@ -692,12 +693,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param propertyName
 	 *            The persisted property name
 	 * @return The persisted property value
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the object does not have the specified property
 	 *             name.
 	 */
 	private Object getPropertyAndRemove(String uuid, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
 			if (wop.getPropertyName().equals(propertyName)) {
 				Object value = wop.getNewValue();
@@ -760,7 +761,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 * already pooled.
 	 */
 	private WabitObject createObjectByCalls(String parentUUID, String classType)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		for (PersistedWabitObject pwo : persistedObjects) {
 			if (pwo.isLoaded())
 				continue;
@@ -777,11 +778,11 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Commits the persisted {@link WabitObject} property values
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if an invalid WabitObject type has been persisted into
 	 *             storage. This theoretically should not occur.
 	 */
-	private void commitProperties() throws WabitPersistenceException {
+	private void commitProperties() throws SPPersistenceException {
 		WabitObject wo;
 		String propertyName;
 		Object newValue;
@@ -811,7 +812,7 @@ public class WabitSessionPersister implements WabitPersister {
 		persistedProperties.clear();
 	}
 
-	private void applyProperty(WabitObject wo, String propertyName, Object newValue) throws WabitPersistenceException {
+	private void applyProperty(WabitObject wo, String propertyName, Object newValue) throws SPPersistenceException {
 		logger.debug("Applying property " + propertyName + " to " + wo.getClass().getSimpleName() + " at " + wo.getUUID());
 		if (isCommonProperty(propertyName)) {
 			commitCommonProperty(wo, propertyName, newValue);
@@ -896,7 +897,7 @@ public class WabitSessionPersister implements WabitPersister {
 			commitWabitWorkspaceProperty((WabitWorkspace) wo,
 					propertyName, newValue);
 		} else {
-			throw new WabitPersistenceException(wo.getUUID(),
+			throw new SPPersistenceException(wo.getUUID(),
 					"Invalid WabitObject of type " + wo.getClass());
 		}
 	}
@@ -904,11 +905,10 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Commits the removal of persisted {@link WabitObject}s
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if a WabitObject could not be removed from its parent.
 	 */
-	private void commitRemovals() throws WabitPersistenceException {
-
+	private void commitRemovals() throws SPPersistenceException {
 		for (String uuid : objectsToRemove.keySet()) {
 			WabitObject wo = WabitUtils.findByUuid(root, uuid,
 					WabitObject.class);
@@ -924,9 +924,9 @@ public class WabitSessionPersister implements WabitPersister {
 						wo,
 						index));
 			} catch (IllegalArgumentException e) {
-				throw new WabitPersistenceException(uuid, e);
+				throw new SPPersistenceException(uuid, e);
 			} catch (ObjectDependentException e) {
-				throw new WabitPersistenceException(uuid, e);
+				throw new SPPersistenceException(uuid, e);
 			}
 		}
 		objectsToRemove.clear();
@@ -935,7 +935,7 @@ public class WabitSessionPersister implements WabitPersister {
 	/**
 	 * Rolls back the removal of persisted {@link WabitObject}s
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if a WabitObject could not be rolled back from its parent.
 	 */
 	private void rollbackRemovals() throws IllegalStateException {
@@ -955,7 +955,7 @@ public class WabitSessionPersister implements WabitPersister {
 		}
 	}
 	
-	private void rollbackProperties() throws WabitPersistenceException {
+	private void rollbackProperties() throws SPPersistenceException {
 		Collections.reverse(this.persistedPropertiesRollbackList);
 		for (PersistedPropertiesEntry entry : this.persistedPropertiesRollbackList) {
 			try {
@@ -1010,11 +1010,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The index of the {@link WabitObject} within its parents' list
 	 *            of children
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	public void persistObject(String parentUUID, String type, String uuid,
-			int index) throws WabitPersistenceException {
+			int index) throws SPPersistenceException {
 		synchronized (session) {
 			this.enforeThreadSafety();
 			logger.debug(String.format(
@@ -1022,7 +1022,7 @@ public class WabitSessionPersister implements WabitPersister {
 					type, uuid, index));
 			if (transactionCount == 0) {
 				this.rollback();
-				throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
+				throw new SPPersistenceException("Cannot persist objects while outside a transaction.");
 			}
 			WabitObject objectToPersist = WabitUtils.findByUuid(root, uuid, WabitObject.class);
 			boolean isWorkspace= objectToPersist instanceof WabitWorkspace;
@@ -1032,7 +1032,7 @@ public class WabitSessionPersister implements WabitPersister {
 			}
 			if (exists(uuid) && !isWorkspace) {
 				this.rollback();
-				throw new WabitPersistenceException(uuid,
+				throw new SPPersistenceException(uuid,
 						"A WabitObject with UUID " + uuid + " and type " + type
 						+ " under parent with UUID " + parentUUID
 						+ " already exists.");
@@ -1059,15 +1059,15 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The expected old property value
 	 * @param newValue
 	 *            The new property value to persist
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (transactionCount <= 0) {
 			this.rollback();
-			throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
+			throw new SPPersistenceException("Cannot persist objects while outside a transaction.");
 		}
 		synchronized (session) {
 			this.enforeThreadSafety();
@@ -1077,7 +1077,7 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
 						newValue, this.godMode);
-			} catch (WabitPersistenceException e) {
+			} catch (SPPersistenceException e) {
 				this.rollback();
 				throw e;
 			}
@@ -1097,15 +1097,15 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property type
 	 * @param newValue
 	 *            The new property value to persist
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	public void persistProperty(String uuid, String propertyName,
 			DataType propertyType, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (transactionCount <= 0) {
 			this.rollback();
-			throw new WabitPersistenceException("Cannot persist objects while outside a transaction.");
+			throw new SPPersistenceException("Cannot persist objects while outside a transaction.");
 		}
 		synchronized (session) {
 			this.enforeThreadSafety();
@@ -1119,7 +1119,7 @@ public class WabitSessionPersister implements WabitPersister {
 				}
 				persistPropertyHelper(uuid, propertyName, propertyType, newValue,
 					newValue, true);
-			} catch (WabitPersistenceException e) {
+			} catch (SPPersistenceException e) {
 				this.rollback();
 				throw e;
 			}
@@ -1143,15 +1143,15 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The expected old property value
 	 * @param newValue
 	 *            The new property value to persist
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void persistPropertyHelper(String uuid, String propertyName,
 			DataType propertyType, Object oldValue, Object newValue,
-			boolean unconditional) throws WabitPersistenceException {
+			boolean unconditional) throws SPPersistenceException {
 		
 		if (!exists(uuid)) {
-			throw new WabitPersistenceException(uuid,
+			throw new SPPersistenceException(uuid,
 					"WabitObject with UUID " + uuid + " could not be found." +
 					" Was trying to set its property \"" + propertyName + "\" " +
 					"to value \"" + newValue + "\".");
@@ -1171,7 +1171,7 @@ public class WabitSessionPersister implements WabitPersister {
 		
 		if (lastPropertyValueFound != null) {
 			if (!unconditional && !lastPropertyValueFound.equals(oldValue)) {
-				throw new WabitPersistenceException(uuid, "For property \""
+				throw new SPPersistenceException(uuid, "For property \""
 						+ propertyName + "\", the expected property value \""
 						+ oldValue
 						+ "\" does not match with the actual property value \""
@@ -1257,7 +1257,7 @@ public class WabitSessionPersister implements WabitPersister {
 											Image.class)).toByteArray();
 							old.reset();
 						} catch (IOException e) {
-							throw new WabitPersistenceException(uuid, e);
+							throw new SPPersistenceException(uuid, e);
 						}
 					}
 
@@ -1283,7 +1283,7 @@ public class WabitSessionPersister implements WabitPersister {
 					propertyValue = getWabitWorkspaceProperty((WabitWorkspace) wo,
 							propertyName);
 				} else {
-					throw new WabitPersistenceException(uuid,
+					throw new SPPersistenceException(uuid,
 							"Invalid WabitObject type " + wo.getClass());
 				}
 				
@@ -1294,7 +1294,7 @@ public class WabitSessionPersister implements WabitPersister {
 												!Arrays.equals((byte[]) oldValue, (byte[]) propertyValue)) ||
 										(!(wo instanceof WabitImage && propertyName.equals("image")) && 
 												!oldValue.equals(propertyValue))))) {
-					throw new WabitPersistenceException(uuid, "For property \""
+					throw new SPPersistenceException(uuid, "For property \""
 							+ propertyName + "\" on WabitObject of type "
 							+ wo.getClass() + " and UUID + " + wo.getUUID()
 							+ ", the expected property value \"" + oldValue
@@ -1302,7 +1302,7 @@ public class WabitSessionPersister implements WabitPersister {
 							+ propertyValue + "\"");
 				}
 //			} else if (!unconditional) {
-//				throw new WabitPersistenceException(uuid, "Could not find the object with id " + 
+//				throw new SPPersistenceException(uuid, "Could not find the object with id " + 
 //						uuid + " to set property " + propertyValue);
 			}
 		}
@@ -1330,7 +1330,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            cannot be found.
 	 * @return An error message for exceptions that describes the above.
 	 */
-	private String getWabitPersistenceExceptionMessage(WabitObject wo,
+	private String getSPPersistenceExceptionMessage(WabitObject wo,
 			String propertyName) {
 		return "Cannot persist property \"" + propertyName + "\" on "
 				+ wo.getClass() + " with name \"" + wo.getName()
@@ -1368,11 +1368,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getCommonProperty(WabitObject wo, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("name")) {
 			return converter.convertToBasicType(wo.getName());
 		} else if (propertyName.equals("UUID")) {
@@ -1380,8 +1380,8 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("parent")) {
 			return converter.convertToBasicType(wo.getParent());
 		} else {
-			throw new WabitPersistenceException(wo.getUUID(),
-					getWabitPersistenceExceptionMessage(wo, propertyName));
+			throw new SPPersistenceException(wo.getUUID(),
+					getSPPersistenceExceptionMessage(wo, propertyName));
 		}
 	}
 
@@ -1395,11 +1395,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitCommonProperty(WabitObject wo, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 		if (propertyName.equals("name")) {
 			wo.setName((String) converter.convertToComplexType(newValue,
 					String.class));
@@ -1421,8 +1421,8 @@ public class WabitSessionPersister implements WabitPersister {
 			wo.setParent(parent);
 
 		} else {
-			throw new WabitPersistenceException(wo.getUUID(),
-					getWabitPersistenceExceptionMessage(wo, propertyName));
+			throw new SPPersistenceException(wo.getUUID(),
+					getSPPersistenceExceptionMessage(wo, propertyName));
 		}
 	}
 
@@ -1445,14 +1445,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitWorkspaceProperty(WabitWorkspace workspace,
-			String propertyName) throws WabitPersistenceException {
-		throw new WabitPersistenceException(
+			String propertyName) throws SPPersistenceException {
+		throw new SPPersistenceException(
 				workspace.getUUID(),
-				getWabitPersistenceExceptionMessage(workspace, propertyName));
+				getSPPersistenceExceptionMessage(workspace, propertyName));
 	}
 
 	/**
@@ -1465,18 +1465,18 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method or
 	 *             the new value could not be committed.
 	 */
 	private void commitWabitWorkspaceProperty(WabitWorkspace workspace,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = workspace.getUUID();
 
-		throw new WabitPersistenceException(
+		throw new SPPersistenceException(
 				uuid,
-				getWabitPersistenceExceptionMessage(workspace, propertyName));
+				getSPPersistenceExceptionMessage(workspace, propertyName));
 	}
 
 	/**
@@ -1499,12 +1499,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitDataSourceProperty(WabitDataSource wds,
-			String propertyName) throws WabitPersistenceException {
-		throw new WabitPersistenceException(wds.getUUID(), "Invalid property: "
+			String propertyName) throws SPPersistenceException {
+		throw new SPPersistenceException(wds.getUUID(), "Invalid property: "
 				+ propertyName);
 	}
 
@@ -1519,13 +1519,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitDataSourceProperty(WabitDataSource wds,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(wds.getUUID(), "Invalid property: "
+			throws SPPersistenceException {
+		throw new SPPersistenceException(wds.getUUID(), "Invalid property: "
 				+ propertyName);
 	}
 
@@ -1548,11 +1548,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getQueryCacheProperty(QueryCache query, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		if (propertyName.equals("streaming")) {
 			return converter.convertToBasicType(query.isStreaming());
@@ -1587,8 +1587,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(query.getDataSource());
 
 		} else {
-			throw new WabitPersistenceException(query.getUUID(),
-					getWabitPersistenceExceptionMessage(query, propertyName));
+			throw new SPPersistenceException(query.getUUID(),
+					getSPPersistenceExceptionMessage(query, propertyName));
 		}
 
 	}
@@ -1603,12 +1603,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitQueryCacheProperty(QueryCache query,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = query.getUUID();
 
 		if (propertyName.equals("streaming")) {
@@ -1652,7 +1652,7 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, JDBCDataSource.class)); 
 
 		} else {
-			throw new WabitPersistenceException(uuid, "Invalid property: "
+			throw new SPPersistenceException(uuid, "Invalid property: "
 					+ propertyName);
 		}
 	}
@@ -1676,12 +1676,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitConstantsContainerProperty(
 			WabitConstantsContainer wabitConstantsContainer, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		Container delegate = wabitConstantsContainer.getDelegate();
 
 		if (propertyName.equals("alias")) {
@@ -1691,8 +1691,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(delegate.getPosition());
 
 		} else {
-			throw new WabitPersistenceException(wabitConstantsContainer
-					.getUUID(), getWabitPersistenceExceptionMessage(
+			throw new SPPersistenceException(wabitConstantsContainer
+					.getUUID(), getSPPersistenceExceptionMessage(
 					wabitConstantsContainer, propertyName));
 		}
 	}
@@ -1707,13 +1707,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitConstantsContainerProperty(
 			WabitConstantsContainer wabitConstantsContainer,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		Container delegate = wabitConstantsContainer.getDelegate();
 
@@ -1726,8 +1726,8 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Point2D.class));
 
 		} else {
-			throw new WabitPersistenceException(wabitConstantsContainer
-					.getUUID(), getWabitPersistenceExceptionMessage(
+			throw new SPPersistenceException(wabitConstantsContainer
+					.getUUID(), getSPPersistenceExceptionMessage(
 					wabitConstantsContainer, propertyName));
 		}
 	}
@@ -1751,12 +1751,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitTableContainerProperty(
 			WabitTableContainer wabitTableContainer, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		if (propertyName.equals("position")) {
 			return converter.convertToBasicType(wabitTableContainer
@@ -1766,8 +1766,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(wabitTableContainer.getAlias());
 
 		} else {
-			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitTableContainer,
+			throw new SPPersistenceException(wabitTableContainer.getUUID(),
+					getSPPersistenceExceptionMessage(wabitTableContainer,
 							propertyName));
 		}
 	}
@@ -1782,12 +1782,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitTableContainerProperty(
 			WabitTableContainer wabitTableContainer, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 
 		if (propertyName.equals("position")) {
 			wabitTableContainer.setPosition((Point2D) converter
@@ -1798,8 +1798,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, String.class));
 
 		} else {
-			throw new WabitPersistenceException(wabitTableContainer.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitTableContainer,
+			throw new SPPersistenceException(wabitTableContainer.getUUID(),
+					getSPPersistenceExceptionMessage(wabitTableContainer,
 							propertyName));
 		}
 	}
@@ -1822,11 +1822,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitItemProperty(WabitItem wabitItem, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = wabitItem.getUUID();
 		Item item = wabitItem.getDelegate();
 
@@ -1859,12 +1859,12 @@ public class WabitSessionPersister implements WabitPersister {
 				return converter.convertToBasicType(item.getColumnWidth());
 
 			} else {
-				throw new WabitPersistenceException(uuid,
-						getWabitPersistenceExceptionMessage(wabitItem,
+				throw new SPPersistenceException(uuid,
+						getSPPersistenceExceptionMessage(wabitItem,
 								propertyName));
 			}
 		} else {
-			throw new WabitPersistenceException(uuid,
+			throw new SPPersistenceException(uuid,
 					"Unknown WabitItem with name " + wabitItem.getName());
 		}
 	}
@@ -1879,13 +1879,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method or if
 	 *             an invalid delegate is contained within this wrapper.
 	 */
 	private void commitWabitItemProperty(WabitItem wabitItem,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = wabitItem.getUUID();
 		Item item = wabitItem.getDelegate();
 
@@ -1928,12 +1928,12 @@ public class WabitSessionPersister implements WabitPersister {
 						newValue, Integer.class));
 
 			} else {
-				throw new WabitPersistenceException(uuid,
-						getWabitPersistenceExceptionMessage(wabitItem,
+				throw new SPPersistenceException(uuid,
+						getSPPersistenceExceptionMessage(wabitItem,
 								propertyName));
 			}
 		} else {
-			throw new WabitPersistenceException(uuid,
+			throw new SPPersistenceException(uuid,
 					"Unknown WabitItem with name " + wabitItem.getName());
 		}
 	}
@@ -1957,11 +1957,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitJoinProperty(WabitJoin wabitJoin, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		if (propertyName.equals("leftColumnOuterJoin")) {
 			return converter.convertToBasicType(wabitJoin
@@ -1974,9 +1974,9 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("comparator")) {
 			return converter.convertToBasicType(wabitJoin.getComparator());
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					wabitJoin.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitJoin, propertyName));
+					getSPPersistenceExceptionMessage(wabitJoin, propertyName));
 		}
 	}
 
@@ -1990,12 +1990,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The property value
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitJoinProperty(WabitJoin wabitJoin,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		if (propertyName.equals("leftColumnOuterJoin")) {
 			wabitJoin.setLeftColumnOuterJoin((Boolean) converter
@@ -2010,9 +2010,9 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, String.class));
 
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					wabitJoin.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitJoin, propertyName));
+					getSPPersistenceExceptionMessage(wabitJoin, propertyName));
 		}
 	}
 
@@ -2035,11 +2035,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getOlapQueryProperty(OlapQuery olapQuery, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
 			return converter.convertToBasicType(olapQuery.getOlapDataSource());
 
@@ -2060,9 +2060,9 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(olapQuery.isNonEmpty());
 
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					olapQuery.getUUID(),
-					getWabitPersistenceExceptionMessage(olapQuery, propertyName));
+					getSPPersistenceExceptionMessage(olapQuery, propertyName));
 		}
 	}
 
@@ -2076,13 +2076,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method or if
 	 *             the new value could not be committed.
 	 */
 	private void commitOlapQueryProperty(OlapQuery olapQuery,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("olapDataSource")) {
 			olapQuery.setOlapDataSource((Olap4jDataSource) converter
 					.convertToComplexType(newValue, Olap4jDataSource.class));
@@ -2092,7 +2092,7 @@ public class WabitSessionPersister implements WabitPersister {
 				olapQuery.setCurrentCube((Cube) converter.convertToComplexType(
 						newValue, Cube.class), false);
 			} catch (SQLException e) {
-				throw new WabitPersistenceException(olapQuery.getUUID(),
+				throw new SPPersistenceException(olapQuery.getUUID(),
 						"Cannot commit currentCube property for OlapQuery with name \""
 								+ olapQuery.getName() + "\" and UUID \""
 								+ olapQuery.getUUID() + "\" to value "
@@ -2104,9 +2104,9 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Boolean.class));
 
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					olapQuery.getUUID(),
-					getWabitPersistenceExceptionMessage(olapQuery, propertyName));
+					getSPPersistenceExceptionMessage(olapQuery, propertyName));
 		}
 	}
 
@@ -2129,11 +2129,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitOlapSelectionProperty(WabitOlapSelection selection,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 		if (propertyName.equals("operator")) {
 			return converter.convertToBasicType(selection.getOperator());
 
@@ -2142,9 +2142,9 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToBasicType(selection.getUniqueMemberName());
 
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					selection.getUUID(),
-					getWabitPersistenceExceptionMessage(selection, propertyName));
+					getSPPersistenceExceptionMessage(selection, propertyName));
 		}
 	}
 
@@ -2159,14 +2159,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitOlapSelectionProperty(WabitOlapSelection selection,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(selection.getUUID(),
-				getWabitPersistenceExceptionMessage(selection, propertyName));
+			throws SPPersistenceException {
+		throw new SPPersistenceException(selection.getUUID(),
+				getSPPersistenceExceptionMessage(selection, propertyName));
 	}
 
 	/**
@@ -2188,13 +2188,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitOlapDimensionProperty(WabitOlapDimension dimension,
-			String propertyName) throws WabitPersistenceException {
-		throw new WabitPersistenceException(dimension.getUUID(),
-				getWabitPersistenceExceptionMessage(dimension, propertyName));
+			String propertyName) throws SPPersistenceException {
+		throw new SPPersistenceException(dimension.getUUID(),
+				getSPPersistenceExceptionMessage(dimension, propertyName));
 	}
 
 	/**
@@ -2208,14 +2208,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitOlapDimensionProperty(WabitOlapDimension dimension,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(dimension.getUUID(),
-				getWabitPersistenceExceptionMessage(dimension, propertyName));
+			throws SPPersistenceException {
+		throw new SPPersistenceException(dimension.getUUID(),
+				getSPPersistenceExceptionMessage(dimension, propertyName));
 	}
 
 	/**
@@ -2237,11 +2237,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitOlapAxisProperty(WabitOlapAxis olapAxis,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 
 		if (propertyName.equals("nonEmpty")) {
 			return converter.convertToBasicType(olapAxis.isNonEmpty());
@@ -2254,8 +2254,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(olapAxis.getSortOrder());
 
 		} else {
-			throw new WabitPersistenceException(olapAxis.getUUID(),
-					getWabitPersistenceExceptionMessage(olapAxis, propertyName));
+			throw new SPPersistenceException(olapAxis.getUUID(),
+					getSPPersistenceExceptionMessage(olapAxis, propertyName));
 		}
 
 	}
@@ -2270,12 +2270,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitWabitOlapAxisProperty(WabitOlapAxis olapAxis,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("nonEmpty")) {
 			olapAxis.setNonEmpty((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
@@ -2289,8 +2289,8 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, String.class));
 
 		} else {
-			throw new WabitPersistenceException(olapAxis.getUUID(),
-					getWabitPersistenceExceptionMessage(olapAxis, propertyName));
+			throw new SPPersistenceException(olapAxis.getUUID(),
+					getSPPersistenceExceptionMessage(olapAxis, propertyName));
 		}
 	}
 
@@ -2312,11 +2312,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getChartProperty(Chart chart, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("xaxisName")) {
 			return converter.convertToBasicType(chart.getXaxisName());
 
@@ -2342,8 +2342,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(chart.getBackgroundColour());
 
 		} else {
-			throw new WabitPersistenceException(chart.getUUID(),
-					getWabitPersistenceExceptionMessage(chart, propertyName));
+			throw new SPPersistenceException(chart.getUUID(),
+					getSPPersistenceExceptionMessage(chart, propertyName));
 		}
 	}
 
@@ -2356,11 +2356,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitChartProperty(Chart chart, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 		String uuid = chart.getUUID();
 
 		if (propertyName.equals("xaxisName")) {
@@ -2393,7 +2393,7 @@ public class WabitSessionPersister implements WabitPersister {
 			try {
 				chart.setQuery(rsProducer);
 			} catch (SQLException e) {
-				throw new WabitPersistenceException(uuid,
+				throw new SPPersistenceException(uuid,
 						"Cannot commit property query on Chart with name \""
 								+ chart.getName() + "\" and UUID \""
 								+ chart.getUUID() + "\" for value \""
@@ -2405,8 +2405,8 @@ public class WabitSessionPersister implements WabitPersister {
 					newValue, Color.class));
 
 		} else {
-			throw new WabitPersistenceException(uuid,
-					getWabitPersistenceExceptionMessage(chart, propertyName));
+			throw new SPPersistenceException(uuid,
+					getSPPersistenceExceptionMessage(chart, propertyName));
 		}
 	}
 
@@ -2429,11 +2429,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getChartColumnProperty(ChartColumn chartColumn,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 		if (propertyName.equals("roleInChart")) {
 			return converter.convertToBasicType(chartColumn.getRoleInChart());
 
@@ -2442,8 +2442,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.getXAxisIdentifier());
 
 		} else {
-			throw new WabitPersistenceException(chartColumn.getUUID(),
-					getWabitPersistenceExceptionMessage(chartColumn,
+			throw new SPPersistenceException(chartColumn.getUUID(),
+					getSPPersistenceExceptionMessage(chartColumn,
 							propertyName));
 		}
 
@@ -2459,12 +2459,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitChartColumnProperty(ChartColumn chartColumn,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("roleInChart")) {
 			chartColumn.setRoleInChart((ColumnRole) converter
 					.convertToComplexType(newValue, ColumnRole.class));
@@ -2474,8 +2474,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, ChartColumn.class));
 
 		} else {
-			throw new WabitPersistenceException(chartColumn.getUUID(),
-					getWabitPersistenceExceptionMessage(chartColumn,
+			throw new SPPersistenceException(chartColumn.getUUID(),
+					getSPPersistenceExceptionMessage(chartColumn,
 							propertyName));
 		}
 	}
@@ -2499,11 +2499,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getWabitImageProperty(WabitImage wabitImage,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 		String uuid = wabitImage.getUUID();
 
 		if (propertyName.equals("image")) {
@@ -2514,8 +2514,8 @@ public class WabitSessionPersister implements WabitPersister {
 					wabitImage.getImage()).toByteArray();
 
 		} else {
-			throw new WabitPersistenceException(uuid,
-					getWabitPersistenceExceptionMessage(wabitImage,
+			throw new SPPersistenceException(uuid,
+					getSPPersistenceExceptionMessage(wabitImage,
 							propertyName));
 		}
 
@@ -2531,21 +2531,21 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method or if
 	 *             the new value could not be committed.
 	 */
 	private void commitWabitImageProperty(WabitImage wabitImage,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		
 		if (propertyName.equals("image")) {
 			wabitImage.setImage((Image) converter.convertToComplexType(
 					newValue, Image.class));
 
 		} else {
-			throw new WabitPersistenceException(wabitImage.getUUID(),
-					getWabitPersistenceExceptionMessage(wabitImage,
+			throw new SPPersistenceException(wabitImage.getUUID(),
+					getSPPersistenceExceptionMessage(wabitImage,
 							propertyName));
 		}
 	}
@@ -2568,13 +2568,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getLayoutProperty(Layout layout, String propertyName)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(layout.getUUID(),
-				getWabitPersistenceExceptionMessage(layout, propertyName));
+			throws SPPersistenceException {
+		throw new SPPersistenceException(layout.getUUID(),
+				getSPPersistenceExceptionMessage(layout, propertyName));
 	}
 
 	/**
@@ -2587,13 +2587,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitLayoutProperty(Layout layout, String propertyName,
-			Object newValue) throws WabitPersistenceException {
-		throw new WabitPersistenceException(layout.getUUID(),
-				getWabitPersistenceExceptionMessage(layout, propertyName));
+			Object newValue) throws SPPersistenceException {
+		throw new SPPersistenceException(layout.getUUID(),
+				getSPPersistenceExceptionMessage(layout, propertyName));
 	}
 
 	/**
@@ -2614,11 +2614,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getPageProperty(Page page, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("height")) {
 			return converter.convertToBasicType(page.getHeight());
 
@@ -2632,8 +2632,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(page.getDefaultFont());
 
 		} else {
-			throw new WabitPersistenceException(page.getUUID(),
-					getWabitPersistenceExceptionMessage(page, propertyName));
+			throw new SPPersistenceException(page.getUUID(),
+					getSPPersistenceExceptionMessage(page, propertyName));
 		}
 	}
 
@@ -2646,11 +2646,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitPageProperty(Page page, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 		if (propertyName.equals("height")) {
 			page.setHeight((Integer) converter.convertToComplexType(newValue,
 					Integer.class));
@@ -2668,8 +2668,8 @@ public class WabitSessionPersister implements WabitPersister {
 					Font.class));
 
 		} else {
-			throw new WabitPersistenceException(page.getUUID(),
-					getWabitPersistenceExceptionMessage(page, propertyName));
+			throw new SPPersistenceException(page.getUUID(),
+					getSPPersistenceExceptionMessage(page, propertyName));
 		}
 	}
 
@@ -2692,11 +2692,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getContentBoxProperty(ContentBox contentBox,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 		if (propertyName.equals("height")) {
 			return converter.convertToBasicType(contentBox.getHeight());
 
@@ -2717,8 +2717,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(contentBox.getFont());
 
 		} else {
-			throw new WabitPersistenceException(contentBox.getUUID(),
-					getWabitPersistenceExceptionMessage(contentBox,
+			throw new SPPersistenceException(contentBox.getUUID(),
+					getSPPersistenceExceptionMessage(contentBox,
 							propertyName));
 		}
 	}
@@ -2733,12 +2733,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitContentBoxProperty(ContentBox contentBox,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("height")) {
 			contentBox.setHeight((Double) converter.convertToComplexType(
 					newValue, Double.class));
@@ -2760,8 +2760,8 @@ public class WabitSessionPersister implements WabitPersister {
 					Font.class));
 
 		} else {
-			throw new WabitPersistenceException(contentBox.getUUID(),
-					getWabitPersistenceExceptionMessage(contentBox,
+			throw new SPPersistenceException(contentBox.getUUID(),
+					getSPPersistenceExceptionMessage(contentBox,
 							propertyName));
 		}
 	}
@@ -2786,13 +2786,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getChartRendererProperty(ChartRenderer cRenderer,
-			String propertyName) throws WabitPersistenceException {
-		throw new WabitPersistenceException(cRenderer.getUUID(),
-				getWabitPersistenceExceptionMessage(cRenderer, propertyName));
+			String propertyName) throws SPPersistenceException {
+		throw new SPPersistenceException(cRenderer.getUUID(),
+				getSPPersistenceExceptionMessage(cRenderer, propertyName));
 	}
 
 	/**
@@ -2806,14 +2806,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitChartRendererProperty(ChartRenderer cRenderer,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(cRenderer.getUUID(),
-				getWabitPersistenceExceptionMessage(cRenderer, propertyName));
+			throws SPPersistenceException {
+		throw new SPPersistenceException(cRenderer.getUUID(),
+				getSPPersistenceExceptionMessage(cRenderer, propertyName));
 	}
 
 	/**
@@ -2835,11 +2835,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getCellSetRendererProperty(CellSetRenderer csRenderer,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 
 		if (propertyName.equals("bodyAlignment")) {
 			return converter.convertToBasicType(csRenderer.getBodyAlignment());
@@ -2857,8 +2857,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(csRenderer.getBackgroundColour());
 
 		} else {
-			throw new WabitPersistenceException(csRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(csRenderer,
+			throw new SPPersistenceException(csRenderer.getUUID(),
+					getSPPersistenceExceptionMessage(csRenderer,
 							propertyName));
 		}
 	}
@@ -2873,12 +2873,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitCellSetRendererProperty(CellSetRenderer csRenderer,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		if (propertyName.equals("bodyAlignment")) {
 			csRenderer.setBodyAlignment((HorizontalAlignment) converter
@@ -2900,8 +2900,8 @@ public class WabitSessionPersister implements WabitPersister {
 			//This is not implemented yet, placeholder for the future.
 
 		} else {
-			throw new WabitPersistenceException(csRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(csRenderer,
+			throw new SPPersistenceException(csRenderer.getUUID(),
+					getSPPersistenceExceptionMessage(csRenderer,
 							propertyName));
 		}
 	}
@@ -2925,11 +2925,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getImageRendererProperty(ImageRenderer iRenderer,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 		if (propertyName.equals("image")) {
 			return converter.convertToBasicType(iRenderer.getImage());
 
@@ -2948,9 +2948,9 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(iRenderer.getVAlign());
 			
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					iRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(iRenderer, propertyName));
+					getSPPersistenceExceptionMessage(iRenderer, propertyName));
 		}
 	}
 
@@ -2964,11 +2964,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
 	private void commitImageRendererProperty(ImageRenderer iRenderer,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		
 		if (propertyName.equals("image")) {
 			iRenderer.setImage((WabitImage) converter.convertToComplexType(
@@ -2991,9 +2991,9 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, VerticalAlignment.class));
 			
 		} else {
-			throw new WabitPersistenceException(
+			throw new SPPersistenceException(
 					iRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(iRenderer, propertyName));
+					getSPPersistenceExceptionMessage(iRenderer, propertyName));
 		}
 	}
 
@@ -3015,11 +3015,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getLabelProperty(Label label, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
 			return converter.convertToBasicType(label.getHorizontalAlignment());
 
@@ -3036,8 +3036,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(label.getFont());
 
 		} else {
-			throw new WabitPersistenceException(label.getUUID(),
-					getWabitPersistenceExceptionMessage(label, propertyName));
+			throw new SPPersistenceException(label.getUUID(),
+					getSPPersistenceExceptionMessage(label, propertyName));
 		}
 	}
 
@@ -3050,10 +3050,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
 	private void commitLabelProperty(Label label, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
 			label.setHorizontalAlignment((HorizontalAlignment) converter
 					.convertToComplexType(newValue, HorizontalAlignment.class));
@@ -3075,8 +3075,8 @@ public class WabitSessionPersister implements WabitPersister {
 					Font.class));
 
 		} else {
-			throw new WabitPersistenceException(label.getUUID(),
-					getWabitPersistenceExceptionMessage(label, propertyName));
+			throw new SPPersistenceException(label.getUUID(),
+					getSPPersistenceExceptionMessage(label, propertyName));
 		}
 	}
 
@@ -3099,11 +3099,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getReportTaskProperty(ReportTask task, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 
 		if (propertyName.equals("email")) {
 			return converter.convertToBasicType(task.getEmail());
@@ -3125,7 +3125,7 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(task.getTriggerIntervalParam());
 
 		} else {
-			throw new WabitPersistenceException(task.getUUID(),
+			throw new SPPersistenceException(task.getUUID(),
 					"Unknown property " + propertyName
 							+ " for ReportTask with name " + task.getName());
 		}
@@ -3141,11 +3141,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitReportTaskProperty(ReportTask task, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 
 		if (propertyName.equals("email")) {
 			task.setEmail((String) converter.convertToComplexType(newValue,
@@ -3173,7 +3173,7 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, Integer.class));
 
 		} else {
-			throw new WabitPersistenceException(task.getUUID(),
+			throw new SPPersistenceException(task.getUUID(),
 					"Unknown property " + propertyName
 							+ " for ReportTask with name " + task.getName());
 		}
@@ -3198,11 +3198,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getResultSetRendererProperty(ResultSetRenderer rsRenderer,
-			String propertyName) throws WabitPersistenceException {
+			String propertyName) throws SPPersistenceException {
 		if (propertyName.equals("nullString")) {
 			return converter.convertToBasicType(rsRenderer.getNullString());
 
@@ -3224,8 +3224,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.isPrintingGrandTotals());
 
 		} else {
-			throw new WabitPersistenceException(rsRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(rsRenderer,
+			throw new SPPersistenceException(rsRenderer.getUUID(),
+					getSPPersistenceExceptionMessage(rsRenderer,
 							propertyName));
 		}
 	}
@@ -3240,12 +3240,12 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitResultSetRendererProperty(ResultSetRenderer rsRenderer,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("nullString")) {
 			rsRenderer.setNullString((String) converter.convertToComplexType(
 					newValue, String.class));
@@ -3271,8 +3271,8 @@ public class WabitSessionPersister implements WabitPersister {
 					.convertToComplexType(newValue, Boolean.class));
 
 		} else {
-			throw new WabitPersistenceException(rsRenderer.getUUID(),
-					getWabitPersistenceExceptionMessage(rsRenderer,
+			throw new SPPersistenceException(rsRenderer.getUUID(),
+					getSPPersistenceExceptionMessage(rsRenderer,
 							propertyName));
 		}
 	}
@@ -3296,11 +3296,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getColumnInfoProperty(ColumnInfo colInfo, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = colInfo.getUUID();
 
 		if (propertyName.equals(ColumnInfo.COLUMN_ALIAS)) {
@@ -3326,8 +3326,8 @@ public class WabitSessionPersister implements WabitPersister {
 			return converter.convertToBasicType(colInfo.getFormat());
 
 		} else {
-			throw new WabitPersistenceException(uuid,
-					getWabitPersistenceExceptionMessage(colInfo, propertyName));
+			throw new SPPersistenceException(uuid,
+					getSPPersistenceExceptionMessage(colInfo, propertyName));
 		}
 	}
 
@@ -3341,13 +3341,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method or if
 	 *             the new property value cannot be committed.
 	 */
 	private void commitColumnInfoProperty(ColumnInfo colInfo,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		String uuid = colInfo.getUUID();
 		if (propertyName.equals(ColumnInfo.COLUMN_ALIAS)) {
 			colInfo.setColumnAlias((String) converter.convertToComplexType(
@@ -3379,8 +3379,8 @@ public class WabitSessionPersister implements WabitPersister {
 					Format.class));
 
 		} else {
-			throw new WabitPersistenceException(uuid,
-					getWabitPersistenceExceptionMessage(colInfo, propertyName));
+			throw new SPPersistenceException(uuid,
+					getSPPersistenceExceptionMessage(colInfo, propertyName));
 		}
 	}
 
@@ -3402,17 +3402,17 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getGuideProperty(Guide guide, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("offset")) {
 			return converter.convertToBasicType(guide.getOffset());
 
 		} else {
-			throw new WabitPersistenceException(guide.getUUID(),
-					getWabitPersistenceExceptionMessage(guide, propertyName));
+			throw new SPPersistenceException(guide.getUUID(),
+					getSPPersistenceExceptionMessage(guide, propertyName));
 		}
 	}
 
@@ -3425,18 +3425,18 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitGuideProperty(Guide guide, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 		if (propertyName.equals("offset")) {
 			guide.setOffset((Double) converter.convertToComplexType(newValue,
 					Double.class));
 
 		} else {
-			throw new WabitPersistenceException(guide.getUUID(),
-					getWabitPersistenceExceptionMessage(guide, propertyName));
+			throw new SPPersistenceException(guide.getUUID(),
+					getSPPersistenceExceptionMessage(guide, propertyName));
 		}
 	}
 
@@ -3458,11 +3458,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getUserProperty(User user, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		if (propertyName.equals("password")) {
 			return converter.convertToBasicType(user.getPassword());
 		} else if (propertyName.equals("fullName")) {
@@ -3470,8 +3470,8 @@ public class WabitSessionPersister implements WabitPersister {
 		} else if (propertyName.equals("email")) {
 			return converter.convertToBasicType(user.getEmail());
 		} else {
-			throw new WabitPersistenceException(user.getUUID(),
-					getWabitPersistenceExceptionMessage(user, propertyName));
+			throw new SPPersistenceException(user.getUUID(),
+					getSPPersistenceExceptionMessage(user, propertyName));
 		}
 	}
 
@@ -3484,11 +3484,11 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitUserProperty(User user, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 
 		if (propertyName.equals("password")) {
 			user.setPassword((String) converter.convertToComplexType(newValue,
@@ -3500,8 +3500,8 @@ public class WabitSessionPersister implements WabitPersister {
 			user.setFullName((String) converter.convertToComplexType(newValue,
 					String.class));
 		} else {
-			throw new WabitPersistenceException(user.getUUID(),
-					getWabitPersistenceExceptionMessage(user, propertyName));
+			throw new SPPersistenceException(user.getUUID(),
+					getSPPersistenceExceptionMessage(user, propertyName));
 		}
 	}
 
@@ -3524,13 +3524,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getGroupProperty(Group group, String propertyName)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(group.getUUID(),
-				getWabitPersistenceExceptionMessage(group, propertyName));
+			throws SPPersistenceException {
+		throw new SPPersistenceException(group.getUUID(),
+				getSPPersistenceExceptionMessage(group, propertyName));
 	}
 
 	/**
@@ -3543,13 +3543,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitGroupProperty(Group group, String propertyName,
-			Object newValue) throws WabitPersistenceException {
-		throw new WabitPersistenceException(group.getUUID(),
-				getWabitPersistenceExceptionMessage(group, propertyName));
+			Object newValue) throws SPPersistenceException {
+		throw new SPPersistenceException(group.getUUID(),
+				getSPPersistenceExceptionMessage(group, propertyName));
 	}
 
 	/**
@@ -3572,13 +3572,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getGroupMemberProperty(GroupMember groupMember,
-			String propertyName) throws WabitPersistenceException {
-		throw new WabitPersistenceException(groupMember.getUUID(),
-				getWabitPersistenceExceptionMessage(groupMember, propertyName));
+			String propertyName) throws SPPersistenceException {
+		throw new SPPersistenceException(groupMember.getUUID(),
+				getSPPersistenceExceptionMessage(groupMember, propertyName));
 	}
 
 	/**
@@ -3592,14 +3592,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitGroupMemberProperty(GroupMember groupMember,
 			String propertyName, Object newValue)
-			throws WabitPersistenceException {
-		throw new WabitPersistenceException(groupMember.getUUID(),
-				getWabitPersistenceExceptionMessage(groupMember, propertyName));
+			throws SPPersistenceException {
+		throw new SPPersistenceException(groupMember.getUUID(),
+				getSPPersistenceExceptionMessage(groupMember, propertyName));
 	}
 
 	/**
@@ -3620,14 +3620,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
 	 *         {@link SessionPersisterSuperConverter}.
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private Object getGrantProperty(Grant grant, String propertyName)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		// Grants are immutable
-		throw new WabitPersistenceException(grant.getUUID(),
-				getWabitPersistenceExceptionMessage(grant, propertyName));
+		throw new SPPersistenceException(grant.getUUID(),
+				getSPPersistenceExceptionMessage(grant, propertyName));
 	}
 
 	/**
@@ -3639,14 +3639,14 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
 	private void commitGrantProperty(Grant grant, String propertyName,
-			Object newValue) throws WabitPersistenceException {
+			Object newValue) throws SPPersistenceException {
 		// Grants are immutable
-		throw new WabitPersistenceException(grant.getUUID(),
-				getWabitPersistenceExceptionMessage(grant, propertyName));
+		throw new SPPersistenceException(grant.getUUID(),
+				getSPPersistenceExceptionMessage(grant, propertyName));
 	}
 
 	/**
@@ -3656,10 +3656,10 @@ public class WabitSessionPersister implements WabitPersister {
 	 *            The parent UUID of the {@link WabitObject} to remove
 	 * @param uuid
 	 *            The UUID of the {@link WabitObject} to remove
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
 	public void removeObject(String parentUUID, String uuid)
-			throws WabitPersistenceException {
+			throws SPPersistenceException {
 		synchronized (session) {
 			this.enforeThreadSafety();
 			logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
@@ -3667,11 +3667,11 @@ public class WabitSessionPersister implements WabitPersister {
 			if (this.transactionCount==0) {
 				logger.error("Remove Object attempted while not in a transaction. Rollback initiated.");
 				this.rollback();
-				throw new WabitPersistenceException(uuid,"Remove Object attempted while not in a transaction. Rollback initiated.");
+				throw new SPPersistenceException(uuid,"Remove Object attempted while not in a transaction. Rollback initiated.");
 			}
 			if (!exists(uuid)) {
 				this.rollback();
-				throw new WabitPersistenceException(uuid,
+				throw new SPPersistenceException(uuid,
 						"Cannot remove the WabitObject with UUID " + uuid
 						+ " from parent UUID " + parentUUID
 						+ " as it does not exist.");
@@ -3690,7 +3690,7 @@ public class WabitSessionPersister implements WabitPersister {
 	 * 
 	 * @pa
 	 * 
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
 	public void rollback(boolean force) {
 		final WabitWorkspace workspace = session.getWorkspace();
@@ -3776,13 +3776,13 @@ public class WabitSessionPersister implements WabitPersister {
 	 * @param creations
 	 * @param properties
 	 * @param removals
-	 * @throws WabitPersistenceException
+	 * @throws SPPersistenceException
 	 */
 	public static void undoForSession(
 			WabitSession session,
 			List<PersistedObjectEntry> creations,
 			List<PersistedPropertiesEntry> properties,
-			List<RemovedObjectEntry> removals) throws WabitPersistenceException
+			List<RemovedObjectEntry> removals) throws SPPersistenceException
 	{
 		WabitSessionPersister persister = new WabitSessionPersister("undoer", session);
 		persister.setGodMode(true);
