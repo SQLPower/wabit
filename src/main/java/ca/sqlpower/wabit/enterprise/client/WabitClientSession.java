@@ -59,6 +59,7 @@ import org.json.JSONObject;
 
 import ca.sqlpower.dao.MessageSender;
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.dao.json.SPJSONMessageDecoder;
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -76,7 +77,6 @@ import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionImpl;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
-import ca.sqlpower.wabit.dao.json.JSONHttpMessageSender;
 import ca.sqlpower.wabit.dao.json.WabitJSONPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.http.WabitHttpResponseHandler;
