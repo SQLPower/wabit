@@ -22,15 +22,14 @@ package ca.sqlpower.wabit.dao.session;
 import java.awt.Image;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import javax.swing.ImageIcon;
 
+import junit.framework.TestCase;
+
 import org.bouncycastle.util.Arrays;
 
-import ca.sqlpower.wabit.dao.PersisterUtils;
-
-import junit.framework.TestCase;
+import ca.sqlpower.dao.PersisterUtils;
 
 public class PNGImageConverterTest extends TestCase {
 	

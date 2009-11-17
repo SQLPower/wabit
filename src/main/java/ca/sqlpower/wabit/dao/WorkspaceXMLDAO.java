@@ -42,6 +42,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 
+import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;

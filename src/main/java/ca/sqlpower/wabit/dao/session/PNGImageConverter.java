@@ -29,7 +29,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.beanutils.ConversionException;
 
-import ca.sqlpower.wabit.dao.PersisterUtils;
+import ca.sqlpower.dao.PersisterUtils;
 
 /**
  * Converts between an Image and an InputStream.
